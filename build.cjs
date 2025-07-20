@@ -14,7 +14,7 @@ if (!fs.existsSync('dist')) {
   process.exit(1);
 }
 
-// Production için index.html'i düzenle (development script tag'ini kaldır)
+// Production için index.html'i düzenle
 const distIndexPath = path.join('dist', 'index.html');
 if (fs.existsSync(distIndexPath)) {
   let indexContent = fs.readFileSync(distIndexPath, 'utf8');
@@ -24,6 +24,23 @@ if (fs.existsSync(distIndexPath)) {
     '<script type="module" src="/src/main.tsx"></script>',
     ''
   );
+  
+  // dist/assets klasöründe JS dosyasını bul
+  const assetsDir = path.join('dist', 'assets');
+  if (fs.existsSync(assetsDir)) {
+    const files = fs.readdirSync(assetsDir);
+    const jsFile = files.find(file => file.startsWith('index.') && file.endsWith('.js'));
+    
+    if (jsFile) {
+      // Production script tag'ini ekle
+      const productionScript = `<script type="module" src="/assets/${jsFile}"></script>`;
+      indexContent = indexContent.replace(
+        '</body>',
+        `  ${productionScript}\n  </body>`
+      );
+      console.log(`✅ Production script eklendi: ${jsFile}`);
+    }
+  }
   
   fs.writeFileSync(distIndexPath, indexContent);
   console.log('✅ Production index.html düzenlendi');
