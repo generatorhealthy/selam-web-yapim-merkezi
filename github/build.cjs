@@ -4,7 +4,7 @@ execSync('npm run build', { stdio: 'inherit' });
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 Build işlemi başlıyor..');
+console.log('🚀 Build işlemi başlıyor...');
 
 // dist klasörü yoksa oluştur
 if (!fs.existsSync('dist')) {
@@ -35,12 +35,6 @@ const htaccessPath = 'public/.htaccess';
 if (fs.existsSync(htaccessPath)) {
   fs.copyFileSync(htaccessPath, 'dist/.htaccess');
   console.log(`✅ .htaccess kopyalandı`);
-}
-
-// public klasörünün tamamını dist'e kopyala (stil/js dosyaları için)
-if (fs.existsSync('public')) {
-  fs.cpSync('public', 'dist', { recursive: true });
-  console.log(`✅ public klasörü tamamı dist'e kopyalandı`);
 }
 
 // Klasörleri kopyala (örnek: lovable-uploads, assets vs.)
