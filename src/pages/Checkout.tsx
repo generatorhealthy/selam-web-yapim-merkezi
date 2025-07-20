@@ -125,7 +125,7 @@ const Checkout = () => {
   const [showPreInfoDialog, setShowPreInfoDialog] = useState(false);
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("bank_transfer");
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer">("bank_transfer");
   const [clientIP, setClientIP] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
@@ -211,11 +211,7 @@ const Checkout = () => {
   };
 
   const handlePaymentSuccess = async () => {
-    if (paymentMethod === "bank_transfer") {
-      setShowBankInfo(true);
-    } else if (paymentMethod === "credit_card") {
-      await handleCreditCardPayment();
-    }
+    setShowBankInfo(true);
   };
 
   const handleCreditCardPayment = async () => {
@@ -651,7 +647,7 @@ const Checkout = () => {
                     disabled={loading || !contractAccepted}
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 text-lg font-semibold"
                   >
-                    {paymentMethod === "credit_card" ? "Kredi Kartı ile Öde" : "Siparişi Onayla"}
+                    Siparişi Onayla
                   </Button>
                 </>
               ) : (
