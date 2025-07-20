@@ -4,7 +4,7 @@ execSync('npm run build', { stdio: 'inherit' });
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 Build işlemi başlıyor...');
+console.log('🚀 Build işlemi başlıyor..');
 
 // dist klasörü yoksa oluştur
 if (!fs.existsSync('dist')) {
