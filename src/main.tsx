@@ -3,8 +3,11 @@ import { HelmetProvider } from 'react-helmet-async';
 import App from './App.tsx';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(
-  <HelmetProvider>
-    <App />
-  </HelmetProvider>
-);
+const container = document.getElementById('root');
+if (container) {
+  createRoot(container).render(
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  );
+}
