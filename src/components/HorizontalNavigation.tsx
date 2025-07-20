@@ -214,7 +214,7 @@ export function HorizontalNavigation() {
             <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="h-14 overflow-hidden">
                 <img 
-                  src="/3743464e-1296-4ae7-a632-eb1bb329d037.png" 
+                  src="/logo.png" 
                   alt="Doktorum Ol Logo" 
                   className="h-full w-auto object-contain"
                   onError={handleLogoError}

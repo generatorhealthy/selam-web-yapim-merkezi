@@ -35,7 +35,7 @@ const Landing = () => {
             {/* Logo */}
             <div className="flex justify-center mb-8">
               <img 
-                src="/3743464e-1296-4ae7-a632-eb1bb329d037.png" 
+                src="/logo.png" 
                 alt="Doktorum Ol Logo" 
                 className="h-16 w-auto object-contain"
                 onError={handleImageError}
