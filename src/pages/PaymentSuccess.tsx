@@ -44,14 +44,7 @@ const PaymentSuccess = () => {
   }, [navigate]);
 
   const getPaymentMethodText = (method: string) => {
-    switch (method) {
-      case 'credit_card':
-        return 'Kredi Kartı';
-      case 'bank_transfer':
-        return 'Banka Havalesi/EFT';
-      default:
-        return method;
-    }
+    return 'Banka Havalesi/EFT';
   };
 
   // Show loading while checking for order data
