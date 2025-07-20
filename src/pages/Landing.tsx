@@ -34,7 +34,12 @@ const Landing = () => {
           <div className="text-center mb-12">
             {/* Logo */}
             <div className="flex justify-center mb-8">
-              <div className="text-2xl font-bold text-blue-600">Doktorum Ol</div>
+              <img 
+                src="/3743464e-1296-4ae7-a632-eb1bb329d037.png" 
+                alt="Doktorum Ol Logo" 
+                className="h-16 w-auto object-contain"
+                onError={handleImageError}
+              />
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">

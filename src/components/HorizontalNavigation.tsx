@@ -213,7 +213,12 @@ export function HorizontalNavigation() {
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="h-14 overflow-hidden">
-                <div className="text-lg font-bold text-blue-600">Doktorum Ol</div>
+                <img 
+                  src="/3743464e-1296-4ae7-a632-eb1bb329d037.png" 
+                  alt="Doktorum Ol Logo" 
+                  className="h-full w-auto object-contain"
+                  onError={handleLogoError}
+                />
               </div>
             </Link>
           </div>

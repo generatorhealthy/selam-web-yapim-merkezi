@@ -50,9 +50,9 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="flex items-center gap-2 mt-2">
             <img 
-              src="https://doktorumol.com.tr/wp-content/uploads/2024/01/doktorum-ol-randevu-sitesi-2024-2.webp" 
+              src="/3743464e-1296-4ae7-a632-eb1bb329d037.png" 
               alt="Doktorum Ol Logo" 
-              className="h-8 w-auto"
+              className="h-8 w-auto object-contain"
             />
           </div>
         )}
