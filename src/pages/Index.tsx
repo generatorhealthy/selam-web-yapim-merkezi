@@ -239,7 +239,7 @@ const Index = () => {
             </div>
             
             <h2 className="text-5xl lg:text-7xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-8 leading-tight">
-              Nasıl Çalışır?
+              Nasıl Çalışır
             </h2>
             
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
