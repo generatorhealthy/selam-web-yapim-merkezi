@@ -1,0 +1,133 @@
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { FileText, Play } from "lucide-react";
+import { Link } from "react-router-dom";
+
+interface Test {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  specialty_area: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface SpecialistTestsProps {
+  specialistId: string;
+  specialistName: string;
+  specialistSpecialty: string;
+}
+
+const SpecialistTests = ({ specialistId, specialistName, specialistSpecialty }: SpecialistTestsProps) => {
+  const { toast } = useToast();
+  const [tests, setTests] = useState<Test[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSpecialistTests();
+  }, [specialistId, specialistSpecialty]);
+
+  const fetchSpecialistTests = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch tests that match the specialist's specialty area and are approved
+      const { data: testsData, error } = await supabase
+        .from('tests')
+        .select('*')
+        .eq('is_active', true)
+        .eq('status', 'approved')
+        .eq('specialty_area', specialistSpecialty)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Testler yüklenirken hata:', error);
+        return;
+      }
+
+      setTests(testsData || []);
+    } catch (error) {
+      console.error('Beklenmeyen hata:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Testler yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {tests.length === 0 ? (
+        <div className="text-center py-8">
+          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">
+            {specialistSpecialty} uzmanlık alanında henüz test bulunmamaktadır.
+          </p>
+        </div>
+      ) : (
+        tests.map((test) => (
+          <Card key={test.id} className="border hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    {test.title}
+                  </h3>
+                  {test.description && (
+                    <p className="text-gray-600 mb-3 leading-relaxed">
+                      {test.description}
+                    </p>
+                  )}
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                      {test.specialty_area}
+                    </Badge>
+                    {test.category && (
+                      <Badge variant="outline">
+                        {test.category}
+                      </Badge>
+                    )}
+                    <Badge variant="default" className="bg-green-50 text-green-700">
+                      Aktif
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {specialistName} tarafından hazırlanmıştır
+                  </p>
+                </div>
+                <div className="ml-4">
+                  <Button 
+                    asChild
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Link to={`/test/${test.id}/${specialistId}`}>
+                      <Play className="w-4 h-4 mr-2" />
+                      Teste Başla
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
+  );
+};
+
+export default SpecialistTests;
