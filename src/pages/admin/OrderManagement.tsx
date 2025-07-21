@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, FileText, Send, Download, Check, Trash2 } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, FileText, Send, Download, Check, Trash2, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,6 +35,7 @@ interface Order {
   payment_method: string;
   is_first_order: boolean;
   subscription_month: number;
+  deleted_at?: string;
 }
 
 interface AutomaticOrder {
@@ -83,7 +84,26 @@ const OrderManagement = () => {
       const { data, error } = await supabase
         .from("orders")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Order[];
+    },
+  });
+
+  // Silinen siparişler için ayrı query
+  const {
+    data: deletedOrders,
+    isLoading: isDeletedOrdersLoading,
+    error: deletedOrdersError,
+  } = useQuery({
+    queryKey: ["deleted_orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .not("deleted_at", "is", null)
+        .order("deleted_at", { ascending: false });
       if (error) throw error;
       return data as Order[];
     },
@@ -137,16 +157,20 @@ const OrderManagement = () => {
 
   const deleteOrderMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase.from("orders").delete().eq("id", id);
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       toast({
-        title: "Sipariş Silindi",
-        description: "Sipariş başarıyla silindi",
+        title: "Sipariş Çöp Kutusuna Taşındı",
+        description: "Sipariş başarıyla çöp kutusuna taşındı",
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
       setSelectedOrder(null);
     },
     onError: (error) => {
@@ -156,6 +180,58 @@ const OrderManagement = () => {
         variant: "destructive",
       });
       console.error("Error deleting order:", error);
+    },
+  });
+
+  // Kalıcı silme mutation
+  const permanentDeleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.from("orders").delete().eq("id", id);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sipariş Kalıcı Olarak Silindi",
+        description: "Sipariş veritabanından kalıcı olarak silindi",
+      });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Sipariş kalıcı olarak silinirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error permanently deleting order:", error);
+    },
+  });
+
+  // Geri getirme mutation
+  const restoreOrderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ deleted_at: null })
+        .eq("id", id);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sipariş Geri Getirildi",
+        description: "Sipariş başarıyla geri getirildi",
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Sipariş geri getirilirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error restoring order:", error);
     },
   });
 
@@ -187,22 +263,23 @@ const OrderManagement = () => {
     },
   });
 
-  // Toplu silme mutation
+  // Toplu silme mutation (çöp kutusuna taşıma)
   const bulkDeleteMutation = useMutation({
     mutationFn: async (orderIds: string[]) => {
       const { data, error } = await supabase
         .from("orders")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .in("id", orderIds);
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       toast({
-        title: "Siparişler Silindi",
-        description: `${selectedOrders.length} sipariş başarıyla silindi`,
+        title: "Siparişler Çöp Kutusuna Taşındı",
+        description: `${selectedOrders.length} sipariş başarıyla çöp kutusuna taşındı`,
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
       setSelectedOrders([]);
     },
     onError: (error) => {
@@ -519,10 +596,14 @@ const OrderManagement = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Siparişler
+          </TabsTrigger>
+          <TabsTrigger value="trash" className="flex items-center gap-2">
+            <Trash2 className="w-4 h-4" />
+            Çöp Kutusu ({deletedOrders?.length || 0})
           </TabsTrigger>
           <TabsTrigger value="automatic" className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
@@ -822,6 +903,104 @@ const OrderManagement = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="trash" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trash2 className="w-5 h-5" />
+                Çöp Kutusu ({deletedOrders?.length || 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isDeletedOrdersLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : deletedOrdersError ? (
+                <div className="text-center py-8 text-red-600">
+                  Hata: {deletedOrdersError.message}
+                </div>
+              ) : deletedOrders && deletedOrders.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Çöp kutusunda sipariş bulunmuyor.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Müşteri</TableHead>
+                        <TableHead>Paket</TableHead>
+                        <TableHead>Tutar</TableHead>
+                        <TableHead>Durum</TableHead>
+                        <TableHead>Silinme Tarihi</TableHead>
+                        <TableHead className="text-right">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {deletedOrders?.map((order) => (
+                        <TableRow key={order.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{order.customer_name}</div>
+                              <div className="text-sm text-gray-500">{order.customer_email}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{order.package_name}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-semibold">{order.amount.toLocaleString('tr-TR')} ₺</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(order.status)} className="flex items-center gap-1 w-fit">
+                              {getStatusIcon(order.status)}
+                              {order.status === 'pending' ? 'Bekleyen' : 
+                               order.status === 'approved' ? 'Onaylanan' :
+                               order.status === 'completed' ? 'Tamamlanan' : 'İptal'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {order.deleted_at && format(new Date(order.deleted_at), "dd MMM yyyy", { locale: tr })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => restoreOrderMutation.mutate(order.id)}
+                                disabled={restoreOrderMutation.isPending}
+                                className="flex items-center gap-1"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                Geri Getir
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm('Bu siparişi kalıcı olarak silmek istediğinizden emin misiniz?')) {
+                                    permanentDeleteMutation.mutate(order.id);
+                                  }
+                                }}
+                                disabled={permanentDeleteMutation.isPending}
+                                className="flex items-center gap-1"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Kalıcı Sil
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="automatic" className="space-y-6">
