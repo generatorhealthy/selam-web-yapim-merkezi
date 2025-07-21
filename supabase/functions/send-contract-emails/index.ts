@@ -258,8 +258,8 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
     format: 'a4'
   });
 
-  // Better font settings for Turkish characters
-  doc.setFont('helvetica');
+  // Better font settings for Turkish characters - use font that supports Turkish
+  doc.setFont('courier');
   
   // Header - Company info with blue background  
   doc.setFillColor(52, 152, 219);
@@ -373,9 +373,9 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
 
   // White background for dates
   doc.setFillColor(248, 249, 250);
-  doc.rect(20, yPosition, 170, 25, 'F');
+  doc.rect(20, yPosition, 170, 40, 'F');
   doc.setDrawColor(52, 152, 219);
-  doc.rect(20, yPosition, 170, 25);
+  doc.rect(20, yPosition, 170, 40);
 
   // Date details
   doc.setTextColor(0, 0, 0);
@@ -386,7 +386,8 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   const currentDate = new Date();
   const dateLines = [
     `Sozlesme Olusturma Tarihi: ${currentDate.toLocaleDateString('tr-TR')}`,
-    `Dijital Onaylama Tarihi: ${currentDate.toLocaleDateString('tr-TR')} ${currentDate.toLocaleTimeString('tr-TR')}`
+    `Dijital Onaylama Tarihi: ${currentDate.toLocaleDateString('tr-TR')} ${currentDate.toLocaleTimeString('tr-TR')}`,
+    'Uyelik Baslangic Dijital Onay Tarihiyle Birlikte 365 Gun ( 12 Ay ) Taahhutlu Hizmettir'
   ];
 
   dateLines.forEach(line => {
@@ -500,8 +501,8 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   const pageHeight = 297;
   const bottomMargin = 25;
 
-  // Better font settings for Turkish characters
-  doc.setFont('helvetica');
+  // Better font settings for Turkish characters - use font that supports Turkish
+  doc.setFont('courier');
   
   // Header - Company info with blue background  
   doc.setFillColor(52, 152, 219);
@@ -510,12 +511,12 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   // Company name in header
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('courier', 'bold');
   doc.text('Doktorum Ol Bilgi ve Teknoloji Hizmetleri Ltd. Sti.', 105, 25, { align: 'center' });
   
   // Company details
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('courier', 'normal');
   const companyAddress = 'Kucukbakkalkoy Mahallesi Selvili Sokak No:4 Ic Kapi No: 20 Atasehir / Istanbul';
   doc.text(companyAddress, 105, 32, { align: 'center' });
   doc.text('0216 706 06 11        info@doktorumol.com.tr', 105, 38, { align: 'center' });
@@ -526,7 +527,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
 
   // Title
   doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('courier', 'bold');
   doc.text('MESAFELI SATIS SOZLESMESI', 105, yPosition, { align: 'center' });
   yPosition += 20;
 
@@ -535,7 +536,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.rect(20, yPosition, 170, 10, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('courier', 'bold');
   doc.text('SATICI BILGILERI:', 25, yPosition + 6);
   yPosition += 15;
 
@@ -548,7 +549,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   // Seller details
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('courier', 'normal');
   yPosition += 8;
   
   const sellerLines = [
@@ -659,16 +660,24 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   
   const generalTerms = [
     '1. Bu sozlesme, 6502 sayili Tuketicinin Korunmasi Hakkinda Kanun kapsaminda duzenlenmistir.',
+    '',
     '2. Hizmet bedeli pesin olarak tahsil edilir.',
+    '',
     '3. Hizmet suresi secilen pakete gore belirlenir.',
+    '',
     '4. Taraflar bu sozlesmeyi kabul etmis sayilir.',
+    '',
     '5. Uyusmazliklar Istanbul mahkemelerinde cozulur.'
   ];
 
   generalTerms.forEach(term => {
-    const wrappedTerm = doc.splitTextToSize(term, 160);
-    doc.text(wrappedTerm, 25, yPosition);
-    yPosition += wrappedTerm.length * 5 + 3;
+    if (term === '') {
+      yPosition += 4; // Add blank line spacing
+    } else {
+      const wrappedTerm = doc.splitTextToSize(term, 160);
+      doc.text(wrappedTerm, 25, yPosition);
+      yPosition += wrappedTerm.length * 5 + 3;
+    }
   });
 
   // Add Service Period Section first
