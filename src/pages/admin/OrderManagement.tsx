@@ -514,10 +514,17 @@ const OrderManagement = () => {
   console.log("DEBUG: deletedOrders:", deletedOrders);
   console.log("DEBUG: Component rendering...");
 
+  // Force immediate render to test
+  console.error("FORCE RENDER TEST");
+  
   return (
     <div className="container mx-auto p-6 space-y-6">
       <AdminBackButton />
       
+      {/* EMERGENCY DEBUG TEST */}
+      <div style={{background: 'red', color: 'white', padding: '20px', fontSize: '24px'}}>
+        DEBUG TEST - Bu görünüyor mu? ActiveTab: {activeTab}
+      </div>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Sipariş Yönetimi</h1>
