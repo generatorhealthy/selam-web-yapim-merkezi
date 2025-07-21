@@ -32,16 +32,41 @@ export const sendContractEmailsAfterPurchase = async (
 ) => {
   try {
     if (isFirstMonth) {
-      // Send email without contracts and attachments
+      // Generate PDFs
+      const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerType, clientIP);
+      const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerType, clientIP);
+      
+      // Convert PDFs to base64 for email attachment
+      const preInfoPDFBase64 = preInfoPDF.output('datauristring').split(',')[1];
+      const distanceSalesPDFBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
+      
+      // Create better file names with current date
+      const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
+      const preInfoFileName = `${customerData.name}_${customerData.surname}_OnBilgilendirme_${currentDate}.pdf`;
+      const distanceSalesFileName = `${customerData.name}_${customerData.surname}_MesafeliSatis_${currentDate}.pdf`;
+      
+      // Send email with contracts and detailed order information
       const emailTemplate = createOrderCompletionEmailTemplate(customerData, packageData, paymentMethod, customerType);
       
       await sendEmail({
         to: customerData.email,
-        subject: 'DoktorumOL - Siparişiniz Tamamlandı',
-        message: emailTemplate
+        subject: 'DoktorumOL - Siparişiniz Tamamlandı - Sözleşme Belgeleri',
+        message: emailTemplate,
+        attachments: [
+          {
+            filename: preInfoFileName,
+            content: preInfoPDFBase64,
+            contentType: 'application/pdf'
+          },
+          {
+            filename: distanceSalesFileName,
+            content: distanceSalesPDFBase64,
+            contentType: 'application/pdf'
+          }
+        ]
       });
       
-      console.log('Sipariş tamamlama e-postası gönderildi:', customerData.email);
+      console.log('Sipariş tamamlama ve sözleşme e-postaları gönderildi:', customerData.email);
     } else {
       // Send monthly payment notification
       const monthlyEmailTemplate = createMonthlyPaymentEmailTemplate(customerData, packageData);
@@ -182,6 +207,25 @@ const createOrderCompletionEmailTemplate = (
         </div>
       </div>
 
+      <!-- Attachments Info -->
+      <div style="background-color: white; padding: 25px; margin-top: 2px;">
+        <h3 style="color: #1f2937; margin-top: 0; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+          📎 Ekteki Belgeler
+        </h3>
+        
+        <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+          <p style="color: #92400e; margin: 0 0 15px 0; font-weight: 500;">
+            Bu e-postaya aşağıdaki belgeler eklenmiştir:
+          </p>
+          <ul style="color: #92400e; margin: 0; padding-left: 20px; line-height: 1.8;">
+            <li><strong>Ön Bilgilendirme Formu</strong> - Kişiselleştirilmiş belgeniz</li>
+            <li><strong>Mesafeli Satış Sözleşmesi</strong> - Hizmet koşullarınız</li>
+          </ul>
+          <p style="color: #92400e; font-size: 14px; margin: 15px 0 0 0; font-style: italic;">
+            Bu belgeler sadılece ilk ödemenizde gönderilmektedir. Sonraki aylarda sadece ödeme bildirimleri alacaksınız.
+          </p>
+        </div>
+      </div>
 
       <!-- Important Information -->
       <div style="background-color: white; padding: 25px; margin-top: 2px;">

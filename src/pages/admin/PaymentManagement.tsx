@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Table, 
   TableBody, 
@@ -33,9 +32,8 @@ import {
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, Download, Filter, Check, X, Trash2, Mail, FileText } from "lucide-react";
+import { Search, Eye, Download, Filter, Check, X, Trash2, Mail } from "lucide-react";
 import { sendContractEmailsAfterPurchase } from "@/services/contractEmailService";
-import { generatePreInfoPDF, generateDistanceSalesPDF } from "@/services/pdfService";
 
 interface Order {
   id: string;
@@ -71,7 +69,6 @@ const PaymentManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [processingEmails, setProcessingEmails] = useState<Set<string>>(new Set());
-  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -362,95 +359,6 @@ const PaymentManagement = () => {
 
   const stats = getOrderStats();
 
-  // Checkbox handlers
-  const toggleSelectAll = () => {
-    if (selectedOrders.size === filteredOrders.length) {
-      setSelectedOrders(new Set());
-    } else {
-      setSelectedOrders(new Set(filteredOrders.map(order => order.id)));
-    }
-  };
-
-  const toggleSelectOrder = (orderId: string) => {
-    const newSelected = new Set(selectedOrders);
-    if (newSelected.has(orderId)) {
-      newSelected.delete(orderId);
-    } else {
-      newSelected.add(orderId);
-    }
-    setSelectedOrders(newSelected);
-  };
-
-  // Bulk operations
-  const bulkApprove = async () => {
-    const ordersToApprove = Array.from(selectedOrders);
-    for (const orderId of ordersToApprove) {
-      await updateOrderStatus(orderId, 'approved');
-    }
-    setSelectedOrders(new Set());
-  };
-
-  const bulkDelete = async () => {
-    const ordersToDelete = Array.from(selectedOrders);
-    for (const orderId of ordersToDelete) {
-      await deleteOrder(orderId);
-    }
-    setSelectedOrders(new Set());
-  };
-
-  // PDF generation functions
-  const downloadPreInfoPDF = (order: Order) => {
-    const nameParts = order.customer_name.split(' ');
-    const customerData = {
-      name: nameParts[0] || '',
-      surname: nameParts.slice(1).join(' ') || '',
-      email: order.customer_email,
-      phone: order.customer_phone || '',
-      tcNo: order.customer_tc_no || '',
-      address: order.customer_address || '',
-      city: order.customer_city || '',
-      postalCode: '',
-      companyName: order.company_name || undefined,
-      taxNo: order.company_tax_no || undefined,
-      taxOffice: order.company_tax_office || undefined,
-    };
-
-    const packageData = {
-      name: order.package_name,
-      price: Number(order.amount),
-      originalPrice: Number(order.amount),
-    };
-
-    const pdf = generatePreInfoPDF(customerData, packageData, order.payment_method, order.customer_type, '127.0.0.1');
-    pdf.save(`on-bilgilendirme-${order.customer_name}-${order.id}.pdf`);
-  };
-
-  const downloadContractPDF = (order: Order) => {
-    const nameParts = order.customer_name.split(' ');
-    const customerData = {
-      name: nameParts[0] || '',
-      surname: nameParts.slice(1).join(' ') || '',
-      email: order.customer_email,
-      phone: order.customer_phone || '',
-      tcNo: order.customer_tc_no || '',
-      address: order.customer_address || '',
-      city: order.customer_city || '',
-      postalCode: '',
-      companyName: order.company_name || undefined,
-      taxNo: order.company_tax_no || undefined,
-      taxOffice: order.company_tax_office || undefined,
-    };
-
-    const packageData = {
-      name: order.package_name,
-      price: Number(order.amount),
-      originalPrice: Number(order.amount),
-    };
-
-    const pdf = generateDistanceSalesPDF(customerData, packageData, order.payment_method, order.customer_type, '127.0.0.1');
-    pdf.save(`mesafeli-satis-sozlesmesi-${order.customer_name}-${order.id}.pdf`);
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <AdminBackButton />
@@ -462,57 +370,6 @@ const PaymentManagement = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Toplu İşlemler */}
-          {selectedOrders.size > 0 && (
-            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-blue-700">
-                  {selectedOrders.size} sipariş seçildi
-                </span>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={bulkApprove}
-                    className="text-green-600 hover:text-green-700"
-                  >
-                    <Check className="w-4 h-4 mr-1" />
-                    Toplu Onayla
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Toplu Sil
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Seçili Siparişleri Sil</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {selectedOrders.size} siparişi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>İptal</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={bulkDelete}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Sil
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Filtreler */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-1">
@@ -579,46 +436,31 @@ const PaymentManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedOrders.size === filteredOrders.length && filteredOrders.length > 0}
-                      onCheckedChange={toggleSelectAll}
-                      aria-label="Tümünü seç"
-                    />
-                  </TableHead>
                   <TableHead>Müşteri</TableHead>
                   <TableHead>Paket</TableHead>
                   <TableHead>Tutar</TableHead>
                   <TableHead>Durum</TableHead>
                   <TableHead>Ödeme Yöntemi</TableHead>
                   <TableHead>Tarih</TableHead>
-                  <TableHead>PDF İndir</TableHead>
                   <TableHead>İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       Yükleniyor...
                     </TableCell>
                   </TableRow>
                 ) : filteredOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       Sipariş bulunamadı
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredOrders.map((order) => (
                     <TableRow key={order.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedOrders.has(order.id)}
-                          onCheckedChange={() => toggleSelectOrder(order.id)}
-                          aria-label={`Sipariş seç: ${order.customer_name}`}
-                        />
-                      </TableCell>
                       <TableCell>
                         <div>
                           <div className="font-medium">{order.customer_name}</div>
@@ -660,28 +502,6 @@ const PaymentManagement = () => {
                       </TableCell>
                       <TableCell>
                         {new Date(order.created_at).toLocaleDateString('tr-TR')}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => downloadPreInfoPDF(order)}
-                            className="text-blue-600 hover:text-blue-700"
-                            title="Ön Bilgilendirme Formu İndir"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => downloadContractPDF(order)}
-                            className="text-purple-600 hover:text-purple-700"
-                            title="Mesafeli Satış Sözleşmesi İndir"
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">

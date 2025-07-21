@@ -33,126 +33,28 @@ serve(async (req) => {
   }
 
   try {
-    const { customerData, packageData, paymentMethod, clientIP, orderId } = await req.json();
+    const { customerData, packageData, paymentMethod, clientIP } = await req.json();
 
     console.log('Contract emails request received:', { 
-      customerEmail: customerData?.email,
-      packageName: packageData?.name,
-      orderId: orderId 
+      customerEmail: customerData.email,
+      packageName: packageData.name 
     });
 
-    let preInfoBase64, distanceSalesBase64;
-    let finalCustomerData = customerData;
-    let finalPackageData = packageData;
-    let finalPaymentMethod = paymentMethod;
-    let finalClientIP = clientIP;
+    // Generate pre-info PDF
+    const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP);
+    const preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
 
-    // Create Supabase client for database queries
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Generate distance sales PDF
+    const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP);
+    const distanceSalesBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
 
-    // If only orderId is provided, fetch all data from database
-    if (orderId && (!customerData || !packageData)) {
-      console.log('Fetching order data from database for order:', orderId);
-      
-      const orderResponse = await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${orderId}&select=*`, {
-        headers: {
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'apikey': supabaseServiceKey,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (orderResponse.ok) {
-        const orders = await orderResponse.json();
-        if (orders.length > 0) {
-          const order = orders[0];
-          
-          finalCustomerData = {
-            name: order.customer_name.split(' ')[0] || order.customer_name,
-            surname: order.customer_name.split(' ').slice(1).join(' ') || '',
-            email: order.customer_email,
-            phone: order.customer_phone,
-            tcNo: order.customer_tc_no,
-            address: order.customer_address,
-            city: order.customer_city,
-            customerType: order.customer_type,
-            companyName: order.company_name,
-            taxNo: order.company_tax_no,
-            taxOffice: order.company_tax_office
-          };
-          
-          finalPackageData = {
-            name: order.package_name,
-            price: order.amount,
-            originalPrice: order.amount
-          };
-          
-          finalPaymentMethod = order.payment_method || 'banka_havalesi';
-          finalClientIP = order.contract_ip_address || '127.0.0.1';
-          
-          console.log('Order data fetched successfully');
-        }
-      }
-    }
-
-    // If orderId is provided, try to get PDFs from database first
-    if (orderId) {
-      console.log('Fetching contract PDFs from database for order:', orderId);
-      
-      const response = await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${orderId}&select=pre_info_pdf_content,distance_sales_pdf_content`, {
-        headers: {
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'apikey': supabaseServiceKey,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const orders = await response.json();
-        if (orders.length > 0 && orders[0].pre_info_pdf_content && orders[0].distance_sales_pdf_content) {
-          console.log('Using stored PDFs from database');
-          preInfoBase64 = orders[0].pre_info_pdf_content;
-          distanceSalesBase64 = orders[0].distance_sales_pdf_content;
-        }
-      }
-    }
-
-    // If no PDFs found in database, generate new ones (fallback)
-    if (!preInfoBase64 || !distanceSalesBase64) {
-      console.log('Generating new PDFs as fallback');
-      
-      // Fetch dynamic form content from database
-      const formContentResponse = await fetch(`${supabaseUrl}/rest/v1/form_contents?form_type=eq.pre_info&select=content`, {
-        headers: {
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'apikey': supabaseServiceKey,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      let formContent = '';
-      if (formContentResponse.ok) {
-        const formData = await formContentResponse.json();
-        if (formData.length > 0) {
-          formContent = formData[0].content;
-        }
-      }
-      
-      // Generate pre-info PDF
-      const preInfoPDF = generatePreInfoPDF(finalCustomerData, finalPackageData, finalPaymentMethod, finalCustomerData.customerType, finalClientIP, formContent);
-      preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
-
-      // Generate distance sales PDF
-      const distanceSalesPDF = generateDistanceSalesPDF(finalCustomerData, finalPackageData, finalPaymentMethod, finalCustomerData.customerType, finalClientIP, formContent);
-      distanceSalesBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
-    }
-
-    // Send email with Brevo (without attachments)
+    // Send email with Brevo
     const emailResponse = await sendEmailWithBrevo(
-      finalCustomerData,
-      finalPackageData,
-      finalPaymentMethod
+      customerData,
+      packageData,
+      paymentMethod,
+      preInfoBase64,
+      distanceSalesBase64
     );
 
     console.log('Email sent successfully:', emailResponse);
@@ -180,7 +82,9 @@ serve(async (req) => {
 async function sendEmailWithBrevo(
   customerData: CustomerData,
   packageData: PackageData,
-  paymentMethod: string
+  paymentMethod: string,
+  preInfoBase64: string,
+  distanceSalesBase64: string
 ) {
   const brevoApiKey = Deno.env.get('BREVO_API_KEY');
   
@@ -201,20 +105,26 @@ async function sendEmailWithBrevo(
         name: `${customerData.name} ${customerData.surname}`
       }
     ],
-    cc: [
-      {
-        email: "satinalma@doktorumol.com.tr",
-        name: "Doktorum Ol - Satın Alma"
-      }
-    ],
     bcc: [
       {
         email: "info@doktorumol.com.tr",
         name: "Doktorum Ol"
       }
     ],
-    subject: "Siparişiniz tamamlandı",
-    htmlContent: emailTemplate
+    subject: "Siparişiniz Tamamlandı - Sözleşme Belgeleri",
+    htmlContent: emailTemplate,
+    attachment: [
+      {
+        content: preInfoBase64,
+        name: "on-bilgilendirme-formu.pdf",
+        type: "application/pdf"
+      },
+      {
+        content: distanceSalesBase64,
+        name: "mesafeli-satis-sozlesmesi.pdf",
+        type: "application/pdf"
+      }
+    ]
   };
 
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -235,369 +145,225 @@ async function sendEmailWithBrevo(
   return await response.json();
 }
 
-function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  // Set font for better Turkish character support
-  doc.setFont('helvetica');
-  
-  const pageWidth = 210;
-  const margin = 20;
-  const contentWidth = pageWidth - 2 * margin;
-  let yPosition = 30;
+function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string): jsPDF {
+  const doc = new jsPDF();
   
   // Header
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('ON BILGILENDIRME FORMU', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 20;
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('ÖN BİLGİLENDİRME FORMU', 105, 20, { align: 'center' });
   
-  // Date and IP info
-  const currentDate = new Date().toLocaleDateString('tr-TR');
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  yPosition += 10;
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
   
-  // Customer info section with blue background box
-  doc.setFillColor(173, 216, 230); // Light blue
-  doc.rect(margin, yPosition, contentWidth, 80, 'F');
+  let yPos = 40;
   
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('MUSTERI BILGILERI:', margin + 5, yPosition + 15);
+  // Seller info
+  doc.setFont(undefined, 'bold');
+  doc.text('SATICI BİLGİLERİ:', 20, yPos);
+  yPos += 10;
   
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
+  doc.setFont(undefined, 'normal');
+  doc.text('Unvan: SELAM WEB YAPIM MERKEZİ', 20, yPos);
+  yPos += 5;
+  doc.text('Adres: Yenişehir, Atatürk Cd. No:621/1, 34912 Pendik/İstanbul', 20, yPos);
+  yPos += 5;
+  doc.text('Telefon: 0 216 706 06 11', 20, yPos);
+  yPos += 5;
+  doc.text('E-posta: info@doktorumol.com.tr', 20, yPos);
+  yPos += 15;
   
-  const customerInfo = [
-    `Musteri Adi: ${customerData.name || ''} ${customerData.surname || ''}`,
-    `E-posta: ${customerData.email || 'Belirtilmemis'}`,
-    customerData.phone ? `Telefon: ${customerData.phone}` : 'Telefon: Belirtilmemis',
-    customerData.tcNo ? `TC Kimlik No: ${customerData.tcNo}` : 'TC Kimlik No: Belirtilmemis',
-    customerData.address ? `Adres: ${customerData.address}, ${customerData.city || ''}` : 'Adres: Belirtilmemis',
-    customerData.city ? `Sehir: ${customerData.city}` : '',
-    customerType === 'company' ? 'Musteri Tipi: Kurumsal' : 'Musteri Tipi: Bireysel'
+  // Customer info
+  doc.setFont(undefined, 'bold');
+  doc.text('ALICI BİLGİLERİ:', 20, yPos);
+  yPos += 10;
+  
+  doc.setFont(undefined, 'normal');
+  doc.text(`Ad Soyad: ${customerData.name} ${customerData.surname}`, 20, yPos);
+  yPos += 5;
+  doc.text(`E-posta: ${customerData.email}`, 20, yPos);
+  yPos += 5;
+  if (customerData.phone) {
+    doc.text(`Telefon: ${customerData.phone}`, 20, yPos);
+    yPos += 5;
+  }
+  if (customerData.address) {
+    doc.text(`Adres: ${customerData.address}`, 20, yPos);
+    yPos += 5;
+  }
+  yPos += 10;
+  
+  // Package info
+  doc.setFont(undefined, 'bold');
+  doc.text('PAKET BİLGİLERİ:', 20, yPos);
+  yPos += 10;
+  
+  doc.setFont(undefined, 'normal');
+  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos);
+  yPos += 5;
+  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
+  yPos += 5;
+  doc.text('Ödeme Yöntemi: Banka Havalesi/EFT', 20, yPos);
+  yPos += 15;
+  
+  // Terms
+  doc.setFont(undefined, 'bold');
+  doc.text('GENEL ŞARTLAR:', 20, yPos);
+  yPos += 10;
+  
+  doc.setFont(undefined, 'normal');
+  const terms = [
+    '1. Bu form, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereği düzenlenmiştir.',
+    '2. Hizmet bedeli ön ödeme olarak tahsil edilmektedir.',
+    '3. Hizmet süresi paket tipine göre değişmektedir.',
+    '4. Cayma hakkı 14 gün olup, hizmetin ifasına başlanması durumunda geçersizdir.',
+    '5. Tüm iletişim elektronik ortamda gerçekleştirilecektir.'
   ];
   
-  let infoYPos = yPosition + 30;
-  customerInfo.forEach((info) => {
-    if (info) {
-      doc.text(info, margin + 5, infoYPos);
-      infoYPos += 8;
-    }
+  terms.forEach(term => {
+    doc.text(term, 20, yPos, { maxWidth: 170 });
+    yPos += 10;
   });
   
-  yPosition += 90;
-  
-  // Package info section with blue background box
-  doc.setFillColor(173, 216, 230); // Light blue
-  doc.rect(margin, yPosition, contentWidth, 50, 'F');
-  
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('PAKET BILGILERI:', margin + 5, yPosition + 15);
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
-  
-  const packageInfo = [
-    `Secilen Paket: ${packageData.name || 'Belirtilmemis'}`,
-    `Fiyat: ${packageData.price ? packageData.price.toLocaleString('tr-TR') : '0'} TL`,
-    `Odeme Yontemi: ${paymentMethod === 'credit_card' ? 'Kredi Karti' : 'Banka Havalesi/EFT'}`
-  ];
-  
-  let packageYPos = yPosition + 30;
-  packageInfo.forEach((info) => {
-    doc.text(info, margin + 5, packageYPos);
-    packageYPos += 8;
-  });
-  
-  yPosition += 60;
-  
-  // Add detailed pre-information form content with the new contract
-  const preInfoContent = `
-DOKTORUM OL UYELIK SOZLESMESI
-
-1.1 Bu Sozlesme geregi, Hizmet Alan, Uyelik hizmetleri dahilinde Doktorum Ol tarafindan sunulan hizmetleri, talep ettigi sekilde almayi kabul eder ve beyan eder. Doktorum Ol, bu Sozlesme cercevesinde Hizmet Alan'a satin aldigi abonelikte bulunan hizmetleri sunmayi taahhut eder.
-
-2. TARAFLAR
-Bu Sozlesme cercevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak adlandirilacaktir.
-
-3. AMAC VE KONU
-
-Bu sozlesmenin temel amaci, Doktorum Ol'un Premium Uyelik hizmetlerinden faydalanmak isteyen kisi adina Doktorum Ol tarafindan www.doktorumol.com.tr alan adindaki web sitesinde bir profil olusturulmasidir.
-
-Musterinin Hizmet Aldigi Paket Icerigi:
-- Detayli profil olusturma ve yonetimi
-- Online randevu sistemi entegrasyonu  
-- Video ve makale yayinlama imkani
-- Hasta takip sistemi erisimi
-- SEO optimizasyonu ve dijital pazarlama destegi
-
-Tarih: ${currentDate}
-IP Adresi: ${clientIP}
-`;
-  
-  const lines = doc.splitTextToSize(preInfoContent, contentWidth);
-  
-  lines.forEach((line: string) => {
-    if (yPosition > 270) {
-      doc.addPage();
-      yPosition = 30;
-    }
-    doc.text(line, margin, yPosition);
-    yPosition += 6;
-  });
+  yPos += 10;
+  doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
+  yPos += 5;
+  doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
   
   return doc;
 }
 
-function generateDistanceSalesPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  // Set font for better Turkish character support
-  doc.setFont('helvetica');
-  
-  const pageWidth = 210;
-  const margin = 20;
-  const contentWidth = pageWidth - 2 * margin;
-  let yPosition = 30;
+function generateDistanceSalesPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string): jsPDF {
+  const doc = new jsPDF();
   
   // Header
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Mesafeli Satis Sozlesmesi', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 30;
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 105, 20, { align: 'center' });
   
-  // Enlightenment text
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('KISISEL VERILERE ILISKIN AYDINLATMA METNI', margin, yPosition);
-  yPosition += 15;
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
   
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
+  let yPos = 40;
   
-  const enlightenmentText = `Doktorumol.com.tr ("doktorumol" veya "Sirket") olarak, Isbu Aydinlatma Metni ile, Kisisel Verilerin Korunmasi Kanunu ("Kanun") ve Aydinlatma Yukunlulugunun Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkinda Teblig kapsaminda aydinlatma yukunlulugunun yerine getirilmesi amaclanmaktadir.
-
-Bu kapsamda bilgi vermekle yukumlu oldugumuz konular asagidaki gibidir:
-
-1. Veri sorumlusunun ve varsa temsilcisinin kimligi
-
-Veri sorumlusu; doktorumol.com.tr'dir.
-
-2. Kisisel verilerin hangi amacla islenecegi
-
-Ad, soyadi, telefon numarasi, e-posta adresi, adres bilgileri, odeme araci bilgileri ve bunlarla sinirli olmamak uzere varsa internet sitesi veya cagri merkezi araciligiyla iletmis oldugunuz genel ve ozel nitelikli kategorilerdeki kisisel verileriniz, internet sitesinde uyeliginizin olusturulmasi, Doktorumol uyeligi sebebiyle aldiginiz hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletisime gecilmesi, musteri iliskilerinde saglikli ve uzun sureli etkilesim kurulmasi, onay vermeniz halinde tarafınıza ticari elektronik ileti gonderilmesi, talep ve sikayetlerinizin takibi ile ilerde olusabilecek uyusmazlik ve sorunlarin cozulmesi ve mevzuattan kaynaklanan zamanaşımı suresi dogrultusunda bu kisisel verilerinizin Doktorumol tarafindan saklanmasi amaci ile islenmektedir.
-
-Ayrica, internet sitemizi ziyaretiniz ve kullanımınız sirasinda internet sayfasi sunucusu tarafından sabit surucu iletilen kucuk metin dosyalari ("Cerezler") araciligiyla elde edilen kullanici tarayici, IP adresi, internet baglantiniz, site`;
+  // Contract parties
+  doc.setFont(undefined, 'bold');
+  doc.text('TARAFLAR:', 20, yPos);
+  yPos += 10;
   
-  const enlightenmentLines = doc.splitTextToSize(enlightenmentText, contentWidth);
+  doc.setFont(undefined, 'normal');
+  doc.text('SATICI:', 20, yPos);
+  yPos += 5;
+  doc.text('SELAM WEB YAPIM MERKEZİ', 30, yPos);
+  yPos += 5;
+  doc.text('Yenişehir, Atatürk Cd. No:621/1, 34912 Pendik/İstanbul', 30, yPos);
+  yPos += 5;
+  doc.text('Tel: 0 216 706 06 11 | E-posta: info@doktorumol.com.tr', 30, yPos);
+  yPos += 10;
   
-  enlightenmentLines.forEach((line: string) => {
-    if (yPosition > 270) {
-      doc.addPage();
-      yPosition = 30;
-    }
-    doc.text(line, margin, yPosition);
-    yPosition += 6;
-  });
-  
-  if (yPosition > 200) {
-    doc.addPage();
-    yPosition = 30;
+  doc.text('ALICI:', 20, yPos);
+  yPos += 5;
+  doc.text(`${customerData.name} ${customerData.surname}`, 30, yPos);
+  yPos += 5;
+  doc.text(`E-posta: ${customerData.email}`, 30, yPos);
+  yPos += 5;
+  if (customerData.phone) {
+    doc.text(`Telefon: ${customerData.phone}`, 30, yPos);
+    yPos += 5;
   }
+  yPos += 10;
   
-  yPosition += 15;
+  // Contract subject
+  doc.setFont(undefined, 'bold');
+  doc.text('SÖZLEŞMENİN KONUSU:', 20, yPos);
+  yPos += 10;
   
-  // Customer info section
-  doc.setFillColor(173, 216, 230); // Light blue
-  doc.rect(margin, yPosition, contentWidth, 80, 'F');
+  doc.setFont(undefined, 'normal');
+  doc.text(`Hizmet: ${packageData.name}`, 20, yPos);
+  yPos += 5;
+  doc.text(`Bedel: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
+  yPos += 5;
+  doc.text('Ödeme Şekli: Banka Havalesi/EFT', 20, yPos);
+  yPos += 15;
   
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('MUSTERI BILGILERI:', margin + 5, yPosition + 15);
+  // General terms
+  doc.setFont(undefined, 'bold');
+  doc.text('GENEL HÜKÜMLER:', 20, yPos);
+  yPos += 10;
   
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
-  
-  const customerInfo = [
-    `Musteri Adi: ${customerData.name || ''} ${customerData.surname || ''}`,
-    `E-posta: ${customerData.email || 'Belirtilmemis'}`,
-    customerData.phone ? `Telefon: ${customerData.phone}` : 'Telefon: Belirtilmemis',
-    customerData.tcNo ? `TC Kimlik No: ${customerData.tcNo}` : 'TC Kimlik No: Belirtilmemis',
-    customerData.address ? `Adres: ${customerData.address}, ${customerData.city || ''}` : 'Adres: Belirtilmemis',
-    customerData.city ? `Sehir: ${customerData.city}` : '',
-    customerType === 'company' ? 'Musteri Tipi: Kurumsal' : 'Musteri Tipi: Bireysel'
+  doc.setFont(undefined, 'normal');
+  const contractTerms = [
+    '1. Bu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında düzenlenmiştir.',
+    '2. Hizmet bedeli peşin olarak tahsil edilir.',
+    '3. Hizmet süresi seçilen pakete göre belirlenir.',
+    '4. Taraflar bu sözleşmeyi kabul etmiş sayılır.',
+    '5. Uyuşmazlıklar İstanbul mahkemelerinde çözülür.'
   ];
   
-  let infoYPos = yPosition + 30;
-  customerInfo.forEach((info) => {
-    if (info) {
-      doc.text(info, margin + 5, infoYPos);
-      infoYPos += 8;
-    }
+  contractTerms.forEach(term => {
+    doc.text(term, 20, yPos, { maxWidth: 170 });
+    yPos += 8;
   });
   
-  yPosition += 90;
-  
-  // Package info section
-  doc.setFillColor(173, 216, 230); // Light blue
-  doc.rect(margin, yPosition, contentWidth, 50, 'F');
-  
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('PAKET BILGILERI:', margin + 5, yPosition + 15);
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
-  
-  const packageInfo = [
-    `Secilen Paket: ${packageData.name || 'Belirtilmemis'}`,
-    `Fiyat: ${packageData.price ? packageData.price.toLocaleString('tr-TR') : '0'} TL`,
-    `Odeme Yontemi: ${paymentMethod === 'credit_card' ? 'Kredi Karti' : 'Banka Havalesi/EFT'}`
-  ];
-  
-  let packageYPos = yPosition + 30;
-  packageInfo.forEach((info) => {
-    doc.text(info, margin + 5, packageYPos);
-    packageYPos += 8;
-  });
-  
-  yPosition += 70;
-  
-  // Footer
-  const currentDate = new Date().toLocaleDateString('tr-TR');
-  doc.text(`Tarih: ${currentDate}`, margin, yPosition);
-  yPosition += 8;
-  doc.text(`IP Adresi: ${clientIP}`, margin, yPosition);
+  yPos += 15;
+  doc.text(`Sözleşme Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
+  yPos += 5;
+  doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
   
   return doc;
 }
 
 function createOrderCompletionEmailTemplate(customerData: CustomerData, packageData: PackageData, paymentMethod: string): string {
   return `
-    <!DOCTYPE html>
-    <html lang="tr">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Siparişiniz Tamamlandı</title>
-    </head>
-    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc;">
-      <div style="max-width: 650px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
-        
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%); padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
-          <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255, 255, 255, 0.1); border-radius: 50%;"></div>
-          <div style="position: absolute; bottom: -30px; left: -30px; width: 60px; height: 60px; background: rgba(255, 255, 255, 0.1); border-radius: 50%;"></div>
-          <div style="position: relative; z-index: 2;">
-            <div style="background: rgba(255, 255, 255, 0.2); display: inline-block; padding: 15px; border-radius: 50%; margin-bottom: 20px;">
-              <div style="color: white; font-size: 32px;">🎉</div>
-            </div>
-            <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Siparişiniz Tamamlandı!</h1>
-            <p style="margin: 15px 0 0 0; font-size: 18px; color: rgba(255, 255, 255, 0.95); font-weight: 300;">Doktorum Ol Randevu Sitesi</p>
-          </div>
-        </div>
-        
-        <!-- Content -->
-        <div style="padding: 40px 35px; line-height: 1.7;">
-          
-          <!-- Welcome Message -->
-          <div style="text-align: center; margin-bottom: 35px;">
-            <h2 style="color: #1e293b; font-size: 24px; margin: 0 0 10px 0; font-weight: 600;">
-              Hoş geldiniz, ${customerData.name} ${customerData.surname}!
-            </h2>
-            <p style="font-size: 16px; color: #64748b; margin: 0; font-weight: 300;">
-              Doktorum Ol ailesine katıldığınız için teşekkür ederiz.
-            </p>
-          </div>
-          
-          <!-- Package Details -->
-          <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; margin: 25px 0; position: relative; overflow: hidden;">
-            <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: linear-gradient(45deg, #3b82f6, #06b6d4); opacity: 0.1; border-radius: 50%;"></div>
-            <div style="position: relative; z-index: 2;">
-              <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px;">📦</div>
-                <h3 style="color: #1e293b; margin: 0; font-size: 20px; font-weight: 600;">Paket Bilgileriniz</h3>
-              </div>
-              <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <div style="display: grid; gap: 12px;">
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
-                    <span style="color: #64748b; font-weight: 500;">Seçilen Paket:</span>
-                    <span style="color: #1e293b; font-weight: 600;">${packageData.name}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
-                    <span style="color: #64748b; font-weight: 500;">Fiyat:</span>
-                    <span style="color: #059669; font-weight: 700; font-size: 18px;">${packageData.price.toLocaleString('tr-TR')} ₺</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                    <span style="color: #64748b; font-weight: 500;">Ödeme Yöntemi:</span>
-                    <span style="color: #1e293b; font-weight: 600;">Banka Havalesi/EFT</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Next Steps -->
-          <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #f59e0b; border-radius: 16px; padding: 30px; margin: 25px 0; position: relative;">
-            <div style="display: flex; align-items: center; margin-bottom: 20px;">
-              <div style="background: #f59e0b; color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px;">🚀</div>
-              <h3 style="color: #92400e; margin: 0; font-size: 20px; font-weight: 600;">Sonraki Adımlar</h3>
-            </div>
-            <div style="color: #92400e;">
-              <div style="display: flex; align-items: start; margin-bottom: 15px;">
-                <div style="background: #f59e0b; color: white; min-width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 12px; font-weight: bold; margin-top: 2px;">1</div>
-                <span style="font-weight: 500;">Ödeme işleminizi banka havalesi ile gerçekleştiriniz</span>
-              </div>
-              <div style="display: flex; align-items: start; margin-bottom: 15px;">
-                <div style="background: #f59e0b; color: white; min-width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 12px; font-weight: bold; margin-top: 2px;">2</div>
-                <span style="font-weight: 500;">Ödeme onayı sonrası 24 saat içinde hizmetiniz aktif edilecektir</span>
-              </div>
-              <div style="display: flex; align-items: start;">
-                <div style="background: #f59e0b; color: white; min-width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 12px; font-weight: bold; margin-top: 2px;">3</div>
-                <span style="font-weight: 500;">Profil oluşturma sürecinde size yardımcı olacağız</span>
-              </div>
-            </div>
-          </div>
-          
-          
-        </div>
-        
-        <!-- Footer -->
-        <div style="background: #f8fafc; padding: 35px; text-align: center; border-top: 1px solid #e2e8f0;">
-          <div style="margin-bottom: 20px;">
-            <h4 style="color: #1e293b; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">Doktorum Ol</h4>
-            <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
-              <div style="margin-bottom: 8px;">
-                <span style="font-weight: 600;">📍</span> Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul
-              </div>
-              <div style="margin-bottom: 8px;">
-                <span style="font-weight: 600;">📞</span> 0 216 706 06 11
-              </div>
-              <div>
-                <span style="font-weight: 600;">✉️</span> info@doktorumol.com.tr
-              </div>
-            </div>
-          </div>
-          
-          <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; color: #94a3b8; font-size: 12px;">
-            <p style="margin: 0;">Bu e-posta otomatik olarak gönderilmiştir.</p>
-            <p style="margin: 5px 0 0 0;">© 2025 Doktorum Ol - Tüm hakları saklıdır.</p>
-          </div>
-        </div>
-        
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+      <div style="background: linear-gradient(135deg, #0369a1, #0284c7); padding: 30px; text-align: center; color: white;">
+        <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Siparişiniz Tamamlandı!</h1>
+        <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Doktorum Ol - Profesyonel Doktor Platformu</p>
       </div>
-    </body>
-    </html>
+      
+      <div style="padding: 30px; line-height: 1.6; color: #333333;">
+        <p style="font-size: 16px; margin-bottom: 20px;">
+          Sayın <strong>${customerData.name} ${customerData.surname}</strong>,
+        </p>
+        
+        <p style="font-size: 14px; color: #666666; margin-bottom: 25px;">
+          Siparişiniz başarıyla tamamlanmıştır. Aşağıda sipariş detaylarınızı bulabilirsiniz:
+        </p>
+        
+        <div style="background-color: #f8fafc; border-left: 4px solid #0369a1; padding: 20px; margin: 20px 0;">
+          <h3 style="color: #0369a1; margin-top: 0;">PAKET BİLGİLERİ:</h3>
+          <p><strong>Seçilen Paket:</strong> ${packageData.name}</p>
+          <p><strong>Fiyat:</strong> ${packageData.price.toLocaleString('tr-TR')} ₺</p>
+          <p><strong>Ödeme Yöntemi:</strong> Banka Havalesi/EFT</p>
+        </div>
+        
+        <div style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #92400e; font-size: 14px;">
+            <strong>📎 Ekli Belgeler:</strong> Bu e-posta ile birlikte ön bilgilendirme formu ve mesafeli satış sözleşmesi gönderilmiştir. 
+            Lütfen bu belgeleri saklayınız.
+          </p>
+        </div>
+        
+        <div style="background-color: #f0f9ff; border: 1px solid #0369a1; border-radius: 6px; padding: 15px; margin: 20px 0;">
+          <h4 style="color: #0369a1; margin-top: 0;">Sonraki Adımlar:</h4>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>Ödeme işleminizi banka havalesi ile gerçekleştiriniz</li>
+            <li>Ödeme onayı sonrası 24 saat içinde hizmetiniz aktif edilecektir</li>
+            <li>Profil oluşturma sürecinde size yardımcı olacağız</li>
+          </ul>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+        
+        <div style="text-align: center; color: #666666; font-size: 12px;">
+          <p>Bu e-posta otomatik olarak gönderilmiştir.</p>
+          <p>
+            <strong>Doktorum Ol</strong><br>
+            📍 Yenişehir, Atatürk Cd. No:621/1, 34912 Pendik/İstanbul<br>
+            📞 0 216 706 06 11 | ✉️ info@doktorumol.com.tr
+          </p>
+        </div>
+      </div>
+    </div>
   `;
 }

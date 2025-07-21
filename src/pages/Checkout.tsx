@@ -16,7 +16,6 @@ import ContractDialog from "@/components/ContractDialog";
 import BankTransferInfo from "@/components/BankTransferInfo";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { supabase } from "@/integrations/supabase/client";
-import jsPDF from "jspdf";
 
 const packages = {
   basic: {
@@ -302,283 +301,9 @@ const Checkout = () => {
     navigate("/odeme-basarili");
   };
 
-  const generatePreInfoPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
-    const doc = new jsPDF();
-    doc.addFont('Arial', 'Arial', 'normal');
-    doc.setFont('Arial');
-    
-    const pageWidth = doc.internal.pageSize.width;
-    const margin = 20;
-    const contentWidth = pageWidth - 2 * margin;
-    let yPosition = 30;
-    
-    // Header
-    doc.setFontSize(18);
-    doc.setFont('Arial', 'bold');
-    doc.text('ÖN BİLGİLENDİRME FORMU', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 20;
-    
-    // Date and IP info
-    const currentDate = new Date().toLocaleDateString('tr-TR');
-    doc.setFontSize(12);
-    doc.setFont('Arial', 'normal');
-    yPosition += 10;
-    
-    // Customer info section with blue background box
-    doc.setFillColor(173, 216, 230); // Light blue
-    doc.rect(margin, yPosition, contentWidth, 80, 'F');
-    
-    doc.setFont('Arial', 'bold');
-    doc.setFontSize(14);
-    doc.text('MÜŞTERİ BİLGİLERİ:', margin + 5, yPosition + 15);
-    
-    doc.setFont('Arial', 'normal');
-    doc.setFontSize(12);
-    
-    const customerInfo = [
-      `Müşteri Adı: ${customerData.name} ${customerData.surname}`,
-      `E-posta: ${customerData.email}`,
-      customerData.phone ? `Telefon: ${customerData.phone}` : 'Telefon: Belirtilmemiş',
-      customerData.tcNo ? `TC Kimlik No: ${customerData.tcNo}` : 'TC Kimlik No: Belirtilmemiş',
-      customerData.address ? `Adres: ${customerData.address}, ${customerData.city}` : 'Adres: Belirtilmemiş',
-      customerData.city ? `Şehir: ${customerData.city}` : '',
-      customerType === 'company' ? 'Müşteri Tipi: Kurumsal' : 'Müşteri Tipi: Bireysel'
-    ];
-    
-    let infoYPos = yPosition + 30;
-    customerInfo.forEach((info) => {
-      if (info) {
-        doc.text(info, margin + 5, infoYPos);
-        infoYPos += 8;
-      }
-    });
-    
-    yPosition += 90;
-    
-    // Package info section with blue background box
-    doc.setFillColor(173, 216, 230); // Light blue
-    doc.rect(margin, yPosition, contentWidth, 50, 'F');
-    
-    doc.setFont('Arial', 'bold');
-    doc.setFontSize(14);
-    doc.text('PAKET BİLGİLERİ:', margin + 5, yPosition + 15);
-    
-    doc.setFont('Arial', 'normal');
-    doc.setFontSize(12);
-    
-    const packageInfo = [
-      `Seçilen Paket: ${packageData.name}`,
-      `Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`,
-      `Ödeme Yöntemi: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}`
-    ];
-    
-    let packageYPos = yPosition + 30;
-    packageInfo.forEach((info) => {
-      doc.text(info, margin + 5, packageYPos);
-      packageYPos += 8;
-    });
-    
-    yPosition += 60;
-    
-    // Add detailed pre-information form content
-    const preInfoContent = `
-DOKTORUM OL ÜYELİK SÖZLEŞMESİ
-
-1.1 Bu Sözleşme gereği, Hizmet Alan, Üyelik hizmetleri dahilinde Doktorum Ol tarafından sunulan hizmetleri, talep ettiği şekilde almayı kabul eder ve beyan eder. Doktorum Ol, bu Sözleşme çerçevesinde Hizmet Alan'a satın aldığı abonelikte bulunan hizmetleri sunmayı taahhüt eder.
-
-2. TARAFLAR
-Bu Sözleşme çerçevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak adlandırılacaktır.
-
-3. AMAÇ VE KONU
-
-Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden faydalanmak isteyen kişi adına Doktorum Ol tarafından www.doktorumol.com.tr alan adındaki web sitesinde bir profil oluşturulmasıdır.
-
-Müşterinin Hizmet Aldığı Paket İçeriği:
-- Detaylı profil oluşturma ve yönetimi
-- Online randevu sistemi entegrasyonu  
-- Video ve makale yayınlama imkanı
-- Hasta takip sistemi erişimi
-- SEO optimizasyonu ve dijital pazarlama desteği
-
-Tarih: ${currentDate}
-IP Adresi: ${clientIP}
-`;
-    
-    const lines = doc.splitTextToSize(preInfoContent, contentWidth);
-    
-    lines.forEach((line: string) => {
-      if (yPosition > 270) {
-        doc.addPage();
-        yPosition = 30;
-      }
-      doc.text(line, margin, yPosition);
-      yPosition += 6;
-    });
-    
-    return doc;
-  };
-
-  const generateDistanceSalesPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
-    const doc = new jsPDF();
-    doc.addFont('Arial', 'Arial', 'normal');
-    doc.setFont('Arial');
-    
-    const pageWidth = doc.internal.pageSize.width;
-    const margin = 20;
-    const contentWidth = pageWidth - 2 * margin;
-    let yPosition = 30;
-    
-    // Header
-    doc.setFontSize(18);
-    doc.setFont('Arial', 'bold');
-    doc.text('Mesafeli Satış Sözleşmesi', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 30;
-    
-    // Enlightenment text
-    doc.setFont('Arial', 'bold');
-    doc.setFontSize(14);
-    doc.text('KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ', margin, yPosition);
-    yPosition += 15;
-    
-    doc.setFont('Arial', 'normal');
-    doc.setFontSize(12);
-    
-    const enlightenmentText = `Doktorumol.com.tr ("doktorumol" veya "Şirket") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
-
-Bu kapsamda bilgi vermekle yükümlü olduğumuz konular aşağıdaki gibidir:
-
-1. Veri sorumlusunun ve varsa temsilcisinin kimliği
-
-Veri sorumlusu; doktorumol.com.tr'dir.
-
-2. Kişisel verilerin hangi amaçla işleneceği
-
-Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz genel ve özel nitelikli kategorilerdeki kişisel verileriniz, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim kurulması, onay vermeniz halinde tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda bu kişisel verilerinizin Doktorumol tarafından saklanması amacı ile işlenmektedir.
-
-Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet sayfası sunucusu tarafından sabit sürücünüze iletilen küçük metin dosyaları ("Çerezler") aracılığıyla elde edilen kullanıcı tarayıcı, IP adresi, internet bağlantınız, site`;
-    
-    const enlightenmentLines = doc.splitTextToSize(enlightenmentText, contentWidth);
-    
-    enlightenmentLines.forEach((line: string) => {
-      if (yPosition > 270) {
-        doc.addPage();
-        yPosition = 30;
-      }
-      doc.text(line, margin, yPosition);
-      yPosition += 6;
-    });
-    
-    if (yPosition > 200) {
-      doc.addPage();
-      yPosition = 30;
-    }
-    
-    yPosition += 15;
-    
-    // Customer info section
-    doc.setFillColor(173, 216, 230); // Light blue
-    doc.rect(margin, yPosition, contentWidth, 80, 'F');
-    
-    doc.setFont('Arial', 'bold');
-    doc.setFontSize(14);
-    doc.text('MÜŞTERİ BİLGİLERİ:', margin + 5, yPosition + 15);
-    
-    doc.setFont('Arial', 'normal');
-    doc.setFontSize(12);
-    
-    const customerInfo = [
-      `Müşteri Adı: ${customerData.name} ${customerData.surname}`,
-      `E-posta: ${customerData.email}`,
-      customerData.phone ? `Telefon: ${customerData.phone}` : 'Telefon: Belirtilmemiş',
-      customerData.tcNo ? `TC Kimlik No: ${customerData.tcNo}` : 'TC Kimlik No: Belirtilmemiş',
-      customerData.address ? `Adres: ${customerData.address}, ${customerData.city}` : 'Adres: Belirtilmemiş',
-      customerData.city ? `Şehir: ${customerData.city}` : '',
-      customerType === 'company' ? 'Müşteri Tipi: Kurumsal' : 'Müşteri Tipi: Bireysel'
-    ];
-    
-    let infoYPos = yPosition + 30;
-    customerInfo.forEach((info) => {
-      if (info) {
-        doc.text(info, margin + 5, infoYPos);
-        infoYPos += 8;
-      }
-    });
-    
-    yPosition += 90;
-    
-    // Package info section
-    doc.setFillColor(173, 216, 230); // Light blue
-    doc.rect(margin, yPosition, contentWidth, 50, 'F');
-    
-    doc.setFont('Arial', 'bold');
-    doc.setFontSize(14);
-    doc.text('PAKET BİLGİLERİ:', margin + 5, yPosition + 15);
-    
-    doc.setFont('Arial', 'normal');
-    doc.setFontSize(12);
-    
-    const packageInfo = [
-      `Seçilen Paket: ${packageData.name}`,
-      `Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`,
-      `Ödeme Yöntemi: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}`
-    ];
-    
-    let packageYPos = yPosition + 30;
-    packageInfo.forEach((info) => {
-      doc.text(info, margin + 5, packageYPos);
-      packageYPos += 8;
-    });
-    
-    yPosition += 70;
-    
-    // Footer
-    const currentDate = new Date().toLocaleDateString('tr-TR');
-    doc.text(`Tarih: ${currentDate}`, margin, yPosition);
-    yPosition += 8;
-    doc.text(`IP Adresi: ${clientIP}`, margin, yPosition);
-    
-    return doc;
-  };
-
   const saveOrder = async (paymentMethod: string) => {
     try {
       setLoading(true);
-      
-      // Generate PDFs with current timestamp
-      const customerDataForPDF = {
-        name: formData.name,
-        surname: formData.surname,
-        email: formData.email,
-        phone: formData.phone,
-        tcNo: formData.tcNo,
-        address: formData.address,
-        city: formData.city,
-        customerType: customerType,
-        companyName: formData.companyName,
-        taxNo: formData.taxNo,
-        taxOffice: formData.taxOffice
-      };
-
-      const packageDataForPDF = {
-        name: selectedPackage.name,
-        price: selectedPackage.price,
-        originalPrice: selectedPackage.originalPrice || selectedPackage.price
-      };
-
-      // Get dynamic form content first
-      const { data: formContent } = await supabase
-        .from('form_contents')
-        .select('content')
-        .eq('form_type', 'pre_info')
-        .single();
-
-      // Generate PDFs that the customer is approving right now
-      const preInfoPDF = generatePreInfoPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP);
-      const distanceSalesPDF = generateDistanceSalesPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP);
-      
-      // Convert PDFs to base64 for storage
-      const preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
-      const distanceSalesBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
       
       const orderData = {
         customer_name: `${formData.name} ${formData.surname}`,
@@ -597,11 +322,7 @@ Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet s
         payment_method: paymentMethod,
         status: 'pending',
         is_first_order: true,
-        subscription_month: 1,
-        pre_info_pdf_content: preInfoBase64,
-        distance_sales_pdf_content: distanceSalesBase64,
-        contract_generated_at: new Date().toISOString(),
-        contract_ip_address: clientIP
+        subscription_month: 1
       };
 
       const { data, error } = await supabase
@@ -646,7 +367,6 @@ Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet s
         
         const { error: emailError } = await supabase.functions.invoke('send-contract-emails', {
           body: {
-            orderId: data.id,
             customerData: customerDataForEmail,
             packageData: packageDataForEmail,
             paymentMethod: paymentMethod,

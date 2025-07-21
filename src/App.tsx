@@ -24,7 +24,6 @@ import PhysiotherapistPackage from "./pages/PhysiotherapistPackage";
 import FamilyCounselorPackage from "./pages/FamilyCounselorPackage";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentError from "./pages/PaymentError";
 import Privacy from "./pages/Privacy";
 import DisclosureText from "./pages/DisclosureText";
 import DistanceSalesContract from "./pages/DistanceSalesContract";
@@ -52,7 +51,6 @@ import ReviewManagement from "./pages/admin/ReviewManagement";
 import PaymentManagement from "./pages/admin/PaymentManagement";
 import NewOrder from "./pages/admin/NewOrder";
 import OrderManagement from "./pages/admin/OrderManagement";
-import NewOrderPage from "./pages/admin/NewOrderPage";
 import Reports from "./pages/admin/Reports";
 import MapboxSettings from "./pages/admin/MapboxSettings";
 import SuccessStatistics from "./pages/admin/SuccessStatistics";
@@ -97,9 +95,7 @@ function App() {
               <Route path="/aile-danismani-paketi" element={<FamilyCounselorPackage />} />
               <Route path="/odeme/:packageType" element={<Checkout />} />
               <Route path="/odeme-sayfasi" element={<Checkout />} />
-          <Route path="/odeme-basarili" element={<PaymentSuccess />} />
-          <Route path="/tesekkurler" element={<PaymentSuccess />} />
-          <Route path="/odeme-hatasi" element={<PaymentError />} />
+              <Route path="/odeme-basarili" element={<PaymentSuccess />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
               <Route path="/aydinlatma-metni" element={<DisclosureText />} />
               <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesContract />} />
@@ -133,8 +129,7 @@ function App() {
               <Route path="/divan_paneli/reviews" element={<ReviewManagement />} />
               <Route path="/divan_paneli/payments" element={<PaymentManagement />} />
               <Route path="/divan_paneli/orders/new" element={<NewOrder />} />
-              <Route path="/divan_paneli/orders" element={<NewOrderPage />} />
-              <Route path="/divan_paneli/siparisler" element={<NewOrderPage />} />
+              <Route path="/divan_paneli/orders" element={<OrderManagement />} />
               <Route path="/divan_paneli/reports" element={<Reports />} />
               <Route path="/divan_paneli/mapbox" element={<MapboxSettings />} />
               <Route path="/divan_paneli/success-statistics" element={<SuccessStatistics />} />
