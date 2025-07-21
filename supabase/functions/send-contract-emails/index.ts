@@ -36,16 +36,65 @@ serve(async (req) => {
     const { customerData, packageData, paymentMethod, clientIP, orderId } = await req.json();
 
     console.log('Contract emails request received:', { 
-      customerEmail: customerData.email,
-      packageName: packageData.name,
+      customerEmail: customerData?.email,
+      packageName: packageData?.name,
       orderId: orderId 
     });
 
     let preInfoBase64, distanceSalesBase64;
+    let finalCustomerData = customerData;
+    let finalPackageData = packageData;
+    let finalPaymentMethod = paymentMethod;
+    let finalClientIP = clientIP;
 
     // Create Supabase client for database queries
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // If only orderId is provided, fetch all data from database
+    if (orderId && (!customerData || !packageData)) {
+      console.log('Fetching order data from database for order:', orderId);
+      
+      const orderResponse = await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${orderId}&select=*`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'apikey': supabaseServiceKey,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (orderResponse.ok) {
+        const orders = await orderResponse.json();
+        if (orders.length > 0) {
+          const order = orders[0];
+          
+          finalCustomerData = {
+            name: order.customer_name.split(' ')[0] || order.customer_name,
+            surname: order.customer_name.split(' ').slice(1).join(' ') || '',
+            email: order.customer_email,
+            phone: order.customer_phone,
+            tcNo: order.customer_tc_no,
+            address: order.customer_address,
+            city: order.customer_city,
+            customerType: order.customer_type,
+            companyName: order.company_name,
+            taxNo: order.company_tax_no,
+            taxOffice: order.company_tax_office
+          };
+          
+          finalPackageData = {
+            name: order.package_name,
+            price: order.amount,
+            originalPrice: order.amount
+          };
+          
+          finalPaymentMethod = order.payment_method || 'banka_havalesi';
+          finalClientIP = order.contract_ip_address || '127.0.0.1';
+          
+          console.log('Order data fetched successfully');
+        }
+      }
+    }
 
     // If orderId is provided, try to get PDFs from database first
     if (orderId) {
@@ -91,19 +140,19 @@ serve(async (req) => {
       }
       
       // Generate pre-info PDF
-      const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP, formContent);
+      const preInfoPDF = generatePreInfoPDF(finalCustomerData, finalPackageData, finalPaymentMethod, finalCustomerData.customerType, finalClientIP, formContent);
       preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
 
       // Generate distance sales PDF
-      const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP, formContent);
+      const distanceSalesPDF = generateDistanceSalesPDF(finalCustomerData, finalPackageData, finalPaymentMethod, finalCustomerData.customerType, finalClientIP, formContent);
       distanceSalesBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
     }
 
     // Send email with Brevo
     const emailResponse = await sendEmailWithBrevo(
-      customerData,
-      packageData,
-      paymentMethod,
+      finalCustomerData,
+      finalPackageData,
+      finalPaymentMethod,
       preInfoBase64,
       distanceSalesBase64
     );
@@ -207,7 +256,7 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   
   // Header - matching modal style
   doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('times', 'bold');
   doc.text('Ön Bilgilendirme Formu', 105, 25, { align: 'center' });
   
   // Blue box for contract info - like in modal
@@ -217,7 +266,7 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   
   // Contract creation details inside blue box
   doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('times', 'normal');
   doc.setTextColor(59, 130, 246); // Blue text
   doc.text('Sözleşme Oluşturulma Tarihi:', 20, 50);
   doc.text('Dijital Onaylama Tarihi:', 20, 58);
@@ -232,7 +281,7 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   
   // Main content header
   doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('times', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 20, yPos);
   yPos += 15;
@@ -243,12 +292,12 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   yPos += 10;
   
   doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('times', 'bold');
   doc.setTextColor(59, 130, 246);
   doc.text('MÜŞTERİ BİLGİLERİ:', 20, yPos);
   yPos += 8;
   
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('times', 'normal');
   doc.setTextColor(0, 0, 0);
   doc.text(`Müşteri Adı: ${customerData.name} ${customerData.surname}`, 20, yPos);
   yPos += 6;
@@ -276,12 +325,12 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   doc.rect(15, yPos, 180, 30);
   yPos += 10;
   
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('times', 'bold');
   doc.setTextColor(59, 130, 246);
   doc.text('PAKET BİLGİLERİ:', 20, yPos);
   yPos += 8;
   
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('times', 'normal');
   doc.setTextColor(0, 0, 0);
   doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos);
   yPos += 6;
@@ -304,7 +353,7 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
     
     const lines = plainText.split('\n').filter(line => line.trim() !== '');
     
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.setFontSize(10);
     
     lines.forEach((line, index) => {
@@ -315,9 +364,9 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
       
       // Format like numbered clauses
       if (line.match(/^\d+\./)) {
-        doc.setFont('helvetica', 'bold');
+        doc.setFont('times', 'bold');
         doc.text(line, 20, yPos, { maxWidth: 170 });
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('times', 'normal');
       } else {
         doc.text(line, 20, yPos, { maxWidth: 170 });
       }
@@ -333,7 +382,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   
   // Header - matching modal style
   doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('times', 'bold');
   doc.text('Mesafeli Satış Sözleşmesi', 105, 25, { align: 'center' });
   
   // Blue box for contract info - like in modal
@@ -343,7 +392,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   
   // Contract creation details inside blue box
   doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('times', 'normal');
   doc.setTextColor(59, 130, 246); // Blue text
   doc.text('Sözleşme Oluşturulma Tarihi:', 20, 50);
   doc.text('Dijital Onaylama Tarihi:', 20, 58);
@@ -358,7 +407,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   
   // Main content header
   doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('times', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 20, yPos);
   yPos += 15;
@@ -369,12 +418,12 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   yPos += 10;
   
   doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('times', 'bold');
   doc.setTextColor(59, 130, 246);
   doc.text('MÜŞTERİ BİLGİLERİ:', 20, yPos);
   yPos += 8;
   
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('times', 'normal');
   doc.setTextColor(0, 0, 0);
   doc.text(`Müşteri Adı: ${customerData.name} ${customerData.surname}`, 20, yPos);
   yPos += 6;
@@ -402,12 +451,12 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.rect(15, yPos, 180, 30);
   yPos += 10;
   
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('times', 'bold');
   doc.setTextColor(59, 130, 246);
   doc.text('PAKET BİLGİLERİ:', 20, yPos);
   yPos += 8;
   
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('times', 'normal');
   doc.setTextColor(0, 0, 0);
   doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos);
   yPos += 6;
@@ -418,7 +467,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   
   // Contract content
   if (formContent && formContent.trim()) {
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ KOŞULLARI:', 20, yPos);
     yPos += 10;
     
@@ -435,7 +484,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
     // Use first 15 meaningful lines for distance sales contract
     const lines = plainText.split('\n').filter(line => line.trim() !== '').slice(0, 15);
     
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.setFontSize(10);
     
     lines.forEach((line, index) => {
@@ -446,9 +495,9 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
       
       // Format like numbered clauses
       if (line.match(/^\d+\./)) {
-        doc.setFont('helvetica', 'bold');
+        doc.setFont('times', 'bold');
         doc.text(line, 20, yPos, { maxWidth: 170 });
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('times', 'normal');
       } else {
         doc.text(line, 20, yPos, { maxWidth: 170 });
       }
@@ -456,11 +505,11 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
     });
   } else {
     // Fallback content
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('times', 'bold');
     doc.text('GENEL HÜKÜMLER:', 20, yPos);
     yPos += 10;
     
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('times', 'normal');
     doc.setFontSize(10);
     const contractTerms = [
       '1. Bu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında düzenlenmiştir.',

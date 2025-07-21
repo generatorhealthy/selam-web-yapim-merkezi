@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, FileText, Send } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -182,6 +182,31 @@ const OrderManagement = () => {
         variant: "destructive",
       });
       console.error("Error generating orders:", error);
+    },
+  });
+
+  const sendContractEmailsMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const { data, error } = await supabase.functions.invoke('send-contract-emails', {
+        body: { orderId }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sözleşmeler Gönderildi",
+        description: "Sözleşme e-postaları başarıyla gönderildi",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Sözleşmeler gönderilirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error sending contract emails:", error);
     },
   });
 
@@ -440,16 +465,30 @@ const OrderManagement = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedOrder(order);
-                                setEditingOrder(order);
-                              }}
-                            >
-                              Düzenle
-                            </Button>
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setEditingOrder(order);
+                                }}
+                              >
+                                Düzenle
+                              </Button>
+                              {order.is_first_order && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => sendContractEmailsMutation.mutate(order.id)}
+                                  disabled={sendContractEmailsMutation.isPending}
+                                  className="flex items-center gap-1"
+                                >
+                                  <Send className="w-3 h-3" />
+                                  Sözleşme Gönder
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
