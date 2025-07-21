@@ -16,6 +16,7 @@ import ContractDialog from "@/components/ContractDialog";
 import BankTransferInfo from "@/components/BankTransferInfo";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
 
 const packages = {
   basic: {
@@ -301,9 +302,206 @@ const Checkout = () => {
     navigate("/odeme-basarili");
   };
 
+  const generatePreInfoPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text('ÖN BİLGİLENDİRME FORMU', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    
+    let yPos = 40;
+    
+    // Seller info
+    doc.setFont(undefined, 'bold');
+    doc.text('SATICI BİLGİLERİ:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    doc.text('Unvan: SELAM WEB YAPIM MERKEZİ', 20, yPos);
+    yPos += 5;
+    doc.text('Adres: Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 20, yPos);
+    yPos += 5;
+    doc.text('Telefon: 0 216 706 06 11', 20, yPos);
+    yPos += 5;
+    doc.text('E-posta: info@doktorumol.com.tr', 20, yPos);
+    yPos += 15;
+    
+    // Customer info
+    doc.setFont(undefined, 'bold');
+    doc.text('ALICI BİLGİLERİ:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    doc.text(`Ad Soyad: ${customerData.name} ${customerData.surname}`, 20, yPos);
+    yPos += 5;
+    doc.text(`E-posta: ${customerData.email}`, 20, yPos);
+    yPos += 5;
+    if (customerData.phone) {
+      doc.text(`Telefon: ${customerData.phone}`, 20, yPos);
+      yPos += 5;
+    }
+    if (customerData.address) {
+      doc.text(`Adres: ${customerData.address}`, 20, yPos);
+      yPos += 5;
+    }
+    yPos += 10;
+    
+    // Package info
+    doc.setFont(undefined, 'bold');
+    doc.text('PAKET BİLGİLERİ:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos);
+    yPos += 5;
+    doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
+    yPos += 5;
+    doc.text('Ödeme Yöntemi: Banka Havalesi/EFT', 20, yPos);
+    yPos += 15;
+    
+    // Terms
+    doc.setFont(undefined, 'bold');
+    doc.text('GENEL ŞARTLAR:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    const terms = [
+      '1. Bu form, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereği düzenlenmiştir.',
+      '2. Hizmet bedeli ön ödeme olarak tahsil edilmektedir.',
+      '3. Hizmet süresi paket tipine göre değişmektedir.',
+      '4. Cayma hakkı 14 gün olup, hizmetin ifasına başlanması durumunda geçersizdir.',
+      '5. Tüm iletişim elektronik ortamda gerçekleştirilecektir.'
+    ];
+    
+    terms.forEach(term => {
+      doc.text(term, 20, yPos, { maxWidth: 170 });
+      yPos += 10;
+    });
+    
+    yPos += 10;
+    doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
+    yPos += 5;
+    doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
+    
+    return doc;
+  };
+
+  const generateDistanceSalesPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    
+    let yPos = 40;
+    
+    // Contract parties
+    doc.setFont(undefined, 'bold');
+    doc.text('TARAFLAR:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    doc.text('SATICI:', 20, yPos);
+    yPos += 5;
+    doc.text('SELAM WEB YAPIM MERKEZİ', 30, yPos);
+    yPos += 5;
+    doc.text('Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 30, yPos);
+    yPos += 5;
+    doc.text('Tel: 0 216 706 06 11 | E-posta: info@doktorumol.com.tr', 30, yPos);
+    yPos += 10;
+    
+    doc.text('ALICI:', 20, yPos);
+    yPos += 5;
+    doc.text(`${customerData.name} ${customerData.surname}`, 30, yPos);
+    yPos += 5;
+    doc.text(`E-posta: ${customerData.email}`, 30, yPos);
+    yPos += 5;
+    if (customerData.phone) {
+      doc.text(`Telefon: ${customerData.phone}`, 30, yPos);
+      yPos += 5;
+    }
+    yPos += 10;
+    
+    // Contract subject
+    doc.setFont(undefined, 'bold');
+    doc.text('SÖZLEŞMENİN KONUSU:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    doc.text(`Hizmet: ${packageData.name}`, 20, yPos);
+    yPos += 5;
+    doc.text(`Bedel: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
+    yPos += 5;
+    doc.text('Ödeme Şekli: Banka Havalesi/EFT', 20, yPos);
+    yPos += 15;
+    
+    // General terms
+    doc.setFont(undefined, 'bold');
+    doc.text('GENEL HÜKÜMLER:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    const contractTerms = [
+      '1. Bu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında düzenlenmiştir.',
+      '2. Hizmet bedeli peşin olarak tahsil edilir.',
+      '3. Hizmet süresi seçilen pakete göre belirlenir.',
+      '4. Taraflar bu sözleşmeyi kabul etmiş sayılır.',
+      '5. Uyuşmazlıklar İstanbul mahkemelerinde çözülür.'
+    ];
+    
+    contractTerms.forEach(term => {
+      doc.text(term, 20, yPos, { maxWidth: 170 });
+      yPos += 8;
+    });
+    
+    yPos += 15;
+    doc.text(`Sözleşme Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
+    yPos += 5;
+    doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
+    
+    return doc;
+  };
+
   const saveOrder = async (paymentMethod: string) => {
     try {
       setLoading(true);
+      
+      // Generate PDFs with current timestamp
+      const customerDataForPDF = {
+        name: formData.name,
+        surname: formData.surname,
+        email: formData.email,
+        phone: formData.phone,
+        tcNo: formData.tcNo,
+        address: formData.address,
+        city: formData.city,
+        customerType: customerType,
+        companyName: formData.companyName,
+        taxNo: formData.taxNo,
+        taxOffice: formData.taxOffice
+      };
+
+      const packageDataForPDF = {
+        name: selectedPackage.name,
+        price: selectedPackage.price,
+        originalPrice: selectedPackage.originalPrice || selectedPackage.price
+      };
+
+      // Generate PDFs that the customer is approving right now
+      const preInfoPDF = generatePreInfoPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP);
+      const distanceSalesPDF = generateDistanceSalesPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP);
+      
+      // Convert PDFs to base64 for storage
+      const preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
+      const distanceSalesBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
       
       const orderData = {
         customer_name: `${formData.name} ${formData.surname}`,
@@ -322,7 +520,11 @@ const Checkout = () => {
         payment_method: paymentMethod,
         status: 'pending',
         is_first_order: true,
-        subscription_month: 1
+        subscription_month: 1,
+        pre_info_pdf_content: preInfoBase64,
+        distance_sales_pdf_content: distanceSalesBase64,
+        contract_generated_at: new Date().toISOString(),
+        contract_ip_address: clientIP
       };
 
       const { data, error } = await supabase

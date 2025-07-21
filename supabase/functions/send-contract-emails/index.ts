@@ -33,20 +33,54 @@ serve(async (req) => {
   }
 
   try {
-    const { customerData, packageData, paymentMethod, clientIP } = await req.json();
+    const { customerData, packageData, paymentMethod, clientIP, orderId } = await req.json();
 
     console.log('Contract emails request received:', { 
       customerEmail: customerData.email,
-      packageName: packageData.name 
+      packageName: packageData.name,
+      orderId: orderId 
     });
 
-    // Generate pre-info PDF
-    const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP);
-    const preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
+    let preInfoBase64, distanceSalesBase64;
 
-    // Generate distance sales PDF
-    const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP);
-    const distanceSalesBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
+    // If orderId is provided, try to get PDFs from database first
+    if (orderId) {
+      console.log('Fetching contract PDFs from database for order:', orderId);
+      
+      // Create a Supabase client for the database query
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      
+      const response = await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${orderId}&select=pre_info_pdf_content,distance_sales_pdf_content`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'apikey': supabaseServiceKey,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const orders = await response.json();
+        if (orders.length > 0 && orders[0].pre_info_pdf_content && orders[0].distance_sales_pdf_content) {
+          console.log('Using stored PDFs from database');
+          preInfoBase64 = orders[0].pre_info_pdf_content;
+          distanceSalesBase64 = orders[0].distance_sales_pdf_content;
+        }
+      }
+    }
+
+    // If no PDFs found in database, generate new ones (fallback)
+    if (!preInfoBase64 || !distanceSalesBase64) {
+      console.log('Generating new PDFs as fallback');
+      
+      // Generate pre-info PDF
+      const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP);
+      preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
+
+      // Generate distance sales PDF
+      const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP);
+      distanceSalesBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
+    }
 
     // Send email with Brevo
     const emailResponse = await sendEmailWithBrevo(
