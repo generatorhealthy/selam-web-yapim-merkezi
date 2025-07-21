@@ -738,8 +738,43 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(52, 152, 219);
-  doc.text('KISISEL VERILERE ILISKIN AYDINLATMA METNI', 105, yPosition, { align: 'center' });
+  doc.text('DOKTORUM OL UYELIK SOZLESMESI', 105, yPosition, { align: 'center' });
   yPosition += 20;
+
+  // Contract content - Full text exactly as provided
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+
+  const fullContractText = `1.1 Bu Sozlesme geregi, Hizmet Alan, Uyelik hizmetleri dahilinde Doktorum Ol tarafindan sunulan hizmetleri, talep ettigi sekilde almayi kabul eder ve beyan eder. Doktorum Ol, bu Sozlesme cercevesinde Hizmet Alan'a satin aldigi abonelikte bulunan hizmetleri sunmayi taahhut eder.
+
+2. TARAFLAR
+Bu Sozlesme cercevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak adlandirilacaktir.
+
+3. AMAC VE KONU
+Bu sozlesmenin temel amaci, Doktorum Ol'un Premium Uyelik hizmetlerinden faydalanmak isteyen kisi adina Doktorum Ol tarafindan www.doktorumol.com.tr alan adindaki web sitesinde bir profil olusturulmasidir. Premium Uyelik paketi kapsaminda sunulan hizmetler, bu sozlesme ile belirtilen sekilde Doktorum Ol tarafindan sunulacak ve karsiliginda Hizmet Alan kisinin bu sozlesmede belirtilen hizmet ucretini Doktorum Ol sitesine odemesi gerekmektedir. Bu sozlesme, taraflarin karsilikli hak ve yukumluluklerini duzenleyen bir anlasma olarak kabul edilir ve bu amac dogrultusunda yururluktedir.
+
+4. TANIMLAR
+Isbu Sozlesmedeki tanimlar asagidaki gibidir;
+Fikri Mulkiyet Doktorum Ol'un sahip oldugu veya kullanildigi veya islerinin yurutulmesi icin gerekli olan dunya capinda mevcut veya gelecekte mevcut olabilecek her turlu ticaret markasini, ticari unvani, hizmet markasini, patentleri, ticaret, faaliyet ve alan adlarini, URL'leri, tasarimlari, telif haklarini, spesifikasyonlari, yazilimlari, ifsa edilmemis ve gizli bilgi niteligindeki haklari (musteri listeleri, surecler, know-how, ticari sirlar ve buluslar gibi, patent edilebilir olsun veya olmasin), veya diger endustriyel veya fikri mulkiyet haklarini, lisanslari, markalari, patentleri, faydali modelleri ve endustriyel tasarim haklarini, ve bunlarla ilgili basvurulari, herhangi bir hukuki koruma altinda olan veya olmayan her turlu bulusu, gelistirmeyi, iyilestirmeyi, kesfi, know-how'i, telif hakkini, kavrami ve dusunceyi, her turlu ticari sirri, herhangi bir hukuki koruma altinda olan veya olmayan her turlu bilgisayar programini ve yazilimi (sanatsal, teknik ve tasarim dokumanlari, algoritmalar, kaynak kodlari, nesne kodlari, cron kodlari, veri ve veri tabanlari dahil), mevcut hukuka uygun olarak "eser sahibi" sifatiyla sahibi olunan her turlu eserin cogaltma, isleme, yayma, temsil etme, radyo, televizyon, mobil veya internet kanali ile veya diger araclarla yayinlama, kamuya sunma gibi her turlu mali haklari ve bunlara iliskin kullanma, yararlanma, devir ve takip haklari, manevi haklar ve telif haklari da dahil olmak uzere tum haklari ifade eder.
+"Hizmet", bu Sozlesme uyarinca Hizmet Alan'in talebine bagli olarak olusturulan uyelik paketi kapsaminda Hizmet Alan'a sunulan; (i) ayrintili profil, (ii) soru cevap uygulamasi, (iii) makale yayinlama, (iv) video yayinlama, (v) online randevu, (vi) kisiye ozel 850'li hat entegrasyonu, randevu yonetimi hizmetlerinin tamamini veya bir kismini ifade eder.
+"Premium Uyelik", bu Sozlesme kapsaminda Doktorum Ol'un sagladigi Hizmetler'den faydalanmak icin gereken ve Hizmet Alan'in dahil oldugu uyelik turunu ifade eder.
+"FSEK 5846", Fikir ve Sanat Eserleri Kanunu'nu ifade eder.
+"Web Sitesi", Hizmetler'in sunulacagi, Doktorum Ol Sitesine ait www.doktorumol.com.tr alan adli internet sitesini ifade eder.`;
+
+  // Split content into lines with proper width and page handling
+  const lines = doc.splitTextToSize(fullContractText, 170);
+  const pageHeight = 297;
+  const bottomMargin = 25;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (yPosition > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(lines[i], 20, yPosition);
+    yPosition += 4;
+  }
 
   // Contract content sections
   doc.setTextColor(0, 0, 0);
