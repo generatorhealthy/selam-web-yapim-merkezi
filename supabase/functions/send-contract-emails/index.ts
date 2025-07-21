@@ -269,7 +269,7 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('Doktorum Ol', 105, 25, { align: 'center' });
+  doc.text('Doktorum Ol Bilgi ve Teknoloji Hizmetleri Ltd. Sti.', 105, 25, { align: 'center' });
   
   // Company details
   doc.setFontSize(9);
@@ -507,7 +507,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('Doktorum Ol', 105, 25, { align: 'center' });
+  doc.text('Doktorum Ol Bilgi ve Teknoloji Hizmetleri Ltd. Sti.', 105, 25, { align: 'center' });
   
   // Company details
   doc.setFontSize(9);
@@ -548,7 +548,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   yPosition += 8;
   
   const sellerLines = [
-    'Unvan: SELAM WEB YAPIM MERKEZI',
+    'Unvan: Doktorum Ol Bilgi ve Teknoloji Hizmetleri Ltd. Sti.',
     'Adres: Kucukbakkalkoy Mahallesi Selvili Sokak No:4 Ic Kapi No: 20 Atasehir / Istanbul',
     'Telefon: 0 216 706 06 11',
     'E-posta: info@doktorumol.com.tr'
@@ -557,7 +557,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   sellerLines.forEach(line => {
     const wrappedLine = doc.splitTextToSize(line, 160);
     doc.text(wrappedLine, 25, yPosition);
-    yPosition += wrappedLine.length * 6 + 2;
+    yPosition += wrappedLine.length * 6 + 4;
   });
 
   yPosition += 10;
@@ -592,7 +592,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   buyerLines.forEach(line => {
     const wrappedLine = doc.splitTextToSize(line, 160);
     doc.text(wrappedLine, 25, yPosition);
-    yPosition += wrappedLine.length * 6 + 2;
+    yPosition += wrappedLine.length * 6 + 4;
   });
 
   yPosition += 10;
@@ -627,7 +627,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   subjectLines.forEach(line => {
     const wrappedLine = doc.splitTextToSize(line, 160);
     doc.text(wrappedLine, 25, yPosition);
-    yPosition += wrappedLine.length * 6 + 2;
+    yPosition += wrappedLine.length * 6 + 4;
   });
 
   yPosition += 15;
@@ -667,6 +667,69 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
     yPosition += wrappedTerm.length * 5 + 3;
   });
 
+  // Add Service Period Section first
+  doc.setFillColor(52, 152, 219);
+  doc.rect(20, yPosition, 170, 10, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('HIZMET SURESI:', 25, yPosition + 6);
+  yPosition += 15;
+
+  // White background for service period
+  doc.setFillColor(248, 249, 250);
+  doc.rect(20, yPosition, 170, 20, 'F');
+  doc.setDrawColor(52, 152, 219);
+  doc.rect(20, yPosition, 170, 20);
+
+  // Service period details
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  yPosition += 8;
+  
+  const servicePeriodText = 'Uyelik baslangic dijital onay tarihiyle birlikte 365 Gun ( 12 Ay ) Taahhutlu';
+  const wrappedServicePeriodText = doc.splitTextToSize(servicePeriodText, 160);
+  doc.text(wrappedServicePeriodText, 25, yPosition);
+
+  yPosition += 25;
+
+  // Add Package Content Section
+  doc.setFillColor(52, 152, 219);
+  doc.rect(20, yPosition, 170, 10, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PAKET ICERIGI:', 25, yPosition + 6);
+  yPosition += 15;
+
+  // White background for package content
+  doc.setFillColor(248, 249, 250);
+  doc.rect(20, yPosition, 170, 50, 'F');
+  doc.setDrawColor(52, 152, 219);
+  doc.rect(20, yPosition, 170, 50);
+
+  // Package content details
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  yPosition += 8;
+  
+  const packageContentItems = [
+    '• Arayan kisiye dogru hitap edilebilmesi',
+    '• Aramanin teyidi ve iletisim faaliyetlerinin yurutulmesi',
+    '• Gorusme talep edilen uzman icin randevu olusturulmasi',
+    '• Arayan kisinin uzmana yonlendirilmesi',
+    '• Talep ve sikayetlerin takibi',
+    '• Dogabilecek uyusmazliklarda delil olarak kullanilmasi amaclarıyla sinirli olarak islenmektedir'
+  ];
+
+  packageContentItems.forEach(item => {
+    const wrappedItem = doc.splitTextToSize(item, 160);
+    doc.text(wrappedItem, 25, yPosition);
+    yPosition += wrappedItem.length * 4 + 2;
+  });
+
   // Add new page for detailed contract content
   doc.addPage();
   yPosition = 30;
@@ -675,34 +738,47 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(52, 152, 219);
-  doc.text('DOKTORUM OL UYELIK SOZLESMESI', 105, yPosition, { align: 'center' });
+  doc.text('KISISEL VERILERE ILISKIN AYDINLATMA METNI', 105, yPosition, { align: 'center' });
   yPosition += 20;
 
   // Contract content sections
   doc.setTextColor(0, 0, 0);
   
+  // Main introduction
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  const introText = 'Doktorumol.com.tr ("doktorumol" veya "Sirket") olarak, Isbu Aydinlatma Metni ile, Kisisel Verilerin Korunmasi Kanunu ("Kanun") ve Aydinlatma Yukunlulugunun Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkinda Teblig kapsaminda aydinlatma yukunlulugunun yerine getirilmesi amaclanmaktadir.';
+  const introLines = doc.splitTextToSize(introText, 170);
+  doc.text(introLines, 20, yPosition);
+  yPosition += introLines.length * 4 + 10;
+
+  const contentText = 'Bu kapsamda bilgi vermekle yukumlu oldugumuz konular asagidaki gibidir:';
+  const contentLines = doc.splitTextToSize(contentText, 170);
+  doc.text(contentLines, 20, yPosition);
+  yPosition += contentLines.length * 4 + 15;
+
   // Section 1
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text('1. SOZLESMENIN KONUSU VE TARAFLAR', 20, yPosition);
-  yPosition += 10;
+  doc.text('1. Veri sorumlusunun ve varsa temsilcisinin kimligi', 20, yPosition);
+  yPosition += 8;
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  const section1Text = 'Bu Sozlesme geregi, Hizmet Alan, Uyelik hizmetleri dahilinde Doktorum Ol tarafindan sunulan hizmetleri, talep ettigi sekilde almayi kabul eder ve beyan eder. Doktorum Ol, bu Sozlesme cercevesinde Hizmet Alan\'a satin aldigi abonelikte bulunan hizmetleri sunmayi taahhut eder.';
+  const section1Text = 'Veri sorumlusu; doktorumol.com.tr\'dir.';
   const section1Lines = doc.splitTextToSize(section1Text, 170);
   doc.text(section1Lines, 20, yPosition);
   yPosition += section1Lines.length * 4 + 10;
 
   // Section 2
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text('2. HIZMET KAPSAMI VE AMAC', 20, yPosition);
-  yPosition += 10;
+  doc.text('2. Kisisel verilerin hangi amacla islenecegi', 20, yPosition);
+  yPosition += 8;
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  const section2Text = 'Bu sozlesmenin temel amaci, Doktorum Ol\'un Premium Uyelik hizmetlerinden faydalanmak isteyen kisi adina Doktorum Ol tarafindan www.doktorumol.com.tr alan adindaki web sitesinde bir profil olusturulmasidir. Premium Uyelik paketi kapsaminda sunulan hizmetler, bu sozlesme ile belirtilen sekilde Doktorum Ol tarafindan sunulacak ve karsiligi Hizmet Alan kisinin bu sozlesmede belirtilen hizmet ucretini Doktorum Ol sitesine odemesi gerekmektedir.';
+  const section2Text = 'Ad, soyadi, telefon numarasi, e-posta adresi, adres bilgileri, odeme araci bilgileri ve bunlarla sinirli olmamak uzere varsa internet sitesi veya cagri merkezi araciligiyla iletmis oldugumuz genel ve ozel nitelikli kategorilerdeki kisisel verileriniz, internet sitesinde uyeliginizin olusturulmasi, Doktorumol uyeligi sebebiyle aldiginiz hizmetlerin sunumu, alinan hizmet ile ilgili sizinle iletisime gecilmesi, musteri iliskilerinde saglikli ve uzun sureli etkilesim kurulmasi, onay vermeniz halinde tarafiniza ticari elektronik ileti gonderilmesi, talep ve sikayetlerinizin takibi ile birlikte Doktorumol tarafindan saklanmasi amaci ile islenmektedir.';
   const section2Lines = doc.splitTextToSize(section2Text, 170);
   const pageHeight = 297;
   const bottomMargin = 25;
@@ -713,6 +789,213 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
       yPosition = 20;
     }
     doc.text(section2Lines[i], 20, yPosition);
+    yPosition += 4;
+  }
+
+  yPosition += 10;
+
+  // Continue with additional sections...
+  const additionalText = 'Ayrica, internet sitemizi ziyaretiniz ve kullanim sirasinda internet sayfasi sunucusu tarafindkan sabit surucu icin iletilen kucuk metin dosyalari ("Cerezler") araciligiyla elde edilen kullanici tarayici, IP adresi, internet baglantiniz, site kullanlariniz hakkindaki bilgiler, bilgisayarinizar isletim sistemi ve benzeri kategorilerdeki kisisel verileriniz, internet sitesinin duzgun bir sekilde calisabilmesi, ziyaret edilebilmesi ve ozelliklerinden faydalanilmasi, internet sitesinde sayfalar arasinda bilgileri tasiyabilmek ve bilgileri tekrardan girmek zorundugunu ortadan kaldirmak amaclari ile islenmektedir.';
+  const additionalLines = doc.splitTextToSize(additionalText, 170);
+
+  for (let i = 0; i < additionalLines.length; i++) {
+    if (yPosition > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(additionalLines[i], 20, yPosition);
+    yPosition += 4;
+  }
+
+  yPosition += 10;
+
+  // Section 3
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('3. Sirket tarafindan islenen kisisel verilerin kimlere ve hangi amacla aktarilabilecegi', 20, yPosition);
+  yPosition += 8;
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  const section3Text = 'Kisisel verileriniz 2. maddede belirtilen amaclarin yerine getirilebilmesi icin Doktorumol hissedarlari, is ortaklari, hizmet aldigi sirketler ile yetkili kamu kurum ve kuruluslarina aktarilabilecektir.';
+  const section3Lines = doc.splitTextToSize(section3Text, 170);
+
+  for (let i = 0; i < section3Lines.length; i++) {
+    if (yPosition > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(section3Lines[i], 20, yPosition);
+    yPosition += 4;
+  }
+
+  yPosition += 10;
+
+  // Section 4
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('4. Kisisel veri toplamanin yontemi ve hukuki sebebi', 20, yPosition);
+  yPosition += 8;
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  const section4Text = 'Sirketimizin internet sitesi veya cagri merkezi araciligiyla, tamamen veya kismen otomatik yollarla elde edilen kisisel verileriniz, kanunda acikca ongurulmesi, Doktorumol ile aranizda kurulabilecek hukuki iliskinin devami icin kisisel verilerinizin islenmesinin gerekli olmasi, iletisim hakkinin tesisi, kullanilmasi veya korunmasi icin veri islemenin zorunlu olmasi ve acik rızaniz hukuki sebepleri ile toplanmaktadir.';
+  const section4Lines = doc.splitTextToSize(section4Text, 170);
+
+  for (let i = 0; i < section4Lines.length; i++) {
+    if (yPosition > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(section4Lines[i], 20, yPosition);
+    yPosition += 4;
+  }
+
+  yPosition += 10;
+
+  // Section 5
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('5. Kisisel verileriniz ile ilgili Kanun kapsamindaki haklariniz asagidaki sekildeedir:', 20, yPosition);
+  yPosition += 8;
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  
+  const rightsText = [
+    '(a) Kisisel verilerinizin islenip islenmedigini ogrenme,',
+    '(b) Kisisel verileriniz islenmisse buna iliskin bilgi talep etme,',
+    '(c) Kisisel verilerinizin islenmesinin amacini ve bunlarin amacina uygun kullanilip kullanilmadigini ogrenme,',
+    '(c) Yurt icinde veya yurt disinda kisisel verilerin aktarildigi ucuncu kisileri bilme,',
+    '(d) Kisisel verilerinizin eksik veya yanlis islenmis olmasi halinde bunlarin duzeltilmesini isteme,',
+    '(e) Kisisel verilerinizin islenmesini gerektiren sebeplerin ortadan kalkmasi halinde kisisel verilerinizin silinmesini veya yok edilmesini isteme,',
+    '(f) (d) ve (e) bentleri uyarinca yapilan islemlerin, kisisel verilerin aktarildigi ucuncu kisilere bildirilmesini isteme,',
+    '(g) İslenen verilerin munhasiran otomatik sistemler vasitasiyla analiz edilmesi suretiyle kisinin kendisi aleyhine bir sonucun ortaya cikmasina itiraz etme,',
+    '(g) Kisisel verilerin kanuna aykiri olarak islenmesi sebebiyle zarara ugramasi halinde zararin giderilmesini talep etme.'
+  ];
+
+  rightsText.forEach(right => {
+    const rightLines = doc.splitTextToSize(right, 170);
+    for (let i = 0; i < rightLines.length; i++) {
+      if (yPosition > pageHeight - bottomMargin) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      doc.text(rightLines[i], 20, yPosition);
+      yPosition += 4;
+    }
+    yPosition += 2;
+  });
+
+  yPosition += 10;
+
+  // Final section
+  const finalText = 'Bu haklarinizi yazili olarak veya guvensli elektronik imza, mobil imza, kayitli elektronik posta (KEP) adresi ya da Sirket\'in sisteminde kayitli bulunan elektronik posta adresini kullanmak suretiyle (Bu kapsamda info@doktorumol.com.tr e-posta adresi uzerinden Sirket\'e ulasabilirsiniz) veya basvuru amacina yonelik gelistirilmis bir yazilim ya da uygulama vasitasiyla Sirket\'e iletebilirsiniz.';
+  const finalLines = doc.splitTextToSize(finalText, 170);
+
+  for (let i = 0; i < finalLines.length; i++) {
+    if (yPosition > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(finalLines[i], 20, yPosition);
+    yPosition += 4;
+  }
+
+  yPosition += 10;
+
+  const closingText = 'Bilginize sunariz.';
+  doc.text(closingText, 20, yPosition);
+  yPosition += 15;
+
+  // Add new page for second section
+  if (yPosition > pageHeight - 80) {
+    doc.addPage();
+    yPosition = 30;
+  }
+
+  // Cagri Merkezi Aydinlatma Metni section
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(52, 152, 219);
+  doc.text('Cagri Merkezi Aydinlatma Metni', 105, yPosition, { align: 'center' });
+  yPosition += 20;
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+
+  const callCenterIntroText = 'Doktorumol.com.tr olarak, Isbu Aydinlatma Metni ile, Kisisel Verilerin Korunmasi Kanunu ("Kanun") ve Aydinlatma Yukunlulugunun Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkinda Teblig kapsaminda aydinlatma yukunlulugunun yerine getirilmesi amaclanmaktadir.';
+  const callCenterIntroLines = doc.splitTextToSize(callCenterIntroText, 170);
+  doc.text(callCenterIntroLines, 20, yPosition);
+  yPosition += callCenterIntroLines.length * 4 + 15;
+
+  const callCenterText = 'Doktoru mol; cagri merkezini arayanlarin paylasmis oldugu ad-soyad, iletisim bilgisi ve ses kayidina ait kisisel verileri;';
+  const callCenterTextLines = doc.splitTextToSize(callCenterText, 170);
+  doc.text(callCenterTextLines, 20, yPosition);
+  yPosition += callCenterTextLines.length * 4 + 10;
+
+  const purposes = [
+    '- Arayan kisiye dogru hitap edilebilmesi,',
+    '- Aramanin teyidi ve iletisim faaliyetlerinin yurutulmesi,',
+    '- Gorusme talep edilen uzman icin randevu olusturulmasi,',
+    '- Arayan kisinin uzmana yonlendirilmesi,',
+    '- Talep ve sikayetlerin takibi,',
+    '- Dogabilecek uyusmazliklarda delil olarak kullanilmasi amaclarıyla sinirli olarak islenmektedir.'
+  ];
+
+  purposes.forEach(purpose => {
+    const purposeLines = doc.splitTextToSize(purpose, 170);
+    for (let i = 0; i < purposeLines.length; i++) {
+      if (yPosition > pageHeight - bottomMargin) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      doc.text(purposeLines[i], 20, yPosition);
+      yPosition += 4;
+    }
+    yPosition += 3;
+  });
+
+  yPosition += 15;
+
+  const transferText = 'Kisisel verileriniz yukarida belirtilen amaclarin yerine getirilebilmesi icin Sirket\'in hissedarlari, is ortaklari, hizmet aldigi sirketler ile yetkili kamu kurum ve kurulutlarina ve randevu olusturma talebinde bulundugunuz ilgili uzmana aktarilabilecektir.';
+  const transferLines = doc.splitTextToSize(transferText, 170);
+
+  for (let i = 0; i < transferLines.length; i++) {
+    if (yPosition > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(transferLines[i], 20, yPosition);
+    yPosition += 4;
+  }
+
+  yPosition += 15;
+
+  const requestText = 'Kisisel saglik verilerinizi cagri merkezi ile gorusmeniz sirasinda paylasmamanizirica ederiz.Sirketimiz araciligiyla randevu olusturma talebiniz kapsaminda cagri merkezi araciligiyla edilen kisisel verileriniz, Sirket ile aranizda kurulabilecek hukuki iliskinin devami icin kisisel verilerinizin islenmesinin gerekli olmasi, randevu olusturulmasina iliskin hakkinin tesisi, kullanilmasi veya korunmasi icin veri islemenin zorunlu olmasi hukuki sebepleri ile telefon yoluyla otomatik olarak islenmektedir.';
+  const requestLines = doc.splitTextToSize(requestText, 170);
+
+  for (let i = 0; i < requestLines.length; i++) {
+    if (yPosition > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(requestLines[i], 20, yPosition);
+    yPosition += 4;
+  }
+
+  yPosition += 15;
+
+  const finalCallCenterText = 'Kanunun "İlgili kisinin haklarini duzenleyen" 11. maddesi kapsamindaki taleplerinizi, "Veri Sorumlusuna Basvuru Usul ve Esaslari Hakkinda Teblig"e gore Doktorumol.com.tr\'nin Sirket malline info@doktorumol.com.tr\'ye iletebilirsiniz.';
+  const finalCallCenterLines = doc.splitTextToSize(finalCallCenterText, 170);
+
+  for (let i = 0; i < finalCallCenterLines.length; i++) {
+    if (yPosition > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(finalCallCenterLines[i], 20, yPosition);
     yPosition += 4;
   }
 
