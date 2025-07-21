@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -161,57 +159,6 @@ const OrderManagement = () => {
     },
   });
 
-  const generateOrdersMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('generate-monthly-orders', {
-        body: { manual: true }
-      });
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Otomatik Siparişler Oluşturuldu",
-        description: `${data.details?.orders_created || 0} yeni sipariş oluşturuldu`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Hata",
-        description: "Otomatik siparişler oluşturulurken hata oluştu",
-        variant: "destructive",
-      });
-      console.error("Error generating orders:", error);
-    },
-  });
-
-  const sendContractEmailsMutation = useMutation({
-    mutationFn: async (orderId: string) => {
-      const { data, error } = await supabase.functions.invoke('send-contract-emails', {
-        body: { orderId }
-      });
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Sözleşmeler Gönderildi",
-        description: "Sözleşme e-postaları başarıyla gönderildi",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Hata",
-        description: "Sözleşmeler gönderilirken hata oluştu",
-        variant: "destructive",
-      });
-      console.error("Error sending contract emails:", error);
-    },
-  });
-
   // Toplu onay mutation
   const bulkApproveMutation = useMutation({
     mutationFn: async (orderIds: string[]) => {
@@ -329,7 +276,79 @@ const OrderManagement = () => {
       });
     }
   };
-  
+
+  const generateOrdersMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('generate-monthly-orders', {
+        body: { manual: true }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Otomatik Siparişler Oluşturuldu",
+        description: `${data.details?.orders_created || 0} yeni sipariş oluşturuldu`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Otomatik siparişler oluşturulurken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error generating orders:", error);
+    },
+  });
+
+  const sendContractEmailsMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const { data, error } = await supabase.functions.invoke('send-contract-emails', {
+        body: { orderId }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sözleşmeler Gönderildi",
+        description: "Sözleşme e-postaları başarıyla gönderildi",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Sözleşmeler gönderilirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error sending contract emails:", error);
+    },
+  });
+
+  const handleUpdateOrder = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: string) => {
+    if (editingOrder) {
+      setEditingOrder({ ...editingOrder, [field]: e.target.value });
+    }
+  };
+
+  const handleSaveOrder = () => {
+    if (editingOrder) {
+      updateOrderMutation.mutate(editingOrder);
+    }
+  };
+
+  const handleDeleteOrder = (id: string) => {
+    deleteOrderMutation.mutate(id);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingOrder(null);
+    setSelectedOrder(null);
+  };
+
   // Checkbox işlemleri
   const handleSelectOrder = (orderId: string, checked: boolean) => {
     if (checked) {
@@ -372,27 +391,6 @@ const OrderManagement = () => {
     if (confirm(`${selectedOrders.length} siparişi silmek istediğinizden emin misiniz?`)) {
       bulkDeleteMutation.mutate(selectedOrders);
     }
-  };
-
-  const handleUpdateOrder = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: string) => {
-    if (editingOrder) {
-      setEditingOrder({ ...editingOrder, [field]: e.target.value });
-    }
-  };
-
-  const handleSaveOrder = () => {
-    if (editingOrder) {
-      updateOrderMutation.mutate(editingOrder);
-    }
-  };
-
-  const handleDeleteOrder = (id: string) => {
-    deleteOrderMutation.mutate(id);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingOrder(null);
-    setSelectedOrder(null);
   };
 
   const getStatusIcon = (status: string) => {
@@ -579,7 +577,7 @@ const OrderManagement = () => {
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
                       <Checkbox
-                        checked={selectedOrders.length === filteredOrders.length}
+                        checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
                         onCheckedChange={handleSelectAll}
                       />
                       <span className="text-sm font-medium">
@@ -909,7 +907,6 @@ const OrderManagement = () => {
                   )}
                 </Button>
 
-                {/* Automatic Orders Table */}
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold mb-4">Otomatik Sipariş Listesi ({filteredAutomaticOrders?.length || 0})</h3>
                   {isAutomaticOrdersLoading ? (
