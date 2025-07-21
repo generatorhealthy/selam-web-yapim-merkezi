@@ -439,7 +439,7 @@ const OrderManagement = () => {
       
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sipariş Yönetimi </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Sipariş Yönetimi</h1>
           <p className="text-gray-600 mt-1">Tüm siparişleri ve otomatik sipariş sistemini yönetin</p>
         </div>
         <Button
