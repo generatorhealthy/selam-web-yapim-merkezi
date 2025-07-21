@@ -254,6 +254,24 @@ async function sendEmailWithBrevo(
 function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
+  // Helper function for adding text with proper wrapping
+  const addWrappedText = (text: string, x: number, y: number, maxWidth: number = 170, lineHeight: number = 5): number => {
+    const splitText = doc.splitTextToSize(text, maxWidth);
+    let currentY = y;
+    
+    splitText.forEach((line: string) => {
+      // Check if we need a new page
+      if (currentY > 270) {
+        doc.addPage();
+        currentY = 20;
+      }
+      doc.text(line, x, currentY);
+      currentY += lineHeight;
+    });
+    
+    return currentY;
+  };
+  
   // Header
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
@@ -266,81 +284,137 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   
   // Seller info
   doc.setFont(undefined, 'bold');
-  doc.text('SATICI BİLGİLERİ:', 20, yPos);
-  yPos += 10;
+  yPos = addWrappedText('SATICI BİLGİLERİ:', 20, yPos);
+  yPos += 5;
   
   doc.setFont(undefined, 'normal');
-  doc.text('Unvan: SELAM WEB YAPIM MERKEZİ', 20, yPos);
-  yPos += 5;
-  doc.text('Adres: Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 20, yPos);
-  yPos += 5;
-  doc.text('Telefon: 0 216 706 06 11', 20, yPos);
-  yPos += 5;
-  doc.text('E-posta: info@doktorumol.com.tr', 20, yPos);
-  yPos += 15;
+  yPos = addWrappedText('Unvan: SELAM WEB YAPIM MERKEZİ', 20, yPos);
+  yPos = addWrappedText('Adres: Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 20, yPos);
+  yPos = addWrappedText('Telefon: 0 216 706 06 11', 20, yPos);
+  yPos = addWrappedText('E-posta: info@doktorumol.com.tr', 20, yPos);
+  yPos += 10;
   
   // Customer info
   doc.setFont(undefined, 'bold');
-  doc.text('ALICI BİLGİLERİ:', 20, yPos);
-  yPos += 10;
+  yPos = addWrappedText('ALICI BİLGİLERİ:', 20, yPos);
+  yPos += 5;
   
   doc.setFont(undefined, 'normal');
-  doc.text(`Ad Soyad: ${customerData.name} ${customerData.surname}`, 20, yPos);
-  yPos += 5;
-  doc.text(`E-posta: ${customerData.email}`, 20, yPos);
-  yPos += 5;
+  yPos = addWrappedText(`Ad Soyad: ${customerData.name} ${customerData.surname}`, 20, yPos);
+  yPos = addWrappedText(`E-posta: ${customerData.email}`, 20, yPos);
+  
   if (customerData.phone) {
-    doc.text(`Telefon: ${customerData.phone}`, 20, yPos);
-    yPos += 5;
+    yPos = addWrappedText(`Telefon: ${customerData.phone}`, 20, yPos);
+  }
+  if (customerData.tcNo) {
+    yPos = addWrappedText(`TC Kimlik No: ${customerData.tcNo}`, 20, yPos);
   }
   if (customerData.address) {
-    doc.text(`Adres: ${customerData.address}`, 20, yPos);
-    yPos += 5;
+    yPos = addWrappedText(`Adres: ${customerData.address}`, 20, yPos);
   }
+  yPos = addWrappedText(`Şehir: ${customerData.city || 'İstanbul'}`, 20, yPos);
+  yPos = addWrappedText(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 20, yPos);
   yPos += 10;
   
   // Package info
   doc.setFont(undefined, 'bold');
-  doc.text('PAKET BİLGİLERİ:', 20, yPos);
-  yPos += 10;
+  yPos = addWrappedText('PAKET BİLGİLERİ:', 20, yPos);
+  yPos += 5;
   
   doc.setFont(undefined, 'normal');
-  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos);
-  yPos += 5;
-  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
-  yPos += 5;
-  doc.text('Ödeme Yöntemi: Banka Havalesi/EFT', 20, yPos);
-  yPos += 15;
-  
-  // Terms
-  doc.setFont(undefined, 'bold');
-  doc.text('GENEL ŞARTLAR:', 20, yPos);
+  yPos = addWrappedText(`Seçilen Paket: ${packageData.name}`, 20, yPos);
+  yPos = addWrappedText(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
+  yPos = addWrappedText('Ödeme Yöntemi: Banka Havalesi/EFT', 20, yPos);
   yPos += 10;
   
+  // Dates
+  doc.setFont(undefined, 'bold');
+  yPos = addWrappedText('TARİHLER:', 20, yPos);
+  yPos += 5;
+  
+  doc.setFont(undefined, 'normal');
+  yPos = addWrappedText(`Sözleşme Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
+  yPos = addWrappedText(`Dijital Onaylama Tarihi: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}`, 20, yPos);
+  yPos += 10;
+  
+  // Service Period
+  doc.setFont(undefined, 'bold');
+  yPos = addWrappedText('HİZMET SÜRESİ:', 20, yPos);
+  yPos += 5;
+  
+  doc.setFont(undefined, 'normal');
+  yPos = addWrappedText('Toplam Hizmet Süresi (Taahhütlü): Üyelik başlangıç dijital onay tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.', 20, yPos, 170, 6);
+  yPos += 10;
+  
+  // Check if we need a new page before adding contract terms
+  if (yPos > 200) {
+    doc.addPage();
+    yPos = 20;
+  }
+  
+  // Contract header
+  doc.setFont(undefined, 'bold');
+  yPos = addWrappedText('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 20, yPos);
+  yPos += 10;
+  
+  // Contract terms - basic version that fits on page
   doc.setFont(undefined, 'normal');
   const terms = [
-    '1. Bu form, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereği düzenlenmiştir.',
-    '2. Hizmet bedeli ön ödeme olarak tahsil edilmektedir.',
-    '3. Hizmet süresi paket tipine göre değişmektedir.',
-    '4. Cayma hakkı 14 gün olup, hizmetin ifasına başlanması durumunda geçersizdir.',
-    '5. Tüm iletişim elektronik ortamda gerçekleştirilecektir.'
+    '1.1 Bu Sözleşme gereği, Hizmet Alan, Üyelik hizmetleri dahilinde Doktorum Ol tarafından sunulan hizmetleri, talep ettiği şekilde almayı kabul eder ve beyan eder. Doktorum Ol, bu Sözleşme çerçevesinde Hizmet Alan\'a satın aldığı abonelikte bulunan hizmetleri sunmayı taahhüt eder.',
+    
+    '2. TARAFLAR',
+    'Bu Sözleşme çerçevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak adlandırılacaktır.',
+    
+    '3. AMAÇ VE KONU',
+    'Bu sözleşmenin temel amacı, Doktorum Ol\'un Premium Üyelik hizmetlerinden faydalanmak isteyen kişi adına Doktorum Ol tarafından www.doktorumol.com.tr alan adındaki web sitesinde bir profil oluşturmasıdır.',
+    
+    '4. TANIMLAR',
+    'İşbu Sözleşmedeki tanımlar aşağıdaki gibidir; Fikri Mülkiyet Doktorum Ol\'un sahip olduğu veya kullanılığı veya işlerinin yürütülmesi için gerekli olan dünya çapında mevcut veya gelecekte olabilecek her türlü ticaret markası, ticari unvan, hizmet markası, patentler, ticaret, faaliyet ve alan adları, URL\'leri, tasarımları, telif hakları, spesifikasyonları, yazılımları, ifşa edilmemiş ve gizli bilgi niteliğindeki haklar (müşteri listeleri, süreçler, know-how, ticari sırlar ve bulgular gibi), patent edilebilir olsun veya olmasın), veya diğer entelektüel veya endüstriyel tasarım haklarını, ve bunlarla ilgili başvurular, herhangi bir hukuki koruma altında olan veya olmayan her türlü buluş, geliştirmeyi, iyileştirmeyi, keşfi, know-how\'ı, telif hakkını, kavramsı ve düşünceyi, her türlü ticari sırrı, herhangi bir hukuki koruma altında olan veya olmayan her türlü bilgisayar programını ve yazılımı (sanatsal, teknik ve tasarım dokümantarı, algoritmalar, kaynak kodları, nesne kodları, veri ve veri tabanları dahil), mevcut hukuka uygun olarak "eser sahibi" statüsü sahibi olunan her türlü eserine orijinal, işleme, yayma, temsil etme, radyo, televizyon, mobil veya internet kanalı ile veya diğer araçlarla yayınlama, kamuya sunma gibi her türlü mali hakkın ve bunlara ilişkin kullanma, yararlanma, devir ve takip hakları, manevi haklar ve telif hakları da dahil olmak üzere tüm hakları ifade eder.'
   ];
   
   terms.forEach(term => {
-    doc.text(term, 20, yPos, { maxWidth: 170 });
-    yPos += 10;
+    // Check if we need a new page
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    yPos = addWrappedText(term, 20, yPos, 170, 5);
+    yPos += 3; // Small gap between terms
   });
   
+  // Add date and IP at the bottom
   yPos += 10;
-  doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
-  yPos += 5;
-  doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
+  if (yPos > 260) {
+    doc.addPage();
+    yPos = 20;
+  }
+  yPos = addWrappedText(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
+  yPos = addWrappedText(`IP Adresi: ${clientIP}`, 20, yPos);
   
   return doc;
 }
 
 function generateDistanceSalesPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
+  
+  // Helper function for adding text with proper wrapping
+  const addWrappedText = (text: string, x: number, y: number, maxWidth: number = 170, lineHeight: number = 5): number => {
+    const splitText = doc.splitTextToSize(text, maxWidth);
+    let currentY = y;
+    
+    splitText.forEach((line: string) => {
+      // Check if we need a new page
+      if (currentY > 270) {
+        doc.addPage();
+        currentY = 20;
+      }
+      doc.text(line, x, currentY);
+      currentY += lineHeight;
+    });
+    
+    return currentY;
+  };
   
   // Header
   doc.setFontSize(16);
@@ -354,48 +428,53 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   
   // Contract parties
   doc.setFont(undefined, 'bold');
-  doc.text('TARAFLAR:', 20, yPos);
-  yPos += 10;
+  yPos = addWrappedText('TARAFLAR:', 20, yPos);
+  yPos += 5;
   
   doc.setFont(undefined, 'normal');
-  doc.text('SATICI:', 20, yPos);
+  yPos = addWrappedText('SATICI:', 20, yPos);
+  yPos = addWrappedText('SELAM WEB YAPIM MERKEZİ', 30, yPos);
+  yPos = addWrappedText('Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 30, yPos);
+  yPos = addWrappedText('Tel: 0 216 706 06 11 | E-posta: info@doktorumol.com.tr', 30, yPos);
   yPos += 5;
-  doc.text('SELAM WEB YAPIM MERKEZİ', 30, yPos);
-  yPos += 5;
-  doc.text('Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 30, yPos);
-  yPos += 5;
-  doc.text('Tel: 0 216 706 06 11 | E-posta: info@doktorumol.com.tr', 30, yPos);
-  yPos += 10;
   
-  doc.text('ALICI:', 20, yPos);
-  yPos += 5;
-  doc.text(`${customerData.name} ${customerData.surname}`, 30, yPos);
-  yPos += 5;
-  doc.text(`E-posta: ${customerData.email}`, 30, yPos);
-  yPos += 5;
+  yPos = addWrappedText('ALICI:', 20, yPos);
+  yPos = addWrappedText(`${customerData.name} ${customerData.surname}`, 30, yPos);
+  yPos = addWrappedText(`E-posta: ${customerData.email}`, 30, yPos);
   if (customerData.phone) {
-    doc.text(`Telefon: ${customerData.phone}`, 30, yPos);
-    yPos += 5;
+    yPos = addWrappedText(`Telefon: ${customerData.phone}`, 30, yPos);
   }
+  if (customerData.tcNo) {
+    yPos = addWrappedText(`TC Kimlik No: ${customerData.tcNo}`, 30, yPos);
+  }
+  if (customerData.address) {
+    yPos = addWrappedText(`Adres: ${customerData.address}`, 30, yPos);
+  }
+  yPos = addWrappedText(`Şehir: ${customerData.city || 'İstanbul'}`, 30, yPos);
+  yPos = addWrappedText(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 30, yPos);
   yPos += 10;
   
   // Contract subject
   doc.setFont(undefined, 'bold');
-  doc.text('SÖZLEŞMENİN KONUSU:', 20, yPos);
-  yPos += 10;
+  yPos = addWrappedText('SÖZLEŞMENİN KONUSU:', 20, yPos);
+  yPos += 5;
   
   doc.setFont(undefined, 'normal');
-  doc.text(`Hizmet: ${packageData.name}`, 20, yPos);
-  yPos += 5;
-  doc.text(`Bedel: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
-  yPos += 5;
-  doc.text('Ödeme Şekli: Banka Havalesi/EFT', 20, yPos);
-  yPos += 15;
+  yPos = addWrappedText(`Hizmet: ${packageData.name}`, 20, yPos);
+  yPos = addWrappedText(`Bedel: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
+  yPos = addWrappedText('Ödeme Şekli: Banka Havalesi/EFT', 20, yPos);
+  yPos += 10;
+  
+  // Check if we need a new page before adding contract terms
+  if (yPos > 200) {
+    doc.addPage();
+    yPos = 20;
+  }
   
   // General terms
   doc.setFont(undefined, 'bold');
-  doc.text('GENEL HÜKÜMLER:', 20, yPos);
-  yPos += 10;
+  yPos = addWrappedText('GENEL HÜKÜMLER:', 20, yPos);
+  yPos += 5;
   
   doc.setFont(undefined, 'normal');
   const contractTerms = [
@@ -407,14 +486,24 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   ];
   
   contractTerms.forEach(term => {
-    doc.text(term, 20, yPos, { maxWidth: 170 });
-    yPos += 8;
+    // Check if we need a new page
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    yPos = addWrappedText(term, 20, yPos, 170, 5);
+    yPos += 3; // Small gap between terms
   });
   
+  // Add date and IP at the bottom
   yPos += 15;
-  doc.text(`Sözleşme Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
-  yPos += 5;
-  doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
+  if (yPos > 260) {
+    doc.addPage();
+    yPos = 20;
+  }
+  yPos = addWrappedText(`Sözleşme Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
+  yPos = addWrappedText(`IP Adresi: ${clientIP}`, 20, yPos);
   
   return doc;
 }
