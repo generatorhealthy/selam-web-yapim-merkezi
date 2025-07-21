@@ -510,6 +510,10 @@ const OrderManagement = () => {
            order.package_name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  console.log("DEBUG: activeTab:", activeTab);
+  console.log("DEBUG: deletedOrders:", deletedOrders);
+  console.log("DEBUG: Component rendering...");
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <AdminBackButton />
