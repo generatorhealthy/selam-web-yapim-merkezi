@@ -254,7 +254,7 @@ async function sendEmailWithBrevo(
 function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
-  // Header - exactly like Checkout
+  // Header
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
   doc.text('ÖN BİLGİLENDİRME FORMU', 105, 20, { align: 'center' });
@@ -264,7 +264,7 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   
   let yPos = 40;
   
-  // Seller info - exactly like Checkout
+  // Seller info
   doc.setFont(undefined, 'bold');
   doc.text('SATICI BİLGİLERİ:', 20, yPos);
   yPos += 10;
@@ -279,7 +279,7 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   doc.text('E-posta: info@doktorumol.com.tr', 20, yPos);
   yPos += 15;
   
-  // Customer info - exactly like Checkout
+  // Customer info
   doc.setFont(undefined, 'bold');
   doc.text('ALICI BİLGİLERİ:', 20, yPos);
   yPos += 10;
@@ -293,21 +293,13 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
     doc.text(`Telefon: ${customerData.phone}`, 20, yPos);
     yPos += 5;
   }
-  if (customerData.tcNo) {
-    doc.text(`TC Kimlik No: ${customerData.tcNo}`, 20, yPos);
-    yPos += 5;
-  }
   if (customerData.address) {
     doc.text(`Adres: ${customerData.address}`, 20, yPos);
     yPos += 5;
   }
-  yPos = yPos + 5;
-  doc.text(`Şehir: ${customerData.city || 'İstanbul'}`, 20, yPos);
-  yPos += 5;
-  doc.text(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 20, yPos);
   yPos += 10;
   
-  // Package info - exactly like Checkout
+  // Package info
   doc.setFont(undefined, 'bold');
   doc.text('PAKET BİLGİLERİ:', 20, yPos);
   yPos += 10;
@@ -319,123 +311,27 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   yPos += 5;
   doc.text('Ödeme Yöntemi: Banka Havalesi/EFT', 20, yPos);
   yPos += 15;
-
-  // Dates section
+  
+  // Terms
   doc.setFont(undefined, 'bold');
-  doc.text('TARİHLER:', 20, yPos);
+  doc.text('GENEL ŞARTLAR:', 20, yPos);
   yPos += 10;
   
   doc.setFont(undefined, 'normal');
-  doc.text(`Sözleşme Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
-  yPos += 5;
-  doc.text(`Dijital Onaylama Tarihi: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}`, 20, yPos);
-  yPos += 15;
-
-  // Service Period section
-  doc.setFont(undefined, 'bold');
-  doc.text('HİZMET SÜRESİ:', 20, yPos);
+  const terms = [
+    '1. Bu form, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereği düzenlenmiştir.',
+    '2. Hizmet bedeli ön ödeme olarak tahsil edilmektedir.',
+    '3. Hizmet süresi paket tipine göre değişmektedir.',
+    '4. Cayma hakkı 14 gün olup, hizmetin ifasına başlanması durumunda geçersizdir.',
+    '5. Tüm iletişim elektronik ortamda gerçekleştirilecektir.'
+  ];
+  
+  terms.forEach(term => {
+    doc.text(term, 20, yPos, { maxWidth: 170 });
+    yPos += 10;
+  });
+  
   yPos += 10;
-  
-  doc.setFont(undefined, 'normal');
-  doc.text('Toplam Hizmet Süresi (Taahhütlü): Üyelik başlangıç dijital onay tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü', 20, yPos, { maxWidth: 170 });
-  yPos += 15;
-  
-  // Check if we need a new page
-  if (yPos > 200) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
-  // Contract header
-  doc.setFont(undefined, 'bold');
-  doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 20, yPos);
-  yPos += 15;
-  
-  // Terms - exactly like Checkout
-  doc.setFont(undefined, 'bold');
-  doc.text('1.1 Bu Sözleşme gereği, Hizmet Alan, Üyelik hizmetleri dahilinde Doktorum Ol tarafından sunulan', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('hizmetleri, talep ettiği şekilde almayı kabul eder ve beyan eder. Doktorum Ol, bu Sözleşme', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('çerçevesinde Hizmet Alan\'a satın aldığı abonelikte bulunan hizmetleri sunmayı taahhüt eder.', 20, yPos, { maxWidth: 170 });
-  yPos += 15;
-  
-  doc.text('2. TARAFLAR', 20, yPos);
-  yPos += 10;
-  
-  doc.setFont(undefined, 'normal');
-  doc.text('Bu Sözleşme çerçevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('adlandırılacaktır.', 20, yPos, { maxWidth: 170 });
-  yPos += 15;
-  
-  doc.setFont(undefined, 'bold');
-  doc.text('3. AMAÇ VE KONU', 20, yPos);
-  yPos += 10;
-  
-  doc.setFont(undefined, 'normal');
-  doc.text('Bu sözleşmenin temel amacı, Doktorum Ol\'un Premium Üyelik hizmetlerinden faydalanmak isteyen', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('kişi adına Doktorum Ol tarafından www.doktorumol.com.tr alan adındaki web sitesinde bir profil', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('oluşturmasıdır. Premium Üyelik paketi kapsamında sunulan hizmetler, bu sözleşme ile belirlenen', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('şekilde Doktorum Ol tarafından sunulacak ve karşılığında Hizmet Alan kişinin bu sözleşmede', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('belirlenen hizmet ücretini Doktorum Ol sitesine ödemesi gerekmektedir.', 20, yPos, { maxWidth: 170 });
-  yPos += 15;
-  
-  // Check if we need a new page
-  if (yPos > 240) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
-  doc.setFont(undefined, 'bold');
-  doc.text('4. TANIMLAR', 20, yPos);
-  yPos += 10;
-  
-  doc.setFont(undefined, 'normal');
-  doc.text('İşbu Sözleşmedeki tanımlar aşağıdaki gibidir;', 20, yPos, { maxWidth: 170 });
-  yPos += 10;
-  
-  doc.text('Fikri Mülkiyet Doktorum Ol\'un sahip olduğu veya kullanılığı veya işlerinin yürütülmesi için', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('gerekli olan dünya çapında mevcut veya gelecekte olabilecek her türlü ticaret markası, ticari', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('unvan, hizmet markası, patentler, ticaret, faaliyet ve alan adları, URL\'leri, tasarımları,', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('telif hakları, spesifikasyonları, yazılımları, ifşa edilmemiş ve gizli bilgi niteliğindeki haklar', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('(müşteri listeleri, süreçler, know-how, ticari sırlar ve bulgular gibi), patent edilebilir olsun', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('veya olmasın), veya diğer entelektüel veya endüstriyel tasarım haklarını, ve bunlarla ilgili', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('başvurular, herhangi bir hukuki koruma altında olan veya olmayan her türlü buluş, geliştirmeyi,', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('iyileştirmeyi, keşfi, know-how\'ı, telif hakkını, kavramsı ve düşünceyi, her türlü ticari sırrı,', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('herhangi bir hukuki koruma altında olan veya olmayan her türlü bilgisayar programını ve yazılımı', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('(sanatsal, teknik ve tasarım dokümantarı, algoritmalar, kaynak kodları, nesre kodları, veri ve', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('veri tabanları dahil), mevcut hukuka uygun olarak "eser sahibi" statüsü sahibi olunan her türlü', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('eserine orijinal, işleme, yayma, temsil etme, radyo, televizyon, mobil veya internet kanalı ile', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('veya diğer araçlarla yayınlama, kamuya sunma gibi her türlü mali hakkın ve bunlara ilişkin', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('kullanma, yararlanma, devir ve takip hakları, manevi haklar ve telif hakları da dahil olmak', 20, yPos, { maxWidth: 170 });
-  yPos += 5;
-  doc.text('üzere tüm hakları ifade eder.', 20, yPos, { maxWidth: 170 });
-  yPos += 15;
-
-  // Add date and IP at the bottom
-  if (yPos > 260) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
   doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
   yPos += 5;
   doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
@@ -446,7 +342,7 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
 function generateDistanceSalesPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
-  // Header - exactly like Checkout
+  // Header
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
   doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 105, 20, { align: 'center' });
@@ -456,7 +352,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   
   let yPos = 40;
   
-  // Contract parties - exactly like Checkout
+  // Contract parties
   doc.setFont(undefined, 'bold');
   doc.text('TARAFLAR:', 20, yPos);
   yPos += 10;
@@ -481,20 +377,9 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
     doc.text(`Telefon: ${customerData.phone}`, 30, yPos);
     yPos += 5;
   }
-  if (customerData.tcNo) {
-    doc.text(`TC Kimlik No: ${customerData.tcNo}`, 30, yPos);
-    yPos += 5;
-  }
-  if (customerData.address) {
-    doc.text(`Adres: ${customerData.address}`, 30, yPos);
-    yPos += 5;
-  }
-  doc.text(`Şehir: ${customerData.city || 'İstanbul'}`, 30, yPos);
-  yPos += 5;
-  doc.text(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 30, yPos);
   yPos += 10;
   
-  // Contract subject - exactly like Checkout
+  // Contract subject
   doc.setFont(undefined, 'bold');
   doc.text('SÖZLEŞMENİN KONUSU:', 20, yPos);
   yPos += 10;
@@ -507,7 +392,7 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.text('Ödeme Şekli: Banka Havalesi/EFT', 20, yPos);
   yPos += 15;
   
-  // General terms - exactly like Checkout
+  // General terms
   doc.setFont(undefined, 'bold');
   doc.text('GENEL HÜKÜMLER:', 20, yPos);
   yPos += 10;
