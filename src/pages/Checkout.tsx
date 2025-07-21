@@ -569,6 +569,7 @@ const Checkout = () => {
         
         const { error: emailError } = await supabase.functions.invoke('send-contract-emails', {
           body: {
+            orderId: data.id,
             customerData: customerDataForEmail,
             packageData: packageDataForEmail,
             paymentMethod: paymentMethod,

@@ -280,7 +280,6 @@ const NewOrder = () => {
 
       // Send contract emails automatically
       try {
-        const nameParts = formData.customerName.split(' ');
         const customerDataForEmail = {
           name: nameParts[0] || '',
           surname: nameParts.slice(1).join(' ') || '',
@@ -305,6 +304,7 @@ const NewOrder = () => {
         
         const { error: emailError } = await supabase.functions.invoke('send-contract-emails', {
           body: {
+            orderId: data.id,
             customerData: customerDataForEmail,
             packageData: packageDataForEmail,
             paymentMethod: formData.paymentMethod,
