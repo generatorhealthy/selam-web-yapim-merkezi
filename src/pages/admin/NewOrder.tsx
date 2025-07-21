@@ -38,7 +38,7 @@ const NewOrder = () => {
     }));
   };
 
-  const generatePreInfoPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
+  const generatePreInfoPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string, formContent?: string) => {
     const doc = new jsPDF();
     
     // Header
@@ -126,7 +126,7 @@ const NewOrder = () => {
     return doc;
   };
 
-  const generateDistanceSalesPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
+  const generateDistanceSalesPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string, formContent?: string) => {
     const doc = new jsPDF();
     
     // Header
@@ -235,9 +235,16 @@ const NewOrder = () => {
         originalPrice: parseFloat(formData.amount)
       };
 
+      // Get dynamic form content first  
+      const { data: formContent } = await supabase
+        .from('form_contents')
+        .select('content')
+        .eq('form_type', 'pre_info')
+        .single();
+
       // Generate PDFs that are being created right now
-      const preInfoPDF = generatePreInfoPDF(customerDataForPDF, packageDataForPDF, formData.paymentMethod, 'individual', '127.0.0.1');
-      const distanceSalesPDF = generateDistanceSalesPDF(customerDataForPDF, packageDataForPDF, formData.paymentMethod, 'individual', '127.0.0.1');
+      const preInfoPDF = generatePreInfoPDF(customerDataForPDF, packageDataForPDF, formData.paymentMethod, 'individual', '127.0.0.1', formContent?.content);
+      const distanceSalesPDF = generateDistanceSalesPDF(customerDataForPDF, packageDataForPDF, formData.paymentMethod, 'individual', '127.0.0.1', formContent?.content);
       
       // Convert PDFs to base64 for storage
       const preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];

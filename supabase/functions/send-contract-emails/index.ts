@@ -73,12 +73,29 @@ serve(async (req) => {
     if (!preInfoBase64 || !distanceSalesBase64) {
       console.log('Generating new PDFs as fallback');
       
+      // Fetch dynamic form content from database
+      const formContentResponse = await fetch(`${supabaseUrl}/rest/v1/form_contents?form_type=eq.pre_info&select=content`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'apikey': supabaseServiceKey,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      let formContent = '';
+      if (formContentResponse.ok) {
+        const formData = await formContentResponse.json();
+        if (formData.length > 0) {
+          formContent = formData[0].content;
+        }
+      }
+      
       // Generate pre-info PDF
-      const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP);
+      const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP, formContent);
       preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
 
       // Generate distance sales PDF
-      const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP);
+      const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerData.customerType, clientIP, formContent);
       distanceSalesBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
     }
 
@@ -185,7 +202,7 @@ async function sendEmailWithBrevo(
   return await response.json();
 }
 
-function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string): jsPDF {
+function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
   // Header
@@ -246,24 +263,58 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   doc.text('Ödeme Yöntemi: Banka Havalesi/EFT', 20, yPos);
   yPos += 15;
   
-  // Terms
-  doc.setFont(undefined, 'bold');
-  doc.text('GENEL ŞARTLAR:', 20, yPos);
-  yPos += 10;
-  
-  doc.setFont(undefined, 'normal');
-  const terms = [
-    '1. Bu form, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereği düzenlenmiştir.',
-    '2. Hizmet bedeli ön ödeme olarak tahsil edilmektedir.',
-    '3. Hizmet süresi paket tipine göre değişmektedir.',
-    '4. Cayma hakkı 14 gün olup, hizmetin ifasına başlanması durumunda geçersizdir.',
-    '5. Tüm iletişim elektronik ortamda gerçekleştirilecektir.'
-  ];
-  
-  terms.forEach(term => {
-    doc.text(term, 20, yPos, { maxWidth: 170 });
+  // Dynamic content or fallback
+  if (formContent && formContent.trim()) {
+    doc.setFont(undefined, 'bold');
+    doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ:', 20, yPos);
     yPos += 10;
-  });
+    
+    doc.setFont(undefined, 'normal');
+    // Convert HTML to plain text
+    const plainText = formContent
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .trim();
+    
+    const lines = plainText.split('\n').filter(line => line.trim() !== '');
+    
+    lines.forEach((line) => {
+      if (yPos > 280) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      const wrappedLines = line.match(/.{1,80}/g) || [line];
+      wrappedLines.forEach((wrappedLine) => {
+        doc.text(wrappedLine.trim(), 20, yPos, { maxWidth: 170 });
+        yPos += 6;
+      });
+      yPos += 3;
+    });
+  } else {
+    // Fallback content
+    doc.setFont(undefined, 'bold');
+    doc.text('GENEL ŞARTLAR:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    const terms = [
+      '1. Bu form, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereği düzenlenmiştir.',
+      '2. Hizmet bedeli ön ödeme olarak tahsil edilmektedir.',
+      '3. Hizmet süresi paket tipine göre değişmektedir.',
+      '4. Cayma hakkı 14 gün olup, hizmetin ifasına başlanması durumunda geçersizdir.',
+      '5. Tüm iletişim elektronik ortamda gerçekleştirilecektir.'
+    ];
+    
+    terms.forEach(term => {
+      doc.text(term, 20, yPos, { maxWidth: 170 });
+      yPos += 10;
+    });
+  }
   
   yPos += 10;
   doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
@@ -273,7 +324,7 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   return doc;
 }
 
-function generateDistanceSalesPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string): jsPDF {
+function generateDistanceSalesPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
   // Header
@@ -326,24 +377,59 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.text('Ödeme Şekli: Banka Havalesi/EFT', 20, yPos);
   yPos += 15;
   
-  // General terms
-  doc.setFont(undefined, 'bold');
-  doc.text('GENEL HÜKÜMLER:', 20, yPos);
-  yPos += 10;
-  
-  doc.setFont(undefined, 'normal');
-  const contractTerms = [
-    '1. Bu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında düzenlenmiştir.',
-    '2. Hizmet bedeli peşin olarak tahsil edilir.',
-    '3. Hizmet süresi seçilen pakete göre belirlenir.',
-    '4. Taraflar bu sözleşmeyi kabul etmiş sayılır.',
-    '5. Uyuşmazlıklar İstanbul mahkemelerinde çözülür.'
-  ];
-  
-  contractTerms.forEach(term => {
-    doc.text(term, 20, yPos, { maxWidth: 170 });
-    yPos += 8;
-  });
+  // Dynamic content for distance sales contract
+  if (formContent && formContent.trim()) {
+    doc.setFont(undefined, 'bold');
+    doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ KOŞULLARI:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    // Convert HTML to plain text and use a subset
+    const plainText = formContent
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .trim();
+    
+    // Use first 10 meaningful lines for distance sales contract
+    const lines = plainText.split('\n').filter(line => line.trim() !== '').slice(0, 10);
+    
+    lines.forEach((line) => {
+      if (yPos > 280) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      const wrappedLines = line.match(/.{1,80}/g) || [line];
+      wrappedLines.forEach((wrappedLine) => {
+        doc.text(wrappedLine.trim(), 20, yPos, { maxWidth: 170 });
+        yPos += 6;
+      });
+      yPos += 3;
+    });
+  } else {
+    // Fallback content
+    doc.setFont(undefined, 'bold');
+    doc.text('GENEL HÜKÜMLER:', 20, yPos);
+    yPos += 10;
+    
+    doc.setFont(undefined, 'normal');
+    const contractTerms = [
+      '1. Bu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında düzenlenmiştir.',
+      '2. Hizmet bedeli peşin olarak tahsil edilir.',
+      '3. Hizmet süresi seçilen pakete göre belirlenir.',
+      '4. Taraflar bu sözleşmeyi kabul etmiş sayılır.',
+      '5. Uyuşmazlıklar İstanbul mahkemelerinde çözülür.'
+    ];
+    
+    contractTerms.forEach(term => {
+      doc.text(term, 20, yPos, { maxWidth: 170 });
+      yPos += 8;
+    });
+  }
   
   yPos += 15;
   doc.text(`Sözleşme Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);

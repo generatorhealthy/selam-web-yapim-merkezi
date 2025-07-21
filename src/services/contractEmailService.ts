@@ -32,7 +32,7 @@ export const sendContractEmailsAfterPurchase = async (
 ) => {
   try {
     if (isFirstMonth) {
-      // Generate PDFs
+      // Generate PDFs with dynamic form content
       const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerType, clientIP);
       const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerType, clientIP);
       

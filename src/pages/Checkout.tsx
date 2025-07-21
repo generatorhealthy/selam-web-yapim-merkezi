@@ -302,7 +302,7 @@ const Checkout = () => {
     navigate("/odeme-basarili");
   };
 
-  const generatePreInfoPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
+  const generatePreInfoPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string, formContent?: string) => {
     const doc = new jsPDF();
     
     // Header
@@ -390,7 +390,7 @@ const Checkout = () => {
     return doc;
   };
 
-  const generateDistanceSalesPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
+  const generateDistanceSalesPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string, formContent?: string) => {
     const doc = new jsPDF();
     
     // Header
@@ -495,9 +495,16 @@ const Checkout = () => {
         originalPrice: selectedPackage.originalPrice || selectedPackage.price
       };
 
+      // Get dynamic form content first
+      const { data: formContent } = await supabase
+        .from('form_contents')
+        .select('content')
+        .eq('form_type', 'pre_info')
+        .single();
+
       // Generate PDFs that the customer is approving right now
-      const preInfoPDF = generatePreInfoPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP);
-      const distanceSalesPDF = generateDistanceSalesPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP);
+      const preInfoPDF = generatePreInfoPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP, formContent?.content);
+      const distanceSalesPDF = generateDistanceSalesPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP, formContent?.content);
       
       // Convert PDFs to base64 for storage
       const preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
