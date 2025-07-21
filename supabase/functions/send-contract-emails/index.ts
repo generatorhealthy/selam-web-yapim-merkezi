@@ -765,11 +765,11 @@ Fikri Mulkiyet Doktorum Ol'un sahip oldugu veya kullanildigi veya islerinin yuru
 
   // Split content into lines with proper width and page handling
   const lines = doc.splitTextToSize(fullContractText, 170);
-  const pageHeight = 297;
+  const pageHeight2 = 297;
   const bottomMargin = 25;
 
   for (let i = 0; i < lines.length; i++) {
-    if (yPosition > pageHeight - bottomMargin) {
+    if (yPosition > pageHeight2 - bottomMargin) {
       doc.addPage();
       yPosition = 20;
     }
@@ -816,11 +816,11 @@ Fikri Mulkiyet Doktorum Ol'un sahip oldugu veya kullanildigi veya islerinin yuru
   doc.setFont('helvetica', 'normal');
   const section2Text = 'Ad, soyadi, telefon numarasi, e-posta adresi, adres bilgileri, odeme araci bilgileri ve bunlarla sinirli olmamak uzere varsa internet sitesi veya cagri merkezi araciligiyla iletmis oldugumuz genel ve ozel nitelikli kategorilerdeki kisisel verileriniz, internet sitesinde uyeliginizin olusturulmasi, Doktorumol uyeligi sebebiyle aldiginiz hizmetlerin sunumu, alinan hizmet ile ilgili sizinle iletisime gecilmesi, musteri iliskilerinde saglikli ve uzun sureli etkilesim kurulmasi, onay vermeniz halinde tarafiniza ticari elektronik ileti gonderilmesi, talep ve sikayetlerinizin takibi ile birlikte Doktorumol tarafindan saklanmasi amaci ile islenmektedir.';
   const section2Lines = doc.splitTextToSize(section2Text, 170);
-  const pageHeight = 297;
-  const bottomMargin = 25;
+  const pageHeight3 = 297;
+  const bottomMargin3 = 25;
 
   for (let i = 0; i < section2Lines.length; i++) {
-    if (yPosition > pageHeight - bottomMargin) {
+    if (yPosition > pageHeight3 - bottomMargin3) {
       doc.addPage();
       yPosition = 20;
     }
