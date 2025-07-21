@@ -254,87 +254,179 @@ async function sendEmailWithBrevo(
 function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
-  // Header
-  doc.setFontSize(16);
+  // Company header
+  doc.setFillColor(70, 130, 180);
+  doc.rect(0, 0, 210, 35, 'F');
+  
+  doc.setFontSize(18);
+  doc.setTextColor(255, 255, 255);
   doc.setFont(undefined, 'bold');
-  doc.text('ÖN BİLGİLENDİRME FORMU', 105, 20, { align: 'center' });
+  doc.text('Doktorum Ol', 105, 15, { align: 'center' });
   
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
+  doc.text('Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 105, 22, { align: 'center' });
+  doc.text('☎ 0 216 706 06 11', 85, 28);
+  doc.text('info@doktorumol.com.tr', 125, 28);
   
-  let yPos = 40;
+  doc.setTextColor(0, 0, 0);
   
-  // Seller info
+  // Title
+  doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('SATICI BİLGİLERİ:', 20, yPos);
-  yPos += 10;
+  doc.text('ÖN BİLGİLENDİRME FORMU', 105, 50, { align: 'center' });
   
+  let yPos = 70;
+  
+  // Customer info box
+  doc.setDrawColor(0, 150, 255);
+  doc.setLineWidth(0.5);
+  doc.rect(15, yPos - 5, 180, 85, 'S');
+  
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0, 100, 200);
+  doc.text('MÜŞTERİ BİLGİLERİ:', 20, yPos + 5);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
   doc.setFont(undefined, 'normal');
-  doc.text('Unvan: SELAM WEB YAPIM MERKEZİ', 20, yPos);
-  yPos += 5;
-  doc.text('Adres: Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 20, yPos);
-  yPos += 5;
-  doc.text('Telefon: 0 216 706 06 11', 20, yPos);
-  yPos += 5;
-  doc.text('E-posta: info@doktorumol.com.tr', 20, yPos);
   yPos += 15;
   
-  // Customer info
-  doc.setFont(undefined, 'bold');
-  doc.text('ALICI BİLGİLERİ:', 20, yPos);
-  yPos += 10;
-  
-  doc.setFont(undefined, 'normal');
-  doc.text(`Ad Soyad: ${customerData.name} ${customerData.surname}`, 20, yPos);
-  yPos += 5;
+  doc.text(`Müşteri Adı: ${customerData.name} ${customerData.surname}`, 20, yPos);
+  yPos += 8;
   doc.text(`E-posta: ${customerData.email}`, 20, yPos);
-  yPos += 5;
+  yPos += 8;
+  
   if (customerData.phone) {
     doc.text(`Telefon: ${customerData.phone}`, 20, yPos);
-    yPos += 5;
+    yPos += 8;
   }
+  
+  if (customerData.tcNo) {
+    doc.text(`TC Kimlik No: ${customerData.tcNo}`, 20, yPos);
+    yPos += 8;
+  }
+  
   if (customerData.address) {
-    doc.text(`Adres: ${customerData.address}`, 20, yPos);
-    yPos += 5;
+    doc.text(`Adres: ${customerData.address}`, 20, yPos, { maxWidth: 170 });
+    yPos += 8;
   }
-  yPos += 10;
   
-  // Package info
-  doc.setFont(undefined, 'bold');
-  doc.text('PAKET BİLGİLERİ:', 20, yPos);
-  yPos += 10;
+  if (customerData.city) {
+    doc.text(`Şehir: ${customerData.city}`, 20, yPos);
+    yPos += 8;
+  }
   
-  doc.setFont(undefined, 'normal');
-  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos);
-  yPos += 5;
-  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
-  yPos += 5;
-  doc.text('Ödeme Yöntemi: Banka Havalesi/EFT', 20, yPos);
+  doc.text(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 20, yPos);
   yPos += 15;
   
-  // Terms
+  // Package info box
+  doc.setDrawColor(0, 150, 255);
+  doc.rect(15, yPos - 5, 180, 55, 'S');
+  
+  doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
-  doc.text('GENEL ŞARTLAR:', 20, yPos);
-  yPos += 10;
+  doc.setTextColor(0, 100, 200);
+  doc.text('PAKET BİLGİLERİ:', 20, yPos + 5);
   
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
   doc.setFont(undefined, 'normal');
-  const terms = [
-    '1. Bu form, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereği düzenlenmiştir.',
-    '2. Hizmet bedeli ön ödeme olarak tahsil edilmektedir.',
-    '3. Hizmet süresi paket tipine göre değişmektedir.',
-    '4. Cayma hakkı 14 gün olup, hizmetin ifasına başlanması durumunda geçersizdir.',
-    '5. Tüm iletişim elektronik ortamda gerçekleştirilecektir.'
-  ];
+  yPos += 15;
   
-  terms.forEach(term => {
-    doc.text(term, 20, yPos, { maxWidth: 170 });
+  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos);
+  yPos += 8;
+  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
+  yPos += 8;
+  doc.text(`Ödeme Yöntemi: Banka Havalesi/EFT`, 20, yPos);
+  yPos += 15;
+  
+  // Date info box
+  doc.setDrawColor(0, 150, 255);
+  doc.rect(15, yPos - 5, 180, 35, 'S');
+  
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0, 100, 200);
+  doc.text('TARİHLER:', 20, yPos + 5);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont(undefined, 'normal');
+  yPos += 15;
+  
+  doc.text(`Sözleşme Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
+  yPos += 8;
+  doc.text(`Dijital Onaylama Tarihi: ${new Date().toLocaleString('tr-TR')}`, 20, yPos);
+  yPos += 15;
+  
+  // Service period info box
+  doc.setDrawColor(0, 150, 255);
+  doc.rect(15, yPos - 5, 180, 25, 'S');
+  
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0, 100, 200);
+  doc.text('HİZMET SÜRESİ:', 20, yPos + 5);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont(undefined, 'normal');
+  yPos += 15;
+  
+  const serviceDescription = `Üyelik başlangıç dijital onay tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.`;
+  doc.text(serviceDescription, 20, yPos, { maxWidth: 170 });
+  
+  // Add a new page for contract content
+  doc.addPage();
+  yPos = 30;
+  
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0, 100, 200);
+  doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 105, yPos, { align: 'center' });
+  
+  yPos += 20;
+  
+  if (formContent) {
+    // Clean HTML content and format for PDF
+    const cleanContent = formContent
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .trim();
+    
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(0, 0, 0);
+    
+    const lines = doc.splitTextToSize(cleanContent, 170);
+    const pageHeight = 297;
+    const bottomMargin = 20;
+    
+    for (let i = 0; i < lines.length; i++) {
+      if (yPos > pageHeight - bottomMargin) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.text(lines[i], 20, yPos);
+      yPos += 5;
+    }
+    
+    // IP address at the end
+    if (yPos > pageHeight - 30) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
     yPos += 10;
-  });
-  
-  yPos += 10;
-  doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
-  yPos += 5;
-  doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
+    doc.setFont(undefined, 'bold');
+    doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
+  }
   
   return doc;
 }
@@ -342,78 +434,197 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
 function generateDistanceSalesPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
-  // Header
-  doc.setFontSize(16);
+  // Company header
+  doc.setFillColor(70, 130, 180);
+  doc.rect(0, 0, 210, 35, 'F');
+  
+  doc.setFontSize(18);
+  doc.setTextColor(255, 255, 255);
   doc.setFont(undefined, 'bold');
-  doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 105, 20, { align: 'center' });
+  doc.text('Doktorum Ol', 105, 15, { align: 'center' });
   
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
+  doc.text('Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 105, 22, { align: 'center' });
+  doc.text('☎ 0 216 706 06 11', 85, 28);
+  doc.text('info@doktorumol.com.tr', 125, 28);
   
-  let yPos = 40;
+  doc.setTextColor(0, 0, 0);
   
-  // Contract parties
+  // Title
+  doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('TARAFLAR:', 20, yPos);
-  yPos += 10;
+  doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 105, 50, { align: 'center' });
   
+  let yPos = 70;
+  
+  // Parties section
+  doc.setDrawColor(0, 150, 255);
+  doc.setLineWidth(0.5);
+  doc.rect(15, yPos - 5, 180, 75, 'S');
+  
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0, 100, 200);
+  doc.text('TARAFLAR:', 20, yPos + 5);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
   doc.setFont(undefined, 'normal');
+  yPos += 15;
+  
   doc.text('SATICI:', 20, yPos);
-  yPos += 5;
+  yPos += 8;
   doc.text('SELAM WEB YAPIM MERKEZİ', 30, yPos);
-  yPos += 5;
-  doc.text('Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 30, yPos);
-  yPos += 5;
+  yPos += 6;
+  doc.text('Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir /', 30, yPos);
+  yPos += 6;
+  doc.text('İstanbul', 30, yPos);
+  yPos += 6;
   doc.text('Tel: 0 216 706 06 11 | E-posta: info@doktorumol.com.tr', 30, yPos);
   yPos += 10;
   
   doc.text('ALICI:', 20, yPos);
-  yPos += 5;
+  yPos += 6;
   doc.text(`${customerData.name} ${customerData.surname}`, 30, yPos);
-  yPos += 5;
+  yPos += 6;
   doc.text(`E-posta: ${customerData.email}`, 30, yPos);
-  yPos += 5;
   if (customerData.phone) {
+    yPos += 6;
     doc.text(`Telefon: ${customerData.phone}`, 30, yPos);
-    yPos += 5;
   }
-  yPos += 10;
+  yPos += 20;
   
   // Contract subject
-  doc.setFont(undefined, 'bold');
-  doc.text('SÖZLEŞMENİN KONUSU:', 20, yPos);
-  yPos += 10;
+  doc.setDrawColor(0, 150, 255);
+  doc.rect(15, yPos - 5, 180, 45, 'S');
   
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0, 100, 200);
+  doc.text('SÖZLEŞMENİN KONUSU:', 20, yPos + 5);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
   doc.setFont(undefined, 'normal');
+  yPos += 15;
+  
   doc.text(`Hizmet: ${packageData.name}`, 20, yPos);
-  yPos += 5;
+  yPos += 8;
   doc.text(`Bedel: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
-  yPos += 5;
+  yPos += 8;
   doc.text('Ödeme Şekli: Banka Havalesi/EFT', 20, yPos);
   yPos += 15;
   
-  // General terms
+  // Service period info
+  doc.setDrawColor(0, 150, 255);
+  doc.rect(15, yPos - 5, 180, 25, 'S');
+  
+  doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
-  doc.text('GENEL HÜKÜMLER:', 20, yPos);
+  doc.setTextColor(0, 100, 200);
+  doc.text('HİZMET SÜRESİ:', 20, yPos + 5);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont(undefined, 'normal');
+  yPos += 15;
+  
+  const serviceDescription = `Toplam Hizmet Süresi (Taahhütlü): Üyelik başlangıç dijital onay tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.`;
+  doc.text(serviceDescription, 20, yPos, { maxWidth: 170 });
+  yPos += 20;
+  
+  // Add a new page for detailed contract content
+  doc.addPage();
+  yPos = 30;
+  
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0, 100, 200);
+  doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 105, yPos, { align: 'center' });
+  yPos += 20;
+  
+  // Contract details section
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text('1.1', 20, yPos);
+  yPos += 8;
+  
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  const contractText1 = 'Bu Sözleşme gereği, Hizmet Alan, Üyelik hizmetleri dahilinde Doktorum Ol tarafından sunulan hizmetleri, talep ettiği şekilde almayı kabul eder ve beyan eder. Doktorum Ol, bu Sözleşme çerçevesinde Hizmet Alan\'a satın aldığı abonelikte bulunan hizmetleri sunmayı taahhüt eder.';
+  doc.text(contractText1, 20, yPos, { maxWidth: 170 });
+  yPos += 20;
+  
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.text('2. TARAFLAR', 20, yPos);
   yPos += 10;
   
+  doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
-  const contractTerms = [
-    '1. Bu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında düzenlenmiştir.',
-    '2. Hizmet bedeli peşin olarak tahsil edilir.',
-    '3. Hizmet süresi seçilen pakete göre belirlenir.',
-    '4. Taraflar bu sözleşmeyi kabul etmiş sayılır.',
-    '5. Uyuşmazlıklar İstanbul mahkemelerinde çözülür.'
-  ];
+  const contractText2 = 'Bu Sözleşme çerçevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak adlandırılacaktır.';
+  doc.text(contractText2, 20, yPos, { maxWidth: 170 });
+  yPos += 20;
   
-  contractTerms.forEach(term => {
-    doc.text(term, 20, yPos, { maxWidth: 170 });
-    yPos += 8;
-  });
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.text('3. AMAÇ VE KONU', 20, yPos);
+  yPos += 10;
+  
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  const contractText3 = `Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden faydalanmak isteyen kişi adına Doktorum Ol tarafından www.doktorumol.com.tr alan adındaki web sitesinde bir profil oluşturulmasıdır. Premium Üyelik paketi kapsamında sunulan hizmetler, bu sözleşme ile belirtilen şekilde Doktorum Ol tarafından sunulacak ve karşılığında Hizmet Alan kişinin bu sözleşmede belirtilen hizmet ücretini Doktorum Ol sitesine ödemesi gerekmektedir. Bu sözleşme, tarafların karşılıklı hak ve yükümlülüklerini düzenleyen bir anlaşma olarak kabul edilir ve bu amaç doğrultusunda yürürlüktedir.`;
+  
+  const lines = doc.splitTextToSize(contractText3, 170);
+  const pageHeight = 297;
+  const bottomMargin = 20;
+  
+  for (let i = 0; i < lines.length; i++) {
+    if (yPos > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.text(lines[i], 20, yPos);
+    yPos += 5;
+  }
   
   yPos += 15;
+  
+  // Add more contract sections
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.text('4. TANIMLAR', 20, yPos);
+  yPos += 10;
+  
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  const definitionsText = `İşbu Sözleşmedeki tanımlar aşağıdaki gibidir;
+
+Fikri Mülkiyet Doktorum Ol'un sahip olduğu veya kullanıldığı veya işlerinin yürütülmesi için gerekli olan dünya çapında mevcut veya gelecekte mevcut olabilecek her türlü ticaret markasını, ticari unvanı, hizmet markasını, patentleri, ticaret, faaliyet ve alan adlarını, URL'leri, tasarımları, telif haklarını, spesifikasyonları, yazılımları, ifşa edilmemiş ve gizli bilgi niteliğindeki hakları (müşteri listeleri, süreçler, know-how, ticari sırlar ve buluşlar gibi, patent edilebilir olsun veya olmasın), veya diğer endüstriyel veya fikri mülkiyet haklarını, lisansları, markaları, patentleri, faydalı modelleri ve endüstriyel tasarım haklarını, ve bunlarla ilgili başvuruları, herhangi bir hukuki koruma altında olan veya olmayan her türlü buluşu, geliştirmeyi, iyileştirmeyi, keşfi, know-how'ı, telif hakkını, kavramı ve düşünceyi, her türlü ticari sırrı, herhangi bir hukuki koruma altında olan veya olmayan her türlü bilgisayar programını ve yazılımı (sanatsal, teknik ve tasarım dokümanları, algoritmalar, kaynak kodları, nesne kodları, cron kodları, veri ve veri tabanları dahil), mevcut hukuka uygun olarak "eser sahibi" sıfatıyla sahibi olunan her türlü eserin çoğaltma, işleme, yayma, temsil etme, radyo, televizyon, mobil veya internet kanalı ile veya diğer araçlarla yayınlama, kamuya sunma gibi her türlü mali hakları ve bunlara ilişkin kullanma, yararlanma, devir ve takip hakları, manevi haklar ve telif hakları da dahil olmak üzere tüm hakları ifade eder.`;
+  
+  const definitionLines = doc.splitTextToSize(definitionsText, 170);
+  
+  for (let i = 0; i < definitionLines.length; i++) {
+    if (yPos > pageHeight - bottomMargin) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.text(definitionLines[i], 20, yPos);
+    yPos += 5;
+  }
+  
+  // Add IP address and date at the end
+  if (yPos > pageHeight - 30) {
+    doc.addPage();
+    yPos = 20;
+  }
+  
+  yPos += 15;
+  doc.setFont(undefined, 'bold');
   doc.text(`Sözleşme Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
-  yPos += 5;
+  yPos += 8;
   doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
   
   return doc;
