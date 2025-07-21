@@ -75,9 +75,52 @@ const NewOrder = () => {
 
       console.log("Order saved successfully:", data);
 
+      // Send contract emails automatically
+      try {
+        const nameParts = formData.customerName.split(' ');
+        const customerDataForEmail = {
+          name: nameParts[0] || '',
+          surname: nameParts.slice(1).join(' ') || '',
+          email: formData.customerEmail,
+          phone: formData.customerPhone,
+          tcNo: formData.customerTckn,
+          address: formData.customerAddress,
+          city: 'İstanbul',
+          customerType: 'individual',
+          companyName: '',
+          taxNo: '',
+          taxOffice: ''
+        };
+
+        const packageDataForEmail = {
+          name: formData.packageName,
+          price: parseFloat(formData.amount),
+          originalPrice: parseFloat(formData.amount)
+        };
+
+        console.log('Sending contract emails for new order...');
+        
+        const { error: emailError } = await supabase.functions.invoke('send-contract-emails', {
+          body: {
+            customerData: customerDataForEmail,
+            packageData: packageDataForEmail,
+            paymentMethod: formData.paymentMethod,
+            clientIP: '127.0.0.1'
+          }
+        });
+
+        if (emailError) {
+          console.error('Contract email sending failed:', emailError);
+        } else {
+          console.log('Contract emails sent successfully');
+        }
+      } catch (emailError) {
+        console.error('Email sending error:', emailError);
+      }
+
       toast({
         title: "Başarılı",
-        description: "Sipariş başarıyla oluşturuldu"
+        description: "Sipariş başarıyla oluşturuldu ve sözleşme belgeleri müşteriye gönderildi"
       });
 
       // Redirect to orders page

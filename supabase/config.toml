@@ -1,0 +1,66 @@
+project_id = "irnfwewabogveofwemvg"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[graphql]
+enabled = true
+port = 54329
+max_rows = 1000
+max_depth = 12
+pool_size = 20
+
+[db]
+enabled = true
+port = 54322
+major_version = 15
+
+[realtime]
+enabled = true
+port = 54323
+tenant_id = "realtime-dev"
+
+[studio]
+enabled = true
+port = 54324
+api_url = "http://127.0.0.1:54321"
+
+[inbucket]
+enabled = true
+port = 54325
+allowed_domains = ["localhost", "testing.supabase.co"]
+
+[storage]
+enabled = true
+port = 54326
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+port = 54327
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+security_refresh_token_reuse_interval = 10
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_manual_linking = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[functions.send-contract-emails]
+verify_jwt = false
+
+[analytics]
+enabled = true
+port = 54327
+vector_port = 54328
+backend = "postgres"

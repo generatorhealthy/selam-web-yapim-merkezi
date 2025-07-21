@@ -341,6 +341,50 @@ const Checkout = () => {
         return;
       }
 
+      // Send contract emails automatically
+      try {
+        const customerDataForEmail = {
+          name: formData.name,
+          surname: formData.surname,
+          email: formData.email,
+          phone: formData.phone,
+          tcNo: formData.tcNo,
+          address: formData.address,
+          city: formData.city,
+          customerType: customerType,
+          companyName: formData.companyName,
+          taxNo: formData.taxNo,
+          taxOffice: formData.taxOffice
+        };
+
+        const packageDataForEmail = {
+          name: selectedPackage.name,
+          price: selectedPackage.price,
+          originalPrice: selectedPackage.originalPrice || selectedPackage.price
+        };
+
+        console.log('Sending contract emails...');
+        
+        const { error: emailError } = await supabase.functions.invoke('send-contract-emails', {
+          body: {
+            customerData: customerDataForEmail,
+            packageData: packageDataForEmail,
+            paymentMethod: paymentMethod,
+            clientIP: clientIP
+          }
+        });
+
+        if (emailError) {
+          console.error('Contract email sending failed:', emailError);
+          // Don't block the order completion, just log the error
+        } else {
+          console.log('Contract emails sent successfully');
+        }
+      } catch (emailError) {
+        console.error('Email sending error:', emailError);
+        // Don't block the order completion
+      }
+
       localStorage.setItem('lastOrder', JSON.stringify({
         id: data.id,
         orderNumber: `DRP-${Date.now()}`,
@@ -352,7 +396,7 @@ const Checkout = () => {
 
       toast({
         title: "Başarılı",
-        description: "Siparişiniz başarıyla kaydedildi!",
+        description: "Siparişiniz başarıyla kaydedildi! Sözleşme belgeleri e-posta adresinize gönderildi.",
         variant: "default"
       });
 
