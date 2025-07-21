@@ -254,9 +254,9 @@ async function sendEmailWithBrevo(
 function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
-  // Header - centered like in the image
+  // Header - centered
   doc.setFontSize(16);
-  doc.setFont('times', 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.text('Ön Bilgilendirme Formu', 105, 30, { align: 'center' });
   
@@ -269,73 +269,77 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   
   // Contract creation details inside blue box
   doc.setFontSize(11);
-  doc.setFont('times', 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(59, 130, 246);
-  doc.text(`Sözleşme_Oluşturma_Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos + 10);
-  doc.text(`Dijital Onaylama Tarihi: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}`, 20, yPos + 20);
-  doc.text(`IP Adresi: ${clientIP}`, 20, yPos + 30);
+  doc.text(`Sözleşme_Oluşturma_Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos + 12);
+  doc.text(`Dijital Onaylama Tarihi: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}`, 20, yPos + 22);
+  doc.text(`IP Adresi: ${clientIP}`, 20, yPos + 32);
   
   yPos += 55;
   
   // Main content header
   doc.setFontSize(14);
-  doc.setFont('times', 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 20, yPos);
   yPos += 20;
   
   // Customer info in blue box
-  const customerBoxHeight = 50;
+  const customerBoxHeight = 60;
   doc.setDrawColor(59, 130, 246);
   doc.rect(15, yPos, 180, customerBoxHeight);
   
   doc.setFontSize(11);
-  doc.setFont('times', 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(59, 130, 246);
-  doc.text('MÜŞTERİ BİLGİLERİ:', 20, yPos + 10);
+  doc.text('MÜŞTERİ BİLGİLERİ:', 20, yPos + 12);
   
-  doc.setFont('times', 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
-  let customerYPos = yPos + 18;
-  doc.text(`Müşteri Adı: ${customerData.name} ${customerData.surname || ''}`, 20, customerYPos);
-  customerYPos += 6;
-  doc.text(`E-posta: ${customerData.email}`, 20, customerYPos);
-  customerYPos += 6;
+  doc.text(`Müşteri Adı: ${customerData.name} ${customerData.surname || ''}`, 20, yPos + 22);
+  doc.text(`E-posta: ${customerData.email}`, 20, yPos + 32);
   if (customerData.phone) {
-    doc.text(`Telefon: ${customerData.phone}`, 20, customerYPos);
-    customerYPos += 6;
+    doc.text(`Telefon: ${customerData.phone}`, 20, yPos + 42);
   }
   if (customerData.tcNo) {
-    doc.text(`TC Kimlik No: ${customerData.tcNo}`, 20, customerYPos);
+    doc.text(`TC Kimlik No: ${customerData.tcNo}`, 20, yPos + 52);
   }
-  doc.text(`Şehir: ${customerData.city || 'İstanbul'}`, 110, yPos + 18);
-  doc.text(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 110, yPos + 24);
+  
+  // Right side info
+  doc.text(`Şehir: ${customerData.city || 'İstanbul'}`, 110, yPos + 22);
+  doc.text(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 110, yPos + 32);
   
   yPos += customerBoxHeight + 15;
   
   // Package info in blue box
-  const packageBoxHeight = 25;
+  const packageBoxHeight = 30;
   doc.setDrawColor(59, 130, 246);
   doc.rect(15, yPos, 180, packageBoxHeight);
   
-  doc.setFont('times', 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(59, 130, 246);
-  doc.text('PAKET BİLGİLERİ:', 20, yPos + 10);
+  doc.text('PAKET BİLGİLERİ:', 20, yPos + 12);
   
-  doc.setFont('times', 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
-  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos + 18);
-  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 110, yPos + 18);
+  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos + 22);
+  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 110, yPos + 22);
   
   yPos += packageBoxHeight + 15;
   
-  // Contract content - complete text with proper formatting
+  // Contract content with proper formatting
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ 1.1 Bu Sözleşme gerçi, Hizmet', 20, yPos);
+  yPos += 15;
+  
+  // Contract text
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ:', 20, yPos);
+  yPos += 10;
+  
   if (formContent && formContent.trim()) {
-    doc.setFontSize(12);
-    doc.setFont('times', 'bold');
-    doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ 1.1 Bu Sözleşme gerçi, Hizmet Alan, Üyelik', 20, yPos);
-    yPos += 15;
-    
     // Convert HTML to plain text
     const plainText = formContent
       .replace(/<[^>]*>/g, '')
@@ -346,36 +350,79 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
       .replace(/&quot;/g, '"')
       .trim();
     
-    // Split text into sentences for better readability
-    const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
     
-    doc.setFont('times', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
+    // Simple text wrapping - more reliable than splitTextToSize
+    const words = plainText.split(' ');
+    let currentLine = '';
+    const maxLineWidth = 170;
     
-    sentences.forEach((sentence) => {
-      if (sentence.trim() === '') return;
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const textWidth = doc.getTextWidth(testLine);
       
-      // Clean and prepare sentence
-      const cleanSentence = sentence.trim() + '.';
-      
-      // Use splitTextToSize for proper wrapping
-      const wrappedText = doc.splitTextToSize(cleanSentence, 170);
-      
-      // Check if we need a new page before adding text
-      if (yPos + (wrappedText.length * 6) > 280) {
+      if (textWidth > maxLineWidth && currentLine !== '') {
+        // Check if we need a new page
+        if (yPos > 275) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.text(currentLine, 20, yPos);
+        yPos += 5;
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    // Print remaining text
+    if (currentLine !== '') {
+      if (yPos > 275) {
         doc.addPage();
         yPos = 20;
       }
+      doc.text(currentLine, 20, yPos);
+    }
+  } else {
+    // Default content
+    const defaultText = '1 Bu Sözle_me gerçi, Hizmet Alan, Üyelik hizmetleri dahilinde Doktorum Ol tarafından etti i_eklide almayı kabul eder ve beyan eder. Doktorum Ol, bu Sözle_me çerçevesinde Hizmet Alan a satlı aldı i abonelikte bulunan hizmetleri sunmayi taahhüt eder.';
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    
+    const words = defaultText.split(' ');
+    let currentLine = '';
+    const maxLineWidth = 170;
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const textWidth = doc.getTextWidth(testLine);
       
-      // Add each line of wrapped text
-      wrappedText.forEach((line: string) => {
-        doc.text(line, 20, yPos);
-        yPos += 6;
-      });
-      
-      yPos += 2; // Small spacing between sentences
-    });
+      if (textWidth > maxLineWidth && currentLine !== '') {
+        if (yPos > 275) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.text(currentLine, 20, yPos);
+        yPos += 5;
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine !== '') {
+      if (yPos > 275) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.text(currentLine, 20, yPos);
+    }
   }
   
   return doc;
@@ -384,9 +431,9 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
 function generateDistanceSalesPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
-  // Header - centered like in the image  
+  // Header - centered
   doc.setFontSize(16);
-  doc.setFont('times', 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 105, 30, { align: 'center' });
   
@@ -398,24 +445,24 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.rect(15, yPos, 180, customerBoxHeight);
   
   doc.setFontSize(11);
-  doc.setFont('times', 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(59, 130, 246);
-  doc.text('MÜŞTERİ BİLGİLERİ:', 20, yPos + 10);
+  doc.text('MÜŞTERİ BİLGİLERİ:', 20, yPos + 12);
   
-  doc.setFont('times', 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
-  doc.text(`Müşteri Adı: ${customerData.name} ${customerData.surname || ''}`, 20, yPos + 20);
-  doc.text(`E-posta: ${customerData.email}`, 20, yPos + 30);
+  doc.text(`Müşteri Adı: ${customerData.name} ${customerData.surname || ''}`, 20, yPos + 22);
+  doc.text(`E-posta: ${customerData.email}`, 20, yPos + 32);
   if (customerData.phone) {
-    doc.text(`Telefon: ${customerData.phone}`, 20, yPos + 40);
+    doc.text(`Telefon: ${customerData.phone}`, 20, yPos + 42);
   }
   if (customerData.tcNo) {
-    doc.text(`TC Kimlik No: ${customerData.tcNo}`, 20, yPos + 50);
+    doc.text(`TC Kimlik No: ${customerData.tcNo}`, 20, yPos + 52);
   }
   
   // Right side info
-  doc.text(`Şehir: ${customerData.city || 'İstanbul'}`, 110, yPos + 20);
-  doc.text(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 110, yPos + 30);
+  doc.text(`Şehir: ${customerData.city || 'İstanbul'}`, 110, yPos + 22);
+  doc.text(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 110, yPos + 32);
   
   yPos += customerBoxHeight + 15;
   
@@ -424,20 +471,20 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.setDrawColor(59, 130, 246);
   doc.rect(15, yPos, 180, packageBoxHeight);
   
-  doc.setFont('times', 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(59, 130, 246);
-  doc.text('PAKET BİLGİLERİ:', 20, yPos + 10);
+  doc.text('PAKET BİLGİLERİ:', 20, yPos + 12);
   
-  doc.setFont('times', 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
-  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos + 20);
-  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 110, yPos + 20);
+  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos + 22);
+  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 110, yPos + 22);
   
   yPos += packageBoxHeight + 15;
   
   // Contract content header
   doc.setFontSize(12);
-  doc.setFont('times', 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ KOŞULLARI:', 20, yPos);
   yPos += 15;
@@ -454,66 +501,91 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
       .replace(/&quot;/g, '"')
       .trim();
     
-    // Take first part for distance sales contract - more focused
-    const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 15).slice(0, 15);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
     
-    doc.setFont('times', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
+    // Simple text wrapping - more reliable
+    const words = plainText.split(' ');
+    let currentLine = '';
+    const maxLineWidth = 170;
+    let lineCount = 0;
+    const maxLines = 50; // Limit for distance sales contract
     
-    sentences.forEach((sentence) => {
-      if (sentence.trim() === '') return;
+    for (let i = 0; i < words.length && lineCount < maxLines; i++) {
+      const word = words[i];
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const textWidth = doc.getTextWidth(testLine);
       
-      // Clean and prepare sentence
-      const cleanSentence = sentence.trim() + '.';
-      
-      // Use splitTextToSize for proper wrapping
-      const wrappedText = doc.splitTextToSize(cleanSentence, 170);
-      
-      // Check if we need a new page
-      if (yPos + (wrappedText.length * 6) > 280) {
+      if (textWidth > maxLineWidth && currentLine !== '') {
+        // Check if we need a new page
+        if (yPos > 275) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.text(currentLine, 20, yPos);
+        yPos += 5;
+        lineCount++;
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    // Print remaining text
+    if (currentLine !== '' && lineCount < maxLines) {
+      if (yPos > 275) {
         doc.addPage();
         yPos = 20;
       }
-      
-      // Add each line of wrapped text
-      wrappedText.forEach((line: string) => {
-        doc.text(line, 20, yPos);
-        yPos += 6;
-      });
-      
-      yPos += 2; // Small spacing between sentences
-    });
+      doc.text(currentLine, 20, yPos);
+    }
   } else {
     // Fallback content with proper formatting
-    doc.setFont('times', 'normal');
-    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
     const contractTerms = [
-      'DOKTORUM OL ÜYELİK SÖZLEŞMESİ 1.1 Bu Sözleşme gerçi, Hizmet Alan, Üyelik hizmetleri tarafından sunulan hizmetleri, talep etti i_eklide almayı kabul eder ve beyan eder.',
-      'Doktorum Ol un Premium Üyelik hizmetlerinden faydalanmak isteyen ki_i adına Doktorum Ol tarafından adındaki web sitesinde bir profil olu_turulmasıdır.',
-      'Premium Üyelik paketi kapsamında sunulan belirtilen _ekilde Doktorum Ol tarafından sunulacak ve kar_ılı ında Hizmet Alan ki_inin bu',
-      'Doktorum Ol sitesine ödeme si gerekmektedir. Bu sözle_me, tarafların kar_ılıklı hak ve yükümlülükleri hak ve yükümlülük olarak kabul edilir ve bu amaç do rultusunda yürütülektedir.',
+      'DOKTORUM OL ÜYELİK SÖZLEŞMESİ 1.1 Bu Sözleşme gerçi, Hizmet Alan, Üyelik hizmetleri dahilinde Doktorum Ol tarafından etti i_eklide almayı kabul eder ve beyan eder.',
+      'Doktorum Ol, bu Sözle_me çerçevesinde Hizmet Alan a satlı aldı i abonelikte bulunan hizmetleri sunmayi taahhüt eder.',
+      'TARAFLARBu Sözle_me çerçevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak adlandırılacaktır.',
+      'AMAÇ VE KONUBu sözle_menin temel amacı; Doktorum Ol un Premium Üyelik hizmetlerinden faydalanmak isteyen ki_i adına Doktorum Ol tarafından adındaki web sitesinde bir profil olu_turulmasıdır.',
       'Bu sözleşme 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği kapsamında düzenlenmiştir.',
       'Taraflar bu sözleşmeyi elektronik ortamda kabul etmiş sayılır ve uyuşmazlıklar İstanbul mahkemelerinde çözülür.'
     ];
     
     contractTerms.forEach(term => {
-      // Use splitTextToSize for proper wrapping
-      const wrappedText = doc.splitTextToSize(term, 170);
+      const words = term.split(' ');
+      let currentLine = '';
+      const maxLineWidth = 170;
       
-      // Check if we need a new page
-      if (yPos + (wrappedText.length * 6) > 280) {
-        doc.addPage();
-        yPos = 20;
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const testLine = currentLine + (currentLine ? ' ' : '') + word;
+        const textWidth = doc.getTextWidth(testLine);
+        
+        if (textWidth > maxLineWidth && currentLine !== '') {
+          if (yPos > 275) {
+            doc.addPage();
+            yPos = 20;
+          }
+          doc.text(currentLine, 20, yPos);
+          yPos += 5;
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
       }
       
-      // Add each line of wrapped text
-      wrappedText.forEach((line: string) => {
-        doc.text(line, 20, yPos);
-        yPos += 6;
-      });
+      if (currentLine !== '') {
+        if (yPos > 275) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.text(currentLine, 20, yPos);
+        yPos += 5;
+      }
       
-      yPos += 4; // Extra spacing between terms
+      yPos += 3; // Extra spacing between terms
     });
   }
   
