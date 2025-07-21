@@ -24,6 +24,7 @@ import PhysiotherapistPackage from "./pages/PhysiotherapistPackage";
 import FamilyCounselorPackage from "./pages/FamilyCounselorPackage";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentError from "./pages/PaymentError";
 import Privacy from "./pages/Privacy";
 import DisclosureText from "./pages/DisclosureText";
 import DistanceSalesContract from "./pages/DistanceSalesContract";
@@ -95,7 +96,9 @@ function App() {
               <Route path="/aile-danismani-paketi" element={<FamilyCounselorPackage />} />
               <Route path="/odeme/:packageType" element={<Checkout />} />
               <Route path="/odeme-sayfasi" element={<Checkout />} />
-              <Route path="/odeme-basarili" element={<PaymentSuccess />} />
+          <Route path="/odeme-basarili" element={<PaymentSuccess />} />
+          <Route path="/tesekkurler" element={<PaymentSuccess />} />
+          <Route path="/odeme-hatasi" element={<PaymentError />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
               <Route path="/aydinlatma-metni" element={<DisclosureText />} />
               <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesContract />} />
