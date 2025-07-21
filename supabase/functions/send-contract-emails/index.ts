@@ -43,13 +43,13 @@ serve(async (req) => {
 
     let preInfoBase64, distanceSalesBase64;
 
+    // Create Supabase client for database queries
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
     // If orderId is provided, try to get PDFs from database first
     if (orderId) {
       console.log('Fetching contract PDFs from database for order:', orderId);
-      
-      // Create a Supabase client for the database query
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       
       const response = await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${orderId}&select=pre_info_pdf_content,distance_sales_pdf_content`, {
         headers: {
