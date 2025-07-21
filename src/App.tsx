@@ -52,6 +52,7 @@ import ReviewManagement from "./pages/admin/ReviewManagement";
 import PaymentManagement from "./pages/admin/PaymentManagement";
 import NewOrder from "./pages/admin/NewOrder";
 import OrderManagement from "./pages/admin/OrderManagement";
+import NewOrderPage from "./pages/admin/NewOrderPage";
 import Reports from "./pages/admin/Reports";
 import MapboxSettings from "./pages/admin/MapboxSettings";
 import SuccessStatistics from "./pages/admin/SuccessStatistics";
@@ -132,8 +133,8 @@ function App() {
               <Route path="/divan_paneli/reviews" element={<ReviewManagement />} />
               <Route path="/divan_paneli/payments" element={<PaymentManagement />} />
               <Route path="/divan_paneli/orders/new" element={<NewOrder />} />
-              <Route path="/divan_paneli/orders" element={<OrderManagement />} />
-              <Route path="/divan_paneli/siparisler" element={<OrderManagement />} />
+              <Route path="/divan_paneli/orders" element={<NewOrderPage />} />
+              <Route path="/divan_paneli/siparisler" element={<NewOrderPage />} />
               <Route path="/divan_paneli/reports" element={<Reports />} />
               <Route path="/divan_paneli/mapbox" element={<MapboxSettings />} />
               <Route path="/divan_paneli/success-statistics" element={<SuccessStatistics />} />
