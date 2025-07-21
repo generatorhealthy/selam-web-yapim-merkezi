@@ -496,6 +496,10 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
     format: 'a4'
   });
 
+  // Define page constants that will be used throughout the function
+  const pageHeight = 297;
+  const bottomMargin = 25;
+
   // Better font settings for Turkish characters
   doc.setFont('helvetica');
   
@@ -780,8 +784,6 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   doc.setFont('helvetica', 'normal');
   const section2Text = 'Ad, soyadi, telefon numarasi, e-posta adresi, adres bilgileri, odeme araci bilgileri ve bunlarla sinirli olmamak uzere varsa internet sitesi veya cagri merkezi araciligiyla iletmis oldugumuz genel ve ozel nitelikli kategorilerdeki kisisel verileriniz, internet sitesinde uyeliginizin olusturulmasi, Doktorumol uyeligi sebebiyle aldiginiz hizmetlerin sunumu, alinan hizmet ile ilgili sizinle iletisime gecilmesi, musteri iliskilerinde saglikli ve uzun sureli etkilesim kurulmasi, onay vermeniz halinde tarafiniza ticari elektronik ileti gonderilmesi, talep ve sikayetlerinizin takibi ile birlikte Doktorumol tarafindan saklanmasi amaci ile islenmektedir.';
   const section2Lines = doc.splitTextToSize(section2Text, 170);
-  const pageHeight = 297;
-  const bottomMargin = 25;
 
   for (let i = 0; i < section2Lines.length; i++) {
     if (yPosition > pageHeight - bottomMargin) {
