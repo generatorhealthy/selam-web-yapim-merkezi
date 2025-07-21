@@ -217,7 +217,7 @@ async function sendEmailWithBrevo(
         name: "Doktorum Ol"
       }
     ],
-    subject: "Siparişiniz Tamamlandı - Sözleşme Belgeleri",
+    subject: "Siparişiniz tamamlandı",
     htmlContent: emailTemplate,
     attachment: [
       {
@@ -1046,7 +1046,7 @@ function createOrderCompletionEmailTemplate(customerData: CustomerData, packageD
               <div style="color: white; font-size: 32px;">🎉</div>
             </div>
             <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Siparişiniz Tamamlandı!</h1>
-            <p style="margin: 15px 0 0 0; font-size: 18px; color: rgba(255, 255, 255, 0.95); font-weight: 300;">Doktorum Ol - Profesyonel Doktor Platformu</p>
+            <p style="margin: 15px 0 0 0; font-size: 18px; color: rgba(255, 255, 255, 0.95); font-weight: 300;">Doktorum Ol Randevu Sitesi</p>
           </div>
         </div>
         
@@ -1112,13 +1112,6 @@ function createOrderCompletionEmailTemplate(customerData: CustomerData, packageD
             </div>
           </div>
           
-          <!-- Important Note -->
-          <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #0ea5e9; border-radius: 16px; padding: 25px; margin: 25px 0; text-align: center;">
-            <div style="color: #0369a1; font-size: 20px; margin-bottom: 10px;">📄</div>
-            <p style="margin: 0; color: #0369a1; font-weight: 600; font-size: 16px;">
-              Sözleşme belgeleriniz bu e-postaya eklenmiştir. Lütfen saklayınız.
-            </p>
-          </div>
           
         </div>
         
