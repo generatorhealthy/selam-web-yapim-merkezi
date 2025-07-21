@@ -59,6 +59,9 @@ enable_confirmations = false
 [functions.send-contract-emails]
 verify_jwt = false
 
+[functions.process-automatic-orders]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
