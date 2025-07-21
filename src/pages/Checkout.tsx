@@ -302,170 +302,240 @@ const Checkout = () => {
     navigate("/odeme-basarili");
   };
 
-  const generatePreInfoPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string, formContent?: string) => {
+  const generatePreInfoPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
     const doc = new jsPDF();
+    doc.addFont('Arial', 'Arial', 'normal');
+    doc.setFont('Arial');
+    
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 20;
+    const contentWidth = pageWidth - 2 * margin;
+    let yPosition = 30;
     
     // Header
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text('ÖN BİLGİLENDİRME FORMU', 105, 20, { align: 'center' });
+    doc.setFontSize(18);
+    doc.setFont('Arial', 'bold');
+    doc.text('ÖN BİLGİLENDİRME FORMU', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 20;
     
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
+    // Date and IP info
+    const currentDate = new Date().toLocaleDateString('tr-TR');
+    doc.setFontSize(12);
+    doc.setFont('Arial', 'normal');
+    yPosition += 10;
     
-    let yPos = 40;
+    // Customer info section with blue background box
+    doc.setFillColor(173, 216, 230); // Light blue
+    doc.rect(margin, yPosition, contentWidth, 80, 'F');
     
-    // Seller info
-    doc.setFont(undefined, 'bold');
-    doc.text('SATICI BİLGİLERİ:', 20, yPos);
-    yPos += 10;
+    doc.setFont('Arial', 'bold');
+    doc.setFontSize(14);
+    doc.text('MÜŞTERİ BİLGİLERİ:', margin + 5, yPosition + 15);
     
-    doc.setFont(undefined, 'normal');
-    doc.text('Unvan: SELAM WEB YAPIM MERKEZİ', 20, yPos);
-    yPos += 5;
-    doc.text('Adres: Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 20, yPos);
-    yPos += 5;
-    doc.text('Telefon: 0 216 706 06 11', 20, yPos);
-    yPos += 5;
-    doc.text('E-posta: info@doktorumol.com.tr', 20, yPos);
-    yPos += 15;
+    doc.setFont('Arial', 'normal');
+    doc.setFontSize(12);
     
-    // Customer info
-    doc.setFont(undefined, 'bold');
-    doc.text('ALICI BİLGİLERİ:', 20, yPos);
-    yPos += 10;
-    
-    doc.setFont(undefined, 'normal');
-    doc.text(`Ad Soyad: ${customerData.name} ${customerData.surname}`, 20, yPos);
-    yPos += 5;
-    doc.text(`E-posta: ${customerData.email}`, 20, yPos);
-    yPos += 5;
-    if (customerData.phone) {
-      doc.text(`Telefon: ${customerData.phone}`, 20, yPos);
-      yPos += 5;
-    }
-    if (customerData.address) {
-      doc.text(`Adres: ${customerData.address}`, 20, yPos);
-      yPos += 5;
-    }
-    yPos += 10;
-    
-    // Package info
-    doc.setFont(undefined, 'bold');
-    doc.text('PAKET BİLGİLERİ:', 20, yPos);
-    yPos += 10;
-    
-    doc.setFont(undefined, 'normal');
-    doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
-    yPos += 5;
-    doc.text('Ödeme Yöntemi: Banka Havalesi/EFT', 20, yPos);
-    yPos += 15;
-    
-    // Terms
-    doc.setFont(undefined, 'bold');
-    doc.text('GENEL ŞARTLAR:', 20, yPos);
-    yPos += 10;
-    
-    doc.setFont(undefined, 'normal');
-    const terms = [
-      '1. Bu form, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereği düzenlenmiştir.',
-      '2. Hizmet bedeli ön ödeme olarak tahsil edilmektedir.',
-      '3. Hizmet süresi paket tipine göre değişmektedir.',
-      '4. Cayma hakkı 14 gün olup, hizmetin ifasına başlanması durumunda geçersizdir.',
-      '5. Tüm iletişim elektronik ortamda gerçekleştirilecektir.'
+    const customerInfo = [
+      `Müşteri Adı: ${customerData.name} ${customerData.surname}`,
+      `E-posta: ${customerData.email}`,
+      customerData.phone ? `Telefon: ${customerData.phone}` : 'Telefon: Belirtilmemiş',
+      customerData.tcNo ? `TC Kimlik No: ${customerData.tcNo}` : 'TC Kimlik No: Belirtilmemiş',
+      customerData.address ? `Adres: ${customerData.address}, ${customerData.city}` : 'Adres: Belirtilmemiş',
+      customerData.city ? `Şehir: ${customerData.city}` : '',
+      customerType === 'company' ? 'Müşteri Tipi: Kurumsal' : 'Müşteri Tipi: Bireysel'
     ];
     
-    terms.forEach(term => {
-      doc.text(term, 20, yPos, { maxWidth: 170 });
-      yPos += 10;
+    let infoYPos = yPosition + 30;
+    customerInfo.forEach((info) => {
+      if (info) {
+        doc.text(info, margin + 5, infoYPos);
+        infoYPos += 8;
+      }
     });
     
-    yPos += 10;
-    doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
-    yPos += 5;
-    doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
+    yPosition += 90;
+    
+    // Package info section with blue background box
+    doc.setFillColor(173, 216, 230); // Light blue
+    doc.rect(margin, yPosition, contentWidth, 50, 'F');
+    
+    doc.setFont('Arial', 'bold');
+    doc.setFontSize(14);
+    doc.text('PAKET BİLGİLERİ:', margin + 5, yPosition + 15);
+    
+    doc.setFont('Arial', 'normal');
+    doc.setFontSize(12);
+    
+    const packageInfo = [
+      `Seçilen Paket: ${packageData.name}`,
+      `Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`,
+      `Ödeme Yöntemi: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}`
+    ];
+    
+    let packageYPos = yPosition + 30;
+    packageInfo.forEach((info) => {
+      doc.text(info, margin + 5, packageYPos);
+      packageYPos += 8;
+    });
+    
+    yPosition += 60;
+    
+    // Add detailed pre-information form content
+    const preInfoContent = `
+DOKTORUM OL ÜYELİK SÖZLEŞMESİ
+
+1.1 Bu Sözleşme gereği, Hizmet Alan, Üyelik hizmetleri dahilinde Doktorum Ol tarafından sunulan hizmetleri, talep ettiği şekilde almayı kabul eder ve beyan eder. Doktorum Ol, bu Sözleşme çerçevesinde Hizmet Alan'a satın aldığı abonelikte bulunan hizmetleri sunmayı taahhüt eder.
+
+2. TARAFLAR
+Bu Sözleşme çerçevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak adlandırılacaktır.
+
+3. AMAÇ VE KONU
+
+Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden faydalanmak isteyen kişi adına Doktorum Ol tarafından www.doktorumol.com.tr alan adındaki web sitesinde bir profil oluşturulmasıdır.
+
+Müşterinin Hizmet Aldığı Paket İçeriği:
+- Detaylı profil oluşturma ve yönetimi
+- Online randevu sistemi entegrasyonu  
+- Video ve makale yayınlama imkanı
+- Hasta takip sistemi erişimi
+- SEO optimizasyonu ve dijital pazarlama desteği
+
+Tarih: ${currentDate}
+IP Adresi: ${clientIP}
+`;
+    
+    const lines = doc.splitTextToSize(preInfoContent, contentWidth);
+    
+    lines.forEach((line: string) => {
+      if (yPosition > 270) {
+        doc.addPage();
+        yPosition = 30;
+      }
+      doc.text(line, margin, yPosition);
+      yPosition += 6;
+    });
     
     return doc;
   };
 
-  const generateDistanceSalesPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string, formContent?: string) => {
+  const generateDistanceSalesPDF = (customerData: any, packageData: any, paymentMethod: string, customerType: string, clientIP: string) => {
     const doc = new jsPDF();
+    doc.addFont('Arial', 'Arial', 'normal');
+    doc.setFont('Arial');
+    
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 20;
+    const contentWidth = pageWidth - 2 * margin;
+    let yPosition = 30;
     
     // Header
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 105, 20, { align: 'center' });
+    doc.setFontSize(18);
+    doc.setFont('Arial', 'bold');
+    doc.text('Mesafeli Satış Sözleşmesi', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 30;
     
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
+    // Enlightenment text
+    doc.setFont('Arial', 'bold');
+    doc.setFontSize(14);
+    doc.text('KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ', margin, yPosition);
+    yPosition += 15;
     
-    let yPos = 40;
+    doc.setFont('Arial', 'normal');
+    doc.setFontSize(12);
     
-    // Contract parties
-    doc.setFont(undefined, 'bold');
-    doc.text('TARAFLAR:', 20, yPos);
-    yPos += 10;
+    const enlightenmentText = `Doktorumol.com.tr ("doktorumol" veya "Şirket") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
+
+Bu kapsamda bilgi vermekle yükümlü olduğumuz konular aşağıdaki gibidir:
+
+1. Veri sorumlusunun ve varsa temsilcisinin kimliği
+
+Veri sorumlusu; doktorumol.com.tr'dir.
+
+2. Kişisel verilerin hangi amaçla işleneceği
+
+Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz genel ve özel nitelikli kategorilerdeki kişisel verileriniz, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim kurulması, onay vermeniz halinde tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda bu kişisel verilerinizin Doktorumol tarafından saklanması amacı ile işlenmektedir.
+
+Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet sayfası sunucusu tarafından sabit sürücünüze iletilen küçük metin dosyaları ("Çerezler") aracılığıyla elde edilen kullanıcı tarayıcı, IP adresi, internet bağlantınız, site`;
     
-    doc.setFont(undefined, 'normal');
-    doc.text('SATICI:', 20, yPos);
-    yPos += 5;
-    doc.text('SELAM WEB YAPIM MERKEZİ', 30, yPos);
-    yPos += 5;
-    doc.text('Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul', 30, yPos);
-    yPos += 5;
-    doc.text('Tel: 0 216 706 06 11 | E-posta: info@doktorumol.com.tr', 30, yPos);
-    yPos += 10;
+    const enlightenmentLines = doc.splitTextToSize(enlightenmentText, contentWidth);
     
-    doc.text('ALICI:', 20, yPos);
-    yPos += 5;
-    doc.text(`${customerData.name} ${customerData.surname}`, 30, yPos);
-    yPos += 5;
-    doc.text(`E-posta: ${customerData.email}`, 30, yPos);
-    yPos += 5;
-    if (customerData.phone) {
-      doc.text(`Telefon: ${customerData.phone}`, 30, yPos);
-      yPos += 5;
-    }
-    yPos += 10;
-    
-    // Contract subject
-    doc.setFont(undefined, 'bold');
-    doc.text('SÖZLEŞMENİN KONUSU:', 20, yPos);
-    yPos += 10;
-    
-    doc.setFont(undefined, 'normal');
-    doc.text(`Hizmet: ${packageData.name}`, 20, yPos);
-    yPos += 5;
-    doc.text(`Bedel: ${packageData.price.toLocaleString('tr-TR')} ₺`, 20, yPos);
-    yPos += 5;
-    doc.text('Ödeme Şekli: Banka Havalesi/EFT', 20, yPos);
-    yPos += 15;
-    
-    // General terms
-    doc.setFont(undefined, 'bold');
-    doc.text('GENEL HÜKÜMLER:', 20, yPos);
-    yPos += 10;
-    
-    doc.setFont(undefined, 'normal');
-    const contractTerms = [
-      '1. Bu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında düzenlenmiştir.',
-      '2. Hizmet bedeli peşin olarak tahsil edilir.',
-      '3. Hizmet süresi seçilen pakete göre belirlenir.',
-      '4. Taraflar bu sözleşmeyi kabul etmiş sayılır.',
-      '5. Uyuşmazlıklar İstanbul mahkemelerinde çözülür.'
-    ];
-    
-    contractTerms.forEach(term => {
-      doc.text(term, 20, yPos, { maxWidth: 170 });
-      yPos += 8;
+    enlightenmentLines.forEach((line: string) => {
+      if (yPosition > 270) {
+        doc.addPage();
+        yPosition = 30;
+      }
+      doc.text(line, margin, yPosition);
+      yPosition += 6;
     });
     
-    yPos += 15;
-    doc.text(`Sözleşme Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
-    yPos += 5;
-    doc.text(`IP Adresi: ${clientIP}`, 20, yPos);
+    if (yPosition > 200) {
+      doc.addPage();
+      yPosition = 30;
+    }
+    
+    yPosition += 15;
+    
+    // Customer info section
+    doc.setFillColor(173, 216, 230); // Light blue
+    doc.rect(margin, yPosition, contentWidth, 80, 'F');
+    
+    doc.setFont('Arial', 'bold');
+    doc.setFontSize(14);
+    doc.text('MÜŞTERİ BİLGİLERİ:', margin + 5, yPosition + 15);
+    
+    doc.setFont('Arial', 'normal');
+    doc.setFontSize(12);
+    
+    const customerInfo = [
+      `Müşteri Adı: ${customerData.name} ${customerData.surname}`,
+      `E-posta: ${customerData.email}`,
+      customerData.phone ? `Telefon: ${customerData.phone}` : 'Telefon: Belirtilmemiş',
+      customerData.tcNo ? `TC Kimlik No: ${customerData.tcNo}` : 'TC Kimlik No: Belirtilmemiş',
+      customerData.address ? `Adres: ${customerData.address}, ${customerData.city}` : 'Adres: Belirtilmemiş',
+      customerData.city ? `Şehir: ${customerData.city}` : '',
+      customerType === 'company' ? 'Müşteri Tipi: Kurumsal' : 'Müşteri Tipi: Bireysel'
+    ];
+    
+    let infoYPos = yPosition + 30;
+    customerInfo.forEach((info) => {
+      if (info) {
+        doc.text(info, margin + 5, infoYPos);
+        infoYPos += 8;
+      }
+    });
+    
+    yPosition += 90;
+    
+    // Package info section
+    doc.setFillColor(173, 216, 230); // Light blue
+    doc.rect(margin, yPosition, contentWidth, 50, 'F');
+    
+    doc.setFont('Arial', 'bold');
+    doc.setFontSize(14);
+    doc.text('PAKET BİLGİLERİ:', margin + 5, yPosition + 15);
+    
+    doc.setFont('Arial', 'normal');
+    doc.setFontSize(12);
+    
+    const packageInfo = [
+      `Seçilen Paket: ${packageData.name}`,
+      `Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`,
+      `Ödeme Yöntemi: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}`
+    ];
+    
+    let packageYPos = yPosition + 30;
+    packageInfo.forEach((info) => {
+      doc.text(info, margin + 5, packageYPos);
+      packageYPos += 8;
+    });
+    
+    yPosition += 70;
+    
+    // Footer
+    const currentDate = new Date().toLocaleDateString('tr-TR');
+    doc.text(`Tarih: ${currentDate}`, margin, yPosition);
+    yPosition += 8;
+    doc.text(`IP Adresi: ${clientIP}`, margin, yPosition);
     
     return doc;
   };
@@ -503,8 +573,8 @@ const Checkout = () => {
         .single();
 
       // Generate PDFs that the customer is approving right now
-      const preInfoPDF = generatePreInfoPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP, formContent?.content);
-      const distanceSalesPDF = generateDistanceSalesPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP, formContent?.content);
+      const preInfoPDF = generatePreInfoPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP);
+      const distanceSalesPDF = generateDistanceSalesPDF(customerDataForPDF, packageDataForPDF, paymentMethod, customerType, clientIP);
       
       // Convert PDFs to base64 for storage
       const preInfoBase64 = preInfoPDF.output('datauristring').split(',')[1];
