@@ -329,12 +329,12 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
   
   yPos += packageBoxHeight + 15;
   
-  // Contract content - complete text
+  // Contract content - complete text with proper formatting
   if (formContent && formContent.trim()) {
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont('times', 'bold');
     doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ 1.1 Bu Sözleşme gerçi, Hizmet Alan, Üyelik', 20, yPos);
-    yPos += 10;
+    yPos += 15;
     
     // Convert HTML to plain text
     const plainText = formContent
@@ -346,50 +346,35 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
       .replace(/&quot;/g, '"')
       .trim();
     
-    // Split into paragraphs and sentences for better wrapping
-    const paragraphs = plainText.split('\n').filter(p => p.trim() !== '');
+    // Split text into sentences for better readability
+    const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 10);
     
     doc.setFont('times', 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
     
-    paragraphs.forEach((paragraph) => {
-      if (paragraph.trim() === '') return;
+    sentences.forEach((sentence) => {
+      if (sentence.trim() === '') return;
       
-      // Split long paragraphs into multiple lines
-      const words = paragraph.split(' ');
-      let currentLine = '';
+      // Clean and prepare sentence
+      const cleanSentence = sentence.trim() + '.';
       
-      words.forEach((word, index) => {
-        const testLine = currentLine + (currentLine ? ' ' : '') + word;
-        const textWidth = doc.getTextWidth(testLine);
-        
-        if (textWidth > 170 && currentLine !== '') {
-          // Check if we need a new page
-          if (yPos > 270) {
-            doc.addPage();
-            yPos = 20;
-          }
-          
-          doc.text(currentLine, 20, yPos);
-          yPos += 5;
-          currentLine = word;
-        } else {
-          currentLine = testLine;
-        }
-      });
+      // Use splitTextToSize for proper wrapping
+      const wrappedText = doc.splitTextToSize(cleanSentence, 170);
       
-      // Print the remaining text
-      if (currentLine !== '') {
-        if (yPos > 270) {
-          doc.addPage();
-          yPos = 20;
-        }
-        doc.text(currentLine, 20, yPos);
-        yPos += 5;
+      // Check if we need a new page before adding text
+      if (yPos + (wrappedText.length * 6) > 280) {
+        doc.addPage();
+        yPos = 20;
       }
       
-      yPos += 3; // Extra spacing between paragraphs
+      // Add each line of wrapped text
+      wrappedText.forEach((line: string) => {
+        doc.text(line, 20, yPos);
+        yPos += 6;
+      });
+      
+      yPos += 2; // Small spacing between sentences
     });
   }
   
@@ -399,38 +384,16 @@ function generatePreInfoPDF(customerData: CustomerData, packageData: PackageData
 function generateDistanceSalesPDF(customerData: CustomerData, packageData: PackageData, paymentMethod: string, customerType: string, clientIP: string, formContent?: string): jsPDF {
   const doc = new jsPDF();
   
-  // Header - centered like in the image
+  // Header - centered like in the image  
   doc.setFontSize(16);
   doc.setFont('times', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text('Mesafeli Satış Sözleşmesi', 105, 30, { align: 'center' });
+  doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 105, 30, { align: 'center' });
   
   let yPos = 50;
   
-  // Blue box for contract info
-  doc.setDrawColor(59, 130, 246);
-  doc.setLineWidth(1);
-  doc.rect(15, yPos, 180, 40);
-  
-  // Contract creation details inside blue box
-  doc.setFontSize(11);
-  doc.setFont('times', 'normal');
-  doc.setTextColor(59, 130, 246);
-  doc.text(`Sözleşme_Oluşturma_Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos + 10);
-  doc.text(`Dijital Onaylama Tarihi: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}`, 20, yPos + 20);
-  doc.text(`IP Adresi: ${clientIP}`, 20, yPos + 30);
-  
-  yPos += 55;
-  
-  // Main content header
-  doc.setFontSize(14);
-  doc.setFont('times', 'bold');
-  doc.setTextColor(0, 0, 0);
-  doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ', 20, yPos);
-  yPos += 20;
-  
-  // Customer info in blue box
-  const customerBoxHeight = 50;
+  // Customer info in blue box - exactly like first image
+  const customerBoxHeight = 70;
   doc.setDrawColor(59, 130, 246);
   doc.rect(15, yPos, 180, customerBoxHeight);
   
@@ -441,25 +404,23 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   
   doc.setFont('times', 'normal');
   doc.setTextColor(0, 0, 0);
-  let customerYPos = yPos + 18;
-  doc.text(`Müşteri Adı: ${customerData.name} ${customerData.surname || ''}`, 20, customerYPos);
-  customerYPos += 6;
-  doc.text(`E-posta: ${customerData.email}`, 20, customerYPos);
-  customerYPos += 6;
+  doc.text(`Müşteri Adı: ${customerData.name} ${customerData.surname || ''}`, 20, yPos + 20);
+  doc.text(`E-posta: ${customerData.email}`, 20, yPos + 30);
   if (customerData.phone) {
-    doc.text(`Telefon: ${customerData.phone}`, 20, customerYPos);
-    customerYPos += 6;
+    doc.text(`Telefon: ${customerData.phone}`, 20, yPos + 40);
   }
   if (customerData.tcNo) {
-    doc.text(`TC Kimlik No: ${customerData.tcNo}`, 20, customerYPos);
+    doc.text(`TC Kimlik No: ${customerData.tcNo}`, 20, yPos + 50);
   }
-  doc.text(`Şehir: ${customerData.city || 'İstanbul'}`, 110, yPos + 18);
-  doc.text(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 110, yPos + 24);
+  
+  // Right side info
+  doc.text(`Şehir: ${customerData.city || 'İstanbul'}`, 110, yPos + 20);
+  doc.text(`Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`, 110, yPos + 30);
   
   yPos += customerBoxHeight + 15;
   
   // Package info in blue box
-  const packageBoxHeight = 25;
+  const packageBoxHeight = 30;
   doc.setDrawColor(59, 130, 246);
   doc.rect(15, yPos, 180, packageBoxHeight);
   
@@ -469,18 +430,20 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
   
   doc.setFont('times', 'normal');
   doc.setTextColor(0, 0, 0);
-  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos + 18);
-  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 110, yPos + 18);
+  doc.text(`Seçilen Paket: ${packageData.name}`, 20, yPos + 20);
+  doc.text(`Fiyat: ${packageData.price.toLocaleString('tr-TR')} ₺`, 110, yPos + 20);
   
   yPos += packageBoxHeight + 15;
   
-  // Contract content - complete text for distance sales
+  // Contract content header
+  doc.setFontSize(12);
+  doc.setFont('times', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ KOŞULLARI:', 20, yPos);
+  yPos += 15;
+  
+  // Contract text with proper formatting
   if (formContent && formContent.trim()) {
-    doc.setFontSize(12);
-    doc.setFont('times', 'bold');
-    doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ KOŞULLARI:', 20, yPos);
-    yPos += 10;
-    
     // Convert HTML to plain text
     const plainText = formContent
       .replace(/<[^>]*>/g, '')
@@ -491,105 +454,66 @@ function generateDistanceSalesPDF(customerData: CustomerData, packageData: Packa
       .replace(/&quot;/g, '"')
       .trim();
     
-    // For distance sales, show relevant sections only but complete
-    const paragraphs = plainText.split('\n').filter(p => p.trim() !== '').slice(0, 25);
+    // Take first part for distance sales contract - more focused
+    const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 15).slice(0, 15);
     
     doc.setFont('times', 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
     
-    paragraphs.forEach((paragraph) => {
-      if (paragraph.trim() === '') return;
+    sentences.forEach((sentence) => {
+      if (sentence.trim() === '') return;
       
-      // Split long paragraphs into multiple lines
-      const words = paragraph.split(' ');
-      let currentLine = '';
+      // Clean and prepare sentence
+      const cleanSentence = sentence.trim() + '.';
       
-      words.forEach((word, index) => {
-        const testLine = currentLine + (currentLine ? ' ' : '') + word;
-        const textWidth = doc.getTextWidth(testLine);
-        
-        if (textWidth > 170 && currentLine !== '') {
-          // Check if we need a new page
-          if (yPos > 270) {
-            doc.addPage();
-            yPos = 20;
-          }
-          
-          doc.text(currentLine, 20, yPos);
-          yPos += 5;
-          currentLine = word;
-        } else {
-          currentLine = testLine;
-        }
-      });
+      // Use splitTextToSize for proper wrapping
+      const wrappedText = doc.splitTextToSize(cleanSentence, 170);
       
-      // Print the remaining text
-      if (currentLine !== '') {
-        if (yPos > 270) {
-          doc.addPage();
-          yPos = 20;
-        }
-        doc.text(currentLine, 20, yPos);
-        yPos += 5;
-      }
-      
-      yPos += 3; // Extra spacing between paragraphs
-    });
-  } else {
-    // Fallback content with proper formatting
-    doc.setFont('times', 'bold');
-    doc.text('MESAFELİ SATIŞ SÖZLEŞMESİ GENEL HÜKÜMLERI:', 20, yPos);
-    yPos += 10;
-    
-    doc.setFont('times', 'normal');
-    doc.setFontSize(9);
-    const contractTerms = [
-      '1. Bu sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği kapsamında düzenlenmiştir.',
-      '2. Hizmet bedeli peşin olarak tahsil edilir ve cayma hakkı bulunmamaktadır.',
-      '3. Hizmet süresi ve özellikleri seçilen pakete göre belirlenir.',
-      '4. Taraflar bu sözleşmeyi elektronik ortamda kabul etmiş sayılır.',
-      '5. Uyuşmazlıklar İstanbul mahkemelerinde çözülür.',
-      '6. İş bu sözleşme elektronik ortamda kabul edilmiş olup imza yerine geçer.'
-    ];
-    
-    contractTerms.forEach(term => {
-      if (yPos > 270) {
+      // Check if we need a new page
+      if (yPos + (wrappedText.length * 6) > 280) {
         doc.addPage();
         yPos = 20;
       }
       
-      // Word wrap for long terms
-      const words = term.split(' ');
-      let currentLine = '';
-      
-      words.forEach((word) => {
-        const testLine = currentLine + (currentLine ? ' ' : '') + word;
-        const textWidth = doc.getTextWidth(testLine);
-        
-        if (textWidth > 170 && currentLine !== '') {
-          if (yPos > 270) {
-            doc.addPage();
-            yPos = 20;
-          }
-          doc.text(currentLine, 20, yPos);
-          yPos += 5;
-          currentLine = word;
-        } else {
-          currentLine = testLine;
-        }
+      // Add each line of wrapped text
+      wrappedText.forEach((line: string) => {
+        doc.text(line, 20, yPos);
+        yPos += 6;
       });
       
-      if (currentLine !== '') {
-        if (yPos > 270) {
-          doc.addPage();
-          yPos = 20;
-        }
-        doc.text(currentLine, 20, yPos);
-        yPos += 5;
+      yPos += 2; // Small spacing between sentences
+    });
+  } else {
+    // Fallback content with proper formatting
+    doc.setFont('times', 'normal');
+    doc.setFontSize(10);
+    const contractTerms = [
+      'DOKTORUM OL ÜYELİK SÖZLEŞMESİ 1.1 Bu Sözleşme gerçi, Hizmet Alan, Üyelik hizmetleri tarafından sunulan hizmetleri, talep etti i_eklide almayı kabul eder ve beyan eder.',
+      'Doktorum Ol un Premium Üyelik hizmetlerinden faydalanmak isteyen ki_i adına Doktorum Ol tarafından adındaki web sitesinde bir profil olu_turulmasıdır.',
+      'Premium Üyelik paketi kapsamında sunulan belirtilen _ekilde Doktorum Ol tarafından sunulacak ve kar_ılı ında Hizmet Alan ki_inin bu',
+      'Doktorum Ol sitesine ödeme si gerekmektedir. Bu sözle_me, tarafların kar_ılıklı hak ve yükümlülükleri hak ve yükümlülük olarak kabul edilir ve bu amaç do rultusunda yürütülektedir.',
+      'Bu sözleşme 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği kapsamında düzenlenmiştir.',
+      'Taraflar bu sözleşmeyi elektronik ortamda kabul etmiş sayılır ve uyuşmazlıklar İstanbul mahkemelerinde çözülür.'
+    ];
+    
+    contractTerms.forEach(term => {
+      // Use splitTextToSize for proper wrapping
+      const wrappedText = doc.splitTextToSize(term, 170);
+      
+      // Check if we need a new page
+      if (yPos + (wrappedText.length * 6) > 280) {
+        doc.addPage();
+        yPos = 20;
       }
       
-      yPos += 5;
+      // Add each line of wrapped text
+      wrappedText.forEach((line: string) => {
+        doc.text(line, 20, yPos);
+        yPos += 6;
+      });
+      
+      yPos += 4; // Extra spacing between terms
     });
   }
   
