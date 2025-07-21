@@ -132,6 +132,7 @@ function App() {
               <Route path="/divan_paneli/reviews" element={<ReviewManagement />} />
               <Route path="/divan_paneli/payments" element={<PaymentManagement />} />
               <Route path="/divan_paneli/orders/new" element={<NewOrder />} />
+              <Route path="/divan_paneli/orders" element={<OrderManagement />} />
               <Route path="/divan_paneli/siparisler" element={<OrderManagement />} />
               <Route path="/divan_paneli/reports" element={<Reports />} />
               <Route path="/divan_paneli/mapbox" element={<MapboxSettings />} />
