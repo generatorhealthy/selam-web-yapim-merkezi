@@ -13,9 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, FileText, Send } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, FileText, Send, Download, Check, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Order {
   id: string;
@@ -72,6 +73,7 @@ const OrderManagement = () => {
   const [activeTab, setActiveTab] = useState("orders");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
   const {
     data: orders,
@@ -209,6 +211,168 @@ const OrderManagement = () => {
       console.error("Error sending contract emails:", error);
     },
   });
+
+  // Toplu onay mutation
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (orderIds: string[]) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ status: "approved" })
+        .in("id", orderIds);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Siparişler Onaylandı",
+        description: `${selectedOrders.length} sipariş başarıyla onaylandı`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      setSelectedOrders([]);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Siparişler onaylanırken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error bulk approving orders:", error);
+    },
+  });
+
+  // Toplu silme mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (orderIds: string[]) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .delete()
+        .in("id", orderIds);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Siparişler Silindi",
+        description: `${selectedOrders.length} sipariş başarıyla silindi`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      setSelectedOrders([]);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Siparişler silinirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error bulk deleting orders:", error);
+    },
+  });
+
+  // PDF indirme fonksiyonu
+  const downloadPDF = async (orderId: string, type: 'pre_info' | 'distance_sales') => {
+    try {
+      const { data: orderData, error } = await supabase
+        .from("orders")
+        .select("pre_info_pdf_content, distance_sales_pdf_content, customer_name")
+        .eq("id", orderId)
+        .single();
+
+      if (error) throw error;
+
+      const pdfContent = type === 'pre_info' 
+        ? orderData.pre_info_pdf_content 
+        : orderData.distance_sales_pdf_content;
+
+      if (!pdfContent) {
+        toast({
+          title: "PDF Bulunamadı",
+          description: "Bu sipariş için PDF henüz oluşturulmamış",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Base64'ü blob'a dönüştür
+      const byteCharacters = atob(pdfContent);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+      // İndirme linkini oluştur
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const fileName = type === 'pre_info' 
+        ? `${orderData.customer_name}_on_bilgilendirme_formu.pdf`
+        : `${orderData.customer_name}_mesafeli_satis_sozlesmesi.pdf`;
+      
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "PDF İndirildi",
+        description: "PDF başarıyla indirildi",
+      });
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast({
+        title: "Hata",
+        description: "PDF indirilirken hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Checkbox işlemleri
+  const handleSelectOrder = (orderId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedOrders([...selectedOrders, orderId]);
+    } else {
+      setSelectedOrders(selectedOrders.filter(id => id !== orderId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedOrders(filteredOrders?.map(order => order.id) || []);
+    } else {
+      setSelectedOrders([]);
+    }
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedOrders.length === 0) {
+      toast({
+        title: "Uyarı",
+        description: "Lütfen onaylanacak siparişleri seçin",
+        variant: "destructive",
+      });
+      return;
+    }
+    bulkApproveMutation.mutate(selectedOrders);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedOrders.length === 0) {
+      toast({
+        title: "Uyarı", 
+        description: "Lütfen silinecek siparişleri seçin",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (confirm(`${selectedOrders.length} siparişi silmek istediğinizden emin misiniz?`)) {
+      bulkDeleteMutation.mutate(selectedOrders);
+    }
+  };
 
   const handleUpdateOrder = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: string) => {
     if (editingOrder) {
@@ -409,6 +573,50 @@ const OrderManagement = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Toplu İşlemler */}
+              {filteredOrders && filteredOrders.length > 0 && (
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={selectedOrders.length === filteredOrders.length}
+                        onCheckedChange={handleSelectAll}
+                      />
+                      <span className="text-sm font-medium">
+                        {selectedOrders.length > 0 
+                          ? `${selectedOrders.length} sipariş seçildi`
+                          : "Tümünü seç"
+                        }
+                      </span>
+                    </div>
+                    
+                    {selectedOrders.length > 0 && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={handleBulkApprove}
+                          disabled={bulkApproveMutation.isPending}
+                          className="flex items-center gap-1"
+                        >
+                          <Check className="w-4 h-4" />
+                          Toplu Onay ({selectedOrders.length})
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={handleBulkDelete}
+                          disabled={bulkDeleteMutation.isPending}
+                          className="flex items-center gap-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Toplu Sil ({selectedOrders.length})
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {isOrdersLoading ? (
                 <div className="flex justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -422,6 +630,12 @@ const OrderManagement = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={selectedOrders.length === filteredOrders?.length && filteredOrders.length > 0}
+                            onCheckedChange={handleSelectAll}
+                          />
+                        </TableHead>
                         <TableHead>Müşteri</TableHead>
                         <TableHead>Paket</TableHead>
                         <TableHead>Tutar</TableHead>
@@ -434,6 +648,12 @@ const OrderManagement = () => {
                     <TableBody>
                       {filteredOrders?.map((order) => (
                         <TableRow key={order.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedOrders.includes(order.id)}
+                              onCheckedChange={(checked) => handleSelectOrder(order.id, checked as boolean)}
+                            />
+                          </TableCell>
                           <TableCell>
                             <div>
                               <div className="font-medium">{order.customer_name}</div>
@@ -465,7 +685,7 @@ const OrderManagement = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex gap-2 justify-end">
+                            <div className="flex gap-2 justify-end flex-wrap">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -476,6 +696,30 @@ const OrderManagement = () => {
                               >
                                 Düzenle
                               </Button>
+                              
+                              {/* PDF İndirme Butonları */}
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => downloadPDF(order.id, 'pre_info')}
+                                className="flex items-center gap-1"
+                                title="Ön Bilgilendirme Formu İndir"
+                              >
+                                <Download className="w-3 h-3" />
+                                Ön Bilgi
+                              </Button>
+                              
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => downloadPDF(order.id, 'distance_sales')}
+                                className="flex items-center gap-1"
+                                title="Mesafeli Satış Sözleşmesi İndir"
+                              >
+                                <Download className="w-3 h-3" />
+                                Sözleşme
+                              </Button>
+
                               {order.is_first_order && (
                                 <Button
                                   variant="secondary"
