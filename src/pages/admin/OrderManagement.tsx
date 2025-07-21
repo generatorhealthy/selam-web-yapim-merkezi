@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -156,6 +156,29 @@ const OrderManagement = () => {
         variant: "destructive",
       });
       console.error("Error deleting order:", error);
+    },
+  });
+
+  const deleteAutomaticOrderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.from("automatic_orders").delete().eq("id", id);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Otomatik Sipariş Silindi",
+        description: "Otomatik sipariş başarıyla silindi",
+      });
+      queryClient.invalidateQueries({ queryKey: ["automatic_orders"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Otomatik sipariş silinirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error deleting automatic order:", error);
     },
   });
 
@@ -641,15 +664,16 @@ const OrderManagement = () => {
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
-                          <TableRow>
-                            <TableHead>Müşteri</TableHead>
-                            <TableHead>Paket</TableHead>
-                            <TableHead>Tutar</TableHead>
-                            <TableHead>Ödeme Günü</TableHead>
-                            <TableHead>Ödenen Aylar</TableHead>
-                            <TableHead>Toplam Ay</TableHead>
-                            <TableHead>Durum</TableHead>
-                          </TableRow>
+                           <TableRow>
+                             <TableHead>Müşteri</TableHead>
+                             <TableHead>Paket</TableHead>
+                             <TableHead>Tutar</TableHead>
+                             <TableHead>Ödeme Günü</TableHead>
+                             <TableHead>Ödenen Aylar</TableHead>
+                             <TableHead>Toplam Ay</TableHead>
+                             <TableHead>Durum</TableHead>
+                             <TableHead className="text-right">İşlemler</TableHead>
+                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {filteredAutomaticOrders?.map((order) => (
@@ -690,7 +714,19 @@ const OrderManagement = () => {
                                 <Badge variant={order.is_active ? "default" : "destructive"}>
                                   {order.is_active ? "Aktif" : "Pasif"}
                                 </Badge>
-                              </TableCell>
+                               </TableCell>
+                               <TableCell className="text-right">
+                                 <Button
+                                   variant="destructive"
+                                   size="sm"
+                                   onClick={() => deleteAutomaticOrderMutation.mutate(order.id)}
+                                   disabled={deleteAutomaticOrderMutation.isPending}
+                                   className="flex items-center gap-1"
+                                 >
+                                   <Trash2 className="w-4 h-4" />
+                                   {deleteAutomaticOrderMutation.isPending ? "Siliniyor..." : "Sil"}
+                                 </Button>
+                               </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
