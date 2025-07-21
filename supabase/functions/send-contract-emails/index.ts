@@ -105,6 +105,12 @@ async function sendEmailWithBrevo(
         name: `${customerData.name} ${customerData.surname}`
       }
     ],
+    bcc: [
+      {
+        email: "info@doktorumol.com.tr",
+        name: "Doktorum Ol"
+      }
+    ],
     subject: "Siparişiniz Tamamlandı - Sözleşme Belgeleri",
     htmlContent: emailTemplate,
     attachment: [
