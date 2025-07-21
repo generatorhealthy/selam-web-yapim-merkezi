@@ -600,16 +600,25 @@ const OrderManagement = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="orders" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-3 bg-muted rounded-lg p-1">
+          <TabsTrigger 
+            value="orders" 
+            className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
+          >
             <Calendar className="w-4 h-4" />
             Siparişler
           </TabsTrigger>
-          <TabsTrigger value="trash" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="trash" 
+            className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
+          >
             <Trash2 className="w-4 h-4" />
             Çöp Kutusu ({deletedOrders?.length || 0})
           </TabsTrigger>
-          <TabsTrigger value="automatic" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="automatic" 
+            className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
+          >
             <Clock className="w-4 h-4" />
             Otomatik Siparişler
           </TabsTrigger>
