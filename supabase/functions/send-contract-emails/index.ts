@@ -148,13 +148,11 @@ serve(async (req) => {
       distanceSalesBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
     }
 
-    // Send email with Brevo
+    // Send email with Brevo (without attachments)
     const emailResponse = await sendEmailWithBrevo(
       finalCustomerData,
       finalPackageData,
-      finalPaymentMethod,
-      preInfoBase64,
-      distanceSalesBase64
+      finalPaymentMethod
     );
 
     console.log('Email sent successfully:', emailResponse);
@@ -182,9 +180,7 @@ serve(async (req) => {
 async function sendEmailWithBrevo(
   customerData: CustomerData,
   packageData: PackageData,
-  paymentMethod: string,
-  preInfoBase64: string,
-  distanceSalesBase64: string
+  paymentMethod: string
 ) {
   const brevoApiKey = Deno.env.get('BREVO_API_KEY');
   
@@ -218,19 +214,7 @@ async function sendEmailWithBrevo(
       }
     ],
     subject: "Siparişiniz tamamlandı",
-    htmlContent: emailTemplate,
-    attachment: [
-      {
-        content: preInfoBase64,
-        name: "on-bilgilendirme-formu.pdf",
-        type: "application/pdf"
-      },
-      {
-        content: distanceSalesBase64,
-        name: "mesafeli-satis-sozlesmesi.pdf",
-        type: "application/pdf"
-      }
-    ]
+    htmlContent: emailTemplate
   };
 
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
