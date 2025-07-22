@@ -76,10 +76,6 @@ const CustomerManagement = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Test - JavaScript çalışıyor mu?
-    console.log('🚀 CustomerManagement component yüklendi');
-    alert('CustomerManagement sayfası yüklendi!');
-    
     fetchCustomers();
     fetchSpecialists();
   }, []);
