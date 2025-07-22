@@ -338,7 +338,7 @@ const AdminDashboard = () => {
               <div className="w-px h-4 bg-gray-300"></div>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                <span>{visibleCards.length} Modül Aktif - Test</span>
+                <span>{visibleCards.length} Modüller Aktif ✅</span>
               </div>
             </div>
           </div>
