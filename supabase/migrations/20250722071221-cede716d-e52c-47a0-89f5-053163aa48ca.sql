@@ -1,0 +1,1 @@
+UPDATE user_profiles SET email = 'ali@ali.com' WHERE user_id = '88c55852-a2a1-4325-adbc-2d85563b2e78';
