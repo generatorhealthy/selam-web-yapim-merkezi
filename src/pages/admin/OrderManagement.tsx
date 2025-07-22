@@ -421,6 +421,130 @@ const OrderManagement = () => {
     }
   };
 
+  // Mevcut siparişler için sözleşme indirme ve oluşturma
+  const handleDownloadContract = async (order: Order, contractType: 'pre_info' | 'distance_sales') => {
+    try {
+      const existingContent = contractType === 'pre_info' ? order.pre_info_pdf_content : order.distance_sales_pdf_content;
+      
+      if (existingContent) {
+        // PDF içeriği varsa direkt indir
+        const filename = contractType === 'pre_info' 
+          ? `on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.txt`
+          : `mesafeli-satis-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.txt`;
+        downloadPDF(existingContent, filename);
+        return;
+      }
+
+      // PDF içeriği yoksa oluştur
+      toast({
+        title: "Sözleşme Hazırlanıyor",
+        description: "Sözleşme içeriği oluşturuluyor...",
+      });
+
+      let newContent = '';
+      
+      if (contractType === 'pre_info') {
+        // Ön bilgilendirme formu içeriğini oluştur
+        const { data: formContent, error } = await supabase
+          .from('form_contents')
+          .select('content')
+          .eq('form_type', 'pre_info')
+          .single();
+
+        if (error || !formContent) {
+          toast({
+            title: "Hata",
+            description: "Form içeriği bulunamadı",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const currentDate = new Date().toLocaleDateString('tr-TR');
+        const customerInfo = `
+MÜŞTERI BİLGİLERİ:
+Müşteri Adı: ${order.customer_name}
+E-posta: ${order.customer_email}
+Telefon: ${order.customer_phone || 'Belirtilmemiş'}
+TC Kimlik No: ${order.customer_tc_no || 'Belirtilmemiş'}
+Adres: ${order.customer_address || 'Belirtilmemiş'}
+Şehir: ${order.customer_city}
+
+PAKET BİLGİLERİ:
+Seçilen Paket: ${order.package_name}
+Fiyat: ${order.amount.toLocaleString('tr-TR')} ₺
+Ödeme Yöntemi: ${order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}
+
+TARİHLER:
+Sözleşme Oluşturulma Tarihi: ${currentDate}
+Sipariş Tarihi: ${format(new Date(order.created_at), "dd MMM yyyy", { locale: tr })}
+
+------------------------------------
+
+`;
+        newContent = customerInfo + formContent.content;
+      } else {
+        // Mesafeli satış sözleşmesi içeriği
+        const currentDate = new Date().toLocaleDateString('tr-TR');
+        newContent = `KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ
+
+Doktorumol.com.tr ("doktorumol" veya "Şirket") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
+
+ALICI BİLGİLERİ:
+Ad Soyad: ${order.customer_name}
+E-posta: ${order.customer_email}
+Telefon: ${order.customer_phone || 'Belirtilmemiş'}
+Adres: ${order.customer_address || 'Belirtilmemiş'}
+Şehir: ${order.customer_city}
+
+ÜRÜN/HİZMET BİLGİLERİ:
+Ürün/Hizmet: ${order.package_name}
+Fiyat: ${order.amount.toLocaleString('tr-TR')} ₺
+Ödeme Şekli: ${order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}
+
+Sözleşme Tarihi: ${currentDate}
+Sipariş Tarihi: ${format(new Date(order.created_at), "dd MMM yyyy", { locale: tr })}`;
+      }
+
+      // Veritabanına kaydet
+      const updateData = contractType === 'pre_info' 
+        ? { pre_info_pdf_content: newContent }
+        : { distance_sales_pdf_content: newContent };
+
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', order.id);
+
+      if (updateError) {
+        console.error('PDF içeriği kaydedilemedi:', updateError);
+        toast({
+          title: "Uyarı",
+          description: "İçerik kaydedilemedi ama indirilecek",
+          variant: "destructive",
+        });
+      } else {
+        // Cache'i yenile
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+      }
+
+      // İndir
+      const filename = contractType === 'pre_info' 
+        ? `on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.txt`
+        : `mesafeli-satis-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.txt`;
+      
+      downloadPDF(newContent, filename);
+
+    } catch (error) {
+      console.error('Sözleşme işlemi hatası:', error);
+      toast({
+        title: "Hata",
+        description: "Sözleşme işlemi sırasında hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "approved":
@@ -699,21 +823,10 @@ const OrderManagement = () => {
                             <div className="flex items-center justify-end gap-2">
                               {order.is_first_order && (
                                 <div className="flex gap-1">
-                                  {/* Debug: Always show buttons for first orders for now */}
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => {
-                                      if (order.pre_info_pdf_content) {
-                                        downloadPreInfoPDF(order);
-                                      } else {
-                                        toast({
-                                          title: "Uyarı",
-                                          description: "Ön bilgilendirme formu PDF'i bulunamadı",
-                                          variant: "destructive",
-                                        });
-                                      }
-                                    }}
+                                    onClick={() => handleDownloadContract(order, 'pre_info')}
                                     className="flex items-center gap-1"
                                   >
                                     <FileText className="w-3 h-3" />
@@ -723,17 +836,7 @@ const OrderManagement = () => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => {
-                                      if (order.distance_sales_pdf_content) {
-                                        downloadDistanceSalesPDF(order);
-                                      } else {
-                                        toast({
-                                          title: "Uyarı", 
-                                          description: "Mesafeli satış sözleşmesi PDF'i bulunamadı",
-                                          variant: "destructive",
-                                        });
-                                      }
-                                    }}
+                                    onClick={() => handleDownloadContract(order, 'distance_sales')}
                                     className="flex items-center gap-1"
                                   >
                                     <Download className="w-3 h-3" />
