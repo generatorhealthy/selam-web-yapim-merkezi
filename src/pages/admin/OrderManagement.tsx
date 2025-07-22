@@ -466,34 +466,47 @@ ${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
       // Geçici div oluştur
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = fullContent;
-      tempDiv.style.width = '800px';
-      tempDiv.style.padding = '20px';
+      tempDiv.style.width = '210mm'; // A4 width
+      tempDiv.style.padding = '15mm';
       tempDiv.style.backgroundColor = 'white';
       tempDiv.style.fontFamily = 'Arial, sans-serif';
-      tempDiv.style.fontSize = '14px';
-      tempDiv.style.lineHeight = '1.5';
+      tempDiv.style.fontSize = '12px';
+      tempDiv.style.lineHeight = '1.4';
+      tempDiv.style.color = '#000';
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
       document.body.appendChild(tempDiv);
 
       try {
         const canvas = await html2canvas(tempDiv, {
-          scale: 2,
+          scale: 1,
           useCORS: true,
-          allowTaint: true
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false
         });
         
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
-        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-        const imgX = (pdfWidth - imgWidth * ratio) / 2;
-        const imgY = 0;
+        
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 10;
+        const contentWidth = pageWidth - (margin * 2);
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = margin;
 
-        pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+        // Add pages as needed
+        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
+        heightLeft -= (pageHeight - margin * 2);
+
+        while (heightLeft > 0) {
+          position = -(imgHeight - heightLeft) + margin;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
+          heightLeft -= (pageHeight - margin * 2);
+        }
         pdf.save(`on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
         
         toast({
@@ -626,34 +639,47 @@ ${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
       // Geçici div oluştur
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = distanceSalesContent;
-      tempDiv.style.width = '800px';
-      tempDiv.style.padding = '20px';
+      tempDiv.style.width = '210mm'; // A4 width
+      tempDiv.style.padding = '15mm';
       tempDiv.style.backgroundColor = 'white';
       tempDiv.style.fontFamily = 'Arial, sans-serif';
-      tempDiv.style.fontSize = '14px';
-      tempDiv.style.lineHeight = '1.5';
+      tempDiv.style.fontSize = '12px';
+      tempDiv.style.lineHeight = '1.4';
+      tempDiv.style.color = '#000';
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
       document.body.appendChild(tempDiv);
 
       try {
         const canvas = await html2canvas(tempDiv, {
-          scale: 2,
+          scale: 1,
           useCORS: true,
-          allowTaint: true
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false
         });
         
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
-        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-        const imgX = (pdfWidth - imgWidth * ratio) / 2;
-        const imgY = 0;
+        
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 10;
+        const contentWidth = pageWidth - (margin * 2);
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = margin;
 
-        pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+        // Add pages as needed
+        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
+        heightLeft -= (pageHeight - margin * 2);
+
+        while (heightLeft > 0) {
+          position = -(imgHeight - heightLeft) + margin;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
+          heightLeft -= (pageHeight - margin * 2);
+        }
         pdf.save(`mesafeli-satis-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
         
         toast({
