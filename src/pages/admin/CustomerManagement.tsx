@@ -60,6 +60,10 @@ interface Specialist {
 }
 
 const CustomerManagement = () => {
+  // BASIT TEST - Bu log Console'da görünmeli!
+  console.log("🔥 CUSTOMER MANAGEMENT LOADED 🔥");
+  console.warn("🔥 CUSTOMER MANAGEMENT LOADED 🔥");
+  console.error("🔥 CUSTOMER MANAGEMENT LOADED 🔥");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [loading, setLoading] = useState(true);
