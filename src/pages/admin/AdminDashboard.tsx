@@ -328,8 +328,8 @@ const AdminDashboard = () => {
           </div>
           
            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
-              Hoş Geldiniz
+            <span className="bg-gradient-to-r from-red-600 via-red-800 to-red-900 bg-clip-text text-transparent">
+              🔥 TEST ÇALIŞIYOR MU? 🔥
             </span>
           </h1>
           
