@@ -36,7 +36,7 @@ const SPECIALTIES = [
   "Çocuk Acil", "Çocuk Cerrahisi", "Çocuk Endokrinolojisi", "Çocuk Gastroenteroloji, Hepatoloji ve Beslenme",
   "Çocuk Gelişim", "Çocuk Gelişimi", "Çocuk Genetik Hastalıkları", "Çocuk Göğüs Hastalıkları",
   "Çocuk İmmünolojisi ve Alerjisi", "Çocuk Kalp ve Damar Cerrahisi", "Çocuk Romatolojisi",
-  "Çocuk Sağlığı ve Hastalıkları", "Çocuk Ürolojisi", "Çocuk ve Ergen Psikiyatristi", "Diyetisyen",
+  "Çocuk Sağlığı ve Hastalıkları", "Çocuk Ürolojisi", "Çocuk ve Ergen Psikiyatristi", "Dil Terapisti", "Diyetisyen",
   "Eğitim Danışmanlığı", "Göz Hastalıkları", "İlişki Danışmanı", "Kadın Doğum", "Psikolog", "Psikolojik Danışmanlık"
 ];
 
