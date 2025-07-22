@@ -410,13 +410,34 @@ const OrderManagement = () => {
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
       
-      // Package features'ı JSON'dan parse et
+      // Package features'ı JSON'dan parse et veya packages tablosundan çek
       let packageFeatures = [];
-      try {
-        const features = JSON.parse(order.package_features || '[]');
-        packageFeatures = Array.isArray(features) ? features : [];
-      } catch {
-        packageFeatures = [];
+      
+      // Önce order'da package_features varsa onu kullan
+      if (order.package_features) {
+        try {
+          const features = JSON.parse(order.package_features);
+          packageFeatures = Array.isArray(features) ? features : [];
+        } catch {
+          packageFeatures = [];
+        }
+      }
+      
+      // Eğer package features boşsa, packages tablosundan çekmeye çalış
+      if (packageFeatures.length === 0) {
+        try {
+          const { data: packageData, error } = await supabase
+            .from('packages')
+            .select('features')
+            .eq('name', order.package_name)
+            .single();
+          
+          if (packageData && !error) {
+            packageFeatures = Array.isArray(packageData.features) ? packageData.features : [];
+          }
+        } catch (error) {
+          console.log('Package features could not be fetched from packages table');
+        }
       }
 
       const customerInfo = `
@@ -442,9 +463,12 @@ ${order.customer_type === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİL
 <p><strong>Ödeme Yöntemi:</strong> ${order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}</p>
 
 <h4 style="color: #0369a1; margin-top: 15px;">Müşterinin Hizmet Aldığı Paket İçeriği:</h4>
-<ul style="margin-left: 20px;">
-${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
-</ul>
+<div style="background: #fafafa; padding: 15px; border-left: 4px solid #0369a1; margin: 10px 0;">
+${packageFeatures.length > 0 ? 
+  `<ul style="margin: 0; padding-left: 20px;">${packageFeatures.map((feature: string) => `<li style="margin-bottom: 5px;">${feature}</li>`).join('')}</ul>` :
+  '<p style="margin: 0; font-style: italic; color: #666;">Paket özellik bilgisi mevcut değil. Lütfen paket yönetiminden kontrol ediniz.</p>'
+}
+</div>
 
 <h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>
 <p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${currentDate}</p>
@@ -466,27 +490,59 @@ ${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
       // Geçici div oluştur
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = fullContent;
-      tempDiv.style.width = '210mm'; // A4 width
-      tempDiv.style.padding = '15mm';
+      tempDiv.style.width = '190mm'; // A4 width minus margins
+      tempDiv.style.maxWidth = '190mm';
+      tempDiv.style.padding = '20mm';
       tempDiv.style.backgroundColor = 'white';
       tempDiv.style.fontFamily = 'Arial, sans-serif';
-      tempDiv.style.fontSize = '12px';
-      tempDiv.style.lineHeight = '1.4';
+      tempDiv.style.fontSize = '11px';
+      tempDiv.style.lineHeight = '1.5';
       tempDiv.style.color = '#000';
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
+      tempDiv.style.wordWrap = 'break-word';
+      tempDiv.style.pageBreakInside = 'avoid';
+      
+      // Add CSS for better page breaks
+      const style = document.createElement('style');
+      style.textContent = `
+        h1, h2, h3, h4 { 
+          page-break-after: avoid; 
+          margin-bottom: 10px; 
+          margin-top: 15px;
+        }
+        p { 
+          page-break-inside: avoid; 
+          margin-bottom: 8px; 
+        }
+        ul, ol { 
+          page-break-inside: avoid; 
+          margin-bottom: 10px; 
+        }
+        li { 
+          margin-bottom: 3px; 
+        }
+        .customer-info { 
+          page-break-inside: avoid; 
+          margin-bottom: 20px; 
+        }
+      `;
+      document.head.appendChild(style);
       document.body.appendChild(tempDiv);
 
       try {
         const canvas = await html2canvas(tempDiv, {
-          scale: 1,
+          scale: 1.5,
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff',
-          logging: false
+          logging: false,
+          width: tempDiv.scrollWidth,
+          height: tempDiv.scrollHeight
         });
         
-        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+        const imgData = canvas.toDataURL('image/jpeg', 0.85);
         const pdf = new jsPDF('p', 'mm', 'a4');
         
         const pageWidth = 210;
@@ -494,19 +550,30 @@ ${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
         const margin = 10;
         const contentWidth = pageWidth - (margin * 2);
         const imgHeight = (canvas.height * contentWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = margin;
+        
+        // Calculate page breaks more carefully
+        const pageContentHeight = pageHeight - (margin * 2);
+        let currentPosition = 0;
+        let pageNumber = 0;
 
-        // Add pages as needed
-        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-        heightLeft -= (pageHeight - margin * 2);
-
-        while (heightLeft > 0) {
-          position = -(imgHeight - heightLeft) + margin;
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-          heightLeft -= (pageHeight - margin * 2);
+        while (currentPosition < imgHeight) {
+          if (pageNumber > 0) {
+            pdf.addPage();
+          }
+          
+          const remainingHeight = imgHeight - currentPosition;
+          const heightForThisPage = Math.min(pageContentHeight, remainingHeight);
+          
+          // Position for this page
+          const yPosition = margin - currentPosition;
+          
+          pdf.addImage(imgData, 'JPEG', margin, yPosition, contentWidth, imgHeight);
+          
+          currentPosition += heightForThisPage;
+          pageNumber++;
         }
+        
+        document.head.removeChild(style);
         pdf.save(`on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
         
         toast({
@@ -537,13 +604,34 @@ ${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
       
-      // Package features'ı JSON'dan parse et
+      // Package features'ı JSON'dan parse et veya packages tablosundan çek
       let packageFeatures = [];
-      try {
-        const features = JSON.parse(order.package_features || '[]');
-        packageFeatures = Array.isArray(features) ? features : [];
-      } catch {
-        packageFeatures = [];
+      
+      // Önce order'da package_features varsa onu kullan
+      if (order.package_features) {
+        try {
+          const features = JSON.parse(order.package_features);
+          packageFeatures = Array.isArray(features) ? features : [];
+        } catch {
+          packageFeatures = [];
+        }
+      }
+      
+      // Eğer package features boşsa, packages tablosundan çekmeye çalış
+      if (packageFeatures.length === 0) {
+        try {
+          const { data: packageData, error } = await supabase
+            .from('packages')
+            .select('features')
+            .eq('name', order.package_name)
+            .single();
+          
+          if (packageData && !error) {
+            packageFeatures = Array.isArray(packageData.features) ? packageData.features : [];
+          }
+        } catch (error) {
+          console.log('Package features could not be fetched from packages table');
+        }
       }
 
       const distanceSalesContent = `
@@ -589,9 +677,12 @@ ${order.customer_type === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİL
 <p>Toplam Hizmet Bedeli: ${order.amount.toLocaleString('tr-TR')} TL (KDV Dahil)</p>
 
 <h4 style="color: #0369a1; margin-top: 15px;">Müşterinin Hizmet Aldığı Paket İçeriği:</h4>
-<ul style="margin-left: 20px;">
-${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
-</ul>
+<div style="background: #fafafa; padding: 15px; border-left: 4px solid #0369a1; margin: 10px 0;">
+${packageFeatures.length > 0 ? 
+  `<ul style="margin: 0; padding-left: 20px;">${packageFeatures.map((feature: string) => `<li style="margin-bottom: 5px;">${feature}</li>`).join('')}</ul>` :
+  '<p style="margin: 0; font-style: italic; color: #666;">Paket özellik bilgisi mevcut değil. Lütfen paket yönetiminden kontrol ediniz.</p>'
+}
+</div>
 
 <h3 style="color: #0369a1;">DETAYLI HİZMET KOŞULLARI VE BİLGİLENDİRME</h3>
 
@@ -639,27 +730,59 @@ ${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
       // Geçici div oluştur
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = distanceSalesContent;
-      tempDiv.style.width = '210mm'; // A4 width
-      tempDiv.style.padding = '15mm';
+      tempDiv.style.width = '190mm'; // A4 width minus margins
+      tempDiv.style.maxWidth = '190mm';
+      tempDiv.style.padding = '20mm';
       tempDiv.style.backgroundColor = 'white';
       tempDiv.style.fontFamily = 'Arial, sans-serif';
-      tempDiv.style.fontSize = '12px';
-      tempDiv.style.lineHeight = '1.4';
+      tempDiv.style.fontSize = '11px';
+      tempDiv.style.lineHeight = '1.5';
       tempDiv.style.color = '#000';
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
+      tempDiv.style.wordWrap = 'break-word';
+      tempDiv.style.pageBreakInside = 'avoid';
+      
+      // Add CSS for better page breaks
+      const style = document.createElement('style');
+      style.textContent = `
+        h1, h2, h3, h4 { 
+          page-break-after: avoid; 
+          margin-bottom: 10px; 
+          margin-top: 15px;
+        }
+        p { 
+          page-break-inside: avoid; 
+          margin-bottom: 8px; 
+        }
+        ul, ol { 
+          page-break-inside: avoid; 
+          margin-bottom: 10px; 
+        }
+        li { 
+          margin-bottom: 3px; 
+        }
+        .customer-info { 
+          page-break-inside: avoid; 
+          margin-bottom: 20px; 
+        }
+      `;
+      document.head.appendChild(style);
       document.body.appendChild(tempDiv);
 
       try {
         const canvas = await html2canvas(tempDiv, {
-          scale: 1,
+          scale: 1.5,
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff',
-          logging: false
+          logging: false,
+          width: tempDiv.scrollWidth,
+          height: tempDiv.scrollHeight
         });
         
-        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+        const imgData = canvas.toDataURL('image/jpeg', 0.85);
         const pdf = new jsPDF('p', 'mm', 'a4');
         
         const pageWidth = 210;
@@ -667,19 +790,30 @@ ${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
         const margin = 10;
         const contentWidth = pageWidth - (margin * 2);
         const imgHeight = (canvas.height * contentWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = margin;
+        
+        // Calculate page breaks more carefully
+        const pageContentHeight = pageHeight - (margin * 2);
+        let currentPosition = 0;
+        let pageNumber = 0;
 
-        // Add pages as needed
-        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-        heightLeft -= (pageHeight - margin * 2);
-
-        while (heightLeft > 0) {
-          position = -(imgHeight - heightLeft) + margin;
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-          heightLeft -= (pageHeight - margin * 2);
+        while (currentPosition < imgHeight) {
+          if (pageNumber > 0) {
+            pdf.addPage();
+          }
+          
+          const remainingHeight = imgHeight - currentPosition;
+          const heightForThisPage = Math.min(pageContentHeight, remainingHeight);
+          
+          // Position for this page
+          const yPosition = margin - currentPosition;
+          
+          pdf.addImage(imgData, 'JPEG', margin, yPosition, contentWidth, imgHeight);
+          
+          currentPosition += heightForThisPage;
+          pageNumber++;
         }
+        
+        document.head.removeChild(style);
         pdf.save(`mesafeli-satis-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
         
         toast({
