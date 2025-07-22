@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -36,6 +36,7 @@ interface Order {
   payment_method: string;
   is_first_order: boolean;
   subscription_month: number;
+  deleted_at?: string | null;
 }
 
 interface AutomaticOrder {
@@ -72,7 +73,9 @@ const OrderManagement = () => {
   const [activeTab, setActiveTab] = useState("orders");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
 
+  // Active orders query (not deleted)
   const {
     data: orders,
     isLoading: isOrdersLoading,
@@ -83,7 +86,26 @@ const OrderManagement = () => {
       const { data, error } = await supabase
         .from("orders")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Order[];
+    },
+  });
+
+  // Deleted orders query (trash)
+  const {
+    data: deletedOrders,
+    isLoading: isDeletedOrdersLoading,
+    error: deletedOrdersError,
+  } = useQuery({
+    queryKey: ["deleted_orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .not("deleted_at", "is", null)
+        .order("deleted_at", { ascending: false });
       if (error) throw error;
       return data as Order[];
     },
@@ -135,27 +157,91 @@ const OrderManagement = () => {
     },
   });
 
+  // Soft delete mutation (move to trash)
   const deleteOrderMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { data, error } = await supabase.from("orders").delete().eq("id", id);
+    mutationFn: async (ids: string[]) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ deleted_at: new Date().toISOString() })
+        .in("id", ids);
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, ids) => {
       toast({
-        title: "Sipariş Silindi",
-        description: "Sipariş başarıyla silindi",
+        title: "Sipariş(ler) Çöp Kutusuna Taşındı",
+        description: `${ids.length} sipariş çöp kutusuna taşındı`,
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+      setSelectedOrderIds([]);
       setSelectedOrder(null);
     },
     onError: (error) => {
       toast({
         title: "Hata",
-        description: "Sipariş silinirken hata oluştu",
+        description: "Sipariş(ler) silinirken hata oluştu",
         variant: "destructive",
       });
-      console.error("Error deleting order:", error);
+      console.error("Error deleting orders:", error);
+    },
+  });
+
+  // Restore from trash mutation
+  const restoreOrderMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ deleted_at: null })
+        .in("id", ids);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, ids) => {
+      toast({
+        title: "Sipariş(ler) Geri Yüklendi",
+        description: `${ids.length} sipariş geri yüklendi`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+      setSelectedOrderIds([]);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Sipariş(ler) geri yüklenirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error restoring orders:", error);
+    },
+  });
+
+  // Permanent delete mutation
+  const permanentDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .delete()
+        .in("id", ids);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, ids) => {
+      toast({
+        title: "Sipariş(ler) Kalıcı Olarak Silindi",
+        description: `${ids.length} sipariş kalıcı olarak silindi`,
+        variant: "destructive",
+      });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+      setSelectedOrderIds([]);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Sipariş(ler) kalıcı olarak silinirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error permanently deleting orders:", error);
     },
   });
 
@@ -198,12 +284,46 @@ const OrderManagement = () => {
   };
 
   const handleDeleteOrder = (id: string) => {
-    deleteOrderMutation.mutate(id);
+    deleteOrderMutation.mutate([id]);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedOrderIds.length > 0) {
+      deleteOrderMutation.mutate(selectedOrderIds);
+    }
+  };
+
+  const handleBulkRestore = () => {
+    if (selectedOrderIds.length > 0) {
+      restoreOrderMutation.mutate(selectedOrderIds);
+    }
+  };
+
+  const handlePermanentDelete = () => {
+    if (selectedOrderIds.length > 0) {
+      permanentDeleteMutation.mutate(selectedOrderIds);
+    }
   };
 
   const handleCancelEdit = () => {
     setEditingOrder(null);
     setSelectedOrder(null);
+  };
+
+  const handleSelectOrder = (orderId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds([...selectedOrderIds, orderId]);
+    } else {
+      setSelectedOrderIds(selectedOrderIds.filter(id => id !== orderId));
+    }
+  };
+
+  const handleSelectAll = (orders: Order[], checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds(orders.map(order => order.id));
+    } else {
+      setSelectedOrderIds([]);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -238,6 +358,13 @@ const OrderManagement = () => {
                          order.package_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
+  });
+
+  const filteredDeletedOrders = deletedOrders?.filter(order => {
+    const matchesSearch = order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.package_name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
   });
 
   const filteredAutomaticOrders = automaticOrders?.filter(order => {
@@ -317,14 +444,12 @@ const OrderManagement = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <DollarSign className="w-5 h-5 text-purple-600" />
+              <div className="p-2 bg-red-100 rounded-lg">
+                <Trash2 className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Toplam Tutar</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {orders?.reduce((sum, order) => sum + order.amount, 0).toLocaleString('tr-TR')} ₺
-                </p>
+                <p className="text-sm text-gray-600">Çöp Kutusu</p>
+                <p className="text-2xl font-bold text-red-600">{deletedOrders?.length || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -332,10 +457,14 @@ const OrderManagement = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Siparişler
+          </TabsTrigger>
+          <TabsTrigger value="trash" className="flex items-center gap-2">
+            <Trash2 className="w-4 h-4" />
+            Çöp Kutusu
           </TabsTrigger>
           <TabsTrigger value="automatic" className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
@@ -371,6 +500,49 @@ const OrderManagement = () => {
                   </SelectContent>
                 </Select>
               )}
+              {selectedOrderIds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">
+                    {selectedOrderIds.length} seçili
+                  </span>
+                  {activeTab === "orders" && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      disabled={deleteOrderMutation.isPending}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash className="w-4 h-4" />
+                      Çöp Kutusuna Taşı
+                    </Button>
+                  )}
+                  {activeTab === "trash" && (
+                    <>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleBulkRestore}
+                        disabled={restoreOrderMutation.isPending}
+                        className="flex items-center gap-2"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Geri Yükle
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handlePermanentDelete}
+                        disabled={permanentDeleteMutation.isPending}
+                        className="flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Kalıcı Sil
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -397,6 +569,12 @@ const OrderManagement = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={filteredOrders?.length > 0 && selectedOrderIds.length === filteredOrders.length}
+                            onCheckedChange={(checked) => handleSelectAll(filteredOrders || [], !!checked)}
+                          />
+                        </TableHead>
                         <TableHead>Müşteri</TableHead>
                         <TableHead>Paket</TableHead>
                         <TableHead>Tutar</TableHead>
@@ -409,6 +587,12 @@ const OrderManagement = () => {
                     <TableBody>
                       {filteredOrders?.map((order) => (
                         <TableRow key={order.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedOrderIds.includes(order.id)}
+                              onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
+                            />
+                          </TableCell>
                           <TableCell>
                             <div>
                               <div className="font-medium">{order.customer_name}</div>
@@ -533,7 +717,7 @@ const OrderManagement = () => {
                         onClick={() => handleDeleteOrder(selectedOrder.id)}
                         disabled={deleteOrderMutation.isPending}
                       >
-                        {deleteOrderMutation.isPending ? "Siliniyor..." : "Sil"}
+                        {deleteOrderMutation.isPending ? "Siliniyor..." : "Çöp Kutusuna Taşı"}
                       </Button>
                     </div>
                   </div>
@@ -541,6 +725,112 @@ const OrderManagement = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="trash" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trash2 className="w-5 h-5" />
+                Çöp Kutusu ({filteredDeletedOrders?.length || 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isDeletedOrdersLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : deletedOrdersError ? (
+                <div className="text-center py-8 text-red-600">
+                  Hata: {deletedOrdersError.message}
+                </div>
+              ) : filteredDeletedOrders?.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Çöp kutusunda sipariş bulunmuyor
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={filteredDeletedOrders?.length > 0 && selectedOrderIds.length === filteredDeletedOrders.length}
+                            onCheckedChange={(checked) => handleSelectAll(filteredDeletedOrders || [], !!checked)}
+                          />
+                        </TableHead>
+                        <TableHead>Müşteri</TableHead>
+                        <TableHead>Paket</TableHead>
+                        <TableHead>Tutar</TableHead>
+                        <TableHead>Durum</TableHead>
+                        <TableHead>Silinme Tarihi</TableHead>
+                        <TableHead className="text-right">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDeletedOrders?.map((order) => (
+                        <TableRow key={order.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedOrderIds.includes(order.id)}
+                              onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{order.customer_name}</div>
+                              <div className="text-sm text-gray-500">{order.customer_email}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{order.package_name}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-semibold">{order.amount.toLocaleString('tr-TR')} ₺</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(order.status)} className="flex items-center gap-1 w-fit">
+                              {getStatusIcon(order.status)}
+                              {order.status === 'pending' ? 'Bekleyen' : 
+                               order.status === 'approved' ? 'Onaylanan' :
+                               order.status === 'completed' ? 'Tamamlanan' : 'İptal'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {order.deleted_at ? format(new Date(order.deleted_at), "dd MMM yyyy", { locale: tr }) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => restoreOrderMutation.mutate([order.id])}
+                                disabled={restoreOrderMutation.isPending}
+                                className="flex items-center gap-1"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                Geri Yükle
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => permanentDeleteMutation.mutate([order.id])}
+                                disabled={permanentDeleteMutation.isPending}
+                                className="flex items-center gap-1"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Kalıcı Sil
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="automatic" className="space-y-6">
