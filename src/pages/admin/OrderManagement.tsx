@@ -402,6 +402,20 @@ const OrderManagement = () => {
         return;
       }
 
+      // jsPDF import
+      const { jsPDF } = await import('jspdf');
+      
+      // PDF oluştur
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 15;
+      const contentWidth = pageWidth - (margin * 2);
+      let currentY = margin;
+
+      // Font ayarları
+      pdf.setFont("helvetica", "normal");
+      
       // Müşteri bilgilerini hazırla
       const currentDate = new Date().toLocaleDateString('tr-TR');
       const currentDateTime = new Date().toLocaleString('tr-TR');
@@ -413,7 +427,6 @@ const OrderManagement = () => {
       // Package features'ı JSON'dan parse et veya packages tablosundan çek
       let packageFeatures = [];
       
-      // Önce order'da package_features varsa onu kullan
       if (order.package_features) {
         try {
           const features = JSON.parse(order.package_features);
@@ -423,7 +436,6 @@ const OrderManagement = () => {
         }
       }
       
-      // Eğer package features boşsa, packages tablosundan çekmeye çalış
       if (packageFeatures.length === 0) {
         try {
           const { data: packageData, error } = await supabase
@@ -436,237 +448,121 @@ const OrderManagement = () => {
             packageFeatures = Array.isArray(packageData.features) ? packageData.features : [];
           }
         } catch (error) {
-          console.log('Package features could not be fetched from packages table');
+          console.log('Package features could not be fetched');
         }
       }
 
-      const customerInfo = `
-<div style="background: #f0f9ff; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #0ea5e9;">
-<h3 style="color: #0369a1; margin-top: 0;">MÜŞTERI BİLGİLERİ:</h3>
-<p><strong>Müşteri Adı:</strong> ${firstName} ${lastName}</p>
-<p><strong>E-posta:</strong> ${order.customer_email}</p>
-<p><strong>Telefon:</strong> ${order.customer_phone || 'Belirtilmemiş'}</p>
-<p><strong>TC Kimlik No:</strong> ${order.customer_tc_no || 'Belirtilmemiş'}</p>
-<p><strong>Adres:</strong> ${order.customer_address || 'Belirtilmemiş'}</p>
-<p><strong>Şehir:</strong> ${order.customer_city || 'Belirtilmemiş'}</p>
-<p><strong>Müşteri Tipi:</strong> ${order.customer_type === 'individual' ? 'Bireysel' : 'Kurumsal'}</p>
+      // Helper functions
+      const addText = (text: string, fontSize = 10, isBold = false, color = [0, 0, 0]) => {
+        if (currentY > pageHeight - margin - 10) {
+          pdf.addPage();
+          currentY = margin;
+        }
+        
+        pdf.setFontSize(fontSize);
+        pdf.setFont("helvetica", isBold ? "bold" : "normal");
+        pdf.setTextColor(color[0], color[1], color[2]);
+        
+        const lines = pdf.splitTextToSize(text, contentWidth);
+        const lineHeight = fontSize * 0.352778; // Convert pt to mm
+        
+        for (let i = 0; i < lines.length; i++) {
+          if (currentY > pageHeight - margin - 10) {
+            pdf.addPage();
+            currentY = margin;
+          }
+          pdf.text(lines[i], margin, currentY);
+          currentY += lineHeight + 1;
+        }
+        currentY += 2;
+      };
 
-${order.customer_type === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:</h3>
-<p><strong>Firma Adı:</strong> ${order.company_name || 'Belirtilmemiş'}</p>
-<p><strong>Vergi No:</strong> ${order.company_tax_no || 'Belirtilmemiş'}</p>
-<p><strong>Vergi Dairesi:</strong> ${order.company_tax_office || 'Belirtilmemiş'}</p>
-` : ''}
+      const addTitle = (text: string) => {
+        addText(text, 14, true, [3, 105, 161]);
+        currentY += 3;
+      };
 
-<h3 style="color: #0369a1;">PAKET BİLGİLERİ:</h3>
-<p><strong>Seçilen Paket:</strong> ${order.package_name}</p>
-<p><strong>Fiyat:</strong> ${order.amount.toLocaleString('tr-TR')} ₺</p>
-<p><strong>Ödeme Yöntemi:</strong> ${order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}</p>
+      const addSubTitle = (text: string) => {
+        addText(text, 12, true, [3, 105, 161]);
+        currentY += 2;
+      };
 
-<h4 style="color: #0369a1; margin-top: 15px;">Müşterinin Hizmet Aldığı Paket İçeriği:</h4>
-<div style="background: #fafafa; padding: 15px; border-left: 4px solid #0369a1; margin: 10px 0;">
-${packageFeatures.length > 0 ? 
-  `<ul style="margin: 0; padding-left: 20px;">${packageFeatures.map((feature: string) => `<li style="margin-bottom: 5px;">${feature}</li>`).join('')}</ul>` :
-  '<p style="margin: 0; font-style: italic; color: #666;">Paket özellik bilgisi mevcut değil. Lütfen paket yönetiminden kontrol ediniz.</p>'
-}
-</div>
+      // PDF içeriği oluştur
+      addTitle("ÖN BİLGİLENDİRME FORMU");
+      currentY += 5;
 
-<h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>
-<p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${currentDate}</p>
-<p><strong>Dijital Onaylama Tarihi:</strong> ${currentDateTime}</p>
-<p><strong>IP Adresi:</strong> ${order.contract_ip_address || 'Bilinmiyor'}</p>
-</div>
-
-<hr style="margin: 20px 0; border: 1px solid #e5e7eb;">
-
-`;
-
-      // Tam içeriği birleştir
-      const fullContent = customerInfo + formData.content;
+      addSubTitle("MÜŞTERI BİLGİLERİ");
+      addText(`Müşteri Adı: ${firstName} ${lastName}`);
+      addText(`E-posta: ${order.customer_email}`);
+      addText(`Telefon: ${order.customer_phone || 'Belirtilmemiş'}`);
+      addText(`TC Kimlik No: ${order.customer_tc_no || 'Belirtilmemiş'}`);
+      addText(`Adres: ${order.customer_address || 'Belirtilmemiş'}`);
+      addText(`Şehir: ${order.customer_city || 'Belirtilmemiş'}`);
+      addText(`Müşteri Tipi: ${order.customer_type === 'individual' ? 'Bireysel' : 'Kurumsal'}`);
       
-      // HTML'yi PDF'e çevir
-      const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
-      
-      // Geçici div oluştur
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = fullContent;
-      tempDiv.style.width = '190mm'; // A4 width minus margins
-      tempDiv.style.maxWidth = '190mm';
-      tempDiv.style.padding = '20mm';
-      tempDiv.style.backgroundColor = 'white';
-      tempDiv.style.fontFamily = 'Arial, sans-serif';
-      tempDiv.style.fontSize = '11px';
-      tempDiv.style.lineHeight = '1.5';
-      tempDiv.style.color = '#000';
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '0';
-      tempDiv.style.wordWrap = 'break-word';
-      tempDiv.style.pageBreakInside = 'avoid';
-      
-      // Add CSS for better page breaks and formatting
-      const style = document.createElement('style');
-      style.textContent = `
-        * { 
-          box-sizing: border-box; 
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-        body { 
-          margin: 0; 
-          padding: 0; 
-        }
-        .page-break { 
-          page-break-before: always !important; 
-          break-before: page !important; 
-        }
-        .avoid-break { 
-          page-break-inside: avoid !important; 
-          break-inside: avoid !important; 
-        }
-        h1, h2, h3, h4, h5, h6 { 
-          page-break-after: avoid !important; 
-          break-after: avoid !important;
-          margin: 10px 0 8px 0 !important;
-          line-height: 1.3 !important;
-          orphans: 3;
-          widows: 3;
-        }
-        p { 
-          page-break-inside: avoid !important; 
-          break-inside: avoid !important;
-          margin: 0 0 8px 0 !important; 
-          line-height: 1.4 !important;
-          orphans: 2;
-          widows: 2;
-        }
-        ul, ol { 
-          page-break-inside: avoid !important; 
-          break-inside: avoid !important;
-          margin: 8px 0 !important; 
-          padding-left: 20px !important;
-        }
-        li { 
-          page-break-inside: avoid !important; 
-          break-inside: avoid !important;
-          margin-bottom: 4px !important; 
-          line-height: 1.4 !important;
-        }
-        div { 
-          page-break-inside: avoid !important; 
-          break-inside: avoid !important;
-        }
-        .customer-info { 
-          page-break-inside: avoid !important; 
-          break-inside: avoid !important;
-          margin-bottom: 15px !important; 
-        }
-        .content-section {
-          page-break-inside: avoid !important; 
-          break-inside: avoid !important;
-          margin-bottom: 12px !important;
-        }
-      `;
-      document.head.appendChild(style);
-      
-      // Apply classes to elements for better page breaks
-      tempDiv.querySelectorAll('div').forEach(div => {
-        if (div.style.background || div.style.backgroundColor) {
-          div.classList.add('customer-info', 'avoid-break');
-        } else {
-          div.classList.add('content-section', 'avoid-break');
-        }
-      });
-      
-      tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => {
-        heading.classList.add('avoid-break');
-      });
-      
-      tempDiv.querySelectorAll('p, ul, ol').forEach(element => {
-        element.classList.add('avoid-break');
-      });
-      
-      document.body.appendChild(tempDiv);
+      if (order.customer_type === 'company') {
+        currentY += 5;
+        addSubTitle("KURUMSAL BİLGİLER");
+        addText(`Firma Adı: ${order.company_name || 'Belirtilmemiş'}`);
+        addText(`Vergi No: ${order.company_tax_no || 'Belirtilmemiş'}`);
+        addText(`Vergi Dairesi: ${order.company_tax_office || 'Belirtilmemiş'}`);
+      }
 
-      try {
-        const canvas = await html2canvas(tempDiv, {
-          scale: 1.0,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          width: tempDiv.scrollWidth,
-          height: tempDiv.scrollHeight,
-          onclone: (clonedDoc) => {
-            const clonedDiv = clonedDoc.body.querySelector('div');
-            if (clonedDiv) {
-              clonedDiv.style.transform = 'none';
-              clonedDiv.style.webkitTransform = 'none';
+      currentY += 5;
+      addSubTitle("PAKET BİLGİLERİ");
+      addText(`Seçilen Paket: ${order.package_name}`);
+      addText(`Fiyat: ${order.amount.toLocaleString('tr-TR')} ₺`);
+      addText(`Ödeme Yöntemi: ${order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}`);
+      
+      currentY += 3;
+      addText("Müşterinin Hizmet Aldığı Paket İçeriği:", 11, true);
+      if (packageFeatures.length > 0) {
+        packageFeatures.forEach((feature: string) => {
+          addText(`• ${feature}`);
+        });
+      } else {
+        addText("Paket özellik bilgisi mevcut değil. Lütfen paket yönetiminden kontrol ediniz.", 9, false, [102, 102, 102]);
+      }
+
+      currentY += 5;
+      addSubTitle("TARİHLER");
+      addText(`Sözleşme Oluşturulma Tarihi: ${currentDate}`);
+      addText(`Dijital Onaylama Tarihi: ${currentDateTime}`);
+      addText(`IP Adresi: ${order.contract_ip_address || 'Bilinmiyor'}`);
+
+      currentY += 10;
+
+      // Form içeriğini HTML'den temizleyip ekle
+      if (formData.content) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = formData.content;
+        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+        
+        // Form içeriğini parçalara ayır ve ekle
+        const sections = plainText.split(/(?:\r?\n){2,}/).filter(section => section.trim());
+        sections.forEach((section, index) => {
+          const trimmedSection = section.trim();
+          if (trimmedSection) {
+            if (trimmedSection.length < 100 && (trimmedSection.includes(':') || index === 0)) {
+              addSubTitle(trimmedSection);
+            } else {
+              addText(trimmedSection);
             }
           }
         });
-        
-        const imgData = canvas.toDataURL('image/jpeg', 0.92);
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        
-        const pageWidth = 210;
-        const pageHeight = 297;
-        const margin = 12;
-        const contentWidth = pageWidth - (margin * 2);
-        const contentHeight = pageHeight - (margin * 2);
-        const imgHeight = (canvas.height * contentWidth) / canvas.width;
-        
-        // Split content into pages without cutting text
-        let yOffset = 0;
-        let pageCount = 0;
-        
-        while (yOffset < imgHeight) {
-          if (pageCount > 0) {
-            pdf.addPage();
-          }
-          
-          // Calculate how much content fits on this page
-          const remainingHeight = imgHeight - yOffset;
-          const pageContentHeight = Math.min(contentHeight, remainingHeight);
-          
-          // Add image to PDF with proper positioning
-          const sourceY = (yOffset * canvas.height) / imgHeight;
-          const sourceHeight = (pageContentHeight * canvas.height) / imgHeight;
-          
-          // Create a temporary canvas for this page
-          const pageCanvas = document.createElement('canvas');
-          const pageCtx = pageCanvas.getContext('2d');
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceHeight;
-          
-          // Draw the portion of the original canvas
-          pageCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
-          
-          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.92);
-          const actualHeight = (pageCanvas.height * contentWidth) / pageCanvas.width;
-          
-          pdf.addImage(pageImgData, 'JPEG', margin, margin, contentWidth, actualHeight);
-          
-          yOffset += pageContentHeight * 0.92; // Small overlap to prevent text cutting
-          pageCount++;
-        }
-        
-        document.head.removeChild(style);
-        pdf.save(`on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
-        
-        toast({
-          title: "Başarılı",
-          description: "Ön bilgilendirme formu PDF'i indirildi",
-          variant: "default",
-        });
-      } finally {
-        document.body.removeChild(tempDiv);
       }
+      
+      pdf.save(`on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
+      
+      toast({
+        title: "Başarılı",
+        description: "Ön bilgilendirme formu PDF'i indirildi",
+      });
     } catch (error) {
       console.error('PDF generation error:', error);
       toast({
         title: "Hata",
-        description: "PDF oluşturulurken hata oluştu",
+        description: "PDF oluşturulurken hata oluştu: " + error.message,
         variant: "destructive",
       });
     }
@@ -674,206 +570,112 @@ ${packageFeatures.length > 0 ?
 
   const downloadDistanceSalesPDF = async (order: Order) => {
     try {
-      // Mesafeli satış sözleşmesi içeriğini hazırla
-      const currentDate = new Date().toLocaleDateString('tr-TR');
-      const currentDateTime = new Date().toLocaleString('tr-TR');
-      
-      const nameParts = order.customer_name.split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-      
-      // Package features'ı JSON'dan parse et veya packages tablosundan çek
-      let packageFeatures = [];
-      
-      // Önce order'da package_features varsa onu kullan
-      if (order.package_features) {
-        try {
-          const features = JSON.parse(order.package_features);
-          packageFeatures = Array.isArray(features) ? features : [];
-        } catch {
-          packageFeatures = [];
-        }
-      }
-      
-      // Eğer package features boşsa, packages tablosundan çekmeye çalış
-      if (packageFeatures.length === 0) {
-        try {
-          const { data: packageData, error } = await supabase
-            .from('packages')
-            .select('features')
-            .eq('name', order.package_name)
-            .single();
-          
-          if (packageData && !error) {
-            packageFeatures = Array.isArray(packageData.features) ? packageData.features : [];
-          }
-        } catch (error) {
-          console.log('Package features could not be fetched from packages table');
-        }
-      }
-
-      const distanceSalesContent = `
-<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
-
-<h1 style="text-align: center; color: #2c3e50; margin-bottom: 30px; font-size: 18px;">KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ</h1>
-
-<p style="margin-bottom: 20px;">Doktorumol.com.tr ("doktorumol" veya "Şirket") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.</p>
-
-<p style="margin-bottom: 20px;">Bu kapsamda bilgi vermekle yükümlü olduğumuz konular aşağıdaki gibidir:</p>
-
-<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">1. Veri sorumlusunun ve varsa temsilcisinin kimliği</h2>
-<p style="margin-bottom: 15px;">Veri sorumlusu; doktorumol.com.tr'dir.</p>
-
-<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">2. Kişisel verilerin hangi amaçla işleneceği</h2>
-<p style="margin-bottom: 15px;">Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz genel ve özel nitelikli kategorilerdeki kişisel verileriniz, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim kurulması, onay vermeniz halinde tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda bu kişisel verilerinizin Doktorumol tarafından saklanması amacı ile işlenmektedir.</p>
-
-<p style="margin-bottom: 15px;">Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet sayfası sunucusu tarafından sabit sürücünüze iletilen küçük metin dosyaları ("Çerezler") aracılığıyla elde edilen kullanılan tarayıcı, IP adresi, internet bağlantınız, site kullanımlarınız hakkındaki bilgiler, bilgisayarınızdaki işletim sistemi ve benzeri kategorilerdeki kişisel verileriniz, internet sitesinin düzgün bir şekilde çalışabilmesi, ziyaret edilebilmesi ve özelliklerinden faydalanılması, internet sitesinde sayfalar arasında bilgileri taşıyabilmek ve bilgileri tekrardan girmek zorunda olmamak amaçları ile işlenmektedir.</p>
-
-<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">3. Şirket tarafından işlenen kişisel verilerin kimlere ve hangi amaçla aktarılabileceği</h2>
-<p style="margin-bottom: 15px;">Kişisel verileriniz 2. maddede belirtilen amaçların yerine getirilebilmesi için Doktorumol hissedarları, iş ortakları, hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına aktarılabilecektir.</p>
-
-<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">4. Kişisel veri toplamanın yöntemi ve hukuki sebebi</h2>
-<p style="margin-bottom: 15px;">Şirketimizin internet sitesi veya çağrı merkezi aracılığıyla, tamamen veya kısmen otomatik yollarla elde edilen kişisel verileriniz, kanunda açıkça öngörülmesi, Doktorumol ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel verilerinin işlenmesinin gerekli olması, iletişim hakkının tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması ve açık rızanız hukuki sebepleri ile toplanmaktadır.</p>
-
-<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">5. Kişisel verileriniz ile ilgili Kanun kapsamındaki haklarınız aşağıdaki şekildedir:</h2>
-
-<p style="margin-bottom: 10px;">(a) Kişisel verilerinizin işlenip işlenmediğini öğrenme, (b) Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme, (c) Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme, (ç) Yurt içinde veya yurt dışında kişisel verilerin aktarıldığı üçüncü kişileri bilme, (d) Kişisel verilerinizin eksik veya yanlış işlenmiş olması halinde bunların düzeltilmesini isteme, (e) Kişisel verilerinizin işlenmesini gerektiren sebeplerin ortadan kalkması halinde kişisel verilerinizin silinmesini veya yok edilmesini isteme, (f) (d) ve (e) bentleri uyarınca yapılan işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme, (g) İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle kişinin kendisi aleyhine bir sonucun ortaya çıkmasına itiraz etme, (ğ) Kişisel verilerin kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması halinde zararın giderilmesini talep etme.</p>
-
-<p style="margin-bottom: 20px;">Bu haklarınızı yazılı olarak veya güvenli elektronik imza, mobil imza, kayıtlı elektronik posta (KEP) adresi ya da Şirket'in sisteminde kayıtlı bulunan elektronik posta adresini kullanmak suretiyle (Bu kapsamda info@doktorumol.com.tr e-posta adresi üzerinden Şirket'e ulaşabilirsiniz) veya başvuru amacına yönelik geliştirilmiş bir yazılım ya da uygulama vasıtasıyla Şirket'e iletebilirsiniz.</p>
-
-<p style="margin-bottom: 20px;">Bilginize sunarız.</p>
-
-<div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee;">
-<h2 style="color: #2c3e50; font-size: 16px; margin-bottom: 20px;">Çağrı Merkezi Aydınlatma Metni</h2>
-
-<p style="margin-bottom: 15px;">Doktorumol.com.tr olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.</p>
-
-<p style="margin-bottom: 15px;">Doktorumol; çağrı merkezini arayanların paylaşmış olduğu ad-soyad, iletişim bilgisi ve ses kaydına ait kişisel verileri;</p>
-
-<ul style="margin-bottom: 15px; padding-left: 30px;">
-<li style="margin-bottom: 8px;">Arayan kişiye doğru hitap edilebilmesi,</li>
-<li style="margin-bottom: 8px;">Aramanın teyidi ve iletişim faaliyetlerinin yürütülmesi,</li>
-<li style="margin-bottom: 8px;">Görüşme talep edilen uzman için randevu oluşturulması,</li>
-<li style="margin-bottom: 8px;">Arayan kişinin uzmana yönlendirilmesi,</li>
-<li style="margin-bottom: 8px;">Talep ve şikayetlerin takibi,</li>
-<li style="margin-bottom: 8px;">Doğabilecek uyuşmazlıklarda delil olarak kullanılması amacıyla sınırlı olarak işlemektedir.</li>
-</ul>
-
-<p style="margin-bottom: 15px;">Kişisel verileriniz yukarıda belirtilen amaçların yerine getirebilmesi için Şirket'in hissedarları, iş ortakları, hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına ve randevu oluşturma talebinde bulunduğunuz ilgili uzmana aktarılabilecektir.</p>
-
-<p style="margin-bottom: 15px;">Kişisel sağlık verilerinizi çağrı merkezi ile görüşmeniz sırasında paylaşmamanızı rica ederiz. Şirketimiz aracılığıyla randevu oluşturma talebiniz kapsamında çağrı merkezi aracılığıyla edilen kişisel verileriniz, Şirket ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel verilerinin işlenmesinin gerekli olması, randevu oluşturulmasına ilişkin hakkının tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması hukuki sebepleri ile telefon yoluyla otomatik olarak işlenmektedir.</p>
-
-<p style="margin-bottom: 20px;">Kanunun "İlgili kişinin haklarını düzenleyen" 11. maddesindeki taleplerinizi, "Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğe" göre Doktorumol.com.tr'nin Şirket mailine info@doktorumol.com.tr'ye iletebilirsiniz.</p>
-
-</div>
-`;
-
-      // HTML'yi PDF'e çevir
-      const html2canvas = (await import('html2canvas')).default;
+      // jsPDF import
       const { jsPDF } = await import('jspdf');
       
-      // Geçici div oluştur
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = distanceSalesContent;
-      tempDiv.style.width = '190mm'; // A4 width minus margins
-      tempDiv.style.maxWidth = '190mm';
-      tempDiv.style.padding = '20mm';
-      tempDiv.style.backgroundColor = 'white';
-      tempDiv.style.fontFamily = 'Arial, sans-serif';
-      tempDiv.style.fontSize = '11px';
-      tempDiv.style.lineHeight = '1.5';
-      tempDiv.style.color = '#000';
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '0';
-      tempDiv.style.wordWrap = 'break-word';
-      tempDiv.style.pageBreakInside = 'avoid';
-      
-      // Add CSS for better page breaks
-      const style = document.createElement('style');
-      style.textContent = `
-        h1, h2, h3, h4 { 
-          page-break-after: avoid; 
-          margin-bottom: 10px; 
-          margin-top: 15px;
-        }
-        p { 
-          page-break-inside: avoid; 
-          margin-bottom: 8px; 
-        }
-        ul, ol { 
-          page-break-inside: avoid; 
-          margin-bottom: 10px; 
-        }
-        li { 
-          margin-bottom: 3px; 
-        }
-        .customer-info { 
-          page-break-inside: avoid; 
-          margin-bottom: 20px; 
-        }
-      `;
-      document.head.appendChild(style);
-      document.body.appendChild(tempDiv);
+      // PDF oluştur
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 15;
+      const contentWidth = pageWidth - (margin * 2);
+      let currentY = margin;
 
-      try {
-        const canvas = await html2canvas(tempDiv, {
-          scale: 1.5,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          width: tempDiv.scrollWidth,
-          height: tempDiv.scrollHeight
-        });
+      // Helper functions
+      const addText = (text: string, fontSize = 10, isBold = false, color = [0, 0, 0]) => {
+        if (currentY > pageHeight - margin - 15) {
+          pdf.addPage();
+          currentY = margin;
+        }
         
-        const imgData = canvas.toDataURL('image/jpeg', 0.85);
-        const pdf = new jsPDF('p', 'mm', 'a4');
+        pdf.setFontSize(fontSize);
+        pdf.setFont("helvetica", isBold ? "bold" : "normal");
+        pdf.setTextColor(color[0], color[1], color[2]);
         
-        const pageWidth = 210;
-        const pageHeight = 297;
-        const margin = 10;
-        const contentWidth = pageWidth - (margin * 2);
-        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+        const lines = pdf.splitTextToSize(text, contentWidth);
+        const lineHeight = fontSize * 0.352778;
         
-        // Calculate page breaks more carefully
-        const pageContentHeight = pageHeight - (margin * 2);
-        let currentPosition = 0;
-        let pageNumber = 0;
-
-        while (currentPosition < imgHeight) {
-          if (pageNumber > 0) {
+        for (let i = 0; i < lines.length; i++) {
+          if (currentY > pageHeight - margin - 15) {
             pdf.addPage();
+            currentY = margin;
           }
-          
-          const remainingHeight = imgHeight - currentPosition;
-          const heightForThisPage = Math.min(pageContentHeight, remainingHeight);
-          
-          // Position for this page
-          const yPosition = margin - currentPosition;
-          
-          pdf.addImage(imgData, 'JPEG', margin, yPosition, contentWidth, imgHeight);
-          
-          currentPosition += heightForThisPage;
-          pageNumber++;
+          pdf.text(lines[i], margin, currentY);
+          currentY += lineHeight + 1;
         }
-        
-        document.head.removeChild(style);
-        pdf.save(`mesafeli-satis-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
-        
-        toast({
-          title: "Başarılı",
-          description: "Mesafeli satış sözleşmesi PDF'i indirildi",
-          variant: "default",
-        });
-      } finally {
-        document.body.removeChild(tempDiv);
-      }
+        currentY += 2;
+      };
+
+      const addTitle = (text: string) => {
+        addText(text, 16, true, [44, 62, 80]);
+        currentY += 5;
+      };
+
+      const addSubTitle = (text: string) => {
+        addText(text, 12, true, [44, 62, 80]);
+        currentY += 3;
+      };
+
+      // KVKK Aydınlatma Metni
+      addTitle("KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ");
+      
+      addText("Doktorumol.com.tr (\"doktorumol\" veya \"Şirket\") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu (\"Kanun\") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.");
+      
+      addText("Bu kapsamda bilgi vermekle yükümlü olduğumuz konular aşağıdaki gibidir:");
+
+      currentY += 5;
+      addSubTitle("1. Veri sorumlusunun ve varsa temsilcisinin kimliği");
+      addText("Veri sorumlusu; doktorumol.com.tr'dir.");
+
+      addSubTitle("2. Kişisel verilerin hangi amaçla işleneceği");
+      addText("Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz genel ve özel nitelikli kategorilerdeki kişisel verileriniz, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim kurulması, onay vermeniz halinde tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda bu kişisel verilerinizin Doktorumol tarafından saklanması amacı ile işlenmektedir.");
+
+      addText("Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet sayfası sunucusu tarafından sabit sürücünüze iletilen küçük metin dosyaları (\"Çerezler\") aracılığıyla elde edilen kullanılan tarayıcı, IP adresi, internet bağlantınız, site kullanımlarınız hakkındaki bilgiler, bilgisayarınızdaki işletim sistemi ve benzeri kategorilerdeki kişisel verileriniz, internet sitesinin düzgün bir şekilde çalışabilmesi, ziyaret edilebilmesi ve özelliklerinden faydalanılması, internet sitesinde sayfalar arasında bilgileri taşıyabilmek ve bilgileri tekrardan girmek zorunda olmamak amaçları ile işlenmektedir.");
+
+      addSubTitle("3. Şirket tarafından işlenen kişisel verilerin kimlere ve hangi amaçla aktarılabileceği");
+      addText("Kişisel verileriniz 2. maddede belirtilen amaçların yerine getirilebilmesi için Doktorumol hissedarları, iş ortakları, hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına aktarılabilecektir.");
+
+      addSubTitle("4. Kişisel veri toplamanın yöntemi ve hukuki sebebi");
+      addText("Şirketimizin internet sitesi veya çağrı merkezi aracılığıyla, tamamen veya kısmen otomatik yollarla elde edilen kişisel verileriniz, kanunda açıkça öngörülmesi, Doktorumol ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel verilerinin işlenmesinin gerekli olması, iletişim hakkının tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması ve açık rızanız hukuki sebepleri ile toplanmaktadır.");
+
+      addSubTitle("5. Kişisel verileriniz ile ilgili Kanun kapsamındaki haklarınız aşağıdaki şekildedir:");
+      addText("(a) Kişisel verilerinizin işlenip işlenmediğini öğrenme, (b) Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme, (c) Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme, (ç) Yurt içinde veya yurt dışında kişisel verilerin aktarıldığı üçüncü kişileri bilme, (d) Kişisel verilerinizin eksik veya yanlış işlenmiş olması halinde bunların düzeltilmesini isteme, (e) Kişisel verilerinizin işlenmesini gerektiren sebeplerin ortadan kalkması halinde kişisel verilerinizin silinmesini veya yok edilmesini isteme, (f) (d) ve (e) bentleri uyarınca yapılan işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme, (g) İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle kişinin kendisi aleyhine bir sonucun ortaya çıkmasına itiraz etme, (ğ) Kişisel verilerin kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması halinde zararın giderilmesini talep etme.");
+
+      addText("Bu haklarınızı yazılı olarak veya güvenli elektronik imza, mobil imza, kayıtlı elektronik posta (KEP) adresi ya da Şirket'in sisteminde kayıtlı bulunan elektronik posta adresini kullanmak suretiyle (Bu kapsamda info@doktorumol.com.tr e-posta adresi üzerinden Şirket'e ulaşabilirsiniz) veya başvuru amacına yönelik geliştirilmiş bir yazılım ya da uygulama vasıtasıyla Şirket'e iletebilirsiniz.");
+
+      addText("Bilginize sunarız.");
+
+      currentY += 10;
+      addSubTitle("Çağrı Merkezi Aydınlatma Metni");
+
+      addText("Doktorumol.com.tr olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu (\"Kanun\") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.");
+
+      addText("Doktorumol; çağrı merkezini arayanların paylaşmış olduğu ad-soyad, iletişim bilgisi ve ses kaydına ait kişisel verileri;");
+
+      addText("• Arayan kişiye doğru hitap edilebilmesi,");
+      addText("• Aramanın teyidi ve iletişim faaliyetlerinin yürütülmesi,");
+      addText("• Görüşme talep edilen uzman için randevu oluşturulması,");
+      addText("• Arayan kişinin uzmana yönlendirilmesi,");
+      addText("• Talep ve şikayetlerin takibi,");
+      addText("• Doğabilecek uyuşmazlıklarda delil olarak kullanılması amacıyla sınırlı olarak işlemektedir.");
+
+      addText("Kişisel verileriniz yukarıda belirtilen amaçların yerine getirebilmesi için Şirket'in hissedarları, iş ortakları, hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına ve randevu oluşturma talebinde bulunduğunuz ilgili uzmana aktarılabilecektir.");
+
+      addText("Kişisel sağlık verilerinizi çağrı merkezi ile görüşmeniz sırasında paylaşmamanızı rica ederiz. Şirketimiz aracılığıyla randevu oluşturma talebiniz kapsamında çağrı merkezi aracılığıyla edinen kişisel verileriniz, Şirket ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel verilerinin işlenmesinin gerekli olması, randevu oluşturulmasına ilişkin hakkının tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması hukuki sebepleri ile telefon yoluyla otomatik olarak işlenmektedir.");
+
+      addText("Kanunun \"İlgili kişinin haklarını düzenleyen\" 11. maddesindeki taleplerinizi, \"Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğe\" göre Doktorumol.com.tr'nin Şirket mailine info@doktorumol.com.tr'ye iletebilirsiniz.");
+
+      pdf.save(`kvkk-aydinlatma-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
+      
+      toast({
+        title: "Başarılı",
+        description: "KVKK Aydınlatma Metni PDF'i indirildi",
+      });
     } catch (error) {
       console.error('PDF generation error:', error);
       toast({
         title: "Hata",
-        description: "PDF oluşturulurken hata oluştu",
+        description: "PDF oluşturulurken hata oluştu: " + error.message,
         variant: "destructive",
       });
     }
