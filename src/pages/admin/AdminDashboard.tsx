@@ -24,6 +24,11 @@ import {
 } from "lucide-react";
 
 const AdminDashboard = () => {
+  // ÇOK BASIT TEST!
+  console.log("🔥🔥🔥 ADMIN DASHBOARD YÜKLENDI! 🔥🔥🔥");
+  console.warn("🔥🔥🔥 ADMIN DASHBOARD YÜKLENDI! 🔥🔥🔥");
+  console.error("🔥🔥🔥 ADMIN DASHBOARD YÜKLENDI! 🔥🔥🔥");
+  
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
 
