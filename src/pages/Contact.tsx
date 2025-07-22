@@ -103,7 +103,7 @@ const Contact = () => {
             İletişim
           </h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto animate-fade-in">
-            Sizlere yardımcı olmak için buradayız. Herhangi bir sorunuz varsa bizimle iletişime geçin.
+            Sizlere yardımcı olmak için buradayız. Herhangi bir sorunuz varsa bizimle iletişime geçin
           </p>
         </div>
       </div>
