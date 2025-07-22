@@ -692,28 +692,46 @@ const OrderManagement = () => {
                             <div className="flex items-center justify-end gap-2">
                               {order.is_first_order && (
                                 <div className="flex gap-1">
-                                  {order.pre_info_pdf_content && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => downloadPreInfoPDF(order)}
-                                      className="flex items-center gap-1"
-                                    >
-                                      <FileText className="w-3 h-3" />
-                                      Ön Bilgi
-                                    </Button>
-                                  )}
-                                  {order.distance_sales_pdf_content && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => downloadDistanceSalesPDF(order)}
-                                      className="flex items-center gap-1"
-                                    >
-                                      <Download className="w-3 h-3" />
-                                      Mesafeli Satış
-                                    </Button>
-                                  )}
+                                  {/* Debug: Always show buttons for first orders for now */}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (order.pre_info_pdf_content) {
+                                        downloadPreInfoPDF(order);
+                                      } else {
+                                        toast({
+                                          title: "Uyarı",
+                                          description: "Ön bilgilendirme formu PDF'i bulunamadı",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <FileText className="w-3 h-3" />
+                                    Ön Bilgi
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (order.distance_sales_pdf_content) {
+                                        downloadDistanceSalesPDF(order);
+                                      } else {
+                                        toast({
+                                          title: "Uyarı", 
+                                          description: "Mesafeli satış sözleşmesi PDF'i bulunamadı",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    Mesafeli Satış
+                                  </Button>
                                 </div>
                               )}
                               <Button
