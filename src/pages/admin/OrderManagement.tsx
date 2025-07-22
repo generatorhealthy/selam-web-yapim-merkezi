@@ -504,72 +504,154 @@ ${packageFeatures.length > 0 ?
       tempDiv.style.wordWrap = 'break-word';
       tempDiv.style.pageBreakInside = 'avoid';
       
-      // HTML'yi PDF'e çevir - daha stabil method
-      const { jsPDF } = await import('jspdf');
+      // Add CSS for better page breaks and formatting
+      const style = document.createElement('style');
+      style.textContent = `
+        * { 
+          box-sizing: border-box; 
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        body { 
+          margin: 0; 
+          padding: 0; 
+        }
+        .page-break { 
+          page-break-before: always !important; 
+          break-before: page !important; 
+        }
+        .avoid-break { 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important; 
+        }
+        h1, h2, h3, h4, h5, h6 { 
+          page-break-after: avoid !important; 
+          break-after: avoid !important;
+          margin: 10px 0 8px 0 !important;
+          line-height: 1.3 !important;
+          orphans: 3;
+          widows: 3;
+        }
+        p { 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin: 0 0 8px 0 !important; 
+          line-height: 1.4 !important;
+          orphans: 2;
+          widows: 2;
+        }
+        ul, ol { 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin: 8px 0 !important; 
+          padding-left: 20px !important;
+        }
+        li { 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin-bottom: 4px !important; 
+          line-height: 1.4 !important;
+        }
+        div { 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+        }
+        .customer-info { 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin-bottom: 15px !important; 
+        }
+        .content-section {
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin-bottom: 12px !important;
+        }
+      `;
+      document.head.appendChild(style);
       
-      // PDF oluştur
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 20;
-      const lineHeight = 6;
-      const maxWidth = pageWidth - (margin * 2);
-      
-      // Font ayarla
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(11);
-      
-      let yPosition = margin;
-      let pageNumber = 1;
-      
-      // HTML içeriğini temizle ve text olarak al
-      const tempElement = document.createElement('div');
-      tempElement.innerHTML = fullContent;
-      
-      // Başlıkları ve paragrafları ayır
-      const elements = tempElement.querySelectorAll('h1, h2, h3, h4, p, li');
-      
-      elements.forEach((element, index) => {
-        const text = element.textContent || '';
-        const tagName = element.tagName.toLowerCase();
-        
-        // Başlık için font boyutu ayarla
-        if (tagName.startsWith('h')) {
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(tagName === 'h1' ? 14 : tagName === 'h2' ? 13 : 12);
-          yPosition += lineHeight * 0.5; // Başlık öncesi boşluk
+      // Apply classes to elements for better page breaks
+      tempDiv.querySelectorAll('div').forEach(div => {
+        if (div.style.background || div.style.backgroundColor) {
+          div.classList.add('customer-info', 'avoid-break');
         } else {
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(11);
-        }
-        
-        // Metin satırlarına böl
-        const lines = pdf.splitTextToSize(text, maxWidth);
-        
-        // Sayfa kontrolü
-        if (yPosition + (lines.length * lineHeight) > pageHeight - margin) {
-          pdf.addPage();
-          yPosition = margin;
-          pageNumber++;
-        }
-        
-        // Metni yazdır
-        lines.forEach((line: string, lineIndex: number) => {
-          if (yPosition > pageHeight - margin) {
-            pdf.addPage();
-            yPosition = margin;
-            pageNumber++;
-          }
-          
-          pdf.text(line, margin, yPosition);
-          yPosition += lineHeight;
-        });
-        
-        // Paragraf sonrası boşluk
-        if (tagName === 'p' || tagName.startsWith('h')) {
-          yPosition += lineHeight * 0.3;
+          div.classList.add('content-section', 'avoid-break');
         }
       });
+      
+      tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => {
+        heading.classList.add('avoid-break');
+      });
+      
+      tempDiv.querySelectorAll('p, ul, ol').forEach(element => {
+        element.classList.add('avoid-break');
+      });
+      
+      document.body.appendChild(tempDiv);
+
+      try {
+        const canvas = await html2canvas(tempDiv, {
+          scale: 1.0,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          width: tempDiv.scrollWidth,
+          height: tempDiv.scrollHeight,
+          onclone: (clonedDoc) => {
+            const clonedDiv = clonedDoc.body.querySelector('div');
+            if (clonedDiv) {
+              clonedDiv.style.transform = 'none';
+              clonedDiv.style.webkitTransform = 'none';
+            }
+          }
+        });
+        
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 12;
+        const contentWidth = pageWidth - (margin * 2);
+        const contentHeight = pageHeight - (margin * 2);
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+        
+        // Split content into pages without cutting text
+        let yOffset = 0;
+        let pageCount = 0;
+        
+        while (yOffset < imgHeight) {
+          if (pageCount > 0) {
+            pdf.addPage();
+          }
+          
+          // Calculate how much content fits on this page
+          const remainingHeight = imgHeight - yOffset;
+          const pageContentHeight = Math.min(contentHeight, remainingHeight);
+          
+          // Add image to PDF with proper positioning
+          const sourceY = (yOffset * canvas.height) / imgHeight;
+          const sourceHeight = (pageContentHeight * canvas.height) / imgHeight;
+          
+          // Create a temporary canvas for this page
+          const pageCanvas = document.createElement('canvas');
+          const pageCtx = pageCanvas.getContext('2d');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sourceHeight;
+          
+          // Draw the portion of the original canvas
+          pageCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+          
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.92);
+          const actualHeight = (pageCanvas.height * contentWidth) / pageCanvas.width;
+          
+          pdf.addImage(pageImgData, 'JPEG', margin, margin, contentWidth, actualHeight);
+          
+          yOffset += pageContentHeight * 0.92; // Small overlap to prevent text cutting
+          pageCount++;
+        }
+        
+        document.head.removeChild(style);
         pdf.save(`on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
         
         toast({
@@ -686,72 +768,97 @@ ${packageFeatures.length > 0 ?
 </div>
 `;
 
-      // HTML'yi PDF'e çevir - text-based method
+      // HTML'yi PDF'e çevir
+      const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
       
-      // PDF oluştur
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 20;
-      const lineHeight = 6;
-      const maxWidth = pageWidth - (margin * 2);
+      // Geçici div oluştur
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = distanceSalesContent;
+      tempDiv.style.width = '190mm'; // A4 width minus margins
+      tempDiv.style.maxWidth = '190mm';
+      tempDiv.style.padding = '20mm';
+      tempDiv.style.backgroundColor = 'white';
+      tempDiv.style.fontFamily = 'Arial, sans-serif';
+      tempDiv.style.fontSize = '11px';
+      tempDiv.style.lineHeight = '1.5';
+      tempDiv.style.color = '#000';
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
+      tempDiv.style.wordWrap = 'break-word';
+      tempDiv.style.pageBreakInside = 'avoid';
       
-      // Font ayarla
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(11);
-      
-      let yPosition = margin;
-      let pageNumber = 1;
-      
-      // HTML içeriğini temizle ve text olarak al
-      const tempElement = document.createElement('div');
-      tempElement.innerHTML = distanceSalesContent;
-      
-      // Başlıkları ve paragrafları ayır
-      const elements = tempElement.querySelectorAll('h1, h2, h3, h4, p, li');
-      
-      elements.forEach((element, index) => {
-        const text = element.textContent || '';
-        const tagName = element.tagName.toLowerCase();
-        
-        // Başlık için font boyutu ayarla
-        if (tagName.startsWith('h')) {
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(tagName === 'h1' ? 14 : tagName === 'h2' ? 13 : 12);
-          yPosition += lineHeight * 0.5; // Başlık öncesi boşluk
-        } else {
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(11);
+      // Add CSS for better page breaks
+      const style = document.createElement('style');
+      style.textContent = `
+        h1, h2, h3, h4 { 
+          page-break-after: avoid; 
+          margin-bottom: 10px; 
+          margin-top: 15px;
         }
+        p { 
+          page-break-inside: avoid; 
+          margin-bottom: 8px; 
+        }
+        ul, ol { 
+          page-break-inside: avoid; 
+          margin-bottom: 10px; 
+        }
+        li { 
+          margin-bottom: 3px; 
+        }
+        .customer-info { 
+          page-break-inside: avoid; 
+          margin-bottom: 20px; 
+        }
+      `;
+      document.head.appendChild(style);
+      document.body.appendChild(tempDiv);
+
+      try {
+        const canvas = await html2canvas(tempDiv, {
+          scale: 1.5,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          width: tempDiv.scrollWidth,
+          height: tempDiv.scrollHeight
+        });
         
-        // Metin satırlarına böl
-        const lines = pdf.splitTextToSize(text, maxWidth);
+        const imgData = canvas.toDataURL('image/jpeg', 0.85);
+        const pdf = new jsPDF('p', 'mm', 'a4');
         
-        // Sayfa kontrolü
-        if (yPosition + (lines.length * lineHeight) > pageHeight - margin) {
-          pdf.addPage();
-          yPosition = margin;
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 10;
+        const contentWidth = pageWidth - (margin * 2);
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+        
+        // Calculate page breaks more carefully
+        const pageContentHeight = pageHeight - (margin * 2);
+        let currentPosition = 0;
+        let pageNumber = 0;
+
+        while (currentPosition < imgHeight) {
+          if (pageNumber > 0) {
+            pdf.addPage();
+          }
+          
+          const remainingHeight = imgHeight - currentPosition;
+          const heightForThisPage = Math.min(pageContentHeight, remainingHeight);
+          
+          // Position for this page
+          const yPosition = margin - currentPosition;
+          
+          pdf.addImage(imgData, 'JPEG', margin, yPosition, contentWidth, imgHeight);
+          
+          currentPosition += heightForThisPage;
           pageNumber++;
         }
         
-        // Metni yazdır
-        lines.forEach((line: string, lineIndex: number) => {
-          if (yPosition > pageHeight - margin) {
-            pdf.addPage();
-            yPosition = margin;
-            pageNumber++;
-          }
-          
-          pdf.text(line, margin, yPosition);
-          yPosition += lineHeight;
-        });
-        
-        // Paragraf sonrası boşluk
-        if (tagName === 'p' || tagName.startsWith('h')) {
-          yPosition += lineHeight * 0.3;
-        }
-      });
+        document.head.removeChild(style);
         pdf.save(`mesafeli-satis-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
         
         toast({
