@@ -317,7 +317,7 @@ const AdminDashboard = () => {
           <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white rounded-full text-sm font-semibold mb-6 shadow-lg shadow-blue-500/25">
             <Sparkles className="w-5 h-5 animate-pulse" />
             <span className="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-              {getRoleDisplayName()} Panel
+              Panel
             </span>
             <Sparkles className="w-5 h-5 animate-pulse" />
           </div>
