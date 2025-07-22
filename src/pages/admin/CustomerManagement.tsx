@@ -89,6 +89,14 @@ const CustomerManagement = () => {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       console.log('🔍 Auth durumu:', { user: user?.email, authError });
       
+      // Also check session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('🔍 Session durumu:', { 
+        hasSession: !!session, 
+        accessToken: session?.access_token ? 'exists' : 'missing',
+        sessionError 
+      });
+
       const { data, error } = await supabase
         .from('automatic_orders')
         .select('*')
