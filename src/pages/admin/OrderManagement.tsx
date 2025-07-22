@@ -23,6 +23,7 @@ interface Order {
   customer_name: string;
   customer_email: string;
   package_name: string;
+  package_features?: string;
   amount: number;
   status: "pending" | "completed" | "cancelled" | "approved";
   created_at: string;
@@ -385,44 +386,126 @@ const OrderManagement = () => {
   // PDF download functions
   const downloadPreInfoPDF = async (order: Order) => {
     try {
-      const { generatePreInfoPDF } = await import('@/services/pdfService');
+      // Supabase'den form içeriğini çek
+      const { data: formData, error } = await supabase
+        .from('form_contents')
+        .select('content')
+        .eq('form_type', 'pre_info')
+        .single();
+
+      if (error) {
+        toast({
+          title: "Hata",
+          description: "Form içeriği yüklenemedi",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Müşteri bilgilerini hazırla
+      const currentDate = new Date().toLocaleDateString('tr-TR');
+      const currentDateTime = new Date().toLocaleString('tr-TR');
       
-      const customerData = {
-        name: order.customer_name.split(' ')[0] || '',
-        surname: order.customer_name.split(' ').slice(1).join(' ') || '',
-        email: order.customer_email,
-        phone: order.customer_phone || '',
-        city: order.customer_city || '',
-        address: order.customer_address || '',
-        postalCode: '',
-        tcNo: order.customer_tc_no || '',
-        companyName: order.company_name || '',
-        taxNo: order.company_tax_no || '',
-        taxOffice: order.company_tax_office || ''
-      };
-
-      const packageData = {
-        name: order.package_name,
-        price: order.amount,
-        originalPrice: order.amount
-      };
-
-      const pdf = generatePreInfoPDF(
-        customerData,
-        packageData,
-        order.payment_method,
-        order.customer_type || 'individual',
-        order.contract_ip_address || 'Bilinmiyor'
-      );
-
-      pdf.save(`on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
+      const nameParts = order.customer_name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
       
-      toast({
-        title: "Başarılı",
-        description: "Ön bilgilendirme formu PDF'i indirildi",
-        variant: "default",
-      });
+      // Package features'ı JSON'dan parse et
+      let packageFeatures = [];
+      try {
+        const features = JSON.parse(order.package_features || '[]');
+        packageFeatures = Array.isArray(features) ? features : [];
+      } catch {
+        packageFeatures = [];
+      }
+
+      const customerInfo = `
+<div style="background: #f0f9ff; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #0ea5e9;">
+<h3 style="color: #0369a1; margin-top: 0;">MÜŞTERI BİLGİLERİ:</h3>
+<p><strong>Müşteri Adı:</strong> ${firstName} ${lastName}</p>
+<p><strong>E-posta:</strong> ${order.customer_email}</p>
+<p><strong>Telefon:</strong> ${order.customer_phone || 'Belirtilmemiş'}</p>
+<p><strong>TC Kimlik No:</strong> ${order.customer_tc_no || 'Belirtilmemiş'}</p>
+<p><strong>Adres:</strong> ${order.customer_address || 'Belirtilmemiş'}</p>
+<p><strong>Şehir:</strong> ${order.customer_city || 'Belirtilmemiş'}</p>
+<p><strong>Müşteri Tipi:</strong> ${order.customer_type === 'individual' ? 'Bireysel' : 'Kurumsal'}</p>
+
+${order.customer_type === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:</h3>
+<p><strong>Firma Adı:</strong> ${order.company_name || 'Belirtilmemiş'}</p>
+<p><strong>Vergi No:</strong> ${order.company_tax_no || 'Belirtilmemiş'}</p>
+<p><strong>Vergi Dairesi:</strong> ${order.company_tax_office || 'Belirtilmemiş'}</p>
+` : ''}
+
+<h3 style="color: #0369a1;">PAKET BİLGİLERİ:</h3>
+<p><strong>Seçilen Paket:</strong> ${order.package_name}</p>
+<p><strong>Fiyat:</strong> ${order.amount.toLocaleString('tr-TR')} ₺</p>
+<p><strong>Ödeme Yöntemi:</strong> ${order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}</p>
+
+<h4 style="color: #0369a1; margin-top: 15px;">Müşterinin Hizmet Aldığı Paket İçeriği:</h4>
+<ul style="margin-left: 20px;">
+${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
+</ul>
+
+<h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>
+<p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${currentDate}</p>
+<p><strong>Dijital Onaylama Tarihi:</strong> ${currentDateTime}</p>
+<p><strong>IP Adresi:</strong> ${order.contract_ip_address || 'Bilinmiyor'}</p>
+</div>
+
+<hr style="margin: 20px 0; border: 1px solid #e5e7eb;">
+
+`;
+
+      // Tam içeriği birleştir
+      const fullContent = customerInfo + formData.content;
+      
+      // HTML'yi PDF'e çevir
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+      
+      // Geçici div oluştur
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = fullContent;
+      tempDiv.style.width = '800px';
+      tempDiv.style.padding = '20px';
+      tempDiv.style.backgroundColor = 'white';
+      tempDiv.style.fontFamily = 'Arial, sans-serif';
+      tempDiv.style.fontSize = '14px';
+      tempDiv.style.lineHeight = '1.5';
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      document.body.appendChild(tempDiv);
+
+      try {
+        const canvas = await html2canvas(tempDiv, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+        const imgX = (pdfWidth - imgWidth * ratio) / 2;
+        const imgY = 0;
+
+        pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+        pdf.save(`on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
+        
+        toast({
+          title: "Başarılı",
+          description: "Ön bilgilendirme formu PDF'i indirildi",
+          variant: "default",
+        });
+      } finally {
+        document.body.removeChild(tempDiv);
+      }
     } catch (error) {
+      console.error('PDF generation error:', error);
       toast({
         title: "Hata",
         description: "PDF oluşturulurken hata oluştu",
@@ -433,44 +516,156 @@ const OrderManagement = () => {
 
   const downloadDistanceSalesPDF = async (order: Order) => {
     try {
-      const { generateDistanceSalesPDF } = await import('@/services/pdfService');
+      // Mesafeli satış sözleşmesi içeriğini hazırla
+      const currentDate = new Date().toLocaleDateString('tr-TR');
+      const currentDateTime = new Date().toLocaleString('tr-TR');
       
-      const customerData = {
-        name: order.customer_name.split(' ')[0] || '',
-        surname: order.customer_name.split(' ').slice(1).join(' ') || '',
-        email: order.customer_email,
-        phone: order.customer_phone || '',
-        city: order.customer_city || '',
-        address: order.customer_address || '',
-        postalCode: '',
-        tcNo: order.customer_tc_no || '',
-        companyName: order.company_name || '',
-        taxNo: order.company_tax_no || '',
-        taxOffice: order.company_tax_office || ''
-      };
-
-      const packageData = {
-        name: order.package_name,
-        price: order.amount,
-        originalPrice: order.amount
-      };
-
-      const pdf = generateDistanceSalesPDF(
-        customerData,
-        packageData,
-        order.payment_method,
-        order.customer_type || 'individual',
-        order.contract_ip_address || 'Bilinmiyor'
-      );
-
-      pdf.save(`mesafeli-satis-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
+      const nameParts = order.customer_name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
       
-      toast({
-        title: "Başarılı",
-        description: "Mesafeli satış sözleşmesi PDF'i indirildi",
-        variant: "default",
-      });
+      // Package features'ı JSON'dan parse et
+      let packageFeatures = [];
+      try {
+        const features = JSON.parse(order.package_features || '[]');
+        packageFeatures = Array.isArray(features) ? features : [];
+      } catch {
+        packageFeatures = [];
+      }
+
+      const distanceSalesContent = `
+<div style="background: #f0f9ff; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #0ea5e9;">
+<h2 style="color: #0369a1; margin-top: 0; text-align: center;">MESAFELİ SATIŞ SÖZLEŞMESİ</h2>
+<p style="text-align: center; font-size: 12px;">(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)</p>
+
+<h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>
+<p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${currentDate}</p>
+<p><strong>Dijital Onaylama Tarihi:</strong> ${currentDateTime}</p>
+<p><strong>IP Adresi:</strong> ${order.contract_ip_address || 'Bilinmiyor'}</p>
+
+<h3 style="color: #0369a1;">SATICI FİRMA BİLGİLERİ</h3>
+<p>Ünvan: DoktorumOL Dijital Sağlık Hizmetleri</p>
+<p>Adres: İstanbul, Türkiye</p>
+<p>Telefon: +90 XXX XXX XX XX</p>
+<p>E-posta: info@doktorumol.com.tr</p>
+<p>Web Sitesi: www.doktorumol.com.tr</p>
+<p>Mersis No: XXXXXXXXXXXXXXXXX</p>
+<p>Ticaret Sicil No: XXXXXX</p>
+<p>Vergi Dairesi: İstanbul Vergi Dairesi</p>
+<p>Vergi No: XXXXXXXXXX</p>
+
+<h3 style="color: #0369a1;">ALICI MÜŞTERI BİLGİLERİ</h3>
+<p>Ad Soyad: ${firstName} ${lastName}</p>
+<p>E-posta Adresi: ${order.customer_email}</p>
+<p>Telefon Numarası: ${order.customer_phone || 'Belirtilmemiş'}</p>
+<p>TC Kimlik No: ${order.customer_tc_no || 'Belirtilmemiş'}</p>
+<p>Teslim Adresi: ${order.customer_address || 'Belirtilmemiş'}</p>
+<p>Fatura Adresi: ${order.customer_address || 'Belirtilmemiş'}</p>
+
+${order.customer_type === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:</h3>
+<p><strong>Firma Adı:</strong> ${order.company_name || 'Belirtilmemiş'}</p>
+<p><strong>Vergi No:</strong> ${order.company_tax_no || 'Belirtilmemiş'}</p>
+<p><strong>Vergi Dairesi:</strong> ${order.company_tax_office || 'Belirtilmemiş'}</p>
+` : ''}
+
+<h3 style="color: #0369a1;">HİZMET BİLGİLERİ VE SÖZLEŞMİK KONU</h3>
+<p>Hizmet Adı: ${order.package_name}</p>
+<p>Hizmet Açıklaması: Dijital sağlık platformu kullanım hakkı ve profesyonel sağlık hizmetleri</p>
+<p>Hizmet Süresi: 12 (On İki) Ay</p>
+<p>Aylık Hizmet Bedeli: ${order.amount.toLocaleString('tr-TR')} TL (KDV Dahil)</p>
+<p>Toplam Hizmet Bedeli: ${order.amount.toLocaleString('tr-TR')} TL (KDV Dahil)</p>
+
+<h4 style="color: #0369a1; margin-top: 15px;">Müşterinin Hizmet Aldığı Paket İçeriği:</h4>
+<ul style="margin-left: 20px;">
+${packageFeatures.map((feature: string) => `<li>${feature}</li>`).join('')}
+</ul>
+
+<h3 style="color: #0369a1;">DETAYLI HİZMET KOŞULLARI VE BİLGİLENDİRME</h3>
+
+<h4>1. HİZMET TANIMI VE KAPSAMI:</h4>
+<p>Bu sözleşme kapsamında sunulan hizmet, DoktorumOL dijital sağlık platformu profili oluşturma, yönetme ve hasta ile etkileşim kurma hakkını kapsamaktadır. Hizmet tamamen dijital ortamda sağlanmakta ve fiziksel teslimat içermemektedir.</p>
+
+<h4>2. HİZMET SÜRESİ VE ÖDEME KOŞULLARI:</h4>
+<p>Hizmet süresi 12 (on iki) ay olup, ödeme aylık taksite bölünerek her ayın 1'inde otomatik olarak tahsil edilecektir. Ödeme yapılmaması durumunda hizmet askıya alınabilir.</p>
+
+<h4>3. CAYMA HAKKI:</h4>
+<p>Alıcı, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereğince, hizmetin ifa edilmeye başlanmasından itibaren on dört gün içinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin bu sözleşmeden cayma hakkına sahiptir.</p>
+
+</div>
+
+<h3>DOKTORUM OL ÜYELİK SÖZLEŞMESİ</h3>
+
+<p>Bu sözleşme, DoktorumOL platformunda sunulan dijital sağlık hizmetlerinin kullanımı ve koşullarını düzenlemektedir.</p>
+
+<h4>Platform Kullanım Hakları:</h4>
+<ul>
+<li>Profesyonel profil oluşturma ve yönetme</li>
+<li>Hasta randevu sistemi erişimi</li>
+<li>Dijital iletişim araçlarını kullanma</li>
+<li>Platform analiz ve raporlama araçlarına erişim</li>
+</ul>
+
+<h4>Sorumluluklar:</h4>
+<ul>
+<li>Platform kurallarına uygun kullanım</li>
+<li>Mesleki etik kurallarına uygunluk</li>
+<li>Hasta mahremiyetinin korunması</li>
+<li>Doğru ve güncel bilgi sağlama</li>
+</ul>
+
+<h4>Fesih ve İptal Koşulları:</h4>
+<p>Bu sözleşme taraflardan birinin yazılı bildirimi ile feshedilebilir. Fesih durumunda kullanılmamış dönemler için ücret iadesi yapılabilir.</p>
+
+<p style="margin-top: 30px;"><strong>Bu sözleşme elektronik ortamda onaylanmış olup, yasal geçerliliğe sahiptir.</strong></p>
+`;
+
+      // HTML'yi PDF'e çevir
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+      
+      // Geçici div oluştur
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = distanceSalesContent;
+      tempDiv.style.width = '800px';
+      tempDiv.style.padding = '20px';
+      tempDiv.style.backgroundColor = 'white';
+      tempDiv.style.fontFamily = 'Arial, sans-serif';
+      tempDiv.style.fontSize = '14px';
+      tempDiv.style.lineHeight = '1.5';
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      document.body.appendChild(tempDiv);
+
+      try {
+        const canvas = await html2canvas(tempDiv, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+        const imgX = (pdfWidth - imgWidth * ratio) / 2;
+        const imgY = 0;
+
+        pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+        pdf.save(`mesafeli-satis-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.pdf`);
+        
+        toast({
+          title: "Başarılı",
+          description: "Mesafeli satış sözleşmesi PDF'i indirildi",
+          variant: "default",
+        });
+      } finally {
+        document.body.removeChild(tempDiv);
+      }
     } catch (error) {
+      console.error('PDF generation error:', error);
       toast({
         title: "Hata",
         description: "PDF oluşturulurken hata oluştu",
