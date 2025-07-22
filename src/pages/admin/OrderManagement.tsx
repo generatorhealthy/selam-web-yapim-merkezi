@@ -635,92 +635,149 @@ ${packageFeatures.length > 0 ?
       }
 
       const distanceSalesContent = `
-<div style="background: #f0f9ff; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #0ea5e9;">
-<h2 style="color: #0369a1; margin-top: 0; text-align: center;">MESAFELİ SATIŞ SÖZLEŞMESİ</h2>
-<p style="text-align: center; font-size: 12px;">(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)</p>
+<div style="padding: 20px; font-family: Arial, sans-serif; line-height: 1.4; color: #333;">
 
-<h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>
-<p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${currentDate}</p>
-<p><strong>Dijital Onaylama Tarihi:</strong> ${currentDateTime}</p>
-<p><strong>IP Adresi:</strong> ${order.contract_ip_address || 'Bilinmiyor'}</p>
+<p style="text-align: justify; margin-bottom: 15px;">
+sistemler vasıtasıyla analiz edilmesi suretiyle kişinin kendisi aleyhine bir sonucun ortaya çıkmasına itiraz etme, (g) 
+Kişisel verilerin kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması halinde zararın giderilmesini talep etme.
+</p>
 
-<h3 style="color: #0369a1;">SATICI FİRMA BİLGİLERİ</h3>
-<p>Ünvan: DoktorumOL Dijital Sağlık Hizmetleri</p>
-<p>Adres: İstanbul, Türkiye</p>
-<p>Telefon: +90 XXX XXX XX XX</p>
-<p>E-posta: info@doktorumol.com.tr</p>
-<p>Web Sitesi: www.doktorumol.com.tr</p>
-<p>Mersis No: XXXXXXXXXXXXXXXXX</p>
-<p>Ticaret Sicil No: XXXXXX</p>
-<p>Vergi Dairesi: İstanbul Vergi Dairesi</p>
-<p>Vergi No: XXXXXXXXXX</p>
+<p style="text-align: justify; margin-bottom: 15px;">
+Bu haklarınızı yazılı olarak veya güvenli elektronik imza, mobil imza, kayıtlı elektronik posta (KEP) adresi ya da 
+Şirket'in sisteminde kayıtlı bulunan elektronik posta adresini kullanmak suretiyle (Bu kapsamda 
+info@doktorumol.com.tr e-posta adresi üzerinden Şirket'e ulaşabilirsiniz) veya başvuru amacına yönelik geliştirilmiş 
+bir yazılım ya da uygulama vasıtasıyla Şirket'e iletebilirsiniz.
+</p>
 
-<h3 style="color: #0369a1;">ALICI MÜŞTERI BİLGİLERİ</h3>
-<p>Ad Soyad: ${firstName} ${lastName}</p>
-<p>E-posta Adresi: ${order.customer_email}</p>
-<p>Telefon Numarası: ${order.customer_phone || 'Belirtilmemiş'}</p>
-<p>TC Kimlik No: ${order.customer_tc_no || 'Belirtilmemiş'}</p>
-<p>Teslim Adresi: ${order.customer_address || 'Belirtilmemiş'}</p>
-<p>Fatura Adresi: ${order.customer_address || 'Belirtilmemiş'}</p>
+<p style="text-align: justify; margin-bottom: 20px;">
+Bilginize sunarız.
+</p>
 
-${order.customer_type === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:</h3>
-<p><strong>Firma Adı:</strong> ${order.company_name || 'Belirtilmemiş'}</p>
-<p><strong>Vergi No:</strong> ${order.company_tax_no || 'Belirtilmemiş'}</p>
-<p><strong>Vergi Dairesi:</strong> ${order.company_tax_office || 'Belirtilmemiş'}</p>
-` : ''}
+<h2 style="text-align: center; margin-top: 30px; margin-bottom: 20px; font-size: 16px; font-weight: bold;">
+Çağrı Merkezi Aydınlatma Metni
+</h2>
 
-<h3 style="color: #0369a1;">HİZMET BİLGİLERİ VE SÖZLEŞMİK KONU</h3>
-<p>Hizmet Adı: ${order.package_name}</p>
-<p>Hizmet Açıklaması: Dijital sağlık platformu kullanım hakkı ve profesyonel sağlık hizmetleri</p>
-<p>Hizmet Süresi: 12 (On İki) Ay</p>
-<p>Aylık Hizmet Bedeli: ${order.amount.toLocaleString('tr-TR')} TL (KDV Dahil)</p>
-<p>Toplam Hizmet Bedeli: ${order.amount.toLocaleString('tr-TR')} TL (KDV Dahil)</p>
+<p style="text-align: justify; margin-bottom: 15px;">
+Doktorumol.com.tr olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma 
+Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma 
+yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
+</p>
 
-<h4 style="color: #0369a1; margin-top: 15px;">Müşterinin Hizmet Aldığı Paket İçeriği:</h4>
-<div style="background: #fafafa; padding: 15px; border-left: 4px solid #0369a1; margin: 10px 0;">
-${packageFeatures.length > 0 ? 
-  `<ul style="margin: 0; padding-left: 20px;">${packageFeatures.map((feature: string) => `<li style="margin-bottom: 5px;">${feature}</li>`).join('')}</ul>` :
-  '<p style="margin: 0; font-style: italic; color: #666;">Paket özellik bilgisi mevcut değil. Lütfen paket yönetiminden kontrol ediniz.</p>'
-}
-</div>
+<p style="text-align: justify; margin-bottom: 15px;">
+Doktoru mol; çağrı merkezini arayanların paylaşmış olduğu ad-soyad, iletişim bilgisi ve ses kaydına ait kişisel 
+verileri;
+</p>
 
-<h3 style="color: #0369a1;">DETAYLI HİZMET KOŞULLARI VE BİLGİLENDİRME</h3>
-
-<h4>1. HİZMET TANIMI VE KAPSAMI:</h4>
-<p>Bu sözleşme kapsamında sunulan hizmet, DoktorumOL dijital sağlık platformu profili oluşturma, yönetme ve hasta ile etkileşim kurma hakkını kapsamaktadır. Hizmet tamamen dijital ortamda sağlanmakta ve fiziksel teslimat içermemektedir.</p>
-
-<h4>2. HİZMET SÜRESİ VE ÖDEME KOŞULLARI:</h4>
-<p>Hizmet süresi 12 (on iki) ay olup, ödeme aylık taksite bölünerek her ayın 1'inde otomatik olarak tahsil edilecektir. Ödeme yapılmaması durumunda hizmet askıya alınabilir.</p>
-
-<h4>3. CAYMA HAKKI:</h4>
-<p>Alıcı, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereğince, hizmetin ifa edilmeye başlanmasından itibaren on dört gün içinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin bu sözleşmeden cayma hakkına sahiptir.</p>
-
-</div>
-
-<h3>DOKTORUM OL ÜYELİK SÖZLEŞMESİ</h3>
-
-<p>Bu sözleşme, DoktorumOL platformunda sunulan dijital sağlık hizmetlerinin kullanımı ve koşullarını düzenlemektedir.</p>
-
-<h4>Platform Kullanım Hakları:</h4>
-<ul>
-<li>Profesyonel profil oluşturma ve yönetme</li>
-<li>Hasta randevu sistemi erişimi</li>
-<li>Dijital iletişim araçlarını kullanma</li>
-<li>Platform analiz ve raporlama araçlarına erişim</li>
+<ul style="margin-left: 30px; margin-bottom: 15px;">
+<li style="margin-bottom: 8px;">- Arayan kişiye doğru hitap edilebilmesi,</li>
+<li style="margin-bottom: 8px;">- Aramanın teyidi ve iletişim faaliyetlerinin yürütülmesi,</li>
+<li style="margin-bottom: 8px;">- Görüşme talep edilen uzman için randevu oluşturulması,</li>
+<li style="margin-bottom: 8px;">- Arayan kişinin uzmana yönlendirilmesi,</li>
+<li style="margin-bottom: 8px;">- Talep ve şikayetlerin takibi,</li>
+<li style="margin-bottom: 8px;">- Doğabilecek uyuşmazlıklarda delil olarak kullanılması amaçlarıyla sınırlı olarak işlemektedir.</li>
 </ul>
 
-<h4>Sorumluluklar:</h4>
-<ul>
-<li>Platform kurallarına uygun kullanım</li>
-<li>Mesleki etik kurallarına uygunluk</li>
-<li>Hasta mahremiyetinin korunması</li>
-<li>Doğru ve güncel bilgi sağlama</li>
-</ul>
+<p style="text-align: justify; margin-bottom: 15px;">
+Kişisel verileriniz yukarıda belirtilen amaçların yerine getirilebilmesi için Şirket'in hissedarları, iş ortakları, hizmet 
+aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına ve randevu oluşturma talebinde bulunduğunuz ilgili uzmana 
+aktarılabilecektir.
+</p>
 
-<h4>Fesih ve İptal Koşulları:</h4>
-<p>Bu sözleşme taraflardan birinin yazılı bildirimi ile feshedilebilir. Fesih durumunda kullanılmamış dönemler için ücret iadesi yapılabilir.</p>
+<p style="text-align: justify; margin-bottom: 15px;">
+Kişisel sağlık verilerinizi çağrı merkezi ile görüşmeniz sırasında paylaşmamanızı rica ederiz.Şirketimiz aracılığıyla 
+randevu oluşturma talebiniz kapsamında çağrı merkezi aracılığıyla edilen kişisel verileriniz, Şirket ile aranızda 
+kurulabilecek hukuki ilişkinin devamı için kişisel verilerinizin işlenmesinin gerekli olması, randevu oluşturulmasına 
+ilişkin hakkınızın tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması hukuki sebepleri ile telefon 
+yoluyla otomatik olarak işlenmektedir.
+</p>
 
-<p style="margin-top: 30px;"><strong>Bu sözleşme elektronik ortamda onaylanmış olup, yasal geçerliliğe sahiptir.</strong></p>
+<p style="text-align: justify; margin-bottom: 15px;">
+Kanunun "İlgili kişinin haklarını düzenleyen" 11. maddesi kapsamındaki taleplerinizi, "Veri Sorumlusuna Başvuru Usul 
+ve Esasları Hakkında Tebliğ"e göre <strong>Doktorumol.com.tr'nin Şirket mailine info@doktorumol.com.tr'ye 
+iletebilirsiniz.</strong>
+</p>
+
+<div style="page-break-before: always;">
+
+<h1 style="text-align: center; margin-top: 20px; margin-bottom: 25px; font-size: 18px; font-weight: bold;">
+KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ
+</h1>
+
+<p style="text-align: justify; margin-bottom: 15px;">
+Doktorumol.com.tr ("<strong>doktorumol</strong>" veya "<strong>Şirket</strong>") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması 
+Kanunu ("<strong>Kanun</strong>") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ 
+kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
+</p>
+
+<p style="text-align: justify; margin-bottom: 15px;">
+Bu kapsamda bilgi vermekle yükümlü olduğumuz konular aşağıdaki gibidir:
+</p>
+
+<h3 style="font-size: 14px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">
+1. Veri sorumlusunun ve varsa temsilcisinin kimliği
+</h3>
+
+<p style="text-align: justify; margin-bottom: 15px;">
+Veri sorumlusu; doktorumol.com.tr'dir.
+</p>
+
+<h3 style="font-size: 14px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">
+2. Kişisel verilerin hangi amaçla işleneceği
+</h3>
+
+<p style="text-align: justify; margin-bottom: 15px;">
+Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere 
+varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz <strong>genel ve özel nitelikli kategorilerdeki 
+kişisel verileriniz</strong>, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin 
+sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim 
+kurulması, <strong>onay vermeniz halinde</strong> tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile 
+ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda 
+bu kişisel verilerinizin Doktorumol tarafından saklanması <strong>amacı ile</strong> işlenmektedir.
+</p>
+
+<p style="text-align: justify; margin-bottom: 15px;">
+Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet sayfası sunucusu tarafından sabit sürücününüze 
+iletilen küçük metin dosyaları ("<strong>Çerezler</strong>") aracılığıyla elde edilen kullanılan tarayıcı, IP adresi, internet bağlantınız, 
+site kullanımlarınız hakkındaki bilgiler, bilgisayarınızdaki işletim sistemi ve benzeri <strong>kategorilerdeki kişisel 
+verileriniz</strong>, internet sitesinin düzgün bir şekilde çalışabilmesi, ziyaret edilebilmesi ve özelliklerinden faydalanılması, 
+internet sitesinde sayfalar arasında bilgileri taşıyabilmek ve bilgileri tekrardan girmek zorluluğunu ortadan 
+kaldırmak <strong>amaçları ile</strong> işlenmektedir.
+</p>
+
+<h3 style="font-size: 14px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">
+3. Şirket tarafından işlenen kişisel verilerin kimlere ve hangi amaçla aktarılabileceği
+</h3>
+
+<p style="text-align: justify; margin-bottom: 15px;">
+Kişisel verileriniz 2. maddede belirtilen amaçların yerine getirilebilmesi için Doktorumol hissedarları, iş ortakları, 
+hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına aktarılabilecektir.
+</p>
+
+<h3 style="font-size: 14px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">
+4. Kişisel veri toplamanın yöntemi ve hukuki sebebi
+</h3>
+
+<p style="text-align: justify; margin-bottom: 15px;">
+Şirketimizin internet sitesi veya çağrı merkezi aracılığıyla, tamamen veya kısmen otomatik yollarla elde edilen kişisel 
+verileriniz, kanunda açıkça öngörülmesi, Doktorumol ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel 
+verilerinizin işlenmesinin gerekli olması, iletişim hakkının tesisi, kullanılması veya korunması için veri işlemenin 
+zorunlu olması ve açık rızanız <strong>hukuki sebepleri</strong> ile toplanmaktadır.
+</p>
+
+<h3 style="font-size: 14px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">
+5. Kişisel verileriniz ile ilgili Kanun kapsamındaki haklarınız aşağıdaki şekildedir:
+</h3>
+
+<p style="text-align: justify; margin-bottom: 8px;">
+<strong>(a)</strong> Kişisel verilerinizin işlenip işlenmediğini öğrenme, <strong>(b)</strong> Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme, <strong>(c)</strong> 
+Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme, <strong>(ç)</strong> Yurt içinde 
+veya yurt dışında kişisel verilerin aktarıldığı üçüncü kişileri bilme, <strong>(d)</strong> Kişisel verilerinizin eksik veya yanlış işlenmiş 
+olması halinde bunların düzeltilmesini isteme, <strong>(e)</strong> Kişisel verilerinizin işlenmesini gerektiren sebeplerin ortadan 
+kalkması halinde kişisel verilerinizin silinmesini veya yok edilmesini isteme, <strong>(f)</strong> (d) ve (e) bentleri uyarınca yapılan 
+işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme, <strong>(g)</strong> İşlenen verilerin münhasıran otomatik
+</p>
+
+</div>
 `;
 
       // HTML'yi PDF'e çevir
