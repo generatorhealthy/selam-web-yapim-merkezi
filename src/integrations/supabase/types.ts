@@ -480,8 +480,6 @@ export type Database = {
           company_tax_no: string | null
           company_tax_office: string | null
           contract_emails_sent: boolean | null
-          contract_generated_at: string | null
-          contract_ip_address: string | null
           created_at: string
           customer_address: string | null
           customer_city: string | null
@@ -491,7 +489,6 @@ export type Database = {
           customer_tc_no: string | null
           customer_type: string
           deleted_at: string | null
-          distance_sales_pdf_content: string | null
           id: string
           is_first_order: boolean | null
           package_name: string
@@ -499,7 +496,6 @@ export type Database = {
           parent_order_id: string | null
           payment_method: string
           payment_transaction_id: string | null
-          pre_info_pdf_content: string | null
           status: string
           subscription_month: number | null
           updated_at: string
@@ -512,8 +508,6 @@ export type Database = {
           company_tax_no?: string | null
           company_tax_office?: string | null
           contract_emails_sent?: boolean | null
-          contract_generated_at?: string | null
-          contract_ip_address?: string | null
           created_at?: string
           customer_address?: string | null
           customer_city?: string | null
@@ -523,7 +517,6 @@ export type Database = {
           customer_tc_no?: string | null
           customer_type?: string
           deleted_at?: string | null
-          distance_sales_pdf_content?: string | null
           id?: string
           is_first_order?: boolean | null
           package_name: string
@@ -531,7 +524,6 @@ export type Database = {
           parent_order_id?: string | null
           payment_method: string
           payment_transaction_id?: string | null
-          pre_info_pdf_content?: string | null
           status?: string
           subscription_month?: number | null
           updated_at?: string
@@ -544,8 +536,6 @@ export type Database = {
           company_tax_no?: string | null
           company_tax_office?: string | null
           contract_emails_sent?: boolean | null
-          contract_generated_at?: string | null
-          contract_ip_address?: string | null
           created_at?: string
           customer_address?: string | null
           customer_city?: string | null
@@ -555,7 +545,6 @@ export type Database = {
           customer_tc_no?: string | null
           customer_type?: string
           deleted_at?: string | null
-          distance_sales_pdf_content?: string | null
           id?: string
           is_first_order?: boolean | null
           package_name?: string
@@ -563,7 +552,6 @@ export type Database = {
           parent_order_id?: string | null
           payment_method?: string
           payment_transaction_id?: string | null
-          pre_info_pdf_content?: string | null
           status?: string
           subscription_month?: number | null
           updated_at?: string
@@ -1066,10 +1054,6 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
-      }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
       }
       is_user_approved: {
         Args: { user_id: string }

@@ -39,11 +39,6 @@ const cities = [
 ];
 
 const Index = () => {
-  // ÇOK BASIT TEST!
-  console.log("🚀🚀🚀 ANA SAYFA YÜKLENDI! 🚀🚀🚀");
-  console.warn("🚀🚀🚀 ANA SAYFA YÜKLENDI! 🚀🚀🚀");
-  console.error("🚀🚀🚀 ANA SAYFA YÜKLENDI! 🚀🚀🚀");
-  
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [appointmentType, setAppointmentType] = useState("online");

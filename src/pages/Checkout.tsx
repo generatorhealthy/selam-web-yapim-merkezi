@@ -125,7 +125,7 @@ const Checkout = () => {
   const [showPreInfoDialog, setShowPreInfoDialog] = useState(false);
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer">("bank_transfer");
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("bank_transfer");
   const [clientIP, setClientIP] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
@@ -211,7 +211,11 @@ const Checkout = () => {
   };
 
   const handlePaymentSuccess = async () => {
-    setShowBankInfo(true);
+    if (paymentMethod === "bank_transfer") {
+      setShowBankInfo(true);
+    } else if (paymentMethod === "credit_card") {
+      await handleCreditCardPayment();
+    }
   };
 
   const handleCreditCardPayment = async () => {
@@ -341,50 +345,6 @@ const Checkout = () => {
         return;
       }
 
-      // Send contract emails automatically
-      try {
-        const customerDataForEmail = {
-          name: formData.name,
-          surname: formData.surname,
-          email: formData.email,
-          phone: formData.phone,
-          tcNo: formData.tcNo,
-          address: formData.address,
-          city: formData.city,
-          customerType: customerType,
-          companyName: formData.companyName,
-          taxNo: formData.taxNo,
-          taxOffice: formData.taxOffice
-        };
-
-        const packageDataForEmail = {
-          name: selectedPackage.name,
-          price: selectedPackage.price,
-          originalPrice: selectedPackage.originalPrice || selectedPackage.price
-        };
-
-        console.log('Sending contract emails...');
-        
-        const { error: emailError } = await supabase.functions.invoke('send-contract-emails', {
-          body: {
-            customerData: customerDataForEmail,
-            packageData: packageDataForEmail,
-            paymentMethod: paymentMethod,
-            clientIP: clientIP
-          }
-        });
-
-        if (emailError) {
-          console.error('Contract email sending failed:', emailError);
-          // Don't block the order completion, just log the error
-        } else {
-          console.log('Contract emails sent successfully');
-        }
-      } catch (emailError) {
-        console.error('Email sending error:', emailError);
-        // Don't block the order completion
-      }
-
       localStorage.setItem('lastOrder', JSON.stringify({
         id: data.id,
         orderNumber: `DRP-${Date.now()}`,
@@ -396,7 +356,7 @@ const Checkout = () => {
 
       toast({
         title: "Başarılı",
-        description: "Siparişiniz başarıyla kaydedildi! Sözleşme belgeleri e-posta adresinize gönderildi.",
+        description: "Siparişiniz başarıyla kaydedildi!",
         variant: "default"
       });
 
@@ -651,6 +611,23 @@ const Checkout = () => {
                           </div>
                         </label>
                         
+                        <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                          paymentMethod === "credit_card" ? "border-blue-500 bg-blue-50" : "border-gray-200"
+                        }`}>
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="credit_card"
+                            checked={paymentMethod === "credit_card"}
+                            onChange={(e) => setPaymentMethod(e.target.value as "credit_card")}
+                            className="mr-3"
+                          />
+                          <CreditCard className="w-5 h-5 mr-3 text-blue-600" />
+                          <div>
+                            <div className="font-medium">Kredi Kartı</div>
+                            <div className="text-sm text-gray-600">Güvenli ödeme</div>
+                          </div>
+                        </label>
                       </div>
                     </CardContent>
                   </Card>
@@ -691,7 +668,7 @@ const Checkout = () => {
                     disabled={loading || !contractAccepted}
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 text-lg font-semibold"
                   >
-                    Siparişi Onayla
+                    {paymentMethod === "credit_card" ? "Kredi Kartı ile Öde" : "Siparişi Onayla"}
                   </Button>
                 </>
               ) : (

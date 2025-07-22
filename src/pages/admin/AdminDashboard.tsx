@@ -24,11 +24,6 @@ import {
 } from "lucide-react";
 
 const AdminDashboard = () => {
-  // ÇOK BASIT TEST!
-  console.log("🔥🔥🔥 ADMIN DASHBOARD YÜKLENDI! 🔥🔥🔥");
-  console.warn("🔥🔥🔥 ADMIN DASHBOARD YÜKLENDI! 🔥🔥🔥");
-  console.error("🔥🔥🔥 ADMIN DASHBOARD YÜKLENDI! 🔥🔥🔥");
-  
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
 
@@ -306,7 +301,7 @@ const AdminDashboard = () => {
         <title>Divan Paneli - Doktorum Ol</title>
       </Helmet>
       
-      <div className="min-h-screen bg-red-600 text-white relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-40">
         <div className="w-full h-full bg-repeat" style={{
@@ -322,14 +317,14 @@ const AdminDashboard = () => {
           <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white rounded-full text-sm font-semibold mb-6 shadow-lg shadow-blue-500/25">
             <Sparkles className="w-5 h-5 animate-pulse" />
             <span className="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-              Panel
+              {getRoleDisplayName()} Panel
             </span>
             <Sparkles className="w-5 h-5 animate-pulse" />
           </div>
           
-           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-red-600 via-red-800 to-red-900 bg-clip-text text-transparent">
-              🔥 TEST ÇALIŞIYOR MU? 🔥
+          <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
+              Hoş Geldiniz!
             </span>
           </h1>
           

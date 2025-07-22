@@ -83,7 +83,7 @@ ${customerType === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:
 <h3 style="color: #0369a1;">PAKET BİLGİLERİ:</h3>
 <p><strong>Seçilen Paket:</strong> ${selectedPackage.name}</p>
 <p><strong>Fiyat:</strong> ${selectedPackage.price.toLocaleString('tr-TR')} ₺</p>
-<p><strong>Ödeme Yöntemi:</strong> Banka Havalesi/EFT</p>
+<p><strong>Ödeme Yöntemi:</strong> ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}</p>
 
 <h4 style="color: #0369a1; margin-top: 15px;">Müşterinin Hizmet Aldığı Paket İçeriği:</h4>
 <ul style="margin-left: 20px;">
@@ -178,7 +178,7 @@ Adres: ${formData.address || 'Belirtilmemiş'}
 ÜRÜN/HİZMET BİLGİLERİ:
 Ürün/Hizmet: ${selectedPackage.name}
 Fiyat: ${selectedPackage.price.toLocaleString('tr-TR')} ₺
-Ödeme Şekli: Banka Havalesi/EFT
+Ödeme Şekli: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}
 
 Sözleşme Tarihi: ${new Date().toLocaleDateString('tr-TR')}
 IP Adresi: ${clientIP}`;
