@@ -391,7 +391,8 @@ const OrderManagement = () => {
       return;
     }
 
-    const blob = new Blob([content], { type: 'application/pdf' });
+    // Create a text file with the content
+    const blob = new Blob([content], { type: 'text/plain; charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -400,17 +401,23 @@ const OrderManagement = () => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Başarılı",
+      description: "Sözleşme içeriği indirildi",
+      variant: "default",
+    });
   };
 
   const downloadPreInfoPDF = (order: Order) => {
     if (order.pre_info_pdf_content) {
-      downloadPDF(order.pre_info_pdf_content, `on-bilgilendirme-${order.customer_name}-${order.id.slice(0, 8)}.pdf`);
+      downloadPDF(order.pre_info_pdf_content, `on-bilgilendirme-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.txt`);
     }
   };
 
   const downloadDistanceSalesPDF = (order: Order) => {
     if (order.distance_sales_pdf_content) {
-      downloadPDF(order.distance_sales_pdf_content, `mesafeli-satis-${order.customer_name}-${order.id.slice(0, 8)}.pdf`);
+      downloadPDF(order.distance_sales_pdf_content, `mesafeli-satis-${order.customer_name.replace(/\s+/g, '-')}-${order.id.slice(0, 8)}.txt`);
     }
   };
 

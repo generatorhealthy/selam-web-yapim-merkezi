@@ -309,6 +309,10 @@ const Checkout = () => {
     try {
       setLoading(true);
       
+      // Generate PDF content
+      const preInfoPdfContent = await generatePreInfoPdfContent();
+      const distanceSalesPdfContent = generateDistanceSalesPdfContent();
+      
       const orderData = {
         customer_name: `${formData.name} ${formData.surname}`,
         customer_email: formData.email,
@@ -326,7 +330,10 @@ const Checkout = () => {
         payment_method: paymentMethod,
         status: 'pending',
         is_first_order: true,
-        subscription_month: 1
+        subscription_month: 1,
+        contract_ip_address: clientIP,
+        pre_info_pdf_content: preInfoPdfContent,
+        distance_sales_pdf_content: distanceSalesPdfContent
       };
 
       const { data, error } = await supabase
@@ -370,6 +377,97 @@ const Checkout = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // PDF içerik oluşturucu fonksiyonlar
+  const generatePreInfoPdfContent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('form_contents')
+        .select('content')
+        .eq('form_type', 'pre_info')
+        .single();
+
+      if (error || !data) {
+        console.error('Ön bilgi formu içeriği alınamadı:', error);
+        return null;
+      }
+
+      // Form içeriğini müşteri bilgileri ile birleştir
+      const currentDate = new Date().toLocaleDateString('tr-TR');
+      const currentDateTime = new Date().toLocaleString('tr-TR');
+      
+      const customerInfo = `
+        MÜŞTERI BİLGİLERİ:
+        Müşteri Adı: ${formData.name} ${formData.surname}
+        E-posta: ${formData.email}
+        Telefon: ${formData.phone || 'Belirtilmemiş'}
+        TC Kimlik No: ${formData.tcNo || 'Belirtilmemiş'}
+        Adres: ${formData.address || 'Belirtilmemiş'}
+        Şehir: ${formData.city}
+        Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}
+
+        ${customerType === 'company' ? `KURUMSAL BİLGİLER:
+        Firma Adı: ${formData.companyName || 'Belirtilmemiş'}
+        Vergi No: ${formData.taxNo || 'Belirtilmemiş'}
+        Vergi Dairesi: ${formData.taxOffice || 'Belirtilmemiş'}
+        ` : ''}
+
+        PAKET BİLGİLERİ:
+        Seçilen Paket: ${selectedPackage.name}
+        Fiyat: ${selectedPackage.price.toLocaleString('tr-TR')} ₺
+        Ödeme Yöntemi: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}
+
+        Müşterinin Hizmet Aldığı Paket İçeriği:
+        ${selectedPackage.features ? selectedPackage.features.map((feature: string) => `• ${feature}`).join('\n') : ''}
+
+        TARİHLER:
+        Sözleşme Oluşturulma Tarihi: ${currentDate}
+        Dijital Onaylama Tarihi: ${currentDateTime}
+        IP Adresi: ${clientIP}
+
+        ------------------------------------
+
+      `;
+
+      return customerInfo + data.content;
+    } catch (error) {
+      console.error('PDF içeriği oluşturulurken hata:', error);
+      return null;
+    }
+  };
+
+  const generateDistanceSalesPdfContent = () => {
+    const currentDate = new Date().toLocaleDateString('tr-TR');
+    
+    return `KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ
+
+Doktorumol.com.tr ("doktorumol" veya "Şirket") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
+
+Bu kapsamda bilgi vermekle yükümlü olduğumuz konular aşağıdaki gibidir:
+
+1. Veri sorumlusunun ve varsa temsilcisinin kimliği
+
+Veri sorumlusu; doktorumol.com.tr'dir.
+
+2. Kişisel verilerin hangi amaçla işleneceği
+
+Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz genel ve özel nitelikli kategorilerdeki kişisel verileriniz, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim kurulması, onay vermeniz halinde tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda bu kişisel verilerinizin Doktorumol tarafından saklanması amacı ile işlenmektedir.
+
+ALICI BİLGİLERİ:
+Ad Soyad: ${formData.name} ${formData.surname}
+E-posta: ${formData.email}
+Telefon: ${formData.phone || 'Belirtilmemiş'}
+Adres: ${formData.address || 'Belirtilmemiş'}
+Şehir: ${formData.city}
+
+ÜRÜN/HİZMET BİLGİLERİ:
+Ürün/Hizmet: ${selectedPackage.name}
+Fiyat: ${selectedPackage.price.toLocaleString('tr-TR')} ₺
+Ödeme Şekli: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}
+
+Sözleşme Tarihi: ${currentDate}
+IP Adresi: ${clientIP}`;
   };
 
   if (loading) {
