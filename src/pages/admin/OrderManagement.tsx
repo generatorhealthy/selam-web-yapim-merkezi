@@ -504,54 +504,118 @@ ${packageFeatures.length > 0 ?
       tempDiv.style.wordWrap = 'break-word';
       tempDiv.style.pageBreakInside = 'avoid';
       
-      // Add CSS for better page breaks
+      // Add CSS for better page breaks and formatting
       const style = document.createElement('style');
       style.textContent = `
-        h1, h2, h3, h4 { 
-          page-break-after: avoid; 
-          margin-bottom: 10px; 
-          margin-top: 15px;
+        * { 
+          box-sizing: border-box; 
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        body { 
+          margin: 0; 
+          padding: 0; 
+        }
+        .page-break { 
+          page-break-before: always !important; 
+          break-before: page !important; 
+        }
+        .avoid-break { 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important; 
+        }
+        h1, h2, h3, h4, h5, h6 { 
+          page-break-after: avoid !important; 
+          break-after: avoid !important;
+          margin: 10px 0 8px 0 !important;
+          line-height: 1.3 !important;
+          orphans: 3;
+          widows: 3;
         }
         p { 
-          page-break-inside: avoid; 
-          margin-bottom: 8px; 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin: 0 0 8px 0 !important; 
+          line-height: 1.4 !important;
+          orphans: 2;
+          widows: 2;
         }
         ul, ol { 
-          page-break-inside: avoid; 
-          margin-bottom: 10px; 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin: 8px 0 !important; 
+          padding-left: 20px !important;
         }
         li { 
-          margin-bottom: 3px; 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin-bottom: 4px !important; 
+          line-height: 1.4 !important;
+        }
+        div { 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
         }
         .customer-info { 
-          page-break-inside: avoid; 
-          margin-bottom: 20px; 
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin-bottom: 15px !important; 
+        }
+        .content-section {
+          page-break-inside: avoid !important; 
+          break-inside: avoid !important;
+          margin-bottom: 12px !important;
         }
       `;
       document.head.appendChild(style);
+      
+      // Apply classes to elements for better page breaks
+      tempDiv.querySelectorAll('div').forEach(div => {
+        if (div.style.background || div.style.backgroundColor) {
+          div.classList.add('customer-info', 'avoid-break');
+        } else {
+          div.classList.add('content-section', 'avoid-break');
+        }
+      });
+      
+      tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => {
+        heading.classList.add('avoid-break');
+      });
+      
+      tempDiv.querySelectorAll('p, ul, ol').forEach(element => {
+        element.classList.add('avoid-break');
+      });
+      
       document.body.appendChild(tempDiv);
 
       try {
         const canvas = await html2canvas(tempDiv, {
-          scale: 1.5,
+          scale: 1.2,
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff',
           logging: false,
           width: tempDiv.scrollWidth,
-          height: tempDiv.scrollHeight
+          height: tempDiv.scrollHeight,
+          onclone: (clonedDoc) => {
+            const clonedDiv = clonedDoc.body.querySelector('div');
+            if (clonedDiv) {
+              clonedDiv.style.transform = 'none';
+              clonedDiv.style.webkitTransform = 'none';
+            }
+          }
         });
         
-        const imgData = canvas.toDataURL('image/jpeg', 0.85);
+        const imgData = canvas.toDataURL('image/jpeg', 0.90);
         const pdf = new jsPDF('p', 'mm', 'a4');
         
         const pageWidth = 210;
         const pageHeight = 297;
-        const margin = 10;
+        const margin = 8;
         const contentWidth = pageWidth - (margin * 2);
         const imgHeight = (canvas.height * contentWidth) / canvas.width;
         
-        // Calculate page breaks more carefully
+        // Better page break calculation
         const pageContentHeight = pageHeight - (margin * 2);
         let currentPosition = 0;
         let pageNumber = 0;
@@ -569,7 +633,7 @@ ${packageFeatures.length > 0 ?
           
           pdf.addImage(imgData, 'JPEG', margin, yPosition, contentWidth, imgHeight);
           
-          currentPosition += heightForThisPage;
+          currentPosition += pageContentHeight * 0.95; // Slight overlap to prevent cutting text
           pageNumber++;
         }
         
@@ -635,92 +699,59 @@ ${packageFeatures.length > 0 ?
       }
 
       const distanceSalesContent = `
-<div style="background: #f0f9ff; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #0ea5e9;">
-<h2 style="color: #0369a1; margin-top: 0; text-align: center;">MESAFELİ SATIŞ SÖZLEŞMESİ</h2>
-<p style="text-align: center; font-size: 12px;">(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)</p>
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
 
-<h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>
-<p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${currentDate}</p>
-<p><strong>Dijital Onaylama Tarihi:</strong> ${currentDateTime}</p>
-<p><strong>IP Adresi:</strong> ${order.contract_ip_address || 'Bilinmiyor'}</p>
+<h1 style="text-align: center; color: #2c3e50; margin-bottom: 30px; font-size: 18px;">KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ</h1>
 
-<h3 style="color: #0369a1;">SATICI FİRMA BİLGİLERİ</h3>
-<p>Ünvan: DoktorumOL Dijital Sağlık Hizmetleri</p>
-<p>Adres: İstanbul, Türkiye</p>
-<p>Telefon: +90 XXX XXX XX XX</p>
-<p>E-posta: info@doktorumol.com.tr</p>
-<p>Web Sitesi: www.doktorumol.com.tr</p>
-<p>Mersis No: XXXXXXXXXXXXXXXXX</p>
-<p>Ticaret Sicil No: XXXXXX</p>
-<p>Vergi Dairesi: İstanbul Vergi Dairesi</p>
-<p>Vergi No: XXXXXXXXXX</p>
+<p style="margin-bottom: 20px;">Doktorumol.com.tr ("doktorumol" veya "Şirket") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.</p>
 
-<h3 style="color: #0369a1;">ALICI MÜŞTERI BİLGİLERİ</h3>
-<p>Ad Soyad: ${firstName} ${lastName}</p>
-<p>E-posta Adresi: ${order.customer_email}</p>
-<p>Telefon Numarası: ${order.customer_phone || 'Belirtilmemiş'}</p>
-<p>TC Kimlik No: ${order.customer_tc_no || 'Belirtilmemiş'}</p>
-<p>Teslim Adresi: ${order.customer_address || 'Belirtilmemiş'}</p>
-<p>Fatura Adresi: ${order.customer_address || 'Belirtilmemiş'}</p>
+<p style="margin-bottom: 20px;">Bu kapsamda bilgi vermekle yükümlü olduğumuz konular aşağıdaki gibidir:</p>
 
-${order.customer_type === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:</h3>
-<p><strong>Firma Adı:</strong> ${order.company_name || 'Belirtilmemiş'}</p>
-<p><strong>Vergi No:</strong> ${order.company_tax_no || 'Belirtilmemiş'}</p>
-<p><strong>Vergi Dairesi:</strong> ${order.company_tax_office || 'Belirtilmemiş'}</p>
-` : ''}
+<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">1. Veri sorumlusunun ve varsa temsilcisinin kimliği</h2>
+<p style="margin-bottom: 15px;">Veri sorumlusu; doktorumol.com.tr'dir.</p>
 
-<h3 style="color: #0369a1;">HİZMET BİLGİLERİ VE SÖZLEŞMİK KONU</h3>
-<p>Hizmet Adı: ${order.package_name}</p>
-<p>Hizmet Açıklaması: Dijital sağlık platformu kullanım hakkı ve profesyonel sağlık hizmetleri</p>
-<p>Hizmet Süresi: 12 (On İki) Ay</p>
-<p>Aylık Hizmet Bedeli: ${order.amount.toLocaleString('tr-TR')} TL (KDV Dahil)</p>
-<p>Toplam Hizmet Bedeli: ${order.amount.toLocaleString('tr-TR')} TL (KDV Dahil)</p>
+<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">2. Kişisel verilerin hangi amaçla işleneceği</h2>
+<p style="margin-bottom: 15px;">Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz genel ve özel nitelikli kategorilerdeki kişisel verileriniz, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim kurulması, onay vermeniz halinde tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda bu kişisel verilerinizin Doktorumol tarafından saklanması amacı ile işlenmektedir.</p>
 
-<h4 style="color: #0369a1; margin-top: 15px;">Müşterinin Hizmet Aldığı Paket İçeriği:</h4>
-<div style="background: #fafafa; padding: 15px; border-left: 4px solid #0369a1; margin: 10px 0;">
-${packageFeatures.length > 0 ? 
-  `<ul style="margin: 0; padding-left: 20px;">${packageFeatures.map((feature: string) => `<li style="margin-bottom: 5px;">${feature}</li>`).join('')}</ul>` :
-  '<p style="margin: 0; font-style: italic; color: #666;">Paket özellik bilgisi mevcut değil. Lütfen paket yönetiminden kontrol ediniz.</p>'
-}
-</div>
+<p style="margin-bottom: 15px;">Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet sayfası sunucusu tarafından sabit sürücünüze iletilen küçük metin dosyaları ("Çerezler") aracılığıyla elde edilen kullanılan tarayıcı, IP adresi, internet bağlantınız, site kullanımlarınız hakkındaki bilgiler, bilgisayarınızdaki işletim sistemi ve benzeri kategorilerdeki kişisel verileriniz, internet sitesinin düzgün bir şekilde çalışabilmesi, ziyaret edilebilmesi ve özelliklerinden faydalanılması, internet sitesinde sayfalar arasında bilgileri taşıyabilmek ve bilgileri tekrardan girmek zorunda olmamak amaçları ile işlenmektedir.</p>
 
-<h3 style="color: #0369a1;">DETAYLI HİZMET KOŞULLARI VE BİLGİLENDİRME</h3>
+<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">3. Şirket tarafından işlenen kişisel verilerin kimlere ve hangi amaçla aktarılabileceği</h2>
+<p style="margin-bottom: 15px;">Kişisel verileriniz 2. maddede belirtilen amaçların yerine getirilebilmesi için Doktorumol hissedarları, iş ortakları, hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına aktarılabilecektir.</p>
 
-<h4>1. HİZMET TANIMI VE KAPSAMI:</h4>
-<p>Bu sözleşme kapsamında sunulan hizmet, DoktorumOL dijital sağlık platformu profili oluşturma, yönetme ve hasta ile etkileşim kurma hakkını kapsamaktadır. Hizmet tamamen dijital ortamda sağlanmakta ve fiziksel teslimat içermemektedir.</p>
+<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">4. Kişisel veri toplamanın yöntemi ve hukuki sebebi</h2>
+<p style="margin-bottom: 15px;">Şirketimizin internet sitesi veya çağrı merkezi aracılığıyla, tamamen veya kısmen otomatik yollarla elde edilen kişisel verileriniz, kanunda açıkça öngörülmesi, Doktorumol ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel verilerinin işlenmesinin gerekli olması, iletişim hakkının tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması ve açık rızanız hukuki sebepleri ile toplanmaktadır.</p>
 
-<h4>2. HİZMET SÜRESİ VE ÖDEME KOŞULLARI:</h4>
-<p>Hizmet süresi 12 (on iki) ay olup, ödeme aylık taksite bölünerek her ayın 1'inde otomatik olarak tahsil edilecektir. Ödeme yapılmaması durumunda hizmet askıya alınabilir.</p>
+<h2 style="color: #2c3e50; font-size: 14px; margin-top: 25px; margin-bottom: 15px;">5. Kişisel verileriniz ile ilgili Kanun kapsamındaki haklarınız aşağıdaki şekildedir:</h2>
 
-<h4>3. CAYMA HAKKI:</h4>
-<p>Alıcı, 6502 sayılı Tüketicinin Korunması Hakkında Kanun gereğince, hizmetin ifa edilmeye başlanmasından itibaren on dört gün içinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin bu sözleşmeden cayma hakkına sahiptir.</p>
+<p style="margin-bottom: 10px;">(a) Kişisel verilerinizin işlenip işlenmediğini öğrenme, (b) Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme, (c) Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme, (ç) Yurt içinde veya yurt dışında kişisel verilerin aktarıldığı üçüncü kişileri bilme, (d) Kişisel verilerinizin eksik veya yanlış işlenmiş olması halinde bunların düzeltilmesini isteme, (e) Kişisel verilerinizin işlenmesini gerektiren sebeplerin ortadan kalkması halinde kişisel verilerinizin silinmesini veya yok edilmesini isteme, (f) (d) ve (e) bentleri uyarınca yapılan işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme, (g) İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle kişinin kendisi aleyhine bir sonucun ortaya çıkmasına itiraz etme, (ğ) Kişisel verilerin kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması halinde zararın giderilmesini talep etme.</p>
 
-</div>
+<p style="margin-bottom: 20px;">Bu haklarınızı yazılı olarak veya güvenli elektronik imza, mobil imza, kayıtlı elektronik posta (KEP) adresi ya da Şirket'in sisteminde kayıtlı bulunan elektronik posta adresini kullanmak suretiyle (Bu kapsamda info@doktorumol.com.tr e-posta adresi üzerinden Şirket'e ulaşabilirsiniz) veya başvuru amacına yönelik geliştirilmiş bir yazılım ya da uygulama vasıtasıyla Şirket'e iletebilirsiniz.</p>
 
-<h3>DOKTORUM OL ÜYELİK SÖZLEŞMESİ</h3>
+<p style="margin-bottom: 20px;">Bilginize sunarız.</p>
 
-<p>Bu sözleşme, DoktorumOL platformunda sunulan dijital sağlık hizmetlerinin kullanımı ve koşullarını düzenlemektedir.</p>
+<div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee;">
+<h2 style="color: #2c3e50; font-size: 16px; margin-bottom: 20px;">Çağrı Merkezi Aydınlatma Metni</h2>
 
-<h4>Platform Kullanım Hakları:</h4>
-<ul>
-<li>Profesyonel profil oluşturma ve yönetme</li>
-<li>Hasta randevu sistemi erişimi</li>
-<li>Dijital iletişim araçlarını kullanma</li>
-<li>Platform analiz ve raporlama araçlarına erişim</li>
+<p style="margin-bottom: 15px;">Doktorumol.com.tr olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.</p>
+
+<p style="margin-bottom: 15px;">Doktorumol; çağrı merkezini arayanların paylaşmış olduğu ad-soyad, iletişim bilgisi ve ses kaydına ait kişisel verileri;</p>
+
+<ul style="margin-bottom: 15px; padding-left: 30px;">
+<li style="margin-bottom: 8px;">Arayan kişiye doğru hitap edilebilmesi,</li>
+<li style="margin-bottom: 8px;">Aramanın teyidi ve iletişim faaliyetlerinin yürütülmesi,</li>
+<li style="margin-bottom: 8px;">Görüşme talep edilen uzman için randevu oluşturulması,</li>
+<li style="margin-bottom: 8px;">Arayan kişinin uzmana yönlendirilmesi,</li>
+<li style="margin-bottom: 8px;">Talep ve şikayetlerin takibi,</li>
+<li style="margin-bottom: 8px;">Doğabilecek uyuşmazlıklarda delil olarak kullanılması amacıyla sınırlı olarak işlemektedir.</li>
 </ul>
 
-<h4>Sorumluluklar:</h4>
-<ul>
-<li>Platform kurallarına uygun kullanım</li>
-<li>Mesleki etik kurallarına uygunluk</li>
-<li>Hasta mahremiyetinin korunması</li>
-<li>Doğru ve güncel bilgi sağlama</li>
-</ul>
+<p style="margin-bottom: 15px;">Kişisel verileriniz yukarıda belirtilen amaçların yerine getirebilmesi için Şirket'in hissedarları, iş ortakları, hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına ve randevu oluşturma talebinde bulunduğunuz ilgili uzmana aktarılabilecektir.</p>
 
-<h4>Fesih ve İptal Koşulları:</h4>
-<p>Bu sözleşme taraflardan birinin yazılı bildirimi ile feshedilebilir. Fesih durumunda kullanılmamış dönemler için ücret iadesi yapılabilir.</p>
+<p style="margin-bottom: 15px;">Kişisel sağlık verilerinizi çağrı merkezi ile görüşmeniz sırasında paylaşmamanızı rica ederiz. Şirketimiz aracılığıyla randevu oluşturma talebiniz kapsamında çağrı merkezi aracılığıyla edilen kişisel verileriniz, Şirket ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel verilerinin işlenmesinin gerekli olması, randevu oluşturulmasına ilişkin hakkının tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması hukuki sebepleri ile telefon yoluyla otomatik olarak işlenmektedir.</p>
 
-<p style="margin-top: 30px;"><strong>Bu sözleşme elektronik ortamda onaylanmış olup, yasal geçerliliğe sahiptir.</strong></p>
+<p style="margin-bottom: 20px;">Kanunun "İlgili kişinin haklarını düzenleyen" 11. maddesindeki taleplerinizi, "Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğe" göre Doktorumol.com.tr'nin Şirket mailine info@doktorumol.com.tr'ye iletebilirsiniz.</p>
+
+</div>
 `;
 
       // HTML'yi PDF'e çevir
