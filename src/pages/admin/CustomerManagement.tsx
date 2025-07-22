@@ -82,24 +82,34 @@ const CustomerManagement = () => {
 
   const fetchCustomers = async () => {
     try {
+      console.log('🔍 CustomerManagement: fetchCustomers başladı');
       setLoading(true);
+      
+      // Check auth state
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log('🔍 Auth durumu:', { user: user?.email, authError });
+      
       const { data, error } = await supabase
         .from('automatic_orders')
         .select('*')
         .order('created_at', { ascending: false });
 
+      console.log('🔍 Supabase sorgu sonucu:', { data: data?.length, error });
+
       if (error) {
+        console.error('🔍 Supabase hatası:', error);
         throw error;
       }
 
       setCustomers(data || []);
+      console.log('🔍 Müşteriler state\'e set edildi:', data?.length);
       
       toast({
         title: "Başarılı",
         description: "Müşteri verileri yüklendi"
       });
     } catch (error) {
-      console.error('Müşteri verileri yüklenirken hata:', error);
+      console.error('🔍 Catch bloğu - Müşteri verileri yüklenirken hata:', error);
       toast({
         title: "Hata",
         description: "Müşteri verileri yüklenirken bir hata oluştu",
@@ -263,15 +273,25 @@ const CustomerManagement = () => {
 
   const deleteCustomer = async (customerId: string) => {
     try {
+      console.log('🔍 deleteCustomer başladı:', customerId);
+      
+      // Check auth state
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log('🔍 Delete - Auth durumu:', { user: user?.email, authError });
+      
       const { error } = await supabase
         .from('automatic_orders')
         .delete()
         .eq('id', customerId);
 
+      console.log('🔍 Delete sorgu sonucu:', { error });
+
       if (error) {
+        console.error('🔍 Delete hatası:', error);
         throw error;
       }
 
+      console.log('🔍 Müşteri silindi, fetchCustomers çağrılıyor');
       await fetchCustomers();
       
       toast({
@@ -279,7 +299,7 @@ const CustomerManagement = () => {
         description: "Müşteri başarıyla silindi"
       });
     } catch (error) {
-      console.error('Müşteri silinirken hata:', error);
+      console.error('🔍 Delete catch bloğu:', error);
       toast({
         title: "Hata",
         description: "Müşteri silinirken bir hata oluştu",
