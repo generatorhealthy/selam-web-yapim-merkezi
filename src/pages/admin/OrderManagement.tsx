@@ -9,11 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -36,6 +37,9 @@ interface Order {
   payment_method: string;
   is_first_order: boolean;
   subscription_month: number;
+  deleted_at?: string | null;
+  pre_info_pdf_content?: string | null;
+  distance_sales_pdf_content?: string | null;
 }
 
 interface AutomaticOrder {
@@ -72,6 +76,8 @@ const OrderManagement = () => {
   const [activeTab, setActiveTab] = useState("orders");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
 
   const {
     data: orders,
@@ -83,7 +89,25 @@ const OrderManagement = () => {
       const { data, error } = await supabase
         .from("orders")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Order[];
+    },
+  });
+
+  const {
+    data: deletedOrders,
+    isLoading: isDeletedOrdersLoading,
+    error: deletedOrdersError,
+  } = useQuery({
+    queryKey: ["deleted_orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .not("deleted_at", "is", null)
+        .order("deleted_at", { ascending: false });
       if (error) throw error;
       return data as Order[];
     },
@@ -135,18 +159,23 @@ const OrderManagement = () => {
     },
   });
 
-  const deleteOrderMutation = useMutation({
+  // Soft delete mutation
+  const softDeleteOrderMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase.from("orders").delete().eq("id", id);
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       toast({
         title: "Sipariş Silindi",
-        description: "Sipariş başarıyla silindi",
+        description: "Sipariş çöp kutusuna taşındı",
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
       setSelectedOrder(null);
     },
     onError: (error) => {
@@ -155,7 +184,120 @@ const OrderManagement = () => {
         description: "Sipariş silinirken hata oluştu",
         variant: "destructive",
       });
-      console.error("Error deleting order:", error);
+      console.error("Error soft deleting order:", error);
+    },
+  });
+
+  // Bulk soft delete mutation
+  const bulkSoftDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ deleted_at: new Date().toISOString() })
+        .in("id", ids);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, ids) => {
+      toast({
+        title: "Siparişler Silindi",
+        description: `${ids.length} sipariş çöp kutusuna taşındı`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+      setSelectedOrderIds([]);
+      setSelectAll(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Siparişler silinirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error bulk soft deleting orders:", error);
+    },
+  });
+
+  // Restore order mutation
+  const restoreOrderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ deleted_at: null })
+        .eq("id", id);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sipariş Geri Getirildi",
+        description: "Sipariş başarıyla geri getirildi",
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Sipariş geri getirilirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error restoring order:", error);
+    },
+  });
+
+  // Bulk restore mutation
+  const bulkRestoreMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ deleted_at: null })
+        .in("id", ids);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, ids) => {
+      toast({
+        title: "Siparişler Geri Getirildi",
+        description: `${ids.length} sipariş başarıyla geri getirildi`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+      setSelectedOrderIds([]);
+      setSelectAll(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Siparişler geri getirilirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error bulk restoring orders:", error);
+    },
+  });
+
+  // Permanent delete mutation (for deleted orders)
+  const permanentDeleteOrderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.from("orders").delete().eq("id", id);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sipariş Kalıcı Silindi",
+        description: "Sipariş kalıcı olarak silindi",
+      });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+      setSelectedOrder(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Sipariş silinirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error permanently deleting order:", error);
     },
   });
 
@@ -197,13 +339,79 @@ const OrderManagement = () => {
     }
   };
 
-  const handleDeleteOrder = (id: string) => {
-    deleteOrderMutation.mutate(id);
+  const handleSoftDeleteOrder = (id: string) => {
+    softDeleteOrderMutation.mutate(id);
   };
 
   const handleCancelEdit = () => {
     setEditingOrder(null);
     setSelectedOrder(null);
+  };
+
+  // Checkbox selection handlers
+  const handleSelectAll = (currentOrders: Order[]) => {
+    if (selectAll) {
+      setSelectedOrderIds([]);
+    } else {
+      setSelectedOrderIds(currentOrders.map(order => order.id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleSelectOrder = (orderId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds([...selectedOrderIds, orderId]);
+    } else {
+      setSelectedOrderIds(selectedOrderIds.filter(id => id !== orderId));
+      setSelectAll(false);
+    }
+  };
+
+  // Bulk action handlers
+  const handleBulkSoftDelete = () => {
+    if (selectedOrderIds.length > 0) {
+      bulkSoftDeleteMutation.mutate(selectedOrderIds);
+    }
+  };
+
+  const handleBulkRestore = () => {
+    if (selectedOrderIds.length > 0) {
+      bulkRestoreMutation.mutate(selectedOrderIds);
+    }
+  };
+
+  // PDF download functions
+  const downloadPDF = (content: string, filename: string) => {
+    if (!content) {
+      toast({
+        title: "Hata",
+        description: "PDF içeriği bulunamadı",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const blob = new Blob([content], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const downloadPreInfoPDF = (order: Order) => {
+    if (order.pre_info_pdf_content) {
+      downloadPDF(order.pre_info_pdf_content, `on-bilgilendirme-${order.customer_name}-${order.id.slice(0, 8)}.pdf`);
+    }
+  };
+
+  const downloadDistanceSalesPDF = (order: Order) => {
+    if (order.distance_sales_pdf_content) {
+      downloadPDF(order.distance_sales_pdf_content, `mesafeli-satis-${order.customer_name}-${order.id.slice(0, 8)}.pdf`);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -332,10 +540,14 @@ const OrderManagement = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Siparişler
+          </TabsTrigger>
+          <TabsTrigger value="trash" className="flex items-center gap-2">
+            <Trash2 className="w-4 h-4" />
+            Çöp Kutusu
           </TabsTrigger>
           <TabsTrigger value="automatic" className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
@@ -376,6 +588,31 @@ const OrderManagement = () => {
         </Card>
 
         <TabsContent value="orders" className="space-y-6">
+          {/* Bulk Actions */}
+          {selectedOrderIds.length > 0 && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">
+                    {selectedOrderIds.length} sipariş seçildi
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkSoftDelete}
+                      disabled={bulkSoftDeleteMutation.isPending}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Toplu Sil
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -397,6 +634,12 @@ const OrderManagement = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={selectAll}
+                            onCheckedChange={() => handleSelectAll(filteredOrders || [])}
+                          />
+                        </TableHead>
                         <TableHead>Müşteri</TableHead>
                         <TableHead>Paket</TableHead>
                         <TableHead>Tutar</TableHead>
@@ -409,6 +652,12 @@ const OrderManagement = () => {
                     <TableBody>
                       {filteredOrders?.map((order) => (
                         <TableRow key={order.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedOrderIds.includes(order.id)}
+                              onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
+                            />
+                          </TableCell>
                           <TableCell>
                             <div>
                               <div className="font-medium">{order.customer_name}</div>
@@ -440,16 +689,44 @@ const OrderManagement = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedOrder(order);
-                                setEditingOrder(order);
-                              }}
-                            >
-                              Düzenle
-                            </Button>
+                            <div className="flex items-center justify-end gap-2">
+                              {order.is_first_order && (
+                                <div className="flex gap-1">
+                                  {order.pre_info_pdf_content && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => downloadPreInfoPDF(order)}
+                                      className="flex items-center gap-1"
+                                    >
+                                      <FileText className="w-3 h-3" />
+                                      Ön Bilgi
+                                    </Button>
+                                  )}
+                                  {order.distance_sales_pdf_content && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => downloadDistanceSalesPDF(order)}
+                                      className="flex items-center gap-1"
+                                    >
+                                      <Download className="w-3 h-3" />
+                                      Mesafeli Satış
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setEditingOrder(order);
+                                }}
+                              >
+                                Düzenle
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -530,10 +807,10 @@ const OrderManagement = () => {
                       <Button onClick={handleSaveOrder}>Kaydet</Button>
                       <Button
                         variant="destructive"
-                        onClick={() => handleDeleteOrder(selectedOrder.id)}
-                        disabled={deleteOrderMutation.isPending}
+                        onClick={() => handleSoftDeleteOrder(selectedOrder.id)}
+                        disabled={softDeleteOrderMutation.isPending}
                       >
-                        {deleteOrderMutation.isPending ? "Siliniyor..." : "Sil"}
+                        {softDeleteOrderMutation.isPending ? "Siliniyor..." : "Sil"}
                       </Button>
                     </div>
                   </div>
@@ -541,6 +818,122 @@ const OrderManagement = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="trash" className="space-y-6">
+          {/* Bulk Actions for Trash */}
+          {selectedOrderIds.length > 0 && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">
+                    {selectedOrderIds.length} sipariş seçildi
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBulkRestore}
+                      disabled={bulkRestoreMutation.isPending}
+                      className="flex items-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Toplu Geri Getir
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trash2 className="w-5 h-5" />
+                Silinmiş Siparişler ({deletedOrders?.length || 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isDeletedOrdersLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : deletedOrdersError ? (
+                <div className="text-center py-8 text-red-600">
+                  Hata: {deletedOrdersError.message}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={selectAll}
+                            onCheckedChange={() => handleSelectAll(deletedOrders || [])}
+                          />
+                        </TableHead>
+                        <TableHead>Müşteri</TableHead>
+                        <TableHead>Paket</TableHead>
+                        <TableHead>Tutar</TableHead>
+                        <TableHead>Silinme Tarihi</TableHead>
+                        <TableHead className="text-right">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {deletedOrders?.map((order) => (
+                        <TableRow key={order.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedOrderIds.includes(order.id)}
+                              onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{order.customer_name}</div>
+                              <div className="text-sm text-gray-500">{order.customer_email}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{order.package_name}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-semibold">{order.amount.toLocaleString('tr-TR')} ₺</div>
+                          </TableCell>
+                          <TableCell>
+                            {order.deleted_at && format(new Date(order.deleted_at), "dd MMM yyyy", { locale: tr })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => restoreOrderMutation.mutate(order.id)}
+                                disabled={restoreOrderMutation.isPending}
+                                className="flex items-center gap-1"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                Geri Getir
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => permanentDeleteOrderMutation.mutate(order.id)}
+                                disabled={permanentDeleteOrderMutation.isPending}
+                              >
+                                Kalıcı Sil
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="automatic" className="space-y-6">
