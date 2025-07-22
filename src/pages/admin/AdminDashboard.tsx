@@ -407,7 +407,7 @@ const AdminDashboard = () => {
           <div className="inline-flex items-center gap-6 px-8 py-4 bg-white/60 backdrop-blur-md rounded-full shadow-lg border border-white/30">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <span className="font-medium">Panel Aktif</span>
+              <span className="font-medium">Panel Aktif - Deployment Test</span>
             </div>
             <div className="w-px h-4 bg-gray-300"></div>
             <div className="text-sm text-gray-600 font-medium">
