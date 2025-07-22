@@ -411,7 +411,7 @@ const AdminDashboard = () => {
             </div>
             <div className="w-px h-4 bg-gray-300"></div>
             <div className="text-sm text-gray-600 font-medium">
-              Son Güncelleme: Bugün
+              Son Güncelleme: Az Önce - Test Değişikliği
             </div>
           </div>
         </div>
