@@ -534,19 +534,23 @@ const OrderManagement = () => {
 
       // Form içeriğini HTML'den temizleyip ekle
       if (formData.content) {
+        // HTML formatında içeriği ayır ve düzgün göster
+        addTitle("DOKTORUM OL ÜYELİK SÖZLEŞMESİ");
+        currentY += 3;
+        
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = formData.content;
         const plainText = tempDiv.textContent || tempDiv.innerText || '';
         
-        // Form içeriğini parçalara ayır ve ekle
+        // Form içeriğini parçalara ayır
         const sections = plainText.split(/(?:\r?\n){2,}/).filter(section => section.trim());
         sections.forEach((section, index) => {
           const trimmedSection = section.trim();
           if (trimmedSection) {
-            if (trimmedSection.length < 100 && (trimmedSection.includes(':') || index === 0)) {
+            if (trimmedSection.length < 80 && trimmedSection.includes('.') && index < 10) {
               addSubTitle(trimmedSection);
             } else {
-              addText(trimmedSection);
+              addText(trimmedSection, 9);
             }
           }
         });
