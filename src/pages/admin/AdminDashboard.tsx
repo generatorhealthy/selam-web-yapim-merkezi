@@ -324,7 +324,7 @@ const AdminDashboard = () => {
           
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             <span className="bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
-              Hoş Geldiniz
+              Merhaba
             </span>
           </h1>
           
