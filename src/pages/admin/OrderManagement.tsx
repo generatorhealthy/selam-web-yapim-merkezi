@@ -590,7 +590,7 @@ ${packageFeatures.length > 0 ?
 
       try {
         const canvas = await html2canvas(tempDiv, {
-          scale: 1.2,
+          scale: 1.0,
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff',
@@ -606,35 +606,49 @@ ${packageFeatures.length > 0 ?
           }
         });
         
-        const imgData = canvas.toDataURL('image/jpeg', 0.90);
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
         const pdf = new jsPDF('p', 'mm', 'a4');
         
         const pageWidth = 210;
         const pageHeight = 297;
-        const margin = 8;
+        const margin = 12;
         const contentWidth = pageWidth - (margin * 2);
+        const contentHeight = pageHeight - (margin * 2);
         const imgHeight = (canvas.height * contentWidth) / canvas.width;
         
-        // Better page break calculation
-        const pageContentHeight = pageHeight - (margin * 2);
-        let currentPosition = 0;
-        let pageNumber = 0;
-
-        while (currentPosition < imgHeight) {
-          if (pageNumber > 0) {
+        // Split content into pages without cutting text
+        let yOffset = 0;
+        let pageCount = 0;
+        
+        while (yOffset < imgHeight) {
+          if (pageCount > 0) {
             pdf.addPage();
           }
           
-          const remainingHeight = imgHeight - currentPosition;
-          const heightForThisPage = Math.min(pageContentHeight, remainingHeight);
+          // Calculate how much content fits on this page
+          const remainingHeight = imgHeight - yOffset;
+          const pageContentHeight = Math.min(contentHeight, remainingHeight);
           
-          // Position for this page
-          const yPosition = margin - currentPosition;
+          // Add image to PDF with proper positioning
+          const sourceY = (yOffset * canvas.height) / imgHeight;
+          const sourceHeight = (pageContentHeight * canvas.height) / imgHeight;
           
-          pdf.addImage(imgData, 'JPEG', margin, yPosition, contentWidth, imgHeight);
+          // Create a temporary canvas for this page
+          const pageCanvas = document.createElement('canvas');
+          const pageCtx = pageCanvas.getContext('2d');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sourceHeight;
           
-          currentPosition += pageContentHeight * 0.95; // Slight overlap to prevent cutting text
-          pageNumber++;
+          // Draw the portion of the original canvas
+          pageCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+          
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.92);
+          const actualHeight = (pageCanvas.height * contentWidth) / pageCanvas.width;
+          
+          pdf.addImage(pageImgData, 'JPEG', margin, margin, contentWidth, actualHeight);
+          
+          yOffset += pageContentHeight * 0.92; // Small overlap to prevent text cutting
+          pageCount++;
         }
         
         document.head.removeChild(style);
