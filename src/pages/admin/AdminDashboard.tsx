@@ -306,7 +306,7 @@ const AdminDashboard = () => {
         <title>Divan Paneli - Doktorum Ol</title>
       </Helmet>
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+      <div className="min-h-screen bg-red-600 text-white relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-40">
         <div className="w-full h-full bg-repeat" style={{
