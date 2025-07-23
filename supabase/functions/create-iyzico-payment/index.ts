@@ -32,63 +32,62 @@ serve(async (req) => {
     const randomString = Date.now().toString();
     const conversationId = `conv_${Date.now()}`;
     
-    // İyzico abonelik ödeme isteği oluştur (standart ödeme için)
+    // İyzico API için doğru format
     const requestBody = {
       locale: "tr",
       conversationId: conversationId,
-      price: "1.20",
-      paidPrice: "1.20",
+      price: "2998",
+      paidPrice: "2998", 
       currency: "TRY",
       installment: "1",
       basketId: conversationId,
       paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
-      callbackUrl: `${req.headers.get("origin")}/payment-success`,
-      enabledInstallments: [1, 2, 3, 6, 9],
+      callbackUrl: `https://doktorumol.com.tr/payment-success`,
       buyer: {
         id: "BY789",
         name: customerData.name || "Test",
-        surname: customerData.surname || "User",
+        surname: customerData.surname || "User", 
         gsmNumber: customerData.phone || "+905555555555",
         email: customerData.email,
         identityNumber: customerData.tcNo || "11111111111",
         lastLoginDate: "2015-10-05 12:43:35",
         registrationDate: "2013-04-21 15:12:09",
-        registrationAddress: customerData.address || "Test Adres",
+        registrationAddress: customerData.address || "Test Address",
         ip: req.headers.get("x-forwarded-for")?.split(',')[0] || "127.0.0.1",
         city: customerData.city || "İstanbul",
         country: "Turkey",
         zipCode: "34000"
       },
       shippingAddress: {
-        contactName: (customerData.name || "Test") + " " + (customerData.surname || "User"),
-        city: customerData.city || "İstanbul",
+        contactName: `${customerData.name || "Test"} ${customerData.surname || "User"}`,
+        city: customerData.city || "İstanbul", 
         country: "Turkey",
-        address: customerData.address || "Test Adres",
+        address: customerData.address || "Test Address",
         zipCode: "34000"
       },
       billingAddress: {
-        contactName: (customerData.name || "Test") + " " + (customerData.surname || "User"),
+        contactName: `${customerData.name || "Test"} ${customerData.surname || "User"}`,
         city: customerData.city || "İstanbul",
-        country: "Turkey",
-        address: customerData.address || "Test Adres",
+        country: "Turkey", 
+        address: customerData.address || "Test Address",
         zipCode: "34000"
       },
       basketItems: [
         {
           id: "BI101",
-          name: packageType + " Paketi",
-          category1: "Collectibles",
-          category2: "Accessories",
+          name: `${packageType} Paketi`,
+          category1: "Danışmanlık",
+          category2: "Online", 
           itemType: "VIRTUAL",
-          price: "1.20"
+          price: "2998"
         }
       ]
     };
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico için SHA1 hash hesaplama (standart ödeme için)
+    // İyzico için SHA1 hash hesaplama (doğru format)
     const requestString = [
       requestBody.locale,
       requestBody.conversationId,
@@ -98,7 +97,6 @@ serve(async (req) => {
       requestBody.basketId,
       requestBody.paymentGroup,
       requestBody.callbackUrl,
-      requestBody.enabledInstallments.join(','),
       requestBody.buyer.id,
       requestBody.buyer.name,
       requestBody.buyer.surname,
@@ -130,13 +128,15 @@ serve(async (req) => {
       requestBody.basketItems[0].price
     ].join('');
 
-    // SHA1 hash oluştur
+    // SHA1 hash oluştur (doğru format - hex string olarak)
     const encoder = new TextEncoder();
     const data = encoder.encode(requestString + IYZICO_SECRET_KEY);
     const hashBuffer = await crypto.subtle.digest('SHA-1', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    const hashBase64 = btoa(hashHex);
+    
+    // Base64 encode etmeden direkt hex kullan
+    const authString = btoa(hashHex);
 
     // İyzico checkout form initialize isteği (standart ödeme)
     const iyzResponse = await fetch("https://api.iyzipay.com/payment/iyzipos/checkoutform/initialize", {
@@ -144,7 +144,7 @@ serve(async (req) => {
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
+        "Authorization": `IYZWS ${IYZICO_API_KEY}:${authString}`,
         "x-iyzi-rnd": randomString,
       },
       body: JSON.stringify(requestBody)
