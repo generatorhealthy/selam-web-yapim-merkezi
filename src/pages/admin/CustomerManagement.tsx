@@ -24,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award } from "lucide-react";
+import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award, Clock, Flame } from "lucide-react";
 import { getMonthName } from "@/utils/monthUtils";
 
 interface Customer {
@@ -401,6 +401,12 @@ const CustomerManagement = () => {
   };
 
   const stats = getCustomerStats();
+  
+  // Get today's payment due specialists
+  const today = new Date().getDate();
+  const todayPaymentDue = specialists.filter(specialist => 
+    (specialist.payment_day || 1) === today && specialist.is_active
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -458,6 +464,114 @@ const CustomerManagement = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Daily Payment Due Section */}
+        {todayPaymentDue.length > 0 && (
+          <Card className="border-0 shadow-lg mb-8 bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-l-orange-500">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl text-slate-800 flex items-center gap-3">
+                <div className="relative">
+                  <Clock className="w-6 h-6 text-orange-600" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                </div>
+                Bugün Ödemesi Olan Uzmanlar
+                <div className="flex items-center gap-2 ml-auto">
+                  <Badge className="bg-orange-100 text-orange-800 border-orange-200 px-3 py-1 font-semibold">
+                    {todayPaymentDue.length} Uzman
+                  </Badge>
+                  <div className="text-lg animate-pulse">🔥</div>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {todayPaymentDue.map((specialist) => (
+                  <div
+                    key={specialist.id}
+                    className="bg-white rounded-lg p-4 border border-orange-200 shadow-sm hover:shadow-md transition-all duration-200 hover:border-orange-300"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-slate-800 text-sm">{specialist.name}</h3>
+                          <div className="relative">
+                            <span className="text-orange-500 text-base animate-pulse">🔥</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-600 mb-2">{specialist.specialty}</p>
+                        <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
+                          <MapPin className="w-3 h-3" />
+                          {specialist.city}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium text-slate-600">Ödeme Günü:</span>
+                        <span className="text-xs font-semibold text-orange-600">
+                          Her ayın {specialist.payment_day || 1}'i
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium text-slate-600">Paket Fiyatı:</span>
+                        <span className="text-xs font-semibold text-emerald-600">
+                          {specialist.package_price ? `₺${specialist.package_price.toLocaleString('tr-TR')}` : '₺0'}
+                        </span>
+                      </div>
+                      
+                      {specialist.phone && (
+                        <div className="flex items-center gap-1 text-xs text-slate-500 pt-1 border-t border-slate-100">
+                          <Phone className="w-3 h-3" />
+                          {specialist.phone}
+                        </div>
+                      )}
+                      
+                      {specialist.email && (
+                        <div className="flex items-center gap-1 text-xs text-slate-500">
+                          <Mail className="w-3 h-3" />
+                          {specialist.email}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {todayPaymentDue.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-orange-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Calendar className="w-4 h-4" />
+                      <span>Bugün: {new Date().toLocaleDateString('tr-TR', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}</span>
+                    </div>
+                    <div className="text-sm font-medium text-orange-700">
+                      Toplam {todayPaymentDue.reduce((sum, specialist) => sum + (specialist.package_price || 0), 0).toLocaleString('tr-TR')} ₺
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {todayPaymentDue.length === 0 && (
+          <Card className="border-0 shadow-lg mb-8 bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-l-emerald-500">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center gap-3 text-emerald-700">
+                <Check className="w-6 h-6" />
+                <span className="font-medium">Bugün ödemesi olan uzman bulunmuyor</span>
+                <div className="text-lg">✅</div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Search and Actions */}
         <Card className="border-0 shadow-lg mb-8">
