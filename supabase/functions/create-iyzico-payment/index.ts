@@ -87,7 +87,17 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico için SHA1 hash hesaplama (doğru format)
+    // SHA1 hash oluşturma fonksiyonu
+    async function createAuthorizationHash(requestString: string, secretKey: string) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(requestString + secretKey);
+      const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return btoa(hashHex);
+    }
+
+    // İyzico için hash hesaplama
     const requestString = [
       requestBody.locale,
       requestBody.conversationId,
@@ -128,15 +138,7 @@ serve(async (req) => {
       requestBody.basketItems[0].price
     ].join('');
 
-    // SHA1 hash oluştur (doğru format - hex string olarak)
-    const encoder = new TextEncoder();
-    const data = encoder.encode(requestString + IYZICO_SECRET_KEY);
-    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    // Base64 encode etmeden direkt hex kullan
-    const authString = btoa(hashHex);
+    const hashBase64 = await createAuthorizationHash(requestString, IYZICO_SECRET_KEY);
 
     // İyzico checkout form initialize isteği (standart ödeme)
     const iyzResponse = await fetch("https://api.iyzipay.com/payment/iyzipos/checkoutform/initialize", {
@@ -144,7 +146,7 @@ serve(async (req) => {
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": `IYZWS ${IYZICO_API_KEY}:${authString}`,
+        "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
         "x-iyzi-rnd": randomString,
       },
       body: JSON.stringify(requestBody)
