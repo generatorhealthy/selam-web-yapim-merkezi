@@ -55,6 +55,7 @@ interface Specialist {
   phone?: string;
   email?: string;
   payment_day?: number;
+  package_price?: number;
   is_active: boolean;
   created_at: string;
 }
@@ -73,6 +74,8 @@ const CustomerManagement = () => {
   const [newAmount, setNewAmount] = useState<number>(3000);
   const [editingPaymentDay, setEditingPaymentDay] = useState<string | null>(null);
   const [newPaymentDay, setNewPaymentDay] = useState<number>(1);
+  const [editingPackagePrice, setEditingPackagePrice] = useState<string | null>(null);
+  const [newPackagePrice, setNewPackagePrice] = useState<number>(2998);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -115,7 +118,7 @@ const CustomerManagement = () => {
       setSpecialistsLoading(true);
       const { data, error } = await supabase
         .from('specialists')
-        .select('id, name, specialty, city, phone, email, payment_day, is_active, created_at')
+        .select('id, name, specialty, city, phone, email, payment_day, package_price, is_active, created_at')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -158,6 +161,34 @@ const CustomerManagement = () => {
       toast({
         title: "Hata",
         description: "Ödeme günü güncellenirken bir hata oluştu",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updateSpecialistPackagePrice = async (specialistId: string, packagePrice: number) => {
+    try {
+      const { error } = await supabase
+        .from('specialists')
+        .update({ package_price: packagePrice })
+        .eq('id', specialistId);
+
+      if (error) {
+        throw error;
+      }
+
+      await fetchSpecialists();
+      setEditingPackagePrice(null);
+      
+      toast({
+        title: "Başarılı",
+        description: `Paket fiyatı ₺${packagePrice.toLocaleString('tr-TR')} olarak güncellendi`
+      });
+    } catch (error) {
+      console.error('Paket fiyatı güncellenirken hata:', error);
+      toast({
+        title: "Hata",
+        description: "Paket fiyatı güncellenirken bir hata oluştu",
         variant: "destructive"
       });
     }
@@ -726,13 +757,14 @@ const CustomerManagement = () => {
                     <TableHead className="font-semibold text-slate-700">Uzmanlık</TableHead>
                     <TableHead className="font-semibold text-slate-700">Şehir</TableHead>
                     <TableHead className="font-semibold text-slate-700">Ödeme Günü</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Paket Fiyatı</TableHead>
                     <TableHead className="font-semibold text-slate-700">Durum</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {specialistsLoading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-12">
+                      <TableCell colSpan={6} className="text-center py-12">
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                           <span className="text-slate-600">Uzmanlar yükleniyor...</span>
@@ -741,7 +773,7 @@ const CustomerManagement = () => {
                     </TableRow>
                   ) : specialists.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-12">
+                      <TableCell colSpan={6} className="text-center py-12">
                         <div className="text-slate-500">
                           <Users className="w-12 h-12 mx-auto mb-3 text-slate-400" />
                           <p className="text-lg font-medium">Uzman bulunamadı</p>
@@ -823,6 +855,52 @@ const CustomerManagement = () => {
                                 onClick={() => {
                                   setEditingPaymentDay(specialist.id);
                                   setNewPaymentDay(specialist.payment_day || 1);
+                                }}
+                                className="h-6 w-6 p-0 hover:bg-slate-100"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="py-4">
+                          {editingPackagePrice === specialist.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                value={newPackagePrice}
+                                onChange={(e) => setNewPackagePrice(Number(e.target.value))}
+                                className="w-24 h-8"
+                                min="0"
+                                step="50"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() => updateSpecialistPackagePrice(specialist.id, newPackagePrice)}
+                                className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700"
+                              >
+                                <Check className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingPackagePrice(null)}
+                                className="h-8 px-3"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-emerald-600">
+                                {specialist.package_price ? `₺${specialist.package_price.toLocaleString('tr-TR')}` : '₺0'}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingPackagePrice(specialist.id);
+                                  setNewPackagePrice(specialist.package_price || 2998);
                                 }}
                                 className="h-6 w-6 p-0 hover:bg-slate-100"
                               >
