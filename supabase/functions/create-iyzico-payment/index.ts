@@ -53,7 +53,7 @@ serve(async (req) => {
         surname: customerData.surname || "User", 
         gsmNumber: customerData.phone || "+905555555555",
         email: customerData.email,
-        identityNumber: customerData.tcNo || "11111111111",
+        identityNumber: customerData.tcNo?.toString() || "11111111111",
         lastLoginDate: "2015-10-05 12:43:35",
         registrationDate: "2013-04-21 15:12:09",
         registrationAddress: customerData.address || "Test Address",
