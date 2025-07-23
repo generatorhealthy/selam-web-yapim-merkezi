@@ -126,14 +126,26 @@ serve(async (req) => {
     }
 
     if (action === 'deleteUser') {
-      // Delete user from auth.users table (this will cascade to user_profiles due to foreign key)
-      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+      console.log('Delete user action started for userId:', userId)
+      
+      try {
+        // Delete user from auth.users table (this will cascade to user_profiles due to foreign key)
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
-      if (deleteError) {
-        console.error('User deletion error:', deleteError)
+        if (deleteError) {
+          console.error('User deletion error:', deleteError)
+          return new Response(
+            JSON.stringify({ error: `User deletion failed: ${deleteError.message}` }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
+        console.log('User deleted successfully:', userId)
+      } catch (err) {
+        console.error('Unexpected error during user deletion:', err)
         return new Response(
-          JSON.stringify({ error: `User deletion failed: ${deleteError.message}` }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: `Unexpected error during user deletion: ${err.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
