@@ -582,25 +582,17 @@ const ClientReferrals = () => {
                                        </div>
                                      </div>
                                      
-                                     {/* Editable Number and City Fields */}
-                                    <div className="flex gap-3">
-                                      <div className="flex-1">
-                                        <Label className="text-xs text-slate-500 mb-1 block">Sayı</Label>
-                                        <Input
-                                          placeholder="Sayı girin..."
-                                          className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
-                                          type="number"
-                                        />
-                                      </div>
-                                      <div className="flex-1">
-                                        <Label className="text-xs text-slate-500 mb-1 block">Şehir</Label>
-                                        <Input
-                                          placeholder="Şehir girin..."
-                                          defaultValue={specialistReferral.specialist.city}
-                                          className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
-                                        />
-                                      </div>
-                                    </div>
+                                      {/* Editable City Field */}
+                                     <div className="flex gap-3">
+                                       <div className="flex-1">
+                                         <Label className="text-xs text-slate-500 mb-1 block">Şehir</Label>
+                                         <Input
+                                           placeholder="Şehir girin..."
+                                           defaultValue={specialistReferral.specialist.city}
+                                           className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
+                                         />
+                                       </div>
+                                     </div>
                                   </div>
                                 </div>
                               </div>
@@ -653,9 +645,9 @@ const ClientReferrals = () => {
                                 <div className="flex-1 min-w-[250px]">
                                   <div className="relative">
                                     <Edit3 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                    <Input
-                                      placeholder="Not ekle..."
-                                      value={monthlyReferral.notes}
+                                     <Input
+                                       placeholder="Dahili numara..."
+                                       value={monthlyReferral.notes}
                                       onChange={(e) => {
                                         setSpecialists(prev => 
                                           prev.map(spec => 
