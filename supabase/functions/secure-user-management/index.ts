@@ -129,7 +129,7 @@ serve(async (req) => {
       console.log('Delete user action started for userId:', userId)
       
       try {
-        // First, check if user exists in specialists table and delete the specialist record
+        // First, check if user exists in specialists table and delete all related records
         const { data: specialist, error: specialistCheckError } = await supabaseAdmin
           .from('specialists')
           .select('id')
@@ -144,9 +144,35 @@ serve(async (req) => {
           )
         }
 
-        // If user is a specialist, delete the specialist record first
+        // If user is a specialist, delete all related records first
         if (specialist) {
-          console.log('User is a specialist, deleting specialist record first:', specialist.id)
+          console.log('User is a specialist, deleting all related records for specialist:', specialist.id)
+          
+          // Delete from client_referrals
+          await supabaseAdmin.from('client_referrals').delete().eq('specialist_id', specialist.id)
+          console.log('Client referrals deleted')
+          
+          // Delete from test_results
+          await supabaseAdmin.from('test_results').delete().eq('specialist_id', specialist.id)
+          console.log('Test results deleted')
+          
+          // Delete from specialist_tests
+          await supabaseAdmin.from('specialist_tests').delete().eq('specialist_id', specialist.id)
+          console.log('Specialist tests deleted')
+          
+          // Delete from tests (where specialist_id is not null)
+          await supabaseAdmin.from('tests').delete().eq('specialist_id', specialist.id)
+          console.log('Tests deleted')
+          
+          // Delete from appointments
+          await supabaseAdmin.from('appointments').delete().eq('specialist_id', specialist.id)
+          console.log('Appointments deleted')
+          
+          // Delete from reviews
+          await supabaseAdmin.from('reviews').delete().eq('specialist_id', specialist.id)
+          console.log('Reviews deleted')
+          
+          // Finally delete the specialist record
           const { error: deleteSpecialistError } = await supabaseAdmin
             .from('specialists')
             .delete()
