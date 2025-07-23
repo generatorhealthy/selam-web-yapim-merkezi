@@ -104,7 +104,7 @@ serve(async (req) => {
       return btoa(String.fromCharCode(...new Uint8Array(signature)));
     }
 
-    // İyzico production hash hesaplama (sadece apiKey + random + secretKey)
+    // İyzico production hash hesaplama
     const hashSource = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
     const hashBase64 = await createAuthorizationHash(hashSource);
 
