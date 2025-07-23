@@ -36,34 +36,51 @@ serve(async (req) => {
     const requestBody = {
       locale: "tr",
       conversationId: conversationId,
-      subscriptionReferenceCode: subscriptionReferenceCode,
       pricingPlanReferenceCode: subscriptionReferenceCode,
       subscriptionInitialStatus: "ACTIVE",
       customer: {
-        name: customerData.name || "Müşteri",
-        surname: customerData.surname || "Adı",
-        gsmNumber: customerData.phone || "+905000000000",
+        name: customerData.name || "Test",
+        surname: customerData.surname || "User",
+        gsmNumber: customerData.phone || "+905555555555",
         email: customerData.email,
         identityNumber: customerData.tcNo || "11111111111",
-        billingAddress: {
-          contactName: `${customerData.name || "Müşteri"} ${customerData.surname || "Adı"}`,
-          city: customerData.city || "İstanbul",
-          country: "Turkey",
-          address: customerData.address || "Adres bilgisi belirtilmemiş",
-          zipCode: "34000"
-        },
-        shippingAddress: {
-          contactName: `${customerData.name || "Müşteri"} ${customerData.surname || "Adı"}`,
-          city: customerData.city || "İstanbul", 
-          country: "Turkey",
-          address: customerData.address || "Adres bilgisi belirtilmemiş",
-          zipCode: "34000"
-        }
+        registrationAddress: customerData.address || "Test Adres",
+        ip: req.headers.get("x-forwarded-for")?.split(',')[0] || "127.0.0.1",
+        city: customerData.city || "İstanbul",
+        country: "Turkey",
+        zipCode: "34000"
       },
       callbackUrl: `${req.headers.get("origin")}/payment-success`
     };
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
+
+    // İyzico için SHA1 hash hesaplama
+    const requestString = [
+      requestBody.locale,
+      requestBody.conversationId, 
+      requestBody.pricingPlanReferenceCode,
+      requestBody.subscriptionInitialStatus,
+      requestBody.customer.name,
+      requestBody.customer.surname,
+      requestBody.customer.gsmNumber,
+      requestBody.customer.email,
+      requestBody.customer.identityNumber,
+      requestBody.customer.registrationAddress,
+      requestBody.customer.ip,
+      requestBody.customer.city,
+      requestBody.customer.country,
+      requestBody.customer.zipCode,
+      requestBody.callbackUrl
+    ].join('');
+
+    // SHA1 hash oluştur
+    const encoder = new TextEncoder();
+    const data = encoder.encode(requestString + IYZICO_SECRET_KEY);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const hashBase64 = btoa(hashHex);
 
     // İyzico checkout form initialize isteği
     const iyzResponse = await fetch("https://api.iyzipay.com/payment/iyzipos/checkoutform/initialize/subscription", {
@@ -71,7 +88,7 @@ serve(async (req) => {
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": `IYZWS ${IYZICO_API_KEY}:${IYZICO_SECRET_KEY}`,
+        "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
         "x-iyzi-rnd": randomString,
       },
       body: JSON.stringify(requestBody)
