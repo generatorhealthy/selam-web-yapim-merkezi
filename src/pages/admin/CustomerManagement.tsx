@@ -397,14 +397,15 @@ const CustomerManagement = () => {
       (c.paid_months?.length || 0) >= c.total_months
     ).length;
     
-    // Calculate total revenue from all paid months
-    const totalRevenue = customers.reduce((total, customer) => {
-      const paidMonthsCount = customer.paid_months?.length || 0;
-      const monthlyAmount = Number(customer.amount) || 0;
-      return total + (paidMonthsCount * monthlyAmount);
-    }, 0);
+    // Calculate monthly revenue from all active customers
+    const monthlyRevenue = customers
+      .filter(c => c.is_active)
+      .reduce((total, customer) => {
+        const monthlyAmount = Number(customer.amount) || 0;
+        return total + monthlyAmount;
+      }, 0);
 
-    return { totalCustomers, activeCustomers, completedCustomers, totalRevenue };
+    return { totalCustomers, activeCustomers, completedCustomers, monthlyRevenue };
   };
 
   const stats = getCustomerStats();
@@ -475,8 +476,8 @@ const CustomerManagement = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm font-medium">Toplam Gelir</p>
-                  <p className="text-2xl font-bold">₺{stats.totalRevenue.toLocaleString('tr-TR')}</p>
+                  <p className="text-purple-100 text-sm font-medium">Aylık Gelir</p>
+                  <p className="text-2xl font-bold">₺{stats.monthlyRevenue.toLocaleString('tr-TR')}</p>
                 </div>
                 <DollarSign className="w-8 h-8 text-purple-200" />
               </div>
