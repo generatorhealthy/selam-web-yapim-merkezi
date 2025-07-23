@@ -125,7 +125,18 @@ const CustomerManagement = () => {
         throw error;
       }
 
-      setSpecialists(data || []);
+      // Sort specialists: payment due today first, then others
+      const today = new Date().getDate();
+      const sortedData = (data || []).sort((a, b) => {
+        const aHasPaymentToday = (a.payment_day || 1) === today;
+        const bHasPaymentToday = (b.payment_day || 1) === today;
+        
+        if (aHasPaymentToday && !bHasPaymentToday) return -1;
+        if (!aHasPaymentToday && bHasPaymentToday) return 1;
+        return 0;
+      });
+
+      setSpecialists(sortedData);
     } catch (error) {
       console.error('Uzman verileri yüklenirken hata:', error);
       toast({
