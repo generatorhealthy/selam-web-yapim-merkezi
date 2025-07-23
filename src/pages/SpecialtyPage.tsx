@@ -76,16 +76,21 @@ const SpecialtyPage = () => {
   };
 
   useEffect(() => {
-    if (specialtySlug) {
-      const specialty = getSpecialtyFromSlug(specialtySlug);
-      setSpecialtyName(specialty);
-      fetchSpecialists(specialty);
-    }
+    const fetchData = async () => {
+      if (specialtySlug) {
+        setLoading(true);
+        const specialty = getSpecialtyFromSlug(specialtySlug);
+        setSpecialtyName(specialty);
+        await fetchSpecialists(specialty);
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
   }, [specialtySlug]);
 
   const fetchSpecialists = async (specialty: string) => {
     try {
-      setLoading(true);
       console.log('Fetching specialists for specialty:', specialty);
       
       // Tam eşleşme ara
@@ -130,8 +135,6 @@ const SpecialtyPage = () => {
         variant: "destructive"
       });
       setSpecialists([]);
-    } finally {
-      setLoading(false);
     }
   };
 
