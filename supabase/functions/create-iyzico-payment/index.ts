@@ -87,14 +87,21 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // SHA1 hash oluşturma fonksiyonu
-    async function createAuthorizationHash(requestString: string, secretKey: string) {
+    // SHA1 hash oluşturma fonksiyonu (İyzico'nun istediği format)
+    async function createAuthorizationHash(requestString: string, secretKey: string): Promise<string> {
       const encoder = new TextEncoder();
-      const data = encoder.encode(requestString + secretKey);
-      const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      return btoa(hashHex);
+      
+      const key = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(secretKey),
+        { name: "HMAC", hash: "SHA-1" },
+        false,
+        ["sign"]
+      );
+      
+      const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(requestString));
+      const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+      return hashBase64;
     }
 
     // İyzico için hash hesaplama
