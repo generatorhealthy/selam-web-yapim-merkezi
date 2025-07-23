@@ -736,6 +736,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           online_consultation: boolean | null
+          package_price: number | null
           payment_day: number | null
           phone: string | null
           profile_picture: string | null
@@ -771,6 +772,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           online_consultation?: boolean | null
+          package_price?: number | null
           payment_day?: number | null
           phone?: string | null
           profile_picture?: string | null
@@ -806,6 +808,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           online_consultation?: boolean | null
+          package_price?: number | null
           payment_day?: number | null
           phone?: string | null
           profile_picture?: string | null
