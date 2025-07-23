@@ -221,7 +221,7 @@ const DoctorList = () => {
             Uzmanlar
           </h1>
           <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-            Alanında uzman, deneyimli doktorlarımızla tanışın. Sağlığınız için en doğru rehberliği alın ve hemen randevu oluşturun.
+            Alanında uzman, deneyimli uzmanlarla tanışın. Sağlığınız için en doğru rehberliği alın ve hemen randevu oluşturun.
           </p>
         </div>
       </div>
