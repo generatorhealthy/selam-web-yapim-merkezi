@@ -60,21 +60,21 @@ serve(async (req) => {
         ip: req.headers.get("x-forwarded-for")?.split(',')[0] || "127.0.0.1",
         city: customerData.city || "İstanbul",
         country: "Turkey",
-        zipCode: "34000"
+        zipCode: "34734"
       },
       shippingAddress: {
         contactName: `${customerData.name || "Test"} ${customerData.surname || "User"}`,
         city: customerData.city || "İstanbul", 
         country: "Turkey",
         address: customerData.address || "Test Address",
-        zipCode: "34000"
+        zipCode: "34734"
       },
       billingAddress: {
         contactName: `${customerData.name || "Test"} ${customerData.surname || "User"}`,
         city: customerData.city || "İstanbul",
         country: "Turkey", 
         address: customerData.address || "Test Address",
-        zipCode: "34000"
+        zipCode: "34734"
       },
       basketItems: [
         {
