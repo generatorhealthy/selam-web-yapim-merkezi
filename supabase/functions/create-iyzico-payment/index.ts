@@ -46,7 +46,7 @@ serve(async (req) => {
       basketId: conversationId,
       paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
-      callbackUrl: `https://doktorumol.com.tr/payment-success`,
+      callbackUrl: `https://doktorumol.com.tr/`,
       buyer: {
         id: "BY789",
         name: customerData.name || "Test",
