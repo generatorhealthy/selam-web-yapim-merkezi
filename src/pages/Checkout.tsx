@@ -18,9 +18,9 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { supabase } from "@/integrations/supabase/client";
 
 const packages = {
-  basic: {
-    name: "Basic Paket",
-    type: "basic",
+  campaign: {
+    name: "Kampanyalı Paket",
+    type: "campaign",
     price: 2398,
     originalPrice: 4999,
     features: [
@@ -36,9 +36,9 @@ const packages = {
       "Doktor Sayfasına Özgün Seo Çalışması"
     ]
   },
-  premium: {
+  basic: {
     name: "Premium Paket",
-    type: "premium",
+    type: "basic",
     price: 2998,
     originalPrice: 6499,
     features: [
@@ -77,9 +77,9 @@ const packages = {
       "Sosyal Medya Reklam ve Yönetimi"
     ]
   },
-  full: {
+  premium: {
     name: "Full Paket",
-    type: "full", 
+    type: "premium", 
     price: 4998,
     originalPrice: 8750,
     features: [
@@ -143,11 +143,10 @@ const Checkout = () => {
 
   const getSubscriptionReferenceCode = (packageType: string) => {
     const referenceCodeMap: { [key: string]: string } = {
-      "campaign": "92feac6d-1181-4b78-b0c2-3b5d5742adff",
-      "campaign-premium": "e01a059d-9392-4690-b030-0002064f9421",
-      "discounted": "696f7277-d3b8-47c2-8a14-4efd3e7a31a1",
-      "basic": "205eb35c-e122-401f-aef7-618daf3732f8", // 2998₺ package
-      "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94" // 4998₺ package
+      "campaign": "e01a059d-9392-4690-b030-0002064f9421", // 2398₺ kampanyali-paket
+      "basic": "205eb35c-e122-401f-aef7-618daf3732f8", // 2998₺ paketler
+      "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff", // 3600₺ kampanyali-premium-paket  
+      "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94" // 4998₺ paketler
     };
     return referenceCodeMap[packageType] || referenceCodeMap["basic"];
   };
@@ -692,6 +691,24 @@ IP Adresi: ${clientIP}`;
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-3">
+                        <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                          paymentMethod === "credit_card" ? "border-blue-500 bg-blue-50" : "border-gray-200"
+                        }`}>
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="credit_card"
+                            checked={paymentMethod === "credit_card"}
+                            onChange={(e) => setPaymentMethod(e.target.value as "credit_card")}
+                            className="mr-3"
+                          />
+                          <CreditCard className="w-5 h-5 mr-3 text-blue-600" />
+                          <div>
+                            <div className="font-medium">Kredi Kartı</div>
+                            <div className="text-sm text-gray-500">İyzico güvencesiyle</div>
+                          </div>
+                        </label>
+
                         <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
                           paymentMethod === "bank_transfer" ? "border-blue-500 bg-blue-50" : "border-gray-200"
                         }`}>
