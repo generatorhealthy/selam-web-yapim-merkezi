@@ -24,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award, Clock, Flame } from "lucide-react";
+import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award, Clock, Flame, DollarSign } from "lucide-react";
 import { getMonthName } from "@/utils/monthUtils";
 
 interface Customer {
@@ -396,8 +396,15 @@ const CustomerManagement = () => {
     const completedCustomers = customers.filter(c => 
       (c.paid_months?.length || 0) >= c.total_months
     ).length;
+    
+    // Calculate total revenue from all paid months
+    const totalRevenue = customers.reduce((total, customer) => {
+      const paidMonthsCount = customer.paid_months?.length || 0;
+      const monthlyAmount = Number(customer.amount) || 0;
+      return total + (paidMonthsCount * monthlyAmount);
+    }, 0);
 
-    return { totalCustomers, activeCustomers, completedCustomers };
+    return { totalCustomers, activeCustomers, completedCustomers, totalRevenue };
   };
 
   const stats = getCustomerStats();
@@ -427,7 +434,7 @@ const CustomerManagement = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -460,6 +467,18 @@ const CustomerManagement = () => {
                   <p className="text-3xl font-bold">{stats.completedCustomers}</p>
                 </div>
                 <Award className="w-8 h-8 text-amber-200" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Toplam Gelir</p>
+                  <p className="text-2xl font-bold">₺{stats.totalRevenue.toLocaleString('tr-TR')}</p>
+                </div>
+                <DollarSign className="w-8 h-8 text-purple-200" />
               </div>
             </CardContent>
           </Card>
