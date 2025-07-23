@@ -83,7 +83,11 @@ const TestTaking = () => {
       const transformedQuestions = questionsData?.map(q => ({
         id: q.id,
         question_text: q.question_text,
-        options: Array.isArray(q.options) ? q.options as string[] : [],
+        options: Array.isArray(q.options) 
+          ? q.options.map((opt: any) => 
+              typeof opt === 'string' ? opt : opt.text || opt.value || String(opt)
+            )
+          : [],
         step_number: q.step_number,
         is_required: q.is_required
       })) || [];
