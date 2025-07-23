@@ -639,9 +639,18 @@ ${packageFeatures.length > 0 ?
       }
     } catch (error) {
       console.error('PDF generation error:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        order: {
+          id: order.id,
+          customer_name: order.customer_name,
+          package_name: order.package_name
+        }
+      });
       toast({
         title: "Hata",
-        description: "PDF oluşturulurken hata oluştu",
+        description: `PDF oluşturulurken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
         variant: "destructive",
       });
     }
@@ -936,9 +945,18 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
       }
     } catch (error) {
       console.error('PDF generation error:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        order: {
+          id: order.id,
+          customer_name: order.customer_name,
+          package_name: order.package_name
+        }
+      });
       toast({
         title: "Hata",
-        description: "PDF oluşturulurken hata oluştu",
+        description: `PDF oluşturulurken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
         variant: "destructive",
       });
     }
