@@ -30,48 +30,35 @@ serve(async (req) => {
 
     // İyzico için gerekli hash oluşturma
     const randomString = Date.now().toString();
-    
-    // İyzico subscription API için hash hesaplama
-    const requestString = [
-      "tr", // locale
-      `conv_${Date.now()}`, // conversationId  
-      subscriptionReferenceCode, // pricingPlanReferenceCode
-      "ACTIVE", // subscriptionInitialStatus
-      customerData.name, // customer.name
-      customerData.surname || customerData.name, // customer.surname
-      customerData.email, // customer.email
-      customerData.tcNo || "11111111111", // customer.identityNumber
-      customerData.city || "Istanbul", // customer.city
-      "Turkey", // customer.country
-      req.headers.get("x-forwarded-for")?.split(',')[0] || "127.0.0.1", // customer.ip
-      `${req.headers.get("origin")}/payment-success` // callbackUrl
-    ].join('');
-    
-    // SHA1 hash hesaplama
-    const crypto = await import('https://deno.land/std@0.190.0/crypto/mod.ts');
-    const encoder = new TextEncoder();
-    const data = encoder.encode(requestString + IYZICO_SECRET_KEY);
-    const hashBuffer = await crypto.crypto.subtle.digest('SHA-1', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    // Base64 encode
-    const hashBase64 = btoa(hashHex);
+    const conversationId = `conv_${Date.now()}`;
     
     // İyzico abonelik ödeme isteği oluştur
     const requestBody = {
       locale: "tr",
-      conversationId: `conv_${Date.now()}`,
+      conversationId: conversationId,
+      subscriptionReferenceCode: subscriptionReferenceCode,
       pricingPlanReferenceCode: subscriptionReferenceCode,
       subscriptionInitialStatus: "ACTIVE",
       customer: {
-        name: customerData.name,
-        surname: customerData.surname || customerData.name,
+        name: customerData.name || "Müşteri",
+        surname: customerData.surname || "Adı",
+        gsmNumber: customerData.phone || "+905000000000",
         email: customerData.email,
         identityNumber: customerData.tcNo || "11111111111",
-        city: customerData.city || "Istanbul",
-        country: "Turkey",
-        ip: req.headers.get("x-forwarded-for")?.split(',')[0] || "127.0.0.1"
+        billingAddress: {
+          contactName: `${customerData.name || "Müşteri"} ${customerData.surname || "Adı"}`,
+          city: customerData.city || "İstanbul",
+          country: "Turkey",
+          address: customerData.address || "Adres bilgisi belirtilmemiş",
+          zipCode: "34000"
+        },
+        shippingAddress: {
+          contactName: `${customerData.name || "Müşteri"} ${customerData.surname || "Adı"}`,
+          city: customerData.city || "İstanbul", 
+          country: "Turkey",
+          address: customerData.address || "Adres bilgisi belirtilmemiş",
+          zipCode: "34000"
+        }
       },
       callbackUrl: `${req.headers.get("origin")}/payment-success`
     };
@@ -84,7 +71,7 @@ serve(async (req) => {
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
+        "Authorization": `IYZWS ${IYZICO_API_KEY}:${IYZICO_SECRET_KEY}`,
         "x-iyzi-rnd": randomString,
       },
       body: JSON.stringify(requestBody)
