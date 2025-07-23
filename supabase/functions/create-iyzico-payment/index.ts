@@ -35,7 +35,7 @@ serve(async (req) => {
     // Canlı ortam için production URL'si kullan
     const IYZICO_API_URL = "https://api.iyzipay.com";
     
-    // İyzico API için doğru format (ondalıklı string formatı)
+    // İyzico API için doğru format
     const requestBody = {
       locale: "tr",
       conversationId: conversationId,
@@ -46,11 +46,11 @@ serve(async (req) => {
       basketId: conversationId,
       paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
-      callbackUrl: `https://doktorumol.com.tr/`,
+      callbackUrl: "https://doktorumol.com.tr/",
       buyer: {
         id: "BY789",
         name: customerData.name || "Test",
-        surname: customerData.surname || "User", 
+        surname: customerData.surname || "User",
         gsmNumber: customerData.phone || "+905555555555",
         email: customerData.email,
         identityNumber: customerData.tcNo?.toString() || "11111111111",
@@ -64,7 +64,7 @@ serve(async (req) => {
       },
       shippingAddress: {
         contactName: `${customerData.name || "Test"} ${customerData.surname || "User"}`,
-        city: customerData.city || "İstanbul", 
+        city: customerData.city || "İstanbul",
         country: "Turkey",
         address: customerData.address || "Test Address",
         zipCode: customerData.zipCode || "34734"
@@ -72,7 +72,7 @@ serve(async (req) => {
       billingAddress: {
         contactName: `${customerData.name || "Test"} ${customerData.surname || "User"}`,
         city: customerData.city || "İstanbul",
-        country: "Turkey", 
+        country: "Turkey",
         address: customerData.address || "Test Address",
         zipCode: customerData.zipCode || "34734"
       },
@@ -81,7 +81,7 @@ serve(async (req) => {
           id: "BI101",
           name: `${packageType} Paketi`,
           category1: "Danışmanlık",
-          category2: "Online", 
+          category2: "Online",
           itemType: "VIRTUAL",
           price: "2998.00"
         }
