@@ -135,7 +135,7 @@ const Checkout = () => {
     tcNo: "",
     address: "",
     city: "İstanbul",
-    postalCode: "",
+    zipCode: "",
     companyName: "",
     taxNo: "",
     taxOffice: ""
@@ -611,6 +611,19 @@ IP Adresi: ${clientIP}`;
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="zipCode">Posta Kodu *</Label>
+                        <Input
+                          id="zipCode"
+                          name="zipCode"
+                          value={formData.zipCode}
+                          onChange={handleInputChange}
+                          placeholder="Posta kodu (örn: 34734)"
+                          maxLength={5}
+                          required
+                        />
                       </div>
                       
                       <div>
