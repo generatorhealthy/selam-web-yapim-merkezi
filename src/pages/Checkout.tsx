@@ -192,6 +192,19 @@ const Checkout = () => {
     if (e.target.name === "tcNo") {
       value = value.replace(/\D/g, "").substring(0, 11);
     }
+    
+    if (e.target.name === "phone") {
+      // Telefon formatını düzenle - İyzico +90 ile başlayan format istiyor
+      value = value.replace(/\D/g, ""); // Sadece rakamları al
+      if (value.startsWith("90")) {
+        value = "+" + value;
+      } else if (value.startsWith("0")) {
+        value = "+9" + value;
+      } else if (!value.startsWith("+90")) {
+        value = "+90" + value;
+      }
+      value = value.substring(0, 14); // Max 14 karakter (+905xxxxxxxxx)
+    }
 
     setFormData({
       ...formData,
@@ -516,14 +529,14 @@ IP Adresi: ${clientIP}`;
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="space-y-6">
               {!showBankInfo ? (
-                <>
+                <div className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Teslimat Bilgileri</CardTitle>
+                      <CardTitle>Teslimat Adresi</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label htmlFor="email">E-Posta *</Label>
+                        <Label htmlFor="email">E-posta Adresi *</Label>
                         <Input
                           id="email"
                           name="email"
@@ -534,14 +547,7 @@ IP Adresi: ${clientIP}`;
                           required
                         />
                       </div>
-                    </CardContent>
-                  </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Teslimat Adresi</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label htmlFor="name">İsim *</Label>
@@ -568,25 +574,27 @@ IP Adresi: ${clientIP}`;
                       </div>
 
                       <div>
-                        <Label htmlFor="tcNo">TC Kimlik Numarası</Label>
+                        <Label htmlFor="tcNo">TC Kimlik Numarası *</Label>
                         <Input
                           id="tcNo"
                           name="tcNo"
                           value={formData.tcNo}
                           onChange={handleInputChange}
-                          placeholder="TC Kimlik Numarası"
+                          placeholder="TC Kimlik Numarası (11 haneli)"
                           maxLength={11}
+                          required
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="phone">Cep Telefon Numarası</Label>
+                        <Label htmlFor="phone">Cep Telefon Numarası * (+90 ile başlayın)</Label>
                         <Input
                           id="phone"
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
-                          placeholder="Cep Telefon Numarası"
+                          placeholder="+905xxxxxxxxx"
+                          required
                         />
                       </div>
 
@@ -605,7 +613,7 @@ IP Adresi: ${clientIP}`;
                       </div>
                       
                       <div>
-                        <Label htmlFor="address">Adres</Label>
+                        <Label htmlFor="address">Adres *</Label>
                         <Textarea
                           id="address"
                           name="address"
@@ -613,6 +621,7 @@ IP Adresi: ${clientIP}`;
                           onChange={handleInputChange}
                           placeholder="Adres"
                           rows={3}
+                          required
                         />
                       </div>
                     </CardContent>
@@ -763,12 +772,12 @@ IP Adresi: ${clientIP}`;
 
                   <Button 
                     onClick={handlePaymentSuccess}
-                    disabled={loading || !contractAccepted}
+                    disabled={loading || !contractAccepted || !formData.name || !formData.surname || !formData.email || !formData.phone || !formData.tcNo || !formData.address}
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 text-lg font-semibold"
                   >
                     {paymentMethod === "credit_card" ? "Kredi Kartı ile Öde" : "Siparişi Onayla"}
                   </Button>
-                </>
+                </div>
               ) : (
                 <BankTransferInfo
                   amount={selectedPackage.price}
