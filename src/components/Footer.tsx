@@ -33,7 +33,7 @@ const Footer = () => {
           {/* Payment Methods */}
           <div className="flex justify-center items-center gap-2">
             <div className="flex items-center gap-2 bg-white rounded-md px-3 py-1 border border-gray-200">
-              <img src="https://doktorumol.com.tr/wp-content/uploads/2023/10/iyzico.png" alt="İyzico" className="h-6" />
+              <img src="/lovable-uploads/034df0a6-00d8-4ba5-9843-e947f0337815.png" alt="Ödeme Yöntemleri" className="h-8" />
             </div>
           </div>
         </div>
@@ -42,8 +42,9 @@ const Footer = () => {
       {/* Bottom Copyright */}
       <div className="border-t border-gray-200 bg-gray-50">
         <div className="container mx-auto px-4 py-2">
-          <div className="text-center text-xs text-gray-600">
-            Doktorumol.com.tr © Copyright 2025. Tüm Hakları saklıdır.
+          <div className="text-center text-xs text-gray-600 space-y-1">
+            <div>Doktorumol.com.tr © Copyright 2025. Tüm Hakları saklıdır.</div>
+            <div>Kayıtlı Adres: Merkez Mahallesi, Cumhuriyet Caddesi No: 123/A, 34000 Fatih/İstanbul</div>
           </div>
         </div>
       </div>
