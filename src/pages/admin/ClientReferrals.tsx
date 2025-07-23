@@ -360,8 +360,20 @@ const ClientReferrals = () => {
 
       if (error) throw error;
 
-      // Local state'i güncelle
+      // Local state'i güncelle - Tüm aylarda aynı dahili numara görünsün
       setSpecialists(prev => 
+        prev.map(spec => 
+          spec.id === specialistId 
+            ? {
+                ...spec,
+                specialist: { ...spec.specialist, internal_number: newInternalNumber }
+              }
+            : spec
+        )
+      );
+
+      // Filtered specialists'i de güncelle
+      setFilteredSpecialists(prev => 
         prev.map(spec => 
           spec.id === specialistId 
             ? {
@@ -374,7 +386,7 @@ const ClientReferrals = () => {
 
       toast({
         title: "Başarılı",
-        description: "Dahili numara güncellendi",
+        description: "Dahili numara tüm aylarda güncellendi",
       });
       
     } catch (error) {
