@@ -489,8 +489,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* PopularSpecialties Component */}
-      <PopularSpecialties />
 
       <Footer />
     </div>
