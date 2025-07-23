@@ -27,19 +27,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-white/30">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
-          <div className="flex items-center gap-2 text-gray-600 font-medium">
-            <Zap className="w-4 h-4 animate-pulse" />
-            <span>Yükleniyor...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Loading durumu kaldırıldı - direkt render et
 
   if (!userProfile || !['admin', 'staff', 'legal'].includes(userProfile.role)) {
     return (
