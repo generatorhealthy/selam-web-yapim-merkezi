@@ -32,46 +32,102 @@ serve(async (req) => {
     const randomString = Date.now().toString();
     const conversationId = `conv_${Date.now()}`;
     
-    // İyzico abonelik ödeme isteği oluştur
+    // İyzico abonelik ödeme isteği oluştur (standart ödeme için)
     const requestBody = {
       locale: "tr",
       conversationId: conversationId,
-      pricingPlanReferenceCode: subscriptionReferenceCode,
-      subscriptionInitialStatus: "ACTIVE",
-      customer: {
+      price: "1",
+      paidPrice: "1.2",
+      currency: "TRY",
+      installment: "1",
+      basketId: conversationId,
+      paymentChannel: "WEB",
+      paymentGroup: "PRODUCT",
+      callbackUrl: `${req.headers.get("origin")}/payment-success`,
+      enabledInstallments: [1, 2, 3, 6, 9],
+      buyer: {
+        id: "BY789",
         name: customerData.name || "Test",
         surname: customerData.surname || "User",
         gsmNumber: customerData.phone || "+905555555555",
         email: customerData.email,
         identityNumber: customerData.tcNo || "11111111111",
+        lastLoginDate: "2015-10-05 12:43:35",
+        registrationDate: "2013-04-21 15:12:09",
         registrationAddress: customerData.address || "Test Adres",
         ip: req.headers.get("x-forwarded-for")?.split(',')[0] || "127.0.0.1",
         city: customerData.city || "İstanbul",
         country: "Turkey",
         zipCode: "34000"
       },
-      callbackUrl: `${req.headers.get("origin")}/payment-success`
+      shippingAddress: {
+        contactName: (customerData.name || "Test") + " " + (customerData.surname || "User"),
+        city: customerData.city || "İstanbul",
+        country: "Turkey",
+        address: customerData.address || "Test Adres",
+        zipCode: "34000"
+      },
+      billingAddress: {
+        contactName: (customerData.name || "Test") + " " + (customerData.surname || "User"),
+        city: customerData.city || "İstanbul",
+        country: "Turkey",
+        address: customerData.address || "Test Adres",
+        zipCode: "34000"
+      },
+      basketItems: [
+        {
+          id: "BI101",
+          name: packageType + " Paketi",
+          category1: "Collectibles",
+          category2: "Accessories",
+          itemType: "VIRTUAL",
+          price: "1"
+        }
+      ]
     };
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico için SHA1 hash hesaplama
+    // İyzico için SHA1 hash hesaplama (standart ödeme için)
     const requestString = [
       requestBody.locale,
-      requestBody.conversationId, 
-      requestBody.pricingPlanReferenceCode,
-      requestBody.subscriptionInitialStatus,
-      requestBody.customer.name,
-      requestBody.customer.surname,
-      requestBody.customer.gsmNumber,
-      requestBody.customer.email,
-      requestBody.customer.identityNumber,
-      requestBody.customer.registrationAddress,
-      requestBody.customer.ip,
-      requestBody.customer.city,
-      requestBody.customer.country,
-      requestBody.customer.zipCode,
-      requestBody.callbackUrl
+      requestBody.conversationId,
+      requestBody.price,
+      requestBody.paidPrice,
+      requestBody.currency,
+      requestBody.basketId,
+      requestBody.paymentGroup,
+      requestBody.callbackUrl,
+      requestBody.enabledInstallments.join(','),
+      requestBody.buyer.id,
+      requestBody.buyer.name,
+      requestBody.buyer.surname,
+      requestBody.buyer.gsmNumber,
+      requestBody.buyer.email,
+      requestBody.buyer.identityNumber,
+      requestBody.buyer.lastLoginDate,
+      requestBody.buyer.registrationDate,
+      requestBody.buyer.registrationAddress,
+      requestBody.buyer.ip,
+      requestBody.buyer.city,
+      requestBody.buyer.country,
+      requestBody.buyer.zipCode,
+      requestBody.shippingAddress.contactName,
+      requestBody.shippingAddress.city,
+      requestBody.shippingAddress.country,
+      requestBody.shippingAddress.address,
+      requestBody.shippingAddress.zipCode,
+      requestBody.billingAddress.contactName,
+      requestBody.billingAddress.city,
+      requestBody.billingAddress.country,
+      requestBody.billingAddress.address,
+      requestBody.billingAddress.zipCode,
+      requestBody.basketItems[0].id,
+      requestBody.basketItems[0].name,
+      requestBody.basketItems[0].category1,
+      requestBody.basketItems[0].category2,
+      requestBody.basketItems[0].itemType,
+      requestBody.basketItems[0].price
     ].join('');
 
     // SHA1 hash oluştur
@@ -82,8 +138,8 @@ serve(async (req) => {
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     const hashBase64 = btoa(hashHex);
 
-    // İyzico checkout form initialize isteği
-    const iyzResponse = await fetch("https://api.iyzipay.com/payment/iyzipos/checkoutform/initialize/subscription", {
+    // İyzico checkout form initialize isteği (standart ödeme)
+    const iyzResponse = await fetch("https://api.iyzipay.com/payment/iyzipos/checkoutform/initialize", {
       method: "POST",
       headers: {
         "Accept": "application/json",
