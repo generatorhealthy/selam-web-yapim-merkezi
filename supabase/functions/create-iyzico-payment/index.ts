@@ -28,7 +28,7 @@ serve(async (req) => {
       throw new Error("İyzico API anahtarları bulunamadı");
     }
 
-    // İyzico için gerekli hash oluşturma
+    // İyzico için gerekli değerler
     const randomString = Date.now().toString();
     const conversationId = `conv_${Date.now()}`;
     
@@ -90,59 +90,23 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico Authorization hash oluşturma fonksiyonu
+    // İyzico production için SHA1 hash oluşturma (HMAC SHA-1)
     async function createAuthorizationHash(data: string): Promise<string> {
       const encoder = new TextEncoder();
-      const hashSource = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
-      const hashData = encoder.encode(hashSource);
-      const hashBuffer = await crypto.subtle.digest('SHA-1', hashData);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      return btoa(hashHex);
+      const key = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(IYZICO_SECRET_KEY),
+        { name: "HMAC", hash: "SHA-1" },
+        false,
+        ["sign"]
+      );
+      const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
+      return btoa(String.fromCharCode(...new Uint8Array(signature)));
     }
 
-    // İyzico için hash hesaplama
-    const requestString = [
-      requestBody.locale,
-      requestBody.conversationId,
-      requestBody.price,
-      requestBody.paidPrice,
-      requestBody.currency,
-      requestBody.basketId,
-      requestBody.paymentGroup,
-      requestBody.callbackUrl,
-      requestBody.buyer.id,
-      requestBody.buyer.name,
-      requestBody.buyer.surname,
-      requestBody.buyer.gsmNumber,
-      requestBody.buyer.email,
-      requestBody.buyer.identityNumber,
-      requestBody.buyer.lastLoginDate,
-      requestBody.buyer.registrationDate,
-      requestBody.buyer.registrationAddress,
-      requestBody.buyer.ip,
-      requestBody.buyer.city,
-      requestBody.buyer.country,
-      requestBody.buyer.zipCode,
-      requestBody.shippingAddress.contactName,
-      requestBody.shippingAddress.city,
-      requestBody.shippingAddress.country,
-      requestBody.shippingAddress.address,
-      requestBody.shippingAddress.zipCode,
-      requestBody.billingAddress.contactName,
-      requestBody.billingAddress.city,
-      requestBody.billingAddress.country,
-      requestBody.billingAddress.address,
-      requestBody.billingAddress.zipCode,
-      requestBody.basketItems[0].id,
-      requestBody.basketItems[0].name,
-      requestBody.basketItems[0].category1,
-      requestBody.basketItems[0].category2,
-      requestBody.basketItems[0].itemType,
-      requestBody.basketItems[0].price
-    ].join('');
-
-    const hashBase64 = await createAuthorizationHash(requestString);
+    // İyzico production hash hesaplama (sadece apiKey + random + secretKey)
+    const hashSource = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
+    const hashBase64 = await createAuthorizationHash(hashSource);
 
     // İyzico checkout form initialize isteği (sandbox URL)
     const iyzResponse = await fetch(`${IYZICO_API_URL}/payment/iyzipos/checkoutform/initialize`, {
