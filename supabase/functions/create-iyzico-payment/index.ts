@@ -36,8 +36,8 @@ serve(async (req) => {
     const requestBody = {
       locale: "tr",
       conversationId: conversationId,
-      price: "1",
-      paidPrice: "1.2",
+      price: "1.20",
+      paidPrice: "1.20",
       currency: "TRY",
       installment: "1",
       basketId: conversationId,
@@ -81,7 +81,7 @@ serve(async (req) => {
           category1: "Collectibles",
           category2: "Accessories",
           itemType: "VIRTUAL",
-          price: "1"
+          price: "1.20"
         }
       ]
     };
