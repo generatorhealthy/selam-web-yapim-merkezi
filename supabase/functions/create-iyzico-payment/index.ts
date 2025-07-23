@@ -28,33 +28,28 @@ serve(async (req) => {
       throw new Error("İyzico API anahtarları bulunamadı");
     }
 
+    // İyzico için gerekli hash oluşturma
+    const randomString = Date.now().toString();
+    
     // İyzico abonelik ödeme isteği oluştur
-    const paymentData = {
+    const requestBody = {
       locale: "tr",
       conversationId: `conv_${Date.now()}`,
       pricingPlanReferenceCode: subscriptionReferenceCode,
       subscriptionInitialStatus: "ACTIVE",
       customer: {
         name: customerData.name,
-        surname: customerData.surname,
+        surname: customerData.surname || customerData.name,
         email: customerData.email,
         identityNumber: customerData.tcNo || "11111111111",
-        city: customerData.city,
+        city: customerData.city || "Istanbul",
         country: "Turkey",
-        ip: req.headers.get("x-forwarded-for") || "127.0.0.1"
+        ip: req.headers.get("x-forwarded-for")?.split(',')[0] || "127.0.0.1"
       },
-      paymentCard: {
-        // Kredi kartı bilgileri checkout formunda girilecek
-      },
-      checkoutFormInitialize: {
-        callbackUrl: `${req.headers.get("origin")}/odeme-basarili`,
-        paymentGroup: "SUBSCRIPTION"
-      }
+      callbackUrl: `${req.headers.get("origin")}/payment-success`
     };
 
-    // İyzico Authorization header oluştur
-    const authString = `${IYZICO_API_KEY}:${IYZICO_SECRET_KEY}`;
-    const authHeader = btoa(authString);
+    console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
     // İyzico checkout form initialize isteği
     const iyzResponse = await fetch("https://api.iyzipay.com/payment/iyzipos/checkoutform/initialize/subscription", {
@@ -62,18 +57,10 @@ serve(async (req) => {
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": `Basic ${authHeader}`,
-        "x-iyzi-rnd": Date.now().toString(),
+        "Authorization": `IYZWS ${IYZICO_API_KEY}:${IYZICO_SECRET_KEY}`,
+        "x-iyzi-rnd": randomString,
       },
-      body: JSON.stringify({
-        locale: paymentData.locale,
-        conversationId: paymentData.conversationId,
-        pricingPlanReferenceCode: paymentData.pricingPlanReferenceCode,
-        subscriptionInitialStatus: paymentData.subscriptionInitialStatus,
-        customer: paymentData.customer,
-        callbackUrl: paymentData.checkoutFormInitialize.callbackUrl,
-        paymentGroup: paymentData.checkoutFormInitialize.paymentGroup
-      })
+      body: JSON.stringify(requestBody)
     });
 
     const responseData = await iyzResponse.json();
