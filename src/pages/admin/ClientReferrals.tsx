@@ -537,7 +537,7 @@ const ClientReferrals = () => {
                               <div className="flex-1 space-y-3">
                                 <div className="flex items-start gap-3">
                                   <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
+                                    <div className="flex items-center gap-3 mb-3">
                                       <h4 className="text-xl font-bold text-slate-800 group-hover:text-blue-700 transition-colors duration-200">
                                         {specialistReferral.specialist.name}
                                       </h4>
@@ -550,13 +550,28 @@ const ClientReferrals = () => {
                                         </Badge>
                                       )}
                                     </div>
-                                    <div className="flex items-center gap-4 text-slate-600">
+                                    <div className="text-slate-600 mb-3">
                                       <span className="font-medium">{specialistReferral.specialist.specialty}</span>
-                                      <span className="text-slate-400">•</span>
-                                      <span className="flex items-center gap-1">
-                                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                                        {specialistReferral.specialist.city}
-                                      </span>
+                                    </div>
+                                    
+                                    {/* Editable Number and City Fields */}
+                                    <div className="flex gap-3">
+                                      <div className="flex-1">
+                                        <Label className="text-xs text-slate-500 mb-1 block">Sayı</Label>
+                                        <Input
+                                          placeholder="Sayı girin..."
+                                          className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
+                                          type="number"
+                                        />
+                                      </div>
+                                      <div className="flex-1">
+                                        <Label className="text-xs text-slate-500 mb-1 block">Şehir</Label>
+                                        <Input
+                                          placeholder="Şehir girin..."
+                                          defaultValue={specialistReferral.specialist.city}
+                                          className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
+                                        />
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
