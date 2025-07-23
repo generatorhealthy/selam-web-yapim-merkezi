@@ -311,6 +311,44 @@ const ClientReferrals = () => {
     }
   };
 
+  const updateCity = async (specialistId: string, newCity: string) => {
+    try {
+      console.log(`Updating city for specialist ${specialistId}, new city: ${newCity}`);
+      
+      const { error } = await supabase
+        .from('specialists')
+        .update({ city: newCity })
+        .eq('id', specialistId);
+
+      if (error) throw error;
+
+      // Local state'i güncelle
+      setSpecialists(prev => 
+        prev.map(spec => 
+          spec.id === specialistId 
+            ? {
+                ...spec,
+                specialist: { ...spec.specialist, city: newCity }
+              }
+            : spec
+        )
+      );
+
+      toast({
+        title: "Başarılı",
+        description: "Şehir bilgisi güncellendi",
+      });
+      
+    } catch (error) {
+      console.error('Error updating city:', error);
+      toast({
+        title: "Hata",
+        description: "Şehir güncellenirken hata oluştu: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const getTotalReferrals = () => {
     return filteredSpecialists.reduce((total, spec) => 
       total + spec.referrals.reduce((specTotal, ref) => specTotal + ref.count, 0), 0
@@ -588,7 +626,23 @@ const ClientReferrals = () => {
                                          <Label className="text-xs text-slate-500 mb-1 block">Şehir</Label>
                                          <Input
                                            placeholder="Şehir girin..."
-                                           defaultValue={specialistReferral.specialist.city}
+                                           value={specialistReferral.specialist.city}
+                                           onChange={(e) => {
+                                             setSpecialists(prev => 
+                                               prev.map(spec => 
+                                                 spec.id === specialistReferral.id 
+                                                   ? {
+                                                       ...spec,
+                                                       specialist: { ...spec.specialist, city: e.target.value }
+                                                     }
+                                                   : spec
+                                               )
+                                             );
+                                           }}
+                                           onBlur={(e) => updateCity(
+                                             specialistReferral.id, 
+                                             e.target.value
+                                           )}
                                            className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
                                          />
                                        </div>
