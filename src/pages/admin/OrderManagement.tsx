@@ -994,154 +994,181 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
   });
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <AdminBackButton />
-      
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sipariş Yönetimi</h1>
-          <p className="text-gray-600 mt-1">Tüm siparişleri ve otomatik sipariş sistemini yönetin</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="container mx-auto p-6 space-y-8">
+        <AdminBackButton />
+        
+        {/* Header Section */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/90 via-primary to-primary/80 p-8 text-white shadow-2xl">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSI0Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-20"></div>
+          <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                Sipariş Yönetimi
+              </h1>
+              <p className="text-blue-100 text-lg">Tüm siparişleri ve otomatik sipariş sistemini yönetin</p>
+            </div>
+            <Button
+              onClick={() => generateOrdersMutation.mutate()}
+              disabled={generateOrdersMutation.isPending}
+              variant="secondary"
+              size="lg"
+              className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all duration-300 shadow-lg"
+            >
+              <RefreshCw className={`w-5 h-5 mr-2 ${generateOrdersMutation.isPending ? 'animate-spin' : ''}`} />
+              Otomatik Sipariş Oluştur
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={() => generateOrdersMutation.mutate()}
-          disabled={generateOrdersMutation.isPending}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${generateOrdersMutation.isPending ? 'animate-spin' : ''}`} />
-          Otomatik Sipariş Oluştur
-        </Button>
-      </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-5 h-5 text-blue-600" />
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-blue-100 text-sm font-medium">Toplam Sipariş</p>
+                  <p className="text-3xl font-bold">{orders?.length || 0}</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <Users className="w-6 h-6" />
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Toplam Sipariş</p>
-                <p className="text-2xl font-bold text-blue-600">{orders?.length || 0}</p>
+              <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-full bg-white/40 rounded-full w-full"></div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+          <Card className="overflow-hidden bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-green-100 text-sm font-medium">Onaylanan</p>
+                  <p className="text-3xl font-bold">
+                    {orders?.filter(o => o.status === 'approved' || o.status === 'completed').length || 0}
+                  </p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <CheckCircle className="w-6 h-6" />
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Onaylanan</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {orders?.filter(o => o.status === 'approved' || o.status === 'completed').length || 0}
-                </p>
+              <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-full bg-white/40 rounded-full w-4/5"></div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-yellow-600" />
+          <Card className="overflow-hidden bg-gradient-to-br from-yellow-500 to-orange-500 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-yellow-100 text-sm font-medium">Bekleyen</p>
+                  <p className="text-3xl font-bold">
+                    {orders?.filter(o => o.status === 'pending').length || 0}
+                  </p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Bekleyen</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {orders?.filter(o => o.status === 'pending').length || 0}
-                </p>
+              <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-full bg-white/40 rounded-full w-3/5"></div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <DollarSign className="w-5 h-5 text-purple-600" />
+          <Card className="overflow-hidden bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-purple-100 text-sm font-medium">Toplam Tutar</p>
+                  <p className="text-2xl font-bold">
+                    {orders?.reduce((sum, order) => sum + order.amount, 0).toLocaleString('tr-TR')} ₺
+                  </p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <DollarSign className="w-6 h-6" />
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Toplam Tutar</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {orders?.reduce((sum, order) => sum + order.amount, 0).toLocaleString('tr-TR')} ₺
-                </p>
+              <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-full bg-white/40 rounded-full w-full"></div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="orders" className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Siparişler
-          </TabsTrigger>
-          <TabsTrigger value="trash" className="flex items-center gap-2">
-            <Trash2 className="w-4 h-4" />
-            Çöp Kutusu
-          </TabsTrigger>
-          <TabsTrigger value="automatic" className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Otomatik Siparişler
-          </TabsTrigger>
-        </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+            <TabsList className="grid w-full lg:w-auto grid-cols-3 bg-white/60 backdrop-blur-sm border border-white/20 shadow-lg rounded-xl p-1">
+              <TabsTrigger value="orders" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg">
+                <Calendar className="w-4 h-4" />
+                Siparişler
+              </TabsTrigger>
+              <TabsTrigger value="trash" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg">
+                <Trash2 className="w-4 h-4" />
+                Çöp Kutusu
+              </TabsTrigger>
+              <TabsTrigger value="automatic" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg">
+                <Clock className="w-4 h-4" />
+                Otomatik Siparişler
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        {/* Search and Filter Bar */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Müşteri adı, email veya paket adı ile ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          {/* Search and Filter Bar */}
+          <Card className="bg-white/60 backdrop-blur-sm border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Input
+                    placeholder="Müşteri adı, email veya paket adı ile ara..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 h-12 border-0 bg-white/80 backdrop-blur-sm shadow-inner text-gray-700 placeholder:text-gray-500"
+                  />
+                </div>
+                {activeTab === "orders" && (
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[200px] h-12 border-0 bg-white/80 backdrop-blur-sm shadow-inner">
+                      <Filter className="w-4 h-4 mr-2 text-gray-500" />
+                      <SelectValue placeholder="Durum filtrele" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white/95 backdrop-blur-sm border-0 shadow-xl">
+                      <SelectItem value="all">Tüm Durumlar</SelectItem>
+                      <SelectItem value="pending">Bekleyen</SelectItem>
+                      <SelectItem value="approved">Onaylanan</SelectItem>
+                      <SelectItem value="completed">Tamamlanan</SelectItem>
+                      <SelectItem value="cancelled">İptal Edilen</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
-              {activeTab === "orders" && (
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Durum filtrele" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tüm Durumlar</SelectItem>
-                    <SelectItem value="pending">Bekleyen</SelectItem>
-                    <SelectItem value="approved">Onaylanan</SelectItem>
-                    <SelectItem value="completed">Tamamlanan</SelectItem>
-                    <SelectItem value="cancelled">İptal Edilen</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
         <TabsContent value="orders" className="space-y-6">
           {/* Bulk Actions */}
           {selectedOrderIds.length > 0 && (
-            <Card>
+            <Card className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 shadow-lg">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    {selectedOrderIds.length} sipariş seçildi
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-red-100 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-red-600" />
+                    </div>
+                    <span className="text-sm font-medium text-red-700">
+                      {selectedOrderIds.length} sipariş seçildi
+                    </span>
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       variant="destructive"
                       size="sm"
                       onClick={handleBulkSoftDelete}
                       disabled={bulkSoftDeleteMutation.isPending}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 bg-red-500 hover:bg-red-600 shadow-lg"
                     >
                       <Trash2 className="w-4 h-4" />
                       Toplu Sil
@@ -1664,6 +1691,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };
