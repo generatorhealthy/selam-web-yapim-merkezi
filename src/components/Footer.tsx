@@ -33,7 +33,7 @@ const Footer = () => {
           {/* Payment Methods */}
           <div className="flex justify-center items-center gap-2">
             <div className="flex items-center gap-2 bg-white rounded-md px-3 py-1 border border-gray-200">
-              <img src="/iyzico-logo.png" alt="İyzico" className="h-6" />
+              <img src="https://doktorumol.com.tr/wp-content/uploads/2023/10/iyzico.png" alt="İyzico" className="h-6" />
             </div>
           </div>
         </div>

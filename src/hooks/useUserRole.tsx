@@ -17,30 +17,21 @@ export const useUserRole = () => {
   useEffect(() => {
     const getCurrentUserProfile = async () => {
       try {
-        // First get the session to check if user is authenticated
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { user } } = await supabase.auth.getUser();
         
-        if (sessionError) {
-          console.error('Session error:', sessionError);
+        if (!user) {
           setUserProfile(null);
           setLoading(false);
           return;
         }
 
-        if (!session?.user) {
-          console.log('No authenticated user found');
-          setUserProfile(null);
-          setLoading(false);
-          return;
-        }
+        console.log('Current user ID:', user.id);
 
-        console.log('Current user ID:', session.user.id);
-
-        // Query user profile with proper error handling
+        // Direct query to avoid RLS issues
         const { data: profile, error } = await supabase
           .from('user_profiles')
           .select('role, is_approved')
-          .eq('user_id', session.user.id)
+          .eq('user_id', user.id)
           .maybeSingle();
 
         console.log('Profile query result:', { profile, error });
@@ -53,7 +44,7 @@ export const useUserRole = () => {
           setUserProfile(profile);
         } else {
           // No profile found, set as basic user
-          console.log('No profile found for user, setting as basic user');
+          console.log('No profile found, setting as basic user');
           setUserProfile({ role: 'user', is_approved: false });
         }
       } catch (error) {
@@ -64,19 +55,14 @@ export const useUserRole = () => {
       }
     };
 
-    // Add initial delay to ensure Supabase has time to restore session
-    const timer = setTimeout(() => {
-      getCurrentUserProfile();
-    }, 100);
+    getCurrentUserProfile();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state change:', event, session?.user?.id);
-        
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setLoading(true);
-          await getCurrentUserProfile();
+          getCurrentUserProfile();
         } else if (event === 'SIGNED_OUT') {
           setUserProfile(null);
           setLoading(false);
@@ -84,10 +70,7 @@ export const useUserRole = () => {
       }
     );
 
-    return () => {
-      clearTimeout(timer);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   return { userProfile, loading };

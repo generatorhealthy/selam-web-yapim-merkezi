@@ -35,55 +35,45 @@ export function HorizontalNavigation() {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      console.log('🔍 Fetching profile for user:', userId);
+      console.log('Fetching profile for user:', userId);
       
-      // Get user role - use maybeSingle to handle no profile case
+      // Get user role
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('role')
         .eq('user_id', userId)
-        .maybeSingle();
+        .single();
         
       if (profileError) {
-        console.log('❌ Profile fetch error:', profileError);
-        // Set default role if profile doesn't exist
-        setUserRole('user');
+        console.log('Profile fetch error:', profileError);
         return;
       }
         
       if (profile) {
-        console.log('✅ User role found:', profile.role);
+        console.log('User role:', profile.role);
         setUserRole(profile.role);
         
         // If user is a specialist, get their profile picture and name
         if (profile.role === 'specialist') {
-          console.log('🔍 Fetching specialist profile...');
           const { data: specialistProfile, error: specialistError } = await supabase
             .from('specialists')
             .select('profile_picture, name')
             .eq('user_id', userId)
-            .maybeSingle();
+            .single();
           
           if (specialistError) {
-            console.log('❌ Specialist fetch error:', specialistError);
+            console.log('Specialist fetch error:', specialistError);
             return;
           }
           
           if (specialistProfile) {
-            console.log('✅ Specialist profile found:', specialistProfile);
+            console.log('Specialist profile found:', specialistProfile);
             setUserProfile(specialistProfile);
-          } else {
-            console.log('❓ No specialist profile found for user');
           }
         }
-      } else {
-        // No profile found, set as regular user
-        console.log('❓ No profile found, setting as regular user');
-        setUserRole('user');
       }
     } catch (error) {
-      console.log('💥 Profile fetch error:', error);
-      setUserRole('user');
+      console.log('Profile fetch error:', error);
     }
   };
 
@@ -92,29 +82,29 @@ export function HorizontalNavigation() {
 
     const initializeAuth = async () => {
       try {
-        console.log('🔄 Initializing auth...');
+        console.log('Initializing auth...');
         
         // Get current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('❌ Session error:', error);
+          console.error('Session error:', error);
         }
         
         if (session?.user && mounted) {
-          console.log('✅ Session found for user:', session.user.email);
+          console.log('Session found for user:', session.user.email);
           setCurrentUser(session.user);
           setIsLoggedIn(true);
           await fetchUserProfile(session.user.id);
         } else if (mounted) {
-          console.log('❌ No session found');
+          console.log('No session found');
           setIsLoggedIn(false);
           setUserRole(null);
           setUserProfile(null);
           setCurrentUser(null);
         }
       } catch (error) {
-        console.error('❌ Session check error:', error);
+        console.error('Session check error:', error);
         if (mounted) {
           setIsLoggedIn(false);
           setUserRole(null);
@@ -125,7 +115,7 @@ export function HorizontalNavigation() {
         if (mounted) {
           setIsLoading(false);
           setAuthInitialized(true);
-          console.log('✅ Auth initialization completed');
+          console.log('Auth initialization completed');
         }
       }
     };
