@@ -129,7 +129,40 @@ serve(async (req) => {
       console.log('Delete user action started for userId:', userId)
       
       try {
-        // Delete user from auth.users table (this will cascade to user_profiles due to foreign key)
+        // First, check if user exists in specialists table and delete the specialist record
+        const { data: specialist, error: specialistCheckError } = await supabaseAdmin
+          .from('specialists')
+          .select('id')
+          .eq('user_id', userId)
+          .single()
+
+        if (specialistCheckError && specialistCheckError.code !== 'PGRST116') {
+          console.error('Error checking specialist:', specialistCheckError)
+          return new Response(
+            JSON.stringify({ error: `Error checking specialist: ${specialistCheckError.message}` }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
+        // If user is a specialist, delete the specialist record first
+        if (specialist) {
+          console.log('User is a specialist, deleting specialist record first:', specialist.id)
+          const { error: deleteSpecialistError } = await supabaseAdmin
+            .from('specialists')
+            .delete()
+            .eq('user_id', userId)
+
+          if (deleteSpecialistError) {
+            console.error('Specialist deletion error:', deleteSpecialistError)
+            return new Response(
+              JSON.stringify({ error: `Specialist deletion failed: ${deleteSpecialistError.message}` }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
+          console.log('Specialist record deleted successfully')
+        }
+
+        // Now delete user from auth.users table
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
         if (deleteError) {
