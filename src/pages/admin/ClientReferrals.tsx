@@ -349,6 +349,44 @@ const ClientReferrals = () => {
     }
   };
 
+  const updateInternalNumber = async (specialistId: string, newInternalNumber: string) => {
+    try {
+      console.log(`Updating internal number for specialist ${specialistId}, new number: ${newInternalNumber}`);
+      
+      const { error } = await supabase
+        .from('specialists')
+        .update({ internal_number: newInternalNumber })
+        .eq('id', specialistId);
+
+      if (error) throw error;
+
+      // Local state'i güncelle
+      setSpecialists(prev => 
+        prev.map(spec => 
+          spec.id === specialistId 
+            ? {
+                ...spec,
+                specialist: { ...spec.specialist, internal_number: newInternalNumber }
+              }
+            : spec
+        )
+      );
+
+      toast({
+        title: "Başarılı",
+        description: "Dahili numara güncellendi",
+      });
+      
+    } catch (error) {
+      console.error('Error updating internal number:', error);
+      toast({
+        title: "Hata",
+        description: "Dahili numara güncellenirken hata oluştu: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const getTotalReferrals = () => {
     return filteredSpecialists.reduce((total, spec) => 
       total + spec.referrals.reduce((specTotal, ref) => specTotal + ref.count, 0), 0
@@ -620,33 +658,57 @@ const ClientReferrals = () => {
                                        </div>
                                      </div>
                                      
-                                      {/* Editable City Field */}
-                                     <div className="flex gap-3">
-                                       <div className="flex-1">
-                                         <Label className="text-xs text-slate-500 mb-1 block">Şehir</Label>
-                                         <Input
-                                           placeholder="Şehir girin..."
-                                           value={specialistReferral.specialist.city}
-                                           onChange={(e) => {
-                                             setSpecialists(prev => 
-                                               prev.map(spec => 
-                                                 spec.id === specialistReferral.id 
-                                                   ? {
-                                                       ...spec,
-                                                       specialist: { ...spec.specialist, city: e.target.value }
-                                                     }
-                                                   : spec
-                                               )
-                                             );
-                                           }}
-                                           onBlur={(e) => updateCity(
-                                             specialistReferral.id, 
-                                             e.target.value
-                                           )}
-                                           className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
-                                         />
-                                       </div>
-                                     </div>
+                                       {/* Editable Fields */}
+                                      <div className="flex gap-3">
+                                        <div className="flex-1">
+                                          <Label className="text-xs text-slate-500 mb-1 block">Şehir</Label>
+                                          <Input
+                                            placeholder="Şehir girin..."
+                                            value={specialistReferral.specialist.city}
+                                            onChange={(e) => {
+                                              setSpecialists(prev => 
+                                                prev.map(spec => 
+                                                  spec.id === specialistReferral.id 
+                                                    ? {
+                                                        ...spec,
+                                                        specialist: { ...spec.specialist, city: e.target.value }
+                                                      }
+                                                    : spec
+                                                )
+                                              );
+                                            }}
+                                            onBlur={(e) => updateCity(
+                                              specialistReferral.id, 
+                                              e.target.value
+                                            )}
+                                            className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
+                                          />
+                                        </div>
+                                        <div className="flex-1">
+                                          <Label className="text-xs text-slate-500 mb-1 block">Dahili Numara</Label>
+                                          <Input
+                                            placeholder="Dahili numara..."
+                                            value={specialistReferral.specialist.internal_number || ''}
+                                            onChange={(e) => {
+                                              setSpecialists(prev => 
+                                                prev.map(spec => 
+                                                  spec.id === specialistReferral.id 
+                                                    ? {
+                                                        ...spec,
+                                                        specialist: { ...spec.specialist, internal_number: e.target.value }
+                                                      }
+                                                    : spec
+                                                )
+                                              );
+                                            }}
+                                            onBlur={(e) => updateInternalNumber(
+                                              specialistReferral.id, 
+                                              e.target.value
+                                            )}
+                                            className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
+                                          />
+                                        </div>
+                                      </div>
                                   </div>
                                 </div>
                               </div>
@@ -700,7 +762,7 @@ const ClientReferrals = () => {
                                   <div className="relative">
                                     <Edit3 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                                      <Input
-                                       placeholder="Dahili numara..."
+                                        placeholder="Notlar girin..."
                                        value={monthlyReferral.notes}
                                       onChange={(e) => {
                                         setSpecialists(prev => 
