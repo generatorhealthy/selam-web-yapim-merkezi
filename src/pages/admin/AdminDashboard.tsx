@@ -94,7 +94,8 @@ const AdminDashboard = () => {
       shadowColor: "shadow-emerald-500/20",
       route: "/divan_paneli/users/create",
       buttonText: "Yeni Kullanıcı",
-      adminOnly: true
+      adminOnly: false,
+      staffOnly: true
     },
     {
       title: "Test Yönetimi",
