@@ -32,6 +32,9 @@ serve(async (req) => {
     const randomString = Date.now().toString();
     const conversationId = `conv_${Date.now()}`;
     
+    // Sandbox ortamı için test URL'si kullan
+    const IYZICO_API_URL = "https://sandbox-api.iyzipay.com";
+    
     // İyzico API için doğru format
     const requestBody = {
       locale: "tr",
@@ -87,21 +90,15 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // SHA1 hash oluşturma fonksiyonu (İyzico'nun istediği format)
-    async function createAuthorizationHash(requestString: string, secretKey: string): Promise<string> {
+    // İyzico Authorization hash oluşturma fonksiyonu
+    async function createAuthorizationHash(data: string): Promise<string> {
       const encoder = new TextEncoder();
-      
-      const key = await crypto.subtle.importKey(
-        "raw",
-        encoder.encode(secretKey),
-        { name: "HMAC", hash: "SHA-1" },
-        false,
-        ["sign"]
-      );
-      
-      const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(requestString));
-      const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
-      return hashBase64;
+      const hashSource = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
+      const hashData = encoder.encode(hashSource);
+      const hashBuffer = await crypto.subtle.digest('SHA-1', hashData);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return btoa(hashHex);
     }
 
     // İyzico için hash hesaplama
@@ -145,10 +142,10 @@ serve(async (req) => {
       requestBody.basketItems[0].price
     ].join('');
 
-    const hashBase64 = await createAuthorizationHash(requestString, IYZICO_SECRET_KEY);
+    const hashBase64 = await createAuthorizationHash(requestString);
 
-    // İyzico checkout form initialize isteği (standart ödeme)
-    const iyzResponse = await fetch("https://api.iyzipay.com/payment/iyzipos/checkoutform/initialize", {
+    // İyzico checkout form initialize isteği (sandbox URL)
+    const iyzResponse = await fetch(`${IYZICO_API_URL}/payment/iyzipos/checkoutform/initialize`, {
       method: "POST",
       headers: {
         "Accept": "application/json",
