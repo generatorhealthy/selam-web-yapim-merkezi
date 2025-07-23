@@ -32,8 +32,8 @@ serve(async (req) => {
     const randomString = Date.now().toString();
     const conversationId = `conv_${Date.now()}`;
     
-    // Sandbox ortamı için test URL'si kullan
-    const IYZICO_API_URL = "https://sandbox-api.iyzipay.com";
+    // Canlı ortam için production URL'si kullan
+    const IYZICO_API_URL = "https://api.iyzipay.com";
     
     // İyzico API için doğru format
     const requestBody = {
