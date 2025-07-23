@@ -709,23 +709,6 @@ IP Adresi: ${clientIP}`;
                           </div>
                         </label>
                         
-                        <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                          paymentMethod === "credit_card" ? "border-blue-500 bg-blue-50" : "border-gray-200"
-                        }`}>
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value="credit_card"
-                            checked={paymentMethod === "credit_card"}
-                            onChange={(e) => setPaymentMethod(e.target.value as "credit_card")}
-                            className="mr-3"
-                          />
-                          <CreditCard className="w-5 h-5 mr-3 text-blue-600" />
-                          <div>
-                            <div className="font-medium">Kredi Kartı</div>
-                            <div className="text-sm text-gray-600">Güvenli ödeme</div>
-                          </div>
-                        </label>
                       </div>
                     </CardContent>
                   </Card>
