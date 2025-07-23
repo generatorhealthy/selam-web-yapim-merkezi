@@ -18,6 +18,8 @@ interface Specialist {
   specialty: string;
   city: string;
   internal_number?: string;
+  online_consultation?: boolean;
+  face_to_face_consultation?: boolean;
 }
 
 interface MonthlyReferral {
@@ -54,7 +56,7 @@ const ClientReferrals = () => {
       // Önce tüm aktif uzmanları getir
       const { data: specialistsData, error: specialistsError } = await supabase
         .from('specialists')
-        .select('id, name, specialty, city, internal_number')
+        .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation')
         .eq('is_active', true)
         .order('name');
 
@@ -349,6 +351,29 @@ const ClientReferrals = () => {
     return colors[hash % colors.length];
   };
 
+  // Generate consultation type badges
+  const getConsultationBadges = (specialist: Specialist) => {
+    const badges = [];
+    
+    if (specialist.face_to_face_consultation) {
+      badges.push(
+        <Badge key="face-to-face" className="bg-emerald-100 text-emerald-700 border-0 font-medium px-3 py-1 text-xs">
+          Yüz Yüze
+        </Badge>
+      );
+    }
+    
+    if (specialist.online_consultation) {
+      badges.push(
+        <Badge key="online" className="bg-blue-100 text-blue-700 border-0 font-medium px-3 py-1 text-xs">
+          Online
+        </Badge>
+      );
+    }
+    
+    return badges;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
@@ -549,12 +574,15 @@ const ClientReferrals = () => {
                                           {specialistReferral.specialist.internal_number}
                                         </Badge>
                                       )}
-                                    </div>
-                                    <div className="text-slate-600 mb-3">
-                                      <span className="font-medium">{specialistReferral.specialist.specialty}</span>
-                                    </div>
-                                    
-                                    {/* Editable Number and City Fields */}
+                                     </div>
+                                     <div className="flex items-center gap-2 mb-3">
+                                       <span className="font-medium text-slate-600">{specialistReferral.specialist.specialty}</span>
+                                       <div className="flex gap-2">
+                                         {getConsultationBadges(specialistReferral.specialist)}
+                                       </div>
+                                     </div>
+                                     
+                                     {/* Editable Number and City Fields */}
                                     <div className="flex gap-3">
                                       <div className="flex-1">
                                         <Label className="text-xs text-slate-500 mb-1 block">Sayı</Label>
