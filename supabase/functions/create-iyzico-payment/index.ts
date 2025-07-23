@@ -35,12 +35,12 @@ serve(async (req) => {
     // Canlı ortam için production URL'si kullan
     const IYZICO_API_URL = "https://api.iyzipay.com";
     
-    // İyzico API için doğru format
+    // İyzico API için doğru format (ondalıklı string formatı)
     const requestBody = {
       locale: "tr",
       conversationId: conversationId,
-      price: "2998",
-      paidPrice: "2998", 
+      price: "2998.00",
+      paidPrice: "2998.00",
       currency: "TRY",
       installment: "1",
       basketId: conversationId,
@@ -83,7 +83,7 @@ serve(async (req) => {
           category1: "Danışmanlık",
           category2: "Online", 
           itemType: "VIRTUAL",
-          price: "2998"
+          price: "2998.00"
         }
       ]
     };
