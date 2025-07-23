@@ -732,6 +732,7 @@ export type Database = {
           faq: string | null
           hospital: string | null
           id: string
+          internal_number: string | null
           is_active: boolean | null
           name: string
           online_consultation: boolean | null
@@ -766,6 +767,7 @@ export type Database = {
           faq?: string | null
           hospital?: string | null
           id?: string
+          internal_number?: string | null
           is_active?: boolean | null
           name: string
           online_consultation?: boolean | null
@@ -800,6 +802,7 @@ export type Database = {
           faq?: string | null
           hospital?: string | null
           id?: string
+          internal_number?: string | null
           is_active?: boolean | null
           name?: string
           online_consultation?: boolean | null

@@ -9,13 +9,15 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserCheck, Calendar, Users, Plus, Minus, Search } from "lucide-react";
+import { UserCheck, Calendar, Users, Plus, Minus, Search, Hash, Edit3, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface Specialist {
   id: string;
   name: string;
   specialty: string;
   city: string;
+  internal_number?: string;
 }
 
 interface MonthlyReferral {
@@ -52,7 +54,7 @@ const ClientReferrals = () => {
       // Önce tüm aktif uzmanları getir
       const { data: specialistsData, error: specialistsError } = await supabase
         .from('specialists')
-        .select('id, name, specialty, city')
+        .select('id, name, specialty, city, internal_number')
         .eq('is_active', true)
         .order('name');
 
@@ -328,100 +330,158 @@ const ClientReferrals = () => {
     };
   };
 
+  // Color generator for internal numbers
+  const getInternalNumberColor = (internalNumber?: string) => {
+    if (!internalNumber) return "bg-gray-100 text-gray-600";
+    
+    const colors = [
+      "bg-blue-100 text-blue-700",
+      "bg-purple-100 text-purple-700", 
+      "bg-green-100 text-green-700",
+      "bg-orange-100 text-orange-700",
+      "bg-pink-100 text-pink-700",
+      "bg-indigo-100 text-indigo-700",
+      "bg-teal-100 text-teal-700",
+      "bg-yellow-100 text-yellow-700"
+    ];
+    
+    const hash = internalNumber.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[hash % colors.length];
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-4 text-center">Yükleniyor...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-white/20">
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+          <p className="text-slate-600 mt-4 text-center font-medium">Veriler yükleniyor...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/50">
       <HorizontalNavigation />
       
       <div className="container mx-auto px-4 py-8">
         <AdminBackButton />
         
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Danışan Yönlendirme</h1>
-            <p className="text-gray-600">Uzmanların aylık danışan yönlendirme durumlarını takip edin</p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <select 
-              value={currentYear} 
-              onChange={(e) => setCurrentYear(Number(e.target.value))}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+        {/* Header Section with Enhanced Design */}
+        <div className="relative mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-3xl"></div>
+          <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl border border-white/20 shadow-xl p-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+                  <TrendingUp className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
+                    Danışan Yönlendirme
+                  </h1>
+                  <p className="text-slate-600 text-lg">Uzmanların aylık danışan yönlendirme durumlarını takip edin</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-slate-500" />
+                  <select 
+                    value={currentYear} 
+                    onChange={(e) => setCurrentYear(Number(e.target.value))}
+                    className="px-6 py-3 bg-white/90 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-slate-700 shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* İstatistik Kartları */}
+        {/* Enhanced Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100/50 hover:shadow-xl transition-all duration-300">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Toplam Uzman</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-700">Toplam Uzman</CardTitle>
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Users className="h-5 w-5 text-blue-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{specialists.length}</div>
+              <div className="text-3xl font-bold text-blue-900">{specialists.length}</div>
+              <p className="text-xs text-blue-600 mt-1">Aktif uzman sayısı</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:shadow-xl transition-all duration-300">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Toplam Yönlendirme</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-700">Toplam Yönlendirme</CardTitle>
+              <div className="p-2 bg-emerald-500/20 rounded-lg">
+                <UserCheck className="h-5 w-5 text-emerald-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{getTotalReferrals()}</div>
+              <div className="text-3xl font-bold text-emerald-900">{getTotalReferrals()}</div>
+              <p className="text-xs text-emerald-600 mt-1">Yıllık toplam</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100/50 hover:shadow-xl transition-all duration-300">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Seçili Ay ({monthNames[selectedMonth - 1]})</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-700">Seçili Ay ({monthNames[selectedMonth - 1]})</CardTitle>
+              <div className="p-2 bg-purple-500/20 rounded-lg">
+                <Calendar className="h-5 w-5 text-purple-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-3xl font-bold text-purple-900">
                 {getMonthlyTotal(selectedMonth)}
               </div>
+              <p className="text-xs text-purple-600 mt-1">Bu ay toplam</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100/50 hover:shadow-xl transition-all duration-300">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ortalama/Ay</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-700">Ortalama/Ay</CardTitle>
+              <div className="p-2 bg-orange-500/20 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-orange-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-3xl font-bold text-orange-900">
                 {specialists.length > 0 ? Math.round(getTotalReferrals() / 12) : 0}
               </div>
+              <p className="text-xs text-orange-600 mt-1">Aylık ortalama</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Ay Seçimi ve Uzman Listesi */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{currentYear} Yılı - Aylık Danışan Yönlendirme Takibi</CardTitle>
+        {/* Enhanced Monthly Tracking Section */}
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-100/50">
+            <CardTitle className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+              <Calendar className="w-6 h-6 text-blue-600" />
+              {currentYear} Yılı - Aylık Danışan Yönlendirme Takibi
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <Tabs value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(Number(value))}>
-              <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12 mb-6">
+              <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12 mb-8 bg-slate-100/50 p-1 rounded-xl">
                 {monthNames.map((month, index) => (
-                  <TabsTrigger key={index + 1} value={(index + 1).toString()} className="text-xs">
+                  <TabsTrigger 
+                    key={index + 1} 
+                    value={(index + 1).toString()} 
+                    className="text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-600 transition-all duration-200"
+                  >
                     {month.substring(0, 3)}
                   </TabsTrigger>
                 ))}
@@ -439,19 +499,27 @@ const ClientReferrals = () => {
                       </p>
                     </div>
 
-                    {/* Arama Bölümü */}
-                    <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Uzman adı, uzmanlık alanı veya şehir ile ara..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 bg-white"
-                        />
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {filteredSpecialists.length} / {specialists.length} uzman
+                    {/* Enhanced Search Section */}
+                    <div className="relative mb-8">
+                      <div className="absolute inset-0 bg-gradient-to-r from-slate-100/50 to-blue-100/30 rounded-2xl"></div>
+                      <div className="relative bg-white/60 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg p-6">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                          <div className="relative flex-1">
+                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                            <Input
+                              placeholder="Uzman adı, uzmanlık alanı veya şehir ile ara..."
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className="pl-12 py-3 bg-white/80 border-white/50 rounded-xl shadow-sm focus:shadow-md transition-all duration-200"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-xl border border-white/50">
+                            <Users className="w-4 h-4 text-slate-500" />
+                            <span className="text-sm font-medium text-slate-600">
+                              {filteredSpecialists.length} / {specialists.length} uzman
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -459,81 +527,117 @@ const ClientReferrals = () => {
                       const monthlyReferral = getSelectedMonthReferrals(specialistReferral);
                       
                       return (
-                        <div key={specialistReferral.id} className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
-                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                            <div className="flex-1">
-                              <h4 className="text-lg font-semibold text-gray-800 mb-1">
-                                {specialistReferral.specialist.name}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                {specialistReferral.specialist.specialty} - {specialistReferral.specialist.city}
-                              </p>
-                            </div>
-                            
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                              <div className="flex items-center space-x-3 bg-gray-50 rounded-lg p-3 border">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => updateReferralCount(
-                                    specialistReferral.id, 
-                                    selectedMonth, 
-                                    Math.max(0, monthlyReferral.count - 1)
-                                  )}
-                                  disabled={monthlyReferral.count <= 0}
-                                  className="h-8 w-8 p-0 hover:bg-red-50 hover:border-red-300"
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </Button>
-                                
-                                <div className="text-center min-w-[60px]">
-                                  <div className="text-2xl font-bold text-blue-600">
-                                    {monthlyReferral.count}
+                        <div key={specialistReferral.id} className="relative group">
+                          {/* Background gradient overlay on hover */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+                          
+                          <div className="relative bg-white/90 backdrop-blur-sm border border-white/40 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-blue-200/50">
+                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                              {/* Specialist Info Section */}
+                              <div className="flex-1 space-y-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <h4 className="text-xl font-bold text-slate-800 group-hover:text-blue-700 transition-colors duration-200">
+                                        {specialistReferral.specialist.name}
+                                      </h4>
+                                      {specialistReferral.specialist.internal_number && (
+                                        <Badge 
+                                          className={`${getInternalNumberColor(specialistReferral.specialist.internal_number)} border-0 font-medium px-3 py-1 text-xs`}
+                                        >
+                                          <Hash className="w-3 h-3 mr-1" />
+                                          {specialistReferral.specialist.internal_number}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-4 text-slate-600">
+                                      <span className="font-medium">{specialistReferral.specialist.specialty}</span>
+                                      <span className="text-slate-400">•</span>
+                                      <span className="flex items-center gap-1">
+                                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                        {specialistReferral.specialist.city}
+                                      </span>
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-gray-500">yönlendirme</div>
                                 </div>
-                                
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => updateReferralCount(
-                                    specialistReferral.id, 
-                                    selectedMonth, 
-                                    monthlyReferral.count + 1
-                                  )}
-                                  className="h-8 w-8 p-0 hover:bg-green-50 hover:border-green-300"
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </Button>
                               </div>
                               
-                              <div className="flex-1 min-w-[200px]">
-                                <Input
-                                  placeholder="Not ekle..."
-                                  value={monthlyReferral.notes}
-                                  onChange={(e) => {
-                                    setSpecialists(prev => 
-                                      prev.map(spec => 
-                                        spec.id === specialistReferral.id 
-                                          ? {
-                                              ...spec,
-                                              referrals: spec.referrals.map(ref => 
-                                                ref.month === selectedMonth 
-                                                  ? { ...ref, notes: e.target.value }
-                                                  : ref
-                                              )
-                                            }
-                                          : spec
-                                      )
-                                    );
-                                  }}
-                                  onBlur={(e) => updateNotes(
-                                    specialistReferral.id, 
-                                    selectedMonth, 
-                                    e.target.value
-                                  )}
-                                  className="text-sm bg-white"
-                                />
+                              {/* Controls Section */}
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:gap-6">
+                                {/* Referral Counter */}
+                                <div className="relative">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 to-indigo-100/50 rounded-2xl"></div>
+                                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl border border-blue-200/30 shadow-md p-4">
+                                    <div className="flex items-center space-x-4">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => updateReferralCount(
+                                          specialistReferral.id, 
+                                          selectedMonth, 
+                                          Math.max(0, monthlyReferral.count - 1)
+                                        )}
+                                        disabled={monthlyReferral.count <= 0}
+                                        className="h-10 w-10 p-0 rounded-xl border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all duration-200 disabled:opacity-50"
+                                      >
+                                        <Minus className="w-4 h-4" />
+                                      </Button>
+                                      
+                                      <div className="text-center min-w-[80px]">
+                                        <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                                          {monthlyReferral.count}
+                                        </div>
+                                        <div className="text-xs text-slate-500 font-medium">yönlendirme</div>
+                                      </div>
+                                      
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => updateReferralCount(
+                                          specialistReferral.id, 
+                                          selectedMonth, 
+                                          monthlyReferral.count + 1
+                                        )}
+                                        className="h-10 w-10 p-0 rounded-xl border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-600 transition-all duration-200"
+                                      >
+                                        <Plus className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Notes Section */}
+                                <div className="flex-1 min-w-[250px]">
+                                  <div className="relative">
+                                    <Edit3 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                    <Input
+                                      placeholder="Not ekle..."
+                                      value={monthlyReferral.notes}
+                                      onChange={(e) => {
+                                        setSpecialists(prev => 
+                                          prev.map(spec => 
+                                            spec.id === specialistReferral.id 
+                                              ? {
+                                                  ...spec,
+                                                  referrals: spec.referrals.map(ref => 
+                                                    ref.month === selectedMonth 
+                                                      ? { ...ref, notes: e.target.value }
+                                                      : ref
+                                                  )
+                                                }
+                                              : spec
+                                          )
+                                        );
+                                      }}
+                                      onBlur={(e) => updateNotes(
+                                        specialistReferral.id, 
+                                        selectedMonth, 
+                                        e.target.value
+                                      )}
+                                      className="pl-10 py-3 bg-white/80 border-slate-200/50 rounded-xl shadow-sm focus:shadow-md focus:border-blue-300 transition-all duration-200"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
