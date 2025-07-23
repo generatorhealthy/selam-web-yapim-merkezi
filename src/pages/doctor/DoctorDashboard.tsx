@@ -25,7 +25,7 @@ const DoctorDashboard = () => {
       try {
         console.log('Doctor dashboard auth check...');
         
-        // Get current session
+        // Get current session with better error handling
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -34,99 +34,85 @@ const DoctorDashboard = () => {
           return;
         }
         
-        if (!session) {
-          console.log('No session found');
+        if (!session?.user) {
+          console.log('No session found in doctor dashboard');
           if (mounted) setIsLoading(false);
           return;
         }
 
-        console.log('Session found, checking specialist profile...');
+        console.log('Session found, checking specialist profile...', session.user.id);
 
-        // Check if user is a specialist by user_id first
+        // Check if user is a specialist by user_id
         const { data: specialist, error: specialistError } = await supabase
           .from('specialists')
           .select('*')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (specialist && !specialistError) {
-          console.log('Specialist found by user_id:', specialist);
-          if (mounted) {
-            setDoctor(specialist);
-            await fetchAppointments(specialist.id);
-          }
-        } else {
-          // Try by email if user_id doesn't match
-          console.log('No specialist found by user_id, trying by email...');
-          const { data: specialistByEmail, error: emailError } = await supabase
-            .from('specialists')
-            .select('*')
-            .eq('email', session.user.email)
-            .single();
+        if (specialistError && specialistError.code !== 'PGRST116') {
+          console.error('Error fetching specialist:', specialistError);
+          if (mounted) setIsLoading(false);
+          return;
+        }
 
-          if (specialistByEmail && !emailError) {
-            console.log('Specialist found by email:', specialistByEmail);
-            if (mounted) {
-              setDoctor(specialistByEmail);
-              await fetchAppointments(specialistByEmail.id);
+        if (!specialist) {
+          console.log('User is not a specialist');
+          if (mounted) setIsLoading(false);
+          return;
+        }
+
+        console.log('Specialist found:', specialist);
+        if (mounted) {
+          setDoctor(specialist);
+          setIsLoading(false);
+          
+          // Fetch appointments for the specialist
+          if (specialist.id) {
+            const { data: appointmentsData, error: appointmentsError } = await supabase
+              .from('appointments')
+              .select('*')
+              .eq('specialist_id', specialist.id)
+              .order('appointment_date', { ascending: true });
+
+            if (appointmentsError) {
+              console.error('Error fetching appointments:', appointmentsError);
+            } else if (mounted) {
+              setAppointments(appointmentsData || []);
             }
-          } else {
-            console.log('No specialist profile found');
           }
         }
       } catch (error) {
-        console.error('Auth check error:', error);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        console.error('Error in doctor dashboard auth:', error);
+        if (mounted) setIsLoading(false);
       }
     };
 
-    // Initialize auth
-    initializeAuth();
+    // Add small delay to ensure session restoration
+    const timer = setTimeout(() => {
+      initializeAuth();
+    }, 200);
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Doctor dashboard auth state change:', event);
-        
-        if (event === 'SIGNED_OUT') {
-          if (mounted) {
-            setDoctor(null);
-            setAppointments([]);
-          }
-        } else if (event === 'SIGNED_IN' && session) {
-          // Re-initialize when signed in
-          initializeAuth();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Doctor dashboard auth state change:', event);
+      if (event === 'SIGNED_OUT') {
+        if (mounted) {
+          setDoctor(null);
+          setAppointments([]);
+          setIsLoading(false);
         }
+      } else if (event === 'SIGNED_IN' && mounted) {
+        setIsLoading(true);
+        initializeAuth();
       }
-    );
+    });
 
     return () => {
       mounted = false;
+      clearTimeout(timer);
       subscription.unsubscribe();
     };
   }, []);
-
-  const fetchAppointments = async (specialistId: string) => {
-    try {
-      const { data: appointmentsData, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('specialist_id', specialistId)
-        .order('appointment_date', { ascending: true });
-
-      if (error) {
-        console.error('Randevular yüklenirken hata:', error);
-        return;
-      }
-
-      setAppointments(appointmentsData || []);
-    } catch (error) {
-      console.error('Randevular yüklenirken beklenmeyen hata:', error);
-    }
-  };
 
   const updateAppointmentStatus = async (appointmentId: string, newStatus: string) => {
     try {

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -27,14 +28,25 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
 
-  if (loading) {
+  // Add longer timeout for session restoration
+  const [sessionLoading, setSessionLoading] = useState(true);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSessionLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading || sessionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-white/30">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
           <div className="flex items-center gap-2 text-gray-600 font-medium">
             <Zap className="w-4 h-4 animate-pulse" />
-            <span>Yükleniyor...</span>
+            <span>Oturum kontrol ediliyor...</span>
           </div>
         </div>
       </div>
