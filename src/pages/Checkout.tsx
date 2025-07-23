@@ -594,6 +594,7 @@ IP Adresi: ${clientIP}`;
                           value={formData.phone}
                           onChange={handleInputChange}
                           placeholder="+905xxxxxxxxx"
+                          maxLength={13}
                           required
                         />
                       </div>
