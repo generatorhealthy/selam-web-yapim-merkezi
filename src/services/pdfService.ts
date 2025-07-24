@@ -129,7 +129,7 @@ export const generatePreInfoPDF = (
   });
   
   // Check if we need a new page
-  if (yPosition > 250) {
+  if (yPosition > 280) {
     pdf.addPage();
     yPosition = 30;
   }
@@ -180,14 +180,17 @@ export const generatePreInfoPDF = (
       return;
     }
     
-    if (yPosition > 250) {
+    const lines = pdf.splitTextToSize(term, contentWidth);
+    const neededHeight = lines.length * 6 + 3;
+    
+    // Check if we need a new page before writing the text
+    if (yPosition + neededHeight > 280) {
       pdf.addPage();
       yPosition = 30;
     }
     
-    const lines = pdf.splitTextToSize(term, contentWidth);
     pdf.text(lines, margin, yPosition);
-    yPosition += lines.length * 6 + 3;
+    yPosition += neededHeight;
   });
   
   // Add new page for signature section
@@ -230,8 +233,16 @@ export const generatePreInfoPDF = (
     }
     
     const lines = pdf.splitTextToSize(text, contentWidth);
+    const neededHeight = lines.length * 6 + 3;
+    
+    // Check if we need a new page before writing the text
+    if (yPosition + neededHeight > 280) {
+      pdf.addPage();
+      yPosition = 30;
+    }
+    
     pdf.text(lines, margin, yPosition);
-    yPosition += lines.length * 6 + 3;
+    yPosition += neededHeight;
   });
   
   return pdf;
@@ -331,7 +342,7 @@ export const generateDistanceSalesPDF = (
   });
   
   // Check if we need a new page
-  if (yPosition > 240) {
+  if (yPosition > 280) {
     pdf.addPage();
     yPosition = 30;
   }
@@ -433,14 +444,17 @@ export const generateDistanceSalesPDF = (
       return;
     }
     
-    if (yPosition > 250) {
+    const lines = pdf.splitTextToSize(term, contentWidth);
+    const neededHeight = lines.length * 6 + 3;
+    
+    // Check if we need a new page before writing the text
+    if (yPosition + neededHeight > 280) {
       pdf.addPage();
       yPosition = 30;
     }
     
-    const lines = pdf.splitTextToSize(term, contentWidth);
     pdf.text(lines, margin, yPosition);
-    yPosition += lines.length * 6 + 3;
+    yPosition += neededHeight;
   });
   
   // Add new page for signature section
@@ -493,8 +507,16 @@ export const generateDistanceSalesPDF = (
     }
     
     const lines = pdf.splitTextToSize(text, contentWidth);
+    const neededHeight = lines.length * 6 + 3;
+    
+    // Check if we need a new page before writing the text
+    if (yPosition + neededHeight > 280) {
+      pdf.addPage();
+      yPosition = 30;
+    }
+    
     pdf.text(lines, margin, yPosition);
-    yPosition += lines.length * 6 + 3;
+    yPosition += neededHeight;
   });
   
   return pdf;
