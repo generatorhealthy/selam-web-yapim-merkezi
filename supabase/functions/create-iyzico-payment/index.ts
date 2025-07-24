@@ -49,9 +49,16 @@ serve(async (req) => {
       throw new Error("İyzico API anahtarları bulunamadı");
     }
 
-    // İyzico için gerekli değerler
-    const randomString = Date.now().toString();
-    const conversationId = `conv_${Date.now()}`;
+    // İyzico için gerekli değerler - zaman senkronizasyonu ile
+    const now = new Date();
+    const randomString = now.getTime().toString(); // Unix timestamp kullan
+    const conversationId = `conv_${randomString}`;
+    
+    console.log('Zaman bilgileri:', {
+      serverTime: now.toISOString(),
+      timestamp: randomString,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
     
     // Canlı ortam için production URL'si kullan
     const IYZICO_API_URL = "https://api.iyzipay.com";
@@ -132,12 +139,12 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico basit SHA1 authorization (eski format) - daha stabil
-    async function createHMACSHA1(data: string, secret: string): Promise<string> {
+    // İyzico doğru authorization - exact format
+    async function createHMACSHA1(data: string): Promise<string> {
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         "raw",
-        encoder.encode(secret),
+        encoder.encode(IYZICO_SECRET_KEY),
         { name: "HMAC", hash: "SHA-1" },
         false,
         ["sign"]
@@ -146,22 +153,25 @@ serve(async (req) => {
       return btoa(String.fromCharCode(...new Uint8Array(signature)));
     }
 
-    // Basit hash string - sadece apiKey + random + secretKey
-    const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
-    const hashBase64 = await createHMACSHA1(hashString, IYZICO_SECRET_KEY);
+    // İyzico exact hash format: apiKey + randomKey + secretKey (hiçbir ek karakter yok)
+    const authData = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
+    const signature = await createHMACSHA1(authData);
 
-    console.log('Hash bilgileri:', {
-      hashStringLength: hashString.length,
-      hashBase64Length: hashBase64.length
+    console.log('Authorization detayları:', {
+      apiKeyLength: IYZICO_API_KEY.length,
+      randomStringLength: randomString.length,
+      secretKeyLength: IYZICO_SECRET_KEY.length,
+      authDataLength: authData.length,
+      signatureLength: signature.length
     });
 
-    // İyzico eski checkout form initialize isteği - stabil format
+    // İyzico API çağrısı - minimal headers
     const iyzResponse = await fetch(`${IYZICO_API_URL}/payment/iyzipos/checkoutform/initialize`, {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
+        "Authorization": `IYZWS ${IYZICO_API_KEY}:${signature}`,
         "x-iyzi-rnd": randomString
       },
       body: JSON.stringify(requestBody)
