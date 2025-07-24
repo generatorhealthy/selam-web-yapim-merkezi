@@ -119,11 +119,18 @@ serve(async (req) => {
       return btoa(String.fromCharCode(...new Uint8Array(signature)));
     }
 
-    // İyzico production hash hesaplama
-    const hashSource = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
-    const hashBase64 = await createAuthorizationHash(hashSource);
+    // İyzico canlı API için hash hesaplama - PWA formatı
+    const hashString = `[apikey=${IYZICO_API_KEY}&conversationId=${conversationId}&currency=TRY&installment=1&locale=tr&paidPrice=${packagePrice}&paymentChannel=WEB&paymentGroup=PRODUCT&price=${packagePrice}]`;
+    
+    const hashBase64 = await createAuthorizationHash(IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + hashString);
 
-    // İyzico checkout form initialize isteği (sandbox URL)
+    console.log('Hash bilgileri:', {
+      apiKey: IYZICO_API_KEY?.substring(0, 10) + '...',
+      randomString,
+      hashString: hashString.substring(0, 50) + '...'
+    });
+
+    // İyzico checkout form initialize isteği
     const iyzResponse = await fetch(`${IYZICO_API_URL}/payment/iyzipos/checkoutform/initialize`, {
       method: "POST",
       headers: {
@@ -131,6 +138,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
         "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
         "x-iyzi-rnd": randomString,
+        "x-iyzi-client-version": "iyzipay-node-2.0.0"
       },
       body: JSON.stringify(requestBody)
     });
