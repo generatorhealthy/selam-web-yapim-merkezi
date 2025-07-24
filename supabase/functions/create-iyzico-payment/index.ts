@@ -139,13 +139,13 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico doğru authorization - exact format
-    async function createHMACSHA1(data: string): Promise<string> {
+    // İyzico doğru authorization - SHA256 format
+    async function createHMACSHA256(data: string): Promise<string> {
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         "raw",
         encoder.encode(IYZICO_SECRET_KEY),
-        { name: "HMAC", hash: "SHA-1" },
+        { name: "HMAC", hash: "SHA-256" },
         false,
         ["sign"]
       );
@@ -155,7 +155,7 @@ serve(async (req) => {
 
     // İyzico exact hash format: apiKey + randomKey + secretKey (hiçbir ek karakter yok)
     const authData = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
-    const signature = await createHMACSHA1(authData);
+    const signature = await createHMACSHA256(authData);
 
     console.log('Authorization detayları:', {
       apiKeyLength: IYZICO_API_KEY.length,
