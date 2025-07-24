@@ -191,10 +191,33 @@ const DoctorDashboard = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Başarılı",
-        description: "Destek talebiniz oluşturuldu. En kısa sürede yanıtlanacaktır.",
+      // Admin ekibine bilgilendirme maili gönder
+      const { error: emailError } = await supabase.functions.invoke('new-ticket-notification', {
+        body: {
+          ticketId: '', // Insert işleminden sonra ID alınacak
+          specialistName: doctor.name,
+          specialistEmail: doctor.email || doctor.user_id,
+          ticketTitle: newTicket.title,
+          ticketDescription: newTicket.description,
+          category: newTicket.category,
+          priority: newTicket.priority
+        }
       });
+
+      if (emailError) {
+        console.error('Bildirim maili gönderimi hatası:', emailError);
+        // Email hatası olsa bile talep oluşturulduğu için sadece uyarı
+        toast({
+          title: "Talep Oluşturuldu",
+          description: "Destek talebiniz oluşturuldu ancak bildirim maili gönderilemedi.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Başarılı",
+          description: "Destek talebiniz oluşturuldu. En kısa sürede yanıtlanacaktır.",
+        });
+      }
 
       setNewTicket({
         title: '',
