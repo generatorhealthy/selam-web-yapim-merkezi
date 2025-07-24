@@ -6,6 +6,7 @@ import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import { useUserRole } from "@/hooks/useUserRole";
+import { memo, useMemo } from "react";
 import { 
   Users, 
   UserPlus, 
@@ -27,7 +28,7 @@ import {
   Clock
 } from "lucide-react";
 
-const AdminDashboard = () => {
+const AdminDashboard = memo(() => {
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
 
@@ -286,28 +287,30 @@ const AdminDashboard = () => {
     }
   ];
 
-  const visibleCards = adminCards.filter(card => {
-    if (isLegal) {
-      return card.legalAccess;
-    }
-    
-    if (isAdmin) {
-      return true;
-    }
-    
-    if (isStaff) {
-      return !card.adminOnly;
-    }
-    
-    return false;
-  });
+  const visibleCards = useMemo(() => {
+    return adminCards.filter(card => {
+      if (isLegal) {
+        return card.legalAccess;
+      }
+      
+      if (isAdmin) {
+        return true;
+      }
+      
+      if (isStaff) {
+        return !card.adminOnly;
+      }
+      
+      return false;
+    });
+  }, [isAdmin, isStaff, isLegal]);
 
-  const getRoleDisplayName = () => {
+  const getRoleDisplayName = useMemo(() => {
     if (isAdmin) return 'Admin';
     if (isStaff) return 'Staff';
     if (isLegal) return 'Hukuk Birimi';
     return 'Kullanıcı';
-  };
+  }, [isAdmin, isStaff, isLegal]);
 
   return (
     <>
@@ -365,7 +368,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="flex items-center gap-3 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-lg border border-white/50">
                     <Badge variant="secondary" className="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border-purple-200">
-                      {getRoleDisplayName()}
+                      {getRoleDisplayName}
                     </Badge>
                   </div>
                 </div>
@@ -497,6 +500,8 @@ const AdminDashboard = () => {
       </div>
     </>
   );
-};
+});
+
+AdminDashboard.displayName = 'AdminDashboard';
 
 export default AdminDashboard;
