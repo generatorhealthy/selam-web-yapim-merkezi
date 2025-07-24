@@ -31,33 +31,44 @@ export const generatePreInfoPDF = (
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
   const pageHeight = pdf.internal.pageSize.height;
-  const margin = 20;
+  const margin = 25;
   const contentWidth = pageWidth - 2 * margin;
-  const safeBottomMargin = 30; // Safe zone from bottom
+  const safeBottomMargin = 40; // Daha büyük güvenli alan
   const maxY = pageHeight - safeBottomMargin;
-  let yPosition = 30;
+  let yPosition = 40;
   
-  // Smart page break function
-  const smartPageBreak = (neededHeight: number, forceBreak: boolean = false) => {
-    if (forceBreak || (yPosition + neededHeight > maxY)) {
+  // Gelişmiş sayfa kontrolü - kesin çözüm
+  const checkNewPageNeeded = (neededHeight: number) => {
+    return yPosition + neededHeight > maxY;
+  };
+  
+  const addNewPageIfNeeded = (neededHeight: number) => {
+    if (checkNewPageNeeded(neededHeight)) {
       pdf.addPage();
-      yPosition = 30;
+      yPosition = 40;
       return true;
     }
     return false;
   };
   
-  // Enhanced text adding function with perfect line height calculation
-  const addTextBlock = (text: string, fontSize: number = 10, fontWeight: string = 'normal', isTitle: boolean = false) => {
+  // Estetik metin bloku ekleme fonksiyonu
+  const addTextBlock = (text: string, fontSize: number = 10, fontWeight: string = 'normal', isTitle: boolean = false, color: number[] = [0, 0, 0]) => {
     pdf.setFontSize(fontSize);
     pdf.setFont('helvetica', fontWeight);
+    pdf.setTextColor(color[0], color[1], color[2]);
     
     const lines = pdf.splitTextToSize(text, contentWidth);
-    const lineHeight = fontSize * 0.6; // More precise line height
-    const totalHeight = lines.length * lineHeight + (isTitle ? 10 : 5);
+    const lineHeight = fontSize * 0.65;
+    const totalHeight = lines.length * lineHeight + (isTitle ? 15 : 8);
     
-    // Always check before writing
-    smartPageBreak(totalHeight);
+    // Sayfa kontrolü
+    addNewPageIfNeeded(totalHeight);
+    
+    // Başlık için arka plan rengi
+    if (isTitle && fontSize > 11) {
+      pdf.setFillColor(245, 248, 250);
+      pdf.rect(margin - 5, yPosition - 5, contentWidth + 10, totalHeight - 5, 'F');
+    }
     
     pdf.text(lines, margin, yPosition);
     yPosition += totalHeight;
@@ -65,34 +76,53 @@ export const generatePreInfoPDF = (
     return lines.length;
   };
   
-  // Add spacing function
+  // Güvenli boşluk ekleme
   const addSpacing = (space: number) => {
-    if (yPosition + space > maxY) {
-      smartPageBreak(0, true);
+    if (checkNewPageNeeded(space)) {
+      addNewPageIfNeeded(0);
     } else {
       yPosition += space;
     }
   };
   
-  // Header
-  pdf.setFontSize(18);
+  // Dekoratif çizgi ekleme
+  const addLine = (color: number[] = [200, 200, 200]) => {
+    addNewPageIfNeeded(5);
+    pdf.setDrawColor(color[0], color[1], color[2]);
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 8;
+  };
+  
+  // Başlık - Estetik tasarım
+  addNewPageIfNeeded(50);
+  
+  // Ana başlık için arka plan
+  pdf.setFillColor(30, 41, 59);
+  pdf.rect(margin - 10, yPosition - 10, contentWidth + 20, 35, 'F');
+  
+  pdf.setFontSize(20);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('ÖN BİLGİLENDİRME FORMU', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 12;
+  pdf.setTextColor(255, 255, 255);
+  pdf.text('ÖN BİLGİLENDİRME FORMU', pageWidth / 2, yPosition + 8, { align: 'center' });
   
-  pdf.setFontSize(12);
+  pdf.setFontSize(11);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 25;
+  pdf.text('(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)', pageWidth / 2, yPosition + 20, { align: 'center' });
+  yPosition += 40;
   
-  // Date and IP info
+  // Dekoratif çizgi
+  addLine([59, 130, 246]);
+  addSpacing(5);
+  
+  // Tarih ve IP bilgileri - renkli
   const currentDate = new Date().toLocaleDateString('tr-TR');
-  addTextBlock(`Belge Tarihi: ${currentDate}`, 10);
-  addTextBlock(`IP Adresi: ${clientIP}`, 10);
-  addSpacing(10);
+  addTextBlock(`📅 Belge Tarihi: ${currentDate}`, 10, 'normal', false, [59, 130, 246]);
+  addTextBlock(`🌐 IP Adresi: ${clientIP}`, 10, 'normal', false, [59, 130, 246]);
+  addSpacing(15);
   
-  // Seller information section
-  addTextBlock('SATICI FİRMA BİLGİLERİ', 12, 'bold', true);
+  // Satıcı bilgileri bölümü
+  addTextBlock('🏢 SATICI FİRMA BİLGİLERİ', 14, 'bold', true, [30, 41, 59]);
   
   const sellerInfo = [
     'Ünvan: DoktorumOL Dijital Sağlık Hizmetleri',
@@ -112,8 +142,8 @@ export const generatePreInfoPDF = (
   
   addSpacing(5);
   
-  // Customer information section
-  addTextBlock('ALICI MÜŞTERİ BİLGİLERİ', 12, 'bold', true);
+  addLine([220, 220, 220]);
+  addTextBlock('👤 ALICI MÜŞTERİ BİLGİLERİ', 14, 'bold', true, [30, 41, 59]);
   
   const customerInfo = [
     `Ad Soyad: ${customerData.name} ${customerData.surname}`,
@@ -136,8 +166,8 @@ export const generatePreInfoPDF = (
   
   addSpacing(5);
   
-  // Product/Service information
-  addTextBlock('HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 12, 'bold', true);
+  addLine([220, 220, 220]);
+  addTextBlock('📋 HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 14, 'bold', true, [30, 41, 59]);
   
   const serviceInfo = [
     `Hizmet Adı: ${packageData.name}`,
@@ -157,8 +187,8 @@ export const generatePreInfoPDF = (
   
   addSpacing(10);
   
-  // Detailed terms and conditions
-  addTextBlock('DETAYLI HİZMET KOŞULLARI VE BİLGİLERİ', 12, 'bold', true);
+  addLine([220, 220, 220]);
+  addTextBlock('📜 DETAYLI HİZMET KOŞULLARI VE BİLGİLERİ', 14, 'bold', true, [30, 41, 59]);
   
   const detailedTerms = [
     '1. HİZMET TANIMI VE KAPSAMI:',
@@ -200,12 +230,21 @@ export const generatePreInfoPDF = (
     addTextBlock(term, 10);
   });
   
-  // Add new page for signature section
+  // İmza sayfası - estetik tasarım
   pdf.addPage();
-  yPosition = 30;
+  yPosition = 40;
   
-  // Signature section
-  addTextBlock('ONAY VE KABUL', 12, 'bold', true);
+  // İmza başlığı
+  pdf.setFillColor(34, 197, 94);
+  pdf.rect(margin - 10, yPosition - 10, contentWidth + 20, 30, 'F');
+  
+  pdf.setFontSize(18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(255, 255, 255);
+  pdf.text('✍️ ONAY VE KABUL', pageWidth / 2, yPosition + 5, { align: 'center' });
+  yPosition += 35;
+  
+  addLine([34, 197, 94]);
   
   const acceptanceText = [
     'Bu ön bilgilendirme formunda yer alan tüm bilgileri okudum, anladım ve kabul ediyorum. Ürün/hizmet bedeli, ödeme şekli, teslimat koşulları ve diğer tüm şartlar hakkında tam bilgi sahibi olduğumu beyan ederim.',
@@ -251,33 +290,44 @@ export const generateDistanceSalesPDF = (
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
   const pageHeight = pdf.internal.pageSize.height;
-  const margin = 20;
+  const margin = 25;
   const contentWidth = pageWidth - 2 * margin;
-  const safeBottomMargin = 30; // Safe zone from bottom
+  const safeBottomMargin = 40; // Daha büyük güvenli alan
   const maxY = pageHeight - safeBottomMargin;
-  let yPosition = 30;
+  let yPosition = 40;
   
-  // Smart page break function
-  const smartPageBreak = (neededHeight: number, forceBreak: boolean = false) => {
-    if (forceBreak || (yPosition + neededHeight > maxY)) {
+  // Gelişmiş sayfa kontrolü - kesin çözüm
+  const checkNewPageNeeded = (neededHeight: number) => {
+    return yPosition + neededHeight > maxY;
+  };
+  
+  const addNewPageIfNeeded = (neededHeight: number) => {
+    if (checkNewPageNeeded(neededHeight)) {
       pdf.addPage();
-      yPosition = 30;
+      yPosition = 40;
       return true;
     }
     return false;
   };
   
-  // Enhanced text adding function with perfect line height calculation
-  const addTextBlock = (text: string, fontSize: number = 10, fontWeight: string = 'normal', isTitle: boolean = false) => {
+  // Estetik metin bloku ekleme fonksiyonu
+  const addTextBlock = (text: string, fontSize: number = 10, fontWeight: string = 'normal', isTitle: boolean = false, color: number[] = [0, 0, 0]) => {
     pdf.setFontSize(fontSize);
     pdf.setFont('helvetica', fontWeight);
+    pdf.setTextColor(color[0], color[1], color[2]);
     
     const lines = pdf.splitTextToSize(text, contentWidth);
-    const lineHeight = fontSize * 0.6; // More precise line height
-    const totalHeight = lines.length * lineHeight + (isTitle ? 10 : 5);
+    const lineHeight = fontSize * 0.65;
+    const totalHeight = lines.length * lineHeight + (isTitle ? 15 : 8);
     
-    // Always check before writing
-    smartPageBreak(totalHeight);
+    // Sayfa kontrolü
+    addNewPageIfNeeded(totalHeight);
+    
+    // Başlık için arka plan rengi
+    if (isTitle && fontSize > 11) {
+      pdf.setFillColor(245, 248, 250);
+      pdf.rect(margin - 5, yPosition - 5, contentWidth + 10, totalHeight - 5, 'F');
+    }
     
     pdf.text(lines, margin, yPosition);
     yPosition += totalHeight;
@@ -285,38 +335,58 @@ export const generateDistanceSalesPDF = (
     return lines.length;
   };
   
-  // Add spacing function
+  // Güvenli boşluk ekleme
   const addSpacing = (space: number) => {
-    if (yPosition + space > maxY) {
-      smartPageBreak(0, true);
+    if (checkNewPageNeeded(space)) {
+      addNewPageIfNeeded(0);
     } else {
       yPosition += space;
     }
   };
   
-  // Header
-  pdf.setFontSize(18);
+  // Dekoratif çizgi ekleme
+  const addLine = (color: number[] = [200, 200, 200]) => {
+    addNewPageIfNeeded(5);
+    pdf.setDrawColor(color[0], color[1], color[2]);
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 8;
+  };
+  
+  // Başlık - Estetik tasarım
+  addNewPageIfNeeded(50);
+  
+  // Ana başlık için arka plan
+  pdf.setFillColor(139, 69, 19);
+  pdf.rect(margin - 10, yPosition - 10, contentWidth + 20, 35, 'F');
+  
+  pdf.setFontSize(20);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('MESAFELİ SATIŞ SÖZLEŞMESİ', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 12;
+  pdf.setTextColor(255, 255, 255);
+  pdf.text('MESAFELİ SATIŞ SÖZLEŞMESİ', pageWidth / 2, yPosition + 8, { align: 'center' });
   
-  pdf.setFontSize(12);
+  pdf.setFontSize(11);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Uyarınca)', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 25;
+  pdf.text('(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Uyarınca)', pageWidth / 2, yPosition + 20, { align: 'center' });
+  yPosition += 40;
   
-  // Date and IP info
+  // Dekoratif çizgi
+  addLine([197, 112, 42]);
+  addSpacing(5);
+  
+  // Tarih ve IP bilgileri - renkli
   const currentDate = new Date().toLocaleDateString('tr-TR');
-  addTextBlock(`Sözleşme Tarihi: ${currentDate}`, 10);
-  addTextBlock(`IP Adresi: ${clientIP}`, 10);
-  addTextBlock(`Sözleşme No: DOL-${Date.now()}`, 10);
-  addSpacing(10);
+  addTextBlock(`📅 Sözleşme Tarihi: ${currentDate}`, 10, 'normal', false, [197, 112, 42]);
+  addTextBlock(`🌐 IP Adresi: ${clientIP}`, 10, 'normal', false, [197, 112, 42]);
+  addTextBlock(`📄 Sözleşme No: DOL-${Date.now()}`, 10, 'normal', false, [197, 112, 42]);
+  addSpacing(15);
   
-  // Parties section - detailed
-  addTextBlock('SÖZLEŞME TARAFLARI', 12, 'bold', true);
+  // Taraflar bölümü - estetik
+  addLine([220, 220, 220]);
+  addTextBlock('🤝 SÖZLEŞME TARAFLARI', 14, 'bold', true, [139, 69, 19]);
   
-  // Seller information
-  addTextBlock('SATICI:', 11, 'bold', true);
+  // Satıcı bilgileri
+  addTextBlock('🏢 SATICI:', 12, 'bold', true, [30, 41, 59]);
   
   const sellerDetails = [
     'Ünvan: DoktorumOL Dijital Sağlık Hizmetleri',
@@ -338,8 +408,9 @@ export const generateDistanceSalesPDF = (
   
   addSpacing(5);
   
-  // Buyer information
-  addTextBlock('ALICI:', 11, 'bold', true);
+  // Alıcı bilgileri
+  addLine([220, 220, 220]);
+  addTextBlock('👤 ALICI:', 12, 'bold', true, [30, 41, 59]);
   
   const buyerDetails = [
     `Ad Soyad: ${customerData.name} ${customerData.surname}`,
@@ -363,8 +434,9 @@ export const generateDistanceSalesPDF = (
   
   addSpacing(10);
   
-  // Contract subject and details
-  addTextBlock('SÖZLEŞME KONUSU VE DETAYLARI', 12, 'bold', true);
+  // Sözleşme konusu
+  addLine([220, 220, 220]);
+  addTextBlock('📋 SÖZLEŞME KONUSU VE DETAYLARI', 14, 'bold', true, [139, 69, 19]);
   
   const contractDetails = [
     `Hizmet Adı: ${packageData.name}`,
@@ -389,8 +461,9 @@ export const generateDistanceSalesPDF = (
   
   addSpacing(10);
   
-  // Comprehensive terms and conditions
-  addTextBlock('GENEL ŞARTLAR VE KOŞULLAR', 12, 'bold', true);
+  // Genel şartlar
+  addLine([220, 220, 220]);
+  addTextBlock('📜 GENEL ŞARTLAR VE KOŞULLAR', 14, 'bold', true, [139, 69, 19]);
   
   const comprehensiveTerms = [
     '1. SÖZLEŞME HÜKÜMLERI VE YASAL DAYANAK',
@@ -453,12 +526,21 @@ export const generateDistanceSalesPDF = (
     addTextBlock(term, 10);
   });
   
-  // Add new page for signature section
-  pdf.addPage();
-  yPosition = 30;
+  // İmza sayfası - estetik tasarım
+  pdf.addPage();  
+  yPosition = 40;
   
-  // Signature section
-  addTextBlock('TARAF İMZALARI VE ONAYLAR', 12, 'bold', true);
+  // İmza başlığı
+  pdf.setFillColor(139, 69, 19);
+  pdf.rect(margin - 10, yPosition - 10, contentWidth + 20, 30, 'F');
+  
+  pdf.setFontSize(18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(255, 255, 255);
+  pdf.text('✍️ TARAF İMZALARI VE ONAYLAR', pageWidth / 2, yPosition + 5, { align: 'center' });
+  yPosition += 35;
+  
+  addLine([139, 69, 19]);
   
   const signatureSection = [
     'Bu sözleşmeyi okudum, anladım ve kabul ediyorum. Sözleşme şartlarının tamamı hakkında bilgi sahibi olduğumu, cayma hakkım konusunda bilgilendirildiğimi beyan ederim.',
