@@ -38,16 +38,22 @@ serve(async (req) => {
     // Tutar formatını düzelt - decimal olmadan
     const packagePrice = parseFloat("2998").toFixed(2);
     
-    // CDN için gelişmiş IP algılama
+    // İyzico için gerçek IP adresi - CDN'den gerçek IP'yi al
     const getClientIP = () => {
+      // Önce Cloudflare IP'sini kontrol et
       const cfIP = req.headers.get("cf-connecting-ip");
-      const xForwardedFor = req.headers.get("x-forwarded-for");
-      const xRealIP = req.headers.get("x-real-ip");
-      
       if (cfIP) return cfIP;
+      
+      // X-Forwarded-For'dan gerçek IP'yi al  
+      const xForwardedFor = req.headers.get("x-forwarded-for");
       if (xForwardedFor) return xForwardedFor.split(',')[0].trim();
+      
+      // X-Real-IP'yi kontrol et
+      const xRealIP = req.headers.get("x-real-ip");
       if (xRealIP) return xRealIP;
-      return "127.0.0.1";
+      
+      // Son çare olarak sitenin gerçek IP'sini kullan
+      return "194.59.166.153";
     };
     
     // İyzico API için doğru format
