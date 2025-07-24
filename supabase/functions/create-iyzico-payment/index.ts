@@ -12,17 +12,29 @@ serve(async (req) => {
   }
 
   try {
-    const { packageType, customerData, subscriptionReferenceCode } = await req.json();
+    console.log('Edge function başladı');
+    
+    const requestBody = await req.json();
+    console.log('Gelen request body:', JSON.stringify(requestBody, null, 2));
+    
+    const { packageType, customerData, subscriptionReferenceCode } = requestBody;
 
     console.log('İyzico ödeme isteği:', {
       packageType,
       subscriptionReferenceCode,
-      customerEmail: customerData.email
+      customerEmail: customerData?.email
     });
 
     // İyzico API anahtarlarını al
     const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY");
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
+
+    console.log('API Key kontrolü:', {
+      hasApiKey: !!IYZICO_API_KEY,
+      hasSecretKey: !!IYZICO_SECRET_KEY,
+      apiKeyLength: IYZICO_API_KEY?.length,
+      secretKeyLength: IYZICO_SECRET_KEY?.length
+    });
 
     if (!IYZICO_API_KEY || !IYZICO_SECRET_KEY) {
       throw new Error("İyzico API anahtarları bulunamadı");
