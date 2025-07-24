@@ -123,13 +123,13 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico resmi HMAC SHA256 authorization - resmi dokümantasyona göre
-    async function createHMACSHA256(data: string, secret: string): Promise<string> {
+    // İyzico basit SHA1 authorization (eski format) - daha stabil
+    async function createHMACSHA1(data: string, secret: string): Promise<string> {
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         "raw",
         encoder.encode(secret),
-        { name: "HMAC", hash: "SHA-256" },
+        { name: "HMAC", hash: "SHA-1" },
         false,
         ["sign"]
       );
@@ -137,29 +137,25 @@ serve(async (req) => {
       return btoa(String.fromCharCode(...new Uint8Array(signature)));
     }
 
-    // İyzico resmi authorization formatı
-    const requestBodyString = JSON.stringify(requestBody);
-    const encryptedData = await createHMACSHA256(requestBodyString, IYZICO_SECRET_KEY);
-    const authString = `apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${encryptedData}`;
-    const base64EncodedAuthorization = btoa(authString);
+    // Basit hash string - sadece apiKey + random + secretKey
+    const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
+    const hashBase64 = await createHMACSHA1(hashString, IYZICO_SECRET_KEY);
 
-    console.log('Authorization bilgileri:', {
-      apiKeyLength: IYZICO_API_KEY?.length,
-      secretKeyLength: IYZICO_SECRET_KEY?.length,
-      randomString,
-      authStringLength: authString.length
+    console.log('Hash bilgileri:', {
+      hashStringLength: hashString.length,
+      hashBase64Length: hashBase64.length
     });
 
-    // İyzico checkout form initialize isteği - resmi format
-    const iyzResponse = await fetch(`${IYZICO_API_URL}/payment/iyzipos/checkoutform/initialize/auth/ecom`, {
+    // İyzico eski checkout form initialize isteği - stabil format
+    const iyzResponse = await fetch(`${IYZICO_API_URL}/payment/iyzipos/checkoutform/initialize`, {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": `IYZWSv2 ${base64EncodedAuthorization}`,
+        "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
         "x-iyzi-rnd": randomString
       },
-      body: requestBodyString
+      body: JSON.stringify(requestBody)
     });
 
     console.log('İyzico HTTP durum kodu:', iyzResponse.status);
