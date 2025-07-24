@@ -35,18 +35,33 @@ serve(async (req) => {
     // Canlı ortam için production URL'si kullan
     const IYZICO_API_URL = "https://api.iyzipay.com";
     
+    // Tutar formatını düzelt - decimal olmadan
+    const packagePrice = parseFloat("2998").toFixed(2);
+    
+    // CDN için gelişmiş IP algılama
+    const getClientIP = () => {
+      const cfIP = req.headers.get("cf-connecting-ip");
+      const xForwardedFor = req.headers.get("x-forwarded-for");
+      const xRealIP = req.headers.get("x-real-ip");
+      
+      if (cfIP) return cfIP;
+      if (xForwardedFor) return xForwardedFor.split(',')[0].trim();
+      if (xRealIP) return xRealIP;
+      return "127.0.0.1";
+    };
+    
     // İyzico API için doğru format
     const requestBody = {
       locale: "tr",
       conversationId: conversationId,
-      price: "2998.00",
-      paidPrice: "2998.00",
+      price: packagePrice,
+      paidPrice: packagePrice,
       currency: "TRY",
-      installment: "1",
+      installment: 1,
       basketId: conversationId,
       paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
-      callbackUrl: "https://doktorumol.com.tr/",
+      callbackUrl: "https://doktorumol.com.tr/payment-success",
       buyer: {
         id: "BY789",
         name: customerData.name || "Test",
@@ -57,7 +72,7 @@ serve(async (req) => {
         lastLoginDate: "2015-10-05 12:43:35",
         registrationDate: "2013-04-21 15:12:09",
         registrationAddress: customerData.address || "Test Address",
-        ip: req.headers.get("x-forwarded-for")?.split(',')[0] || req.headers.get("cf-connecting-ip") || "127.0.0.1",
+        ip: getClientIP(),
         city: customerData.city || "İstanbul",
         country: "Turkey",
         zipCode: customerData.zipCode || "34734"
@@ -83,7 +98,7 @@ serve(async (req) => {
           category1: "Danışmanlık",
           category2: "Online",
           itemType: "VIRTUAL",
-          price: "2998.00"
+          price: packagePrice
         }
       ]
     };
