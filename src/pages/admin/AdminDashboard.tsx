@@ -175,8 +175,7 @@ const AdminDashboard = () => {
       shadowColor: "shadow-teal-500/20",
       route: "/divan_paneli/customers",
       buttonText: "Müşterileri Görüntüle",
-      adminOnly: false,
-      staffOnly: true
+      adminOnly: true
     },
     {
       title: "Yorum Yönetimi",
