@@ -18,6 +18,7 @@ export function HorizontalNavigation() {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentSession, setCurrentSession] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [authInitialized, setAuthInitialized] = useState(false);
   const isMobile = useIsMobile();
@@ -56,6 +57,7 @@ export function HorizontalNavigation() {
         
         // If user is a specialist, get their profile picture and name
         if (profile.role === 'specialist') {
+          console.log('Fetching specialist profile for user:', userId);
           const { data: specialistProfile, error: specialistError } = await supabase
             .from('specialists')
             .select('profile_picture, name')
@@ -67,6 +69,7 @@ export function HorizontalNavigation() {
             // Fallback: try to find by email
             const currentUser = await supabase.auth.getUser();
             if (currentUser.data.user?.email) {
+              console.log('Trying to find specialist by email:', currentUser.data.user.email);
               const { data: specialistByEmail } = await supabase
                 .from('specialists')
                 .select('profile_picture, name')
@@ -74,7 +77,11 @@ export function HorizontalNavigation() {
                 .maybeSingle();
               
               if (specialistByEmail) {
+                console.log('Found specialist by email:', specialistByEmail);
                 setUserProfile(specialistByEmail);
+              } else {
+                console.log('No specialist found by email');
+                setUserProfile(null);
               }
             }
             return;
@@ -83,13 +90,18 @@ export function HorizontalNavigation() {
           if (specialistProfile) {
             console.log('Specialist profile found:', specialistProfile);
             setUserProfile(specialistProfile);
+          } else {
+            console.log('No specialist profile found');
+            setUserProfile(null);
           }
         } else {
           // Clear specialist profile if not a specialist
+          console.log('User is not a specialist, clearing profile');
           setUserProfile(null);
         }
       } else {
         // No profile found, set defaults
+        console.log('No user profile found, setting defaults');
         setUserRole('user');
         setUserProfile(null);
       }
@@ -103,88 +115,94 @@ export function HorizontalNavigation() {
   useEffect(() => {
     let mounted = true;
 
-    const initializeAuth = async () => {
-      try {
-        console.log('Initializing auth...');
-        setIsLoading(true);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
         
-        // Get current session
+        if (!mounted) return;
+        
+        setCurrentSession(session);
+        setCurrentUser(session?.user ?? null);
+        setIsLoggedIn(!!session?.user);
+        
+        if (event === 'SIGNED_OUT') {
+          setUserRole(null);
+          setUserProfile(null);
+          setIsLoading(false);
+          setAuthInitialized(true);
+        } else if (session?.user) {
+          setIsLoading(true);
+          // Defer Supabase calls with setTimeout to prevent deadlock
+          setTimeout(() => {
+            if (mounted) {
+              fetchUserProfile(session.user.id).finally(() => {
+                if (mounted) {
+                  setIsLoading(false);
+                  setAuthInitialized(true);
+                }
+              });
+            }
+          }, 0);
+        } else {
+          setUserRole(null);
+          setUserProfile(null);
+          setIsLoading(false);
+          setAuthInitialized(true);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    const initializeSession = async () => {
+      try {
+        console.log('Initializing session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Session error:', error);
           if (mounted) {
+            setCurrentSession(null);
+            setCurrentUser(null);
             setIsLoggedIn(false);
             setUserRole(null);
             setUserProfile(null);
-            setCurrentUser(null);
             setIsLoading(false);
             setAuthInitialized(true);
           }
           return;
         }
-        
-        if (session?.user && mounted) {
-          console.log('Session found for user:', session.user.email);
-          setCurrentUser(session.user);
-          setIsLoggedIn(true);
-          await fetchUserProfile(session.user.id);
-        } else if (mounted) {
-          console.log('No session found');
-          setIsLoggedIn(false);
-          setUserRole(null);
-          setUserProfile(null);
-          setCurrentUser(null);
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
+
         if (mounted) {
-          setIsLoggedIn(false);
-          setUserRole(null);
-          setUserProfile(null);
-          setCurrentUser(null);
-        }
-      } finally {
-        if (mounted) {
+          setCurrentSession(session);
+          setCurrentUser(session?.user ?? null);
+          setIsLoggedIn(!!session?.user);
+          
+          if (session?.user) {
+            setIsLoading(true);
+            await fetchUserProfile(session.user.id);
+          } else {
+            setUserRole(null);
+            setUserProfile(null);
+          }
           setIsLoading(false);
           setAuthInitialized(true);
-          console.log('Auth initialization completed');
+        }
+      } catch (error) {
+        console.error('Session initialization error:', error);
+        if (mounted) {
+          setCurrentSession(null);
+          setCurrentUser(null);
+          setIsLoggedIn(false);
+          setUserRole(null);
+          setUserProfile(null);
+          setIsLoading(false);
+          setAuthInitialized(true);
         }
       }
     };
 
-    // Listen for auth changes first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
-        
-        if (!mounted) return;
-        
-        if (event === 'SIGNED_OUT') {
-          setIsLoggedIn(false);
-          setUserRole(null);
-          setUserProfile(null);
-          setCurrentUser(null);
-          setIsLoading(false);
-          setAuthInitialized(true);
-        } else if (session?.user) {
-          setCurrentUser(session.user);
-          setIsLoggedIn(true);
-          setIsLoading(true);
-          await fetchUserProfile(session.user.id);
-          setIsLoading(false);
-        }
-        
-        // Always set auth as initialized after any auth state change
-        if (mounted) {
-          setAuthInitialized(true);
-          console.log('Auth state changed and initialized');
-        }
-      }
-    );
-
-    // Then initialize auth
-    initializeAuth();
+    initializeSession();
 
     return () => {
       mounted = false;
