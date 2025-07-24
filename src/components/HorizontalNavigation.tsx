@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, X } from "lucide-react";
 import DoctorRegistrationForm from "./DoctorRegistrationForm";
+import { AdminTopBar } from "./AdminTopBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function HorizontalNavigation() {
@@ -265,8 +266,10 @@ export function HorizontalNavigation() {
   };
 
   return (
-    <div className="bg-white shadow-sm border-b relative">
-      <div className="container mx-auto px-4 py-3">
+    <>
+      <AdminTopBar userRole={userRole} />
+      <div className="bg-white shadow-sm border-b relative">
+        <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -449,12 +452,13 @@ export function HorizontalNavigation() {
             </div>
           </div>
         )}
+        </div>
       </div>
 
-      <DoctorRegistrationForm 
-        isOpen={showRegistrationForm} 
-        onClose={() => setShowRegistrationForm(false)} 
-      />
-    </div>
-  );
-}
+      <DoctorRegistrationForm
+          isOpen={showRegistrationForm} 
+          onClose={() => setShowRegistrationForm(false)} 
+        />
+      </>
+    );
+  }
