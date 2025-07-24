@@ -111,7 +111,7 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico için HMAC SHA-1 hash hesaplama
+    // İyzico için doğru hash hesaplama - resmi dokümantasyon formatı
     async function createAuthorizationHash(data: string): Promise<string> {
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
@@ -125,9 +125,16 @@ serve(async (req) => {
       return btoa(String.fromCharCode(...new Uint8Array(signature)));
     }
 
-    // İyzico için hash string - basit format
-    const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
-    const hashBase64 = await createAuthorizationHash(hashString);
+    // İyzico resmi hash formatı: [locale=tr&conversationId=123&price=1.0]
+    const hashParams = [
+      `locale=${requestBody.locale}`,
+      `conversationId=${requestBody.conversationId}`, 
+      `price=${requestBody.price}`
+    ].join('&');
+    
+    const hashString = `[${hashParams}]`;
+    const authString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + hashString;
+    const hashBase64 = await createAuthorizationHash(authString);
 
     console.log('Hash bilgileri:', {
       apiKeyLength: IYZICO_API_KEY?.length,
