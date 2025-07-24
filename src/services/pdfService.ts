@@ -33,12 +33,13 @@ export const generatePreInfoPDF = (
   const pageHeight = pdf.internal.pageSize.height;
   const margin = 20;
   const contentWidth = pageWidth - 2 * margin;
-  const maxY = pageHeight - 40; // Safe margin from bottom
+  const safeBottomMargin = 30; // Safe zone from bottom
+  const maxY = pageHeight - safeBottomMargin;
   let yPosition = 30;
   
-  // Helper function to check if new page is needed
-  const checkNewPage = (neededHeight: number) => {
-    if (yPosition + neededHeight > maxY) {
+  // Smart page break function
+  const smartPageBreak = (neededHeight: number, forceBreak: boolean = false) => {
+    if (forceBreak || (yPosition + neededHeight > maxY)) {
       pdf.addPage();
       yPosition = 30;
       return true;
@@ -46,19 +47,31 @@ export const generatePreInfoPDF = (
     return false;
   };
   
-  // Helper function to add text with proper line wrapping
-  const addText = (text: string, fontSize: number = 10, fontWeight: string = 'normal') => {
+  // Enhanced text adding function with perfect line height calculation
+  const addTextBlock = (text: string, fontSize: number = 10, fontWeight: string = 'normal', isTitle: boolean = false) => {
     pdf.setFontSize(fontSize);
     pdf.setFont('helvetica', fontWeight);
     
     const lines = pdf.splitTextToSize(text, contentWidth);
-    const lineHeight = fontSize * 0.5;
-    const totalHeight = lines.length * lineHeight + 5;
+    const lineHeight = fontSize * 0.6; // More precise line height
+    const totalHeight = lines.length * lineHeight + (isTitle ? 10 : 5);
     
-    checkNewPage(totalHeight);
+    // Always check before writing
+    smartPageBreak(totalHeight);
     
     pdf.text(lines, margin, yPosition);
     yPosition += totalHeight;
+    
+    return lines.length;
+  };
+  
+  // Add spacing function
+  const addSpacing = (space: number) => {
+    if (yPosition + space > maxY) {
+      smartPageBreak(0, true);
+    } else {
+      yPosition += space;
+    }
   };
   
   // Header
@@ -74,12 +87,12 @@ export const generatePreInfoPDF = (
   
   // Date and IP info
   const currentDate = new Date().toLocaleDateString('tr-TR');
-  addText(`Belge Tarihi: ${currentDate}`, 10);
-  addText(`IP Adresi: ${clientIP}`, 10);
-  yPosition += 10;
+  addTextBlock(`Belge Tarihi: ${currentDate}`, 10);
+  addTextBlock(`IP Adresi: ${clientIP}`, 10);
+  addSpacing(10);
   
   // Seller information section
-  addText('SATICI FİRMA BİLGİLERİ', 12, 'bold');
+  addTextBlock('SATICI FİRMA BİLGİLERİ', 12, 'bold', true);
   
   const sellerInfo = [
     'Ünvan: DoktorumOL Dijital Sağlık Hizmetleri',
@@ -94,13 +107,13 @@ export const generatePreInfoPDF = (
   ];
   
   sellerInfo.forEach((info) => {
-    addText(info, 10);
+    addTextBlock(info, 10);
   });
   
-  yPosition += 5;
+  addSpacing(5);
   
   // Customer information section
-  addText('ALICI MÜŞTERİ BİLGİLERİ', 12, 'bold');
+  addTextBlock('ALICI MÜŞTERİ BİLGİLERİ', 12, 'bold', true);
   
   const customerInfo = [
     `Ad Soyad: ${customerData.name} ${customerData.surname}`,
@@ -118,13 +131,13 @@ export const generatePreInfoPDF = (
   }
   
   customerInfo.forEach((info) => {
-    addText(info, 10);
+    addTextBlock(info, 10);
   });
   
-  yPosition += 5;
+  addSpacing(5);
   
   // Product/Service information
-  addText('HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 12, 'bold');
+  addTextBlock('HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 12, 'bold', true);
   
   const serviceInfo = [
     `Hizmet Adı: ${packageData.name}`,
@@ -139,13 +152,13 @@ export const generatePreInfoPDF = (
   ];
   
   serviceInfo.forEach((info) => {
-    addText(info, 10);
+    addTextBlock(info, 10);
   });
   
-  yPosition += 10;
+  addSpacing(10);
   
   // Detailed terms and conditions
-  addText('DETAYLI HİZMET KOŞULLARI VE BİLGİLERİ', 12, 'bold');
+  addTextBlock('DETAYLI HİZMET KOŞULLARI VE BİLGİLERİ', 12, 'bold', true);
   
   const detailedTerms = [
     '1. HİZMET TANIMI VE KAPSAMI:',
@@ -181,10 +194,10 @@ export const generatePreInfoPDF = (
   
   detailedTerms.forEach((term) => {
     if (term === '') {
-      yPosition += 3;
+      addSpacing(3);
       return;
     }
-    addText(term, 10);
+    addTextBlock(term, 10);
   });
   
   // Add new page for signature section
@@ -192,7 +205,7 @@ export const generatePreInfoPDF = (
   yPosition = 30;
   
   // Signature section
-  addText('ONAY VE KABUL', 12, 'bold');
+  addTextBlock('ONAY VE KABUL', 12, 'bold', true);
   
   const acceptanceText = [
     'Bu ön bilgilendirme formunda yer alan tüm bilgileri okudum, anladım ve kabul ediyorum. Ürün/hizmet bedeli, ödeme şekli, teslimat koşulları ve diğer tüm şartlar hakkında tam bilgi sahibi olduğumu beyan ederim.',
@@ -219,10 +232,10 @@ export const generatePreInfoPDF = (
   
   acceptanceText.forEach((text) => {
     if (text === '') {
-      yPosition += 3;
+      addSpacing(3);
       return;
     }
-    addText(text, 10);
+    addTextBlock(text, 10);
   });
   
   return pdf;
@@ -240,12 +253,13 @@ export const generateDistanceSalesPDF = (
   const pageHeight = pdf.internal.pageSize.height;
   const margin = 20;
   const contentWidth = pageWidth - 2 * margin;
-  const maxY = pageHeight - 40; // Safe margin from bottom
+  const safeBottomMargin = 30; // Safe zone from bottom
+  const maxY = pageHeight - safeBottomMargin;
   let yPosition = 30;
   
-  // Helper function to check if new page is needed
-  const checkNewPage = (neededHeight: number) => {
-    if (yPosition + neededHeight > maxY) {
+  // Smart page break function
+  const smartPageBreak = (neededHeight: number, forceBreak: boolean = false) => {
+    if (forceBreak || (yPosition + neededHeight > maxY)) {
       pdf.addPage();
       yPosition = 30;
       return true;
@@ -253,19 +267,31 @@ export const generateDistanceSalesPDF = (
     return false;
   };
   
-  // Helper function to add text with proper line wrapping
-  const addText = (text: string, fontSize: number = 10, fontWeight: string = 'normal') => {
+  // Enhanced text adding function with perfect line height calculation
+  const addTextBlock = (text: string, fontSize: number = 10, fontWeight: string = 'normal', isTitle: boolean = false) => {
     pdf.setFontSize(fontSize);
     pdf.setFont('helvetica', fontWeight);
     
     const lines = pdf.splitTextToSize(text, contentWidth);
-    const lineHeight = fontSize * 0.5;
-    const totalHeight = lines.length * lineHeight + 5;
+    const lineHeight = fontSize * 0.6; // More precise line height
+    const totalHeight = lines.length * lineHeight + (isTitle ? 10 : 5);
     
-    checkNewPage(totalHeight);
+    // Always check before writing
+    smartPageBreak(totalHeight);
     
     pdf.text(lines, margin, yPosition);
     yPosition += totalHeight;
+    
+    return lines.length;
+  };
+  
+  // Add spacing function
+  const addSpacing = (space: number) => {
+    if (yPosition + space > maxY) {
+      smartPageBreak(0, true);
+    } else {
+      yPosition += space;
+    }
   };
   
   // Header
@@ -281,16 +307,16 @@ export const generateDistanceSalesPDF = (
   
   // Date and IP info
   const currentDate = new Date().toLocaleDateString('tr-TR');
-  addText(`Sözleşme Tarihi: ${currentDate}`, 10);
-  addText(`IP Adresi: ${clientIP}`, 10);
-  addText(`Sözleşme No: DOL-${Date.now()}`, 10);
-  yPosition += 10;
+  addTextBlock(`Sözleşme Tarihi: ${currentDate}`, 10);
+  addTextBlock(`IP Adresi: ${clientIP}`, 10);
+  addTextBlock(`Sözleşme No: DOL-${Date.now()}`, 10);
+  addSpacing(10);
   
   // Parties section - detailed
-  addText('SÖZLEŞME TARAFLARI', 12, 'bold');
+  addTextBlock('SÖZLEŞME TARAFLARI', 12, 'bold', true);
   
   // Seller information
-  addText('SATICI:', 11, 'bold');
+  addTextBlock('SATICI:', 11, 'bold', true);
   
   const sellerDetails = [
     'Ünvan: DoktorumOL Dijital Sağlık Hizmetleri',
@@ -307,13 +333,13 @@ export const generateDistanceSalesPDF = (
   ];
   
   sellerDetails.forEach((detail) => {
-    addText(`  ${detail}`, 10);
+    addTextBlock(`  ${detail}`, 10);
   });
   
-  yPosition += 5;
+  addSpacing(5);
   
   // Buyer information
-  addText('ALICI:', 11, 'bold');
+  addTextBlock('ALICI:', 11, 'bold', true);
   
   const buyerDetails = [
     `Ad Soyad: ${customerData.name} ${customerData.surname}`,
@@ -332,13 +358,13 @@ export const generateDistanceSalesPDF = (
   }
   
   buyerDetails.forEach((detail) => {
-    addText(`  ${detail}`, 10);
+    addTextBlock(`  ${detail}`, 10);
   });
   
-  yPosition += 10;
+  addSpacing(10);
   
   // Contract subject and details
-  addText('SÖZLEŞME KONUSU VE DETAYLARI', 12, 'bold');
+  addTextBlock('SÖZLEŞME KONUSU VE DETAYLARI', 12, 'bold', true);
   
   const contractDetails = [
     `Hizmet Adı: ${packageData.name}`,
@@ -358,13 +384,13 @@ export const generateDistanceSalesPDF = (
   ];
   
   contractDetails.forEach((detail) => {
-    addText(detail, 10);
+    addTextBlock(detail, 10);
   });
   
-  yPosition += 10;
+  addSpacing(10);
   
   // Comprehensive terms and conditions
-  addText('GENEL ŞARTLAR VE KOŞULLAR', 12, 'bold');
+  addTextBlock('GENEL ŞARTLAR VE KOŞULLAR', 12, 'bold', true);
   
   const comprehensiveTerms = [
     '1. SÖZLEŞME HÜKÜMLERI VE YASAL DAYANAK',
@@ -380,7 +406,7 @@ export const generateDistanceSalesPDF = (
     'Alıcı, sözleşme tarihinden itibaren 14 (on dört) gün içerisinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin bu sözleşmeden cayabilir. Cayma hakkının kullanılması için bu süre içinde satıcıya yazılı bildirim yapılması yeterlidir. Cayma bildirimi e-posta, faks veya posta yoluyla yapılabilir.',
     '',
     '5. CAYMA HAKKININ SONUÇLARI',
-    'Cayma hakkının kullanılması halinde, alıcı tarafından yapılan ödemeler cayma bildiriminin alındığı tarihten itibaren en geç 10 (on) gün içerisinde iade edilir. İade, alıcının ödeme yaptığı araçla aynı yöntemle yapılır. Cayma hakkı kullanıldıktan sonra hizmet erişimi derhال sonlandırılır.',
+    'Cayma hakkının kullanılması halinde, alıcı tarafından yapılan ödemeler cayma bildiriminin alındığı tarihten itibaren en geç 10 (on) gün içerisinde iade edilir. İade, alıcının ödeme yaptığı araçla aynı yöntemle yapılır. Cayma hakkı kullanıldıktan sonra hizmet erişimi derhal sonlandırılır.',
     '',
     '6. HİZMET BAŞLATILMASI VE AKTİVASYON',
     'Hizmet, ödeme onayının alınmasından sonra en geç 24 saat içerisinde aktifleştirilir. Alıcıya hesap bilgileri ve giriş detayları ayrı bir e-posta ile gönderilir. Platform kullanımı için güncel internet tarayıcısı ve kararlı internet bağlantısı gereklidir.',
@@ -421,10 +447,10 @@ export const generateDistanceSalesPDF = (
   
   comprehensiveTerms.forEach((term) => {
     if (term === '') {
-      yPosition += 3;
+      addSpacing(3);
       return;
     }
-    addText(term, 10);
+    addTextBlock(term, 10);
   });
   
   // Add new page for signature section
@@ -432,7 +458,7 @@ export const generateDistanceSalesPDF = (
   yPosition = 30;
   
   // Signature section
-  addText('TARAF İMZALARI VE ONAYLAR', 12, 'bold');
+  addTextBlock('TARAF İMZALARI VE ONAYLAR', 12, 'bold', true);
   
   const signatureSection = [
     'Bu sözleşmeyi okudum, anladım ve kabul ediyorum. Sözleşme şartlarının tamamı hakkında bilgi sahibi olduğumu, cayma hakkım konusunda bilgilendirildiğimi beyan ederim.',
@@ -469,10 +495,10 @@ export const generateDistanceSalesPDF = (
   
   signatureSection.forEach((text) => {
     if (text === '') {
-      yPosition += 3;
+      addSpacing(3);
       return;
     }
-    addText(text, 10);
+    addTextBlock(text, 10);
   });
   
   return pdf;
