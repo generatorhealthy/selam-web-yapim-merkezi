@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
+import CookieConsent from "@/components/CookieConsent";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -75,6 +76,7 @@ function App() {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <CookieConsent />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/hakkimizda" element={<About />} />
