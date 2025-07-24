@@ -27,7 +27,19 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
 
-  // Loading durumu kaldırıldı - direkt render et
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white/95 backdrop-blur-lg p-10 rounded-3xl shadow-2xl text-center border border-blue-100/50">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <Sparkles className="w-10 h-10 text-blue-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Yükleniyor...</h2>
+          <p className="text-gray-600">Panel bilgileri alınıyor</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!userProfile || !['admin', 'staff', 'legal'].includes(userProfile.role)) {
     return (
