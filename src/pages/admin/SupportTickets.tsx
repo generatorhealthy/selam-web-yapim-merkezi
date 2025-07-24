@@ -349,7 +349,7 @@ const SupportTickets = () => {
                 {ticket.admin_response && (
                   <CardContent>
                     <div className="bg-blue-50 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-900 mb-2">Admin Cevabı:</h4>
+                      <h4 className="font-medium text-blue-900 mb-2">Doktorum Ol:</h4>
                       <p className="text-blue-800 text-sm">{ticket.admin_response}</p>
                       {ticket.resolved_at && (
                         <p className="text-xs text-blue-600 mt-2">
