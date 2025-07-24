@@ -40,6 +40,7 @@ const DoctorDashboard = () => {
     const initializeAuth = async () => {
       try {
         console.log('Doctor dashboard auth check...');
+        setIsLoading(true);
         
         // Get current session
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -50,7 +51,7 @@ const DoctorDashboard = () => {
           return;
         }
         
-        if (!session) {
+        if (!session?.user) {
           console.log('No session found');
           if (mounted) setIsLoading(false);
           return;
@@ -63,7 +64,7 @@ const DoctorDashboard = () => {
           .from('specialists')
           .select('*')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (specialist && !specialistError) {
           console.log('Specialist found by user_id:', specialist);
@@ -79,20 +80,27 @@ const DoctorDashboard = () => {
             .from('specialists')
             .select('*')
             .eq('email', session.user.email)
-            .single();
+            .maybeSingle();
 
           if (specialistByEmail && !emailError) {
             console.log('Specialist found by email:', specialistByEmail);
             if (mounted) {
               setDoctor(specialistByEmail);
               await fetchAppointments(specialistByEmail.id);
+              await fetchSupportTickets(specialistByEmail.id);
             }
           } else {
             console.log('No specialist profile found');
+            if (mounted) {
+              setDoctor(null);
+            }
           }
         }
       } catch (error) {
         console.error('Auth check error:', error);
+        if (mounted) {
+          setDoctor(null);
+        }
       } finally {
         if (mounted) {
           setIsLoading(false);
@@ -100,25 +108,30 @@ const DoctorDashboard = () => {
       }
     };
 
-    // Initialize auth
-    initializeAuth();
-
-    // Listen for auth changes
+    // Listen for auth changes first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Doctor dashboard auth state change:', event);
         
+        if (!mounted) return;
+        
         if (event === 'SIGNED_OUT') {
-          if (mounted) {
-            setDoctor(null);
-            setAppointments([]);
-          }
+          setDoctor(null);
+          setAppointments([]);
+          setSupportTickets([]);
+          setIsLoading(false);
         } else if (event === 'SIGNED_IN' && session) {
           // Re-initialize when signed in
-          initializeAuth();
+          await initializeAuth();
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          // Maintain current state on token refresh
+          console.log('Token refreshed, maintaining current state');
         }
       }
     );
+
+    // Initialize auth
+    initializeAuth();
 
     return () => {
       mounted = false;

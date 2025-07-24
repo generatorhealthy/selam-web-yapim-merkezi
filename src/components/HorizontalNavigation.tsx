@@ -42,10 +42,11 @@ export function HorizontalNavigation() {
         .from('user_profiles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
         
       if (profileError) {
         console.log('Profile fetch error:', profileError);
+        setUserRole('user'); // Default fallback
         return;
       }
         
@@ -59,10 +60,23 @@ export function HorizontalNavigation() {
             .from('specialists')
             .select('profile_picture, name')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
           
           if (specialistError) {
             console.log('Specialist fetch error:', specialistError);
+            // Fallback: try to find by email
+            const currentUser = await supabase.auth.getUser();
+            if (currentUser.data.user?.email) {
+              const { data: specialistByEmail } = await supabase
+                .from('specialists')
+                .select('profile_picture, name')
+                .eq('email', currentUser.data.user.email)
+                .maybeSingle();
+              
+              if (specialistByEmail) {
+                setUserProfile(specialistByEmail);
+              }
+            }
             return;
           }
           
@@ -70,10 +84,19 @@ export function HorizontalNavigation() {
             console.log('Specialist profile found:', specialistProfile);
             setUserProfile(specialistProfile);
           }
+        } else {
+          // Clear specialist profile if not a specialist
+          setUserProfile(null);
         }
+      } else {
+        // No profile found, set defaults
+        setUserRole('user');
+        setUserProfile(null);
       }
     } catch (error) {
       console.log('Profile fetch error:', error);
+      setUserRole('user');
+      setUserProfile(null);
     }
   };
 
@@ -83,12 +106,22 @@ export function HorizontalNavigation() {
     const initializeAuth = async () => {
       try {
         console.log('Initializing auth...');
+        setIsLoading(true);
         
         // Get current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Session error:', error);
+          if (mounted) {
+            setIsLoggedIn(false);
+            setUserRole(null);
+            setUserProfile(null);
+            setCurrentUser(null);
+            setIsLoading(false);
+            setAuthInitialized(true);
+          }
+          return;
         }
         
         if (session?.user && mounted) {
@@ -125,20 +158,25 @@ export function HorizontalNavigation() {
       async (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
         
-        if (session?.user && mounted) {
-          setCurrentUser(session.user);
-          setIsLoggedIn(true);
-          await fetchUserProfile(session.user.id);
-        } else if (mounted) {
+        if (!mounted) return;
+        
+        if (event === 'SIGNED_OUT') {
           setIsLoggedIn(false);
           setUserRole(null);
           setUserProfile(null);
           setCurrentUser(null);
+          setIsLoading(false);
+          setAuthInitialized(true);
+        } else if (session?.user) {
+          setCurrentUser(session.user);
+          setIsLoggedIn(true);
+          setIsLoading(true);
+          await fetchUserProfile(session.user.id);
+          setIsLoading(false);
         }
         
-        // Set auth as initialized after any auth state change
+        // Always set auth as initialized after any auth state change
         if (mounted) {
-          setIsLoading(false);
           setAuthInitialized(true);
           console.log('Auth state changed and initialized');
         }
@@ -168,8 +206,11 @@ export function HorizontalNavigation() {
     if (isLoggedIn && userRole === 'specialist') {
       console.log('Navigating to doctor panel...');
       navigate("/doktor-paneli");
+    } else if (isLoggedIn && (userRole === 'admin' || userRole === 'staff')) {
+      console.log('Navigating to admin panel...');
+      navigate("/admin");
     } else {
-      console.log('Not a specialist or not logged in, navigating to login...');
+      console.log('Not logged in or no specific role, navigating to login...');
       navigate("/giris-yap");
     }
     setIsMobileMenuOpen(false);
