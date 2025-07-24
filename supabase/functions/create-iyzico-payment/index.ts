@@ -84,55 +84,54 @@ serve(async (req) => {
       return "194.59.166.153";
     };
     
-    // İyzico API için doğru format - resmi dokümantasyona göre
+    // İyzico API için doğru format - checkoutform için enabledInstallments array kullan
     const requestBody = {
       locale: "tr",
       conversationId: conversationId,
       price: packagePrice,
       paidPrice: packagePrice,
       currency: "TRY",
-      installment: 1,
       basketId: conversationId,
-      paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
+      enabledInstallments: [1, 2, 3, 6, 9], // Checkoutform için array formatında
       callbackUrl: "https://doktorumol.com.tr/payment-success",
       buyer: {
         id: "BY789",
         name: customerData.name || "Test",
         surname: customerData.surname || "User",
-        gsmNumber: customerData.phone && customerData.phone.startsWith('+90') ? customerData.phone : `+90${customerData.phone?.replace(/^0/, '') || '5555555555'}`,
-        email: customerData.email,
         identityNumber: customerData.tcNo?.toString().padStart(11, '0') || "11111111111",
-        lastLoginDate: "2015-10-05 12:43:35",
+        email: customerData.email,
+        gsmNumber: customerData.phone && customerData.phone.startsWith('+90') ? customerData.phone : `+90${customerData.phone?.replace(/^0/, '') || '5555555555'}`,
         registrationDate: "2013-04-21 15:12:09",
+        lastLoginDate: "2015-10-05 12:43:35",
         registrationAddress: customerData.address || "Test Address",
-        ip: getClientIP(),
         city: customerData.city || "İstanbul",
         country: "Turkey",
-        zipCode: customerData.zipCode || "34734"
+        zipCode: customerData.zipCode || "34734",
+        ip: getClientIP()
       },
       shippingAddress: {
+        address: customerData.address || "Test Address",
+        zipCode: customerData.zipCode || "34734",
         contactName: `${customerData.name || "Test"} ${customerData.surname || "User"}`,
         city: customerData.city || "İstanbul",
-        country: "Turkey",
-        address: customerData.address || "Test Address",
-        zipCode: customerData.zipCode || "34734"
+        country: "Turkey"
       },
       billingAddress: {
+        address: customerData.address || "Test Address",
+        zipCode: customerData.zipCode || "34734",
         contactName: `${customerData.name || "Test"} ${customerData.surname || "User"}`,
         city: customerData.city || "İstanbul",
-        country: "Turkey",
-        address: customerData.address || "Test Address",
-        zipCode: customerData.zipCode || "34734"
+        country: "Turkey"
       },
       basketItems: [
         {
           id: "BI101",
+          price: packagePrice,
           name: `${packageType} Paketi`,
           category1: "Danışmanlık",
           category2: "Online",
-          itemType: "VIRTUAL",
-          price: packagePrice
+          itemType: "VIRTUAL"
         }
       ]
     };
