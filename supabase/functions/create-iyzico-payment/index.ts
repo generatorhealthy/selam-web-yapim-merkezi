@@ -105,7 +105,7 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico production için SHA1 hash oluşturma (HMAC SHA-1)
+    // İyzico production için basit hash hesaplama
     async function createAuthorizationHash(data: string): Promise<string> {
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
@@ -119,15 +119,15 @@ serve(async (req) => {
       return btoa(String.fromCharCode(...new Uint8Array(signature)));
     }
 
-    // İyzico canlı API için hash hesaplama - PWA formatı
-    const hashString = `[apikey=${IYZICO_API_KEY}&conversationId=${conversationId}&currency=TRY&installment=1&locale=tr&paidPrice=${packagePrice}&paymentChannel=WEB&paymentGroup=PRODUCT&price=${packagePrice}]`;
-    
-    const hashBase64 = await createAuthorizationHash(IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + hashString);
+    // İyzico canlı API için basit hash string
+    const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
+    const hashBase64 = await createAuthorizationHash(hashString);
 
-    console.log('Hash bilgileri:', {
-      apiKey: IYZICO_API_KEY?.substring(0, 10) + '...',
+    console.log('İyzico hash detayları:', {
+      apiKeyLength: IYZICO_API_KEY?.length,
+      secretKeyLength: IYZICO_SECRET_KEY?.length,
       randomString,
-      hashString: hashString.substring(0, 50) + '...'
+      hashStringLength: hashString.length
     });
 
     // İyzico checkout form initialize isteği
@@ -137,8 +137,7 @@ serve(async (req) => {
         "Accept": "application/json",
         "Content-Type": "application/json",
         "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
-        "x-iyzi-rnd": randomString,
-        "x-iyzi-client-version": "iyzipay-node-2.0.0"
+        "x-iyzi-rnd": randomString
       },
       body: JSON.stringify(requestBody)
     });
