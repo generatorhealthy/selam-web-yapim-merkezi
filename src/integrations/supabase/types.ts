@@ -865,6 +865,57 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          admin_response: string | null
+          category: string
+          created_at: string
+          description: string
+          id: string
+          priority: string
+          resolved_at: string | null
+          resolved_by: string | null
+          specialist_email: string
+          specialist_id: string
+          specialist_name: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          category?: string
+          created_at?: string
+          description: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          specialist_email: string
+          specialist_id: string
+          specialist_name: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          specialist_email?: string
+          specialist_id?: string
+          specialist_name?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       test_questions: {
         Row: {
           created_at: string

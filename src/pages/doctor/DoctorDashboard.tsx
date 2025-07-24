@@ -9,14 +9,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Calendar, FileText, User, BarChart3 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus } from "lucide-react";
 
 const DoctorDashboard = () => {
   const [doctor, setDoctor] = useState<any>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
+  const [newTicket, setNewTicket] = useState({
+    title: '',
+    description: '',
+    category: 'general',
+    priority: 'medium'
+  });
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     let mounted = true;
@@ -54,6 +70,7 @@ const DoctorDashboard = () => {
           if (mounted) {
             setDoctor(specialist);
             await fetchAppointments(specialist.id);
+            await fetchSupportTickets(specialist.id);
           }
         } else {
           // Try by email if user_id doesn't match
@@ -125,6 +142,117 @@ const DoctorDashboard = () => {
       setAppointments(appointmentsData || []);
     } catch (error) {
       console.error('Randevular yüklenirken beklenmeyen hata:', error);
+    }
+  };
+
+  const fetchSupportTickets = async (specialistId: string) => {
+    try {
+      const { data: ticketsData, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('specialist_id', specialistId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Destek talepleri yüklenirken hata:', error);
+        return;
+      }
+
+      setSupportTickets(ticketsData || []);
+    } catch (error) {
+      console.error('Destek talepleri yüklenirken beklenmeyen hata:', error);
+    }
+  };
+
+  const handleCreateTicket = async () => {
+    if (!newTicket.title.trim() || !newTicket.description.trim()) {
+      toast({
+        title: "Hata",
+        description: "Lütfen başlık ve açıklama alanlarını doldurun.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('support_tickets')
+        .insert({
+          specialist_id: doctor.id,
+          specialist_name: doctor.name,
+          specialist_email: doctor.email || doctor.user_id,
+          title: newTicket.title,
+          description: newTicket.description,
+          category: newTicket.category,
+          priority: newTicket.priority,
+          status: 'open'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Başarılı",
+        description: "Destek talebiniz oluşturuldu. En kısa sürede yanıtlanacaktır.",
+      });
+
+      setNewTicket({
+        title: '',
+        description: '',
+        category: 'general',
+        priority: 'medium'
+      });
+      setIsCreateTicketOpen(false);
+      await fetchSupportTickets(doctor.id);
+    } catch (error) {
+      console.error('Destek talebi oluşturulurken hata:', error);
+      toast({
+        title: "Hata",
+        description: "Destek talebi oluşturulurken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getTicketStatusColor = (status: string) => {
+    switch (status) {
+      case 'open': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-purple-100 text-purple-800';
+      case 'resolved': return 'bg-green-100 text-green-800';
+      case 'closed': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTicketStatusText = (status: string) => {
+    switch (status) {
+      case 'open': return 'Açık';
+      case 'in_progress': return 'İşlemde';
+      case 'resolved': return 'Çözüldü';
+      case 'closed': return 'Kapalı';
+      default: return status;
+    }
+  };
+
+  const getTicketPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTicketPriorityText = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'Acil';
+      case 'high': return 'Yüksek';
+      case 'medium': return 'Orta';
+      case 'low': return 'Düşük';
+      default: return priority;
     }
   };
 
@@ -214,7 +342,7 @@ const DoctorDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             <div 
               className={`bg-white rounded-lg border p-6 text-center cursor-pointer transition-all ${activeTab === 'dashboard' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
               onClick={() => setActiveTab('dashboard')}
@@ -230,6 +358,14 @@ const DoctorDashboard = () => {
               <Calendar className="w-8 h-8 text-blue-600 mx-auto mb-2" />
               <h3 className="text-lg font-semibold text-blue-600 mb-2">Randevular</h3>
               <p className="text-sm text-gray-600">Randevu yönetimi</p>
+            </div>
+            <div 
+              className={`bg-white rounded-lg border p-6 text-center cursor-pointer transition-all ${activeTab === 'support' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
+              onClick={() => setActiveTab('support')}
+            >
+              <MessageSquare className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+              <h3 className="text-lg font-semibold text-blue-600 mb-2">Destek Talebi</h3>
+              <p className="text-sm text-gray-600">Destek konuları</p>
             </div>
             <div 
               className={`bg-white rounded-lg border p-6 text-center cursor-pointer transition-all ${activeTab === 'blog' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
@@ -358,6 +494,136 @@ const DoctorDashboard = () => {
                               >
                                 Tamamlandı Olarak İşaretle
                               </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="support">
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Destek Talepleri</h2>
+                    <p className="text-gray-600 mt-2">Destek taleplerinizi görüntüleyin ve yeni talep oluşturun</p>
+                  </div>
+                  <Dialog open={isCreateTicketOpen} onOpenChange={setIsCreateTicketOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Yeni Talep
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Yeni Destek Talebi</DialogTitle>
+                        <DialogDescription>
+                          Destek ekibimize ulaşın. En kısa sürede yanıtlanacaktır.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="title">Konu</Label>
+                          <Input
+                            id="title"
+                            value={newTicket.title}
+                            onChange={(e) => setNewTicket(prev => ({ ...prev, title: e.target.value }))}
+                            placeholder="Destek talebinizin konusunu yazın"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="category">Kategori</Label>
+                            <Select value={newTicket.category} onValueChange={(value) => setNewTicket(prev => ({ ...prev, category: value }))}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="general">Genel</SelectItem>
+                                <SelectItem value="technical">Teknik</SelectItem>
+                                <SelectItem value="payment">Ödeme</SelectItem>
+                                <SelectItem value="account">Hesap</SelectItem>
+                                <SelectItem value="other">Diğer</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="priority">Öncelik</Label>
+                            <Select value={newTicket.priority} onValueChange={(value) => setNewTicket(prev => ({ ...prev, priority: value }))}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="low">Düşük</SelectItem>
+                                <SelectItem value="medium">Orta</SelectItem>
+                                <SelectItem value="high">Yüksek</SelectItem>
+                                <SelectItem value="urgent">Acil</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="description">Açıklama</Label>
+                          <Textarea
+                            id="description"
+                            value={newTicket.description}
+                            onChange={(e) => setNewTicket(prev => ({ ...prev, description: e.target.value }))}
+                            placeholder="Sorununuzu detaylı olarak açıklayın"
+                            rows={5}
+                          />
+                        </div>
+                        <div className="flex justify-end gap-3">
+                          <Button variant="outline" onClick={() => setIsCreateTicketOpen(false)}>
+                            İptal
+                          </Button>
+                          <Button onClick={handleCreateTicket} disabled={submitting}>
+                            {submitting ? "Oluşturuluyor..." : "Talep Oluştur"}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+              <div className="p-6">
+                {supportTickets.length === 0 ? (
+                  <div className="text-center py-8">
+                    <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Henüz destek talebiniz bulunmamaktadır.</p>
+                    <p className="text-sm text-gray-400 mt-2">Yeni talep oluşturmak için yukarıdaki butonu kullanın.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {supportTickets.map((ticket) => (
+                      <Card key={ticket.id}>
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-lg font-semibold text-gray-900">{ticket.title}</h3>
+                                <Badge className={getTicketPriorityColor(ticket.priority)}>
+                                  {getTicketPriorityText(ticket.priority)}
+                                </Badge>
+                                <Badge className={getTicketStatusColor(ticket.status)}>
+                                  {getTicketStatusText(ticket.status)}
+                                </Badge>
+                              </div>
+                              <p className="text-gray-600 mb-2">{ticket.description}</p>
+                              <p className="text-sm text-gray-500">
+                                Oluşturulma: {new Date(ticket.created_at).toLocaleDateString('tr-TR')}
+                              </p>
+                            </div>
+                          </div>
+                          {ticket.admin_response && (
+                            <div className="bg-blue-50 rounded-lg p-4 mt-4">
+                              <h4 className="font-medium text-blue-900 mb-2">Destek Ekibi Cevabı:</h4>
+                              <p className="text-blue-800 text-sm">{ticket.admin_response}</p>
                             </div>
                           )}
                         </CardContent>

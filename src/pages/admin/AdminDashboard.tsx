@@ -267,6 +267,18 @@ const AdminDashboard = () => {
       route: "/divan_paneli/employee-salaries",
       buttonText: "Maaşları Görüntüle",
       adminOnly: true
+    },
+    {
+      title: "Destek Bölümü",
+      description: "Uzman destek taleplerini görüntüle ve yönet",
+      icon: MessageSquare,
+      gradient: "from-purple-500 via-indigo-500 to-blue-600",
+      bgGradient: "from-purple-50 to-blue-50",
+      shadowColor: "shadow-purple-500/20",
+      route: "/divan_paneli/support-tickets",
+      buttonText: "Destek Taleplerini Görüntüle",
+      adminOnly: false,
+      staffOnly: true
     }
   ];
 

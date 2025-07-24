@@ -60,6 +60,7 @@ import ClientReferrals from "./pages/admin/ClientReferrals";
 import PreInfoFormManagement from "./pages/admin/PreInfoFormManagement";
 import PackageManagement from "./pages/admin/PackageManagement";
 import TestManagement from "./pages/admin/TestManagement";
+import SupportTickets from "./pages/admin/SupportTickets";
 
 // Doctor pages
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
@@ -135,6 +136,7 @@ function App() {
               <Route path="/divan_paneli/success-statistics" element={<SuccessStatistics />} />
               <Route path="/divan_paneli/legal-proceedings" element={<LegalProceedings />} />
               <Route path="/divan_paneli/employee-salaries" element={<EmployeeSalaryManagement />} />
+              <Route path="/divan_paneli/support-tickets" element={<SupportTickets />} />
               
               {/* Doctor Routes */}
               <Route path="/doktor-paneli" element={<DoctorDashboard />} />
