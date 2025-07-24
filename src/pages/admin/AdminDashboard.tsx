@@ -317,125 +317,149 @@ const AdminDashboard = () => {
         <title>Divan Paneli - Doktorum Ol</title>
       </Helmet>
       
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-primary/5">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/50 to-purple-50/30 relative overflow-hidden">
+        {/* Animated background pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-0 left-0 w-full h-full">
+            <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-indigo-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-cyan-400/20 to-violet-400/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+          </div>
+        </div>
+        
         <HorizontalNavigation />
         
-        <div className="relative">
-          {/* Modern gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
-          
-          {/* Header Section */}
-          <div className="relative z-10 px-6 py-8">
+        <div className="relative z-10">
+          {/* Enhanced Header Section */}
+          <div className="px-6 py-12">
             <div className="mx-auto max-w-7xl">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-                        <Settings className="h-6 w-6 text-primary-foreground" />
-                      </div>
-                      <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                          Merhaba
-                        </h1>
-                        <Badge variant="secondary" className="text-xs font-medium">
-                          {getRoleDisplayName()} Paneli
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground">
-                    Yönetim paneline hoş geldiniz. Tüm işlemlerinizi buradan gerçekleştirebilirsiniz.
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500 text-white rounded-full text-sm font-semibold mb-8 shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-500">
+                  <Sparkles className="w-5 h-5 animate-spin" />
+                  <span className="bg-gradient-to-r from-white to-purple-100 bg-clip-text text-transparent font-bold">
+                    Admin Panel
+                  </span>
+                  <Sparkles className="w-5 h-5 animate-spin" />
+                </div>
+                
+                <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tight">
+                  <span className="bg-gradient-to-r from-slate-900 via-purple-800 to-indigo-800 bg-clip-text text-transparent drop-shadow-sm">
+                    Merhaba
+                  </span>
+                </h1>
+                
+                <div className="max-w-2xl mx-auto mb-8">
+                  <p className="text-lg text-slate-600 leading-relaxed">
+                    Profesyonel yönetim paneline hoş geldiniz. Tüm işlemlerinizi kolayca gerçekleştirebilirsiniz.
                   </p>
                 </div>
                 
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-sm text-muted-foreground">Sistemi Aktif</span>
+                <div className="flex items-center justify-center gap-8 text-sm">
+                  <div className="flex items-center gap-3 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-lg border border-white/50">
+                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+                    <span className="font-semibold text-slate-700">Sistem Aktif</span>
                   </div>
-                  <div className="h-4 w-px bg-border" />
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{visibleCards.length} Modül</span>
+                  <div className="flex items-center gap-3 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-lg border border-white/50">
+                    <Activity className="w-4 h-4 text-indigo-600" />
+                    <span className="font-semibold text-slate-700">{visibleCards.length} Modül</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Az önce</span>
+                  <div className="flex items-center gap-3 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-lg border border-white/50">
+                    <Badge variant="secondary" className="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border-purple-200">
+                      {getRoleDisplayName()}
+                    </Badge>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="relative z-10 px-6 pb-12">
+          {/* Enhanced Cards Grid */}
+          <div className="px-6 pb-16">
             <div className="mx-auto max-w-7xl">
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {visibleCards.map((card, index) => {
                   const Icon = card.icon;
                   return (
                     <Card 
                       key={card.route}
-                      className="group relative overflow-hidden border bg-card text-card-foreground shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:-translate-y-1"
+                      className="group relative overflow-hidden border-0 bg-white/80 backdrop-blur-xl hover:bg-white/95 transition-all duration-500 cursor-pointer hover:scale-[1.05] hover:-translate-y-3 shadow-xl hover:shadow-2xl rounded-3xl animate-fade-in"
                       onClick={() => navigate(card.route)}
                       style={{
-                        animationDelay: `${index * 100}ms`,
+                        animationDelay: `${index * 120}ms`,
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
                       }}
                     >
-                      {/* Gradient overlay on hover */}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                      {/* Enhanced gradient overlay */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-0 group-hover:opacity-40 transition-all duration-700`} />
                       
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className={`inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br ${card.gradient} text-white shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                            <Icon className="h-6 w-6" />
+                      {/* Animated border gradient */}
+                      <div className={`absolute inset-0 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-30 rounded-3xl transition-all duration-700`} />
+                      
+                      {/* Glow effect */}
+                      <div className={`absolute inset-0 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-20 rounded-3xl blur-xl transition-all duration-700 -z-10`} />
+                      
+                      <CardHeader className="pb-6 relative z-10">
+                        <div className="flex items-start justify-between mb-6">
+                          <div className={`relative p-4 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-2xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-700`}>
+                            <Icon className="w-8 h-8 text-white drop-shadow-lg" />
+                            <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                           </div>
-                          <Badge variant="outline" className="opacity-60 group-hover:opacity-100 transition-opacity">
-                            <ArrowRight className="h-3 w-3" />
-                          </Badge>
+                          
+                          <div className="opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-2 group-hover:translate-x-0">
+                            <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm">
+                              <ArrowRight className="w-5 h-5 text-slate-600 group-hover:text-slate-800 group-hover:translate-x-1 transition-all duration-300" />
+                            </div>
+                          </div>
                         </div>
                         
-                        <div className="space-y-2">
-                          <CardTitle className="text-lg font-semibold leading-none group-hover:text-primary transition-colors">
+                        <div className="space-y-3">
+                          <CardTitle className="text-xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors duration-300 leading-tight">
                             {card.title}
                           </CardTitle>
                           {card.description && (
-                            <CardDescription className="text-sm leading-relaxed">
+                            <CardDescription className="text-slate-600 text-sm leading-relaxed line-clamp-2">
                               {card.description}
                             </CardDescription>
                           )}
                         </div>
                       </CardHeader>
                       
-                      <CardContent className="pt-0">
+                      <CardContent className="pt-0 relative z-10">
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="w-full justify-start h-9 px-3 text-sm font-medium group-hover:bg-muted/50 transition-colors"
+                          className={`w-full justify-between h-12 px-4 text-sm font-semibold bg-gradient-to-r from-white/50 to-white/30 hover:from-white/80 hover:to-white/60 border border-white/30 hover:border-white/50 backdrop-blur-sm rounded-xl transition-all duration-500 group-hover:shadow-lg text-slate-700 hover:text-slate-900`}
                         >
-                          {card.buttonText}
-                          <ArrowRight className="ml-auto h-4 w-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                          <span>{card.buttonText}</span>
+                          <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-300" />
                         </Button>
                       </CardContent>
                       
-                      {/* Subtle shine effect */}
-                      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000" />
+                      {/* Enhanced shine effect */}
+                      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1200 skew-x-12" />
+                      
+                      {/* Floating particles effect */}
+                      <div className="absolute top-4 right-4 w-2 h-2 bg-white/40 rounded-full opacity-0 group-hover:opacity-100 animate-ping transition-opacity duration-500"></div>
+                      <div className="absolute top-8 right-8 w-1 h-1 bg-white/60 rounded-full opacity-0 group-hover:opacity-100 animate-ping delay-200 transition-opacity duration-500"></div>
                     </Card>
                   );
                 })}
               </div>
               
-              {/* Status Bar */}
-              <div className="mt-12 flex items-center justify-center">
-                <div className="inline-flex items-center gap-6 rounded-full border bg-card/50 px-6 py-3 text-sm shadow-sm backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                    <span className="font-medium text-foreground">Panel Aktif</span>
+              {/* Enhanced Status Bar */}
+              <div className="mt-16 flex items-center justify-center">
+                <div className="inline-flex items-center gap-8 rounded-full border border-white/30 bg-white/60 backdrop-blur-xl px-8 py-4 text-sm shadow-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="h-3 w-3 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 animate-pulse shadow-lg shadow-emerald-400/50" />
+                      <div className="absolute inset-0 h-3 w-3 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 animate-ping opacity-30" />
+                    </div>
+                    <span className="font-bold text-slate-800">Panel Aktif</span>
                   </div>
-                  <div className="h-4 w-px bg-border" />
-                  <div className="text-muted-foreground">
-                    Son güncelleme: Az önce
+                  <div className="h-6 w-px bg-gradient-to-b from-transparent via-slate-300 to-transparent" />
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Clock className="w-4 h-4 text-indigo-500" />
+                    <span className="font-medium">Son güncelleme: Az önce</span>
                   </div>
                 </div>
               </div>
@@ -444,6 +468,32 @@ const AdminDashboard = () => {
         </div>
         
         <Footer />
+        
+        <style>{`
+          @keyframes fade-in {
+            from {
+              opacity: 0;
+              transform: translateY(40px) scale(0.95);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+          
+          .animate-fade-in {
+            animation: fade-in 1s ease-out forwards;
+            opacity: 0;
+            transform: translateY(40px) scale(0.95);
+          }
+          
+          .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+        `}</style>
       </div>
     </>
   );
