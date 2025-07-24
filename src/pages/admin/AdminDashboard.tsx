@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
@@ -20,7 +21,10 @@ import {
   ArrowRight,
   Sparkles,
   Zap,
-  ClipboardCheck
+  ClipboardCheck,
+  Settings,
+  Activity,
+  Clock
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -313,142 +317,133 @@ const AdminDashboard = () => {
         <title>Divan Paneli - Doktorum Ol</title>
       </Helmet>
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 opacity-40">
-        <div className="w-full h-full bg-repeat" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239fa8da' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
-      </div>
-      
-      <HorizontalNavigation />
-      
-      <div className="container mx-auto px-4 py-12 relative z-10">
-        {/* Enhanced Header Section */}
-        <div className="mb-16 text-center">
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white rounded-full text-sm font-semibold mb-6 shadow-lg shadow-blue-500/25">
-            <Sparkles className="w-5 h-5 animate-pulse" />
-            <span className="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-              Panel
-            </span>
-            <Sparkles className="w-5 h-5 animate-pulse" />
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-primary/5">
+        <HorizontalNavigation />
+        
+        <div className="relative">
+          {/* Modern gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
           
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
-              Merhaba
-            </span>
-          </h1>
-          
-          <div className="max-w-3xl mx-auto">
-            
-            <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Sistemini Aktif</span>
-              </div>
-              <div className="w-px h-4 bg-gray-300"></div>
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                <span>{visibleCards.length} Modüller Mevcut</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {visibleCards.map((card, index) => {
-            const Icon = card.icon;
-            return (
-              <Card 
-                key={card.route}
-                className={`group relative overflow-hidden border-0 bg-white/80 backdrop-blur-sm hover:bg-white/90 transition-all duration-700 cursor-pointer hover:scale-[1.02] hover:-translate-y-2 ${card.shadowColor} shadow-lg hover:shadow-2xl rounded-2xl animate-fade-in`}
-                onClick={() => navigate(card.route)}
-                style={{
-                  animationDelay: `${index * 150}ms`,
-                }}
-              >
-                {/* Background gradient overlay */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-0 group-hover:opacity-30 transition-opacity duration-500`} />
-                
-                {/* Animated border gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-20 rounded-2xl transition-opacity duration-500`} />
-                
-                <CardHeader className="pb-4 relative z-10">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`p-4 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
-                      <Icon className="w-7 h-7 text-white" />
-                    </div>
-                    
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-300" />
+          {/* Header Section */}
+          <div className="relative z-10 px-6 py-8">
+            <div className="mx-auto max-w-7xl">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
+                        <Settings className="h-6 w-6 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                          Merhaba
+                        </h1>
+                        <Badge variant="secondary" className="text-xs font-medium">
+                          {getRoleDisplayName()} Paneli
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                  
-                  <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors duration-300 leading-tight">
-                    {card.title}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600 text-sm leading-relaxed mt-2">
-                    {card.description}
-                  </CardDescription>
-                </CardHeader>
+                  <p className="text-muted-foreground">
+                    Yönetim paneline hoş geldiniz. Tüm işlemlerinizi buradan gerçekleştirebilirsiniz.
+                  </p>
+                </div>
                 
-                <CardContent className="pt-0 relative z-10">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className={`w-full border-2 border-gray-200 bg-white/50 hover:bg-gradient-to-r hover:${card.gradient} hover:text-white hover:border-transparent hover:shadow-lg transition-all duration-500 font-semibold text-gray-700 hover:scale-105`}
-                  >
-                    <span className="flex items-center justify-center gap-2">
-                      {card.buttonText}
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                    </span>
-                  </Button>
-                </CardContent>
-                
-                {/* Shine effect */}
-                <div className="absolute inset-0 -top-full group-hover:top-full bg-gradient-to-b from-transparent via-white/20 to-transparent transition-all duration-1000 transform rotate-12 opacity-0 group-hover:opacity-100" />
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Enhanced Footer Stats */}
-        <div className="mt-20 text-center">
-          <div className="inline-flex items-center gap-6 px-8 py-4 bg-white/60 backdrop-blur-md rounded-full shadow-lg border border-white/30">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <span className="font-medium">Panel Aktif - Deployment Test</span>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-sm text-muted-foreground">Sistemi Aktif</span>
+                  </div>
+                  <div className="h-4 w-px bg-border" />
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">{visibleCards.length} Modül</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Az önce</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="w-px h-4 bg-gray-300"></div>
-            <div className="text-sm text-gray-600 font-medium">
-              Son Güncelleme: Az Önce - Test Değişikliği
+          </div>
+
+          {/* Main Content */}
+          <div className="relative z-10 px-6 pb-12">
+            <div className="mx-auto max-w-7xl">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {visibleCards.map((card, index) => {
+                  const Icon = card.icon;
+                  return (
+                    <Card 
+                      key={card.route}
+                      className="group relative overflow-hidden border bg-card text-card-foreground shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:-translate-y-1"
+                      onClick={() => navigate(card.route)}
+                      style={{
+                        animationDelay: `${index * 100}ms`,
+                      }}
+                    >
+                      {/* Gradient overlay on hover */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                      
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className={`inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br ${card.gradient} text-white shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                            <Icon className="h-6 w-6" />
+                          </div>
+                          <Badge variant="outline" className="opacity-60 group-hover:opacity-100 transition-opacity">
+                            <ArrowRight className="h-3 w-3" />
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <CardTitle className="text-lg font-semibold leading-none group-hover:text-primary transition-colors">
+                            {card.title}
+                          </CardTitle>
+                          {card.description && (
+                            <CardDescription className="text-sm leading-relaxed">
+                              {card.description}
+                            </CardDescription>
+                          )}
+                        </div>
+                      </CardHeader>
+                      
+                      <CardContent className="pt-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full justify-start h-9 px-3 text-sm font-medium group-hover:bg-muted/50 transition-colors"
+                        >
+                          {card.buttonText}
+                          <ArrowRight className="ml-auto h-4 w-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                        </Button>
+                      </CardContent>
+                      
+                      {/* Subtle shine effect */}
+                      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000" />
+                    </Card>
+                  );
+                })}
+              </div>
+              
+              {/* Status Bar */}
+              <div className="mt-12 flex items-center justify-center">
+                <div className="inline-flex items-center gap-6 rounded-full border bg-card/50 px-6 py-3 text-sm shadow-sm backdrop-blur-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    <span className="font-medium text-foreground">Panel Aktif</span>
+                  </div>
+                  <div className="h-4 w-px bg-border" />
+                  <div className="text-muted-foreground">
+                    Son güncelleme: Az önce
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <Footer />
-
-      <style>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
         
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out forwards;
-          opacity: 0;
-          transform: translateY(30px);
-        }
-      `}</style>
+        <Footer />
       </div>
     </>
   );
