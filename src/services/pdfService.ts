@@ -30,33 +30,56 @@ export const generatePreInfoPDF = (
 ) => {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
+  const pageHeight = pdf.internal.pageSize.height;
   const margin = 20;
   const contentWidth = pageWidth - 2 * margin;
+  const maxY = pageHeight - 40; // Safe margin from bottom
   let yPosition = 30;
+  
+  // Helper function to check if new page is needed
+  const checkNewPage = (neededHeight: number) => {
+    if (yPosition + neededHeight > maxY) {
+      pdf.addPage();
+      yPosition = 30;
+      return true;
+    }
+    return false;
+  };
+  
+  // Helper function to add text with proper line wrapping
+  const addText = (text: string, fontSize: number = 10, fontWeight: string = 'normal') => {
+    pdf.setFontSize(fontSize);
+    pdf.setFont('helvetica', fontWeight);
+    
+    const lines = pdf.splitTextToSize(text, contentWidth);
+    const lineHeight = fontSize * 0.5;
+    const totalHeight = lines.length * lineHeight + 5;
+    
+    checkNewPage(totalHeight);
+    
+    pdf.text(lines, margin, yPosition);
+    yPosition += totalHeight;
+  };
   
   // Header
   pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
   pdf.text('ÖN BİLGİLENDİRME FORMU', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 10;
+  yPosition += 12;
   
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'normal');
   pdf.text('(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 20;
+  yPosition += 25;
   
   // Date and IP info
   const currentDate = new Date().toLocaleDateString('tr-TR');
-  pdf.text(`Belge Tarihi: ${currentDate}`, margin, yPosition);
-  yPosition += 8;
-  pdf.text(`IP Adresi: ${clientIP}`, margin, yPosition);
-  yPosition += 15;
+  addText(`Belge Tarihi: ${currentDate}`, 10);
+  addText(`IP Adresi: ${clientIP}`, 10);
+  yPosition += 10;
   
   // Seller information section
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('SATICI FİRMA BİLGİLERİ', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 12;
+  addText('SATICI FİRMA BİLGİLERİ', 12, 'bold');
   
   const sellerInfo = [
     'Ünvan: DoktorumOL Dijital Sağlık Hizmetleri',
@@ -71,17 +94,13 @@ export const generatePreInfoPDF = (
   ];
   
   sellerInfo.forEach((info) => {
-    pdf.text(info, margin, yPosition);
-    yPosition += 8;
+    addText(info, 10);
   });
   
-  yPosition += 10;
+  yPosition += 5;
   
   // Customer information section
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('ALICI MÜŞTERİ BİLGİLERİ', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 12;
+  addText('ALICI MÜŞTERİ BİLGİLERİ', 12, 'bold');
   
   const customerInfo = [
     `Ad Soyad: ${customerData.name} ${customerData.surname}`,
@@ -99,17 +118,13 @@ export const generatePreInfoPDF = (
   }
   
   customerInfo.forEach((info) => {
-    pdf.text(info, margin, yPosition);
-    yPosition += 8;
+    addText(info, 10);
   });
   
-  yPosition += 10;
+  yPosition += 5;
   
   // Product/Service information
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 12;
+  addText('HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 12, 'bold');
   
   const serviceInfo = [
     `Hizmet Adı: ${packageData.name}`,
@@ -124,23 +139,13 @@ export const generatePreInfoPDF = (
   ];
   
   serviceInfo.forEach((info) => {
-    pdf.text(info, margin, yPosition);
-    yPosition += 8;
+    addText(info, 10);
   });
   
-  // Check if we need a new page
-  if (yPosition > 280) {
-    pdf.addPage();
-    yPosition = 30;
-  }
-  
-  yPosition += 15;
+  yPosition += 10;
   
   // Detailed terms and conditions
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('DETAYLI HİZMET KOŞULLARI VE BİLGİLERİ', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 15;
+  addText('DETAYLI HİZMET KOŞULLARI VE BİLGİLERİ', 12, 'bold');
   
   const detailedTerms = [
     '1. HİZMET TANIMI VE KAPSAMI:',
@@ -176,21 +181,10 @@ export const generatePreInfoPDF = (
   
   detailedTerms.forEach((term) => {
     if (term === '') {
-      yPosition += 5;
+      yPosition += 3;
       return;
     }
-    
-    const lines = pdf.splitTextToSize(term, contentWidth);
-    const neededHeight = lines.length * 6 + 3;
-    
-    // Check if we need a new page before writing the text
-    if (yPosition + neededHeight > 280) {
-      pdf.addPage();
-      yPosition = 30;
-    }
-    
-    pdf.text(lines, margin, yPosition);
-    yPosition += neededHeight;
+    addText(term, 10);
   });
   
   // Add new page for signature section
@@ -198,10 +192,7 @@ export const generatePreInfoPDF = (
   yPosition = 30;
   
   // Signature section
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('ONAY VE KABUL', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 15;
+  addText('ONAY VE KABUL', 12, 'bold');
   
   const acceptanceText = [
     'Bu ön bilgilendirme formunda yer alan tüm bilgileri okudum, anladım ve kabul ediyorum. Ürün/hizmet bedeli, ödeme şekli, teslimat koşulları ve diğer tüm şartlar hakkında tam bilgi sahibi olduğumu beyan ederim.',
@@ -228,21 +219,10 @@ export const generatePreInfoPDF = (
   
   acceptanceText.forEach((text) => {
     if (text === '') {
-      yPosition += 5;
+      yPosition += 3;
       return;
     }
-    
-    const lines = pdf.splitTextToSize(text, contentWidth);
-    const neededHeight = lines.length * 6 + 3;
-    
-    // Check if we need a new page before writing the text
-    if (yPosition + neededHeight > 280) {
-      pdf.addPage();
-      yPosition = 30;
-    }
-    
-    pdf.text(lines, margin, yPosition);
-    yPosition += neededHeight;
+    addText(text, 10);
   });
   
   return pdf;
@@ -257,41 +237,60 @@ export const generateDistanceSalesPDF = (
 ) => {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
+  const pageHeight = pdf.internal.pageSize.height;
   const margin = 20;
   const contentWidth = pageWidth - 2 * margin;
+  const maxY = pageHeight - 40; // Safe margin from bottom
   let yPosition = 30;
+  
+  // Helper function to check if new page is needed
+  const checkNewPage = (neededHeight: number) => {
+    if (yPosition + neededHeight > maxY) {
+      pdf.addPage();
+      yPosition = 30;
+      return true;
+    }
+    return false;
+  };
+  
+  // Helper function to add text with proper line wrapping
+  const addText = (text: string, fontSize: number = 10, fontWeight: string = 'normal') => {
+    pdf.setFontSize(fontSize);
+    pdf.setFont('helvetica', fontWeight);
+    
+    const lines = pdf.splitTextToSize(text, contentWidth);
+    const lineHeight = fontSize * 0.5;
+    const totalHeight = lines.length * lineHeight + 5;
+    
+    checkNewPage(totalHeight);
+    
+    pdf.text(lines, margin, yPosition);
+    yPosition += totalHeight;
+  };
   
   // Header
   pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
   pdf.text('MESAFELİ SATIŞ SÖZLEŞMESİ', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 10;
+  yPosition += 12;
   
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'normal');
   pdf.text('(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Uyarınca)', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 20;
+  yPosition += 25;
   
   // Date and IP info
   const currentDate = new Date().toLocaleDateString('tr-TR');
-  pdf.text(`Sözleşme Tarihi: ${currentDate}`, margin, yPosition);
-  yPosition += 8;
-  pdf.text(`IP Adresi: ${clientIP}`, margin, yPosition);
-  yPosition += 8;
-  pdf.text(`Sözleşme No: DOL-${Date.now()}`, margin, yPosition);
-  yPosition += 15;
+  addText(`Sözleşme Tarihi: ${currentDate}`, 10);
+  addText(`IP Adresi: ${clientIP}`, 10);
+  addText(`Sözleşme No: DOL-${Date.now()}`, 10);
+  yPosition += 10;
   
   // Parties section - detailed
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('SÖZLEŞME TARAFLARI', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 12;
+  addText('SÖZLEŞME TARAFLARI', 12, 'bold');
   
   // Seller information
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('SATICI:', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 10;
+  addText('SATICI:', 11, 'bold');
   
   const sellerDetails = [
     'Ünvan: DoktorumOL Dijital Sağlık Hizmetleri',
@@ -308,17 +307,13 @@ export const generateDistanceSalesPDF = (
   ];
   
   sellerDetails.forEach((detail) => {
-    pdf.text(detail, margin + 10, yPosition);
-    yPosition += 7;
+    addText(`  ${detail}`, 10);
   });
   
-  yPosition += 10;
+  yPosition += 5;
   
   // Buyer information
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('ALICI:', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 10;
+  addText('ALICI:', 11, 'bold');
   
   const buyerDetails = [
     `Ad Soyad: ${customerData.name} ${customerData.surname}`,
@@ -337,23 +332,13 @@ export const generateDistanceSalesPDF = (
   }
   
   buyerDetails.forEach((detail) => {
-    pdf.text(detail, margin + 10, yPosition);
-    yPosition += 7;
+    addText(`  ${detail}`, 10);
   });
   
-  // Check if we need a new page
-  if (yPosition > 280) {
-    pdf.addPage();
-    yPosition = 30;
-  }
-  
-  yPosition += 15;
+  yPosition += 10;
   
   // Contract subject and details
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('SÖZLEŞME KONUSU VE DETAYLARI', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 12;
+  addText('SÖZLEŞME KONUSU VE DETAYLARI', 12, 'bold');
   
   const contractDetails = [
     `Hizmet Adı: ${packageData.name}`,
@@ -373,17 +358,13 @@ export const generateDistanceSalesPDF = (
   ];
   
   contractDetails.forEach((detail) => {
-    pdf.text(detail, margin, yPosition);
-    yPosition += 8;
+    addText(detail, 10);
   });
   
-  yPosition += 15;
+  yPosition += 10;
   
   // Comprehensive terms and conditions
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('GENEL ŞARTLAR VE KOŞULLAR', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 15;
+  addText('GENEL ŞARTLAR VE KOŞULLAR', 12, 'bold');
   
   const comprehensiveTerms = [
     '1. SÖZLEŞME HÜKÜMLERI VE YASAL DAYANAK',
@@ -440,21 +421,10 @@ export const generateDistanceSalesPDF = (
   
   comprehensiveTerms.forEach((term) => {
     if (term === '') {
-      yPosition += 5;
+      yPosition += 3;
       return;
     }
-    
-    const lines = pdf.splitTextToSize(term, contentWidth);
-    const neededHeight = lines.length * 6 + 3;
-    
-    // Check if we need a new page before writing the text
-    if (yPosition + neededHeight > 280) {
-      pdf.addPage();
-      yPosition = 30;
-    }
-    
-    pdf.text(lines, margin, yPosition);
-    yPosition += neededHeight;
+    addText(term, 10);
   });
   
   // Add new page for signature section
@@ -462,10 +432,7 @@ export const generateDistanceSalesPDF = (
   yPosition = 30;
   
   // Signature section
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('TARAF İMZALARI VE ONAYLAR', margin, yPosition);
-  pdf.setFont('helvetica', 'normal');
-  yPosition += 15;
+  addText('TARAF İMZALARI VE ONAYLAR', 12, 'bold');
   
   const signatureSection = [
     'Bu sözleşmeyi okudum, anladım ve kabul ediyorum. Sözleşme şartlarının tamamı hakkında bilgi sahibi olduğumu, cayma hakkım konusunda bilgilendirildiğimi beyan ederim.',
@@ -502,21 +469,10 @@ export const generateDistanceSalesPDF = (
   
   signatureSection.forEach((text) => {
     if (text === '') {
-      yPosition += 5;
+      yPosition += 3;
       return;
     }
-    
-    const lines = pdf.splitTextToSize(text, contentWidth);
-    const neededHeight = lines.length * 6 + 3;
-    
-    // Check if we need a new page before writing the text
-    if (yPosition + neededHeight > 280) {
-      pdf.addPage();
-      yPosition = 30;
-    }
-    
-    pdf.text(lines, margin, yPosition);
-    yPosition += neededHeight;
+    addText(text, 10);
   });
   
   return pdf;
