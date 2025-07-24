@@ -148,7 +148,19 @@ serve(async (req) => {
       body: JSON.stringify(requestBody)
     });
 
-    const responseData = await iyzResponse.json();
+    console.log('İyzico HTTP durum kodu:', iyzResponse.status);
+    console.log('İyzico yanıt headers:', Object.fromEntries(iyzResponse.headers.entries()));
+    
+    const responseText = await iyzResponse.text();
+    console.log('İyzico ham yanıtı:', responseText);
+    
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('JSON parse hatası:', parseError);
+      throw new Error(`İyzico yanıtı JSON olarak çözümlenemedi: ${responseText}`);
+    }
     
     console.log('İyzico yanıtı:', responseData);
 
