@@ -1,7 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,12 +35,26 @@ const handler = async (req: Request): Promise<Response> => {
       hour12: false
     }).format(now);
 
-    // Admin'e gönderilecek e-posta
-    const adminEmailResponse = await resend.emails.send({
-      from: "Doktorum Ol <onboarding@resend.dev>",
-      to: ["info@doktorumol.com.tr"],
+    const brevoApiKey = Deno.env.get("BREVO_API_KEY");
+    
+    if (!brevoApiKey) {
+      throw new Error("BREVO_API_KEY is not configured");
+    }
+
+    // Admin'e gönderilecek e-posta (Brevo API ile)
+    const adminEmailPayload = {
+      sender: {
+        name: "Doktorum Ol",
+        email: "info@doktorumol.com.tr"
+      },
+      to: [
+        {
+          email: "info@doktorumol.com.tr",
+          name: "Doktorum Ol Admin"
+        }
+      ],
       subject: `Yeni İletişim Formu Mesajı - ${subject}`,
-      html: `
+      htmlContent: `
         <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white; border-radius: 8px 8px 0 0;">
             <h1 style="margin: 0; font-size: 24px;">🌟 Yeni İletişim Formu Mesajı</h1>
@@ -72,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             
             <div style="background: white; padding: 20px; border-radius: 8px;">
-              <h3 style="margin: 0 0 15px 0; color: #333;">🕐 Tarih:</h3>
+              <h3 style="margin: 0 0 15px 0; color: #333;">🕐 Tarih (Türkiye Saati):</h3>
               <p style="margin: 0; font-size: 16px; color: #555;">${turkeyTime}</p>
             </div>
             
@@ -81,15 +92,39 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
           </div>
         </div>
-      `,
+      `
+    };
+
+    // Admin'e e-posta gönder
+    const adminEmailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": brevoApiKey,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(adminEmailPayload)
     });
 
+    if (!adminEmailResponse.ok) {
+      const errorText = await adminEmailResponse.text();
+      throw new Error(`Admin email failed: ${adminEmailResponse.status} - ${errorText}`);
+    }
+
     // Kullanıcıya otomatik yanıt gönder
-    const userEmailResponse = await resend.emails.send({
-      from: "Doktorum Ol <onboarding@resend.dev>",
-      to: [email],
+    const userEmailPayload = {
+      sender: {
+        name: "Doktorum Ol",
+        email: "info@doktorumol.com.tr"
+      },
+      to: [
+        {
+          email: email,
+          name: name
+        }
+      ],
       subject: "Mesajınızı Aldık - Doktorum Ol",
-      html: `
+      htmlContent: `
         <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white; border-radius: 8px 8px 0 0;">
             <h1 style="margin: 0; font-size: 24px;">🙏 Teşekkür Ederiz!</h1>
@@ -108,7 +143,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h3 style="margin: 0 0 10px 0; color: #1976d2;">📋 Mesaj Özeti</h3>
                 <p style="margin: 5px 0; color: #555;"><strong>Konu:</strong> ${subject}</p>
-                <p style="margin: 5px 0; color: #555;"><strong>Tarih:</strong> ${turkeyTime}</p>
+                <p style="margin: 5px 0; color: #555;"><strong>Tarih (Türkiye Saati):</strong> ${turkeyTime}</p>
               </div>
               
               <p style="margin: 20px 0 0 0; font-size: 14px; color: #666;">
@@ -124,16 +159,36 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
           </div>
         </div>
-      `,
+      `
+    };
+
+    // Kullanıcıya e-posta gönder
+    const userEmailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": brevoApiKey,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(userEmailPayload)
     });
 
-    console.log("Emails sent successfully:", { adminEmailResponse, userEmailResponse });
+    if (!userEmailResponse.ok) {
+      const errorText = await userEmailResponse.text();
+      throw new Error(`User email failed: ${userEmailResponse.status} - ${errorText}`);
+    }
+
+    const adminResult = await adminEmailResponse.json();
+    const userResult = await userEmailResponse.json();
+
+    console.log("Emails sent successfully via Brevo:", { adminResult, userResult });
 
     return new Response(JSON.stringify({ 
       success: true, 
-      adminEmail: adminEmailResponse,
-      userEmail: userEmailResponse,
-      timestamp: turkeyTime
+      adminEmail: adminResult,
+      userEmail: userResult,
+      timestamp: turkeyTime,
+      provider: "Brevo"
     }), {
       status: 200,
       headers: {
