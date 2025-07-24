@@ -23,10 +23,10 @@ serve(async (req) => {
   try {
     console.log('Edge function başladı');
     
-    const requestBody = await req.json();
-    console.log('Gelen request body:', JSON.stringify(requestBody, null, 2));
+    const incomingData = await req.json();
+    console.log('Gelen request body:', JSON.stringify(incomingData, null, 2));
     
-    const { packageType, customerData, subscriptionReferenceCode } = requestBody;
+    const { packageType, customerData, subscriptionReferenceCode } = incomingData;
 
     console.log('İyzico ödeme isteği:', {
       packageType,
