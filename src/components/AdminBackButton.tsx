@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface AdminBackButtonProps {
   to?: string;
@@ -9,12 +9,16 @@ interface AdminBackButtonProps {
 }
 
 const AdminBackButton = ({ to = "/divan_paneli/dashboard", label = "Geri Dön" }: AdminBackButtonProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(to);
+  };
+
   return (
-    <Button variant="outline" size="sm" asChild className="mb-6">
-      <Link to={to}>
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        {label}
-      </Link>
+    <Button variant="outline" size="sm" onClick={handleClick} className="mb-6">
+      <ArrowLeft className="w-4 h-4 mr-2" />
+      {label}
     </Button>
   );
 };
