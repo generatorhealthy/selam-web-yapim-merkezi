@@ -35,8 +35,8 @@ serve(async (req) => {
     // Canlı ortam için production URL'si kullan
     const IYZICO_API_URL = "https://api.iyzipay.com";
     
-    // Tutar formatını düzelt - decimal olmadan
-    const packagePrice = parseFloat("2998").toFixed(2);
+    // Tutar formatını düzelt
+    const packagePrice = "2998.00";
     
     // İyzico için gerçek IP adresi - CDN'den gerçek IP'yi al
     const getClientIP = () => {
@@ -56,7 +56,7 @@ serve(async (req) => {
       return "194.59.166.153";
     };
     
-    // İyzico API için doğru format
+    // İyzico API için doğru format - resmi dokümantasyona göre
     const requestBody = {
       locale: "tr",
       conversationId: conversationId,
@@ -111,13 +111,13 @@ serve(async (req) => {
 
     console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
 
-    // İyzico için doğru hash hesaplama - resmi dokümantasyon formatı
-    async function createAuthorizationHash(data: string): Promise<string> {
+    // İyzico resmi HMAC SHA256 authorization - resmi dokümantasyona göre
+    async function createHMACSHA256(data: string, secret: string): Promise<string> {
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         "raw",
-        encoder.encode(IYZICO_SECRET_KEY),
-        { name: "HMAC", hash: "SHA-1" },
+        encoder.encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
         false,
         ["sign"]
       );
@@ -125,34 +125,29 @@ serve(async (req) => {
       return btoa(String.fromCharCode(...new Uint8Array(signature)));
     }
 
-    // İyzico resmi hash formatı: [locale=tr&conversationId=123&price=1.0]
-    const hashParams = [
-      `locale=${requestBody.locale}`,
-      `conversationId=${requestBody.conversationId}`, 
-      `price=${requestBody.price}`
-    ].join('&');
-    
-    const hashString = `[${hashParams}]`;
-    const authString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + hashString;
-    const hashBase64 = await createAuthorizationHash(authString);
+    // İyzico resmi authorization formatı
+    const requestBodyString = JSON.stringify(requestBody);
+    const encryptedData = await createHMACSHA256(requestBodyString, IYZICO_SECRET_KEY);
+    const authString = `apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${encryptedData}`;
+    const base64EncodedAuthorization = btoa(authString);
 
-    console.log('Hash bilgileri:', {
+    console.log('Authorization bilgileri:', {
       apiKeyLength: IYZICO_API_KEY?.length,
       secretKeyLength: IYZICO_SECRET_KEY?.length,
       randomString,
-      hashStringLength: hashString.length
+      authStringLength: authString.length
     });
 
-    // İyzico checkout form initialize isteği
-    const iyzResponse = await fetch(`${IYZICO_API_URL}/payment/iyzipos/checkoutform/initialize`, {
+    // İyzico checkout form initialize isteği - resmi format
+    const iyzResponse = await fetch(`${IYZICO_API_URL}/payment/iyzipos/checkoutform/initialize/auth/ecom`, {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
+        "Authorization": `IYZWSv2 ${base64EncodedAuthorization}`,
         "x-iyzi-rnd": randomString
       },
-      body: JSON.stringify(requestBody)
+      body: requestBodyString
     });
 
     console.log('İyzico HTTP durum kodu:', iyzResponse.status);
