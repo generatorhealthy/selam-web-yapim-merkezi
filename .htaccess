@@ -1,7 +1,7 @@
 RewriteEngine On
 RewriteBase /
 
-# MIME type zorla ayarları -  ÖNEMLİ KISIM
+# MIME type zorla ayarları - EN ÖNEMLİ KISIM
 <IfModule mod_mime.c>
     # JavaScript dosyaları için
     AddType application/javascript .js
