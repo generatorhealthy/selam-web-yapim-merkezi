@@ -64,7 +64,7 @@ serve(async (req) => {
     const IYZICO_API_URL = "https://api.iyzipay.com";
     
     // Tutar formatını düzelt
-    const packagePrice = "2998.00";
+    const packagePrice = "2998.0";
     
     // İyzico için gerçek IP adresi - CDN'den gerçek IP'yi al
     const getClientIP = () => {
