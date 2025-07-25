@@ -382,17 +382,27 @@ const PaymentManagement = () => {
               />
             </div>
             <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Durum Filtrele" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tümü</SelectItem>
-                  <SelectItem value="approved">Onaylandı</SelectItem>
-                  <SelectItem value="pending">Beklemede</SelectItem>
-                  <SelectItem value="cancelled">İptal Edildi</SelectItem>
-                </SelectContent>
-              </Select>
+              <Button 
+                variant={statusFilter === "pending" ? "default" : "outline"} 
+                size="sm" 
+                onClick={() => setStatusFilter("pending")}
+              >
+                Bekleyen
+              </Button>
+              <Button 
+                variant={statusFilter === "approved" ? "default" : "outline"} 
+                size="sm" 
+                onClick={() => setStatusFilter("approved")}
+              >
+                Tamamlanan
+              </Button>
+              <Button 
+                variant={statusFilter === "all" ? "default" : "outline"} 
+                size="sm" 
+                onClick={() => setStatusFilter("all")}
+              >
+                Tümü
+              </Button>
               <Button variant="outline" size="sm" onClick={generateMonthlyOrders}>
                 Aylık Siparişler Oluştur
               </Button>
