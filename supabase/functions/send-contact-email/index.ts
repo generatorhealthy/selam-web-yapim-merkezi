@@ -9,6 +9,7 @@ const corsHeaders = {
 interface ContactEmailRequest {
   name: string;
   email: string;
+  phone?: string;
   subject: string;
   message: string;
 }
@@ -20,7 +21,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, subject, message }: ContactEmailRequest = await req.json();
+    const { name, email, phone, subject, message }: ContactEmailRequest = await req.json();
 
     // Türkiye saat diliminde tarih formatı (TR: DD.MM.YYYY HH:mm:ss)
     const now = new Date();
@@ -71,6 +72,13 @@ const handler = async (req: Request): Promise<Response> => {
               <h3 style="margin: 0 0 15px 0; color: #333;">📧 E-posta:</h3>
               <p style="margin: 0; font-size: 16px; color: #555;"><a href="mailto:${email}" style="color: #667eea; text-decoration: none;">${email}</a></p>
             </div>
+            
+            ${phone ? `
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h3 style="margin: 0 0 15px 0; color: #333;">📞 Telefon:</h3>
+              <p style="margin: 0; font-size: 16px; color: #555;"><a href="tel:${phone}" style="color: #667eea; text-decoration: none;">${phone}</a></p>
+            </div>
+            ` : ''}
             
             <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
               <h3 style="margin: 0 0 15px 0; color: #333;">📝 Konu:</h3>

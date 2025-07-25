@@ -17,6 +17,7 @@ const Contact = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     subject: "",
     message: ""
   });
@@ -43,6 +44,7 @@ const Contact = () => {
         body: {
           name: formData.name,
           email: formData.email,
+          phone: formData.phone,
           subject: formData.subject || "İletişim Formu Mesajı",
           message: formData.message
         }
@@ -63,6 +65,7 @@ const Contact = () => {
       setFormData({
         name: "",
         email: "",
+        phone: "",
         subject: "",
         message: ""
       });
@@ -155,17 +158,32 @@ const Contact = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="subject" className="text-gray-700 font-semibold">Konu</Label>
-                    <Input
-                      id="subject"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleChange}
-                      placeholder="Mesaj konusunu girin"
-                      className="border-2 border-gray-200 focus:border-blue-500 transition-colors h-12"
-                    />
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-gray-700 font-semibold">Telefon Numarası</Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="Telefon numaranızı girin"
+                        className="border-2 border-gray-200 focus:border-blue-500 transition-colors h-12"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="subject" className="text-gray-700 font-semibold">Konu</Label>
+                      <Input
+                        id="subject"
+                        name="subject"
+                        value={formData.subject}
+                        onChange={handleChange}
+                        placeholder="Mesaj konusunu girin"
+                        className="border-2 border-gray-200 focus:border-blue-500 transition-colors h-12"
+                      />
+                    </div>
                   </div>
+
 
                   <div className="space-y-2">
                     <Label htmlFor="message" className="text-gray-700 font-semibold">Mesaj *</Label>
