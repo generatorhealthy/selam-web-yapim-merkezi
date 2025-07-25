@@ -1,12 +1,17 @@
 RewriteEngine On
 RewriteBase /
 
-# Force MIME types - Bu çok önemli
+# MIME type zorla ayarları - EN ÖNEMLİ KISIM
 <IfModule mod_mime.c>
+    # JavaScript dosyaları için
     AddType application/javascript .js
     AddType application/javascript .mjs
-    AddType application/javascript .jsx
+    AddType text/javascript .js
+    
+    # CSS dosyaları için
     AddType text/css .css
+    
+    # Diğer dosya türleri
     AddType text/html .html
     AddType application/json .json
     AddType image/svg+xml .svg
@@ -18,47 +23,60 @@ RewriteBase /
     AddType image/jpeg .jpeg
     AddType image/gif .gif
     AddType image/webp .webp
-    AddType image/ico .ico
+    AddType image/vnd.microsoft.icon .ico
 </IfModule>
 
-# Hostinger için özel ayarlar - MIME type zorla
+# Header ayarları ile MIME type zorla
 <IfModule mod_headers.c>
-    <FilesMatch "\.(js|mjs|jsx)$">
+    # JavaScript dosyaları
+    <FilesMatch "\.(js|mjs)$">
         Header always set Content-Type "application/javascript; charset=utf-8"
         Header always set X-Content-Type-Options nosniff
+        Header always set Cache-Control "public, max-age=31536000"
     </FilesMatch>
-
+    
+    # CSS dosyaları
     <FilesMatch "\.css$">
         Header always set Content-Type "text/css; charset=utf-8"
+        Header always set Cache-Control "public, max-age=31536000"
     </FilesMatch>
-
+    
+    # Resim dosyaları
     <FilesMatch "\.(png|jpg|jpeg|gif|webp|ico|svg)$">
         Header always set Cache-Control "public, max-age=31536000"
     </FilesMatch>
+    
+    # Font dosyaları
+    <FilesMatch "\.(woff|woff2|ttf|eot)$">
+        Header always set Cache-Control "public, max-age=31536000"
+        Header always set Access-Control-Allow-Origin "*"
+    </FilesMatch>
 </IfModule>
 
-# Alternative MIME type forcing
-RemoveType .js .css
+# Alternatif MIME type ayarları
+RemoveType .js .css .html
 AddType application/javascript .js
 AddType text/css .css
+AddType text/html .html
 
-# Security headers
+# Güvenlik başlıkları
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options nosniff
     Header always set X-Frame-Options SAMEORIGIN
     Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# Disable directory browsing
+# Dizin görüntülemeyi engelle
 Options -Indexes
 
-# Handle React Router (catch all) - En sonda olmalı
+# React Router için catch-all
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/assets/
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml)$
 RewriteRule ^(.*)$ /index.html [L,QSA]
 
-# Error pages
+# Hata sayfaları
 ErrorDocument 404 /index.html
 ErrorDocument 500 /index.html
