@@ -37,13 +37,13 @@ const SpecialistTests = ({ specialistId, specialistName, specialistSpecialty }: 
     try {
       setLoading(true);
       
-      // Fetch tests that match the specialist's specialty area and are approved
+      // Fetch tests that belong to this specific specialist
       const { data: testsData, error } = await supabase
         .from('tests')
         .select('*')
         .eq('is_active', true)
         .eq('status', 'approved')
-        .eq('specialty_area', specialistSpecialty)
+        .eq('specialist_id', specialistId)
         .order('created_at', { ascending: false });
 
       if (error) {
