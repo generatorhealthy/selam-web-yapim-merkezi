@@ -26,14 +26,20 @@ RewriteBase /
     AddType image/vnd.microsoft.icon .ico
 </IfModule>
 
-# Header ayarları ile MIME type zorla
+# Header ayarları ile MIME type zorla - ÖZEL ASSETS KLASÖRÜ İÇİN
 <IfModule mod_headers.c>
-    # JavaScript dosyaları
+    # JavaScript dosyaları - hem kök hem de assets klasöründeki
     <FilesMatch "\.(js|mjs)$">
         Header always set Content-Type "application/javascript; charset=utf-8"
         Header always set X-Content-Type-Options nosniff
         Header always set Cache-Control "public, max-age=31536000"
     </FilesMatch>
+    
+    # Assets klasöründeki dosyalar için özel JS kural
+    <Files "assets/*.js">
+        Header always set Content-Type "application/javascript; charset=utf-8"
+        Header always set X-Content-Type-Options nosniff
+    </Files>
     
     # CSS dosyaları
     <FilesMatch "\.css$">
