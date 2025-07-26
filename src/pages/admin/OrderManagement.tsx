@@ -1115,29 +1115,19 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                  Kopyala
                                </Button>
                                
-                               {order.is_first_order && (
-                                 <div className="flex gap-1">
-                                   <Button
-                                     variant="outline"
-                                     size="sm"
-                                     onClick={() => handleDownloadContract(order, 'pre_info')}
-                                     className="flex items-center gap-1"
-                                   >
-                                     <FileText className="w-3 h-3" />
-                                     Ön Bilgi
-                                   </Button>
-                                   
-                                   <Button
-                                     variant="outline"
-                                     size="sm"
-                                     onClick={() => handleDownloadContract(order, 'distance_sales')}
-                                     className="flex items-center gap-1"
-                                   >
-                                     <Download className="w-3 h-3" />
-                                     Mesafeli Satış
-                                   </Button>
-                                 </div>
-                               )}
+                                {order.is_first_order && (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDownloadContract(order, 'distance_sales')}
+                                      className="flex items-center gap-1"
+                                    >
+                                      <Download className="w-3 h-3" />
+                                      Mesafeli Satış
+                                    </Button>
+                                  </div>
+                                )}
                                
                                <Button
                                  variant="outline"
