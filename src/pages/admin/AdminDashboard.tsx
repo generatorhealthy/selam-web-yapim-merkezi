@@ -254,6 +254,17 @@ const AdminDashboard = () => {
       buttonText: "Destek Taleplerini Görüntüle",
       adminOnly: false,
       staffOnly: true
+    },
+    {
+      title: "Sözleşmeler",
+      description: "Müşteri ön bilgilendirme ve mesafeli satış sözleşmelerini görüntüle",
+      icon: FileText,
+      gradient: "from-emerald-500 via-teal-500 to-cyan-600",
+      bgGradient: "from-emerald-50 to-cyan-50",
+      shadowColor: "shadow-emerald-500/20",
+      route: "/divan_paneli/contracts",
+      buttonText: "Sözleşmeleri Görüntüle",
+      adminOnly: true
     }
   ];
 
