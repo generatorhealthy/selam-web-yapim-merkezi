@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,62 +6,57 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Star, Users, Calendar, Headphones, Sparkles, Crown, Gift, Target, Megaphone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
+import { supabase } from "@/integrations/supabase/client";
 
-const packages = [
-  {
-    id: "basic",
-    name: "Premium Paket",
-    price: 2998,
-    originalPrice: 6499,
-    features: [
-      "Hasta Takibi",
-      "Detaylı Profil",
-      "Branş (Doktor Üyeliği 1)",
-      "İletişim",
-      "Adres ve Konum",
-      "Sosyal Medya Hesapları Ekleme",
-      "Video Yayınlama",
-      "Soru Cevaplama",
-      "Danışan Görüşleri",
-      "Doktor Sayfasına Özgün Seo Çalışması",
-      "Online Randevu Takimi",
-      "Google Reklam ve Yönetimi",
-      "Sosyal Medya Reklam ve Yönetimi",
-      "Santral Sistemden Danışan Yönlendirme"
-    ],
-    color: "from-blue-500 to-blue-600",
-    popular: true,
-    icon: Crown
-  },
-  {
-    id: "premium",
-    name: "Full Paket",
-    price: 4998,
-    originalPrice: 8750,
-    features: [
-      "Hasta Takibi",
-      "Detaylı Profil",
-      "Branş (Doktor Üyeliği 1)",
-      "İletişim",
-      "Adres ve Konum",
-      "Sosyal Medya Hesapları Ekleme",
-      "Video Yayınlama",
-      "Soru Cevaplama",
-      "Danışan Görüşleri",
-      "Doktor Sayfasına Özgün Seo Çalışması",
-      "Online Randevu Takimi",
-      "Google Reklam ve Yönetimi",
-      "Sosyal Medya Reklam ve Yönetimi",
-      "Santral Sistemden Danışan Yönlendirme"
-    ],
-    color: "from-purple-500 to-purple-600",
-    popular: false,
-    icon: Sparkles
-  }
-];
+// Icon mapping for database values
+const iconMap: { [key: string]: any } = {
+  Crown,
+  Sparkles,
+  Star,
+  Gift,
+  Target,
+  Users,
+  Calendar
+};
 
 const Packages = () => {
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('is_active', true)
+        .order('price', { ascending: true });
+
+      if (error) throw error;
+
+      // Map database data to frontend format
+      const mappedPackages = data.map(pkg => ({
+        id: pkg.package_key,
+        name: pkg.name,
+        price: Number(pkg.price),
+        originalPrice: Number(pkg.original_price),
+        features: pkg.features,
+        color: pkg.color,
+        popular: pkg.popular,
+        icon: iconMap[pkg.icon] || Crown
+      }));
+
+      setPackages(mappedPackages);
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleWhatsAppContact = () => {
     const phoneNumber = "905335822275"; // 0533 582 22 75
@@ -69,6 +64,27 @@ const Packages = () => {
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
+
+  if (loading) {
+    return (
+      <>
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+          <meta name="googlebot" content="noindex, nofollow" />
+          <title>Paketler - Doktorum Ol</title>
+        </Helmet>
+        
+        <HorizontalNavigation />
+        
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Paketler yükleniyor...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
