@@ -9,6 +9,7 @@ import { Helmet } from "react-helmet-async";
 import { AdminTopBar } from "@/components/AdminTopBar";
 import AdminBackButton from "@/components/AdminBackButton";
 import { useUserRole } from "@/hooks/useUserRole";
+import ContractDialog from "@/components/ContractDialog";
 import { 
   FileText, 
   Download, 
@@ -32,6 +33,9 @@ interface ContractOrder {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  customer_tc_no: string;
+  customer_address: string;
+  customer_city: string;
   package_name: string;
   amount: number;
   payment_method: string;
@@ -48,6 +52,11 @@ const ContractManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "individual" | "company">("all");
+  
+  // Dialog states
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<ContractOrder | null>(null);
+  const [contractType, setContractType] = useState<"preInfo" | "distanceSales">("preInfo");
 
   const isAdmin = userProfile?.role === 'admin';
 
@@ -67,6 +76,9 @@ const ContractManagement = () => {
           customer_name,
           customer_email,
           customer_phone,
+          customer_tc_no,
+          customer_address,
+          customer_city,
           package_name,
           amount,
           payment_method,
@@ -93,6 +105,13 @@ const ContractManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Contract dialog functions
+  const openContractDialog = (order: ContractOrder, type: "preInfo" | "distanceSales") => {
+    setSelectedOrder(order);
+    setContractType(type);
+    setContractDialogOpen(true);
   };
 
   const downloadPreInfoPDF = async (order: ContractOrder) => {
@@ -410,21 +429,21 @@ const ContractManagement = () => {
                           
                           <div className="flex items-center gap-2">
                             <Button
-                              onClick={() => downloadPreInfoPDF(order)}
+                              onClick={() => openContractDialog(order, "preInfo")}
                               size="sm"
                               className="flex items-center gap-2"
                             >
-                              <Download className="w-4 h-4" />
+                              <Eye className="w-4 h-4" />
                               Ön Bilgi
                             </Button>
                             
                             <Button
-                              onClick={() => downloadDistanceSalesPDF(order)}
+                              onClick={() => openContractDialog(order, "distanceSales")}
                               size="sm"
                               variant="outline"
                               className="flex items-center gap-2"
                             >
-                              <Download className="w-4 h-4" />
+                              <Eye className="w-4 h-4" />
                               Mesafeli Satış
                             </Button>
                           </div>
@@ -437,6 +456,32 @@ const ContractManagement = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Contract Dialog */}
+        {selectedOrder && (
+          <ContractDialog
+            open={contractDialogOpen}
+            onClose={() => setContractDialogOpen(false)}
+            contractType={contractType}
+            formData={{
+              name: selectedOrder.customer_name.split(' ')[0] || '',
+              surname: selectedOrder.customer_name.split(' ').slice(1).join(' ') || '',
+              email: selectedOrder.customer_email,
+              phone: selectedOrder.customer_phone,
+              tcNo: selectedOrder.customer_tc_no,
+              address: selectedOrder.customer_address,
+              city: selectedOrder.customer_city
+            }}
+            selectedPackage={{
+              name: selectedOrder.package_name,
+              price: selectedOrder.amount,
+              features: [] // Paket özelliklerini buraya ekleyebiliriz
+            }}
+            paymentMethod={selectedOrder.payment_method}
+            customerType={selectedOrder.customer_type}
+            clientIP="Admin Panel"
+          />
+        )}
       </div>
     </>
   );
