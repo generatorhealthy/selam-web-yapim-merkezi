@@ -43,6 +43,7 @@ interface ContractOrder {
   created_at: string;
   pre_info_pdf_content: string | null;
   distance_sales_pdf_content: string | null;
+  package_features?: string[];
 }
 
 const ContractManagement = () => {
@@ -69,32 +70,53 @@ const ContractManagement = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          id,
-          customer_name,
-          customer_email,
-          customer_phone,
-          customer_tc_no,
-          customer_address,
-          customer_city,
-          package_name,
-          amount,
-          payment_method,
-          customer_type,
-          created_at,
-          pre_info_pdf_content,
-          distance_sales_pdf_content
-        `)
-        .not('pre_info_pdf_content', 'is', null)
-        .order('created_at', { ascending: false });
+      
+      // Önce orders ve packages verilerini al
+      const [ordersResponse, packagesResponse] = await Promise.all([
+        supabase
+          .from('orders')
+          .select(`
+            id,
+            customer_name,
+            customer_email,
+            customer_phone,
+            customer_tc_no,
+            customer_address,
+            customer_city,
+            package_name,
+            amount,
+            payment_method,
+            customer_type,
+            created_at,
+            pre_info_pdf_content,
+            distance_sales_pdf_content
+          `)
+          .not('pre_info_pdf_content', 'is', null)
+          .order('created_at', { ascending: false }),
+        
+        supabase
+          .from('packages')
+          .select('name, features')
+      ]);
 
-      if (error) {
-        throw error;
+      if (ordersResponse.error) {
+        throw ordersResponse.error;
       }
 
-      setOrders(data || []);
+      if (packagesResponse.error) {
+        console.error('Paket verileri alınırken hata:', packagesResponse.error);
+      }
+
+      // Paket özelliklerini orders ile birleştir
+      const ordersWithPackageFeatures = (ordersResponse.data || []).map(order => {
+        const packageData = (packagesResponse.data || []).find(pkg => pkg.name === order.package_name);
+        return {
+          ...order,
+          package_features: packageData?.features || []
+        };
+      });
+
+      setOrders(ordersWithPackageFeatures);
     } catch (error) {
       console.error('Sözleşmeler yüklenirken hata:', error);
       toast({
@@ -475,7 +497,7 @@ const ContractManagement = () => {
             selectedPackage={{
               name: selectedOrder.package_name,
               price: selectedOrder.amount,
-              features: [] // Paket özelliklerini buraya ekleyebiliriz
+              features: selectedOrder.package_features || []
             }}
             paymentMethod={selectedOrder.payment_method}
             customerType={selectedOrder.customer_type}
