@@ -35,8 +35,8 @@ export const generatePreInfoPDF = async (orderId: string) => {
 
     console.log('📡 Sipariş bilgileri sorgulanıyor...');
     
-    // Sipariş bilgilerini ve ön bilgilendirme form içeriğini al
-    const { data: orderData, error } = await supabase
+    // Sipariş bilgilerini al
+    const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .select(`
         id,
@@ -51,30 +51,37 @@ export const generatePreInfoPDF = async (orderId: string) => {
         payment_method,
         customer_type,
         contract_ip_address,
-        pre_info_pdf_content,
         created_at
       `)
       .eq('id', orderId)
       .maybeSingle();
-    
-    if (error) {
-      console.error('❌ Veritabanı hatası:', error);
-      throw new Error(`Veritabanı hatası: ${error.message}`);
-    }
 
-    console.log('📊 Sipariş verisi:', orderData);
-    console.log('📝 Pre info içerik var mı:', !!orderData?.pre_info_pdf_content);
-    console.log('📄 Pre info içerik uzunluğu:', orderData?.pre_info_pdf_content?.length || 0);
+    if (orderError) {
+      console.error('❌ Sipariş veritabanı hatası:', orderError);
+      throw new Error(`Sipariş veritabanı hatası: ${orderError.message}`);
+    }
 
     if (!orderData) {
       console.error('❌ Sipariş bulunamadı');
       throw new Error('Sipariş bulunamadı');
     }
 
-    if (!orderData.pre_info_pdf_content || orderData.pre_info_pdf_content.trim() === '') {
-      console.error('❌ Pre info içerik boş');
-      throw new Error('Bu sipariş için ön bilgilendirme form içeriği bulunamadı. Form içeriği boş veya mevcut değil.');
+    console.log('📊 Sipariş verisi alındı:', orderData);
+
+    // Form içeriğini al
+    const { data: formData, error: formError } = await supabase
+      .from('form_contents')
+      .select('content')
+      .eq('form_type', 'pre_info')
+      .maybeSingle();
+
+    if (formError) {
+      console.error('❌ Form içeriği hatası:', formError);
+      throw new Error(`Form içeriği hatası: ${formError.message}`);
     }
+
+    const formContent = formData?.content || 'DOKTORUM OL ÜYELİK SÖZLEŞMESİ';
+    console.log('📝 Form içeriği alındı, uzunluk:', formContent.length);
 
     console.log('✅ Veriler kontrol edildi, PDF oluşturuluyor...');
 
@@ -256,11 +263,11 @@ export const generatePreInfoPDF = async (orderId: string) => {
 
   addSpacing(15);
   
-  // ÖN BİLGİLENDİRME FORM İÇERİĞİ
-  addTextBlock('📄 ÖN BİLGİLENDİRME FORM İÇERİĞİ', 14, 'bold', true, [255, 255, 255], [168, 85, 247]);
+  // SÖZLEŞME İÇERİĞİ - Form tablosundan alınan içerik
+  addTextBlock('📄 SÖZLEŞME İÇERİĞİ', 14, 'bold', true, [255, 255, 255], [168, 85, 247]);
   
   // HTML içeriğini temizle ve düz metne çevir
-  const cleanContent = orderData.pre_info_pdf_content
+  const cleanContent = formContent
     .replace(/<[^>]*>/g, '') // HTML etiketlerini kaldır
     .replace(/&nbsp;/g, ' ') // &nbsp; karakterlerini boşluk yap
     .replace(/&amp;/g, '&') // HTML entity'lerini düzelt
@@ -270,11 +277,29 @@ export const generatePreInfoPDF = async (orderId: string) => {
     .replace(/&#39;/g, "'")
     .trim();
   
-  // İçeriği paragraf paragraf böl ve ekle
-  const paragraphs = cleanContent.split(/\n\s*\n/);
-  paragraphs.forEach((paragraph) => {
-    if (paragraph.trim()) {
-      addTextBlock(paragraph.trim(), 10);
+  // İçeriği satır satır böl ve ekle
+  const lines = cleanContent.split('\n');
+  lines.forEach((line) => {
+    const trimmedLine = line.trim();
+    if (trimmedLine) {
+      // Başlık kontrolü - büyük harfler ve uzun satırlar
+      const isTitle = trimmedLine.length > 15 && trimmedLine === trimmedLine.toUpperCase();
+      // Madde başlığı kontrolü - sayı ile başlayanlar
+      const isArticle = /^\d+\./.test(trimmedLine);
+      
+      if (isTitle) {
+        addSpacing(10);
+        addTextBlock(trimmedLine, 12, 'bold', false, [30, 58, 138]);
+        addSpacing(5);
+      } else if (isArticle) {
+        addSpacing(8);
+        addTextBlock(trimmedLine, 11, 'bold', false, [0, 0, 0]);
+        addSpacing(3);
+      } else {
+        addTextBlock(trimmedLine, 10, 'normal', false, [0, 0, 0]);
+        addSpacing(2);
+      }
+    } else {
       addSpacing(5);
     }
   });
