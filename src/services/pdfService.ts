@@ -49,7 +49,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
         payment_method,
         customer_type,
         client_ip,
-        pre_info_form_content,
+        pre_info_pdf_content,
         created_at
       `)
       .eq('id', orderId)
@@ -60,7 +60,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
     throw new Error('Sipariş bulunamadı');
   }
 
-  if (!orderData || !orderData.pre_info_form_content) {
+  if (!orderData || !orderData.pre_info_pdf_content) {
     throw new Error('Ön bilgilendirme form içeriği bulunamadı');
   }
 
@@ -246,7 +246,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
   addTextBlock('📄 ÖN BİLGİLENDİRME FORM İÇERİĞİ', 14, 'bold', true, [255, 255, 255], [168, 85, 247]);
   
   // HTML içeriğini temizle ve düz metne çevir
-  const cleanContent = orderData.pre_info_form_content
+  const cleanContent = orderData.pre_info_pdf_content
     .replace(/<[^>]*>/g, '') // HTML etiketlerini kaldır
     .replace(/&nbsp;/g, ' ') // &nbsp; karakterlerini boşluk yap
     .replace(/&amp;/g, '&') // HTML entity'lerini düzelt

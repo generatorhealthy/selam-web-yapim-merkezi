@@ -458,10 +458,10 @@ const OrderManagement = () => {
       });
 
     } catch (error) {
-      console.error('Word dosyası oluşturulurken hata:', error);
+      console.error('PDF dosyası oluşturulurken hata:', error);
       toast({
         title: "Hata",
-        description: "Word dosyası oluşturulurken hata oluştu",
+        description: "PDF dosyası oluşturulurken hata oluştu",
         variant: "destructive",
       });
     }
