@@ -1,5 +1,6 @@
 
 import jsPDF from 'jspdf';
+import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
 
 interface CustomerData {
   name: string;
@@ -606,4 +607,450 @@ export const generateDistanceSalesPDF = (
   });
   
   return pdf;
+};
+
+// Word document generator for pre-info form with original content
+export const generatePreInfoWord = async (
+  customerData: CustomerData,
+  packageData: PackageData,
+  paymentMethod: string,
+  customerType: string,
+  clientIP: string
+) => {
+  const currentDate = new Date().toLocaleDateString('tr-TR');
+
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: [
+        // Title
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [
+            new TextRun({
+              text: "ÖN BİLGİLENDİRME FORMU",
+              bold: true,
+              size: 28,
+              color: "2E74B5"
+            })
+          ]
+        }),
+        
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [
+            new TextRun({
+              text: "(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)",
+              size: 20,
+              italics: true
+            })
+          ]
+        }),
+
+        new Paragraph({ text: "" }), // Empty line
+        
+        // Document info
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Belge Tarihi: ${currentDate}`,
+              bold: true
+            })
+          ]
+        }),
+        
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `IP Adresi: ${clientIP}`,
+              bold: true
+            })
+          ]
+        }),
+
+        new Paragraph({ text: "" }), // Empty line
+
+        // Seller info section
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "SATICI FİRMA BİLGİLERİ",
+              bold: true,
+              size: 24,
+              color: "2E74B5"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Ünvan: DoktorumOL Dijital Sağlık Hizmetleri"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Adres: İstanbul, Türkiye"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Telefon: +90 XXX XXX XX XX"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "E-posta: info@doktorumol.com.tr"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Web Sitesi: www.doktorumol.com.tr"
+            })
+          ]
+        }),
+
+        new Paragraph({ text: "" }), // Empty line
+
+        // Customer info section
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "ALICI MÜŞTERİ BİLGİLERİ",
+              bold: true,
+              size: 24,
+              color: "2E74B5"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Ad Soyad: ${customerData.name} ${customerData.surname}`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `E-posta Adresi: ${customerData.email}`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Telefon Numarası: ${customerData.phone}`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `TC Kimlik No: ${customerData.tcNo}`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Adres: ${customerData.address}, ${customerData.city} ${customerData.postalCode}`
+            })
+          ]
+        }),
+
+        ...(customerType === 'company' && customerData.companyName ? [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Firma Adı: ${customerData.companyName}`
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Vergi No: ${customerData.taxNo}`
+              })
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Vergi Dairesi: ${customerData.taxOffice}`
+              })
+            ]
+          })
+        ] : []),
+
+        new Paragraph({ text: "" }), // Empty line
+
+        // Service info section
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU",
+              bold: true,
+              size: 24,
+              color: "2E74B5"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Hizmet Adı: ${packageData.name}`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Hizmet Açıklaması: Dijital sağlık platformu kullanım hakkı ve profesyonel doktor profili yönetimi"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Hizmet Süresi: 12 (On İki) Ay"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Aylık Hizmet Bedeli: ${packageData.price.toLocaleString('tr-TR')} TL (KDV Dahil)`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Toplam Hizmet Bedeli: ${(packageData.price * 12).toLocaleString('tr-TR')} TL (KDV Dahil)`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Ödeme Şekli: ${paymentMethod === 'creditCard' ? 'Kredi Kartı/Banka Kartı ile Aylık Otomatik Tahsilat' : 'Banka Havalesi/EFT ile Aylık Manuel Ödeme'}`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "KDV Oranı: %20"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Para Birimi: Türk Lirası (TL)"
+            })
+          ]
+        }),
+
+        new Paragraph({ text: "" }), // Empty line
+
+        // Terms and conditions
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "CAYMA HAKKI BİLGİLERİ",
+              bold: true,
+              size: 24,
+              color: "2E74B5"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında, sözleşme tarihinden itibaren 14 (on dört) gün içerisinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin bu sözleşmeden cayma hakkınız bulunmaktadır."
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Cayma hakkının kullanılması için bu süre içerisinde satıcıya yazılı olarak bildirim yapılması yeterlidir. Cayma bildirimi info@doktorumol.com.tr e-posta adresine veya kayıtlı adrese yazılı olarak yapılabilir."
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Cayma hakkının kullanılması halinde, ödenen tüm bedeller 10 (on) gün içerisinde iade edilir."
+            })
+          ]
+        }),
+
+        new Paragraph({ text: "" }), // Empty line
+
+        // Service conditions
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "HİZMET KOŞULLARI",
+              bold: true,
+              size: 24,
+              color: "2E74B5"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "• Hizmet, ödeme onayının alınmasından sonra en geç 24 saat içerisinde aktifleştirilir."
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "• Kullanıcı hesap bilgileri ayrı bir e-posta ile gönderilir."
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "• Platform kullanımı için internet bağlantısı gereklidir."
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "• Aylık ödemeler zamanında yapılmalıdır. Ödeme gecikmeleri durumunda hizmet askıya alınabilir."
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "• Hizmet, alıcı tarafından herhangi bir zamanda iptal edilebilir."
+            })
+          ]
+        }),
+
+        new Paragraph({ text: "" }), // Empty line
+
+        // Acceptance
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "ONAY VE KABUL",
+              bold: true,
+              size: 24,
+              color: "2E74B5"
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Bu ön bilgilendirme formunda yer alan tüm bilgileri okudum, anladım ve kabul ediyorum. Cayma hakkım konusunda bilgilendirildiğimi onaylıyorum."
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Kabul Tarihi: ${currentDate}`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `IP Adresi: ${clientIP}`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Müşteri: ${customerData.name} ${customerData.surname}`
+            })
+          ]
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Bu belge elektronik ortamda düzenlenmiş ve yasal geçerliliğe sahiptir."
+            })
+          ]
+        })
+      ]
+    }]
+  });
+
+  return await Packer.toBlob(doc);
+};
+
+// Function to download Word document
+export const downloadPreInfoWord = async (
+  customerData: CustomerData,
+  packageData: PackageData,
+  paymentMethod: string,
+  customerType: string,
+  clientIP: string
+) => {
+  try {
+    const blob = await generatePreInfoWord(customerData, packageData, paymentMethod, customerType, clientIP);
+    
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `on-bilgi-formu-${customerData.name}-${customerData.surname}.docx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Word dosyası oluşturulurken hata:', error);
+    throw error;
+  }
 };
