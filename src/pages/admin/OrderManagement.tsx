@@ -17,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { downloadPreInfoWord as downloadPreInfoWordFromService } from "@/services/pdfService";
+import { generatePreInfoPDF } from "@/services/pdfService";
 
 interface Order {
   id: string;
@@ -438,7 +438,7 @@ const OrderManagement = () => {
   };
 
   // PDF download functions
-  const downloadPreInfoWord = async (order: Order) => {
+  const downloadPreInfoPDF = async (order: Order) => {
     try {
       const nameParts = order.customer_name.split(' ');
       const firstName = nameParts[0] || '';
@@ -464,7 +464,7 @@ const OrderManagement = () => {
         originalPrice: order.amount
       };
 
-      await downloadPreInfoWordFromService(
+      const pdf = await generatePreInfoPDF(
         customerData,
         packageData,
         order.payment_method,
@@ -472,9 +472,14 @@ const OrderManagement = () => {
         order.contract_ip_address || 'Bilinmiyor'
       );
 
+      // Download PDF
+      const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
+      const fileName = `${firstName}_${lastName}_OnBilgilendirme_${currentDate}.pdf`;
+      pdf.save(fileName);
+
       toast({
         title: "Başarılı",
-        description: "Ön bilgi formu Word dosyası olarak indirildi",
+        description: "Ön bilgilendirme formu PDF olarak indirildi.",
       });
 
     } catch (error) {
@@ -796,7 +801,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
   // Mevcut siparişler için sözleşme indirme
   const handleDownloadContract = async (order: Order, contractType: 'pre_info' | 'distance_sales') => {
     if (contractType === 'pre_info') {
-      await downloadPreInfoWord(order);
+      await downloadPreInfoPDF(order);
     } else {
       await downloadDistanceSalesPDF(order);
     }
