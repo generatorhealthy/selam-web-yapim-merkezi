@@ -31,13 +31,13 @@ export const generatePreInfoPDF = (
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
   const pageHeight = pdf.internal.pageSize.height;
-  const margin = 25;
+  const margin = 20;
   const contentWidth = pageWidth - 2 * margin;
-  const safeBottomMargin = 40; // Daha büyük güvenli alan
+  const safeBottomMargin = 30;
   const maxY = pageHeight - safeBottomMargin;
-  let yPosition = 40;
+  let yPosition = 30;
   
-  // Gelişmiş sayfa kontrolü - kesin çözüm
+  // Gelişmiş sayfa kontrolü
   const checkNewPageNeeded = (neededHeight: number) => {
     return yPosition + neededHeight > maxY;
   };
@@ -45,32 +45,45 @@ export const generatePreInfoPDF = (
   const addNewPageIfNeeded = (neededHeight: number) => {
     if (checkNewPageNeeded(neededHeight)) {
       pdf.addPage();
-      yPosition = 40;
+      yPosition = 30;
       return true;
     }
     return false;
   };
   
-  // Estetik metin bloku ekleme fonksiyonu
-  const addTextBlock = (text: string, fontSize: number = 10, fontWeight: string = 'normal', isTitle: boolean = false, color: number[] = [0, 0, 0]) => {
+  // Modern metin bloku ekleme
+  const addTextBlock = (
+    text: string, 
+    fontSize: number = 10, 
+    fontWeight: string = 'normal', 
+    isTitle: boolean = false, 
+    color: number[] = [0, 0, 0],
+    backgroundColor?: number[]
+  ) => {
     pdf.setFontSize(fontSize);
     pdf.setFont('helvetica', fontWeight);
     pdf.setTextColor(color[0], color[1], color[2]);
     
-    const lines = pdf.splitTextToSize(text, contentWidth);
-    const lineHeight = fontSize * 0.65;
-    const totalHeight = lines.length * lineHeight + (isTitle ? 15 : 8);
+    const lines = pdf.splitTextToSize(text, contentWidth - 20);
+    const lineHeight = fontSize * 0.75;
+    const totalHeight = lines.length * lineHeight + (isTitle ? 20 : 10);
     
     // Sayfa kontrolü
     addNewPageIfNeeded(totalHeight);
     
-    // Başlık için arka plan rengi
-    if (isTitle && fontSize > 11) {
-      pdf.setFillColor(245, 248, 250);
-      pdf.rect(margin - 5, yPosition - 5, contentWidth + 10, totalHeight - 5, 'F');
+    // Başlık için modern arka plan
+    if (backgroundColor) {
+      pdf.setFillColor(backgroundColor[0], backgroundColor[1], backgroundColor[2]);
+      pdf.roundedRect(margin - 5, yPosition - 8, contentWidth + 10, totalHeight - 2, 3, 3, 'F');
     }
     
-    pdf.text(lines, margin, yPosition);
+    // Gölge efekti için
+    if (isTitle && fontSize > 12) {
+      pdf.setFillColor(0, 0, 0, 0.1);
+      pdf.roundedRect(margin - 3, yPosition - 6, contentWidth + 6, totalHeight - 4, 3, 3, 'F');
+    }
+    
+    pdf.text(lines, margin + (backgroundColor ? 10 : 0), yPosition + 5);
     yPosition += totalHeight;
     
     return lines.length;
@@ -85,44 +98,51 @@ export const generatePreInfoPDF = (
     }
   };
   
-  // Dekoratif çizgi ekleme
-  const addLine = (color: number[] = [200, 200, 200]) => {
-    addNewPageIfNeeded(5);
+  // Modern çizgi ekleme
+  const addLine = (color: number[] = [220, 220, 220], thickness: number = 0.5) => {
+    addNewPageIfNeeded(10);
     pdf.setDrawColor(color[0], color[1], color[2]);
-    pdf.setLineWidth(0.5);
+    pdf.setLineWidth(thickness);
     pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 8;
+    yPosition += 10;
   };
   
-  // Başlık - Estetik tasarım
-  addNewPageIfNeeded(50);
+  // Modern başlık tasarımı
+  addNewPageIfNeeded(60);
   
-  // Ana başlık için arka plan
-  pdf.setFillColor(30, 41, 59);
-  pdf.rect(margin - 10, yPosition - 10, contentWidth + 20, 35, 'F');
+  // Gradient arka plan efekti
+  pdf.setFillColor(59, 130, 246);
+  pdf.roundedRect(margin - 15, yPosition - 15, contentWidth + 30, 50, 8, 8, 'F');
   
-  pdf.setFontSize(20);
+  pdf.setFillColor(30, 64, 175);
+  pdf.roundedRect(margin - 10, yPosition - 10, contentWidth + 20, 40, 6, 6, 'F');
+  
+  pdf.setFontSize(22);
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(255, 255, 255);
   pdf.text('ÖN BİLGİLENDİRME FORMU', pageWidth / 2, yPosition + 8, { align: 'center' });
   
-  pdf.setFontSize(11);
+  pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)', pageWidth / 2, yPosition + 20, { align: 'center' });
-  yPosition += 40;
+  pdf.setTextColor(245, 245, 245);
+  pdf.text('(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)', pageWidth / 2, yPosition + 22, { align: 'center' });
+  yPosition += 50;
   
-  // Dekoratif çizgi
-  addLine([59, 130, 246]);
-  addSpacing(5);
+  addSpacing(10);
   
-  // Tarih ve IP bilgileri - renkli
+  // Modern bilgi kutusu
   const currentDate = new Date().toLocaleDateString('tr-TR');
-  addTextBlock(`📅 Belge Tarihi: ${currentDate}`, 10, 'normal', false, [59, 130, 246]);
-  addTextBlock(`🌐 IP Adresi: ${clientIP}`, 10, 'normal', false, [59, 130, 246]);
-  addSpacing(15);
+  pdf.setFillColor(241, 245, 249);
+  pdf.roundedRect(margin, yPosition, contentWidth, 25, 4, 4, 'F');
   
-  // Satıcı bilgileri bölümü
-  addTextBlock('🏢 SATICI FİRMA BİLGİLERİ', 14, 'bold', true, [30, 41, 59]);
+  pdf.setFontSize(9);
+  pdf.setTextColor(71, 85, 105);
+  pdf.text(`📅 Belge Tarihi: ${currentDate}`, margin + 10, yPosition + 8);
+  pdf.text(`🌐 IP Adresi: ${clientIP}`, margin + 10, yPosition + 18);
+  yPosition += 35;
+  
+  // Modern bölüm başlığı
+  addTextBlock('🏢 SATICI FİRMA BİLGİLERİ', 14, 'bold', true, [255, 255, 255], [59, 130, 246]);
   
   const sellerInfo = [
     'Ünvan: DoktorumOL Dijital Sağlık Hizmetleri',
@@ -142,8 +162,8 @@ export const generatePreInfoPDF = (
   
   addSpacing(5);
   
-  addLine([220, 220, 220]);
-  addTextBlock('👤 ALICI MÜŞTERİ BİLGİLERİ', 14, 'bold', true, [30, 41, 59]);
+  addSpacing(15);
+  addTextBlock('👤 ALICI MÜŞTERİ BİLGİLERİ', 14, 'bold', true, [255, 255, 255], [34, 197, 94]);
   
   const customerInfo = [
     `Ad Soyad: ${customerData.name} ${customerData.surname}`,
@@ -166,8 +186,8 @@ export const generatePreInfoPDF = (
   
   addSpacing(5);
   
-  addLine([220, 220, 220]);
-  addTextBlock('📋 HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 14, 'bold', true, [30, 41, 59]);
+  addSpacing(15);
+  addTextBlock('📋 HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 14, 'bold', true, [255, 255, 255], [239, 68, 68]);
   
   const serviceInfo = [
     `Hizmet Adı: ${packageData.name}`,
@@ -185,10 +205,9 @@ export const generatePreInfoPDF = (
     addTextBlock(info, 10);
   });
   
-  addSpacing(10);
+  addSpacing(15);
   
-  addLine([220, 220, 220]);
-  addTextBlock('📜 DETAYLI HİZMET KOŞULLARI VE BİLGİLERİ', 14, 'bold', true, [30, 41, 59]);
+  addTextBlock('📜 DETAYLI HİZMET KOŞULLARI VE BİLGİLERİ', 14, 'bold', true, [255, 255, 255], [168, 85, 247]);
   
   const detailedTerms = [
     '1. HİZMET TANIMI VE KAPSAMI:',
@@ -230,21 +249,24 @@ export const generatePreInfoPDF = (
     addTextBlock(term, 10);
   });
   
-  // İmza sayfası - estetik tasarım
+  // Modern imza sayfası
   pdf.addPage();
-  yPosition = 40;
+  yPosition = 30;
   
-  // İmza başlığı
+  // Gradient imza başlığı
   pdf.setFillColor(34, 197, 94);
-  pdf.rect(margin - 10, yPosition - 10, contentWidth + 20, 30, 'F');
+  pdf.roundedRect(margin - 15, yPosition - 15, contentWidth + 30, 45, 8, 8, 'F');
   
-  pdf.setFontSize(18);
+  pdf.setFillColor(16, 185, 129);
+  pdf.roundedRect(margin - 10, yPosition - 10, contentWidth + 20, 35, 6, 6, 'F');
+  
+  pdf.setFontSize(20);
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(255, 255, 255);
-  pdf.text('✍️ ONAY VE KABUL', pageWidth / 2, yPosition + 5, { align: 'center' });
-  yPosition += 35;
+  pdf.text('✍️ ONAY VE KABUL', pageWidth / 2, yPosition + 8, { align: 'center' });
+  yPosition += 40;
   
-  addLine([34, 197, 94]);
+  addSpacing(10);
   
   const acceptanceText = [
     'Bu ön bilgilendirme formunda yer alan tüm bilgileri okudum, anladım ve kabul ediyorum. Ürün/hizmet bedeli, ödeme şekli, teslimat koşulları ve diğer tüm şartlar hakkında tam bilgi sahibi olduğumu beyan ederim.',
