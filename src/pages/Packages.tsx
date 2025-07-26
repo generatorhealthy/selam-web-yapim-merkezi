@@ -34,6 +34,7 @@ const Packages = () => {
         .from('packages')
         .select('*')
         .eq('is_active', true)
+        .eq('price', 2998)
         .order('price', { ascending: true });
 
       if (error) throw error;
