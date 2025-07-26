@@ -1,6 +1,6 @@
 
 import { sendEmail } from './emailService';
-import { generatePreInfoWord, generateDistanceSalesPDF } from './pdfService';
+import { generatePreInfoPDF, generateDistanceSalesPDF } from './pdfService';
 
 interface CustomerData {
   name: string;
@@ -32,20 +32,17 @@ export const sendContractEmailsAfterPurchase = async (
 ) => {
   try {
     if (isFirstMonth) {
-      // Generate Word and PDF documents
-      const preInfoWordBlob = await generatePreInfoWord(customerData, packageData, paymentMethod, customerType, clientIP);
+      // Generate PDFs
+      const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerType, clientIP);
       const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerType, clientIP);
       
-      // Convert Word blob to base64 for email attachment
-      const preInfoWordArrayBuffer = await preInfoWordBlob.arrayBuffer();
-      const preInfoWordBase64 = btoa(String.fromCharCode(...new Uint8Array(preInfoWordArrayBuffer)));
-      
-      // Convert PDF to base64 for email attachment
+      // Convert PDFs to base64 for email attachment
+      const preInfoPDFBase64 = preInfoPDF.output('datauristring').split(',')[1];
       const distanceSalesPDFBase64 = distanceSalesPDF.output('datauristring').split(',')[1];
       
       // Create better file names with current date
       const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
-      const preInfoFileName = `${customerData.name}_${customerData.surname}_OnBilgilendirme_${currentDate}.docx`;
+      const preInfoFileName = `${customerData.name}_${customerData.surname}_OnBilgilendirme_${currentDate}.pdf`;
       const distanceSalesFileName = `${customerData.name}_${customerData.surname}_MesafeliSatis_${currentDate}.pdf`;
       
       // Send email with contracts and detailed order information
@@ -58,8 +55,8 @@ export const sendContractEmailsAfterPurchase = async (
         attachments: [
           {
             filename: preInfoFileName,
-            content: preInfoWordBase64,
-            contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            content: preInfoPDFBase64,
+            contentType: 'application/pdf'
           },
           {
             filename: distanceSalesFileName,
@@ -221,8 +218,8 @@ const createOrderCompletionEmailTemplate = (
             Bu e-postaya aşağıdaki belgeler eklenmiştir:
           </p>
           <ul style="color: #92400e; margin: 0; padding-left: 20px; line-height: 1.8;">
-            <li><strong>Ön Bilgilendirme Formu (Word)</strong> - Kişiselleştirilmiş belgeniz</li>
-            <li><strong>Mesafeli Satış Sözleşmesi (PDF)</strong> - Hizmet koşullarınız</li>
+            <li><strong>Ön Bilgilendirme Formu</strong> - Kişiselleştirilmiş belgeniz</li>
+            <li><strong>Mesafeli Satış Sözleşmesi</strong> - Hizmet koşullarınız</li>
           </ul>
           <p style="color: #92400e; font-size: 14px; margin: 15px 0 0 0; font-style: italic;">
             Bu belgeler sadılece ilk ödemenizde gönderilmektedir. Sonraki aylarda sadece ödeme bildirimleri alacaksınız.
