@@ -217,10 +217,14 @@ export const generatePreInfoPDF = async (orderId: string) => {
     doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 20, yPosition);
     addSpacing(20);
     
-    // Form içeriğini ekle
+    // Form içeriğini ekle - HTML etiketlerini temizle ve düzenle
     if (formContent && formContent !== 'DOKTORUM OL ÜYELİK SÖZLEŞMESİ') {
       const cleanContent = formContent
-        .replace(/<[^>]*>/g, '')
+        .replace(/<p><br><\/p>/g, '\n')
+        .replace(/<br>/g, '\n')
+        .replace(/<\/p><p>/g, '\n\n')
+        .replace(/<p>/g, '')
+        .replace(/<\/p>/g, '\n')
         .replace(/&nbsp;/g, ' ')
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
@@ -229,24 +233,55 @@ export const generatePreInfoPDF = async (orderId: string) => {
         .replace(/&#39;/g, "'")
         .trim();
       
-      const paragraphs = cleanContent.split(/\n\s*\n/);
-      paragraphs.forEach((paragraph) => {
-        if (paragraph.trim()) {
-          const isTitle = paragraph.length > 20 && paragraph === paragraph.toUpperCase();
-          const isArticle = /^\d+\./.test(paragraph.trim());
-          
-          if (isTitle) {
-            addSpacing(10);
-            addTextBlock(paragraph.trim(), 12, 'bold', false, [33, 150, 243]);
-            addSpacing(5);
-          } else if (isArticle) {
-            addSpacing(8);
-            addTextBlock(paragraph.trim(), 11, 'bold');
-            addSpacing(3);
-          } else {
-            addTextBlock(paragraph.trim(), 10);
-            addSpacing(5);
-          }
+      const lines = cleanContent.split('\n');
+      
+      lines.forEach((line, index) => {
+        const trimmedLine = line.trim();
+        
+        // Boş satırları atla
+        if (!trimmedLine) {
+          addSpacing(5);
+          return;
+        }
+        
+        // Ana başlıklar (büyük harflerle yazılmış uzun satırlar)
+        const isMainTitle = trimmedLine.length > 15 && 
+                           (trimmedLine.includes('DOKTORUM OL ÜYELİK SÖZLEŞMESİ') ||
+                            trimmedLine.includes('TARAFLAR') ||
+                            trimmedLine.includes('AMAÇ VE KONU') ||
+                            trimmedLine.includes('TANIMLAR') ||
+                            trimmedLine.includes('HAK VE YÜKÜMLÜLÜK') ||
+                            trimmedLine.includes('KİŞİSEL VERİLER') ||
+                            trimmedLine.includes('HİZMET BEDELİ') ||
+                            trimmedLine.includes('SÜRE VE FESİH') ||
+                            trimmedLine.includes('GİZLİLİK') ||
+                            trimmedLine.includes('MÜCBİR SEBEPLER') ||
+                            trimmedLine.includes('FİKRİ MÜLKİYET') ||
+                            trimmedLine.includes('ÇEŞİTLİ HÜKÜMLER') ||
+                            trimmedLine.includes('AYDINLATMA METNİ') ||
+                            trimmedLine.includes('RIZA METNİ'));
+        
+        // Madde başlıkları (sayı ile başlayan)
+        const isArticle = /^\d+\.(?!\d)/.test(trimmedLine);
+        
+        // Alt maddeler (sayı.sayı ile başlayan)
+        const isSubArticle = /^\d+\.\d+/.test(trimmedLine);
+        
+        if (isMainTitle) {
+          addSpacing(15);
+          addTextBlock(trimmedLine, 14, 'bold', false, [33, 150, 243]);
+          addSpacing(10);
+        } else if (isArticle) {
+          addSpacing(10);
+          addTextBlock(trimmedLine, 12, 'bold', false, [0, 0, 0]);
+          addSpacing(5);
+        } else if (isSubArticle) {
+          addSpacing(8);
+          addTextBlock(trimmedLine, 11, 'bold', false, [0, 0, 0]);
+          addSpacing(5);
+        } else {
+          addTextBlock(trimmedLine, 10, 'normal', false, [0, 0, 0]);
+          addSpacing(4);
         }
       });
     }
