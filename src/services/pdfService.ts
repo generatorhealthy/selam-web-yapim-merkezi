@@ -339,13 +339,31 @@ export const generatePreInfoWord = async (
   );
 
   // Get form content from database
-  const { data: formData } = await supabase
+  const { data: formData, error } = await supabase
     .from('form_contents')
     .select('content')
     .eq('form_type', 'pre_info')
     .single();
 
-  const formContent = formData?.content || 'Form içeriği bulunamadı.';
+  if (error) {
+    console.error('Form içeriği alınamadı:', error);
+  }
+
+  const formContent = formData?.content || `
+DOKTORUM OL ÜYELİK SÖZLEŞMESİ
+
+1. HIZMET ALAN'IN ÜYELIK PAKETI VE ÖZELLIKLERI
+
+1.1 Bu Sözleşme gereği, Hizmet Alan, Üyelik hizmetleri dahilinde Doktorum Ol tarafından sunulan hizmetleri, talep ettiği şekilde almayı kabul eder ve beyan eder. Doktorum Ol, bu Sözleşme çerçevesinde Hizmet Alan'a satın aldığı abonelikte bulunan hizmetleri sunmayı taahhüt eder.
+
+2. TARAFLAR
+
+Bu Sözleşme çerçevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak adlandırılacaktır.
+
+3. AMAÇ VE KONU
+
+Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden faydalanmak isteyen kişi adına Doktorum Ol tarafından www.doktorumol.com.tr alan adındaki web sitesinde bir profil oluşturulmasıdır.
+  `.trim();
   
   // Clean HTML content and split into lines
   const cleanContent = formContent.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
@@ -355,18 +373,19 @@ export const generatePreInfoWord = async (
   
   const paragraphs = [];
   
-  // Title
+  // Modern title section with customer and package info
   paragraphs.push(
     new Paragraph({
       children: [
         new TextRun({
           text: "ÖN BİLGİLENDİRME FORMU",
           bold: true,
-          size: 32,
+          size: 36,
+          color: "2563EB"
         }),
       ],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 400 },
+      spacing: { after: 300 },
     })
   );
   
@@ -375,11 +394,105 @@ export const generatePreInfoWord = async (
       children: [
         new TextRun({
           text: "(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)",
-          size: 24,
+          size: 20,
+          color: "6B7280"
         }),
       ],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 800 },
+      spacing: { after: 600 },
+    })
+  );
+
+  // Customer Information Section
+  paragraphs.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "MÜŞTERİ BİLGİLERİ",
+          bold: true,
+          size: 24,
+          color: "059669"
+        }),
+      ],
+      alignment: AlignmentType.LEFT,
+      spacing: { before: 400, after: 300 },
+    })
+  );
+
+  const customerInfoLines = [
+    `Müşteri Adı: ${customerData.name} ${customerData.surname}`,
+    `E-posta: ${customerData.email}`,
+    `Telefon: ${customerData.phone}`,
+    `TC Kimlik No: ${customerData.tcNo}`,
+    `Adres: ${customerData.address}, ${customerData.city} ${customerData.postalCode}`
+  ];
+
+  customerInfoLines.forEach(line => {
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: line,
+            size: 20,
+          }),
+        ],
+        spacing: { after: 150 },
+      })
+    );
+  });
+
+  // Package Information Section
+  paragraphs.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "PAKET BİLGİLERİ",
+          bold: true,
+          size: 24,
+          color: "DC2626"
+        }),
+      ],
+      alignment: AlignmentType.LEFT,
+      spacing: { before: 400, after: 300 },
+    })
+  );
+
+  const packageInfoLines = [
+    `Seçilen Paket: ${packageData.name}`,
+    `Paket Fiyatı: ${packageData.price.toLocaleString('tr-TR')} TL`,
+    `Ödeme Yöntemi: ${paymentMethod === 'creditCard' ? 'Kredi Kartı' : 'Banka Transferi'}`,
+    `Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}`,
+    `Belge Tarihi: ${new Date().toLocaleDateString('tr-TR')}`,
+    `IP Adresi: ${clientIP}`
+  ];
+
+  packageInfoLines.forEach(line => {
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: line,
+            size: 20,
+          }),
+        ],
+        spacing: { after: 150 },
+      })
+    );
+  });
+
+  // Contract Content Header
+  paragraphs.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "SÖZLEŞME İÇERİĞİ",
+          bold: true,
+          size: 24,
+          color: "7C3AED"
+        }),
+      ],
+      alignment: AlignmentType.LEFT,
+      spacing: { before: 600, after: 400 },
     })
   );
 
@@ -416,27 +529,31 @@ export const generatePreInfoWord = async (
                          trimmedLine.includes('RIZA METNİ'));
     
     // Article titles (start with number)
-    const isArticleTitle = /^\d+\./.test(trimmedLine);
+    const isArticleTitle = /^\d+\.(?!\d)/.test(trimmedLine);
     
     // Sub articles (start with number.number)
     const isSubArticle = /^\d+\.\d+/.test(trimmedLine);
     
     let fontSize = 20;
     let bold = false;
-    let spacing = { after: 120 };
+    let spacing = { before: 200, after: 200 };
+    let color = "000000";
     
     if (isMainTitle) {
       fontSize = 28;
       bold = true;
-      spacing = { after: 600 };
+      spacing = { before: 800, after: 600 };
+      color = "1E40AF";
     } else if (isArticleTitle) {
       fontSize = 24;
       bold = true;
-      spacing = { after: 400 };
+      spacing = { before: 600, after: 400 };
+      color = "059669";
     } else if (isSubArticle) {
       fontSize = 22;
       bold = true;
-      spacing = { after: 300 };
+      spacing = { before: 400, after: 300 };
+      color = "7C2D12";
     }
     
     paragraphs.push(
@@ -446,6 +563,7 @@ export const generatePreInfoWord = async (
             text: trimmedLine,
             bold: bold,
             size: fontSize,
+            color: color,
           }),
         ],
         spacing: spacing,
