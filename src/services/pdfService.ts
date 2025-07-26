@@ -207,6 +207,34 @@ export const generatePreInfoPDF = async (
   addSpacing(5);
   
   addSpacing(15);
+  
+  // Form içeriğini ekle
+  if (formData && formData.content) {
+    addTextBlock('📄 SÖZLEŞME İÇERİĞİ', 14, 'bold', true, [255, 255, 255], [34, 197, 94]);
+    
+    // HTML içeriğini temizle ve düz metne çevir
+    const cleanContent = formData.content
+      .replace(/<[^>]*>/g, '') // HTML etiketlerini kaldır
+      .replace(/&nbsp;/g, ' ') // &nbsp; karakterlerini boşluk yap
+      .replace(/&amp;/g, '&') // HTML entity'lerini düzelt
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .trim();
+    
+    // İçeriği paragraf paragraf böl ve ekle
+    const paragraphs = cleanContent.split(/\n\s*\n/);
+    paragraphs.forEach((paragraph) => {
+      if (paragraph.trim()) {
+        addTextBlock(paragraph.trim(), 10);
+        addSpacing(5);
+      }
+    });
+    
+    addSpacing(10);
+  }
+  
   addTextBlock('📋 HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 14, 'bold', true, [255, 255, 255], [239, 68, 68]);
   
   const serviceInfo = [
