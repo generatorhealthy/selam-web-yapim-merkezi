@@ -449,7 +449,7 @@ const ContractManagement = () => {
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-2">
                             <Button
                               onClick={() => openContractDialog(order, "preInfo")}
                               size="sm"
@@ -460,16 +460,6 @@ const ContractManagement = () => {
                             </Button>
                             
                             <Button
-                              onClick={() => downloadPreInfoPDF(order)}
-                              size="sm"
-                              variant="secondary"
-                              className="flex items-center gap-2"
-                            >
-                              <Download className="w-4 h-4" />
-                              Ön Bilgi İndir
-                            </Button>
-                            
-                            <Button
                               onClick={() => openContractDialog(order, "distanceSales")}
                               size="sm"
                               variant="outline"
@@ -477,16 +467,6 @@ const ContractManagement = () => {
                             >
                               <Eye className="w-4 h-4" />
                               Mesafeli Satış
-                            </Button>
-
-                            <Button
-                              onClick={() => downloadDistanceSalesPDF(order)}
-                              size="sm"
-                              variant="secondary"
-                              className="flex items-center gap-2"
-                            >
-                              <Download className="w-4 h-4" />
-                              Mesafeli Satış İndir
                             </Button>
                           </div>
                         </div>
