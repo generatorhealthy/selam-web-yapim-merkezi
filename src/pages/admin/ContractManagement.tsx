@@ -303,38 +303,42 @@ const ContractManagement = () => {
             </div>
           </div>
 
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="w-5 h-5" />
-                Filtreler
+          {/* Modern Filters */}
+          <Card className="mb-8 bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                  <Filter className="w-5 h-5 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Filtreler
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="search">Müşteri / E-posta / Paket Ara</Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="search" className="text-sm font-medium text-gray-700">Müşteri / E-posta / Paket Ara</Label>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <Input
                       id="search"
                       type="text"
                       placeholder="Arama yapmak için yazın..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-11 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
                     />
                   </div>
                 </div>
                 
-                <div>
-                  <Label htmlFor="filter">Müşteri Tipi</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="filter" className="text-sm font-medium text-gray-700">Müşteri Tipi</Label>
                   <select
                     id="filter"
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value as "all" | "individual" | "company")}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full h-12 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   >
                     <option value="all">Tümü</option>
                     <option value="individual">Bireysel</option>
@@ -346,9 +350,9 @@ const ContractManagement = () => {
                   <Button
                     onClick={fetchOrders}
                     variant="outline"
-                    className="flex items-center gap-2"
+                    className="h-12 px-6 border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 rounded-xl transition-all duration-200 flex items-center gap-2"
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className="w-5 h-5" />
                     Yenile
                   </Button>
                 </div>
@@ -356,135 +360,184 @@ const ContractManagement = () => {
             </CardContent>
           </Card>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <FileText className="w-5 h-5 text-blue-600" />
-                  </div>
+          {/* Modern Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Toplam Sözleşme</p>
-                    <p className="text-xl font-bold text-gray-900">{orders.length}</p>
+                    <p className="text-sm font-medium text-blue-600 mb-1">Toplam Sözleşme</p>
+                    <p className="text-3xl font-bold text-blue-900">{orders.length}</p>
+                  </div>
+                  <div className="p-3 bg-blue-500 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-200">
+                    <FileText className="w-6 h-6 text-white" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <User className="w-5 h-5 text-emerald-600" />
-                  </div>
+            <Card className="bg-gradient-to-br from-emerald-50 to-green-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Bireysel</p>
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-sm font-medium text-emerald-600 mb-1">Bireysel</p>
+                    <p className="text-3xl font-bold text-emerald-900">
                       {orders.filter(o => o.customer_type === 'individual').length}
                     </p>
                   </div>
+                  <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-200">
+                    <User className="w-6 h-6 text-white" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Building className="w-5 h-5 text-purple-600" />
-                  </div>
+            <Card className="bg-gradient-to-br from-purple-50 to-violet-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Kurumsal</p>
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-sm font-medium text-purple-600 mb-1">Kurumsal</p>
+                    <p className="text-3xl font-bold text-purple-900">
                       {orders.filter(o => o.customer_type === 'company').length}
                     </p>
                   </div>
+                  <div className="p-3 bg-purple-500 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-200">
+                    <Building className="w-6 h-6 text-white" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-100 rounded-lg">
-                    <Package className="w-5 h-5 text-amber-600" />
-                  </div>
+            <Card className="bg-gradient-to-br from-amber-50 to-orange-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Filtreli</p>
-                    <p className="text-xl font-bold text-gray-900">{filteredOrders.length}</p>
+                    <p className="text-sm font-medium text-amber-600 mb-1">Filtreli</p>
+                    <p className="text-3xl font-bold text-amber-900">{filteredOrders.length}</p>
+                  </div>
+                  <div className="p-3 bg-amber-500 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-200">
+                    <Package className="w-6 h-6 text-white" />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Contracts List */}
-          <Card>
-            <CardHeader>
+          {/* Modern Contracts List */}
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+            <CardHeader className="border-b border-gray-100">
               <CardTitle className="flex items-center justify-between">
-                <span>Sözleşme Listesi</span>
-                <Badge variant="secondary">{filteredOrders.length} sonuç</Badge>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg">
+                    <FileText className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    Sözleşme Listesi
+                  </span>
+                </div>
+                <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 text-sm font-medium">
+                  {filteredOrders.length} sonuç
+                </Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               {loading ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                  <p className="text-gray-600">Sözleşmeler yükleniyor...</p>
+                <div className="text-center py-12">
+                  <div className="relative">
+                    <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-white" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Sözleşmeler Yükleniyor</h3>
+                  <p className="text-gray-600">Lütfen bekleyiniz...</p>
                 </div>
               ) : filteredOrders.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Sözleşme Bulunamadı</h3>
-                  <p className="text-gray-600">
-                    {searchTerm || filterType !== "all" ? "Arama kriterlerinize uygun sözleşme bulunamadı." : "Henüz hiç sözleşme bulunmuyor."}
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                    <FileText className="w-12 h-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Sözleşme Bulunamadı</h3>
+                  <p className="text-gray-600 max-w-md mx-auto">
+                    {searchTerm || filterType !== "all" ? "Arama kriterlerinize uygun sözleşme bulunamadı. Filtreleri değiştirmeyi deneyin." : "Henüz hiç sözleşme bulunmuyor. İlk sözleşmeniz oluşturulduğunda burada görünecek."}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filteredOrders.map((order) => (
-                    <Card key={order.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
+                  {filteredOrders.map((order, index) => (
+                    <Card 
+                      key={order.id} 
+                      className="bg-white border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 group animate-fade-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
                       <CardContent className="p-6">
-                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                           <div className="flex-1">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
-                              <h3 className="text-lg font-semibold text-gray-900">{order.customer_name}</h3>
-                              <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                                <Badge variant={order.customer_type === 'individual' ? 'default' : 'secondary'}>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                                  <User className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                    {order.customer_name}
+                                  </h3>
+                                  <p className="text-sm text-gray-500">{order.customer_email}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 mt-3 sm:mt-0">
+                                <Badge 
+                                  className={`px-3 py-1 text-xs font-medium ${
+                                    order.customer_type === 'individual' 
+                                      ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white' 
+                                      : 'bg-gradient-to-r from-purple-500 to-violet-600 text-white'
+                                  }`}
+                                >
                                   {order.customer_type === 'individual' ? 'Bireysel' : 'Kurumsal'}
                                 </Badge>
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
                                   {format(new Date(order.created_at), 'dd MMM yyyy', { locale: tr })}
                                 </Badge>
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-gray-600">
-                              <div className="flex items-center gap-2">
-                                <User className="w-4 h-4" />
-                                <span>{order.customer_email}</span>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div className="p-2 bg-blue-500 rounded-lg">
+                                  <Package className="w-4 h-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 uppercase tracking-wide">Paket</p>
+                                  <p className="text-sm font-semibold text-gray-900">{order.package_name}</p>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Package className="w-4 h-4" />
-                                <span>{order.package_name}</span>
+                              
+                              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div className="p-2 bg-emerald-500 rounded-lg">
+                                  <CreditCard className="w-4 h-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 uppercase tracking-wide">Tutar</p>
+                                  <p className="text-sm font-semibold text-gray-900">{order.amount.toLocaleString('tr-TR')} ₺</p>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <CreditCard className="w-4 h-4" />
-                                <span>{order.amount.toLocaleString('tr-TR')} ₺</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4" />
-                                <span>{order.customer_phone}</span>
+                              
+                              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div className="p-2 bg-purple-500 rounded-lg">
+                                  <Calendar className="w-4 h-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 uppercase tracking-wide">Telefon</p>
+                                  <p className="text-sm font-semibold text-gray-900">{order.customer_phone}</p>
+                                </div>
                               </div>
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex flex-col sm:flex-row items-center gap-3">
                             <Button
                               onClick={() => openContractDialog(order, "preInfo")}
                               size="sm"
-                              className="flex items-center gap-2"
+                              className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
                             >
                               <Eye className="w-4 h-4" />
                               Ön Bilgi
@@ -493,8 +546,7 @@ const ContractManagement = () => {
                             <Button
                               onClick={() => openContractDialog(order, "distanceSales")}
                               size="sm"
-                              variant="outline"
-                              className="flex items-center gap-2"
+                              className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
                             >
                               <Eye className="w-4 h-4" />
                               Mesafeli Satış
@@ -503,8 +555,7 @@ const ContractManagement = () => {
                             <Button
                               onClick={() => deleteContract(order)}
                               size="sm"
-                              variant="destructive"
-                              className="flex items-center gap-2"
+                              className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
                             >
                               <Trash2 className="w-4 h-4" />
                               Sil
