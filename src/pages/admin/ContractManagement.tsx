@@ -124,11 +124,54 @@ const ContractManagement = () => {
   };
 
   const downloadDistanceSalesPDF = async (order: ContractOrder) => {
-    // Bu fonksiyon daha sonra implement edilecek
-    toast({
-      title: "Bilgi",
-      description: "Mesafeli satış sözleşmesi indirme özelliği yakında eklenecek.",
-    });
+    try {
+      // PDF service'ını import edelim
+      const { generateDistanceSalesPDF } = await import('@/services/pdfService');
+      
+      const customerData = {
+        name: order.customer_name.split(' ')[0] || '',
+        surname: order.customer_name.split(' ').slice(1).join(' ') || '',
+        email: order.customer_email,
+        phone: order.customer_phone,
+        tcNo: '',
+        address: '',
+        city: '',
+        postalCode: ''
+      };
+
+      const packageData = {
+        name: order.package_name,
+        price: order.amount,
+        originalPrice: order.amount
+      };
+      
+      const pdf = generateDistanceSalesPDF(
+        customerData,
+        packageData,
+        order.payment_method,
+        order.customer_type,
+        ''
+      );
+      
+      // Download PDF
+      const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
+      const firstName = order.customer_name.split(' ')[0] || 'Müşteri';
+      const lastName = order.customer_name.split(' ')[1] || '';
+      const fileName = `${firstName}_${lastName}_MesafeliSatis_${currentDate}.pdf`;
+      pdf.save(fileName);
+
+      toast({
+        title: "Başarılı",
+        description: "Mesafeli satış sözleşmesi PDF olarak indirildi.",
+      });
+    } catch (error) {
+      console.error('PDF indirme hatası:', error);
+      toast({
+        title: "Hata",
+        description: "PDF dosyası indirilirken hata oluştu",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredOrders = orders.filter(order => {

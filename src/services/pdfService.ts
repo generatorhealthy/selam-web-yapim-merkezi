@@ -43,15 +43,14 @@ export const generatePreInfoPDF = async (orderId: string) => {
         customer_name,
         customer_email,
         customer_phone,
-        tc_no,
-        address,
-        city,
-        postal_code,
+        customer_tc_no,
+        customer_address,
+        customer_city,
         package_name,
-        total_amount,
+        amount,
         payment_method,
         customer_type,
-        client_ip,
+        contract_ip_address,
         pre_info_pdf_content,
         created_at
       `)
@@ -189,7 +188,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
   pdf.setFontSize(9);
   pdf.setTextColor(71, 85, 105);
   pdf.text(`📅 Belge Tarihi: ${currentDate}`, margin + 10, yPosition + 8);
-  pdf.text(`🌐 IP Adresi: ${orderData.client_ip || 'Bilinmiyor'}`, margin + 10, yPosition + 18);
+  pdf.text(`🌐 IP Adresi: ${orderData.contract_ip_address || 'Bilinmiyor'}`, margin + 10, yPosition + 18);
   yPosition += 35;
   
   // Modern bölüm başlığı
@@ -220,9 +219,9 @@ export const generatePreInfoPDF = async (orderId: string) => {
     `Ad Soyad: ${orderData.customer_name}`,
     `E-posta Adresi: ${orderData.customer_email}`,
     `Telefon Numarası: ${orderData.customer_phone}`,
-    `TC Kimlik No: ${orderData.tc_no || 'Belirtilmemiş'}`,
-    `Teslimat Adresi: ${orderData.address || 'Belirtilmemiş'}, ${orderData.city || ''} ${orderData.postal_code || ''}`,
-    `Fatura Adresi: ${orderData.address || 'Belirtilmemiş'}, ${orderData.city || ''} ${orderData.postal_code || ''}`
+    `TC Kimlik No: ${orderData.customer_tc_no || 'Belirtilmemiş'}`,
+    `Teslimat Adresi: ${orderData.customer_address || 'Belirtilmemiş'}, ${orderData.customer_city || ''}`,
+    `Fatura Adresi: ${orderData.customer_address || 'Belirtilmemiş'}, ${orderData.customer_city || ''}`
   ];
   
   if (orderData.customer_type === 'company') {
@@ -245,7 +244,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
     `Hizmet Adı: ${orderData.package_name}`,
     `Hizmet Açıklaması: Dijital sağlık platformu kullanım hakkı ve profesyonel doktor profili yönetimi`,
     `Hizmet Süresi: 12 (On İki) Ay`,
-    `Toplam Hizmet Bedeli: ${orderData.total_amount.toLocaleString('tr-TR')} TL (KDV Dahil)`,
+    `Toplam Hizmet Bedeli: ${orderData.amount.toLocaleString('tr-TR')} TL (KDV Dahil)`,
     `Ödeme Şekli: ${orderData.payment_method === 'creditCard' ? 'Kredi Kartı/Banka Kartı ile Aylık Otomatik Tahsilat' : 'Banka Havalesi/EFT ile Aylık Manuel Ödeme'}`,
     'KDV Oranı: %20',
     'Para Birimi: Türk Lirası (TL)'
@@ -352,7 +351,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
     '',
     `Kabul Tarihi: ${currentDate}`,
     `Kabul Saati: ${new Date().toLocaleTimeString('tr-TR')}`,
-    `IP Adresi: ${orderData.client_ip || 'Bilinmiyor'}`,
+    `IP Adresi: ${orderData.contract_ip_address || 'Bilinmiyor'}`,
     '',
     'MÜŞTERİ BİLGİLERİ VE DİJİTAL ONAYI:',
     `Ad Soyad: ${orderData.customer_name}`,
