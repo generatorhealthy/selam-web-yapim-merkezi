@@ -1,18 +1,6 @@
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
 
-// Türkçe karakterler için DejaVu Sans font import
-import 'jspdf-fonts/DejaVuSans-Bold/DejaVuSans-Bold';
-import 'jspdf-fonts/DejaVuSans/DejaVuSans';
-
-// Font declarations for TypeScript
-declare module 'jspdf' {
-  interface jsPDF {
-    addFileToVFS(filename: string, content: string): void;
-    addFont(filename: string, fontName: string, fontStyle: string): void;
-  }
-}
-
 interface CustomerData {
   name: string;
   surname: string;
@@ -103,10 +91,6 @@ export const generatePreInfoPDF = async (orderId: string) => {
       format: 'a4'
     });
     
-    // Türkçe karakterler için DejaVu Sans font ekle
-    doc.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
-    doc.addFont('DejaVuSans-Bold.ttf', 'DejaVuSans', 'bold');
-    
     // PDF metadatalarını ayarla
     doc.setProperties({
       title: `Ön Bilgilendirme Formu - ${orderData.customer_name}`,
@@ -125,20 +109,11 @@ export const generatePreInfoPDF = async (orderId: string) => {
 
     // Yardımcı fonksiyonlar
     const addTextBlock = (text: string, size = 11, style = 'normal', center = false, textColor = [0, 0, 0]) => {
-      // Türkçe karakterler için DejaVu Sans font kullan
-      try {
-        if (style === 'bold') {
-          doc.setFont('DejaVuSans', 'bold');
-        } else {
-          doc.setFont('DejaVuSans', 'normal');
-        }
-      } catch (e) {
-        // Fallback to helvetica if DejaVu Sans is not available
-        if (style === 'bold') {
-          doc.setFont('helvetica', 'bold');
-        } else {
-          doc.setFont('helvetica', 'normal');
-        }
+      // Helvetica font kullan (Türkçe karakterleri destekler)
+      if (style === 'bold') {
+        doc.setFont('helvetica', 'bold');
+      } else {
+        doc.setFont('helvetica', 'normal');
       }
       
       doc.setFontSize(size);
@@ -155,7 +130,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
         }
         
         // Ortalama veya sol hizalama
-        let xPos = marginLeft;
+        let xPos = marginLeft + 5; // Sol margin ekle
         if (center) {
           const textWidth = doc.getTextWidth(line);
           xPos = (pageWidth - textWidth) / 2;
@@ -174,13 +149,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
       // Başlık kutusu
       doc.setFillColor(33, 150, 243); // Mavi arka plan
       doc.setTextColor(255, 255, 255); // Beyaz yazı
-      
-      // Türkçe karakterler için font ayarla
-      try {
-        doc.setFont('DejaVuSans', 'bold');
-      } catch (e) {
-        doc.setFont('helvetica', 'bold');
-      }
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       
       const titleHeight = 10;
@@ -195,11 +164,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
       const contentStartY = yPosition;
       
       doc.setTextColor(0, 0, 0);
-      try {
-        doc.setFont('DejaVuSans', 'normal');
-      } catch (e) {
-        doc.setFont('helvetica', 'normal');
-      }
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(11);
       
       content.forEach((item) => {
