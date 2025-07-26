@@ -1,6 +1,14 @@
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
 
+// Türkçe karakterler için font yükleme
+declare module 'jspdf' {
+  interface jsPDF {
+    addFileToVFS(filename: string, content: string): void;
+    addFont(filename: string, fontName: string, fontStyle: string): void;
+  }
+}
+
 interface CustomerData {
   name: string;
   surname: string;
@@ -85,7 +93,11 @@ export const generatePreInfoPDF = async (orderId: string) => {
 
     console.log('✅ Veriler kontrol edildi, PDF oluşturuluyor...');
 
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
     
     // PDF metadatalarını ayarla
     doc.setProperties({
@@ -95,15 +107,17 @@ export const generatePreInfoPDF = async (orderId: string) => {
       creator: 'Doktorum Ol System'
     });
 
-    let yPosition = 40;
+    // Sayfa boyutları
+    let yPosition = 30;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
+    const marginLeft = 15;
+    const marginRight = 15;
+    const contentWidth = pageWidth - marginLeft - marginRight;
 
     // Yardımcı fonksiyonlar
-    const addTextBlock = (text: string, size = 10, style = 'normal', center = false, textColor = [0, 0, 0]) => {
-      const maxWidth = 170;
-      
-      // Stil ayarları
+    const addTextBlock = (text: string, size = 11, style = 'normal', center = false, textColor = [0, 0, 0], maxWidth = contentWidth) => {
+      // Font ayarları - Türkçe karakterler için
       if (style === 'bold') {
         doc.setFont('helvetica', 'bold');
       } else {
@@ -117,14 +131,21 @@ export const generatePreInfoPDF = async (orderId: string) => {
       const lines = doc.splitTextToSize(text, maxWidth);
       
       lines.forEach((line: string) => {
-        if (yPosition > pageHeight - 30) {
+        // Sayfa sonu kontrolü
+        if (yPosition > pageHeight - 20) {
           doc.addPage();
-          yPosition = 30;
+          yPosition = 20;
         }
         
-        const xPos = center ? (pageWidth - doc.getTextWidth(line)) / 2 : 20;
+        // Ortalama veya sol hizalama
+        let xPos = marginLeft;
+        if (center) {
+          const textWidth = doc.getTextWidth(line);
+          xPos = (pageWidth - textWidth) / 2;
+        }
+        
         doc.text(line, xPos, yPosition);
-        yPosition += size * 0.6;
+        yPosition += size * 0.4 + 2; // Satır aralığını optimize et
       });
     };
 
@@ -133,20 +154,21 @@ export const generatePreInfoPDF = async (orderId: string) => {
     };
 
     const addBlueBox = (content: string[], title: string) => {
-      // Başlık
+      // Başlık kutusu
       doc.setFillColor(33, 150, 243); // Mavi arka plan
       doc.setTextColor(255, 255, 255); // Beyaz yazı
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       
-      const titleHeight = 8;
-      doc.rect(20, yPosition - 3, pageWidth - 40, titleHeight, 'F');
-      doc.text(title, 25, yPosition + 3);
-      yPosition += titleHeight + 5;
+      const titleHeight = 10;
+      const boxWidth = contentWidth;
+      doc.rect(marginLeft, yPosition - 2, boxWidth, titleHeight, 'F');
+      doc.text(title, marginLeft + 5, yPosition + 6);
+      yPosition += titleHeight + 2;
       
       // İçerik kutusu
       doc.setDrawColor(33, 150, 243);
-      doc.setLineWidth(1);
+      doc.setLineWidth(0.5);
       const contentStartY = yPosition;
       
       doc.setTextColor(0, 0, 0);
@@ -154,23 +176,24 @@ export const generatePreInfoPDF = async (orderId: string) => {
       doc.setFontSize(11);
       
       content.forEach((item) => {
-        doc.text(item, 25, yPosition);
-        yPosition += 6;
+        if (yPosition > pageHeight - 20) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        doc.text(item, marginLeft + 5, yPosition);
+        yPosition += 7;
       });
       
-      yPosition += 5;
+      yPosition += 3;
       const boxHeight = yPosition - contentStartY;
-      doc.rect(20, contentStartY - 3, pageWidth - 40, boxHeight, 'S');
+      doc.rect(marginLeft, contentStartY - 2, boxWidth, boxHeight, 'S');
       
-      addSpacing(10);
+      addSpacing(15);
     };
 
-    // BAŞLIK
-    doc.setTextColor(33, 150, 243);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
-    doc.text('ÖN BİLGİLENDİRME FORMU', pageWidth / 2, yPosition, { align: 'center' });
-    addSpacing(30);
+    // BAŞLIK - Ortalanmış
+    addTextBlock('ÖN BİLGİLENDİRME FORMU', 18, 'bold', true, [33, 150, 243]);
+    addSpacing(25);
 
     // MÜŞTERİ BİLGİLERİ
     const customerInfo = [
@@ -209,12 +232,9 @@ export const generatePreInfoPDF = async (orderId: string) => {
     
     addBlueBox(dateInfo, 'TARİHLER:');
 
-    // SÖZLEŞME İÇERİĞİ
-    addSpacing(10);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 20, yPosition);
+    // SÖZLEŞME İÇERİĞİ BAŞLIĞI - Ortalanmış
+    addSpacing(15);
+    addTextBlock('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 16, 'bold', true, [0, 0, 0]);
     addSpacing(20);
     
     // Form içeriğini ekle - HTML etiketlerini temizle ve düzenle
