@@ -53,19 +53,37 @@ const ClientReferrals = () => {
       setLoading(true);
       console.log("Fetching specialists and referrals for year:", currentYear);
       
-      // Önce tüm aktif uzmanları getir
-      const { data: specialistsData, error: specialistsError } = await supabase
-        .from('specialists')
-        .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation')
-        .eq('is_active', true)
-        .order('name');
+      // Paralel veri çekme ile performansı artır
+      const [specialistsResult, referralsResult] = await Promise.all([
+        // Tüm aktif uzmanları getir
+        supabase
+          .from('specialists')
+          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation')
+          .eq('is_active', true)
+          .order('name'),
+        
+        // Tüm referral verilerini bir seferde getir
+        supabase
+          .from('client_referrals')
+          .select('*')
+          .eq('year', currentYear)
+      ]);
+
+      const { data: specialistsData, error: specialistsError } = specialistsResult;
+      const { data: allReferrals, error: referralsError } = referralsResult;
 
       if (specialistsError) {
         console.error('Specialists fetch error:', specialistsError);
         throw specialistsError;
       }
 
+      if (referralsError) {
+        console.error('Referrals fetch error:', referralsError);
+        // Referral hatası olsa bile devam et
+      }
+
       console.log("Specialists fetched:", specialistsData?.length || 0);
+      console.log("Referrals fetched:", allReferrals?.length || 0);
 
       if (!specialistsData || specialistsData.length === 0) {
         console.log("No specialists found");
@@ -74,51 +92,36 @@ const ClientReferrals = () => {
         return;
       }
 
-      // Her uzman için 12 aylık referral verilerini getir/oluştur
-      const specialistReferrals: SpecialistReferral[] = [];
-
-      for (const specialist of specialistsData) {
-        console.log(`Processing specialist: ${specialist.name}`);
-        const monthlyReferrals: MonthlyReferral[] = [];
-
-        // Tüm ayları bir seferde getir
-        const { data: existingReferrals, error: referralsError } = await supabase
-          .from('client_referrals')
-          .select('*')
-          .eq('specialist_id', specialist.id)
-          .eq('year', currentYear);
-
-        if (referralsError) {
-          console.error('Referrals fetch error:', referralsError);
-          // Hata olsa bile devam et
+      // Referral verilerini specialist_id'ye göre grupla (daha hızlı)
+      const referralsBySpecialist = new Map();
+      allReferrals?.forEach(referral => {
+        if (!referralsBySpecialist.has(referral.specialist_id)) {
+          referralsBySpecialist.set(referral.specialist_id, []);
         }
+        referralsBySpecialist.get(referral.specialist_id).push(referral);
+      });
 
-        // Her ay için veri oluştur
-        for (let month = 1; month <= 12; month++) {
-          const existingReferral = existingReferrals?.find(r => r.month === month);
+      // Her uzman için 12 aylık veriyi oluştur (batch processing)
+      const specialistReferrals: SpecialistReferral[] = specialistsData.map(specialist => {
+        const specialistReferrals = referralsBySpecialist.get(specialist.id) || [];
+        
+        const monthlyReferrals: MonthlyReferral[] = Array.from({ length: 12 }, (_, index) => {
+          const month = index + 1;
+          const existingReferral = specialistReferrals.find(r => r.month === month);
           
-          if (existingReferral) {
-            monthlyReferrals.push({
-              month,
-              count: existingReferral.referral_count || 0,
-              notes: existingReferral.notes || ''
-            });
-          } else {
-            // Kayıt yoksa sadece local state'e ekle, veritabanına ekleme
-            monthlyReferrals.push({
-              month,
-              count: 0,
-              notes: ''
-            });
-          }
-        }
+          return {
+            month,
+            count: existingReferral?.referral_count || 0,
+            notes: existingReferral?.notes || ''
+          };
+        });
 
-        specialistReferrals.push({
+        return {
           id: specialist.id,
           specialist,
           referrals: monthlyReferrals
-        });
-      }
+        };
+      });
 
       console.log("Specialist referrals processed:", specialistReferrals.length);
       setSpecialists(specialistReferrals);

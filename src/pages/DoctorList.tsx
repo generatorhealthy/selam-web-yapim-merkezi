@@ -128,21 +128,30 @@ const DoctorList = () => {
   };
 
   const filterSpecialists = () => {
-    let filtered = specialists;
+    let filtered = [...specialists];
 
-    if (searchTerm) {
+    // Arama filtresi
+    if (searchTerm && searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
       filtered = filtered.filter(specialist =>
-        specialist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        specialist.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+        specialist.name.toLowerCase().includes(searchLower) ||
+        specialist.specialty.toLowerCase().includes(searchLower) ||
+        specialist.city?.toLowerCase().includes(searchLower)
       );
     }
 
-    if (selectedSpecialty && selectedSpecialty !== "all") {
-      filtered = filtered.filter(specialist => specialist.specialty === selectedSpecialty);
+    // Uzmanlık alanı filtresi
+    if (selectedSpecialty && selectedSpecialty !== "all" && selectedSpecialty.trim()) {
+      filtered = filtered.filter(specialist => 
+        specialist.specialty && specialist.specialty.toLowerCase() === selectedSpecialty.toLowerCase()
+      );
     }
 
-    if (selectedCity && selectedCity !== "all") {
-      filtered = filtered.filter(specialist => specialist.city === selectedCity);
+    // Şehir filtresi
+    if (selectedCity && selectedCity !== "all" && selectedCity.trim()) {
+      filtered = filtered.filter(specialist => 
+        specialist.city && specialist.city.toLowerCase() === selectedCity.toLowerCase()
+      );
     }
 
     setFilteredSpecialists(filtered);
@@ -228,33 +237,35 @@ const DoctorList = () => {
 
       <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Filter Section */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 md:p-8 mb-4 md:mb-8">
-          <div className="flex items-center gap-3 mb-4 md:mb-6">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#4f7cff' }}>
-              <Filter className="w-5 h-5 md:w-6 md:h-6 text-white" />
+        <div className="bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 rounded-3xl shadow-lg border border-white/40 p-6 md:p-8 mb-6 md:mb-8 backdrop-blur-sm">
+          <div className="flex items-center gap-4 mb-6 md:mb-8">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+              <Filter className="w-6 h-6 md:w-7 md:h-7 text-white" />
             </div>
-            <h2 className="text-lg md:text-2xl font-bold text-gray-900">Uzman Ara & Filtrele</h2>
+            <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              Uzman Ara & Filtrele
+            </h2>
           </div>
           
           <div className={`grid gap-4 md:gap-6 ${isMobile ? 'grid-cols-1' : 'md:grid-cols-4'}`}>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-hover:text-blue-500 transition-colors" />
               <Input
-                placeholder="Doktor adı veya branş..."
+                placeholder="Doktor adı, branş veya şehir..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 text-base border-gray-200 rounded-xl"
+                className="pl-12 h-14 text-base border-2 border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm hover:border-blue-300 focus:border-blue-500 transition-all duration-300 shadow-sm"
               />
             </div>
             
             <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
-              <SelectTrigger className="h-12 text-base border-gray-200 rounded-xl">
-                <SelectValue placeholder="Uzmanlık Alanı" />
+              <SelectTrigger className="h-14 text-base border-2 border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm hover:border-blue-300 focus:border-blue-500 transition-all duration-300 shadow-sm">
+                <SelectValue placeholder="Uzmanlık Alanı Seçin" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
+              <SelectContent className="rounded-xl border-2 bg-white/95 backdrop-blur-md shadow-xl">
+                <SelectItem value="all" className="rounded-lg">Tümü</SelectItem>
                 {specialties.map(specialty => (
-                  <SelectItem key={specialty} value={specialty}>
+                  <SelectItem key={specialty} value={specialty} className="rounded-lg">
                     {specialty}
                   </SelectItem>
                 ))}
@@ -262,13 +273,13 @@ const DoctorList = () => {
             </Select>
 
             <Select value={selectedCity} onValueChange={setSelectedCity}>
-              <SelectTrigger className="h-12 text-base border-gray-200 rounded-xl">
+              <SelectTrigger className="h-14 text-base border-2 border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm hover:border-blue-300 focus:border-blue-500 transition-all duration-300 shadow-sm">
                 <SelectValue placeholder="Şehir Seçin" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
+              <SelectContent className="rounded-xl border-2 bg-white/95 backdrop-blur-md shadow-xl max-h-60">
+                <SelectItem value="all" className="rounded-lg">Tümü</SelectItem>
                 {cities.map(city => (
-                  <SelectItem key={city} value={city}>
+                  <SelectItem key={city} value={city} className="rounded-lg">
                     {city}
                   </SelectItem>
                 ))}
@@ -283,10 +294,20 @@ const DoctorList = () => {
                 setSelectedCity("");
                 setCurrentPage(0);
               }}
-              className="h-12 text-base border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-semibold"
+              className="h-14 text-base border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-2xl font-semibold bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm"
             >
               Filtreleri Temizle
             </Button>
+          </div>
+          
+          {/* Filtreleme Sonucu Bilgisi */}
+          <div className="mt-6 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200">
+            <p className="text-gray-600 text-sm font-medium">
+              {filteredSpecialists.length} uzman bulundu
+              {searchTerm && ` "${searchTerm}" araması için`}
+              {selectedSpecialty && selectedSpecialty !== "all" && ` ${selectedSpecialty} uzmanlığında`}
+              {selectedCity && selectedCity !== "all" && ` ${selectedCity} şehrinde`}
+            </p>
           </div>
         </div>
 
