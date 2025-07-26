@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Helmet } from "react-helmet-async";
-import { MessageSquare, Clock, CheckCircle, AlertCircle, User, Calendar, Tag, Send } from "lucide-react";
+import { MessageSquare, Clock, CheckCircle, AlertCircle, User, Calendar, Tag, Send, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -120,6 +120,35 @@ const SupportTickets = () => {
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId: string) => {
+    if (!confirm('Bu destek talebini silmek istediğinizden emin misiniz?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('support_tickets')
+        .delete()
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Başarılı",
+        description: "Destek talebi silindi.",
+      });
+
+      fetchTickets();
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+      toast({
+        title: "Hata",
+        description: "Destek talebi silinirken bir hata oluştu.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -259,23 +288,24 @@ const SupportTickets = () => {
                       </CardDescription>
                     </div>
                     
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedTicket(ticket);
-                            setAdminResponse(ticket.admin_response || "");
-                            setNewStatus(ticket.status);
-                          }}
-                        >
-                          <Send className="w-4 h-4 mr-2" />
-                          Cevapla
-                        </Button>
-                      </DialogTrigger>
-                      
-                      <DialogContent className="max-w-2xl">
+                    <div className="flex gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTicket(ticket);
+                              setAdminResponse(ticket.admin_response || "");
+                              setNewStatus(ticket.status);
+                            }}
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            Cevapla
+                          </Button>
+                        </DialogTrigger>
+                        
+                        <DialogContent className="max-w-2xl">
                         <DialogHeader>
                           <DialogTitle>Destek Talebine Cevap Ver</DialogTitle>
                           <DialogDescription>
@@ -341,8 +371,20 @@ const SupportTickets = () => {
                             </Button>
                           </div>
                         </div>
-                      </DialogContent>
-                    </Dialog>
+                        </DialogContent>
+                      </Dialog>
+                      
+                      {ticket.status === 'resolved' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteTicket(ticket.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 
