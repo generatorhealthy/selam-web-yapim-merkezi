@@ -22,7 +22,8 @@ import {
   CreditCard,
   Building,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -210,6 +211,36 @@ const ContractManagement = () => {
       toast({
         title: "Hata",
         description: "PDF dosyası indirilirken hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteContract = async (order: ContractOrder) => {
+    if (!confirm(`${order.customer_name} müşterisinin sözleşmesini silmek istediğinizden emin misiniz?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', order.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Başarılı",
+        description: "Sözleşme başarıyla silindi.",
+      });
+
+      // Listeyi yenile
+      fetchOrders();
+    } catch (error) {
+      console.error('Sözleşme silme hatası:', error);
+      toast({
+        title: "Hata",
+        description: "Sözleşme silinirken bir hata oluştu.",
         variant: "destructive",
       });
     }
@@ -449,7 +480,7 @@ const ContractManagement = () => {
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Button
                               onClick={() => openContractDialog(order, "preInfo")}
                               size="sm"
@@ -467,6 +498,16 @@ const ContractManagement = () => {
                             >
                               <Eye className="w-4 h-4" />
                               Mesafeli Satış
+                            </Button>
+
+                            <Button
+                              onClick={() => deleteContract(order)}
+                              size="sm"
+                              variant="destructive"
+                              className="flex items-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Sil
                             </Button>
                           </div>
                         </div>
