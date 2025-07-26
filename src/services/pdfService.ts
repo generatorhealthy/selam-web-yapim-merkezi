@@ -53,15 +53,22 @@ export const generatePreInfoPDF = async (orderId: string) => {
         created_at
       `)
       .eq('id', orderId)
-      .single();
+      .maybeSingle();
     orderData = data;
   } catch (error) {
     console.error('Sipariş bilgileri alınamadı:', error);
     throw new Error('Sipariş bulunamadı');
   }
 
-  if (!orderData || !orderData.pre_info_pdf_content) {
-    throw new Error('Ön bilgilendirme form içeriği bulunamadı');
+  console.log('Order data:', orderData);
+  console.log('Pre info content:', orderData?.pre_info_pdf_content);
+
+  if (!orderData) {
+    throw new Error('Sipariş bulunamadı');
+  }
+
+  if (!orderData.pre_info_pdf_content || orderData.pre_info_pdf_content.trim() === '') {
+    throw new Error('Bu sipariş için ön bilgilendirme form içeriği bulunamadı. Form içeriği boş veya mevcut değil.');
   }
 
   const pdf = new jsPDF();
