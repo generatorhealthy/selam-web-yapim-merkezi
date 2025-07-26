@@ -23,17 +23,20 @@ interface PackageData {
 
 // PDF indirme fonksiyonu - ödeme sayfasından onaylanan ön bilgilendirme form içeriğini PDF'e çevirir
 export const generatePreInfoPDF = async (orderId: string) => {
-  // Import supabase here to avoid issues
-  const { createClient } = await import('@supabase/supabase-js');
-  const supabase = createClient(
-    'https://irnfwewabogveofwemvg.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs'
-  );
-
-  // Sipariş bilgilerini ve ön bilgilendirme form içeriğini al
-  let orderData = null;
+  console.log('🔄 PDF oluşturma başlatıldı, Order ID:', orderId);
+  
   try {
-    const { data } = await supabase
+    // Import supabase here to avoid issues
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(
+      'https://irnfwewabogveofwemvg.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs'
+    );
+
+    console.log('📡 Sipariş bilgileri sorgulanıyor...');
+    
+    // Sipariş bilgilerini ve ön bilgilendirme form içeriğini al
+    const { data: orderData, error } = await supabase
       .from('orders')
       .select(`
         id,
@@ -54,22 +57,27 @@ export const generatePreInfoPDF = async (orderId: string) => {
       `)
       .eq('id', orderId)
       .maybeSingle();
-    orderData = data;
-  } catch (error) {
-    console.error('Sipariş bilgileri alınamadı:', error);
-    throw new Error('Sipariş bulunamadı');
-  }
+    
+    if (error) {
+      console.error('❌ Veritabanı hatası:', error);
+      throw new Error(`Veritabanı hatası: ${error.message}`);
+    }
 
-  console.log('Order data:', orderData);
-  console.log('Pre info content:', orderData?.pre_info_pdf_content);
+    console.log('📊 Sipariş verisi:', orderData);
+    console.log('📝 Pre info içerik var mı:', !!orderData?.pre_info_pdf_content);
+    console.log('📄 Pre info içerik uzunluğu:', orderData?.pre_info_pdf_content?.length || 0);
 
-  if (!orderData) {
-    throw new Error('Sipariş bulunamadı');
-  }
+    if (!orderData) {
+      console.error('❌ Sipariş bulunamadı');
+      throw new Error('Sipariş bulunamadı');
+    }
 
-  if (!orderData.pre_info_pdf_content || orderData.pre_info_pdf_content.trim() === '') {
-    throw new Error('Bu sipariş için ön bilgilendirme form içeriği bulunamadı. Form içeriği boş veya mevcut değil.');
-  }
+    if (!orderData.pre_info_pdf_content || orderData.pre_info_pdf_content.trim() === '') {
+      console.error('❌ Pre info içerik boş');
+      throw new Error('Bu sipariş için ön bilgilendirme form içeriği bulunamadı. Form içeriği boş veya mevcut değil.');
+    }
+
+    console.log('✅ Veriler kontrol edildi, PDF oluşturuluyor...');
 
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
@@ -366,7 +374,13 @@ export const generatePreInfoPDF = async (orderId: string) => {
     addTextBlock(text, 10);
   });
   
+  console.log('✅ PDF başarıyla oluşturuldu');
   return pdf;
+  
+  } catch (error) {
+    console.error('❌ PDF oluşturma hatası:', error);
+    throw new Error(`PDF dosyası oluşturulurken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
+  }
 };
 
 export const generateDistanceSalesPDF = (
