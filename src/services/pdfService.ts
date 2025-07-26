@@ -1,7 +1,11 @@
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
 
-// Türkçe karakterler için font yükleme
+// Türkçe karakterler için DejaVu Sans font import
+import 'jspdf-fonts/DejaVuSans-Bold/DejaVuSans-Bold';
+import 'jspdf-fonts/DejaVuSans/DejaVuSans';
+
+// Font declarations for TypeScript
 declare module 'jspdf' {
   interface jsPDF {
     addFileToVFS(filename: string, content: string): void;
@@ -99,6 +103,10 @@ export const generatePreInfoPDF = async (orderId: string) => {
       format: 'a4'
     });
     
+    // Türkçe karakterler için DejaVu Sans font ekle
+    doc.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
+    doc.addFont('DejaVuSans-Bold.ttf', 'DejaVuSans', 'bold');
+    
     // PDF metadatalarını ayarla
     doc.setProperties({
       title: `Ön Bilgilendirme Formu - ${orderData.customer_name}`,
@@ -107,34 +115,43 @@ export const generatePreInfoPDF = async (orderId: string) => {
       creator: 'Doktorum Ol System'
     });
 
-    // Sayfa boyutları
-    let yPosition = 30;
+    // Sayfa boyutları ve marjinlar
+    let yPosition = 25;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const marginLeft = 15;
-    const marginRight = 15;
+    const marginLeft = 20;
+    const marginRight = 20;
     const contentWidth = pageWidth - marginLeft - marginRight;
 
     // Yardımcı fonksiyonlar
-    const addTextBlock = (text: string, size = 11, style = 'normal', center = false, textColor = [0, 0, 0], maxWidth = contentWidth) => {
-      // Font ayarları - Türkçe karakterler için
-      if (style === 'bold') {
-        doc.setFont('helvetica', 'bold');
-      } else {
-        doc.setFont('helvetica', 'normal');
+    const addTextBlock = (text: string, size = 11, style = 'normal', center = false, textColor = [0, 0, 0]) => {
+      // Türkçe karakterler için DejaVu Sans font kullan
+      try {
+        if (style === 'bold') {
+          doc.setFont('DejaVuSans', 'bold');
+        } else {
+          doc.setFont('DejaVuSans', 'normal');
+        }
+      } catch (e) {
+        // Fallback to helvetica if DejaVu Sans is not available
+        if (style === 'bold') {
+          doc.setFont('helvetica', 'bold');
+        } else {
+          doc.setFont('helvetica', 'normal');
+        }
       }
       
       doc.setFontSize(size);
       doc.setTextColor(textColor[0], textColor[1], textColor[2]);
       
       // Metin satırlarına böl
-      const lines = doc.splitTextToSize(text, maxWidth);
+      const lines = doc.splitTextToSize(text, contentWidth - 10);
       
       lines.forEach((line: string) => {
         // Sayfa sonu kontrolü
-        if (yPosition > pageHeight - 20) {
+        if (yPosition > pageHeight - 25) {
           doc.addPage();
-          yPosition = 20;
+          yPosition = 25;
         }
         
         // Ortalama veya sol hizalama
@@ -145,7 +162,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
         }
         
         doc.text(line, xPos, yPosition);
-        yPosition += size * 0.4 + 2; // Satır aralığını optimize et
+        yPosition += size * 0.5 + 1;
       });
     };
 
@@ -157,7 +174,13 @@ export const generatePreInfoPDF = async (orderId: string) => {
       // Başlık kutusu
       doc.setFillColor(33, 150, 243); // Mavi arka plan
       doc.setTextColor(255, 255, 255); // Beyaz yazı
-      doc.setFont('helvetica', 'bold');
+      
+      // Türkçe karakterler için font ayarla
+      try {
+        doc.setFont('DejaVuSans', 'bold');
+      } catch (e) {
+        doc.setFont('helvetica', 'bold');
+      }
       doc.setFontSize(12);
       
       const titleHeight = 10;
@@ -172,13 +195,17 @@ export const generatePreInfoPDF = async (orderId: string) => {
       const contentStartY = yPosition;
       
       doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'normal');
+      try {
+        doc.setFont('DejaVuSans', 'normal');
+      } catch (e) {
+        doc.setFont('helvetica', 'normal');
+      }
       doc.setFontSize(11);
       
       content.forEach((item) => {
-        if (yPosition > pageHeight - 20) {
+        if (yPosition > pageHeight - 25) {
           doc.addPage();
-          yPosition = 20;
+          yPosition = 25;
         }
         doc.text(item, marginLeft + 5, yPosition);
         yPosition += 7;
