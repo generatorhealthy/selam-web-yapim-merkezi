@@ -444,33 +444,8 @@ const OrderManagement = () => {
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
       
-      const customerData = {
-        name: firstName,
-        surname: lastName,
-        email: order.customer_email,
-        phone: order.customer_phone,
-        tcNo: order.customer_tc_no,
-        address: order.customer_address,
-        city: order.customer_city,
-        postalCode: '',
-        companyName: order.company_name,
-        taxNo: order.company_tax_no,
-        taxOffice: order.company_tax_office
-      };
 
-      const packageData = {
-        name: order.package_name,
-        price: order.amount,
-        originalPrice: order.amount
-      };
-
-      const pdf = await generatePreInfoPDF(
-        customerData,
-        packageData,
-        order.payment_method,
-        order.customer_type,
-        order.contract_ip_address || 'Bilinmiyor'
-      );
+      const pdf = await generatePreInfoPDF(order.id);
 
       // Download PDF
       const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');

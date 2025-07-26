@@ -21,13 +21,8 @@ interface PackageData {
   originalPrice: number;
 }
 
-export const generatePreInfoPDF = async (
-  customerData: CustomerData,
-  packageData: PackageData,
-  paymentMethod: string,
-  customerType: string,
-  clientIP: string
-) => {
+// PDF indirme fonksiyonu - ödeme sayfasından onaylanan ön bilgilendirme form içeriğini PDF'e çevirir
+export const generatePreInfoPDF = async (orderId: string) => {
   // Import supabase here to avoid issues
   const { createClient } = await import('@supabase/supabase-js');
   const supabase = createClient(
@@ -35,17 +30,38 @@ export const generatePreInfoPDF = async (
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs'
   );
 
-  // Get form content from database
-  let formData = null;
+  // Sipariş bilgilerini ve ön bilgilendirme form içeriğini al
+  let orderData = null;
   try {
     const { data } = await supabase
-      .from('form_contents')
-      .select('content')
-      .eq('form_type', 'pre_info')
+      .from('orders')
+      .select(`
+        id,
+        customer_name,
+        customer_email,
+        customer_phone,
+        tc_no,
+        address,
+        city,
+        postal_code,
+        package_name,
+        total_amount,
+        payment_method,
+        customer_type,
+        client_ip,
+        pre_info_form_content,
+        created_at
+      `)
+      .eq('id', orderId)
       .single();
-    formData = data;
+    orderData = data;
   } catch (error) {
-    console.error('Form içeriği alınamadı:', error);
+    console.error('Sipariş bilgileri alınamadı:', error);
+    throw new Error('Sipariş bulunamadı');
+  }
+
+  if (!orderData || !orderData.pre_info_form_content) {
+    throw new Error('Ön bilgilendirme form içeriği bulunamadı');
   }
 
   const pdf = new jsPDF();
@@ -158,7 +174,7 @@ export const generatePreInfoPDF = async (
   pdf.setFontSize(9);
   pdf.setTextColor(71, 85, 105);
   pdf.text(`📅 Belge Tarihi: ${currentDate}`, margin + 10, yPosition + 8);
-  pdf.text(`🌐 IP Adresi: ${clientIP}`, margin + 10, yPosition + 18);
+  pdf.text(`🌐 IP Adresi: ${orderData.client_ip || 'Bilinmiyor'}`, margin + 10, yPosition + 18);
   yPosition += 35;
   
   // Modern bölüm başlığı
@@ -186,18 +202,18 @@ export const generatePreInfoPDF = async (
   addTextBlock('👤 ALICI MÜŞTERİ BİLGİLERİ', 14, 'bold', true, [255, 255, 255], [34, 197, 94]);
   
   const customerInfo = [
-    `Ad Soyad: ${customerData.name} ${customerData.surname}`,
-    `E-posta Adresi: ${customerData.email}`,
-    `Telefon Numarası: ${customerData.phone}`,
-    `TC Kimlik No: ${customerData.tcNo}`,
-    `Teslimat Adresi: ${customerData.address}, ${customerData.city} ${customerData.postalCode}`,
-    `Fatura Adresi: ${customerData.address}, ${customerData.city} ${customerData.postalCode}`
+    `Ad Soyad: ${orderData.customer_name}`,
+    `E-posta Adresi: ${orderData.customer_email}`,
+    `Telefon Numarası: ${orderData.customer_phone}`,
+    `TC Kimlik No: ${orderData.tc_no || 'Belirtilmemiş'}`,
+    `Teslimat Adresi: ${orderData.address || 'Belirtilmemiş'}, ${orderData.city || ''} ${orderData.postal_code || ''}`,
+    `Fatura Adresi: ${orderData.address || 'Belirtilmemiş'}, ${orderData.city || ''} ${orderData.postal_code || ''}`
   ];
   
-  if (customerType === 'company' && customerData.companyName) {
-    customerInfo.push(`Firma Adı: ${customerData.companyName}`);
-    customerInfo.push(`Vergi No: ${customerData.taxNo}`);
-    customerInfo.push(`Vergi Dairesi: ${customerData.taxOffice}`);
+  if (orderData.customer_type === 'company') {
+    customerInfo.push(`Müşteri Tipi: Kurumsal`);
+  } else {
+    customerInfo.push(`Müşteri Tipi: Bireysel`);
   }
   
   customerInfo.forEach((info) => {
@@ -208,49 +224,45 @@ export const generatePreInfoPDF = async (
   
   addSpacing(15);
   
-  // Form içeriğini ekle
-  if (formData && formData.content) {
-    addTextBlock('📄 SÖZLEŞME İÇERİĞİ', 14, 'bold', true, [255, 255, 255], [34, 197, 94]);
-    
-    // HTML içeriğini temizle ve düz metne çevir
-    const cleanContent = formData.content
-      .replace(/<[^>]*>/g, '') // HTML etiketlerini kaldır
-      .replace(/&nbsp;/g, ' ') // &nbsp; karakterlerini boşluk yap
-      .replace(/&amp;/g, '&') // HTML entity'lerini düzelt
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .trim();
-    
-    // İçeriği paragraf paragraf böl ve ekle
-    const paragraphs = cleanContent.split(/\n\s*\n/);
-    paragraphs.forEach((paragraph) => {
-      if (paragraph.trim()) {
-        addTextBlock(paragraph.trim(), 10);
-        addSpacing(5);
-      }
-    });
-    
-    addSpacing(10);
-  }
-  
   addTextBlock('📋 HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 14, 'bold', true, [255, 255, 255], [239, 68, 68]);
   
   const serviceInfo = [
-    `Hizmet Adı: ${packageData.name}`,
+    `Hizmet Adı: ${orderData.package_name}`,
     `Hizmet Açıklaması: Dijital sağlık platformu kullanım hakkı ve profesyonel doktor profili yönetimi`,
     `Hizmet Süresi: 12 (On İki) Ay`,
-    `Aylık Hizmet Bedeli: ${packageData.price.toLocaleString('tr-TR')} TL (KDV Dahil)`,
-    `Toplam Hizmet Bedeli: ${(packageData.price * 12).toLocaleString('tr-TR')} TL (KDV Dahil)`,
-    `İndirimli Fiyat: ${packageData.price.toLocaleString('tr-TR')} TL yerine ${packageData.originalPrice.toLocaleString('tr-TR')} TL`,
-    `Ödeme Şekli: ${paymentMethod === 'creditCard' ? 'Kredi Kartı/Banka Kartı ile Aylık Otomatik Tahsilat' : 'Banka Havalesi/EFT ile Aylık Manuel Ödeme'}`,
+    `Toplam Hizmet Bedeli: ${orderData.total_amount.toLocaleString('tr-TR')} TL (KDV Dahil)`,
+    `Ödeme Şekli: ${orderData.payment_method === 'creditCard' ? 'Kredi Kartı/Banka Kartı ile Aylık Otomatik Tahsilat' : 'Banka Havalesi/EFT ile Aylık Manuel Ödeme'}`,
     'KDV Oranı: %20',
     'Para Birimi: Türk Lirası (TL)'
   ];
   
   serviceInfo.forEach((info) => {
     addTextBlock(info, 10);
+  });
+
+  addSpacing(15);
+  
+  // ÖN BİLGİLENDİRME FORM İÇERİĞİ
+  addTextBlock('📄 ÖN BİLGİLENDİRME FORM İÇERİĞİ', 14, 'bold', true, [255, 255, 255], [168, 85, 247]);
+  
+  // HTML içeriğini temizle ve düz metne çevir
+  const cleanContent = orderData.pre_info_form_content
+    .replace(/<[^>]*>/g, '') // HTML etiketlerini kaldır
+    .replace(/&nbsp;/g, ' ') // &nbsp; karakterlerini boşluk yap
+    .replace(/&amp;/g, '&') // HTML entity'lerini düzelt
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim();
+  
+  // İçeriği paragraf paragraf böl ve ekle
+  const paragraphs = cleanContent.split(/\n\s*\n/);
+  paragraphs.forEach((paragraph) => {
+    if (paragraph.trim()) {
+      addTextBlock(paragraph.trim(), 10);
+      addSpacing(5);
+    }
   });
   
   addSpacing(15);
@@ -325,12 +337,12 @@ export const generatePreInfoPDF = async (
     '',
     `Kabul Tarihi: ${currentDate}`,
     `Kabul Saati: ${new Date().toLocaleTimeString('tr-TR')}`,
-    `IP Adresi: ${clientIP}`,
+    `IP Adresi: ${orderData.client_ip || 'Bilinmiyor'}`,
     '',
     'MÜŞTERİ BİLGİLERİ VE DİJİTAL ONAYI:',
-    `Ad Soyad: ${customerData.name} ${customerData.surname}`,
-    `E-posta: ${customerData.email}`,
-    `Telefon: ${customerData.phone}`,
+    `Ad Soyad: ${orderData.customer_name}`,
+    `E-posta: ${orderData.customer_email}`,
+    `Telefon: ${orderData.customer_phone}`,
     '',
     'DİJİTAL İMZA: Bu belge elektronik ortamda kabul edilmiş ve dijital olarak imzalanmıştır.',
     '',
