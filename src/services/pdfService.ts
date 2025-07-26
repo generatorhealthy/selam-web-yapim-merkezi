@@ -21,13 +21,33 @@ interface PackageData {
   originalPrice: number;
 }
 
-export const generatePreInfoPDF = (
+export const generatePreInfoPDF = async (
   customerData: CustomerData,
   packageData: PackageData,
   paymentMethod: string,
   customerType: string,
   clientIP: string
 ) => {
+  // Import supabase here to avoid issues
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabase = createClient(
+    'https://irnfwewabogveofwemvg.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs'
+  );
+
+  // Get form content from database
+  let formData = null;
+  try {
+    const { data } = await supabase
+      .from('form_contents')
+      .select('content')
+      .eq('form_type', 'pre_info')
+      .single();
+    formData = data;
+  } catch (error) {
+    console.error('Form içeriği alınamadı:', error);
+  }
+
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
   const pageHeight = pdf.internal.pageSize.height;

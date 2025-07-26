@@ -33,7 +33,7 @@ export const sendContractEmailsAfterPurchase = async (
   try {
     if (isFirstMonth) {
       // Generate PDFs
-      const preInfoPDF = generatePreInfoPDF(customerData, packageData, paymentMethod, customerType, clientIP);
+      const preInfoPDF = await generatePreInfoPDF(customerData, packageData, paymentMethod, customerType, clientIP);
       const distanceSalesPDF = generateDistanceSalesPDF(customerData, packageData, paymentMethod, customerType, clientIP);
       
       // Convert PDFs to base64 for email attachment
