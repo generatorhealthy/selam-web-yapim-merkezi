@@ -300,15 +300,6 @@ const DoctorList = () => {
             </Button>
           </div>
           
-          {/* Filtreleme Sonucu Bilgisi */}
-          <div className="mt-6 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200">
-            <p className="text-gray-600 text-sm font-medium">
-              {filteredSpecialists.length} uzman bulundu
-              {searchTerm && ` "${searchTerm}" araması için`}
-              {selectedSpecialty && selectedSpecialty !== "all" && ` ${selectedSpecialty} uzmanlığında`}
-              {selectedCity && selectedCity !== "all" && ` ${selectedCity} şehrinde`}
-            </p>
-          </div>
         </div>
 
         {filteredSpecialists.length === 0 ? (
