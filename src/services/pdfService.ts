@@ -349,21 +349,7 @@ export const generatePreInfoWord = async (
     console.error('Form içeriği alınamadı:', error);
   }
 
-  const formContent = formData?.content || `
-DOKTORUM OL ÜYELİK SÖZLEŞMESİ
-
-1. HIZMET ALAN'IN ÜYELIK PAKETI VE ÖZELLIKLERI
-
-1.1 Bu Sözleşme gereği, Hizmet Alan, Üyelik hizmetleri dahilinde Doktorum Ol tarafından sunulan hizmetleri, talep ettiği şekilde almayı kabul eder ve beyan eder. Doktorum Ol, bu Sözleşme çerçevesinde Hizmet Alan'a satın aldığı abonelikte bulunan hizmetleri sunmayı taahhüt eder.
-
-2. TARAFLAR
-
-Bu Sözleşme çerçevesinde, Doktorum Ol Sitesi ve Hizmet Alan birlikte "Taraflar" olarak adlandırılacaktır.
-
-3. AMAÇ VE KONU
-
-Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden faydalanmak isteyen kişi adına Doktorum Ol tarafından www.doktorumol.com.tr alan adındaki web sitesinde bir profil oluşturulmasıdır.
-  `.trim();
+  const formContent = formData?.content || 'DOKTORUM OL ÜYELİK SÖZLEŞMESİ';
   
   // Clean HTML content and split into lines
   const cleanContent = formContent.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
@@ -381,7 +367,7 @@ Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden fay
           text: "ÖN BİLGİLENDİRME FORMU",
           bold: true,
           size: 36,
-          color: "2563EB"
+          color: "000000"
         }),
       ],
       alignment: AlignmentType.CENTER,
@@ -389,19 +375,6 @@ Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden fay
     })
   );
   
-  paragraphs.push(
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: "(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)",
-          size: 20,
-          color: "6B7280"
-        }),
-      ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 600 },
-    })
-  );
 
   // Customer Information Section
   paragraphs.push(
@@ -411,7 +384,7 @@ Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden fay
           text: "MÜŞTERİ BİLGİLERİ",
           bold: true,
           size: 24,
-          color: "059669"
+          color: "000000"
         }),
       ],
       alignment: AlignmentType.LEFT,
@@ -449,7 +422,7 @@ Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden fay
           text: "PAKET BİLGİLERİ",
           bold: true,
           size: 24,
-          color: "DC2626"
+          color: "000000"
         }),
       ],
       alignment: AlignmentType.LEFT,
@@ -485,10 +458,10 @@ Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden fay
     new Paragraph({
       children: [
         new TextRun({
-          text: "SÖZLEŞME İÇERİĞİ",
+          text: "DOKTORUM OL ÜYELİK SÖZLEŞMESİ",
           bold: true,
           size: 24,
-          color: "7C3AED"
+          color: "000000"
         }),
       ],
       alignment: AlignmentType.LEFT,
@@ -543,17 +516,17 @@ Bu sözleşmenin temel amacı, Doktorum Ol'un Premium Üyelik hizmetlerinden fay
       fontSize = 28;
       bold = true;
       spacing = { before: 800, after: 600 };
-      color = "1E40AF";
+      color = "000000";
     } else if (isArticleTitle) {
       fontSize = 24;
       bold = true;
       spacing = { before: 600, after: 400 };
-      color = "059669";
+      color = "000000";
     } else if (isSubArticle) {
       fontSize = 22;
       bold = true;
       spacing = { before: 400, after: 300 };
-      color = "7C2D12";
+      color = "000000";
     }
     
     paragraphs.push(
