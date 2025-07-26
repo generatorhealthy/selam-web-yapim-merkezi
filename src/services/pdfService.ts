@@ -85,321 +85,174 @@ export const generatePreInfoPDF = async (orderId: string) => {
 
     console.log('✅ Veriler kontrol edildi, PDF oluşturuluyor...');
 
-  const pdf = new jsPDF();
-  const pageWidth = pdf.internal.pageSize.width;
-  const pageHeight = pdf.internal.pageSize.height;
-  const margin = 20;
-  const contentWidth = pageWidth - 2 * margin;
-  const safeBottomMargin = 30;
-  const maxY = pageHeight - safeBottomMargin;
-  let yPosition = 30;
-  
-  // Gelişmiş sayfa kontrolü
-  const checkNewPageNeeded = (neededHeight: number) => {
-    return yPosition + neededHeight > maxY;
-  };
-  
-  const addNewPageIfNeeded = (neededHeight: number) => {
-    if (checkNewPageNeeded(neededHeight)) {
-      pdf.addPage();
-      yPosition = 30;
-      return true;
-    }
-    return false;
-  };
-  
-  // Modern metin bloku ekleme
-  const addTextBlock = (
-    text: string, 
-    fontSize: number = 10, 
-    fontWeight: string = 'normal', 
-    isTitle: boolean = false, 
-    color: number[] = [0, 0, 0],
-    backgroundColor?: number[]
-  ) => {
-    pdf.setFontSize(fontSize);
-    pdf.setFont('helvetica', fontWeight);
-    pdf.setTextColor(color[0], color[1], color[2]);
+    const doc = new jsPDF();
     
-    const lines = pdf.splitTextToSize(text, contentWidth - 20);
-    const lineHeight = fontSize * 0.75;
-    const totalHeight = lines.length * lineHeight + (isTitle ? 20 : 10);
-    
-    // Sayfa kontrolü
-    addNewPageIfNeeded(totalHeight);
-    
-    // Başlık için modern arka plan
-    if (backgroundColor) {
-      pdf.setFillColor(backgroundColor[0], backgroundColor[1], backgroundColor[2]);
-      pdf.roundedRect(margin - 5, yPosition - 8, contentWidth + 10, totalHeight - 2, 3, 3, 'F');
-    }
-    
-    // Gölge efekti için
-    if (isTitle && fontSize > 12) {
-      pdf.setFillColor(0, 0, 0, 0.1);
-      pdf.roundedRect(margin - 3, yPosition - 6, contentWidth + 6, totalHeight - 4, 3, 3, 'F');
-    }
-    
-    pdf.text(lines, margin + (backgroundColor ? 10 : 0), yPosition + 5);
-    yPosition += totalHeight;
-    
-    return lines.length;
-  };
-  
-  // Güvenli boşluk ekleme
-  const addSpacing = (space: number) => {
-    if (checkNewPageNeeded(space)) {
-      addNewPageIfNeeded(0);
-    } else {
-      yPosition += space;
-    }
-  };
-  
-  // Modern çizgi ekleme
-  const addLine = (color: number[] = [220, 220, 220], thickness: number = 0.5) => {
-    addNewPageIfNeeded(10);
-    pdf.setDrawColor(color[0], color[1], color[2]);
-    pdf.setLineWidth(thickness);
-    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 10;
-  };
-  
-  // Modern başlık tasarımı
-  addNewPageIfNeeded(60);
-  
-  // Gradient arka plan efekti
-  pdf.setFillColor(59, 130, 246);
-  pdf.roundedRect(margin - 15, yPosition - 15, contentWidth + 30, 50, 8, 8, 'F');
-  
-  pdf.setFillColor(30, 64, 175);
-  pdf.roundedRect(margin - 10, yPosition - 10, contentWidth + 20, 40, 6, 6, 'F');
-  
-  pdf.setFontSize(22);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(255, 255, 255);
-  pdf.text('ÖN BİLGİLENDİRME FORMU', pageWidth / 2, yPosition + 8, { align: 'center' });
-  
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(245, 245, 245);
-  pdf.text('(6502 Sayılı Tüketicinin Korunması Hakkında Kanun Kapsamında)', pageWidth / 2, yPosition + 22, { align: 'center' });
-  yPosition += 50;
-  
-  addSpacing(10);
-  
-  // Modern bilgi kutusu
-  const currentDate = new Date().toLocaleDateString('tr-TR');
-  pdf.setFillColor(241, 245, 249);
-  pdf.roundedRect(margin, yPosition, contentWidth, 25, 4, 4, 'F');
-  
-  pdf.setFontSize(9);
-  pdf.setTextColor(71, 85, 105);
-  pdf.text(`📅 Belge Tarihi: ${currentDate}`, margin + 10, yPosition + 8);
-  pdf.text(`🌐 IP Adresi: ${orderData.contract_ip_address || 'Bilinmiyor'}`, margin + 10, yPosition + 18);
-  yPosition += 35;
-  
-  // Modern bölüm başlığı
-  addTextBlock('🏢 SATICI FİRMA BİLGİLERİ', 14, 'bold', true, [255, 255, 255], [59, 130, 246]);
-  
-  const sellerInfo = [
-    'Ünvan: DoktorumOL Dijital Sağlık Hizmetleri',
-    'Adres: İstanbul, Türkiye',
-    'Telefon: +90 XXX XXX XX XX',
-    'E-posta: info@doktorumol.com.tr',
-    'Web Sitesi: www.doktorumol.com.tr',
-    'Mersis No: XXXXXXXXXXXXXXXXX',
-    'Ticaret Sicil No: XXXXXX',
-    'Vergi Dairesi: İstanbul Vergi Dairesi',
-    'Vergi No: XXXXXXXXXX'
-  ];
-  
-  sellerInfo.forEach((info) => {
-    addTextBlock(info, 10);
-  });
-  
-  addSpacing(5);
-  
-  addSpacing(15);
-  addTextBlock('👤 ALICI MÜŞTERİ BİLGİLERİ', 14, 'bold', true, [255, 255, 255], [34, 197, 94]);
-  
-  const customerInfo = [
-    `Ad Soyad: ${orderData.customer_name}`,
-    `E-posta Adresi: ${orderData.customer_email}`,
-    `Telefon Numarası: ${orderData.customer_phone}`,
-    `TC Kimlik No: ${orderData.customer_tc_no || 'Belirtilmemiş'}`,
-    `Teslimat Adresi: ${orderData.customer_address || 'Belirtilmemiş'}, ${orderData.customer_city || ''}`,
-    `Fatura Adresi: ${orderData.customer_address || 'Belirtilmemiş'}, ${orderData.customer_city || ''}`
-  ];
-  
-  if (orderData.customer_type === 'company') {
-    customerInfo.push(`Müşteri Tipi: Kurumsal`);
-  } else {
-    customerInfo.push(`Müşteri Tipi: Bireysel`);
-  }
-  
-  customerInfo.forEach((info) => {
-    addTextBlock(info, 10);
-  });
-  
-  addSpacing(5);
-  
-  addSpacing(15);
-  
-  addTextBlock('📋 HİZMET BİLGİLERİ VE SÖZLEŞME KONUSU', 14, 'bold', true, [255, 255, 255], [239, 68, 68]);
-  
-  const serviceInfo = [
-    `Hizmet Adı: ${orderData.package_name}`,
-    `Hizmet Açıklaması: Dijital sağlık platformu kullanım hakkı ve profesyonel doktor profili yönetimi`,
-    `Hizmet Süresi: 12 (On İki) Ay`,
-    `Toplam Hizmet Bedeli: ${orderData.amount.toLocaleString('tr-TR')} TL (KDV Dahil)`,
-    `Ödeme Şekli: ${orderData.payment_method === 'creditCard' ? 'Kredi Kartı/Banka Kartı ile Aylık Otomatik Tahsilat' : 'Banka Havalesi/EFT ile Aylık Manuel Ödeme'}`,
-    'KDV Oranı: %20',
-    'Para Birimi: Türk Lirası (TL)'
-  ];
-  
-  serviceInfo.forEach((info) => {
-    addTextBlock(info, 10);
-  });
+    // PDF metadatalarını ayarla
+    doc.setProperties({
+      title: `Ön Bilgilendirme Formu - ${orderData.customer_name}`,
+      subject: `Sipariş: ${orderData.id}`,
+      author: 'Doktorum Ol',
+      creator: 'Doktorum Ol System'
+    });
 
-  addSpacing(15);
-  
-  // SÖZLEŞME İÇERİĞİ - Form tablosundan alınan içerik
-  addTextBlock('📄 SÖZLEŞME İÇERİĞİ', 14, 'bold', true, [255, 255, 255], [168, 85, 247]);
-  
-  // HTML içeriğini temizle ve düz metne çevir
-  const cleanContent = formContent
-    .replace(/<[^>]*>/g, '') // HTML etiketlerini kaldır
-    .replace(/&nbsp;/g, ' ') // &nbsp; karakterlerini boşluk yap
-    .replace(/&amp;/g, '&') // HTML entity'lerini düzelt
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .trim();
-  
-  // İçeriği satır satır böl ve ekle
-  const lines = cleanContent.split('\n');
-  lines.forEach((line) => {
-    const trimmedLine = line.trim();
-    if (trimmedLine) {
-      // Başlık kontrolü - büyük harfler ve uzun satırlar
-      const isTitle = trimmedLine.length > 15 && trimmedLine === trimmedLine.toUpperCase();
-      // Madde başlığı kontrolü - sayı ile başlayanlar
-      const isArticle = /^\d+\./.test(trimmedLine);
+    let yPosition = 40;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Yardımcı fonksiyonlar
+    const addTextBlock = (text: string, size = 10, style = 'normal', center = false, textColor = [0, 0, 0]) => {
+      const maxWidth = 170;
       
-      if (isTitle) {
-        addSpacing(10);
-        addTextBlock(trimmedLine, 12, 'bold', false, [30, 58, 138]);
-        addSpacing(5);
-      } else if (isArticle) {
-        addSpacing(8);
-        addTextBlock(trimmedLine, 11, 'bold', false, [0, 0, 0]);
-        addSpacing(3);
+      // Stil ayarları
+      if (style === 'bold') {
+        doc.setFont('helvetica', 'bold');
       } else {
-        addTextBlock(trimmedLine, 10, 'normal', false, [0, 0, 0]);
-        addSpacing(2);
+        doc.setFont('helvetica', 'normal');
       }
-    } else {
-      addSpacing(5);
+      
+      doc.setFontSize(size);
+      doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+      
+      // Metin satırlarına böl
+      const lines = doc.splitTextToSize(text, maxWidth);
+      
+      lines.forEach((line: string) => {
+        if (yPosition > pageHeight - 30) {
+          doc.addPage();
+          yPosition = 30;
+        }
+        
+        const xPos = center ? (pageWidth - doc.getTextWidth(line)) / 2 : 20;
+        doc.text(line, xPos, yPosition);
+        yPosition += size * 0.6;
+      });
+    };
+
+    const addSpacing = (space: number) => {
+      yPosition += space;
+    };
+
+    const addBlueBox = (content: string[], title: string) => {
+      // Başlık
+      doc.setFillColor(33, 150, 243); // Mavi arka plan
+      doc.setTextColor(255, 255, 255); // Beyaz yazı
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      
+      const titleHeight = 8;
+      doc.rect(20, yPosition - 3, pageWidth - 40, titleHeight, 'F');
+      doc.text(title, 25, yPosition + 3);
+      yPosition += titleHeight + 5;
+      
+      // İçerik kutusu
+      doc.setDrawColor(33, 150, 243);
+      doc.setLineWidth(1);
+      const contentStartY = yPosition;
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      
+      content.forEach((item) => {
+        doc.text(item, 25, yPosition);
+        yPosition += 6;
+      });
+      
+      yPosition += 5;
+      const boxHeight = yPosition - contentStartY;
+      doc.rect(20, contentStartY - 3, pageWidth - 40, boxHeight, 'S');
+      
+      addSpacing(10);
+    };
+
+    // BAŞLIK
+    doc.setTextColor(33, 150, 243);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.text('ÖN BİLGİLENDİRME FORMU', pageWidth / 2, yPosition, { align: 'center' });
+    addSpacing(30);
+
+    // MÜŞTERİ BİLGİLERİ
+    const customerInfo = [
+      `Müşteri Adı: ${orderData.customer_name}`,
+      `E-posta: ${orderData.customer_email}`,
+      `Telefon: ${orderData.customer_phone || 'Belirtilmemiş'}`,
+      `TC Kimlik No: ${orderData.customer_tc_no || 'Belirtilmemiş'}`,
+      `Adres: ${orderData.customer_address || 'Belirtilmemiş'}`,
+      `Şehir: ${orderData.customer_city || 'Belirtilmemiş'}`,
+      `Müşteri Tipi: ${orderData.customer_type === 'corporate' ? 'Kurumsal' : 'Bireysel'}`
+    ];
+    
+    addBlueBox(customerInfo, 'MÜŞTERİ BİLGİLERİ:');
+
+    // PAKET BİLGİLERİ
+    const paymentMethodText = orderData.payment_method === 'bank_transfer' ? 'Banka Havalesi/EFT' : 
+                             orderData.payment_method === 'credit_card' ? 'Kredi Kartı' : 
+                             orderData.payment_method;
+    
+    const packageInfo = [
+      `Seçilen Paket: ${orderData.package_name}`,
+      `Fiyat: ${orderData.amount} ₺`,
+      `Ödeme Yöntemi: ${paymentMethodText}`
+    ];
+    
+    addBlueBox(packageInfo, 'PAKET BİLGİLERİ:');
+
+    // TARİHLER
+    const createdDate = new Date(orderData.created_at).toLocaleDateString('tr-TR');
+    const createdDateTime = new Date(orderData.created_at).toLocaleString('tr-TR');
+    
+    const dateInfo = [
+      `Sözleşme Oluşturulma Tarihi: ${createdDate}`,
+      `Dijital Onaylama Tarihi: ${createdDateTime}`
+    ];
+    
+    addBlueBox(dateInfo, 'TARİHLER:');
+
+    // SÖZLEŞME İÇERİĞİ
+    addSpacing(10);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 20, yPosition);
+    addSpacing(20);
+    
+    // Form içeriğini ekle
+    if (formContent && formContent !== 'DOKTORUM OL ÜYELİK SÖZLEŞMESİ') {
+      const cleanContent = formContent
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .trim();
+      
+      const paragraphs = cleanContent.split(/\n\s*\n/);
+      paragraphs.forEach((paragraph) => {
+        if (paragraph.trim()) {
+          const isTitle = paragraph.length > 20 && paragraph === paragraph.toUpperCase();
+          const isArticle = /^\d+\./.test(paragraph.trim());
+          
+          if (isTitle) {
+            addSpacing(10);
+            addTextBlock(paragraph.trim(), 12, 'bold', false, [33, 150, 243]);
+            addSpacing(5);
+          } else if (isArticle) {
+            addSpacing(8);
+            addTextBlock(paragraph.trim(), 11, 'bold');
+            addSpacing(3);
+          } else {
+            addTextBlock(paragraph.trim(), 10);
+            addSpacing(5);
+          }
+        }
+      });
     }
-  });
-  
-  addSpacing(15);
-  
-  addTextBlock('📜 DETAYLI HİZMET KOŞULLARI VE BİLGİLERİ', 14, 'bold', true, [255, 255, 255], [168, 85, 247]);
-  
-  const detailedTerms = [
-    '1. HİZMET TANIMI VE KAPSAMI:',
-    'Bu sözleşme kapsamında sunulan hizmet, DoktorumOL dijital sağlık platformunda profesyonel doktor profili oluşturma, yönetme ve hasta ile etkileşim kurma imkanı sağlayan dijital bir hizmettir. Hizmet tamamen dijital ortamda sunulmakta olup, herhangi bir fiziksel teslimat içermemektedir.',
-    '',
-    '2. HİZMET SÜRESİ VE ÖDEME KOŞULLARI:',
-    'Hizmet süresi 12 (on iki) ay olup, ödeme aylık taksitler halinde yapılacaktır. İlk ödeme hizmetin başlangıcında, sonraki ödemeler her ayın aynı gününde otomatik olarak tahsil edilecektir. Ödeme yapılmayan durumlarda hizmet askıya alınabilir.',
-    '',
-    '3. CAYMA HAKKI:',
-    'Alıcı, 6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamında, sözleşme tarihinden itibaren 14 (on dört) gün içerisinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin bu sözleşmeden cayma hakkına sahiptir. Cayma hakkının kullanılması için bu süre içerisinde satıcıya yazılı olarak bildirim yapılması yeterlidir.',
-    '',
-    '4. CAYMA HAKKININ KULLANILMASI:',
-    'Cayma hakkının kullanılması halinde, alıcı tarafından ödenen tüm bedeller 10 (on) gün içerisinde iade edilir. Cayma bildirimi info@doktorumol.com.tr e-posta adresine veya kayıtlı adrese yazılı olarak yapılabilir.',
-    '',
-    '5. HİZMET BAŞLANGICI VE AKTİVASYON:',
-    'Hizmet, ödeme onayının alınmasından sonra en geç 24 saat içerisinde aktifleştirilir. Kullanıcı hesap bilgileri ayrı bir e-posta ile gönderilir. Hizmetin kullanımı için internet bağlantısı gereklidir.',
-    '',
-    '6. SORUMLULUKLAR VE YÜKÜMLÜLÜKLER:',
-    'Satıcı, platform üzerinden kesintisiz hizmet sunmaya, teknik destek sağlamaya ve kullanıcı verilerinin güvenliğini sağlamaya yükümlüdür. Alıcı, platform kurallarına uymaya, doğru bilgi vermeye ve aylık ödemelerini zamanında yapmaya yükümlüdür.',
-    '',
-    '7. İPTAL VE SONLANDIRMA:',
-    'Hizmet, alıcı tarafından herhangi bir zamanda iptal edilebilir. İptal durumunda kalan aylık ödemeler tahsil edilmez. Ancak kullanılan dönem için ödeme iadesi yapılmaz. Satıcı, platform kurallarının ihlali durumunda hizmeti tek taraflı olarak sonlandırabilir.',
-    '',
-    '8. KİŞİSEL VERİLERİN KORUNMASI:',
-    'Toplanan kişisel veriler, 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında işlenir ve korunur. Detaylı bilgi için www.doktorumol.com.tr/gizlilik-politikasi adresini ziyaret edebilirsiniz.',
-    '',
-    '9. UYUŞMAZLIK ÇÖZÜMÜ:',
-    'Bu sözleşmeden doğan uyuşmazlıklar öncelikle dostane yollarla çözülmeye çalışılır. Çözüm sağlanamayan hallerde İstanbul Mahkemeleri ve İcra Müdürlükleri yetkilidir. Tüketici şikayetleri için Tüketici Hakem Heyetleri ve Tüketici Mahkemelerine başvuru yapılabilir.',
-    '',
-    '10. DİĞER HÜKÜMLER:',
-    'Bu sözleşme elektronik ortamda akdedilmiş olup, onaylanan şekliyle geçerlidir. Sözleşme şartlarında değişiklik yalnızca yazılı anlaşma ile yapılabilir. Sözleşmenin herhangi bir hükmünün geçersiz olması diğer hükümlerin geçerliliğini etkilemez.'
-  ];
-  
-  detailedTerms.forEach((term) => {
-    if (term === '') {
-      addSpacing(3);
-      return;
-    }
-    addTextBlock(term, 10);
-  });
-  
-  // Modern imza sayfası
-  pdf.addPage();
-  yPosition = 30;
-  
-  // Gradient imza başlığı
-  pdf.setFillColor(34, 197, 94);
-  pdf.roundedRect(margin - 15, yPosition - 15, contentWidth + 30, 45, 8, 8, 'F');
-  
-  pdf.setFillColor(16, 185, 129);
-  pdf.roundedRect(margin - 10, yPosition - 10, contentWidth + 20, 35, 6, 6, 'F');
-  
-  pdf.setFontSize(20);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(255, 255, 255);
-  pdf.text('✍️ ONAY VE KABUL', pageWidth / 2, yPosition + 8, { align: 'center' });
-  yPosition += 40;
-  
-  addSpacing(10);
-  
-  const acceptanceText = [
-    'Bu ön bilgilendirme formunda yer alan tüm bilgileri okudum, anladım ve kabul ediyorum. Ürün/hizmet bedeli, ödeme şekli, teslimat koşulları ve diğer tüm şartlar hakkında tam bilgi sahibi olduğumu beyan ederim.',
-    '',
-    '6502 sayılı Tüketicinin Korunması Hakkında Kanun kapsamındaki cayma hakkım konusunda bilgilendirildiğimi, bu hakkımı 14 gün içerisinde kullanabileceğimi bildiğimi onaylıyorum.',
-    '',
-    'Bu belge elektronik ortamda düzenlenmiş olup, 5070 sayılı Elektronik İmza Kanunu kapsamında geçerlidir.',
-    '',
-    `Kabul Tarihi: ${currentDate}`,
-    `Kabul Saati: ${new Date().toLocaleTimeString('tr-TR')}`,
-    `IP Adresi: ${orderData.contract_ip_address || 'Bilinmiyor'}`,
-    '',
-    'MÜŞTERİ BİLGİLERİ VE DİJİTAL ONAYI:',
-    `Ad Soyad: ${orderData.customer_name}`,
-    `E-posta: ${orderData.customer_email}`,
-    `Telefon: ${orderData.customer_phone}`,
-    '',
-    'DİJİTAL İMZA: Bu belge elektronik ortamda kabul edilmiş ve dijital olarak imzalanmıştır.',
-    '',
-    '* Bu belge müşteri tarafından dijital ortamda onaylanmış ve yasal geçerliliğe sahiptir.',
-    '* Belgenin dijital kopyası müşterinin e-posta adresine gönderilmiştir.',
-    '* Sorularınız için info@doktorumol.com.tr adresinden bizimle iletişime geçebilirsiniz.'
-  ];
-  
-  acceptanceText.forEach((text) => {
-    if (text === '') {
-      addSpacing(3);
-      return;
-    }
-    addTextBlock(text, 10);
-  });
-  
-  console.log('✅ PDF başarıyla oluşturuldu');
-  return pdf;
+
+    console.log('✅ PDF başarıyla oluşturuldu');
+    return doc;
   
   } catch (error) {
     console.error('❌ PDF oluşturma hatası:', error);
