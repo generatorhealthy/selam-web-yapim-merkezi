@@ -35,7 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
     const smsData = {
       username: username,
       password: password,
-      source_addr: 'SELAMWEB', // Your registered sender ID
+      source_addr: '02167060611', // Your registered sender ID
       messages: [
         {
           msg: message,
