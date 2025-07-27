@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.send-verimor-sms]
 verify_jwt = false
+
+[functions.get-edge-ip]
+verify_jwt = false
