@@ -213,6 +213,25 @@ const BookAppointment = () => {
         console.error('Patient notification error (non-critical):', notificationError);
       }
 
+      // Send SMS notification to specialist
+      try {
+        await sendDoctorNotification(
+          specialist.email || '',
+          specialist.phone || '',
+          {
+            patientName: formData.patientName,
+            patientPhone: formData.patientPhone,
+            patientEmail: formData.patientEmail,
+            appointmentDate: formData.appointmentDate,
+            appointmentTime: formData.appointmentTime,
+            appointmentType: formData.appointmentType === 'face-to-face' ? 'Yüz Yüze' : 'Online',
+            notes: formData.notes
+          }
+        );
+      } catch (doctorNotificationError) {
+        console.error('Doctor notification error (non-critical):', doctorNotificationError);
+      }
+
       toast.success('Randevu talebiniz başarıyla gönderildi! Uzman e-posta ile bilgilendirildi.');
       
       // Form'u temizle

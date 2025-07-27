@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.create-iyzico-payment]
 verify_jwt = false
+
+[functions.send-verimor-sms]
+verify_jwt = false
