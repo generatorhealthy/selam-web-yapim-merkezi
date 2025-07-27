@@ -27,15 +27,24 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Clean phone number (remove spaces, dashes, etc.)
-    const cleanPhone = phone.replace(/[^\d+]/g, '');
+    let cleanPhone = phone.replace(/[^\d+]/g, '');
     
-    // Verimor API endpoint
+    // Ensure phone starts with 90 for Turkey
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = '90' + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith('90')) {
+      cleanPhone = '90' + cleanPhone;
+    }
+    
+    // Verimor API endpoint  
     const verimorUrl = 'https://sms.verimor.com.tr/v2/send.json';
     
     const smsData = {
       username: username,
       password: password,
-      source_addr: '02167060611', // Your registered sender ID
+      source_addr: '02167060611',
+      custom_id: Date.now().toString(),
+      datacoding: '0',
       messages: [
         {
           msg: message,
