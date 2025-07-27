@@ -115,49 +115,16 @@ const SmsManagement = () => {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setSmsStatus({type: null, message: ''});
-
-      const { data, error } = await supabase.functions.invoke('send-verimor-sms', {
-        body: {
-          phone: phoneNumber,
-          message: message
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        setSmsStatus({
-          type: 'success',
-          message: 'SMS başarıyla gönderildi!'
-        });
-        toast({
-          title: "Başarılı",
-          description: "SMS başarıyla gönderildi.",
-        });
-        // Reset form
-        setMessage('');
-        setPhoneNumber('');
-        setSelectedSpecialist('');
-      } else {
-        throw new Error(data.error || 'SMS gönderim hatası');
-      }
-    } catch (error: any) {
-      console.error('SMS sending error:', error);
-      setSmsStatus({
-        type: 'error',
-        message: error.message || 'SMS gönderilirken bir hata oluştu.'
-      });
-      toast({
-        title: "Hata",
-        description: error.message || "SMS gönderilirken bir hata oluştu.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Temporarily show manual SMS info instead of sending
+    setSmsStatus({
+      type: 'success',
+      message: `SMS hazırlandı! Manuel gönderim: ${phoneNumber} numarasına "${message.substring(0, 50)}..." mesajını Verimor panelinden gönderin.`
+    });
+    
+    toast({
+      title: "Manuel SMS",
+      description: "Verimor 2FA sorunu nedeniyle şimdilik manuel gönderim yapın.",
+    });
   };
 
   if (loading || isFetching) {
