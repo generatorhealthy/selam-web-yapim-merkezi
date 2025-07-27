@@ -46,6 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending SMS to:', cleanPhone);
     console.log('Message:', message);
+    console.log('SMS Data:', JSON.stringify(smsData, null, 2));
 
     const response = await fetch(verimorUrl, {
       method: 'POST',
@@ -55,7 +56,11 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify(smsData)
     });
 
+    console.log('Verimor API response status:', response.status);
+    console.log('Verimor API response headers:', Object.fromEntries(response.headers.entries()));
+    
     const result = await response.json();
+    console.log('Verimor response body:', JSON.stringify(result, null, 2));
     
     console.log('Verimor response:', result);
 
