@@ -19,11 +19,10 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { phone, message }: SmsRequest = await req.json();
     
-    const username = Deno.env.get('VERIMOR_USERNAME');
-    const password = Deno.env.get('VERIMOR_PASSWORD');
+    const apiKey = Deno.env.get('VERIMOR_API_KEY');
     
-    if (!username || !password) {
-      throw new Error('Verimor credentials not configured');
+    if (!apiKey) {
+      throw new Error('Verimor API key not configured');
     }
 
     // Clean phone number (remove spaces, dashes, etc.)
@@ -33,8 +32,10 @@ const handler = async (req: Request): Promise<Response> => {
     const verimorUrl = 'https://sms.verimor.com.tr/v2/send.json';
     
     const smsData = {
-      username: username,
-      password: password,
+      auth: {
+        type: 'api_key',
+        api_key: apiKey
+      },
       source_addr: '02167060611', // Your registered sender ID
       messages: [
         {
