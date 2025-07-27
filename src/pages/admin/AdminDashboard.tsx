@@ -24,7 +24,8 @@ import {
   ClipboardCheck,
   Settings,
   Activity,
-  Clock
+  Clock,
+  MessageCircle
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -265,6 +266,18 @@ const AdminDashboard = () => {
       route: "/divan_paneli/contracts",
       buttonText: "Sözleşmeleri Görüntüle",
       adminOnly: true
+    },
+    {
+      title: "Verimor SMS Hizmeti",
+      description: "Uzmanlar için SMS gönderim sistemi",
+      icon: MessageCircle,
+      gradient: "from-violet-500 via-purple-500 to-indigo-600",
+      bgGradient: "from-violet-50 to-indigo-50",
+      shadowColor: "shadow-violet-500/20",
+      route: "/divan_paneli/sms-management",
+      buttonText: "SMS Hizmetini Yönet",
+      adminOnly: false,
+      staffOnly: true
     }
   ];
 
