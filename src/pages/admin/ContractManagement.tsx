@@ -92,7 +92,7 @@ const ContractManagement = () => {
             pre_info_pdf_content,
             distance_sales_pdf_content
           `)
-          .not('pre_info_pdf_content', 'is', null)
+          .in('status', ['approved', 'completed'])
           .order('created_at', { ascending: false }),
         
         supabase
