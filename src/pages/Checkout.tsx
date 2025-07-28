@@ -125,34 +125,48 @@ const Checkout = () => {
   const [showPreInfoDialog, setShowPreInfoDialog] = useState(false);
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("bank_transfer");
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("credit_card");
   const [clientIP, setClientIP] = useState<string>("");
+  
+  // Form verilerini Iyzico standartlarına göre düzenlendi
   const [formData, setFormData] = useState({
+    // Buyer Information (Required by Iyzico)
     name: "",
     surname: "",
     email: "",
-    phone: "",
-    tcNo: "",
-    address: "",
+    gsmNumber: "", // Iyzico format: +905xxxxxxxxx
+    identityNumber: "", // TC Kimlik No
+    registrationAddress: "", // Buyer's registration address
     city: "İstanbul",
-    zipCode: "",
-    shippingAddress: "",
-    shippingCity: "İstanbul",
-    shippingZipCode: "",
+    country: "Turkey",
+    ip: "",
+    
+    // Billing Address (Required by Iyzico)
+    billingContactName: "",
+    billingCity: "İstanbul",
+    billingCountry: "Turkey", 
     billingAddress: "",
-    billingCity: "İstanbul", 
     billingZipCode: "",
+    
+    // Shipping Address (Required by Iyzico)
+    shippingContactName: "",
+    shippingCity: "İstanbul", 
+    shippingCountry: "Turkey",
+    shippingAddress: "",
+    shippingZipCode: "",
+    
+    // Company Information (for corporate customers)
     companyName: "",
-    taxNo: "",
+    taxNumber: "",
     taxOffice: ""
   });
 
   const getSubscriptionReferenceCode = (packageType: string) => {
     const referenceCodeMap: { [key: string]: string } = {
-      "campaign": "e01a059d-9392-4690-b030-0002064f9421", // 2398₺ kampanyali-paket
-      "basic": "205eb35c-e122-401f-aef7-618daf3732f8", // 2998₺ paketler
-      "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff", // 3600₺ kampanyali-premium-paket  
-      "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94" // 4998₺ paketler
+      "campaign": "e01a059d-9392-4690-b030-0002064f9421",
+      "basic": "205eb35c-e122-401f-aef7-618daf3732f8", 
+      "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff",
+      "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94"
     };
     return referenceCodeMap[packageType] || referenceCodeMap["basic"];
   };
@@ -162,8 +176,6 @@ const Checkout = () => {
       setLoading(true);
       
       const packageData = location.state?.packageData;
-      console.log('Received package data:', packageData);
-      
       if (packageData) {
         const convertedPackage = {
           name: packageData.name,
@@ -172,18 +184,18 @@ const Checkout = () => {
           originalPrice: packageData.originalPrice,
           features: packageData.features
         };
-        console.log('Converted to:', convertedPackage);
         setSelectedPackage(convertedPackage);
       } else {
-        console.log('No package data received, using default package');
         setSelectedPackage(packages.basic);
       }
 
       try {
         const ip = await getClientIP();
         setClientIP(ip);
+        setFormData(prev => ({ ...prev, ip }));
       } catch (error) {
         setClientIP('127.0.0.1');
+        setFormData(prev => ({ ...prev, ip: '127.0.0.1' }));
       }
 
       setLoading(false);
@@ -193,15 +205,16 @@ const Checkout = () => {
   }, [packageId, navigate, location.state]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    let value = e.target.value;
+    let { name, value } = e.target;
     
-    if (e.target.name === "tcNo") {
+    // TC Kimlik No formatı
+    if (name === "identityNumber") {
       value = value.replace(/\D/g, "").substring(0, 11);
     }
     
-    if (e.target.name === "phone") {
-      // Telefon formatını düzenle - İyzico +90 ile başlayan format istiyor
-      value = value.replace(/\D/g, ""); // Sadece rakamları al
+    // Telefon formatı - Iyzico +905xxxxxxxxx formatını bekliyor
+    if (name === "gsmNumber") {
+      value = value.replace(/\D/g, "");
       if (value.startsWith("90")) {
         value = "+" + value;
       } else if (value.startsWith("0")) {
@@ -209,29 +222,102 @@ const Checkout = () => {
       } else if (!value.startsWith("+90")) {
         value = "+90" + value;
       }
-      value = value.substring(0, 14); // Max 14 karakter (+905xxxxxxxxx)
+      value = value.substring(0, 14);
     }
 
-    setFormData({
-      ...formData,
-      [e.target.name]: value
-    });
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Auto-fill contact names when name/surname changes
+    if (name === "name" || name === "surname") {
+      const fullName = `${name === "name" ? value : formData.name} ${name === "surname" ? value : formData.surname}`.trim();
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        billingContactName: fullName,
+        shippingContactName: fullName
+      }));
+    }
   };
 
-  const handlePreInfoLinkClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setShowPreInfoDialog(true);
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleDistanceSalesLinkClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setShowDistanceSalesDialog(true);
+  const validateForm = () => {
+    const requiredFields = [
+      'name', 'surname', 'email', 'gsmNumber', 'identityNumber',
+      'registrationAddress', 'city', 'billingAddress', 'billingCity',
+      'shippingAddress', 'shippingCity'
+    ];
+
+    for (const field of requiredFields) {
+      if (!formData[field as keyof typeof formData]) {
+        toast({
+          title: "Eksik Bilgi",
+          description: `Lütfen tüm zorunlu alanları doldurun.`,
+          variant: "destructive"
+        });
+        return false;
+      }
+    }
+
+    if (customerType === 'company') {
+      if (!formData.companyName || !formData.taxNumber) {
+        toast({
+          title: "Eksik Bilgi", 
+          description: "Kurumsal müşteriler için firma adı ve vergi numarası zorunludur.",
+          variant: "destructive"
+        });
+        return false;
+      }
+    }
+
+    if (!contractAccepted) {
+      toast({
+        title: "Sözleşme Onayı",
+        description: "Devam etmek için sözleşmeleri kabul etmelisiniz.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Email formatı kontrolü
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Geçersiz Email",
+        description: "Lütfen geçerli bir email adresi girin.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // TC Kimlik No kontrolü
+    if (formData.identityNumber.length !== 11) {
+      toast({
+        title: "Geçersiz TC Kimlik No",
+        description: "TC Kimlik No 11 haneli olmalıdır.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
   };
 
-  const handlePaymentSuccess = async () => {
+  const handlePaymentProcess = async () => {
+    if (!validateForm()) return;
+
     if (paymentMethod === "bank_transfer") {
+      await saveOrder('bank_transfer');
       setShowBankInfo(true);
-    } else if (paymentMethod === "credit_card") {
+    } else {
       await handleCreditCardPayment();
     }
   };
@@ -240,31 +326,45 @@ const Checkout = () => {
     try {
       setLoading(true);
       
+      // Iyzico standartlarına göre customer data hazırla
       const customerData = {
+        // Buyer bilgileri
         name: formData.name,
-        surname: formData.surname,
+        surname: formData.surname, 
         email: formData.email,
-        phone: formData.phone,
-        tcNo: formData.tcNo,
-        address: formData.shippingAddress,
-        city: formData.shippingCity,
-        zipCode: formData.shippingZipCode,
-        shippingAddress: formData.shippingAddress,
-        shippingCity: formData.shippingCity,
-        shippingZipCode: formData.shippingZipCode,
-        billingAddress: formData.billingAddress,
+        gsmNumber: formData.gsmNumber,
+        identityNumber: formData.identityNumber,
+        registrationAddress: formData.registrationAddress,
+        city: formData.city,
+        country: formData.country,
+        ip: clientIP,
+        
+        // Billing Address
+        billingContactName: formData.billingContactName || `${formData.name} ${formData.surname}`,
         billingCity: formData.billingCity,
-        billingZipCode: formData.billingZipCode,
+        billingCountry: formData.billingCountry,
+        billingAddress: formData.billingAddress,
+        billingZipCode: formData.billingZipCode || "34100",
+        
+        // Shipping Address  
+        shippingContactName: formData.shippingContactName || `${formData.name} ${formData.surname}`,
+        shippingCity: formData.shippingCity,
+        shippingCountry: formData.shippingCountry,
+        shippingAddress: formData.shippingAddress,
+        shippingZipCode: formData.shippingZipCode || "34100",
+        
+        // Company bilgileri (opsiyonel)
         customerType,
-        companyName: formData.companyName,
-        taxNo: formData.taxNo,
-        taxOffice: formData.taxOffice
+        companyName: customerType === 'company' ? formData.companyName : "",
+        taxNumber: customerType === 'company' ? formData.taxNumber : "",
+        taxOffice: customerType === 'company' ? formData.taxOffice : ""
       };
 
       const subscriptionReferenceCode = getSubscriptionReferenceCode(selectedPackage.type);
 
-      console.log('Ödeme isteği gönderiliyor...', {
+      console.log('Iyzico ödeme isteği:', {
         packageType: selectedPackage.type,
+        customerData,
         subscriptionReferenceCode
       });
 
@@ -277,47 +377,42 @@ const Checkout = () => {
       });
 
       if (error) {
-        console.error('Supabase function hatası:', error);
-        throw new Error(`Ödeme servisi hatası: ${error.message}`);
+        console.error('Supabase function error:', error);
+        throw new Error(`Payment service error: ${error.message}`);
       }
 
-      console.log('Ödeme yanıtı:', data);
+      console.log('Iyzico response:', data);
 
-      if (data?.success) {
-        if (data.paymentPageUrl) {
-          // İyzico ödeme sayfasına yönlendir
-          window.location.href = data.paymentPageUrl;
-        } else if (data.checkoutFormContent) {
-          // Gömülü checkout form göster
-          const checkoutContainer = document.createElement('div');
-          checkoutContainer.innerHTML = data.checkoutFormContent;
-          document.body.appendChild(checkoutContainer);
-          
-          // Checkout form'daki scriptleri çalıştır
-          const scripts = checkoutContainer.querySelectorAll('script');
-          scripts.forEach(script => {
-            const newScript = document.createElement('script');
+      if (data?.status === 'success' && data?.checkoutFormContent) {
+        // Checkout form'u sayfaya ekle
+        const checkoutContainer = document.createElement('div');
+        checkoutContainer.id = 'iyzipay-checkout-form';
+        checkoutContainer.innerHTML = data.checkoutFormContent;
+        document.body.appendChild(checkoutContainer);
+        
+        // Script'leri çalıştır
+        const scripts = checkoutContainer.querySelectorAll('script');
+        scripts.forEach(script => {
+          const newScript = document.createElement('script');
+          if (script.src) {
+            newScript.src = script.src;
+          } else {
             newScript.textContent = script.textContent;
-            document.head.appendChild(newScript);
-          });
-        }
+          }
+          document.head.appendChild(newScript);
+        });
+      } else if (data?.paymentPageUrl) {
+        // Redirect URL varsa yönlendir
+        window.location.href = data.paymentPageUrl;
       } else {
-        const errorMessage = data?.error || 'Ödeme işlemi başlatılamadı';
-        console.error('Ödeme hatası:', errorMessage);
-        throw new Error(errorMessage);
+        throw new Error(data?.errorMessage || 'Payment initialization failed');
       }
 
     } catch (error) {
-      console.error('Kredi kartı ödeme hatası:', error);
-      let errorMessage = "Kredi kartı ödemesi başlatılamadı. Lütfen tekrar deneyin.";
-      
-      if (error.message) {
-        errorMessage = error.message;
-      }
-      
+      console.error('Payment error:', error);
       toast({
-        title: "Hata",
-        description: errorMessage,
+        title: "Ödeme Hatası",
+        description: error.message || "Ödeme başlatılamadı. Lütfen tekrar deneyin.",
         variant: "destructive"
       });
     } finally {
@@ -325,30 +420,21 @@ const Checkout = () => {
     }
   };
 
-  const handleBankTransferComplete = async () => {
-    await saveOrder('bank_transfer');
-    navigate("/odeme-basarili");
-  };
-
   const saveOrder = async (paymentMethod: string) => {
     try {
       setLoading(true);
       
-      // Generate PDF content
-      const preInfoPdfContent = await generatePreInfoPdfContent();
-      const distanceSalesPdfContent = generateDistanceSalesPdfContent();
-      
       const orderData = {
         customer_name: `${formData.name} ${formData.surname}`,
         customer_email: formData.email,
-        customer_phone: formData.phone || null,
-        customer_tc_no: formData.tcNo || null,
-        customer_address: formData.address || null,
+        customer_phone: formData.gsmNumber,
+        customer_tc_no: formData.identityNumber,
+        customer_address: formData.registrationAddress,
         customer_city: formData.city,
         customer_type: customerType,
-        company_name: customerType === 'company' ? formData.companyName || null : null,
-        company_tax_no: customerType === 'company' ? formData.taxNo || null : null,
-        company_tax_office: customerType === 'company' ? formData.taxOffice || null : null,
+        company_name: customerType === 'company' ? formData.companyName : null,
+        company_tax_no: customerType === 'company' ? formData.taxNumber : null,
+        company_tax_office: customerType === 'company' ? formData.taxOffice : null,
         package_name: selectedPackage.name,
         package_type: selectedPackage.type,
         amount: selectedPackage.price,
@@ -356,9 +442,7 @@ const Checkout = () => {
         status: 'pending',
         is_first_order: true,
         subscription_month: 1,
-        contract_ip_address: clientIP,
-        pre_info_pdf_content: preInfoPdfContent,
-        distance_sales_pdf_content: distanceSalesPdfContent
+        contract_ip_address: clientIP
       };
 
       const { data, error } = await supabase
@@ -368,13 +452,8 @@ const Checkout = () => {
         .single();
 
       if (error) {
-        console.error('Sipariş kaydedilirken hata:', error);
-        toast({
-          title: "Hata",
-          description: "Sipariş kaydedilirken bir hata oluştu. Lütfen destek ile iletişime geçin.",
-          variant: "destructive"
-        });
-        return;
+        console.error('Order save error:', error);
+        throw new Error('Sipariş kaydedilemedi');
       }
 
       localStorage.setItem('lastOrder', JSON.stringify({
@@ -386,17 +465,15 @@ const Checkout = () => {
         customerName: `${formData.name} ${formData.surname}`
       }));
 
-      toast({
-        title: "Başarılı",
-        description: "Siparişiniz başarıyla kaydedildi!",
-        variant: "default"
-      });
+      if (paymentMethod === 'bank_transfer') {
+        navigate("/odeme-basarili");
+      }
 
     } catch (error) {
-      console.error('Beklenmeyen hata:', error);
+      console.error('Save order error:', error);
       toast({
         title: "Hata",
-        description: "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
+        description: error.message || "Beklenmeyen bir hata oluştu.",
         variant: "destructive"
       });
     } finally {
@@ -404,525 +481,486 @@ const Checkout = () => {
     }
   };
 
-  // PDF içerik oluşturucu fonksiyonlar
-  const generatePreInfoPdfContent = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('form_contents')
-        .select('content')
-        .eq('form_type', 'pre_info')
-        .single();
-
-      if (error || !data) {
-        console.error('Ön bilgi formu içeriği alınamadı:', error);
-        return null;
-      }
-
-      // Form içeriğini müşteri bilgileri ile birleştir
-      const currentDate = new Date().toLocaleDateString('tr-TR');
-      const currentDateTime = new Date().toLocaleString('tr-TR');
-      
-      const customerInfo = `
-        MÜŞTERI BİLGİLERİ:
-        Müşteri Adı: ${formData.name} ${formData.surname}
-        E-posta: ${formData.email}
-        Telefon: ${formData.phone || 'Belirtilmemiş'}
-        TC Kimlik No: ${formData.tcNo || 'Belirtilmemiş'}
-        Adres: ${formData.address || 'Belirtilmemiş'}
-        Şehir: ${formData.city}
-        Müşteri Tipi: ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}
-
-        ${customerType === 'company' ? `KURUMSAL BİLGİLER:
-        Firma Adı: ${formData.companyName || 'Belirtilmemiş'}
-        Vergi No: ${formData.taxNo || 'Belirtilmemiş'}
-        Vergi Dairesi: ${formData.taxOffice || 'Belirtilmemiş'}
-        ` : ''}
-
-        PAKET BİLGİLERİ:
-        Seçilen Paket: ${selectedPackage.name}
-        Fiyat: ${selectedPackage.price.toLocaleString('tr-TR')} ₺
-        Ödeme Yöntemi: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}
-
-        Müşterinin Hizmet Aldığı Paket İçeriği:
-        ${selectedPackage.features ? selectedPackage.features.map((feature: string) => `• ${feature}`).join('\n') : ''}
-
-        TARİHLER:
-        Sözleşme Oluşturulma Tarihi: ${currentDate}
-        Dijital Onaylama Tarihi: ${currentDateTime}
-        IP Adresi: ${clientIP}
-
-        ------------------------------------
-
-      `;
-
-      return customerInfo + data.content;
-    } catch (error) {
-      console.error('PDF içeriği oluşturulurken hata:', error);
-      return null;
-    }
+  const handlePreInfoLinkClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowPreInfoDialog(true);
   };
 
-  const generateDistanceSalesPdfContent = () => {
-    const currentDate = new Date().toLocaleDateString('tr-TR');
-    
-    return `KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ
-
-Doktorumol.com.tr ("doktorumol" veya "Şirket") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
-
-Bu kapsamda bilgi vermekle yükümlü olduğumuz konular aşağıdaki gibidir:
-
-1. Veri sorumlusunun ve varsa temsilcisinin kimliği
-
-Veri sorumlusu; doktorumol.com.tr'dir.
-
-2. Kişisel verilerin hangi amaçla işleneceği
-
-Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz genel ve özel nitelikli kategorilerdeki kişisel verileriniz, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim kurulması, onay vermeniz halinde tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda bu kişisel verilerinizin Doktorumol tarafından saklanması amacı ile işlenmektedir.
-
-ALICI BİLGİLERİ:
-Ad Soyad: ${formData.name} ${formData.surname}
-E-posta: ${formData.email}
-Telefon: ${formData.phone || 'Belirtilmemiş'}
-Adres: ${formData.address || 'Belirtilmemiş'}
-Şehir: ${formData.city}
-
-ÜRÜN/HİZMET BİLGİLERİ:
-Ürün/Hizmet: ${selectedPackage.name}
-Fiyat: ${selectedPackage.price.toLocaleString('tr-TR')} ₺
-Ödeme Şekli: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}
-
-Sözleşme Tarihi: ${currentDate}
-IP Adresi: ${clientIP}`;
+  const handleDistanceSalesLinkClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowDistanceSalesDialog(true);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Yükleniyor...</p>
         </div>
       </div>
     );
   }
 
-  const customerData = {
-    ...formData,
-    customerType
-  };
-
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <Helmet>
-        <meta name="robots" content="noindex, nofollow" />
-        <meta name="googlebot" content="noindex, nofollow" />
-        <title>Ödeme Sayfası - Doktorum Ol</title>
+        <title>Ödeme Sayfası - Doktorumol</title>
+        <meta name="description" content="Güvenli ödeme sayfası" />
       </Helmet>
-      
+
       <HorizontalNavigation />
-      
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b">
-          <div className="max-w-4xl mx-auto px-4 py-4">
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
             <Button 
               variant="ghost" 
-              onClick={() => navigate("/paketler")}
-              className="flex items-center gap-2 mb-2"
+              size="sm" 
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="h-4 w-4" />
               Geri Dön
             </Button>
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold text-gray-900">Ödeme</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Ödeme Sayfası</h1>
+              <p className="text-muted-foreground">Güvenli ödeme işlemi</p>
             </div>
           </div>
-        </div>
 
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="grid lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              {!showBankInfo ? (
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Kişisel Bilgiler</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label htmlFor="email">E-posta Adresi *</Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="ornek@email.com"
-                          required
-                        />
-                      </div>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Sol Taraf - Form */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Müşteri Tipi Seçimi */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Müşteri Bilgileri
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex gap-4">
+                    <Button
+                      type="button"
+                      variant={customerType === "individual" ? "default" : "outline"}
+                      onClick={() => setCustomerType("individual")}
+                      className="flex-1"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Bireysel
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={customerType === "company" ? "default" : "outline"}
+                      onClick={() => setCustomerType("company")}
+                      className="flex-1"
+                    >
+                      <Building className="h-4 w-4 mr-2" />
+                      Kurumsal
+                    </Button>
+                  </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="name">İsim *</Label>
-                          <Input
-                            id="name"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            placeholder="İsim"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="surname">Soyisim *</Label>
-                          <Input
-                            id="surname"
-                            name="surname"
-                            value={formData.surname}
-                            onChange={handleInputChange}
-                            placeholder="Soyisim"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="tcNo">TC Kimlik Numarası *</Label>
-                        <Input
-                          id="tcNo"
-                          name="tcNo"
-                          value={formData.tcNo}
-                          onChange={handleInputChange}
-                          placeholder="TC Kimlik Numarası (11 haneli)"
-                          maxLength={11}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="phone">Cep Telefon Numarası * (+90 ile başlayın)</Label>
-                        <Input
-                          id="phone"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          placeholder="+905xxxxxxxxx"
-                          maxLength={13}
-                          required
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Teslimat Adresi</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label htmlFor="shippingCity">Şehir</Label>
-                        <Select value={formData.shippingCity} onValueChange={(value) => setFormData({...formData, shippingCity: value})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Şehir seçin" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {turkishCities.map((city) => (
-                              <SelectItem key={city} value={city}>{city}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="shippingZipCode">Posta Kodu *</Label>
-                        <Input
-                          id="shippingZipCode"
-                          name="shippingZipCode"
-                          value={formData.shippingZipCode}
-                          onChange={handleInputChange}
-                          placeholder="Posta kodu (örn: 34734)"
-                          maxLength={5}
-                          required
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="shippingAddress">Teslimat Adresi *</Label>
-                        <Textarea
-                          id="shippingAddress"
-                          name="shippingAddress"
-                          value={formData.shippingAddress}
-                          onChange={handleInputChange}
-                          placeholder="Teslimat adresi"
-                          rows={3}
-                          required
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Fatura Adresi</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label htmlFor="billingCity">Şehir</Label>
-                        <Select value={formData.billingCity} onValueChange={(value) => setFormData({...formData, billingCity: value})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Şehir seçin" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {turkishCities.map((city) => (
-                              <SelectItem key={city} value={city}>{city}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="billingZipCode">Posta Kodu *</Label>
-                        <Input
-                          id="billingZipCode"
-                          name="billingZipCode"
-                          value={formData.billingZipCode}
-                          onChange={handleInputChange}
-                          placeholder="Posta kodu (örn: 34734)"
-                          maxLength={5}
-                          required
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="billingAddress">Fatura Adresi *</Label>
-                        <Textarea
-                          id="billingAddress"
-                          name="billingAddress"
-                          value={formData.billingAddress}
-                          onChange={handleInputChange}
-                          placeholder="Fatura adresi"
-                          rows={3}
-                          required
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex gap-4">
-                        <label className={`flex-1 p-3 border rounded-lg cursor-pointer transition-colors ${
-                          customerType === "individual" ? "border-blue-500 bg-blue-50" : "border-gray-200"
-                        }`}>
-                          <input
-                            type="radio"
-                            name="customerType"
-                            value="individual"
-                            checked={customerType === "individual"}
-                            onChange={(e) => setCustomerType(e.target.value as "individual")}
-                            className="sr-only"
-                          />
-                          <div className="text-center">
-                            <User className="w-5 h-5 mx-auto mb-1 text-gray-600" />
-                            <div className="text-sm font-medium">Bireysel</div>
-                          </div>
-                        </label>
-                        <label className={`flex-1 p-3 border rounded-lg cursor-pointer transition-colors ${
-                          customerType === "company" ? "border-blue-500 bg-blue-50" : "border-gray-200"
-                        }`}>
-                          <input
-                            type="radio"
-                            name="customerType"
-                            value="company"
-                            checked={customerType === "company"}
-                            onChange={(e) => setCustomerType(e.target.value as "company")}
-                            className="sr-only"
-                          />
-                          <div className="text-center">
-                            <Building className="w-5 h-5 mx-auto mb-1 text-gray-600" />
-                            <div className="text-sm font-medium">Kurumsal</div>
-                          </div>
-                        </label>
-                      </div>
-
-                      {customerType === "company" && (
-                        <div className="space-y-3 p-4 bg-blue-50 rounded-lg mt-4">
-                          <h4 className="font-medium text-blue-900">Kurumsal Bilgiler</h4>
-                          <div className="space-y-3">
-                            <Input
-                              name="companyName"
-                              value={formData.companyName}
-                              onChange={handleInputChange}
-                              placeholder="Firma Adı"
-                            />
-                            <div className="grid grid-cols-2 gap-3">
-                              <Input
-                                name="taxNo"
-                                value={formData.taxNo}
-                                onChange={handleInputChange}
-                                placeholder="Vergi No"
-                              />
-                              <Input
-                                name="taxOffice"
-                                value={formData.taxOffice}
-                                onChange={handleInputChange}
-                                placeholder="Vergi Dairesi"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Ödeme Detayları</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-3">
-                        <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                          paymentMethod === "credit_card" ? "border-blue-500 bg-blue-50" : "border-gray-200"
-                        }`}>
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value="credit_card"
-                            checked={paymentMethod === "credit_card"}
-                            onChange={(e) => setPaymentMethod(e.target.value as "credit_card")}
-                            className="mr-3"
-                          />
-                          <CreditCard className="w-5 h-5 mr-3 text-blue-600" />
-                          <div>
-                            <div className="font-medium">Kredi Kartı</div>
-                            <div className="text-sm text-gray-500">İyzico güvencesiyle</div>
-                          </div>
-                        </label>
-
-                        <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                          paymentMethod === "bank_transfer" ? "border-blue-500 bg-blue-50" : "border-gray-200"
-                        }`}>
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value="bank_transfer"
-                            checked={paymentMethod === "bank_transfer"}
-                            onChange={(e) => setPaymentMethod(e.target.value as "bank_transfer")}
-                            className="mr-3"
-                          />
-                          <Banknote className="w-5 h-5 mr-3 text-green-600" />
-                          <div>
-                            <div className="font-medium">Bankadan Havale/EFT</div>
-                          </div>
-                        </label>
-                        
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-3">
-                        <Checkbox 
-                          id="contractTerms"
-                          checked={contractAccepted}
-                          onCheckedChange={(checked) => setContractAccepted(checked as boolean)}
-                          className="mt-1"
-                        />
-                        <Label htmlFor="contractTerms" className="text-sm text-gray-700 leading-relaxed">
-                          <a 
-                            href="#" 
-                            onClick={handlePreInfoLinkClick}
-                            className="text-blue-600 hover:underline"
-                          >
-                            Ön Bilgilendirme Formu
-                          </a>
-                          {" ve "}
-                          <a 
-                            href="#" 
-                            onClick={handleDistanceSalesLinkClick}
-                            className="text-blue-600 hover:underline"
-                          >
-                            Mesafeli Satış Sözleşmesi
-                          </a>
-                          {'ni kabul ediyorum.'}
-                        </Label>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Button 
-                    onClick={handlePaymentSuccess}
-                    disabled={loading || !contractAccepted || !formData.name || !formData.surname || !formData.email || !formData.phone || !formData.tcNo || !formData.shippingAddress || !formData.billingAddress}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 text-lg font-semibold"
-                  >
-                    {paymentMethod === "credit_card" ? "Kredi Kartı ile Öde" : "Siparişi Onayla"}
-                  </Button>
-                </div>
-              ) : (
-                <BankTransferInfo
-                  amount={selectedPackage.price}
-                  customerName={`${formData.name} ${formData.surname}`}
-                  onComplete={handleBankTransferComplete}
-                />
-              )}
-            </div>
-
-            <div className="lg:pl-8">
-              <div className="bg-gray-50 rounded-lg p-6 sticky top-8">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Sipariş Özeti</h3>
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
+                  {/* Kişisel Bilgiler */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <div className="font-medium text-gray-900">{selectedPackage.name}</div>
-                      <div className="text-sm text-gray-600">Aylık abonelik</div>
+                      <Label htmlFor="name">Ad *</Label>
+                      <Input
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="Adınız"
+                        required
+                      />
                     </div>
-                    <div className="text-right">
-                      <div className="font-medium text-gray-900">
-                        {selectedPackage.price.toLocaleString('tr-TR')} ₺
-                      </div>
-                      <div className="text-sm text-gray-500 line-through">
-                        {selectedPackage.originalPrice.toLocaleString('tr-TR')} ₺
-                      </div>
+                    <div>
+                      <Label htmlFor="surname">Soyad *</Label>
+                      <Input
+                        id="surname"
+                        name="surname"
+                        value={formData.surname}
+                        onChange={handleInputChange}
+                        placeholder="Soyadınız"
+                        required
+                      />
                     </div>
                   </div>
-                  
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="email">E-posta *</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="ornek@email.com"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="gsmNumber">Telefon *</Label>
+                      <Input
+                        id="gsmNumber"
+                        name="gsmNumber"
+                        value={formData.gsmNumber}
+                        onChange={handleInputChange}
+                        placeholder="+905xxxxxxxxx"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="identityNumber">TC Kimlik No *</Label>
+                      <Input
+                        id="identityNumber"
+                        name="identityNumber"
+                        value={formData.identityNumber}
+                        onChange={handleInputChange}
+                        placeholder="12345678901"
+                        maxLength={11}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="city">Şehir *</Label>
+                      <Select value={formData.city} onValueChange={(value) => handleSelectChange('city', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Şehir seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {turkishCities.map((city) => (
+                            <SelectItem key={city} value={city}>
+                              {city}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="registrationAddress">Kayıt Adresi *</Label>
+                    <Textarea
+                      id="registrationAddress"
+                      name="registrationAddress"
+                      value={formData.registrationAddress}
+                      onChange={handleInputChange}
+                      placeholder="Kayıt adresinizi girin"
+                      rows={2}
+                      required
+                    />
+                  </div>
+
+                  {/* Kurumsal Bilgiler */}
+                  {customerType === "company" && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                      <h4 className="font-semibold">Kurumsal Bilgiler</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="companyName">Firma Adı *</Label>
+                          <Input
+                            id="companyName"
+                            name="companyName"
+                            value={formData.companyName}
+                            onChange={handleInputChange}
+                            placeholder="Firma adı"
+                            required={customerType === "company"}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="taxNumber">Vergi Numarası *</Label>
+                          <Input
+                            id="taxNumber"
+                            name="taxNumber"
+                            value={formData.taxNumber}
+                            onChange={handleInputChange}
+                            placeholder="1234567890"
+                            required={customerType === "company"}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="taxOffice">Vergi Dairesi</Label>
+                        <Input
+                          id="taxOffice"
+                          name="taxOffice"
+                          value={formData.taxOffice}
+                          onChange={handleInputChange}
+                          placeholder="Vergi dairesi"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Fatura Adresi */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Fatura Adresi</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="billingCity">Şehir *</Label>
+                      <Select value={formData.billingCity} onValueChange={(value) => handleSelectChange('billingCity', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Şehir seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {turkishCities.map((city) => (
+                            <SelectItem key={city} value={city}>
+                              {city}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="billingZipCode">Posta Kodu</Label>
+                      <Input
+                        id="billingZipCode"
+                        name="billingZipCode"
+                        value={formData.billingZipCode}
+                        onChange={handleInputChange}
+                        placeholder="34100"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="billingAddress">Fatura Adresi *</Label>
+                    <Textarea
+                      id="billingAddress"
+                      name="billingAddress"
+                      value={formData.billingAddress}
+                      onChange={handleInputChange}
+                      placeholder="Fatura adresinizi girin"
+                      rows={2}
+                      required
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Teslimat Adresi */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Teslimat Adresi</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="shippingCity">Şehir *</Label>
+                      <Select value={formData.shippingCity} onValueChange={(value) => handleSelectChange('shippingCity', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Şehir seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {turkishCities.map((city) => (
+                            <SelectItem key={city} value={city}>
+                              {city}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="shippingZipCode">Posta Kodu</Label>
+                      <Input
+                        id="shippingZipCode"
+                        name="shippingZipCode"
+                        value={formData.shippingZipCode}
+                        onChange={handleInputChange}
+                        placeholder="34100"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="shippingAddress">Teslimat Adresi *</Label>
+                    <Textarea
+                      id="shippingAddress"
+                      name="shippingAddress"
+                      value={formData.shippingAddress}
+                      onChange={handleInputChange}
+                      placeholder="Teslimat adresinizi girin"
+                      rows={2}
+                      required
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Ödeme Yöntemi */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Ödeme Yöntemi
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button
+                      type="button"
+                      variant={paymentMethod === "credit_card" ? "default" : "outline"}
+                      onClick={() => setPaymentMethod("credit_card")}
+                      className="h-auto p-4 justify-start"
+                    >
+                      <CreditCard className="h-6 w-6 mr-3" />
+                      <div className="text-left">
+                        <div className="font-semibold">Kredi Kartı</div>
+                        <div className="text-xs text-muted-foreground">Güvenli ödeme</div>
+                      </div>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={paymentMethod === "bank_transfer" ? "default" : "outline"}
+                      onClick={() => setPaymentMethod("bank_transfer")}
+                      className="h-auto p-4 justify-start"
+                    >
+                      <Banknote className="h-6 w-6 mr-3" />
+                      <div className="text-left">
+                        <div className="font-semibold">Banka Havalesi</div>
+                        <div className="text-xs text-muted-foreground">Manuel onay</div>
+                      </div>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Sağ Taraf - Özet */}
+            <div className="space-y-6">
+              <Card className="sticky top-4">
+                <CardHeader>
+                  <CardTitle>Sipariş Özeti</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold">{selectedPackage.name}</h4>
+                    <div className="text-sm text-muted-foreground">
+                      {selectedPackage.features?.slice(0, 3).map((feature: string, index: number) => (
+                        <div key={index}>• {feature}</div>
+                      ))}
+                      {selectedPackage.features?.length > 3 && (
+                        <div>... ve {selectedPackage.features.length - 3} özellik daha</div>
+                      )}
+                    </div>
+                  </div>
+
                   <Separator />
-                  
-                  <div className="flex justify-between items-center font-medium text-gray-900 text-lg">
-                    <span>Toplam</span>
-                    <span>{selectedPackage.price.toLocaleString('tr-TR')} ₺</span>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Paket Fiyatı:</span>
+                      <span className="line-through text-muted-foreground">
+                        ₺{selectedPackage.originalPrice?.toLocaleString('tr-TR')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-semibold text-lg">
+                      <span>İndirimli Fiyat:</span>
+                      <span className="text-primary">₺{selectedPackage.price.toLocaleString('tr-TR')}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-xl border-t pt-2">
+                      <span>Toplam:</span>
+                      <span>₺{selectedPackage.price.toLocaleString('tr-TR')}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
+
+                  <Separator />
+
+                  {/* Sözleşme Onay Kısmı - SABİT KALACAK */}
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-2">
+                      <Checkbox
+                        id="contract-acceptance"
+                        checked={contractAccepted}
+                        onCheckedChange={(checked) => setContractAccepted(checked === true)}
+                      />
+                      <Label 
+                        htmlFor="contract-acceptance" 
+                        className="text-sm leading-relaxed cursor-pointer"
+                      >
+                        <button
+                          type="button"
+                          onClick={handlePreInfoLinkClick}
+                          className="text-primary underline hover:no-underline"
+                        >
+                          Ön Bilgilendirme Formu
+                        </button>
+                        {" ve "}
+                        <button
+                          type="button"
+                          onClick={handleDistanceSalesLinkClick}
+                          className="text-primary underline hover:no-underline"
+                        >
+                          Mesafeli Satış Sözleşmesi
+                        </button>
+                        ni kabul ediyorum.
+                      </Label>
+                    </div>
+
+                    <Button
+                      onClick={handlePaymentProcess}
+                      disabled={loading || !contractAccepted}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {loading ? (
+                        "İşleniyor..."
+                      ) : paymentMethod === "credit_card" ? (
+                        "Kredi Kartı ile Öde"
+                      ) : (
+                        "Banka Havalesi ile Öde"
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
-
-        <ContractDialog
-          open={showPreInfoDialog}
-          onClose={() => setShowPreInfoDialog(false)}
-          contractType="preInfo"
-          formData={formData}
-          selectedPackage={selectedPackage}
-          paymentMethod="bank_transfer"
-          customerType={customerType}
-          clientIP={clientIP}
-        />
-
-        <ContractDialog
-          open={showDistanceSalesDialog}
-          onClose={() => setShowDistanceSalesDialog(false)}
-          contractType="distanceSales"
-          formData={formData}
-          selectedPackage={selectedPackage}
-          paymentMethod="bank_transfer"
-          customerType={customerType}
-          clientIP={clientIP}
-        />
       </div>
-    </>
+
+      {/* Dialog'lar */}
+      <ContractDialog
+        open={showPreInfoDialog}
+        onClose={() => setShowPreInfoDialog(false)}
+        contractType="preInfo"
+        formData={formData}
+        selectedPackage={selectedPackage}
+        paymentMethod={paymentMethod}
+        customerType={customerType}
+        clientIP={clientIP}
+      />
+      <ContractDialog
+        open={showDistanceSalesDialog}
+        onClose={() => setShowDistanceSalesDialog(false)}
+        contractType="distanceSales"
+        formData={formData}
+        selectedPackage={selectedPackage}
+        paymentMethod={paymentMethod}
+        customerType={customerType}
+        clientIP={clientIP}
+      />
+      {showBankInfo && (
+        <BankTransferInfo
+          amount={selectedPackage.price}
+          customerName={`${formData.name} ${formData.surname}`}
+          onComplete={() => {
+            setShowBankInfo(false);
+            navigate("/odeme-basarili");
+          }}
+        />
+      )}
+    </div>
   );
 };
 
