@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from "@/hooks/useUserRole";
 import { UserCheck, Calendar, Users, Plus, Minus, Search, Hash, Edit3, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -41,6 +42,7 @@ const ClientReferrals = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [searchTerm, setSearchTerm] = useState("");
+  const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
 
   const monthNames = [
@@ -464,6 +466,40 @@ const ClientReferrals = () => {
     
     return badges;
   };
+
+  // Access control - only admin and staff can access
+  if (roleLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-white/20">
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+          <p className="text-slate-600 mt-4 text-center font-medium">Yetki kontrolü yapılıyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userProfile || !userProfile.is_approved || !['admin', 'staff'].includes(userProfile.role)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-white/20 max-w-md text-center">
+          <div className="p-4 bg-red-100 rounded-full w-fit mx-auto mb-4">
+            <UserCheck className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Erişim Reddedildi</h2>
+          <p className="text-slate-600 mb-4">
+            Bu sayfaya sadece admin ve staff üyeleri erişebilir.
+          </p>
+          <Button 
+            onClick={() => window.history.back()} 
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+          >
+            Geri Dön
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
