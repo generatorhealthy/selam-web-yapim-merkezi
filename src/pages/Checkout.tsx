@@ -480,7 +480,6 @@ const Checkout = () => {
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-foreground">Ödeme Sayfası</h1>
-              <p className="text-muted-foreground">Güvenli ödeme işlemi</p>
             </div>
           </div>
 
