@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Search, MapPin, Calendar, Star, Users, Circle, UserCheck, Clock, MessageSquare, User, Check, ArrowRight, Brain, Heart, Stethoscope, Users2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
@@ -48,6 +49,7 @@ interface Specialist {
   rating: number;
   image_url?: string;
   bio?: string;
+  profile_picture?: string;
 }
 
 const Index = () => {
@@ -75,7 +77,7 @@ const Index = () => {
       try {
         const { data, error } = await supabase
           .from('specialists')
-          .select('id, name, specialty, city, rating, bio')
+          .select('id, name, specialty, city, rating, bio, profile_picture')
           .eq('is_active', true)
           .or(`name.ilike.%${searchTerm}%,specialty.ilike.%${searchTerm}%`)
           .limit(3);
@@ -276,9 +278,16 @@ const Index = () => {
                           >
                             <div className="flex items-center space-x-4">
                               <div className="flex-shrink-0">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                                  <User className="w-6 h-6 text-white" />
-                                </div>
+                                <Avatar className="w-12 h-12">
+                                  <AvatarImage 
+                                    src={specialist.profile_picture} 
+                                    alt={specialist.name}
+                                    className="object-cover"
+                                  />
+                                  <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                                    <User className="w-6 h-6" />
+                                  </AvatarFallback>
+                                </Avatar>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
