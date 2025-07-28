@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body - V2:", body);
+    console.log("Gelen Body - V3:", body);
     
     const { packageType, customerData, subscriptionReferenceCode } = body;
     const { 
