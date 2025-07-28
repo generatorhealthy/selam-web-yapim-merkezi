@@ -196,7 +196,7 @@ serve(async (req) => {
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": `IYZWS ${pz6XtkqnNDuS6PpRtNzvMlVJnkaaCgmC}:${hashBase64}`,
+        "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
         "x-iyzi-rnd": randomString
       },
       body: jsonString
