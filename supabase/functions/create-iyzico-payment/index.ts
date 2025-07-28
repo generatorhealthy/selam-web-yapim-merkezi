@@ -86,7 +86,7 @@ serve(async (req)=>{
     const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + jsonString;
     console.log("Hash string uzunluğu:", hashString.length);
     
-    const hash = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(hashString));
+    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(hashString));
     const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hash)));
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/payment/iyzipos/checkoutform/initialize`, {
       method: "POST",
