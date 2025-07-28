@@ -136,6 +136,12 @@ const Checkout = () => {
     address: "",
     city: "İstanbul",
     zipCode: "",
+    shippingAddress: "",
+    shippingCity: "İstanbul",
+    shippingZipCode: "",
+    billingAddress: "",
+    billingCity: "İstanbul", 
+    billingZipCode: "",
     companyName: "",
     taxNo: "",
     taxOffice: ""
@@ -240,9 +246,15 @@ const Checkout = () => {
         email: formData.email,
         phone: formData.phone,
         tcNo: formData.tcNo,
-        address: formData.address,
-        city: formData.city,
-        zipCode: formData.zipCode,
+        address: formData.shippingAddress,
+        city: formData.shippingCity,
+        zipCode: formData.shippingZipCode,
+        shippingAddress: formData.shippingAddress,
+        shippingCity: formData.shippingCity,
+        shippingZipCode: formData.shippingZipCode,
+        billingAddress: formData.billingAddress,
+        billingCity: formData.billingCity,
+        billingZipCode: formData.billingZipCode,
         customerType,
         companyName: formData.companyName,
         taxNo: formData.taxNo,
@@ -533,7 +545,7 @@ IP Adresi: ${clientIP}`;
                 <div className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Teslimat Adresi</CardTitle>
+                      <CardTitle>Kişisel Bilgiler</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
@@ -599,10 +611,17 @@ IP Adresi: ${clientIP}`;
                           required
                         />
                       </div>
+                    </CardContent>
+                  </Card>
 
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Teslimat Adresi</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                       <div>
-                        <Label htmlFor="city">Şehir</Label>
-                        <Select value={formData.city} onValueChange={(value) => setFormData({...formData, city: value})}>
+                        <Label htmlFor="shippingCity">Şehir</Label>
+                        <Select value={formData.shippingCity} onValueChange={(value) => setFormData({...formData, shippingCity: value})}>
                           <SelectTrigger>
                             <SelectValue placeholder="Şehir seçin" />
                           </SelectTrigger>
@@ -615,11 +634,11 @@ IP Adresi: ${clientIP}`;
                       </div>
 
                       <div>
-                        <Label htmlFor="zipCode">Posta Kodu *</Label>
+                        <Label htmlFor="shippingZipCode">Posta Kodu *</Label>
                         <Input
-                          id="zipCode"
-                          name="zipCode"
-                          value={formData.zipCode}
+                          id="shippingZipCode"
+                          name="shippingZipCode"
+                          value={formData.shippingZipCode}
                           onChange={handleInputChange}
                           placeholder="Posta kodu (örn: 34734)"
                           maxLength={5}
@@ -628,13 +647,60 @@ IP Adresi: ${clientIP}`;
                       </div>
                       
                       <div>
-                        <Label htmlFor="address">Adres *</Label>
+                        <Label htmlFor="shippingAddress">Teslimat Adresi *</Label>
                         <Textarea
-                          id="address"
-                          name="address"
-                          value={formData.address}
+                          id="shippingAddress"
+                          name="shippingAddress"
+                          value={formData.shippingAddress}
                           onChange={handleInputChange}
-                          placeholder="Adres"
+                          placeholder="Teslimat adresi"
+                          rows={3}
+                          required
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Fatura Adresi</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label htmlFor="billingCity">Şehir</Label>
+                        <Select value={formData.billingCity} onValueChange={(value) => setFormData({...formData, billingCity: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Şehir seçin" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {turkishCities.map((city) => (
+                              <SelectItem key={city} value={city}>{city}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="billingZipCode">Posta Kodu *</Label>
+                        <Input
+                          id="billingZipCode"
+                          name="billingZipCode"
+                          value={formData.billingZipCode}
+                          onChange={handleInputChange}
+                          placeholder="Posta kodu (örn: 34734)"
+                          maxLength={5}
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="billingAddress">Fatura Adresi *</Label>
+                        <Textarea
+                          id="billingAddress"
+                          name="billingAddress"
+                          value={formData.billingAddress}
+                          onChange={handleInputChange}
+                          placeholder="Fatura adresi"
                           rows={3}
                           required
                         />
@@ -787,7 +853,7 @@ IP Adresi: ${clientIP}`;
 
                   <Button 
                     onClick={handlePaymentSuccess}
-                    disabled={loading || !contractAccepted || !formData.name || !formData.surname || !formData.email || !formData.phone || !formData.tcNo || !formData.address}
+                    disabled={loading || !contractAccepted || !formData.name || !formData.surname || !formData.email || !formData.phone || !formData.tcNo || !formData.shippingAddress || !formData.billingAddress}
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4 text-lg font-semibold"
                   >
                     {paymentMethod === "credit_card" ? "Kredi Kartı ile Öde" : "Siparişi Onayla"}
