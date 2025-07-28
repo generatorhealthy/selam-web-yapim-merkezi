@@ -18,19 +18,20 @@ serve(async (req)=>{
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
     const IYZICO_BASE_URL = "https://api.iyzipay.com"; // ✅ CANLI ORTAM
     const conversationId = `conv_${Date.now()}`;
-    const price = packageType === "premium" ? 2998.0 : 0.0; // ✅ .00 yerine .0 gönderiliyor
+    const price = packageType === "premium" ? "2998.0" : "1.0";
     const paidPrice = price;
+    
     const requestData = {
       locale: "tr",
       conversationId,
-      price: price.toString(),
-      paidPrice: paidPrice.toString(),
+      price: price,
+      paidPrice: paidPrice,
       currency: "TRY",
       installment: "1",
       basketId: "B67832",
       paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
-      callbackUrl: "https://doktorumol.com.tr/",
+      callbackUrl: "https://doktorumol.com.tr/payment-success",
       buyer: {
         id: "BY789",
         name,
@@ -63,10 +64,11 @@ serve(async (req)=>{
       basketItems: [
         {
           id: "BI101",
-          name: "Danışmanlık Paketi",
-          category1: "Hizmet",
+          name: "Premium Paket",
+          category1: "Danışmanlık",
+          category2: "Psikoloji",
           itemType: "VIRTUAL",
-          price: price.toString()
+          price: price
         }
       ]
     };
