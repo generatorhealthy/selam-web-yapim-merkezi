@@ -56,14 +56,14 @@ serve(async (req) => {
         city,
         country: "Turkey",
         address,
-        zipCode,
+        zipCode: "34100",
       },
       billingAddress: {
         contactName: name + " " + surname,
         city,
         country: "Turkey",
         address,
-        zipCode,
+        zipCode: "34100",
       },
       basketItems: [
         {
