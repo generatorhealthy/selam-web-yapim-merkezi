@@ -12,7 +12,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import PopularSpecialties from "@/components/PopularSpecialties";
 import { supabase } from "@/integrations/supabase/client";
-import { createDoctorSlug } from "@/utils/doctorUtils";
+import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
 
 const popularSpecialties = [
   { name: "Psikolog", slug: "psikolog" },
@@ -271,8 +271,9 @@ const Index = () => {
                             key={specialist.id}
                             className="p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-200"
                             onClick={() => {
-                              const slug = createDoctorSlug(specialist.name);
-                              navigate(`/doktor/${slug}`);
+                              const doctorSlug = createDoctorSlug(specialist.name);
+                              const specialtySlug = createSpecialtySlug(specialist.specialty);
+                              navigate(`/${specialtySlug}/${doctorSlug}`);
                               setShowResults(false);
                             }}
                           >
