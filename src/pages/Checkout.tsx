@@ -699,7 +699,6 @@ const Checkout = () => {
                       <Banknote className="h-6 w-6 mr-3" />
                       <div className="text-left">
                         <div className="font-semibold">Banka Havalesi</div>
-                        <div className="text-xs text-muted-foreground">Manuel onay</div>
                       </div>
                     </Button>
                   </div>
