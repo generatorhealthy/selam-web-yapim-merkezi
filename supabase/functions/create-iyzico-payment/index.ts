@@ -15,7 +15,7 @@ serve(async (req) => {
     console.log("Gelen Body - V2:", body);
 
     const { packageType, customerData, subscriptionReferenceCode } = body;
-    const { name, surname, email, phone, tcNo, address, city } = customerData;
+    const { name, surname, email, phone, tcNo, address, city, zipCode } = customerData;
 
     const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY")!;
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY")!;
@@ -49,21 +49,21 @@ serve(async (req) => {
         ip: "194.59.166.153", // ✅ IP
         city,
         country: "Turkey",
-        zipCode: "34100",
+        zipCode: zipCode || "34100",
       },
       shippingAddress: {
         contactName: name + " " + surname,
         city,
         country: "Turkey",
         address,
-        zipCode: "34100",
+        zipCode: zipCode || "34100",
       },
       billingAddress: {
         contactName: name + " " + surname,
         city,
         country: "Turkey",
         address,
-        zipCode: "34100",
+        zipCode: zipCode || "34100",
       },
       basketItems: [
         {
