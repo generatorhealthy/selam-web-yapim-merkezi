@@ -38,16 +38,16 @@ serve(async (req) => {
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI");
     
     const conversationId = `conv_${Date.now()}`;
-    const price = packageType === "premium" ? "2998.0" : "1.0";
+    const price = packageType === "premium" ? 2998.0 : 1.0;
     const paidPrice = price;
 
     const requestData = {
       locale: "tr",
       conversationId,
-      price: price,
-      paidPrice: paidPrice,
+      price,
+      paidPrice,
       currency: "TRY",
-      installment: "1",
+      installment: 1,
       basketId: "B67832",
       paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
@@ -66,7 +66,7 @@ serve(async (req) => {
         ip: "194.59.166.153",
         city,
         country: "Turkey",
-        zipCode: "34100"
+        zipCode: billingZipCode || "34100"
       },
       shippingAddress: {
         contactName: name + " " + surname,
@@ -85,11 +85,11 @@ serve(async (req) => {
       basketItems: [
         {
           id: "BI101",
-          name: "Premium Paket",
+          name: packageType === "premium" ? "Premium Paket" : "Temel Paket",
           category1: "Danışmanlık",
           category2: "Psikoloji",
           itemType: "VIRTUAL",
-          price: price
+          price
         }
       ]
     };
