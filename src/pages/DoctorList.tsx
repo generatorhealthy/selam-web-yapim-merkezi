@@ -69,6 +69,14 @@ const DoctorList = () => {
 
   useEffect(() => {
     fetchSpecialists();
+    
+    // Read URL parameters and set initial filters
+    const urlParams = new URLSearchParams(window.location.search);
+    const search = urlParams.get('search');
+    const city = urlParams.get('city');
+    
+    if (search) setSearchTerm(search);
+    if (city) setSelectedCity(city);
   }, []);
 
   useEffect(() => {
