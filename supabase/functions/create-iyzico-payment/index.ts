@@ -14,11 +14,16 @@ serve(async (req) => {
     const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY")!;
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY")!;
     const body = await req.json();
+    console.log("📦 Gelen Body:", body);
 
     const now = new Date();
     const randomString = now.getTime().toString();
     const conversationId = `conv_${randomString}`;
     const price = "2998.0";
+
+    const phone = body.customerData.phone?.replace(/\D/g, "") || "5310000000";
+    const gsmNumber = phone.startsWith("90") ? `+${phone}` : `+90${phone.replace(/^0/, "")}`;
+    const identityNumber = (body.customerData.tcNo || "74300864791").toString().padStart(11, "0");
     const ip = req.headers.get("x-forwarded-for") || "194.59.166.153";
 
     const requestBody = {
@@ -34,9 +39,9 @@ serve(async (req) => {
         id: "BY789",
         name: body.customerData.name || "John",
         surname: body.customerData.surname || "Doe",
-        identityNumber: body.customerData.tcNo?.toString().padStart(11, "0") || "74300864791",
-        email: body.customerData.email,
-        gsmNumber: body.customerData.phone.startsWith("+90") ? body.customerData.phone : "+90" + body.customerData.phone.replace(/^0/, ""),
+        identityNumber,
+        email: body.customerData.email || "test@example.com",
+        gsmNumber,
         registrationDate: "2023-07-01 12:00:00",
         lastLoginDate: "2023-07-25 12:00:00",
         registrationAddress: body.customerData.address || "Nidakule Göztepe",
@@ -46,23 +51,23 @@ serve(async (req) => {
         ip,
       },
       shippingAddress: {
-        contactName: `${body.customerData.name} ${body.customerData.surname}`,
+        contactName: `${body.customerData.name || "Jane"} ${body.customerData.surname || "Doe"}`,
         city: body.customerData.city || "Istanbul",
         country: "Turkey",
-        address: body.customerData.address,
+        address: body.customerData.address || "Nidakule Göztepe",
         zipCode: body.customerData.zipCode || "34742",
       },
       billingAddress: {
-        contactName: `${body.customerData.name} ${body.customerData.surname}`,
+        contactName: `${body.customerData.name || "Jane"} ${body.customerData.surname || "Doe"}`,
         city: body.customerData.city || "Istanbul",
         country: "Turkey",
-        address: body.customerData.address,
+        address: body.customerData.address || "Nidakule Göztepe",
         zipCode: body.customerData.zipCode || "34742",
       },
       basketItems: [
         {
           id: "BI101",
-          name: `${body.packageType} Paketi`,
+          name: `${body.packageType || "Premium"} Paketi`,
           category1: "Hizmet",
           category2: "Psikoloji",
           itemType: "VIRTUAL",
@@ -71,10 +76,12 @@ serve(async (req) => {
       ],
     };
 
+    console.log("📤 İyzico Request Body:", requestBody);
+
     const raw = JSON.stringify(requestBody);
+    const hashString = raw + randomString + IYZICO_SECRET_KEY;
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey("raw", encoder.encode(IYZICO_SECRET_KEY), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-    const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
     const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(hashString));
     const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
 
@@ -90,6 +97,8 @@ serve(async (req) => {
     });
 
     const text = await iyzicoResponse.text();
+    console.log("🧾 İyzico Yanıt:", text);
+
     let result: any = {};
     try {
       result = JSON.parse(text);
@@ -121,6 +130,7 @@ serve(async (req) => {
     });
 
   } catch (err) {
+    console.error("❌ Hata:", err);
     return new Response(JSON.stringify({
       success: false,
       error: err.message,
