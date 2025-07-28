@@ -15,7 +15,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body - V6:", body);
+    console.log("Gelen Body - V7:", body);
     
     const { packageType, customerData, subscriptionReferenceCode } = body;
     const { 
@@ -155,28 +155,42 @@ serve(async (req) => {
     };
 
     const jsonString = JSON.stringify(requestData);
-    console.log("İyzico'ya gönderilen JSON V6:", jsonString);
+    console.log("İyzico'ya gönderilen JSON V7:", jsonString);
+    console.log("JSON String Length:", jsonString.length);
+    console.log("Request Data Type Check:", typeof requestData);
+    
     
     const randomString = Date.now().toString();
+    console.log("Random String:", randomString);
+    console.log("API Key exists:", !!IYZICO_API_KEY);
+    console.log("Secret Key exists:", !!IYZICO_SECRET_KEY);
+    console.log("Base URL:", IYZICO_BASE_URL);
     
-    // SHA-256 hash hesaplaması (Iyzico format)
+    // Hash hesaplaması için tüm bileşenleri logla
     const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + jsonString;
-    console.log("Hash string V6 uzunluk:", hashString.length);
-    console.log("Hash components:", {
-      apiKeyLength: IYZICO_API_KEY?.length,
-      randomStringLength: randomString.length,
-      secretKeyLength: IYZICO_SECRET_KEY?.length,
-      jsonLength: jsonString.length
-    });
+    console.log("Hash String Parçaları:");
+    console.log("- API Key uzunluk:", IYZICO_API_KEY?.length || 0);
+    console.log("- Random string:", randomString);
+    console.log("- Secret key uzunluk:", IYZICO_SECRET_KEY?.length || 0);
+    console.log("- JSON uzunluk:", jsonString.length);
+    console.log("- Total hash string uzunluk:", hashString.length);
     
-    // Doğru hash hesaplama - binary data'yı direkt base64'e çevir
+    // Hash hesaplama
     const encoder = new TextEncoder();
     const data = encoder.encode(hashString);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
     const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
 
-    console.log("Generated hash V6 (ilk 20 karakter):", hashBase64.substring(0, 20));
+    console.log("Final Hash V7:", hashBase64);
+    console.log("Authorization Header:", `IYZWS ${IYZICO_API_KEY}:${hashBase64}`);
 
+    console.log("Request Headers:", {
+      "Content-Type": "application/json",
+      "Accept": "application/json", 
+      "Authorization": `IYZWS ${IYZICO_API_KEY}:${hashBase64}`,
+      "x-iyzi-rnd": randomString
+    });
+    
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/payment/iyzipos/checkoutform/initialize`, {
       method: "POST",
       headers: {
@@ -206,7 +220,7 @@ serve(async (req) => {
       });
     }
 
-    console.log("İyzico Yanıtı V6:", iyzicoResult);
+    console.log("İyzico Yanıtı V7:", iyzicoResult);
 
     return new Response(JSON.stringify(iyzicoResult), {
       headers: {
