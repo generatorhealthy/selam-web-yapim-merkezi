@@ -156,7 +156,22 @@ const Checkout = () => {
     const initializeData = async () => {
       setLoading(true);
       
+      // Ödeme sayfasına doğrudan erişimi engelle
+      // Sadece paket seçimi yapılmışsa (state veya referrer kontrolü) erişime izin ver
       const packageData = location.state?.packageData;
+      const hasValidReferrer = document.referrer && 
+        (document.referrer.includes('/paketler') || document.referrer.includes('/packages'));
+      
+      if (!packageData && !hasValidReferrer) {
+        toast({
+          title: "Geçersiz Erişim",
+          description: "Ödeme sayfasına erişmek için önce bir paket seçmelisiniz.",
+          variant: "destructive"
+        });
+        navigate('/paketler');
+        return;
+      }
+      
       if (packageData) {
         const convertedPackage = {
           name: packageData.name,
@@ -181,7 +196,7 @@ const Checkout = () => {
     };
 
     initializeData();
-  }, [packageId, navigate, location.state]);
+  }, [packageId, navigate, location.state, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let { name, value } = e.target;
