@@ -79,8 +79,10 @@ serve(async (req)=>{
       ]
     };
     const jsonString = JSON.stringify(requestData);
+    console.log("İyzico'ya gönderilen JSON:", jsonString);
     const randomString = Date.now().toString();
-    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY));
+    const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + jsonString;
+    const hash = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(hashString));
     const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hash)));
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/payment/iyzipos/checkoutform/initialize`, {
       method: "POST",
