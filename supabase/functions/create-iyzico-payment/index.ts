@@ -12,7 +12,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body:", body);
+    console.log("Gelen Body - V2:", body);
 
     const { packageType, customerData, subscriptionReferenceCode } = body;
     const { name, surname, email, phone, tcNo, address, city } = customerData;
