@@ -68,15 +68,15 @@ const ContractDialog = ({
 <h3 style="color: #0369a1; margin-top: 0;">MÜŞTERI BİLGİLERİ:</h3>
 <p><strong>Müşteri Adı:</strong> ${formData.name} ${formData.surname}</p>
 <p><strong>E-posta:</strong> ${formData.email}</p>
-<p><strong>Telefon:</strong> ${formData.phone || 'Belirtilmemiş'}</p>
-<p><strong>TC Kimlik No:</strong> ${formData.tcNo || 'Belirtilmemiş'}</p>
+<p><strong>Telefon:</strong> ${formData.gsmNumber || 'Belirtilmemiş'}</p>
+<p><strong>TC Kimlik No:</strong> ${formData.identityNumber || 'Belirtilmemiş'}</p>
 <p><strong>Adres:</strong> ${formData.address || 'Belirtilmemiş'}</p>
 <p><strong>Şehir:</strong> ${formData.city}</p>
 <p><strong>Müşteri Tipi:</strong> ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}</p>
 
 ${customerType === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:</h3>
 <p><strong>Firma Adı:</strong> ${formData.companyName || 'Belirtilmemiş'}</p>
-<p><strong>Vergi No:</strong> ${formData.taxNo || 'Belirtilmemiş'}</p>
+<p><strong>Vergi No:</strong> ${formData.taxNumber || 'Belirtilmemiş'}</p>
 <p><strong>Vergi Dairesi:</strong> ${formData.taxOffice || 'Belirtilmemiş'}</p>
 ` : ''}
 
@@ -171,7 +171,7 @@ Kanunun "İlgili kişinin haklarını düzenleyen" 11. maddesi kapsamındaki tal
 ALICI BİLGİLERİ:
 Ad Soyad: ${formData.name} ${formData.surname}
 E-posta: ${formData.email}
-Telefon: ${formData.phone || 'Belirtilmemiş'}
+Telefon: ${formData.gsmNumber || 'Belirtilmemiş'}
 Adres: ${formData.address || 'Belirtilmemiş'}
 Şehir: ${formData.city}
 
