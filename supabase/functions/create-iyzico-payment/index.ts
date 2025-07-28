@@ -15,7 +15,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body - V4:", body);
+    console.log("Gelen Body - V5:", body);
     
     const { packageType, customerData, subscriptionReferenceCode } = body;
     const { 
@@ -155,22 +155,28 @@ serve(async (req) => {
     };
 
     const jsonString = JSON.stringify(requestData);
-    console.log("İyzico'ya gönderilen JSON V4:", jsonString);
+    console.log("İyzico'ya gönderilen JSON V5:", jsonString);
     
     const randomString = Date.now().toString();
     
-    // SHA1 hash kullan (Iyzico SHA1 gerektiriyor)
+    // SHA-256 hash kullan (Iyzico önerisi)
     const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + jsonString;
-    console.log("Hash string V4:", hashString.substring(0, 100) + "...");
+    console.log("Hash string V5 uzunluk:", hashString.length);
+    console.log("Hash components:", {
+      apiKeyLength: IYZICO_API_KEY?.length,
+      randomStringLength: randomString.length,
+      secretKeyLength: IYZICO_SECRET_KEY?.length,
+      jsonLength: jsonString.length
+    });
     
     const encoder = new TextEncoder();
     const data = encoder.encode(hashString);
-    const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     const hashBase64 = btoa(hashHex);
 
-    console.log("Generated hash (ilk 20 karakter):", hashBase64.substring(0, 20));
+    console.log("Generated hash V5 (ilk 20 karakter):", hashBase64.substring(0, 20));
 
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/payment/iyzipos/checkoutform/initialize`, {
       method: "POST",
@@ -201,7 +207,7 @@ serve(async (req) => {
       });
     }
 
-    console.log("İyzico Yanıtı V4:", iyzicoResult);
+    console.log("İyzico Yanıtı V5:", iyzicoResult);
 
     return new Response(JSON.stringify(iyzicoResult), {
       headers: {
@@ -212,7 +218,7 @@ serve(async (req) => {
     });
 
   } catch (err) {
-    console.error("Hata V4:", err);
+    console.error("Hata V5:", err);
     return new Response(JSON.stringify({
       error: "Sunucu hatası",
       details: err.message
