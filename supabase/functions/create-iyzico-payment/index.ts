@@ -16,7 +16,7 @@ serve(async (req)=>{
     const { name, surname, email, phone, tcNo, address, city, zipCode } = customerData;
     const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY");
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
-    const IYZICO_BASE_URL = "https://api.iyzipay.com"; // ✅ CANLI ORTAM
+    const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI");
     const conversationId = `conv_${Date.now()}`;
     const price = packageType === "premium" ? "2998.0" : "1.0";
     const paidPrice = price;
@@ -81,11 +81,9 @@ serve(async (req)=>{
     const jsonString = JSON.stringify(requestData);
     console.log("İyzico'ya gönderilen JSON:", jsonString);
     const randomString = Date.now().toString();
-    
     // İyzico hash hesaplama: APIKEY + RANDOMSTRING + SECRETKEY + REQUESTBODY
     const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + jsonString;
     console.log("Hash string uzunluğu:", hashString.length);
-    
     const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(hashString));
     const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hash)));
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/payment/iyzipos/checkoutform/initialize`, {
