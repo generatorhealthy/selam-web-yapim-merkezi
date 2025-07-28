@@ -191,7 +191,7 @@ const Checkout = () => {
       value = value.replace(/\D/g, "").substring(0, 11);
     }
     
-    // Telefon formatı - Iyzico +905xxxxxxxxx formatını bekliyor
+    // Telefon formatı - Iyzico +90xxxxxxxxxx formatını bekliyor (13 karakter)
     if (name === "gsmNumber") {
       value = value.replace(/\D/g, "");
       if (value.startsWith("90")) {
@@ -201,7 +201,7 @@ const Checkout = () => {
       } else if (!value.startsWith("+90")) {
         value = "+90" + value;
       }
-      value = value.substring(0, 14);
+      value = value.substring(0, 13); // +90xxxxxxxxxx = 13 karakter
     }
 
     setFormData(prev => ({
