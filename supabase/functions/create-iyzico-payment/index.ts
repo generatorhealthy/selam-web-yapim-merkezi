@@ -80,10 +80,10 @@ serve(async (req) => {
         surname,
         gsmNumber: phone,
         email,
-        identityNumber: tcNo,
+        identityNumber: tcNo || "11111111111", // Varsayılan 11 haneli TC no
         lastLoginDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
         registrationDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
-        registrationAddress: address,
+        registrationAddress: address && address.length >= 5 ? address : "Varsayılan Adres",
         ip: clientIP.split(',')[0].trim(),
         city,
         country: "Turkey",
@@ -93,14 +93,14 @@ serve(async (req) => {
         contactName: `${name} ${surname}`,
         city: shippingCity || city,
         country: "Turkey",
-        address: shippingAddress || address,
+        address: (shippingAddress && shippingAddress.length >= 5) ? shippingAddress : (address && address.length >= 5) ? address : "Varsayılan Adres",
         zipCode: shippingZipCode || "34100"
       },
       billingAddress: {
         contactName: `${name} ${surname}`,
         city: billingCity || city,
         country: "Turkey",
-        address: billingAddress || address,
+        address: (billingAddress && billingAddress.length >= 5) ? billingAddress : (address && address.length >= 5) ? address : "Varsayılan Adres",
         zipCode: billingZipCode || "34100"
       },
       basketItems: [

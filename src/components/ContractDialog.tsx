@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -192,6 +193,9 @@ IP Adresi: ${clientIP}`;
             <DialogTitle className="text-xl font-semibold">
               {getTitle()}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              {contractType === "preInfo" ? "Ön bilgilendirme formu içeriği" : "Mesafeli satış sözleşmesi içeriği"}
+            </DialogDescription>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
