@@ -32,6 +32,7 @@ serve(async (req)=>{
       paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
       callbackUrl: "https://doktorumol.com.tr/payment-success",
+      enabledInstallments: [1, 2, 3, 6, 9],
       buyer: {
         id: "BY789",
         name,
