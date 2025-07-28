@@ -242,6 +242,7 @@ const Checkout = () => {
         tcNo: formData.tcNo,
         address: formData.address,
         city: formData.city,
+        zipCode: formData.zipCode,
         customerType,
         companyName: formData.companyName,
         taxNo: formData.taxNo,
