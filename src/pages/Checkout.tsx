@@ -128,34 +128,15 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("credit_card");
   const [clientIP, setClientIP] = useState<string>("");
   
-  // Form verilerini Iyzico standartlarına göre düzenlendi
   const [formData, setFormData] = useState({
-    // Buyer Information (Required by Iyzico)
     name: "",
     surname: "",
     email: "",
-    gsmNumber: "", // Iyzico format: +905xxxxxxxxx
-    identityNumber: "", // TC Kimlik No
-    registrationAddress: "", // Buyer's registration address
+    gsmNumber: "",
+    identityNumber: "",
+    address: "",
     city: "İstanbul",
-    country: "Turkey",
-    ip: "",
-    
-    // Billing Address (Required by Iyzico)
-    billingContactName: "",
-    billingCity: "İstanbul",
-    billingCountry: "Turkey", 
-    billingAddress: "",
-    billingZipCode: "",
-    
-    // Shipping Address (Required by Iyzico)
-    shippingContactName: "",
-    shippingCity: "İstanbul", 
-    shippingCountry: "Turkey",
-    shippingAddress: "",
-    shippingZipCode: "",
-    
-    // Company Information (for corporate customers)
+    zipCode: "34100",
     companyName: "",
     taxNumber: "",
     taxOffice: ""
@@ -192,10 +173,8 @@ const Checkout = () => {
       try {
         const ip = await getClientIP();
         setClientIP(ip);
-        setFormData(prev => ({ ...prev, ip }));
       } catch (error) {
         setClientIP('127.0.0.1');
-        setFormData(prev => ({ ...prev, ip: '127.0.0.1' }));
       }
 
       setLoading(false);
@@ -229,17 +208,6 @@ const Checkout = () => {
       ...prev,
       [name]: value
     }));
-    
-    // Auto-fill contact names when name/surname changes
-    if (name === "name" || name === "surname") {
-      const fullName = `${name === "name" ? value : formData.name} ${name === "surname" ? value : formData.surname}`.trim();
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        billingContactName: fullName,
-        shippingContactName: fullName
-      }));
-    }
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -252,8 +220,7 @@ const Checkout = () => {
   const validateForm = () => {
     const requiredFields = [
       'name', 'surname', 'email', 'gsmNumber', 'identityNumber',
-      'registrationAddress', 'city', 'billingAddress', 'billingCity',
-      'shippingAddress', 'shippingCity'
+      'address', 'city'
     ];
 
     for (const field of requiredFields) {
@@ -326,34 +293,21 @@ const Checkout = () => {
     try {
       setLoading(true);
       
-      // Iyzico standartlarına göre customer data hazırla
+      // Tek adres alanını tüm adres türleri için kullan
       const customerData = {
-        // Buyer bilgileri
         name: formData.name,
         surname: formData.surname, 
         email: formData.email,
         gsmNumber: formData.gsmNumber,
         identityNumber: formData.identityNumber,
-        registrationAddress: formData.registrationAddress,
+        registrationAddress: formData.address,
         city: formData.city,
-        country: formData.country,
-        ip: clientIP,
-        
-        // Billing Address
-        billingContactName: formData.billingContactName || `${formData.name} ${formData.surname}`,
-        billingCity: formData.billingCity,
-        billingCountry: formData.billingCountry,
-        billingAddress: formData.billingAddress,
-        billingZipCode: formData.billingZipCode || "34100",
-        
-        // Shipping Address  
-        shippingContactName: formData.shippingContactName || `${formData.name} ${formData.surname}`,
-        shippingCity: formData.shippingCity,
-        shippingCountry: formData.shippingCountry,
-        shippingAddress: formData.shippingAddress,
-        shippingZipCode: formData.shippingZipCode || "34100",
-        
-        // Company bilgileri (opsiyonel)
+        billingAddress: formData.address,
+        billingCity: formData.city,
+        billingZipCode: formData.zipCode,
+        shippingAddress: formData.address,
+        shippingCity: formData.city,
+        shippingZipCode: formData.zipCode,
         customerType,
         companyName: customerType === 'company' ? formData.companyName : "",
         taxNumber: customerType === 'company' ? formData.taxNumber : "",
@@ -429,7 +383,7 @@ const Checkout = () => {
         customer_email: formData.email,
         customer_phone: formData.gsmNumber,
         customer_tc_no: formData.identityNumber,
-        customer_address: formData.registrationAddress,
+        customer_address: formData.address,
         customer_city: formData.city,
         customer_type: customerType,
         company_name: customerType === 'company' ? formData.companyName : null,
@@ -645,14 +599,27 @@ const Checkout = () => {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="zipCode">Posta Kodu</Label>
+                      <Input
+                        id="zipCode"
+                        name="zipCode"
+                        value={formData.zipCode}
+                        onChange={handleInputChange}
+                        placeholder="34100"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <Label htmlFor="registrationAddress">Kayıt Adresi *</Label>
+                    <Label htmlFor="address">Adres *</Label>
                     <Textarea
-                      id="registrationAddress"
-                      name="registrationAddress"
-                      value={formData.registrationAddress}
+                      id="address"
+                      name="address"
+                      value={formData.address}
                       onChange={handleInputChange}
-                      placeholder="Kayıt adresinizi girin"
+                      placeholder="Adresinizi girin"
                       rows={2}
                       required
                     />
@@ -698,102 +665,6 @@ const Checkout = () => {
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Fatura Adresi */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Fatura Adresi</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="billingCity">Şehir *</Label>
-                      <Select value={formData.billingCity} onValueChange={(value) => handleSelectChange('billingCity', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Şehir seçin" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {turkishCities.map((city) => (
-                            <SelectItem key={city} value={city}>
-                              {city}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="billingZipCode">Posta Kodu</Label>
-                      <Input
-                        id="billingZipCode"
-                        name="billingZipCode"
-                        value={formData.billingZipCode}
-                        onChange={handleInputChange}
-                        placeholder="34100"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="billingAddress">Fatura Adresi *</Label>
-                    <Textarea
-                      id="billingAddress"
-                      name="billingAddress"
-                      value={formData.billingAddress}
-                      onChange={handleInputChange}
-                      placeholder="Fatura adresinizi girin"
-                      rows={2}
-                      required
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Teslimat Adresi */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Teslimat Adresi</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="shippingCity">Şehir *</Label>
-                      <Select value={formData.shippingCity} onValueChange={(value) => handleSelectChange('shippingCity', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Şehir seçin" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {turkishCities.map((city) => (
-                            <SelectItem key={city} value={city}>
-                              {city}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="shippingZipCode">Posta Kodu</Label>
-                      <Input
-                        id="shippingZipCode"
-                        name="shippingZipCode"
-                        value={formData.shippingZipCode}
-                        onChange={handleInputChange}
-                        placeholder="34100"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="shippingAddress">Teslimat Adresi *</Label>
-                    <Textarea
-                      id="shippingAddress"
-                      name="shippingAddress"
-                      value={formData.shippingAddress}
-                      onChange={handleInputChange}
-                      placeholder="Teslimat adresinizi girin"
-                      rows={2}
-                      required
-                    />
-                  </div>
                 </CardContent>
               </Card>
 
