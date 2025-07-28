@@ -15,7 +15,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body - V5:", body);
+    console.log("Gelen Body - V6:", body);
     
     const { packageType, customerData, subscriptionReferenceCode } = body;
     const { 
@@ -155,13 +155,13 @@ serve(async (req) => {
     };
 
     const jsonString = JSON.stringify(requestData);
-    console.log("İyzico'ya gönderilen JSON V5:", jsonString);
+    console.log("İyzico'ya gönderilen JSON V6:", jsonString);
     
     const randomString = Date.now().toString();
     
-    // SHA-256 hash kullan (Iyzico önerisi)
+    // SHA-256 hash hesaplaması (Iyzico format)
     const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + jsonString;
-    console.log("Hash string V5 uzunluk:", hashString.length);
+    console.log("Hash string V6 uzunluk:", hashString.length);
     console.log("Hash components:", {
       apiKeyLength: IYZICO_API_KEY?.length,
       randomStringLength: randomString.length,
@@ -169,14 +169,13 @@ serve(async (req) => {
       jsonLength: jsonString.length
     });
     
+    // Doğru hash hesaplama - binary data'yı direkt base64'e çevir
     const encoder = new TextEncoder();
     const data = encoder.encode(hashString);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    const hashBase64 = btoa(hashHex);
+    const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
 
-    console.log("Generated hash V5 (ilk 20 karakter):", hashBase64.substring(0, 20));
+    console.log("Generated hash V6 (ilk 20 karakter):", hashBase64.substring(0, 20));
 
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/payment/iyzipos/checkoutform/initialize`, {
       method: "POST",
@@ -207,7 +206,7 @@ serve(async (req) => {
       });
     }
 
-    console.log("İyzico Yanıtı V5:", iyzicoResult);
+    console.log("İyzico Yanıtı V6:", iyzicoResult);
 
     return new Response(JSON.stringify(iyzicoResult), {
       headers: {
@@ -218,7 +217,7 @@ serve(async (req) => {
     });
 
   } catch (err) {
-    console.error("Hata V5:", err);
+    console.error("Hata V6:", err);
     return new Response(JSON.stringify({
       error: "Sunucu hatası",
       details: err.message
