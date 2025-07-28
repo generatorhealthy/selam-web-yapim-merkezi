@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.get-edge-ip]
 verify_jwt = false
+
+[functions.iyzico-payment-callback]
+verify_jwt = false

@@ -300,6 +300,7 @@ const Checkout = () => {
       await saveOrder('bank_transfer');
       setShowBankInfo(true);
     } else {
+      await saveOrder('credit_card');
       await handleCreditCardPayment();
     }
   };

@@ -103,7 +103,7 @@ serve(async (req) => {
       basketId,
       paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
-      callbackUrl: "https://doktorumol.com.tr/payment-success",
+      callbackUrl: "https://irnfwewabogveofwemvg.supabase.co/functions/v1/iyzico-payment-callback",
       enabledInstallments: [1, 2, 3, 6, 9],
       buyer: {
         id: `BY${Date.now()}`,
