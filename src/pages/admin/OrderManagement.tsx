@@ -386,7 +386,10 @@ const OrderManagement = () => {
 
   const handleUpdateOrder = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: string) => {
     if (editingOrder) {
-      setEditingOrder({ ...editingOrder, [field]: e.target.value });
+      const value = field === 'subscription_month' || field === 'amount' ? 
+        (e.target.value === '' ? 0 : Number(e.target.value)) : 
+        e.target.value;
+      setEditingOrder({ ...editingOrder, [field]: value });
     }
   };
 
@@ -1095,13 +1098,23 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                {format(new Date(order.created_at), "HH:mm", { locale: tr })}
                              </div>
                            </TableCell>
-                           <TableCell className="py-4">
-                             {order.subscription_month ? (
-                               <Badge variant="outline" className="font-medium">{order.subscription_month}. Ay</Badge>
-                             ) : (
-                               <Badge variant="secondary" className="font-medium">İlk Sipariş</Badge>
-                             )}
-                           </TableCell>
+                            <TableCell className="py-4">
+                              {editingOrder && editingOrder.id === order.id ? (
+                                <Input
+                                  type="number"
+                                  value={editingOrder.subscription_month || 1}
+                                  onChange={(e) => handleUpdateOrder(e, "subscription_month")}
+                                  className="w-20 h-8 text-center"
+                                  min="1"
+                                />
+                              ) : (
+                                order.subscription_month ? (
+                                  <Badge variant="outline" className="font-medium">{order.subscription_month}. Ay</Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="font-medium">İlk Sipariş</Badge>
+                                )
+                              )}
+                            </TableCell>
                            <TableCell className="text-right py-4">
                              <div className="flex items-center justify-end gap-1 flex-wrap">
                                <Button
@@ -1200,6 +1213,16 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                           <SelectItem value="cancelled">İptal Edildi</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="subscription_month">Sipariş Ayı</Label>
+                      <Input
+                        type="number"
+                        id="subscription_month"
+                        value={editingOrder.subscription_month || 1}
+                        onChange={(e) => handleUpdateOrder(e, "subscription_month")}
+                        min="1"
+                      />
                     </div>
                     <div className="flex justify-end gap-2 md:col-span-2">
                       <Button variant="ghost" onClick={handleCancelEdit}>
