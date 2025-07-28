@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import PopularSpecialties from "@/components/PopularSpecialties";
+import { supabase } from "@/integrations/supabase/client";
+import { createDoctorSlug } from "@/utils/doctorUtils";
 
 const popularSpecialties = [
   { name: "Psikolog", slug: "psikolog" },
@@ -38,12 +40,75 @@ const cities = [
   "Tunceli", "Uşak", "Van", "Yalova", "Yozgat", "Zonguldak"
 ];
 
+interface Specialist {
+  id: string;
+  name: string;
+  specialty: string;
+  city: string;
+  rating: number;
+  image_url?: string;
+  bio?: string;
+}
+
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [appointmentType, setAppointmentType] = useState("online");
   const [selectedCity, setSelectedCity] = useState("");
+  const [searchResults, setSearchResults] = useState<Specialist[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const navigate = useNavigate();
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Search specialists as user types
+  useEffect(() => {
+    const searchSpecialists = async () => {
+      if (searchTerm.length < 2) {
+        setSearchResults([]);
+        setShowResults(false);
+        return;
+      }
+      
+      setIsSearching(true);
+      
+      try {
+        const { data, error } = await supabase
+          .from('specialists')
+          .select('id, name, specialty, city, rating, bio')
+          .eq('is_active', true)
+          .or(`name.ilike.%${searchTerm}%,specialty.ilike.%${searchTerm}%`)
+          .limit(3);
+        
+        if (error) throw error;
+        
+        setSearchResults(data || []);
+        setShowResults(true);
+      } catch (error) {
+        console.error('Error searching specialists:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(searchSpecialists, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
+  // Hide search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSearch = () => {
     // Create URL with search parameters and redirect to /uzmanlar
@@ -103,7 +168,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8 md:py-16 relative z-10">
           <div className="max-w-5xl mx-auto text-center">
             {/* Search Form - Mobile Optimized */}
-            <div className="bg-white rounded-2xl p-4 md:p-8 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0">
+            <div ref={searchContainerRef} className="bg-white rounded-2xl p-4 md:p-8 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0">
               <div className="grid gap-4 md:gap-6">
                 {/* Appointment Type Toggle - Mobile Friendly */}
                 <div className="flex justify-center mb-4 md:mb-6">
@@ -184,6 +249,84 @@ const Index = () => {
                     </Button>
                   </div>
                 </div>
+                
+                {/* Search Results - Show below search when searching */}
+                {showResults && (searchResults.length > 0 || isSearching) && (
+                  <div className="mt-6 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    {isSearching ? (
+                      <div className="p-6 text-center">
+                        <div className="flex items-center justify-center space-x-2 text-gray-500">
+                          <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
+                          <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-75"></div>
+                          <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-150"></div>
+                        </div>
+                        <p className="mt-2 text-gray-600">Uzmanlar aranıyor...</p>
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="divide-y divide-gray-100">
+                        {searchResults.map((specialist, index) => (
+                          <div 
+                            key={specialist.id}
+                            className="p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                            onClick={() => {
+                              const slug = createDoctorSlug(specialist.name);
+                              navigate(`/doktor/${slug}`);
+                              setShowResults(false);
+                            }}
+                          >
+                            <div className="flex items-center space-x-4">
+                              <div className="flex-shrink-0">
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                                  <User className="w-6 h-6 text-white" />
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-sm font-semibold text-gray-900 truncate">
+                                    {specialist.name}
+                                  </h4>
+                                  <div className="flex items-center space-x-1 text-yellow-400">
+                                    <Star className="w-4 h-4 fill-current" />
+                                    <span className="text-sm text-gray-600">{specialist.rating}</span>
+                                  </div>
+                                </div>
+                                <p className="text-sm text-blue-600 font-medium">{specialist.specialty}</p>
+                                <div className="flex items-center space-x-2 mt-1">
+                                  <MapPin className="w-3 h-3 text-gray-400" />
+                                  <span className="text-xs text-gray-500">{specialist.city}</span>
+                                </div>
+                                {specialist.bio && (
+                                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                    {specialist.bio.length > 100 ? specialist.bio.substring(0, 100) + '...' : specialist.bio}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex-shrink-0">
+                                <ArrowRight className="w-4 h-4 text-gray-400" />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {searchResults.length === 3 && (
+                          <div className="p-3 bg-gray-50 text-center">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={handleSearch}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              Tüm sonuçları görüntüle
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center">
+                        <p className="text-gray-500">Aradığınız kriterlere uygun uzman bulunamadı.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
