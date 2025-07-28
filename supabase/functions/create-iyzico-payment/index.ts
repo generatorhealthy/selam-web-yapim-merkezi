@@ -30,16 +30,37 @@ serve(async (req) => {
       billingZipCode, 
       shippingAddress, 
       shippingCity, 
-      shippingZipCode 
+      shippingZipCode,
+      customerType,
+      companyName,
+      taxNumber,
+      taxOffice
     } = customerData;
 
     const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY");
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI");
     
-    const conversationId = `conv_${Date.now()}`;
-    const price = packageType === "premium" ? 2998.0 : 1.0;
+    // Paket fiyatlarını doğru şekilde map et
+    const getPriceByPackageType = (type: string) => {
+      const priceMap: { [key: string]: number } = {
+        "campaign": 2398,
+        "basic": 2998, 
+        "professional": 3600,
+        "premium": 4998
+      };
+      return priceMap[type] || 2998;
+    };
+
+    const conversationId = `${Date.now()}`;
+    const price = getPriceByPackageType(packageType);
     const paidPrice = price;
+    const basketId = `B${Date.now()}`;
+
+    // Client IP'yi request header'dan al
+    const clientIP = req.headers.get('x-forwarded-for') || 
+                     req.headers.get('x-real-ip') || 
+                     '194.59.166.153';
 
     const requestData = {
       locale: "tr",
@@ -48,13 +69,13 @@ serve(async (req) => {
       paidPrice,
       currency: "TRY",
       installment: 1,
-      basketId: "B67832",
+      basketId,
       paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
       callbackUrl: "https://doktorumol.com.tr/payment-success",
       enabledInstallments: [1, 2, 3, 6, 9],
       buyer: {
-        id: "BY789",
+        id: `BY${Date.now()}`,
         name,
         surname,
         gsmNumber: phone,
@@ -63,20 +84,20 @@ serve(async (req) => {
         lastLoginDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
         registrationDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
         registrationAddress: address,
-        ip: "194.59.166.153",
+        ip: clientIP.split(',')[0].trim(),
         city,
         country: "Turkey",
         zipCode: billingZipCode || "34100"
       },
       shippingAddress: {
-        contactName: name + " " + surname,
+        contactName: `${name} ${surname}`,
         city: shippingCity || city,
         country: "Turkey",
         address: shippingAddress || address,
         zipCode: shippingZipCode || "34100"
       },
       billingAddress: {
-        contactName: name + " " + surname,
+        contactName: `${name} ${surname}`,
         city: billingCity || city,
         country: "Turkey",
         address: billingAddress || address,
@@ -84,8 +105,16 @@ serve(async (req) => {
       },
       basketItems: [
         {
-          id: "BI101",
-          name: packageType === "premium" ? "Premium Paket" : "Temel Paket",
+          id: `BI${Date.now()}`,
+          name: (() => {
+            const nameMap: { [key: string]: string } = {
+              "campaign": "Kampanyalı Paket",
+              "basic": "Premium Paket",
+              "professional": "Professional Paket", 
+              "premium": "Full Paket"
+            };
+            return nameMap[packageType] || "Premium Paket";
+          })(),
           category1: "Danışmanlık",
           category2: "Psikoloji",
           itemType: "VIRTUAL",
