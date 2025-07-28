@@ -43,8 +43,8 @@ serve(async (req) => {
         gsmNumber: phone,
         email,
         identityNumber: tcNo,
-        lastLoginDate: "2023-04-10 12:43:35",
-        registrationDate: "2023-04-10 12:43:35",
+        lastLoginDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        registrationDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
         registrationAddress: address,
         ip: "194.59.166.153", // ✅ IP
         city,
