@@ -38,8 +38,8 @@ serve(async (req) => {
       taxOffice
     } = customerData;
 
-    const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY");
-    const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
+    const IYZICO_API_KEY = Deno.env.get("pz6XtkqnNDuS6PpRtNzvMlVJnkaaCgmC");
+    const IYZICO_SECRET_KEY = Deno.env.get("qFw4qyjLlrgfZr4J0UzJrB9srLUHDiGW");
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
     
     // TC kimlik kontrolü - 11 haneli olmalı
