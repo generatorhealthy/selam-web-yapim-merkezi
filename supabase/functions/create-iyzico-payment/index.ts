@@ -1,133 +1,96 @@
-// Supabase Edge Function - TypeScript (Deno için)
-// Dosya: create-iyzico-payment.ts
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createHmac } from "https://deno.land/std@0.190.0/hash/mod.ts";
 
-// Ortak PKI string oluşturucu fonksiyon
-function buildPkiString(data: Record<string, any>): string {
-  function internal(obj: any): string {
-    const keys = Object.keys(obj).filter(k => obj[k] !== null && obj[k] !== undefined).sort();
-    return keys.map(key => {
-      if (typeof obj[key] === "object" && !Array.isArray(obj[key])) {
-        return `${key}=[${internal(obj[key])}]`;
-      } else if (Array.isArray(obj[key])) {
-        return `${key}=[${obj[key].map(internal).join(",")}]`;
-      } else {
-        return `${key}=${obj[key]}`;
-      }
-    }).join(",");
-  }
-  return `[${internal(data)}]`;
-}
-
-// SHA1 imza oluşturucu
-function generateAuthorization(apiKey: string, secretKey: string, pkiString: string): string {
-  const hash = createHmac("sha1", secretKey).update(pkiString).digest("base64");
-  return `IYZWS ${apiKey}:${hash}`;
-}
+const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY")!;
+const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY")!;
+const IYZICO_BASE_URL = "https://sandbox-api.iyzipay.com";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
-      }
-    });
-  }
-
   try {
     const { packageType, customerData, subscriptionReferenceCode } = await req.json();
 
-    const apiKey = Deno.env.get("IYZICO_API_KEY")!;
-    const secretKey = Deno.env.get("IYZICO_SECRET_KEY")!;
-    const url = "https://api.iyzipay.com/payment/init3ds/ecom";
+    const price = packageType === "premium" ? "2998.0" : "0.0";
 
     const requestBody = {
       locale: "tr",
       conversationId: subscriptionReferenceCode,
-      price: "2998.0",
-      paidPrice: "2998.0",
+      price: price,
+      paidPrice: price,
       currency: "TRY",
-      basketId: "B67832",
+      installment: "1",
+      basketId: subscriptionReferenceCode,
+      paymentChannel: "WEB",
       paymentGroup: "PRODUCT",
-      callbackUrl: "https://doktorumol.com.tr/payment-success",
+      callbackUrl: "https://doktorumol.com.tr/odeme-sonucu",
       buyer: {
         id: "BY789",
         name: customerData.name,
         surname: customerData.surname,
-        identityNumber: customerData.identityNumber,
-        email: customerData.email,
         gsmNumber: customerData.phone,
+        email: customerData.email,
+        identityNumber: customerData.identityNumber,
+        lastLoginDate: new Date().toISOString(),
+        registrationDate: new Date().toISOString(),
         registrationAddress: customerData.address,
+        ip: "85.34.99.112",
         city: customerData.city,
         country: "Turkey",
-        zipCode: customerData.postalCode
-      },
-      paymentCard: {
-        cardHolderName: customerData.cardHolderName,
-        cardNumber: customerData.cardNumber,
-        expireMonth: customerData.expireMonth,
-        expireYear: customerData.expireYear,
-        cvc: customerData.cvc,
-        registerCard: "0"
+        zipCode: customerData.zipCode,
       },
       shippingAddress: {
-        contactName: customerData.name + " " + customerData.surname,
+        contactName: `${customerData.name} ${customerData.surname}`,
         city: customerData.city,
         country: "Turkey",
         address: customerData.address,
-        zipCode: customerData.postalCode
+        zipCode: customerData.zipCode,
       },
       billingAddress: {
-        contactName: customerData.name + " " + customerData.surname,
+        contactName: `${customerData.name} ${customerData.surname}`,
         city: customerData.city,
         country: "Turkey",
         address: customerData.address,
-        zipCode: customerData.postalCode
+        zipCode: customerData.zipCode,
       },
       basketItems: [
         {
           id: "BI101",
-          name: "Premium Paket",
+          name: packageType,
           category1: "Danışmanlık",
+          category2: "Online Hizmet",
           itemType: "VIRTUAL",
-          price: "2998.0"
-        }
-      ]
+          price: price,
+        },
+      ],
     };
 
-    const pkiString = buildPkiString(requestBody);
-    const authorization = generateAuthorization(apiKey, secretKey, pkiString);
+    const jsonString = JSON.stringify(requestBody);
+    const randomString = crypto.randomUUID();
+    const hashStr = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + jsonString;
 
-    const iyzicoRes = await fetch(url, {
+    const hash = createHmac("sha1", IYZICO_SECRET_KEY)
+      .update(hashStr)
+      .toString("base64");
+
+    const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/payment/iyzipos/initialize`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": authorization,
-        "x-iyzi-rnd": new Date().getTime().toString()
+        "Authorization": `IYZWS ${IYZICO_API_KEY}:${hash}`,
+        "x-iyzi-rnd": randomString
       },
-      body: JSON.stringify(requestBody)
+      body: jsonString,
     });
 
-    const iyzicoData = await iyzicoRes.json();
+    const iyzicoData = await iyzicoResponse.json();
 
     return new Response(JSON.stringify(iyzicoData), {
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
-      }
+      status: 200,
+      headers: { "Content-Type": "application/json" },
     });
 
   } catch (error) {
-    console.error("İyzico ödeme hatası:", error);
-    return new Response(JSON.stringify({ error: "İşlem başlatılamadı", detail: error.message }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
-      }
     });
   }
 });
