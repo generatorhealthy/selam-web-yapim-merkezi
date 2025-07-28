@@ -2,224 +2,131 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-requested-with",
-  "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE",
-  "Access-Control-Max-Age": "86400",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
-  console.log('Request method:', req.method);
-  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
-  
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    console.log('Handling OPTIONS request');
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 200
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Edge function başladı');
-    
-    const incomingData = await req.json();
-    console.log('Gelen request body:', JSON.stringify(incomingData, null, 2));
-    
-    const { packageType, customerData, subscriptionReferenceCode } = incomingData;
+    const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY")!;
+    const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY")!;
+    const body = await req.json();
 
-    console.log('İyzico ödeme isteği:', {
-      packageType,
-      subscriptionReferenceCode,
-      customerEmail: customerData?.email
-    });
-
-    // İyzico API anahtarlarını al
-    const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY");
-    const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
-
-    console.log('API Key kontrolü:', {
-      hasApiKey: !!IYZICO_API_KEY,
-      hasSecretKey: !!IYZICO_SECRET_KEY,
-      apiKeyLength: IYZICO_API_KEY?.length,
-      secretKeyLength: IYZICO_SECRET_KEY?.length
-    });
-
-    if (!IYZICO_API_KEY || !IYZICO_SECRET_KEY) {
-      throw new Error("İyzico API anahtarları bulunamadı");
-    }
-
-    // İyzico için gerekli değerler - zaman senkronizasyonu ile
     const now = new Date();
-    const randomString = now.getTime().toString(); // Unix timestamp kullan
+    const randomString = now.getTime().toString();
     const conversationId = `conv_${randomString}`;
-    
-    console.log('Zaman bilgileri:', {
-      serverTime: now.toISOString(),
-      timestamp: randomString,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    });
-    
-    // Canlı ortam için production URL'si kullan
-    const IYZICO_API_URL = "https://api.iyzipay.com";
-    
-    // Tutar formatını düzelt
-    const packagePrice = "2998.0";
-    
-    // İyzico için gerçek IP adresi - CDN'den gerçek IP'yi al
-    const getClientIP = () => {
-      // Önce Cloudflare IP'sini kontrol et
-      const cfIP = req.headers.get("cf-connecting-ip");
-      if (cfIP) return cfIP;
-      
-      // X-Forwarded-For'dan gerçek IP'yi al  
-      const xForwardedFor = req.headers.get("x-forwarded-for");
-      if (xForwardedFor) return xForwardedFor.split(',')[0].trim();
-      
-      // X-Real-IP'yi kontrol et
-      const xRealIP = req.headers.get("x-real-ip");
-      if (xRealIP) return xRealIP;
-      
-      // Son çare olarak sitenin gerçek IP'sini kullan
-      return "194.59.166.153";
-    };
-    
-    // İyzico checkoutform için standart format
+
+    const price = "2998.0";
+    const ip = req.headers.get("x-forwarded-for") || "194.59.166.153";
+
     const requestBody = {
       locale: "tr",
-      conversationId: conversationId,
-      price: packagePrice,
-      paidPrice: packagePrice,
+      conversationId,
+      price,
+      paidPrice: price,
       currency: "TRY",
-      basketId: conversationId,
+      basketId: "B67832",
       paymentGroup: "PRODUCT",
-      callbackUrl: "https://doktorumol.com.tr/payment-success",
-      enabledInstallments: [1, 2, 3, 6, 9],
+      callbackUrl: "https://doktorumol.com.tr",
       buyer: {
         id: "BY789",
-        name: customerData.name || "John",
-        surname: customerData.surname || "Doe",
-        identityNumber: customerData.tcNo?.toString().padStart(11, '0') || "74300864791",
-        email: customerData.email || "email@email.com",
-        gsmNumber: customerData.phone && customerData.phone.startsWith('+90') ? customerData.phone : `+90${customerData.phone?.replace(/^0/, '') || '5350000000'}`,
-        registrationDate: "2013-04-21 15:12:09",
-        lastLoginDate: "2015-10-05 12:43:35",
-        registrationAddress: customerData.address || "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
-        city: customerData.city || "Istanbul",
+        name: body.customerData.name || "John",
+        surname: body.customerData.surname || "Doe",
+        identityNumber: body.customerData.tcNo?.toString().padStart(11, "0") || "74300864791",
+        email: body.customerData.email,
+        gsmNumber: "+90" + body.customerData.phone?.replace(/^0/, "") || "5310000000",
+        registrationDate: "2023-07-01 12:00:00",
+        lastLoginDate: "2023-07-25 12:00:00",
+        registrationAddress: body.customerData.address || "Nidakule Göztepe",
+        city: body.customerData.city || "Istanbul",
         country: "Turkey",
-        zipCode: customerData.zipCode || "34732",
-        ip: getClientIP()
+        zipCode: body.customerData.zipCode || "34732",
+        ip,
       },
       shippingAddress: {
-        address: customerData.address || "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
-        zipCode: customerData.zipCode || "34742",
-        contactName: `${customerData.name || "Jane"} ${customerData.surname || "Doe"}`,
-        city: customerData.city || "Istanbul",
-        country: "Turkey"
+        contactName: `${body.customerData.name} ${body.customerData.surname}`,
+        city: body.customerData.city || "Istanbul",
+        country: "Turkey",
+        address: body.customerData.address,
+        zipCode: body.customerData.zipCode || "34742",
       },
       billingAddress: {
-        address: customerData.address || "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
-        zipCode: customerData.zipCode || "34742",
-        contactName: `${customerData.name || "Jane"} ${customerData.surname || "Doe"}`,
-        city: customerData.city || "Istanbul",
-        country: "Turkey"
+        contactName: `${body.customerData.name} ${body.customerData.surname}`,
+        city: body.customerData.city || "Istanbul",
+        country: "Turkey",
+        address: body.customerData.address,
+        zipCode: body.customerData.zipCode || "34742",
       },
       basketItems: [
         {
           id: "BI101",
-          price: packagePrice,
-          name: `${packageType} Paketi`,
-          category1: "Collectibles",
-          category2: "Accessories",
-          itemType: "VIRTUAL"
-        }
-      ]
+          name: `${body.packageType} Paketi`,
+          category1: "Hizmet",
+          category2: "Psikoloji",
+          itemType: "VIRTUAL",
+          price,
+        },
+      ],
     };
 
-    console.log('İyzico istek gövdesi:', JSON.stringify(requestBody, null, 2));
+    const raw = JSON.stringify(requestBody);
+    const hashString = raw + randomString + IYZICO_SECRET_KEY;
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey("raw", encoder.encode(IYZICO_SECRET_KEY), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(hashString));
+    const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
 
-    // İyzico doğru authorization - SHA256 format
-    async function createHMACSHA256(data: string): Promise<string> {
-      const encoder = new TextEncoder();
-      const key = await crypto.subtle.importKey(
-        "raw",
-        encoder.encode(IYZICO_SECRET_KEY),
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-      );
-      const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
-      return btoa(String.fromCharCode(...new Uint8Array(signature)));
-    }
-
-    // İyzico exact hash format: apiKey + randomKey + secretKey (hiçbir ek karakter yok)
-    const authData = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
-    const signature = await createHMACSHA256(authData);
-
-    console.log('Authorization detayları:', {
-      apiKeyLength: IYZICO_API_KEY.length,
-      randomStringLength: randomString.length,
-      secretKeyLength: IYZICO_SECRET_KEY.length,
-      authDataLength: authData.length,
-      signatureLength: signature.length
-    });
-
-    // İyzico API çağrısı - minimal headers
-    const iyzResponse = await fetch(`${IYZICO_API_URL}/payment/iyzipos/checkoutform/initialize`, {
+    const iyzicoResponse = await fetch("https://api.iyzipay.com/payment/iyzipos/checkoutform/initialize", {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
         "Authorization": `IYZWS ${IYZICO_API_KEY}:${signature}`,
-        "x-iyzi-rnd": randomString
+        "x-iyzi-rnd": randomString,
       },
-      body: JSON.stringify(requestBody)
+      body: raw,
     });
 
-    console.log('İyzico HTTP durum kodu:', iyzResponse.status);
-    console.log('İyzico yanıt headers:', Object.fromEntries(iyzResponse.headers.entries()));
-    
-    const responseText = await iyzResponse.text();
-    console.log('İyzico ham yanıtı:', responseText);
-    
-    let responseData;
+    const text = await iyzicoResponse.text();
+    let result: any = {};
     try {
-      responseData = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('JSON parse hatası:', parseError);
-      throw new Error(`İyzico yanıtı JSON olarak çözümlenemedi: ${responseText}`);
+      result = JSON.parse(text);
+    } catch (_) {
+      return new Response(JSON.stringify({ success: false, error: "İyzico'dan geçersiz JSON" }), {
+        headers: corsHeaders,
+        status: 500,
+      });
     }
-    
-    console.log('İyzico yanıtı:', responseData);
 
-    if (responseData.status === "success") {
+    if (result.status === "success") {
       return new Response(JSON.stringify({
         success: true,
-        paymentPageUrl: responseData.paymentPageUrl,
-        checkoutFormContent: responseData.checkoutFormContent,
-        token: responseData.token
+        token: result.token,
+        checkoutFormContent: result.checkoutFormContent,
+        paymentPageUrl: result.paymentPageUrl,
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: corsHeaders,
         status: 200,
-      });
-    } else {
-      console.error('İyzico hatası:', responseData);
-      return new Response(JSON.stringify({
-        success: false,
-        error: responseData.errorMessage || "Ödeme işlemi başlatılamadı"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
       });
     }
 
-  } catch (error) {
-    console.error('Edge function hatası:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || "Bilinmeyen bir hata oluştu"
+      error: result.errorMessage || "Bilinmeyen hata",
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: corsHeaders,
+      status: 400,
+    });
+
+  } catch (err) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: err.message,
+    }), {
+      headers: corsHeaders,
       status: 500,
     });
   }
