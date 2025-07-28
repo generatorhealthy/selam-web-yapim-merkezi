@@ -18,7 +18,6 @@ serve(async (req) => {
     const now = new Date();
     const randomString = now.getTime().toString();
     const conversationId = `conv_${randomString}`;
-
     const price = "2998.0";
     const ip = req.headers.get("x-forwarded-for") || "194.59.166.153";
 
@@ -30,14 +29,14 @@ serve(async (req) => {
       currency: "TRY",
       basketId: "B67832",
       paymentGroup: "PRODUCT",
-      callbackUrl: "https://doktorumol.com.tr",
+      callbackUrl: "https://doktorumol.com.tr/payment-success",
       buyer: {
         id: "BY789",
         name: body.customerData.name || "John",
         surname: body.customerData.surname || "Doe",
         identityNumber: body.customerData.tcNo?.toString().padStart(11, "0") || "74300864791",
         email: body.customerData.email,
-        gsmNumber: "+90" + body.customerData.phone?.replace(/^0/, "") || "5310000000",
+        gsmNumber: body.customerData.phone.startsWith("+90") ? body.customerData.phone : "+90" + body.customerData.phone.replace(/^0/, ""),
         registrationDate: "2023-07-01 12:00:00",
         lastLoginDate: "2023-07-25 12:00:00",
         registrationAddress: body.customerData.address || "Nidakule Göztepe",
@@ -73,9 +72,9 @@ serve(async (req) => {
     };
 
     const raw = JSON.stringify(requestBody);
-    const hashString = raw + randomString + IYZICO_SECRET_KEY;
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey("raw", encoder.encode(IYZICO_SECRET_KEY), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY;
     const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(hashString));
     const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
 
