@@ -92,42 +92,42 @@ const PaymentSuccess = () => {
               </CardHeader>
 
               <CardContent className="space-y-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-900 mb-4 text-center">
                     Sipariş Detayları
                   </h3>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <div className="flex justify-between">
+                  <div className="text-sm text-gray-600 space-y-3">
+                    <div className="flex justify-between py-2">
                       <span>Sipariş No:</span>
-                      <span className="font-medium">
-                        {orderData?.orderNumber || `#DRP-${Date.now()}`}
+                      <span className="font-medium text-gray-900">
+                        {orderData?.orderNumber || `DRP-${Date.now().toString().slice(-12)}`}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between py-2">
                       <span>Paket:</span>
-                      <span className="font-medium">
+                      <span className="font-medium text-gray-900">
                         {orderData?.package || 'Premium Paket'}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between py-2">
                       <span>Toplam:</span>
-                      <span className="font-medium">
+                      <span className="font-medium text-gray-900">
                         {orderData?.amount ? 
                           `${orderData.amount.toLocaleString('tr-TR')} ₺` : 
-                          '2.998,80 ₺'
+                          '2.998 ₺'
                         }
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between py-2">
                       <span>Ödeme Yöntemi:</span>
-                      <span className="font-medium">
+                      <span className="font-medium text-gray-900">
                         {orderData?.paymentMethod ? 
                           getPaymentMethodText(orderData.paymentMethod) : 
                           'Banka Havalesi/EFT'
                         }
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between py-2">
                       <span>Durum:</span>
                       <span className="font-medium text-green-600">Aktif</span>
                     </div>
