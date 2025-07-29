@@ -51,7 +51,9 @@ const DoctorList = () => {
     "Plastik Cerrahi", "Dahiliye – İç Hastalıkları",
     "Çocuk Sağlığı ve Hastalıkları", "Endokrinoloji ve Metabolizma Hastalıkları",
     "Nöroloji (Beyin ve Sinir Hastalıkları)", "Gastroenteroloji",
-    "Üroloji", "Genel Cerrahi"
+    "Üroloji", "Genel Cerrahi", "Dil ve Konuşma Terapisti",
+    "Psikolog", "Psikolojik Danışman", "Aile Danışmanı", 
+    "İlişki Danışmanı", "Uzman", "Doktor"
   ];
 
   const cities = [
