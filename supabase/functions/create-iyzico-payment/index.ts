@@ -17,11 +17,11 @@ serve(async (req) => {
     console.log("Gelen Body - Subscription V4:", body);
 
     const { packageType, customerData, subscriptionReferenceCode } = body;
-    const { 
-      name, surname, email, gsmNumber: phone, identityNumber: tcNo, 
-      registrationAddress: address, city, billingAddress, billingCity, 
-      billingZipCode, shippingAddress, shippingCity, shippingZipCode, 
-      customerType, companyName, taxNumber, taxOffice 
+    const {
+      name, surname, email, gsmNumber: phone, identityNumber: tcNo,
+      registrationAddress: address, city, billingAddress, billingCity,
+      billingZipCode, shippingAddress, shippingCity, shippingZipCode,
+      customerType, companyName, taxNumber, taxOffice
     } = customerData;
 
     const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY");
@@ -69,7 +69,7 @@ serve(async (req) => {
       subscriptionInitialStatus: "ACTIVE",
       customer: {
         name: name || "Kullanici",
-        surname: surname || "Adi", 
+        surname: surname || "Adi",
         email: email || "test@test.com",
         gsmNumber: validatedPhone,
         identityNumber: validatedTCNo,
@@ -85,23 +85,15 @@ serve(async (req) => {
 
     const jsonString = JSON.stringify(requestData);
     console.log("Subscription API'ya gönderilen JSON V4:", jsonString);
-    console.log("JSON String Length:", jsonString.length);
 
     const randomString = "123456789";
     const uri_path = "/v2/subscription/checkoutform/initialize";
-    
-    console.log("Hash hesaplama parametreleri:");
-    console.log("- Random String:", randomString);
-    console.log("- URI Path:", uri_path);
-    console.log("- Request Body Length:", jsonString.length);
-
     const dataToEncrypt = randomString + uri_path + jsonString;
-    console.log("Data to encrypt length:", dataToEncrypt.length);
 
     const encoder = new TextEncoder();
     const keyData = encoder.encode(IYZICO_SECRET_KEY);
     const messageData = encoder.encode(dataToEncrypt);
-    
+
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
       keyData,
@@ -115,13 +107,9 @@ serve(async (req) => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    console.log("HMAC SHA256 Signature:", signatureHex);
-
     const authorizationString = `apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${signatureHex}`;
     const base64EncodedAuthorization = btoa(authorizationString);
     const authorization = `IYZWSv2 ${base64EncodedAuthorization}`;
-
-    console.log("Authorization Header:", authorization);
 
     const headers = {
       "Content-Type": "application/json",
@@ -129,43 +117,19 @@ serve(async (req) => {
       "Authorization": authorization
     };
 
-    console.log("Request Headers:", headers);
-
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/v2/subscription/checkoutform/initialize?locale=tr`, {
       method: "POST",
       headers: headers,
       body: jsonString
     });
 
-    const responseText = await iyzicoResponse.text();
-    console.log("Iyzico HTTP Status:", iyzicoResponse.status);
-    console.log("Iyzico Raw Response:", responseText);
+    const iyzicoData = await iyzicoResponse.json();
 
-    let iyzicoResult;
-    try {
-      iyzicoResult = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error("JSON parse hatası:", parseError);
-      return new Response(JSON.stringify({
-        error: "Iyzico yanıt formatı hatası",
-        details: responseText
-      }), {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        },
-        status: 500
-      });
-    }
-
-    console.log("İyzico Subscription Yanıtı V4:", iyzicoResult);
-
-    return new Response(JSON.stringify(iyzicoResult), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json"
-      },
-      status: 200
+    return new Response(JSON.stringify({
+      status: "success",
+      paymentPageUrl: iyzicoData.data?.checkoutPageUrl
+    }), {
+      headers: { "Content-Type": "application/json" }
     });
 
   } catch (err) {
