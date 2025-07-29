@@ -340,14 +340,17 @@ const handleCreditCardPayment = async () => {
       },
     });
 
-    if (error) throw new Error(`Payment service error: ${error.message}`);
+  if (error) {
+  console.error("Supabase function error:", error);
+  throw new Error("Edge function çağrısı başarısız.");
+}
 
     if (data?.status === "success" && data?.paymentPageUrl) {
-      // Yönlendirme: İyzico sitesine gönder
-      window.location.href = data.paymentPageUrl;
-    } else {
-      throw new Error(data?.errorMessage || "Ödeme başlatılamadı.");
-    }
+  window.location.href = data.paymentPageUrl;
+} else {
+  console.error("Yanıt geçersiz:", data);
+  throw new Error(data?.errorMessage || "Ödeme başlatılamadı.");
+}
 
   } catch (error: any) {
     toast({
