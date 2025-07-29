@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body - Subscription V2:", body);
+    console.log("Gelen Body - Subscription V3:", body);
 
     const { packageType, customerData, subscriptionReferenceCode } = body;
     const { 
@@ -28,15 +28,16 @@ serve(async (req) => {
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
 
-const getPricingPlanByPackageType = (type) => {
-  const planMap = {
-    "campaign": "e01a059d-9392-4690-b030-0002064f9421",  // 2398 TRY
-    "basic": "205eb35c-e122-401f-aef7-618daf3732f8",     // 2998 TRY  
-    "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff", // 3600 TRY
-    "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94"    // 4998 TRY
-  };
-  return planMap[type] || "205eb35c-e122-401f-aef7-618daf3732f8"; // Default: basic (2998 TRY)
-};
+    const getPricingPlanByPackageType = (type) => {
+      const planMap = {
+        "campaign": "e01a059d-9392-4690-b030-0002064f9421",
+        "basic": "205eb35c-e122-401f-aef7-618daf3732f8",
+        "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff",
+        "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94"
+      };
+      return planMap[type] || "205eb35c-e122-401f-aef7-618daf3732f8";
+    };
+
     const validateTCNo = (tc) => {
       if (!tc) return "11111111111";
       const cleanTC = tc.replace(/\D/g, '');
@@ -49,7 +50,7 @@ const getPricingPlanByPackageType = (type) => {
       let cleaned = phoneNumber.replace(/\D/g, '');
       if (cleaned.startsWith('90')) cleaned = cleaned.substring(2);
       if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
-      if (cleaned.length === 10) return +90${cleaned};
+      if (cleaned.length === 10) return `+90${cleaned}`;
       return "+905000000000";
     };
 
@@ -76,7 +77,7 @@ const getPricingPlanByPackageType = (type) => {
         billingAddress: {
           address: validatedBillingAddress,
           zipCode: billingZipCode || "34100",
-          contactName: ${name || "Kullanici"} ${surname || "Adi"}, // 
+          contactName: `${name || "Kullanici"} ${surname || "Adi"}`,
           city: billingCity || city || "Istanbul",
           country: "Turkey"
         }
@@ -84,10 +85,10 @@ const getPricingPlanByPackageType = (type) => {
     };
 
     const jsonString = JSON.stringify(requestData);
-    console.log("Subscription API'ya gönderilen JSON V2:", jsonString);
+    console.log("Subscription API'ya gönderilen JSON V3:", jsonString);
     console.log("JSON String Length:", jsonString.length);
 
-    const randomString = "123456789"; 
+    const randomString = "123456789";
     const uri_path = "/v2/subscription/checkoutform/initialize";
     
     console.log("Hash hesaplama parametreleri:");
@@ -117,9 +118,9 @@ const getPricingPlanByPackageType = (type) => {
 
     console.log("HMAC SHA256 Signature:", signatureHex);
 
-    const authorizationString = apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${signatureHex};
+    const authorizationString = `apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${signatureHex}`;
     const base64EncodedAuthorization = btoa(authorizationString);
-    const authorization = IYZWSv2 ${base64EncodedAuthorization};
+    const authorization = `IYZWSv2 ${base64EncodedAuthorization}`;
 
     console.log("Authorization Header:", authorization);
 
@@ -131,7 +132,7 @@ const getPricingPlanByPackageType = (type) => {
 
     console.log("Request Headers:", headers);
 
-    const iyzicoResponse = await fetch(${IYZICO_BASE_URL}/v2/subscription/checkoutform/initialize?locale=tr, {
+    const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/v2/subscription/checkoutform/initialize?locale=tr`, {
       method: "POST",
       headers: headers,
       body: jsonString
@@ -158,7 +159,7 @@ const getPricingPlanByPackageType = (type) => {
       });
     }
 
-    console.log("İyzico Subscription Yanıtı V2:", iyzicoResult);
+    console.log("İyzico Subscription Yanıtı V3:", iyzicoResult);
 
     return new Response(JSON.stringify(iyzicoResult), {
       headers: {
@@ -169,7 +170,7 @@ const getPricingPlanByPackageType = (type) => {
     });
 
   } catch (err) {
-    console.error("Subscription API Hatası V2:", err);
+    console.error("Subscription API Hatası V3:", err);
     return new Response(JSON.stringify({
       error: "Sunucu hatası",
       details: err.message
