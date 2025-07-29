@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body - Subscription V1:", body);
+    console.log("Gelen Body - Subscription V2:", body);
 
     const { packageType, customerData, subscriptionReferenceCode } = body;
     const { 
@@ -28,19 +28,16 @@ serve(async (req) => {
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
 
-    // Pricing plan mapping - gerçek plan ID'leri kullanılacak
     const getPricingPlanByPackageType = (type) => {
-      // Bu ID'ler Postman'da oluşturduğumuz planlardan gelecek
       const planMap = {
-        "campaign": "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4", // Test plan ID
-        "basic": "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4",
-        "professional": "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4", 
-        "premium": "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4"
+        "campaign": "42c92284-b1a2-43f2-9c5b-d6835555cbaf",  // 2398 TRY Paket
+        "basic": "7735f12f-4946-410b-adc8-8dca01d9ac70",     // 2998 TRY Paket  
+        "professional": "e7f258f1-8028-4258-be4e-de5bc68792c5", // 3600 TRY Paket
+        "premium": "2a80bc55-7e59-4e86-b176-67f5ab371b4d"    // 4998 TRY Paket
       };
-      return planMap[type] || "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4";
+      return planMap[type] || "7735f12f-4946-410b-adc8-8dca01d9ac70"; 
     };
 
-    // TC kimlik kontrolü
     const validateTCNo = (tc) => {
       if (!tc) return "11111111111";
       const cleanTC = tc.replace(/\D/g, '');
@@ -48,7 +45,6 @@ serve(async (req) => {
       return "11111111111";
     };
 
-    // Telefon numarası kontrolü
     const validatePhone = (phoneNumber) => {
       if (!phoneNumber) return "+905000000000";
       let cleaned = phoneNumber.replace(/\D/g, '');
@@ -58,7 +54,6 @@ serve(async (req) => {
       return "+905000000000";
     };
 
-    // Adres kontrolü
     const validateAddress = (addr) => {
       if (!addr || addr.length < 5) return "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1";
       return addr;
@@ -69,7 +64,6 @@ serve(async (req) => {
     const validatedAddress = validateAddress(address);
     const validatedBillingAddress = validateAddress(billingAddress || address);
 
-    // SUBSCRIPTION API REQUEST FORMAT
     const requestData = {
       callbackUrl: "https://irnfwewabogveofwemvg.supabase.co/functions/v1/iyzico-payment-callback",
       pricingPlanReferenceCode: getPricingPlanByPackageType(packageType),
@@ -83,7 +77,7 @@ serve(async (req) => {
         billingAddress: {
           address: validatedBillingAddress,
           zipCode: billingZipCode || "34100",
-          contactName: `${name || "Kullanici"} ${surname || "Adi"}`,
+          contactName: `${name || "Kullanici"} ${surname || "Adi"}`, // 
           city: billingCity || city || "Istanbul",
           country: "Turkey"
         }
@@ -91,11 +85,10 @@ serve(async (req) => {
     };
 
     const jsonString = JSON.stringify(requestData);
-    console.log("Subscription API'ya gönderilen JSON:", jsonString);
+    console.log("Subscription API'ya gönderilen JSON V2:", jsonString);
     console.log("JSON String Length:", jsonString.length);
 
-    // SUBSCRIPTION API HASH HESAPLAMASI (Postman'dan)
-    const randomString = "123456789"; // Sabit random key (Postman'daki gibi)
+    const randomString = "123456789"; 
     const uri_path = "/v2/subscription/checkoutform/initialize";
     
     console.log("Hash hesaplama parametreleri:");
@@ -103,11 +96,9 @@ serve(async (req) => {
     console.log("- URI Path:", uri_path);
     console.log("- Request Body Length:", jsonString.length);
 
-    // Data to encrypt: randomKey + uri_path + requestBody
     const dataToEncrypt = randomString + uri_path + jsonString;
     console.log("Data to encrypt length:", dataToEncrypt.length);
 
-    // HMAC SHA256 ile hash hesapla
     const encoder = new TextEncoder();
     const keyData = encoder.encode(IYZICO_SECRET_KEY);
     const messageData = encoder.encode(dataToEncrypt);
@@ -127,7 +118,6 @@ serve(async (req) => {
 
     console.log("HMAC SHA256 Signature:", signatureHex);
 
-    // Authorization string format (Postman'daki gibi)
     const authorizationString = `apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${signatureHex}`;
     const base64EncodedAuthorization = btoa(authorizationString);
     const authorization = `IYZWSv2 ${base64EncodedAuthorization}`;
@@ -142,7 +132,6 @@ serve(async (req) => {
 
     console.log("Request Headers:", headers);
 
-    // SUBSCRIPTION API ENDPOINT
     const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/v2/subscription/checkoutform/initialize?locale=tr`, {
       method: "POST",
       headers: headers,
@@ -170,7 +159,7 @@ serve(async (req) => {
       });
     }
 
-    console.log("İyzico Subscription Yanıtı:", iyzicoResult);
+    console.log("İyzico Subscription Yanıtı V2:", iyzicoResult);
 
     return new Response(JSON.stringify(iyzicoResult), {
       headers: {
@@ -181,7 +170,7 @@ serve(async (req) => {
     });
 
   } catch (err) {
-    console.error("Subscription API Hatası:", err);
+    console.error("Subscription API Hatası V2:", err);
     return new Response(JSON.stringify({
       error: "Sunucu hatası",
       details: err.message
