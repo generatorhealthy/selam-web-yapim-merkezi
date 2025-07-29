@@ -85,26 +85,50 @@ Deno.serve(async (req) => {
       }
 
       // Find and update the most recent pending order for this email
-      const { data: updateData, error: updateError } = await supabase
+      const { data: orderData, error: selectError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('customer_email', customerEmail)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (selectError || !orderData) {
+        console.error('❌ Order not found:', selectError)
+        throw new Error('Order not found')
+      }
+
+      // Update the order
+      const { error: updateError } = await supabase
         .from('orders')
         .update({ 
           payment_method: 'credit_card',
           status: 'approved' // Mark as approved since payment is successful
         })
-        .eq('customer_email', customerEmail)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(1)
+        .eq('id', orderData.id)
 
       if (updateError) {
         console.error('❌ Order update error:', updateError)
         throw updateError
       }
 
-      console.log('✅ Order updated successfully:', updateData)
+      console.log('✅ Order updated successfully:', orderData)
 
-      // Redirect to success page
-      return Response.redirect('https://doktorumol.com.tr/odeme-basarili', 302)
+      // Create a redirect URL with order data for localStorage
+      const orderInfo = {
+        id: orderData.id,
+        orderNumber: `DRP-${orderData.id.slice(-12)}`,
+        package: orderData.package_name,
+        amount: orderData.total_amount,
+        paymentMethod: 'credit_card',
+        customerName: orderData.customer_name
+      }
+
+      const encodedOrderData = encodeURIComponent(JSON.stringify(orderInfo))
+      
+      // Redirect to success page with order data
+      return Response.redirect(`https://doktorumol.com.tr/odeme-basarili?orderData=${encodedOrderData}`, 302)
     } else {
       console.log('❌ Payment failed or not successful:', iyzicoResult)
       // Redirect to failure page or checkout page

@@ -22,7 +22,28 @@ const PaymentSuccess = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get order data from localStorage
+    // First check URL parameters for order data (from Iyzico callback)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlOrderData = urlParams.get('orderData');
+    
+    if (urlOrderData) {
+      try {
+        const orderInfo = JSON.parse(decodeURIComponent(urlOrderData));
+        setOrderData(orderInfo);
+        setLoading(false);
+        
+        // Store in localStorage for consistency
+        localStorage.setItem('lastOrder', JSON.stringify(orderInfo));
+        
+        // Clean URL by removing the parameter
+        window.history.replaceState({}, document.title, '/odeme-basarili');
+        return;
+      } catch (error) {
+        console.error('Error parsing URL order data:', error);
+      }
+    }
+    
+    // Fallback to localStorage if no URL data
     const lastOrderData = localStorage.getItem('lastOrder');
     if (lastOrderData) {
       try {
