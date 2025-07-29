@@ -28,16 +28,15 @@ serve(async (req) => {
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
 
-    const getPricingPlanByPackageType = (type) => {
-      const planMap = {
-        "campaign": "42c92284-b1a2-43f2-9c5b-d6835555cbaf",  // 2398 TRY Paket
-        "basic": "7735f12f-4946-410b-adc8-8dca01d9ac70",     // 2998 TRY Paket  
-        "professional": "e7f258f1-8028-4258-be4e-de5bc68792c5", // 3600 TRY Paket
-        "premium": "2a80bc55-7e59-4e86-b176-67f5ab371b4d"    // 4998 TRY Paket
-      };
-      return planMap[type] || "7735f12f-4946-410b-adc8-8dca01d9ac70"; 
-    };
-
+const getPricingPlanByPackageType = (type) => {
+  const planMap = {
+    "campaign": "e01a059d-9392-4690-b030-0002064f9421",  // 2398 TRY
+    "basic": "205eb35c-e122-401f-aef7-618daf3732f8",     // 2998 TRY  
+    "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff", // 3600 TRY
+    "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94"    // 4998 TRY
+  };
+  return planMap[type] || "205eb35c-e122-401f-aef7-618daf3732f8"; // Default: basic (2998 TRY)
+};
     const validateTCNo = (tc) => {
       if (!tc) return "11111111111";
       const cleanTC = tc.replace(/\D/g, '');
@@ -50,7 +49,7 @@ serve(async (req) => {
       let cleaned = phoneNumber.replace(/\D/g, '');
       if (cleaned.startsWith('90')) cleaned = cleaned.substring(2);
       if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
-      if (cleaned.length === 10) return `+90${cleaned}`;
+      if (cleaned.length === 10) return +90${cleaned};
       return "+905000000000";
     };
 
@@ -77,7 +76,7 @@ serve(async (req) => {
         billingAddress: {
           address: validatedBillingAddress,
           zipCode: billingZipCode || "34100",
-          contactName: `${name || "Kullanici"} ${surname || "Adi"}`, // 
+          contactName: ${name || "Kullanici"} ${surname || "Adi"}, // 
           city: billingCity || city || "Istanbul",
           country: "Turkey"
         }
@@ -118,9 +117,9 @@ serve(async (req) => {
 
     console.log("HMAC SHA256 Signature:", signatureHex);
 
-    const authorizationString = `apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${signatureHex}`;
+    const authorizationString = apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${signatureHex};
     const base64EncodedAuthorization = btoa(authorizationString);
-    const authorization = `IYZWSv2 ${base64EncodedAuthorization}`;
+    const authorization = IYZWSv2 ${base64EncodedAuthorization};
 
     console.log("Authorization Header:", authorization);
 
@@ -132,7 +131,7 @@ serve(async (req) => {
 
     console.log("Request Headers:", headers);
 
-    const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/v2/subscription/checkoutform/initialize?locale=tr`, {
+    const iyzicoResponse = await fetch(${IYZICO_BASE_URL}/v2/subscription/checkoutform/initialize?locale=tr, {
       method: "POST",
       headers: headers,
       body: jsonString
