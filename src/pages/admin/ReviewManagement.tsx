@@ -162,8 +162,7 @@ const ReviewManagement = () => {
   const maskName = (name: string) => {
     if (!name || name.length <= 3) return name;
     const firstThree = name.substring(0, 3);
-    const masked = '*'.repeat(name.length - 3);
-    return firstThree + masked;
+    return firstThree + '***';
   };
 
   const renderStars = (rating: number) => {

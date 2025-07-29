@@ -267,6 +267,12 @@ const DoctorProfile = () => {
     return types.length > 0 ? types : ['Yüz Yüze'];
   };
 
+  const maskName = (name: string) => {
+    if (!name || name.length <= 3) return name;
+    const firstThree = name.substring(0, 3);
+    return firstThree + '***';
+  };
+
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -612,8 +618,8 @@ const DoctorProfile = () => {
                         {reviews.map((review) => (
                           <div key={review.id} className="border-b pb-6 last:border-b-0">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{review.reviewer_name}</span>
+                               <div className="flex items-center gap-2">
+                                 <span className="font-medium">{maskName(review.reviewer_name)}</span>
                                 <div className="flex items-center gap-1">
                                   {renderStars(review.rating)}
                                 </div>
