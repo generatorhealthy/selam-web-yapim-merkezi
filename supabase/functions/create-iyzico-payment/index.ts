@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body - V8:", body);
+    console.log("Gelen Body - Subscription V1:", body);
 
     const { packageType, customerData, subscriptionReferenceCode } = body;
     const { 
@@ -28,7 +28,19 @@ serve(async (req) => {
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
 
-    // TC kimlik kontrolü - 11 haneli olmalı
+    // Pricing plan mapping - gerçek plan ID'leri kullanılacak
+    const getPricingPlanByPackageType = (type) => {
+      // Bu ID'ler Postman'da oluşturduğumuz planlardan gelecek
+      const planMap = {
+        "campaign": "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4", // Test plan ID
+        "basic": "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4",
+        "professional": "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4", 
+        "premium": "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4"
+      };
+      return planMap[type] || "839a0aa9-63a4-4da2-a75f-5ce5710bf3e4";
+    };
+
+    // TC kimlik kontrolü
     const validateTCNo = (tc) => {
       if (!tc) return "11111111111";
       const cleanTC = tc.replace(/\D/g, '');
@@ -46,137 +58,92 @@ serve(async (req) => {
       return "+905000000000";
     };
 
-    // Adres kontrolü - minimum 5 karakter
+    // Adres kontrolü
     const validateAddress = (addr) => {
-      if (!addr || addr.length < 5) return "Varsayılan Adres 12345";
+      if (!addr || addr.length < 5) return "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1";
       return addr;
     };
-
-    // Paket fiyatlarını doğru şekilde map et
-    const getPriceByPackageType = (type) => {
-      const priceMap = {
-        "campaign": 2398,
-        "basic": 2998,
-        "professional": 3600,
-        "premium": 4998
-      };
-      return priceMap[type] || 2998;
-    };
-
-    const conversationId = `${Date.now()}`;
-    const price = getPriceByPackageType(packageType);
-    const paidPrice = price;
-    const basketId = `B${Date.now()}`;
-
-    // Client IP'yi request header'dan al
-    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '194.59.166.153';
 
     const validatedTCNo = validateTCNo(tcNo);
     const validatedPhone = validatePhone(phone);
     const validatedAddress = validateAddress(address);
     const validatedBillingAddress = validateAddress(billingAddress || address);
-    const validatedShippingAddress = validateAddress(shippingAddress || address);
 
+    // SUBSCRIPTION API REQUEST FORMAT
     const requestData = {
-      locale: "tr",
-      conversationId,
-      price: price.toString(),
-      paidPrice: paidPrice.toString(),
-      currency: "TRY",
-      installment: 1,
-      basketId,
-      paymentChannel: "WEB",
-      paymentGroup: "PRODUCT",
       callbackUrl: "https://irnfwewabogveofwemvg.supabase.co/functions/v1/iyzico-payment-callback",
-      enabledInstallments: [1, 2, 3, 6, 9],
-      buyer: {
-        id: `BY${Date.now()}`,
+      pricingPlanReferenceCode: getPricingPlanByPackageType(packageType),
+      subscriptionInitialStatus: "ACTIVE",
+      customer: {
         name: name || "Kullanici",
-        surname: surname || "Adi",
-        gsmNumber: validatedPhone,
+        surname: surname || "Adi", 
         email: email || "test@test.com",
+        gsmNumber: validatedPhone,
         identityNumber: validatedTCNo,
-        lastLoginDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
-        registrationDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
-        registrationAddress: validatedAddress,
-        ip: clientIP.split(',')[0].trim(),
-        city: city || "Istanbul",
-        country: "Turkey",
-        zipCode: billingZipCode || "34100"
-      },
-      shippingAddress: {
-        contactName: `${name || "Kullanici"} ${surname || "Adi"}`,
-        city: shippingCity || city || "Istanbul",
-        country: "Turkey",
-        address: validatedShippingAddress,
-        zipCode: shippingZipCode || "34100"
-      },
-      billingAddress: {
-        contactName: `${name || "Kullanici"} ${surname || "Adi"}`,
-        city: billingCity || city || "Istanbul",
-        country: "Turkey",
-        address: validatedBillingAddress,
-        zipCode: billingZipCode || "34100"
-      },
-      basketItems: [{
-        id: `BI${Date.now()}`,
-        name: (() => {
-          const nameMap = {
-            "campaign": "Kampanyali Paket",
-            "basic": "Premium Paket", 
-            "professional": "Professional Paket",
-            "premium": "Full Paket"
-          };
-          return nameMap[packageType] || "Premium Paket";
-        })(),
-        category1: "Danismanlik",
-        category2: "Psikoloji", 
-        itemType: "VIRTUAL",
-        price: price.toString()
-      }]
+        billingAddress: {
+          address: validatedBillingAddress,
+          zipCode: billingZipCode || "34100",
+          contactName: `${name || "Kullanici"} ${surname || "Adi"}`,
+          city: billingCity || city || "Istanbul",
+          country: "Turkey"
+        }
+      }
     };
 
     const jsonString = JSON.stringify(requestData);
-    console.log("İyzico'ya gönderilen JSON V8:", jsonString);
+    console.log("Subscription API'ya gönderilen JSON:", jsonString);
     console.log("JSON String Length:", jsonString.length);
 
-    const randomString = Date.now().toString();
-    console.log("Random String:", randomString);
-    console.log("API Key exists:", !!IYZICO_API_KEY);
-    console.log("Secret Key exists:", !!IYZICO_SECRET_KEY);
-    console.log("Base URL:", IYZICO_BASE_URL);
+    // SUBSCRIPTION API HASH HESAPLAMASI (Postman'dan)
+    const randomString = "123456789"; // Sabit random key (Postman'daki gibi)
+    const uri_path = "/v2/subscription/checkoutform/initialize";
+    
+    console.log("Hash hesaplama parametreleri:");
+    console.log("- Random String:", randomString);
+    console.log("- URI Path:", uri_path);
+    console.log("- Request Body Length:", jsonString.length);
 
-    // Hash hesaplaması için tüm bileşenleri logla
-    const hashString = IYZICO_API_KEY + randomString + IYZICO_SECRET_KEY + jsonString;
-    console.log("Hash String Parçaları:");
-    console.log("- API Key uzunluk:", IYZICO_API_KEY?.length || 0);
-    console.log("- Random string:", randomString);
-    console.log("- Secret key uzunluk:", IYZICO_SECRET_KEY?.length || 0);
-    console.log("- JSON uzunluk:", jsonString.length);
-    console.log("- Total hash string uzunluk:", hashString.length);
+    // Data to encrypt: randomKey + uri_path + requestBody
+    const dataToEncrypt = randomString + uri_path + jsonString;
+    console.log("Data to encrypt length:", dataToEncrypt.length);
 
-    // ✅ DÜZELTME 1: SHA-1 kullan (SHA-256 değil!)
+    // HMAC SHA256 ile hash hesapla
     const encoder = new TextEncoder();
-    const data = encoder.encode(hashString);
-    const hashBuffer = await crypto.subtle.digest("SHA-1", data); // SHA-256 → SHA-1
-    const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
+    const keyData = encoder.encode(IYZICO_SECRET_KEY);
+    const messageData = encoder.encode(dataToEncrypt);
+    
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
 
-    console.log("Final Hash V8 (SHA-1):", hashBase64);
+    const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
+    const signatureHex = Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
 
-    // ✅ DÜZELTME 2: Authorization header formatı (apikey:randomString:hash)
-    const authHeader = `IYZWS ${IYZICO_API_KEY}:${randomString}:${hashBase64}`;
-    console.log("Authorization Header:", authHeader);
+    console.log("HMAC SHA256 Signature:", signatureHex);
+
+    // Authorization string format (Postman'daki gibi)
+    const authorizationString = `apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${signatureHex}`;
+    const base64EncodedAuthorization = btoa(authorizationString);
+    const authorization = `IYZWSv2 ${base64EncodedAuthorization}`;
+
+    console.log("Authorization Header:", authorization);
 
     const headers = {
       "Content-Type": "application/json",
       "Accept": "application/json",
-      "Authorization": authHeader, // Düzeltilmiş format
-      "x-iyzi-rnd": randomString
+      "Authorization": authorization
     };
 
     console.log("Request Headers:", headers);
 
-    const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/payment/iyzipos/checkoutform/initialize`, {
+    // SUBSCRIPTION API ENDPOINT
+    const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}/v2/subscription/checkoutform/initialize?locale=tr`, {
       method: "POST",
       headers: headers,
       body: jsonString
@@ -203,7 +170,7 @@ serve(async (req) => {
       });
     }
 
-    console.log("İyzico Yanıtı V8:", iyzicoResult);
+    console.log("İyzico Subscription Yanıtı:", iyzicoResult);
 
     return new Response(JSON.stringify(iyzicoResult), {
       headers: {
@@ -214,7 +181,7 @@ serve(async (req) => {
     });
 
   } catch (err) {
-    console.error("Hata V8:", err);
+    console.error("Subscription API Hatası:", err);
     return new Response(JSON.stringify({
       error: "Sunucu hatası",
       details: err.message
