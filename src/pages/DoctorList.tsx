@@ -45,15 +45,10 @@ const DoctorList = () => {
   const ITEMS_PER_PAGE = 4;
   
   const specialties = [
-    "Psikiyatri", "Psikoloji", "Kardiyoloji", "Dermatoloji", 
-    "Ortopedi ve Travmatoloji", "Kadın Hastalıkları ve Doğum",
-    "Göz Hastalıkları", "Kulak Burun Boğaz hastalıkları – KBB",
-    "Plastik Cerrahi", "Dahiliye – İç Hastalıkları",
-    "Çocuk Sağlığı ve Hastalıkları", "Endokrinoloji ve Metabolizma Hastalıkları",
-    "Nöroloji (Beyin ve Sinir Hastalıkları)", "Gastroenteroloji",
-    "Üroloji", "Genel Cerrahi", "Dil ve Konuşma Terapisti",
-    "Psikolog", "Psikolojik Danışman", "Aile Danışmanı", 
-    "İlişki Danışmanı", "Uzman", "Doktor"
+    "Aile Danışmanı", "Cildiye", "Dil ve Konuşma Terapisti", 
+    "Eğitim Danışmanlığı", "İlişki Danışmanı", "Kadın Doğum",
+    "Psikolog", "Psikolojik Danışmanlık", "Doktor", "Uzman",
+    "Psikolojik Danışman"
   ];
 
   const cities = [
