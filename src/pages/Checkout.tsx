@@ -336,38 +336,19 @@ const handleCreditCardPayment = async () => {
         packageType: selectedPackage.type,
         customerData,
         subscriptionReferenceCode,
-        layout: "popup" // <-- BURAYI SABİTLEDİK
+        callbackUrl: "https://irnfwewabogveofwemvg.supabase.co/functions/v1/iyzico-payment-callback" 
       },
     });
 
     if (error) throw new Error(`Payment service error: ${error.message}`);
 
-    if (data?.status === "success" && data?.checkoutFormContent) {
-      // Daha önce eklenmiş form varsa sil
-      const existing = document.getElementById("iyzipay-checkout-form");
-      if (existing) existing.remove();
-
-      // Yeni container ekle
-      const checkoutContainer = document.createElement("div");
-      checkoutContainer.id = "iyzipay-checkout-form";
-      checkoutContainer.className = "popup"; // <-- POPUP SABİT
-      checkoutContainer.innerHTML = data.checkoutFormContent;
-      document.body.appendChild(checkoutContainer);
-
-      // Script'leri yeniden çalıştır
-      const scripts = checkoutContainer.querySelectorAll("script");
-      scripts.forEach((script) => {
-        const newScript = document.createElement("script");
-        if (script.src) newScript.src = script.src;
-        else newScript.textContent = script.textContent;
-        document.head.appendChild(newScript);
-      });
-    } else if (data?.paymentPageUrl) {
-      // Ayrı sekmede aç
-      window.open(data.paymentPageUrl, "_blank");
+    if (data?.status === "success" && data?.paymentPageUrl) {
+      // Yönlendirme: İyzico sitesine gönder
+      window.location.href = data.paymentPageUrl;
     } else {
-      throw new Error(data?.errorMessage || "Payment initialization failed");
+      throw new Error(data?.errorMessage || "Ödeme başlatılamadı.");
     }
+
   } catch (error: any) {
     toast({
       title: "Ödeme Hatası",
@@ -378,6 +359,7 @@ const handleCreditCardPayment = async () => {
     setLoading(false);
   }
 };
+
 
   const saveOrder = async (paymentMethod: string) => {
     try {
