@@ -137,14 +137,12 @@ const DoctorRegistrationForm = ({ isOpen, onClose }: DoctorRegistrationFormProps
                 <SelectValue placeholder="Uzmanlık alanınızı seçin" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Kadın Doğum">Kadın Doğum</SelectItem>
-                <SelectItem value="Göz Hastalıkları">Göz Hastalıkları</SelectItem>
-                <SelectItem value="Diyetisyen">Diyetisyen</SelectItem>
                 <SelectItem value="Psikolog">Psikolog</SelectItem>
-                <SelectItem value="Dahiliye">Dahiliye</SelectItem>
-                <SelectItem value="Kardiyoloji">Kardiyoloji</SelectItem>
-                <SelectItem value="Üroloji">Üroloji</SelectItem>
-                <SelectItem value="Ortopedi">Ortopedi</SelectItem>
+                <SelectItem value="Psikolojik Danışman">Psikolojik Danışman</SelectItem>
+                <SelectItem value="Aile Danışmanı">Aile Danışmanı</SelectItem>
+                <SelectItem value="İlişki Danışmanı">İlişki Danışmanı</SelectItem>
+                <SelectItem value="Uzman">Uzman</SelectItem>
+                <SelectItem value="Doktor">Doktor</SelectItem>
               </SelectContent>
             </Select>
           </div>
