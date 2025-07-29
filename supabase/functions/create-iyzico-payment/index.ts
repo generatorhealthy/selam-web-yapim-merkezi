@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body - Subscription V3:", body);
+    console.log("Gelen Body - Subscription V4:", body);
 
     const { packageType, customerData, subscriptionReferenceCode } = body;
     const { 
@@ -85,7 +85,7 @@ serve(async (req) => {
     };
 
     const jsonString = JSON.stringify(requestData);
-    console.log("Subscription API'ya gönderilen JSON V3:", jsonString);
+    console.log("Subscription API'ya gönderilen JSON V4:", jsonString);
     console.log("JSON String Length:", jsonString.length);
 
     const randomString = "123456789";
@@ -159,7 +159,7 @@ serve(async (req) => {
       });
     }
 
-    console.log("İyzico Subscription Yanıtı V3:", iyzicoResult);
+    console.log("İyzico Subscription Yanıtı V4:", iyzicoResult);
 
     return new Response(JSON.stringify(iyzicoResult), {
       headers: {
@@ -170,7 +170,7 @@ serve(async (req) => {
     });
 
   } catch (err) {
-    console.error("Subscription API Hatası V3:", err);
+    console.error("Subscription API Hatası V4:", err);
     return new Response(JSON.stringify({
       error: "Sunucu hatası",
       details: err.message
