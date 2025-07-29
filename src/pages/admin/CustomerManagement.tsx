@@ -24,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award, Clock, Flame, DollarSign } from "lucide-react";
+import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award, Clock, Flame, DollarSign, Trash2 } from "lucide-react";
 import { getMonthName } from "@/utils/monthUtils";
 
 interface Customer {
@@ -256,6 +256,33 @@ const CustomerManagement = () => {
       toast({
         title: "Hata",
         description: "Paket fiyatı güncellenirken bir hata oluştu",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteCustomer = async (customerId: string, customerName: string) => {
+    try {
+      const { error } = await supabase
+        .from('automatic_orders')
+        .delete()
+        .eq('id', customerId);
+
+      if (error) {
+        throw error;
+      }
+
+      await fetchCustomers();
+      
+      toast({
+        title: "Başarılı",
+        description: `${customerName} müşterisi başarıyla silindi`
+      });
+    } catch (error) {
+      console.error('Müşteri silinirken hata:', error);
+      toast({
+        title: "Hata",
+        description: "Müşteri silinirken bir hata oluştu",
         variant: "destructive"
       });
     }
@@ -776,18 +803,19 @@ const CustomerManagement = () => {
                             )}
                           </TableCell>
                           <TableCell className="py-4">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => setSelectedCustomer(customer)}
-                                  className="h-8 px-4 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors"
-                                >
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  Detay
-                                </Button>
-                              </DialogTrigger>
+                            <div className="flex items-center gap-2">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => setSelectedCustomer(customer)}
+                                    className="h-8 px-4 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                                  >
+                                    <Eye className="w-4 h-4 mr-1" />
+                                    Detay
+                                  </Button>
+                                </DialogTrigger>
                               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                   <DialogTitle className="text-xl flex items-center gap-2">
@@ -876,7 +904,22 @@ const CustomerManagement = () => {
                                   </div>
                                 )}
                               </DialogContent>
-                            </Dialog>
+                              </Dialog>
+                              
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  if (window.confirm(`${customer.customer_name} müşterisini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`)) {
+                                    deleteCustomer(customer.id, customer.customer_name);
+                                  }
+                                }}
+                                className="h-8 px-4 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Sil
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
