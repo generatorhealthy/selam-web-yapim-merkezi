@@ -305,90 +305,79 @@ const Checkout = () => {
     }
   };
 
-  const handleCreditCardPayment = async () => {
-    try {
-      setLoading(true);
-      
-      // Tek adres alanını tüm adres türleri için kullan
-      const customerData = {
-        name: formData.name,
-        surname: formData.surname, 
-        email: formData.email,
-        gsmNumber: formData.gsmNumber,
-        identityNumber: formData.identityNumber,
-        registrationAddress: formData.address,
-        city: formData.city,
-        billingAddress: formData.address,
-        billingCity: formData.city,
-        billingZipCode: formData.zipCode,
-        shippingAddress: formData.address,
-        shippingCity: formData.city,
-        shippingZipCode: formData.zipCode,
-        customerType,
-        companyName: customerType === 'company' ? formData.companyName : "",
-        taxNumber: customerType === 'company' ? formData.taxNumber : "",
-        taxOffice: customerType === 'company' ? formData.taxOffice : ""
-      };
+const handleCreditCardPayment = async () => {
+  try {
+    setLoading(true);
 
-      const subscriptionReferenceCode = getSubscriptionReferenceCode(selectedPackage.type);
+    const customerData = {
+      name: formData.name,
+      surname: formData.surname,
+      email: formData.email,
+      gsmNumber: formData.gsmNumber,
+      identityNumber: formData.identityNumber,
+      registrationAddress: formData.address,
+      city: formData.city,
+      billingAddress: formData.address,
+      billingCity: formData.city,
+      billingZipCode: formData.zipCode,
+      shippingAddress: formData.address,
+      shippingCity: formData.city,
+      shippingZipCode: formData.zipCode,
+      customerType,
+      companyName: customerType === "company" ? formData.companyName : "",
+      taxNumber: customerType === "company" ? formData.taxNumber : "",
+      taxOffice: customerType === "company" ? formData.taxOffice : ""
+    };
 
-      console.log('Iyzico ödeme isteği:', {
+    const subscriptionReferenceCode = getSubscriptionReferenceCode(selectedPackage.type);
+
+    const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
+      body: {
         packageType: selectedPackage.type,
         customerData,
-        subscriptionReferenceCode
+        subscriptionReferenceCode,
+        layout: "popup" // <-- BURAYI SABİTLEDİK
+      },
+    });
+
+    if (error) throw new Error(`Payment service error: ${error.message}`);
+
+    if (data?.status === "success" && data?.checkoutFormContent) {
+      // Daha önce eklenmiş form varsa sil
+      const existing = document.getElementById("iyzipay-checkout-form");
+      if (existing) existing.remove();
+
+      // Yeni container ekle
+      const checkoutContainer = document.createElement("div");
+      checkoutContainer.id = "iyzipay-checkout-form";
+      checkoutContainer.className = "popup"; // <-- POPUP SABİT
+      checkoutContainer.innerHTML = data.checkoutFormContent;
+      document.body.appendChild(checkoutContainer);
+
+      // Script'leri yeniden çalıştır
+      const scripts = checkoutContainer.querySelectorAll("script");
+      scripts.forEach((script) => {
+        const newScript = document.createElement("script");
+        if (script.src) newScript.src = script.src;
+        else newScript.textContent = script.textContent;
+        document.head.appendChild(newScript);
       });
-
-      const { data, error } = await supabase.functions.invoke('create-iyzico-payment', {
-        body: {
-          packageType: selectedPackage.type,
-          customerData,
-          subscriptionReferenceCode
-        }
-      });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(`Payment service error: ${error.message}`);
-      }
-
-      console.log('Iyzico response:', data);
-
-      if (data?.status === 'success' && data?.checkoutFormContent) {
-        // Checkout form'u sayfaya ekle
-        const checkoutContainer = document.createElement('div');
-        checkoutContainer.id = 'iyzipay-checkout-form';
-        checkoutContainer.innerHTML = data.checkoutFormContent;
-        document.body.appendChild(checkoutContainer);
-        
-        // Script'leri çalıştır
-        const scripts = checkoutContainer.querySelectorAll('script');
-        scripts.forEach(script => {
-          const newScript = document.createElement('script');
-          if (script.src) {
-            newScript.src = script.src;
-          } else {
-            newScript.textContent = script.textContent;
-          }
-          document.head.appendChild(newScript);
-        });
-      } else if (data?.paymentPageUrl) {
-        // Redirect URL varsa yönlendir
-        window.location.href = data.paymentPageUrl;
-      } else {
-        throw new Error(data?.errorMessage || 'Payment initialization failed');
-      }
-
-    } catch (error) {
-      console.error('Payment error:', error);
-      toast({
-        title: "Ödeme Hatası",
-        description: error.message || "Ödeme başlatılamadı. Lütfen tekrar deneyin.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+    } else if (data?.paymentPageUrl) {
+      // Ayrı sekmede aç
+      window.open(data.paymentPageUrl, "_blank");
+    } else {
+      throw new Error(data?.errorMessage || "Payment initialization failed");
     }
-  };
+  } catch (error: any) {
+    toast({
+      title: "Ödeme Hatası",
+      description: error.message || "Ödeme başlatılamadı. Lütfen tekrar deneyin.",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const saveOrder = async (paymentMethod: string) => {
     try {
