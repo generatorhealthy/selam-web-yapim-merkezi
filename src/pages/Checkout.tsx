@@ -147,6 +147,7 @@ const Checkout = () => {
       "campaign": "e01a059d-9392-4690-b030-0002064f9421",
       "basic": "205eb35c-e122-401f-aef7-618daf3732f8", 
       "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff",
+      "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94"
     };
     return referenceCodeMap[packageType] || referenceCodeMap["basic"];
   };
