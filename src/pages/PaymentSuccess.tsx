@@ -55,12 +55,12 @@ const PaymentSuccess = () => {
       } catch (error) {
         console.error('Error parsing order data:', error);
         // If data is corrupted, redirect to home
-        navigate('/');
+        setTimeout(() => navigate('/'), 2000);
       }
     } else {
-      // If no order data found, redirect to home page
+      // If no order data found, redirect to home page after 3 seconds
       console.log('No order data found, redirecting to home');
-      navigate('/');
+      setTimeout(() => navigate('/'), 3000);
     }
   }, [navigate]);
 
