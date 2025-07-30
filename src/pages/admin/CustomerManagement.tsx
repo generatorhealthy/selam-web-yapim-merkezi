@@ -20,12 +20,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award, Clock, Flame, DollarSign, Trash2 } from "lucide-react";
+import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award, Clock, Flame, DollarSign, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { getMonthName } from "@/utils/monthUtils";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths } from "date-fns";
+import { tr } from "date-fns/locale";
 
 interface Customer {
   id: string;
@@ -76,6 +80,7 @@ const CustomerManagement = () => {
   const [newPaymentDay, setNewPaymentDay] = useState<number>(1);
   const [editingPackagePrice, setEditingPackagePrice] = useState<string | null>(null);
   const [newPackagePrice, setNewPackagePrice] = useState<number>(2998);
+  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -443,6 +448,218 @@ const CustomerManagement = () => {
     (specialist.payment_day || 1) === today && specialist.is_active
   );
 
+  // Calendar related functions
+  const getPaymentDatesForMonth = (date: Date) => {
+    const paymentDates: { [key: string]: { customers: Customer[], specialists: Specialist[] } } = {};
+    
+    // Add customer payment dates
+    customers.forEach(customer => {
+      if (customer.is_active) {
+        const paymentDay = customer.monthly_payment_day;
+        const paymentDate = new Date(date.getFullYear(), date.getMonth(), paymentDay);
+        const dateKey = format(paymentDate, 'yyyy-MM-dd');
+        
+        if (!paymentDates[dateKey]) {
+          paymentDates[dateKey] = { customers: [], specialists: [] };
+        }
+        paymentDates[dateKey].customers.push(customer);
+      }
+    });
+
+    // Add specialist payment dates
+    specialists.forEach(specialist => {
+      if (specialist.is_active && specialist.payment_day) {
+        const paymentDate = new Date(date.getFullYear(), date.getMonth(), specialist.payment_day);
+        const dateKey = format(paymentDate, 'yyyy-MM-dd');
+        
+        if (!paymentDates[dateKey]) {
+          paymentDates[dateKey] = { customers: [], specialists: [] };
+        }
+        paymentDates[dateKey].specialists.push(specialist);
+      }
+    });
+
+    return paymentDates;
+  };
+
+  const renderCalendarView = () => {
+    const paymentDates = getPaymentDatesForMonth(currentCalendarDate);
+    const monthStart = startOfMonth(currentCalendarDate);
+    const monthEnd = endOfMonth(currentCalendarDate);
+    const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+    return (
+      <div className="space-y-6">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentCalendarDate(subMonths(currentCalendarDate, 1))}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Önceki Ay
+          </Button>
+          
+          <h3 className="text-xl font-semibold text-slate-800">
+            {format(currentCalendarDate, 'MMMM yyyy', { locale: tr })}
+          </h3>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentCalendarDate(addMonths(currentCalendarDate, 1))}
+            className="flex items-center gap-2"
+          >
+            Sonraki Ay
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+          {/* Day headers */}
+          <div className="grid grid-cols-7 gap-0 border-b">
+            {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => (
+              <div key={day} className="p-3 text-center font-semibold text-slate-600 bg-slate-50 border-r last:border-r-0">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar days */}
+          <div className="grid grid-cols-7 gap-0">
+            {/* Empty cells for days before month start */}
+            {Array.from({ length: (monthStart.getDay() + 6) % 7 }, (_, i) => (
+              <div key={`empty-${i}`} className="h-32 border-r border-b last:border-r-0 bg-slate-25"></div>
+            ))}
+            
+            {/* Days of the month */}
+            {daysInMonth.map((day) => {
+              const dateKey = format(day, 'yyyy-MM-dd');
+              const dayPayments = paymentDates[dateKey];
+              const isToday = isSameDay(day, new Date());
+              
+              return (
+                <div
+                  key={dateKey}
+                  className={`h-32 border-r border-b last:border-r-0 p-2 relative ${
+                    isToday ? 'bg-blue-50 border-blue-200' : 'bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <div className={`text-sm font-medium mb-2 ${
+                    isToday ? 'text-blue-600' : 'text-slate-700'
+                  }`}>
+                    {format(day, 'd')}
+                    {isToday && (
+                      <span className="ml-1 text-xs text-blue-500">(Bugün)</span>
+                    )}
+                  </div>
+                  
+                  {dayPayments && (
+                    <div className="space-y-1">
+                      {/* Customer payments */}
+                      {dayPayments.customers.length > 0 && (
+                        <div className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded cursor-pointer hover:bg-emerald-200 transition-colors"
+                             title={`${dayPayments.customers.length} müşteri ödemesi`}>
+                          <div className="flex items-center gap-1">
+                            <CreditCard className="w-3 h-3" />
+                            <span>{dayPayments.customers.length} Müşteri</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Specialist payments */}
+                      {dayPayments.specialists.length > 0 && (
+                        <div className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded cursor-pointer hover:bg-orange-200 transition-colors"
+                             title={`${dayPayments.specialists.length} uzman ödemesi`}>
+                          <div className="flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            <span>{dayPayments.specialists.length} Uzman</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Payment Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Bu Ay Müşteri Ödemeleri
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {Object.entries(getPaymentDatesForMonth(currentCalendarDate))
+                  .filter(([_, data]) => data.customers.length > 0)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([dateKey, data]) => (
+                    <div key={dateKey} className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="text-lg font-semibold text-emerald-700">
+                          {format(new Date(dateKey), 'd')}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-slate-800">
+                            {data.customers.length} müşteri ödemesi
+                          </div>
+                          <div className="text-xs text-slate-600">
+                            Toplam: ₺{data.customers.reduce((sum, customer) => sum + Number(customer.amount), 0).toLocaleString('tr-TR')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Bu Ay Uzman Ödemeleri
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {Object.entries(getPaymentDatesForMonth(currentCalendarDate))
+                  .filter(([_, data]) => data.specialists.length > 0)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([dateKey, data]) => (
+                    <div key={dateKey} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="text-lg font-semibold text-orange-700">
+                          {format(new Date(dateKey), 'd')}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-slate-800">
+                            {data.specialists.length} uzman ödemesi
+                          </div>
+                          <div className="text-xs text-slate-600">
+                            Toplam: ₺{data.specialists.reduce((sum, specialist) => sum + (specialist.package_price || 0), 0).toLocaleString('tr-TR')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-6 py-8">
@@ -620,35 +837,49 @@ const CustomerManagement = () => {
           </Card>
         )}
 
-        {/* Search and Actions */}
-        <Card className="border-0 shadow-lg mb-8">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <Input
-                  placeholder="Müşteri adı, e-posta veya paket adı ile ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 h-12 border-slate-200 focus:border-blue-400 focus:ring-blue-400"
-                />
-              </div>
-              <Button 
-                onClick={fetchCustomers}
-                className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium"
-              >
-                Yenile
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Tabs for different views */}
+        <Tabs defaultValue="list" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+            <TabsTrigger value="list" className="flex items-center gap-2">
+              <Table className="w-4 h-4" />
+              Müşteri Listesi
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Ödeme Takvimi
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Customers Table */}
-        <Card className="border-0 shadow-lg overflow-hidden">
-          <CardHeader className="bg-slate-50 border-b border-slate-200">
-            <CardTitle className="text-xl text-slate-800">Müşteri Listesi</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
+          <TabsContent value="list" className="space-y-6">
+            {/* Search and Actions */}
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <Input
+                      placeholder="Müşteri adı, e-posta veya paket adı ile ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-12 h-12 border-slate-200 focus:border-blue-400 focus:ring-blue-400"
+                    />
+                  </div>
+                  <Button 
+                    onClick={fetchCustomers}
+                    className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  >
+                    Yenile
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Customers Table */}
+            <Card className="border-0 shadow-lg overflow-hidden">
+              <CardHeader className="bg-slate-50 border-b border-slate-200">
+                <CardTitle className="text-xl text-slate-800">Müşteri Listesi</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -1109,7 +1340,13 @@ const CustomerManagement = () => {
               </Table>
             </div>
           </CardContent>
-        </Card>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            {renderCalendarView()}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
