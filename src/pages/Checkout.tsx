@@ -147,7 +147,6 @@ const Checkout = () => {
       "campaign": "e01a059d-9392-4690-b030-0002064f9421",
       "basic": "205eb35c-e122-401f-aef7-618daf3732f8", 
       "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff",
-      "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94"
     };
     return referenceCodeMap[packageType] || referenceCodeMap["basic"];
   };
@@ -336,22 +335,38 @@ const handleCreditCardPayment = async () => {
         packageType: selectedPackage.type,
         customerData,
         subscriptionReferenceCode,
-        callbackUrl: "https://irnfwewabogveofwemvg.supabase.co/functions/v1/iyzico-payment-callback" 
+        layout: "popup" // <-- BURAYI SABİTLEDİK
       },
     });
 
-  if (error) {
-  console.error("Supabase function error:", error);
-  throw new Error("Edge function çağrısı başarısız.");
-}
+    if (error) throw new Error(`Payment service error: ${error.message}`);
 
-    if (data?.status === "success" && data?.paymentPageUrl) {
-  window.location.href = data.paymentPageUrl;
-} else {
-  console.error("Yanıt geçersiz:", data);
-  throw new Error(data?.errorMessage || "Ödeme başlatılamadı.");
-}
+    if (data?.status === "success" && data?.checkoutFormContent) {
+      // Daha önce eklenmiş form varsa sil
+      const existing = document.getElementById("iyzipay-checkout-form");
+      if (existing) existing.remove();
 
+      // Yeni container ekle
+      const checkoutContainer = document.createElement("div");
+      checkoutContainer.id = "iyzipay-checkout-form";
+      checkoutContainer.className = "popup"; // <-- POPUP SABİT
+      checkoutContainer.innerHTML = data.checkoutFormContent;
+      document.body.appendChild(checkoutContainer);
+
+      // Script'leri yeniden çalıştır
+      const scripts = checkoutContainer.querySelectorAll("script");
+      scripts.forEach((script) => {
+        const newScript = document.createElement("script");
+        if (script.src) newScript.src = script.src;
+        else newScript.textContent = script.textContent;
+        document.head.appendChild(newScript);
+      });
+    } else if (data?.paymentPageUrl) {
+      // Ayrı sekmede aç
+      window.open(data.paymentPageUrl, "_blank");
+    } else {
+      throw new Error(data?.errorMessage || "Payment initialization failed");
+    }
   } catch (error: any) {
     toast({
       title: "Ödeme Hatası",
@@ -362,7 +377,6 @@ const handleCreditCardPayment = async () => {
     setLoading(false);
   }
 };
-
 
   const saveOrder = async (paymentMethod: string) => {
     try {
