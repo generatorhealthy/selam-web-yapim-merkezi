@@ -347,10 +347,48 @@ const handleCreditCardPayment = async () => {
       const existing = document.getElementById("iyzipay-checkout-form");
       if (existing) existing.remove();
 
+      // Mobil uyumlu popup için CSS ekliyoruz
+      const style = document.createElement('style');
+      style.textContent = `
+        #iyzipay-checkout-form {
+          position: fixed !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) !important;
+          z-index: 9999 !important;
+          background: white !important;
+          border-radius: 8px !important;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+          max-width: 90vw !important;
+          max-height: 90vh !important;
+          overflow: auto !important;
+          padding: 20px !important;
+        }
+        
+        @media (max-width: 768px) {
+          #iyzipay-checkout-form {
+            max-width: 95vw !important;
+            max-height: 95vh !important;
+            padding: 15px !important;
+          }
+        }
+        
+        #iyzipay-checkout-form::before {
+          content: '';
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0,0,0,0.5);
+          z-index: -1;
+        }
+      `;
+      document.head.appendChild(style);
+
       // Yeni container ekle
       const checkoutContainer = document.createElement("div");
       checkoutContainer.id = "iyzipay-checkout-form";
-      checkoutContainer.className = "popup"; // <-- POPUP SABİT
       checkoutContainer.innerHTML = data.checkoutFormContent;
       document.body.appendChild(checkoutContainer);
 
