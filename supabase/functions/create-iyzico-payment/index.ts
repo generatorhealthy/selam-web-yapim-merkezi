@@ -39,7 +39,7 @@ serve(async (req) => {
       let cleaned = p.replace(/\D/g, "");
       if (cleaned.startsWith("90")) cleaned = cleaned.slice(2);
       if (cleaned.startsWith("0")) cleaned = cleaned.slice(1);
-      return cleaned.length === 10 ? +90${cleaned} : "+905000000000";
+      return cleaned.length === 10 ? `+90${cleaned}` : "+905000000000";
     };
 
     const validateTC = (tc?: string) => {
@@ -65,7 +65,7 @@ serve(async (req) => {
         billingAddress: {
           address: validateAddress(billingAddress || address),
           zipCode: billingZipCode || "34100",
-          contactName: ${name || "Kullanici"} ${surname || "Adi"},
+          contactName: `${name || "Kullanici"} ${surname || "Adi"}`,
           city: billingCity || city || "Istanbul",
           country: "Turkey"
         }
@@ -87,10 +87,10 @@ serve(async (req) => {
     const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
     const signatureHex = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-    const authString = apiKey:${IYZICO_API_KEY}&randomKey:${randomKey}&signature:${signatureHex};
-    const authorization = IYZWSv2 ${btoa(authString)};
+    const authString = `apiKey:${IYZICO_API_KEY}&randomKey:${randomKey}&signature:${signatureHex}`;
+    const authorization = `IYZWSv2 ${btoa(authString)}`;
 
-    const iyzicoRes = await fetch(${IYZICO_BASE_URL}${uriPath}?locale=tr, {
+    const iyzicoRes = await fetch(`${IYZICO_BASE_URL}${uriPath}?locale=tr`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
