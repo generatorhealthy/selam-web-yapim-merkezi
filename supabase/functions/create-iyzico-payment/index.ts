@@ -16,7 +16,7 @@ serve(async (req) => {
     const body = await req.json();
     console.log("Gelen Body - Subscription V4:", body);
 
-    const { packageType, customerData, subscriptionReferenceCode } = body;
+    const { packageType, customerData, subscriptionReferenceCode, layout } = body;
     const {
       name, surname, email, gsmNumber: phone, identityNumber: tcNo,
       registrationAddress: address, city, billingAddress, billingCity,
@@ -136,6 +136,10 @@ serve(async (req) => {
         headers: corsHeaders,
         status: 500
       });
+    }
+
+    if (layout === "popup" && iyzicoResult?.data?.checkoutPageUrl) {
+      iyzicoResult.popup = true;
     }
 
     return new Response(JSON.stringify(iyzicoResult), {
