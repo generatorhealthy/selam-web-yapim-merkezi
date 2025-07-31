@@ -73,13 +73,26 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Verimor API response status:', response.status);
     console.log('Verimor API response headers:', Object.fromEntries(response.headers.entries()));
     
-    const result = await response.json();
-    console.log('Verimor response body:', JSON.stringify(result, null, 2));
+    let result;
+    const responseText = await response.text();
+    console.log('Verimor raw response:', responseText);
     
-    console.log('Verimor response:', result);
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.log('Failed to parse as JSON, treating as text response');
+      result = { message: responseText, raw_response: responseText };
+    }
+    
+    console.log('Verimor parsed response:', result);
 
     if (!response.ok) {
-      throw new Error(`Verimor API error: ${result.message || 'Unknown error'}`);
+      console.error('Verimor API error details:', {
+        status: response.status,
+        statusText: response.statusText,
+        response: result
+      });
+      throw new Error(`Verimor API error (${response.status}): ${result.message || responseText || 'Unknown error'}`);
     }
 
     return new Response(JSON.stringify({ 
