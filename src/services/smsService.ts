@@ -6,8 +6,8 @@ export const sendSms = async (phone: string, message: string) => {
   try {
     console.log(`Sending SMS to ${phone}: ${message}`);
     
-    // Edge function'ı çağır
-    const { data, error } = await supabase.functions.invoke('send-verimor-sms', {
+    // Statik IP proxy kullanarak Edge function'ı çağır
+    const { data, error } = await supabase.functions.invoke('send-sms-via-static-proxy', {
       body: {
         phone: phone,
         message: message
