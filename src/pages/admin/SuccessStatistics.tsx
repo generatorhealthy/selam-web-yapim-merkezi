@@ -310,11 +310,11 @@ const SuccessStatistics = () => {
         .reduce((sum, stat) => sum + stat.specialists_registered, 0);
       
       let bonus = 0;
-      if (monthlyTotal >= 40) {
+      if (monthlyTotal >= 50) {
         bonus = 10000;
-      } else if (monthlyTotal >= 30) {
+      } else if (monthlyTotal >= 40) {
         bonus = 6000;
-      } else if (monthlyTotal >= 20) {
+      } else if (monthlyTotal >= 25) {
         bonus = 4000;
       }
       
@@ -375,10 +375,10 @@ const SuccessStatistics = () => {
                 <div className="bg-white rounded-lg p-4 border border-yellow-200">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">
-                      20
+                      25
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Aylık 20 kayıt</p>
+                      <p className="text-sm text-gray-600">Aylık 25 kayıt</p>
                       <p className="text-2xl font-bold text-yellow-600">4.000₺</p>
                     </div>
                   </div>
@@ -388,10 +388,10 @@ const SuccessStatistics = () => {
                 <div className="bg-white rounded-lg p-4 border border-yellow-200">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-                      30
+                      40
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Aylık 30 kayıt</p>
+                      <p className="text-sm text-gray-600">Aylık 40 kayıt</p>
                       <p className="text-2xl font-bold text-orange-600">6.000₺</p>
                     </div>
                   </div>
@@ -401,10 +401,10 @@ const SuccessStatistics = () => {
                 <div className="bg-white rounded-lg p-4 border border-yellow-200">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">
-                      40
+                      50
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Aylık 40 kayıt</p>
+                      <p className="text-sm text-gray-600">Aylık 50 kayıt</p>
                       <p className="text-2xl font-bold text-red-600">10.000₺</p>
                     </div>
                   </div>
@@ -445,20 +445,20 @@ const SuccessStatistics = () => {
                         </div>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="h-3 rounded-full transition-all duration-700 ease-out"
-                          style={{ 
-                            width: `${Math.min((employee.monthlyTotal / 40) * 100, 100)}%`,
-                            backgroundColor: employee.color
-                          }}
-                        ></div>
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>0</span>
-                        <span className="text-yellow-600">20</span>
-                        <span className="text-orange-600">30</span>
-                        <span className="text-red-600">40</span>
-                      </div>
+                         <div 
+                           className="h-3 rounded-full transition-all duration-700 ease-out"
+                           style={{ 
+                             width: `${Math.min((employee.monthlyTotal / 50) * 100, 100)}%`,
+                             backgroundColor: employee.color
+                           }}
+                         ></div>
+                       </div>
+                       <div className="flex justify-between text-xs text-gray-500 mt-1">
+                         <span>0</span>
+                         <span className="text-yellow-600">25</span>
+                         <span className="text-orange-600">40</span>
+                         <span className="text-red-600">50</span>
+                       </div>
                     </div>
                   </div>
                 ))}
