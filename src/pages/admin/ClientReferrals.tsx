@@ -21,6 +21,7 @@ interface Specialist {
   internal_number?: string;
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
+  created_at?: string;
 }
 
 interface MonthlyReferral {
@@ -60,7 +61,7 @@ const ClientReferrals = () => {
         // Tüm aktif uzmanları getir
         supabase
           .from('specialists')
-          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation')
+          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation, created_at')
           .eq('is_active', true)
           .order('name'),
         
@@ -709,57 +710,74 @@ const ClientReferrals = () => {
                                        </div>
                                      </div>
                                      
-                                       {/* Editable Fields */}
-                                      <div className="flex gap-3">
-                                        <div className="flex-1">
-                                          <Label className="text-xs text-slate-500 mb-1 block">Şehir</Label>
-                                          <Input
-                                            placeholder="Şehir girin..."
-                                            value={specialistReferral.specialist.city}
-                                            onChange={(e) => {
-                                              setSpecialists(prev => 
-                                                prev.map(spec => 
-                                                  spec.id === specialistReferral.id 
-                                                    ? {
-                                                        ...spec,
-                                                        specialist: { ...spec.specialist, city: e.target.value }
-                                                      }
-                                                    : spec
-                                                )
-                                              );
-                                            }}
-                                            onBlur={(e) => updateCity(
-                                              specialistReferral.id, 
-                                              e.target.value
-                                            )}
-                                            className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
-                                          />
-                                        </div>
-                                        <div className="flex-1">
-                                          <Label className="text-xs text-slate-500 mb-1 block">Dahili Numara</Label>
-                                          <Input
-                                            placeholder="Dahili numara..."
-                                            value={specialistReferral.specialist.internal_number || ''}
-                                            onChange={(e) => {
-                                              setSpecialists(prev => 
-                                                prev.map(spec => 
-                                                  spec.id === specialistReferral.id 
-                                                    ? {
-                                                        ...spec,
-                                                        specialist: { ...spec.specialist, internal_number: e.target.value }
-                                                      }
-                                                    : spec
-                                                )
-                                              );
-                                            }}
-                                            onBlur={(e) => updateInternalNumber(
-                                              specialistReferral.id, 
-                                              e.target.value
-                                            )}
-                                            className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
-                                          />
-                                        </div>
-                                      </div>
+                                        {/* Registration Date Display */}
+                                       {specialistReferral.specialist.created_at && (
+                                         <div className="mb-3">
+                                           <div className="flex items-center gap-2 text-sm">
+                                             <Calendar className="w-4 h-4 text-blue-500" />
+                                             <span className="text-slate-500">Kayıt Tarihi:</span>
+                                             <span className="font-medium text-blue-600">
+                                               {new Date(specialistReferral.specialist.created_at).toLocaleDateString('tr-TR', {
+                                                 day: '2-digit',
+                                                 month: '2-digit',
+                                                 year: 'numeric'
+                                               })}
+                                             </span>
+                                           </div>
+                                         </div>
+                                       )}
+                                       
+                                        {/* Editable Fields */}
+                                       <div className="flex gap-3">
+                                         <div className="flex-1">
+                                           <Label className="text-xs text-slate-500 mb-1 block">Şehir</Label>
+                                           <Input
+                                             placeholder="Şehir girin..."
+                                             value={specialistReferral.specialist.city}
+                                             onChange={(e) => {
+                                               setSpecialists(prev => 
+                                                 prev.map(spec => 
+                                                   spec.id === specialistReferral.id 
+                                                     ? {
+                                                         ...spec,
+                                                         specialist: { ...spec.specialist, city: e.target.value }
+                                                       }
+                                                     : spec
+                                                 )
+                                               );
+                                             }}
+                                             onBlur={(e) => updateCity(
+                                               specialistReferral.id, 
+                                               e.target.value
+                                             )}
+                                             className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
+                                           />
+                                         </div>
+                                         <div className="flex-1">
+                                           <Label className="text-xs text-slate-500 mb-1 block">Dahili Numara</Label>
+                                           <Input
+                                             placeholder="Dahili numara..."
+                                             value={specialistReferral.specialist.internal_number || ''}
+                                             onChange={(e) => {
+                                               setSpecialists(prev => 
+                                                 prev.map(spec => 
+                                                   spec.id === specialistReferral.id 
+                                                     ? {
+                                                         ...spec,
+                                                         specialist: { ...spec.specialist, internal_number: e.target.value }
+                                                       }
+                                                     : spec
+                                                 )
+                                               );
+                                             }}
+                                             onBlur={(e) => updateInternalNumber(
+                                               specialistReferral.id, 
+                                               e.target.value
+                                             )}
+                                             className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
+                                           />
+                                         </div>
+                                       </div>
                                   </div>
                                 </div>
                               </div>
