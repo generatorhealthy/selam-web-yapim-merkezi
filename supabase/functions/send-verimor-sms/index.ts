@@ -42,9 +42,14 @@ const handler = async (req: Request): Promise<Response> => {
     const smsData = {
       username: username,
       password: password,
-      source_addr: '02167060611',
+      source_addr: '902167060611',
+      source_addr_type: '5',
+      msg_header: 'Doktorum Ol',
       custom_id: Date.now().toString(),
       datacoding: '0',
+      valid_for: '48:00',
+      send_at: '',
+      datacoding_lock: '0',
       messages: [
         {
           msg: message,
