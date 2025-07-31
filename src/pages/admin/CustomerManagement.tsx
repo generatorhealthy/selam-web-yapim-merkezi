@@ -23,6 +23,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -572,13 +573,29 @@ const CustomerManagement = () => {
                       
                       {/* Specialist payments */}
                       {dayPayments.specialists.length > 0 && (
-                        <div className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded cursor-pointer hover:bg-orange-200 transition-colors"
-                             title={`${dayPayments.specialists.length} uzman ödemesi`}>
-                          <div className="flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            <span>{dayPayments.specialists.length} Uzman</span>
-                          </div>
-                        </div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded cursor-pointer hover:bg-orange-200 transition-colors">
+                                <div className="flex items-center gap-1">
+                                  <User className="w-3 h-3" />
+                                  <span>{dayPayments.specialists.length} Uzman</span>
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              <div className="space-y-1">
+                                <p className="font-semibold text-xs mb-2">Ödemesi olan uzmanlar:</p>
+                                {dayPayments.specialists.map((specialist, index) => (
+                                  <div key={specialist.id} className="text-xs">
+                                    <span className="font-medium">{specialist.name}</span>
+                                    <span className="text-muted-foreground ml-1">({specialist.specialty})</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   )}
