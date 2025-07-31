@@ -21,7 +21,6 @@ interface Specialist {
   internal_number?: string;
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
-  created_at?: string;
 }
 
 interface MonthlyReferral {
@@ -61,7 +60,7 @@ const ClientReferrals = () => {
         // Tüm aktif uzmanları getir
         supabase
           .from('specialists')
-          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation, created_at')
+          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation')
           .eq('is_active', true)
           .order('name'),
         
@@ -709,25 +708,8 @@ const ClientReferrals = () => {
                                          {getConsultationBadges(specialistReferral.specialist)}
                                        </div>
                                      </div>
-                                     
-                                        {/* Registration Date Display */}
-                                       {specialistReferral.specialist.created_at && (
-                                         <div className="mb-3">
-                                           <div className="flex items-center gap-2 text-sm">
-                                             <Calendar className="w-4 h-4 text-blue-500" />
-                                             <span className="text-slate-500">Kayıt Tarihi:</span>
-                                             <span className="font-medium text-blue-600">
-                                               {new Date(specialistReferral.specialist.created_at).toLocaleDateString('tr-TR', {
-                                                 day: '2-digit',
-                                                 month: '2-digit',
-                                                 year: 'numeric'
-                                               })}
-                                             </span>
-                                           </div>
-                                         </div>
-                                       )}
-                                       
-                                        {/* Editable Fields */}
+                                      
+                                         {/* Editable Fields */}
                                        <div className="flex gap-3">
                                          <div className="flex-1">
                                            <Label className="text-xs text-slate-500 mb-1 block">Şehir</Label>
