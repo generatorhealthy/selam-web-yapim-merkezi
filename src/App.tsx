@@ -82,6 +82,7 @@ function App() {
             <CookieConsent />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
               <Route path="/hakkimizda" element={<About />} />
               <Route path="/iletisim" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
@@ -102,10 +103,14 @@ function App() {
               <Route path="/odeme/:packageType" element={<Checkout />} />
               <Route path="/odeme-sayfasi" element={<Checkout />} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
+              <Route path="/disclosure-text" element={<DisclosureText />} />
               <Route path="/aydinlatma-metni" element={<DisclosureText />} />
               <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesContract />} />
+              <Route path="/visitor-consultant-agreement" element={<VisitorConsultantAgreement />} />
               <Route path="/ziyaretci-danisan-sozlesmesi" element={<VisitorConsultantAgreement />} />
+              <Route path="/comment-rules" element={<CommentRules />} />
               <Route path="/yorum-kurallari" element={<CommentRules />} />
               <Route path="/anasayfa" element={<Landing />} />
               <Route path="/giris-yap" element={<LoginPage />} />
