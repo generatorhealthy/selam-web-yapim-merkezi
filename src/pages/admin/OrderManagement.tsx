@@ -1045,7 +1045,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                 <div className="w-full">
                   <div className="grid grid-cols-1 gap-4 p-6">
                     {/* Header Row */}
-                    <div className="grid grid-cols-16 gap-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 font-semibold text-gray-700 text-sm">
+                    <div className="grid grid-cols-18 gap-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 font-semibold text-gray-700 text-sm">
                       <div className="col-span-1 flex items-center justify-center">
                         <Checkbox
                           checked={selectAll}
@@ -1061,13 +1061,14 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                       <div className="col-span-1">Tutar</div>
                       <div className="col-span-1">Durum</div>
                       <div className="col-span-2">Tarih</div>
+                      <div className="col-span-1">Ay</div>
                       <div className="col-span-2">İşlemler</div>
                     </div>
                     
                     {/* Data Rows */}
                     <div className="space-y-3">
                       {filteredOrders?.map((order) => (
-                        <div key={order.id} className="grid grid-cols-16 gap-3 p-4 bg-white hover:bg-blue-50/50 rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-300 shadow-sm hover:shadow-md">
+                        <div key={order.id} className="grid grid-cols-18 gap-3 p-4 bg-white hover:bg-blue-50/50 rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-300 shadow-sm hover:shadow-md">
                           <div className="col-span-1 flex items-center justify-center">
                             <Checkbox
                               checked={selectedOrderIds.includes(order.id)}
@@ -1136,6 +1137,26 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                             <div className="text-xs text-gray-500">
                               {format(new Date(order.created_at), "HH:mm", { locale: tr })}
                             </div>
+                          </div>
+                          
+                          <div className="col-span-1 flex items-center justify-center">
+                            {editingOrder && editingOrder.id === order.id ? (
+                              <Input
+                                type="number"
+                                value={editingOrder.subscription_month || 1}
+                                onChange={(e) => handleUpdateOrder(e, "subscription_month")}
+                                className="w-16 h-8 text-center text-xs"
+                                min="1"
+                              />
+                            ) : (
+                              order.subscription_month ? (
+                                <Badge variant="outline" className="font-medium text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
+                                  {order.subscription_month}. Ay
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="font-medium text-xs">İlk Sipariş</Badge>
+                              )
+                            )}
                           </div>
                           
                           <div className="col-span-2 flex items-center justify-end gap-2">
