@@ -1045,9 +1045,12 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                              onCheckedChange={() => handleSelectAll(filteredOrders || [])}
                            />
                          </TableHead>
-                         <TableHead className="font-semibold text-gray-700">Müşteri</TableHead>
-                         <TableHead className="font-semibold text-gray-700">Paket</TableHead>
-                         <TableHead className="font-semibold text-gray-700">Tutar</TableHead>
+                          <TableHead className="font-semibold text-gray-700">Müşteri</TableHead>
+                          <TableHead className="font-semibold text-gray-700">Telefon</TableHead>
+                          <TableHead className="font-semibold text-gray-700">Adres</TableHead>
+                          <TableHead className="font-semibold text-gray-700">TC Kimlik No</TableHead>
+                          <TableHead className="font-semibold text-gray-700">Paket</TableHead>
+                          <TableHead className="font-semibold text-gray-700">Tutar</TableHead>
                          <TableHead className="font-semibold text-gray-700">Durum</TableHead>
                          <TableHead className="font-semibold text-gray-700">Tarih</TableHead>
                          <TableHead className="font-semibold text-gray-700">Ay</TableHead>
@@ -1063,15 +1066,36 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
                              />
                            </TableCell>
-                           <TableCell className="py-4">
-                             <div className="space-y-1">
-                               <div className="font-semibold text-gray-900">{order.customer_name}</div>
-                               <div className="text-sm text-muted-foreground">{order.customer_email}</div>
-                               {order.customer_phone && (
-                                 <div className="text-xs text-muted-foreground">{order.customer_phone}</div>
-                               )}
-                             </div>
-                           </TableCell>
+                            <TableCell className="py-4">
+                              <div className="space-y-1">
+                                <div className="font-semibold text-gray-900">{order.customer_name}</div>
+                                <div className="text-sm text-muted-foreground">{order.customer_email}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="text-sm">
+                                {order.customer_phone || 'Belirtilmemiş'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="text-sm">
+                                {order.customer_address ? (
+                                  <div>
+                                    <div>{order.customer_address}</div>
+                                    {order.customer_city && (
+                                      <div className="text-gray-500">{order.customer_city}</div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  'Belirtilmemiş'
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="text-sm">
+                                {order.customer_tc_no || 'Belirtilmemiş'}
+                              </div>
+                            </TableCell>
                            <TableCell className="py-4">
                              <div className="font-semibold text-gray-900">{order.package_name}</div>
                              <div className="text-sm text-muted-foreground">{order.package_type}</div>
