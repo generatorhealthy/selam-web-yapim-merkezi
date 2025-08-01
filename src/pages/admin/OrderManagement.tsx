@@ -1164,11 +1164,11 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </div>
-                )
-              )}
-            </CardContent>
+                     </div>
+                   </div>
+                 </div>
+               )}
+             </CardContent>
           </Card>
 
           {selectedOrder && (
