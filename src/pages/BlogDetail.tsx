@@ -54,7 +54,7 @@ const BlogDetail = () => {
         .select('*')
         .eq('slug', blogSlug)
         .eq('status', 'published')
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Blog yazısı çekilirken hata:', error);
@@ -211,7 +211,7 @@ const BlogDetail = () => {
           <CardContent className="p-8">
             <div 
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900"
-              dangerouslySetInnerHTML={{ __html: blog.content.replace(/\n/g, '<br>') }}
+              dangerouslySetInnerHTML={{ __html: blog.content }}
             />
           </CardContent>
         </Card>
