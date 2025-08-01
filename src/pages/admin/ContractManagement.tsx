@@ -44,6 +44,7 @@ interface ContractOrder {
   created_at: string;
   pre_info_pdf_content: string | null;
   distance_sales_pdf_content: string | null;
+  contract_ip_address: string | null;
   package_features?: string[];
 }
 
@@ -90,7 +91,8 @@ const ContractManagement = () => {
             customer_type,
             created_at,
             pre_info_pdf_content,
-            distance_sales_pdf_content
+            distance_sales_pdf_content,
+            contract_ip_address
           `)
           .in('status', ['approved', 'completed'])
           .order('created_at', { ascending: false }),
@@ -593,7 +595,7 @@ const ContractManagement = () => {
             }}
             paymentMethod={selectedOrder.payment_method}
             customerType={selectedOrder.customer_type}
-            clientIP="Admin Panel"
+            clientIP={selectedOrder.contract_ip_address || '127.0.0.1'}
           />
         )}
       </div>
