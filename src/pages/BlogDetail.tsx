@@ -33,18 +33,26 @@ const BlogDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (slug) {
-      fetchBlog();
+    let currentSlug = slug;
+    
+    // Eğer slug parameter yoksa, URL'den direkt slug'ı çıkar
+    if (!currentSlug) {
+      const pathname = window.location.pathname;
+      currentSlug = pathname.replace(/^\//, '').replace(/\/$/, '');
+    }
+    
+    if (currentSlug) {
+      fetchBlogBySlug(currentSlug);
     }
   }, [slug]);
 
-  const fetchBlog = async () => {
+  const fetchBlogBySlug = async (blogSlug: string) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('blogs')
         .select('*')
-        .eq('slug', slug)
+        .eq('slug', blogSlug)
         .eq('status', 'published')
         .single();
 
