@@ -18,12 +18,11 @@ interface BlogPost {
   featured_image: string | null;
   slug: string;
   author_name: string;
-  author_type: string;
-  published_at: string;
-  word_count: number | null;
-  specialists?: {
-    specialty: string;
-  } | null;
+  tags: string[] | null;
+  created_at: string;
+  updated_at: string;
+  meta_title: string | null;
+  meta_description: string | null;
 }
 
 const Blog = () => {
@@ -69,10 +68,10 @@ const Blog = () => {
       const to = from + POSTS_PER_PAGE - 1;
 
       const { data, error } = await supabase
-        .from('blog_posts')
+        .from('blogs')
         .select('*')
         .eq('status', 'published')
-        .order('published_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .range(from, to);
 
       if (error) {
@@ -85,26 +84,7 @@ const Blog = () => {
         return;
       }
 
-      // Specialist blog yazıları için uzmanlık bilgilerini al
-      const blogsWithSpecialistInfo = await Promise.all(
-        (data || []).map(async (blog) => {
-          if (blog.author_type === 'specialist' && blog.author_id) {
-            const { data: specialistData } = await supabase
-              .from('specialists')
-              .select('specialty')
-              .eq('user_id', blog.author_id)
-              .single();
-            
-            return {
-              ...blog,
-              specialists: specialistData ? { specialty: specialistData.specialty } : null
-            };
-          }
-          return blog;
-        })
-      );
-
-      const newBlogs = blogsWithSpecialistInfo as BlogPost[] || [];
+      const newBlogs = data as BlogPost[] || [];
       
       if (isInitial) {
         setBlogs(newBlogs);
@@ -143,24 +123,14 @@ const Blog = () => {
     (blog.excerpt && blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const getReadTime = (wordCount: number | null) => {
-    if (!wordCount) return "5 dakika";
+  const getReadTime = (content: string) => {
+    const wordCount = content.split(' ').length;
     const minutes = Math.ceil(wordCount / 200);
     return `${minutes} dakika`;
   };
 
   const getAuthorTypeText = (blog: BlogPost) => {
-    if (blog.author_type === "specialist" && blog.specialists?.specialty) {
-      return blog.specialists.specialty;
-    }
-    
-    switch (blog.author_type) {
-      case "admin": return "Editör";
-      case "staff": return "Editör";
-      case "editor": return "Editör";
-      case "specialist": return "Uzman Doktor";
-      default: return blog.author_type;
-    }
+    return blog.author_name;
   };
 
   if (loading) {
@@ -249,9 +219,9 @@ const Blog = () => {
                         <Badge variant="secondary" className="text-xs font-medium">
                           {getAuthorTypeText(filteredBlogs[0])}
                         </Badge>
-                        <span className="text-sm text-gray-500">
-                          {filteredBlogs[0].author_type === 'admin' || filteredBlogs[0].author_type === 'staff' || filteredBlogs[0].author_type === 'editor' ? 'Editör' : filteredBlogs[0].author_name}
-                        </span>
+                         <span className="text-sm text-gray-500">
+                           {filteredBlogs[0].author_name}
+                         </span>
                       </div>
                       
                       <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-900 mb-4 leading-tight">
@@ -267,11 +237,11 @@ const Blog = () => {
                       <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
-                          <span>{new Date(filteredBlogs[0].published_at).toLocaleDateString('tr-TR')}</span>
+                          <span>{new Date(filteredBlogs[0].created_at).toLocaleDateString('tr-TR')}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
-                          <span>{getReadTime(filteredBlogs[0].word_count)}</span>
+                          <span>{getReadTime(filteredBlogs[0].content)}</span>
                         </div>
                       </div>
                       
@@ -328,12 +298,12 @@ const Blog = () => {
                         <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                           <div className="flex items-center gap-1">
                             <span>
-                              {blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' ? 'Editör' : blog.author_name}
+                              {blog.author_name}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            <span>{new Date(blog.published_at).toLocaleDateString('tr-TR')}</span>
+                            <span>{new Date(blog.created_at).toLocaleDateString('tr-TR')}</span>
                           </div>
                         </div>
                         
