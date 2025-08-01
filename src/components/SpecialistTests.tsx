@@ -82,38 +82,38 @@ const SpecialistTests = ({ specialistId, specialistName, specialistSpecialty }: 
       ) : (
         tests.map((test) => (
           <Card key={test.id} className="border hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-4 md:space-y-0">
+                <div className="flex-1 md:mr-4">
+                  <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
                     {test.title}
                   </h3>
                   {test.description && (
-                    <p className="text-gray-600 mb-3 leading-relaxed">
+                    <p className="text-gray-600 mb-3 leading-relaxed text-sm md:text-base">
                       {test.description}
                     </p>
                   )}
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <Badge variant="secondary" className="bg-blue-50 text-blue-700 text-xs">
                       {test.specialty_area}
                     </Badge>
                     {test.category && (
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="text-xs">
                         {test.category}
                       </Badge>
                     )}
-                    <Badge variant="default" className="bg-green-50 text-green-700">
+                    <Badge variant="default" className="bg-green-50 text-green-700 text-xs">
                       Aktif
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs md:text-sm text-gray-500">
                     {specialistName} tarafından hazırlanmıştır
                   </p>
                 </div>
-                <div className="ml-4">
+                <div className="w-full md:w-auto">
                   <Button 
                     asChild
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto"
                   >
                     <Link to={`/test/${test.id}/${specialistId}`}>
                       <Play className="w-4 h-4 mr-2" />
