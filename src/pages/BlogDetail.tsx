@@ -19,12 +19,11 @@ interface BlogPost {
   featured_image: string | null;
   slug: string;
   author_name: string;
-  author_type: string;
-  published_at: string;
-  word_count: number | null;
-  specialists?: {
-    specialty: string;
-  } | null;
+  tags: string[] | null;
+  created_at: string;
+  updated_at: string;
+  meta_title: string | null;
+  meta_description: string | null;
 }
 
 const BlogDetail = () => {
@@ -43,7 +42,7 @@ const BlogDetail = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('blog_posts')
+        .from('blogs')
         .select('*')
         .eq('slug', slug)
         .eq('status', 'published')
@@ -64,22 +63,7 @@ const BlogDetail = () => {
         return;
       }
 
-      // Eğer specialist yazarsa, uzmanlık bilgisini al
-      let blogWithSpecialist = data as any;
-      if (data.author_type === 'specialist' && data.author_id) {
-        const { data: specialistData } = await supabase
-          .from('specialists')
-          .select('specialty')
-          .eq('user_id', data.author_id)
-          .single();
-        
-        blogWithSpecialist = {
-          ...data,
-          specialists: specialistData ? { specialty: specialistData.specialty } : null
-        };
-      }
-
-      setBlog(blogWithSpecialist);
+      setBlog(data);
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
       toast({
@@ -92,8 +76,8 @@ const BlogDetail = () => {
     }
   };
 
-  const getReadTime = (wordCount: number | null) => {
-    if (!wordCount) return "5 dakika";
+  const getReadTime = (content: string) => {
+    const wordCount = content.split(' ').length;
     const minutes = Math.ceil(wordCount / 200);
     return `${minutes} dakika`;
   };
@@ -185,11 +169,7 @@ const BlogDetail = () => {
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">
-                    {blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                      ? 'Editör' 
-                      : blog.author_type === 'specialist' && blog.specialists?.specialty
-                        ? blog.specialists.specialty
-                        : blog.author_name}
+                    {blog.author_name}
                   </span>
                 </div>
               </div>
@@ -207,11 +187,11 @@ const BlogDetail = () => {
               <div className="flex items-center gap-6 text-sm text-gray-500 border-t pt-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  <span>{new Date(blog.published_at).toLocaleDateString('tr-TR')}</span>
+                  <span>{new Date(blog.created_at).toLocaleDateString('tr-TR')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>{getReadTime(blog.word_count)}</span>
+                  <span>{getReadTime(blog.content)}</span>
                 </div>
               </div>
             </div>
@@ -234,13 +214,9 @@ const BlogDetail = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               {/* Author Info */}
               <div>
-                <h3 className="font-semibold text-lg mb-2">
-                  {blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                    ? 'Editör' 
-                    : blog.author_type === 'specialist' && blog.specialists?.specialty
-                      ? blog.specialists.specialty
-                      : blog.author_name}
-                </h3>
+                 <h3 className="font-semibold text-lg mb-2">
+                   {blog.author_name}
+                 </h3>
               </div>
               
               {/* Share Buttons */}
