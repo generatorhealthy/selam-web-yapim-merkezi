@@ -1045,7 +1045,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                 <div className="w-full">
                   <div className="grid grid-cols-1 gap-4 p-6">
                     {/* Header Row */}
-                    <div className="grid grid-cols-12 gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 font-semibold text-gray-700 text-sm">
+                    <div className="grid grid-cols-16 gap-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 font-semibold text-gray-700 text-sm">
                       <div className="col-span-1 flex items-center justify-center">
                         <Checkbox
                           checked={selectAll}
@@ -1053,21 +1053,21 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                           className="border-gray-400"
                         />
                       </div>
-                      <div className="col-span-2">Müşteri Bilgileri</div>
-                      <div className="col-span-1">Telefon</div>
-                      <div className="col-span-2">Adres</div>
-                      <div className="col-span-1">TC Kimlik</div>
-                      <div className="col-span-1">Paket</div>
+                      <div className="col-span-3">Müşteri Bilgileri</div>
+                      <div className="col-span-2">Telefon</div>
+                      <div className="col-span-3">Adres</div>
+                      <div className="col-span-2">TC Kimlik</div>
+                      <div className="col-span-2">Paket</div>
                       <div className="col-span-1">Tutar</div>
                       <div className="col-span-1">Durum</div>
-                      <div className="col-span-1">Tarih</div>
-                      <div className="col-span-1">İşlemler</div>
+                      <div className="col-span-2">Tarih</div>
+                      <div className="col-span-2">İşlemler</div>
                     </div>
                     
                     {/* Data Rows */}
                     <div className="space-y-3">
                       {filteredOrders?.map((order) => (
-                        <div key={order.id} className="grid grid-cols-12 gap-4 p-4 bg-white hover:bg-blue-50/50 rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-300 shadow-sm hover:shadow-md">
+                        <div key={order.id} className="grid grid-cols-16 gap-3 p-4 bg-white hover:bg-blue-50/50 rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-300 shadow-sm hover:shadow-md">
                           <div className="col-span-1 flex items-center justify-center">
                             <Checkbox
                               checked={selectedOrderIds.includes(order.id)}
@@ -1076,18 +1076,18 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                             />
                           </div>
                           
-                          <div className="col-span-2 space-y-1">
+                          <div className="col-span-3 space-y-1">
                             <div className="font-semibold text-gray-900 text-sm">{order.customer_name}</div>
-                            <div className="text-xs text-gray-600">{order.customer_email}</div>
+                            <div className="text-xs text-gray-600 truncate">{order.customer_email}</div>
                           </div>
                           
-                          <div className="col-span-1 flex items-center">
+                          <div className="col-span-2 flex items-center">
                             <div className="text-sm text-gray-700">
                               {order.customer_phone || 'Belirtilmemiş'}
                             </div>
                           </div>
                           
-                          <div className="col-span-2 space-y-1">
+                          <div className="col-span-3 space-y-1">
                             <div className="text-sm text-gray-700">
                               {order.customer_address ? (
                                 <div>
@@ -1102,14 +1102,14 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                             </div>
                           </div>
                           
-                          <div className="col-span-1 flex items-center">
+                          <div className="col-span-2 flex items-center">
                             <div className="text-sm text-gray-700">
                               {order.customer_tc_no || 'Belirtilmemiş'}
                             </div>
                           </div>
                           
-                          <div className="col-span-1 space-y-1">
-                            <div className="font-semibold text-gray-900 text-sm">{order.package_name}</div>
+                          <div className="col-span-2 space-y-1">
+                            <div className="font-semibold text-gray-900 text-sm truncate">{order.package_name}</div>
                             <div className="text-xs text-gray-500">{order.package_type}</div>
                           </div>
                           
@@ -1129,7 +1129,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                             </Badge>
                           </div>
                           
-                          <div className="col-span-1 space-y-1">
+                          <div className="col-span-2 space-y-1">
                             <div className="font-medium text-gray-900 text-sm">
                               {format(new Date(order.created_at), "dd MMM yyyy", { locale: tr })}
                             </div>
@@ -1138,7 +1138,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                             </div>
                           </div>
                           
-                          <div className="col-span-1 flex items-center justify-end gap-2">
+                          <div className="col-span-2 flex items-center justify-end gap-2">
                             <Button
                               variant="outline"
                               size="sm"
