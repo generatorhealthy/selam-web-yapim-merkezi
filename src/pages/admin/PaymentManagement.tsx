@@ -447,6 +447,9 @@ const PaymentManagement = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Müşteri</TableHead>
+                  <TableHead>Telefon</TableHead>
+                  <TableHead>Adres</TableHead>
+                  <TableHead>TC Kimlik No</TableHead>
                   <TableHead>Paket</TableHead>
                   <TableHead>Tutar</TableHead>
                   <TableHead>Durum</TableHead>
@@ -458,13 +461,13 @@ const PaymentManagement = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={10} className="text-center py-8">
                       Yükleniyor...
                     </TableCell>
                   </TableRow>
                 ) : filteredOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={10} className="text-center py-8">
                       Sipariş bulunamadı
                     </TableCell>
                   </TableRow>
@@ -475,9 +478,6 @@ const PaymentManagement = () => {
                         <div>
                           <div className="font-medium">{order.customer_name}</div>
                           <div className="text-sm text-gray-500">{order.customer_email}</div>
-                          {order.customer_phone && (
-                            <div className="text-sm text-gray-500">{order.customer_phone}</div>
-                          )}
                           {order.is_first_order && (
                             <Badge variant="outline" className="text-xs mt-1">
                               İlk Sipariş
@@ -493,6 +493,30 @@ const PaymentManagement = () => {
                               E-posta Gönderildi
                             </Badge>
                           )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {order.customer_phone || 'Belirtilmemiş'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {order.customer_address ? (
+                            <div>
+                              <div>{order.customer_address}</div>
+                              {order.customer_city && (
+                                <div className="text-gray-500">{order.customer_city}</div>
+                              )}
+                            </div>
+                          ) : (
+                            'Belirtilmemiş'
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {order.customer_tc_no || 'Belirtilmemiş'}
                         </div>
                       </TableCell>
                       <TableCell>
