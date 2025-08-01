@@ -203,7 +203,7 @@ const SpecialtyPage = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-7xl mx-auto">
             {specialists.map((specialist) => {
               const specialtySlugForLinks = createSpecialtySlug(specialist.specialty);
               const doctorSlug = createDoctorSlug(specialist.name);
@@ -262,44 +262,46 @@ const SpecialtyPage = () => {
                         </p>
                       )}
 
-                      <div className="flex gap-2 pt-3">
-                        <Button asChild className="flex-1">
+                      <div className="flex flex-col sm:flex-row gap-2 pt-3">
+                        <Button asChild className="w-full sm:flex-1">
                           <Link to={`/${specialtySlugForLinks}/${doctorSlug}`}>
                             Profili Görüntüle
                           </Link>
                         </Button>
-                        <Button variant="outline" asChild>
-                          <Link to={`/randevu-al/${specialtySlugForLinks}/${doctorSlug}`}>
-                            <Calendar className="w-4 h-4 mr-2" />
-                            Randevu
-                          </Link>
-                        </Button>
-                      
-                      {/* WhatsApp and Call Buttons */}
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleWhatsAppClick(specialist)}
-                          className="border-green-200 text-green-700 hover:bg-green-50"
-                          title="WhatsApp"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleCallClick(specialist.phone)}
-                          className="border-blue-200 text-blue-700 hover:bg-blue-50"
-                          title="Ara"
-                        >
-                          <Phone className="w-4 h-4" />
-                        </Button>
+                        
+                        <div className="flex gap-2 w-full sm:w-auto">
+                          <Button variant="outline" asChild className="flex-1 sm:flex-none">
+                            <Link to={`/randevu-al/${specialtySlugForLinks}/${doctorSlug}`}>
+                              <Calendar className="w-4 h-4 mr-1 sm:mr-2" />
+                              <span className="hidden sm:inline">Randevu</span>
+                              <span className="sm:hidden">Randevu</span>
+                            </Link>
+                          </Button>
+                        
+                          {/* WhatsApp and Call Buttons */}
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleWhatsAppClick(specialist)}
+                            className="border-green-200 text-green-700 hover:bg-green-50 flex-shrink-0"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleCallClick(specialist.phone)}
+                            className="border-blue-200 text-blue-700 hover:bg-blue-50 flex-shrink-0"
+                            title="Ara"
+                          >
+                            <Phone className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
