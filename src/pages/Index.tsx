@@ -343,27 +343,26 @@ const Index = () => {
             {/* Popular Specialties - Mobile Grid Layout */}
             <div className="text-center px-2 md:px-0">
               <h3 className="text-lg md:text-xl font-medium mb-4 md:mb-6 text-blue-100">Branşlar</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap justify-center gap-2 md:gap-3 max-w-4xl mx-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3 max-w-6xl mx-auto">
                 {popularSpecialties.slice(0, 10).map((specialty, index) => (
                   <button
                     key={index}
                     onClick={() => handleSpecialtyClick(specialty)}
-                    className="px-3 md:px-6 py-2 md:py-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 text-xs md:text-sm font-medium border border-white/20 hover:border-white/40 whitespace-nowrap overflow-hidden text-ellipsis"
+                    className="px-2 py-2 md:px-4 md:py-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 text-xs md:text-sm font-medium border border-white/20 hover:border-white/40 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
                     title={specialty.name}
                   >
-                    <span className="block md:hidden text-xs leading-tight">
-                      {specialty.name.length > 12 ? specialty.name.substring(0, 12) + '...' : specialty.name}
-                    </span>
-                    <span className="hidden md:block">
+                    <span className="block truncate px-1">
                       {specialty.name}
                     </span>
                   </button>
                 ))}
                 <button
                   onClick={() => navigate('/uzmanlar')}
-                  className="col-span-2 sm:col-span-1 md:col-span-auto px-4 md:px-6 py-2 md:py-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 text-xs md:text-sm font-medium border border-white/20 hover:border-white/40"
+                  className="px-2 py-2 md:px-4 md:py-3 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-all duration-300 text-xs md:text-sm font-medium border border-white/30 hover:border-white/50 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
                 >
-                  Tümünü Göster
+                  <span className="block truncate px-1">
+                    Tümünü Göster
+                  </span>
                 </button>
               </div>
             </div>
