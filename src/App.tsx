@@ -89,9 +89,6 @@ function App() {
               <Route path="/iletisim" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogDetail />} />
-              {/* WordPress blog redirects */}
-              <Route path="/alerji-testinin-yuksek-cikmasi-nedir/" element={<BlogDetail />} />
-              <Route path="/uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/" element={<BlogDetail />} />
               <Route path="/yazilar/:slug" element={<BlogPost />} />
               <Route path="/uzmanlar" element={<DoctorList />} />
               <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />

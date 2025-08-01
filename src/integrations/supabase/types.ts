@@ -265,54 +265,6 @@ export type Database = {
         }
         Relationships: []
       }
-      blogs: {
-        Row: {
-          author_name: string | null
-          content: string
-          created_at: string
-          excerpt: string | null
-          featured_image: string | null
-          id: string
-          meta_description: string | null
-          meta_title: string | null
-          slug: string
-          status: string | null
-          tags: string[] | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          author_name?: string | null
-          content: string
-          created_at?: string
-          excerpt?: string | null
-          featured_image?: string | null
-          id?: string
-          meta_description?: string | null
-          meta_title?: string | null
-          slug: string
-          status?: string | null
-          tags?: string[] | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          author_name?: string | null
-          content?: string
-          created_at?: string
-          excerpt?: string | null
-          featured_image?: string | null
-          id?: string
-          meta_description?: string | null
-          meta_title?: string | null
-          slug?: string
-          status?: string | null
-          tags?: string[] | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       client_referrals: {
         Row: {
           created_at: string
