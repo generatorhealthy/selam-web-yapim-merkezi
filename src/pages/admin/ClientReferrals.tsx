@@ -403,9 +403,6 @@ const ClientReferrals = () => {
 
       console.log(`✅ Database update successful:`, data);
 
-      // 500ms bekle sonra tekrar veriyi çek
-      await new Promise(resolve => setTimeout(resolve, 500));
-
       // Verify the update by fetching the specific record
       const { data: verification, error: verifyError } = await supabase
         .from('specialists')
@@ -420,7 +417,7 @@ const ClientReferrals = () => {
         console.log(`📊 Updated_at comparison - Before: ${readTest.updated_at}, After: ${verification.updated_at}`);
       }
 
-      // Force complete data refresh
+      // Force complete data refresh without page reload
       console.log('🔄 Refreshing all data from database...');
       await fetchSpecialistsAndReferrals();
       
