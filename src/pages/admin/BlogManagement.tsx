@@ -82,7 +82,7 @@ const BlogManagement = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('blogs')
+        .from('blog_posts')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -143,7 +143,7 @@ const BlogManagement = () => {
       }
 
       const { error } = await supabase
-        .from('blogs')
+        .from('blog_posts')
         .insert({
           title: values.title,
           content: values.content,
@@ -215,8 +215,8 @@ const BlogManagement = () => {
     setIsProcessing(true);
     try {
       const { error } = await supabase
-        .from('blogs')
-        .update({
+        .from('blog_posts')
+        .update({ 
           status: 'published',
           published_at: new Date().toISOString(),
           admin_message: null
@@ -264,8 +264,8 @@ const BlogManagement = () => {
     setIsProcessing(true);
     try {
       const { error } = await supabase
-        .from('blogs')
-        .update({
+        .from('blog_posts')
+        .update({ 
           status: 'revision_needed',
           admin_message: adminMessage,
           revision_count: blogs.find(b => b.id === blogId)?.revision_count + 1 || 1
@@ -308,7 +308,7 @@ const BlogManagement = () => {
     setIsProcessing(true);
     try {
       const { error } = await supabase
-        .from('blogs')
+        .from('blog_posts')
         .delete()
         .eq('id', blogId);
 
@@ -363,7 +363,7 @@ const BlogManagement = () => {
       const wordCount = values.content.split(/\s+/).length;
 
       const { error } = await supabase
-        .from('blogs')
+        .from('blog_posts')
         .update({
           title: values.title,
           content: values.content,
