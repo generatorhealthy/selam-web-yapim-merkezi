@@ -162,6 +162,34 @@ const SpecialistManagement = () => {
     fetchSpecialists();
   }, [currentUser, toast]);
 
+  // Sayfa odağa geldiğinde verileri yenile
+  useEffect(() => {
+    const handleFocus = () => {
+      if (currentUser) {
+        fetchSpecialists();
+      }
+    };
+
+    const fetchSpecialists = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('specialists')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          setSpecialists(data);
+          setFilteredSpecialists(data);
+        }
+      } catch (error) {
+        console.error('Veri yenileme hatası:', error);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [currentUser]);
+
   // Filtering and sorting logic
   useEffect(() => {
     let filtered = specialists.filter(specialist => {

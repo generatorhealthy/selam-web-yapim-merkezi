@@ -145,6 +145,16 @@ const ClientReferrals = () => {
     fetchSpecialistsAndReferrals();
   }, [currentYear]);
 
+  // Sayfa odağa geldiğinde verileri yenile
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchSpecialistsAndReferrals();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [currentYear]);
+
   // Filter specialists based on search term and sort by referral count
   useEffect(() => {
     let filtered = specialists;
