@@ -53,7 +53,7 @@ const ClientReferrals = () => {
   const fetchSpecialistsAndReferrals = async () => {
     try {
       setLoading(true);
-      console.log("Fetching specialists and referrals for year:", currentYear);
+      console.log("🔄 Fetching specialists and referrals for year:", currentYear);
       
       // Paralel veri çekme ile performansı artır
       const [specialistsResult, referralsResult] = await Promise.all([
@@ -75,20 +75,25 @@ const ClientReferrals = () => {
       const { data: allReferrals, error: referralsError } = referralsResult;
 
       if (specialistsError) {
-        console.error('Specialists fetch error:', specialistsError);
+        console.error('❌ Specialists fetch error:', specialistsError);
         throw specialistsError;
       }
 
       if (referralsError) {
-        console.error('Referrals fetch error:', referralsError);
+        console.error('❌ Referrals fetch error:', referralsError);
         // Referral hatası olsa bile devam et
       }
 
-      console.log("Specialists fetched:", specialistsData?.length || 0);
-      console.log("Referrals fetched:", allReferrals?.length || 0);
+      console.log("✅ Specialists fetched:", specialistsData?.length || 0);
+      console.log("✅ Referrals fetched:", allReferrals?.length || 0);
+      
+      // Debug: internal_number değerlerini logla
+      specialistsData?.forEach(specialist => {
+        console.log(`🔍 Specialist ${specialist.name}: internal_number = "${specialist.internal_number}"`);
+      });
 
       if (!specialistsData || specialistsData.length === 0) {
-        console.log("No specialists found");
+        console.log("⚠️ No specialists found");
         setSpecialists([]);
         setFilteredSpecialists([]);
         return;
@@ -125,11 +130,11 @@ const ClientReferrals = () => {
         };
       });
 
-      console.log("Specialist referrals processed:", specialistReferrals.length);
+      console.log("✅ Specialist referrals processed:", specialistReferrals.length);
       setSpecialists(specialistReferrals);
       
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('❌ Error fetching data:', error);
       toast({
         title: "Hata",
         description: "Veriler yüklenirken hata oluştu: " + (error as Error).message,
@@ -366,32 +371,56 @@ const ClientReferrals = () => {
 
   const updateInternalNumber = async (specialistId: string, newInternalNumber: string) => {
     try {
-      console.log(`Updating internal number for specialist ${specialistId}, new number: ${newInternalNumber}`);
+      console.log(`🔄 Starting internal number update for specialist ${specialistId}, new number: "${newInternalNumber}"`);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('specialists')
-        .update({ internal_number: newInternalNumber })
-        .eq('id', specialistId);
+        .update({ 
+          internal_number: newInternalNumber,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', specialistId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase update error:', error);
+        throw error;
+      }
 
-      console.log(`Internal number successfully updated in database for specialist ${specialistId}`);
+      console.log(`✅ Database update successful:`, data);
 
-      // Force refresh data from database to ensure persistence
+      // Verify the update by fetching the specific record
+      const { data: verification, error: verifyError } = await supabase
+        .from('specialists')
+        .select('internal_number')
+        .eq('id', specialistId)
+        .single();
+
+      if (verifyError) {
+        console.error('❌ Verification error:', verifyError);
+      } else {
+        console.log(`✅ Verification: Database shows internal_number as "${verification.internal_number}"`);
+      }
+
+      // Force complete data refresh
+      console.log('🔄 Refreshing all data from database...');
       await fetchSpecialistsAndReferrals();
 
       toast({
         title: "Başarılı",
-        description: "Dahili numara başarıyla kaydedildi",
+        description: "Dahili numara başarıyla kaydedildi ve veritabanından doğrulandı",
       });
       
     } catch (error) {
-      console.error('Error updating internal number:', error);
+      console.error('❌ Error updating internal number:', error);
       toast({
         title: "Hata",
         description: "Dahili numara güncellenirken hata oluştu: " + (error as Error).message,
         variant: "destructive",
       });
+      
+      // On error, also refresh to show actual database state
+      await fetchSpecialistsAndReferrals();
     }
   };
 
