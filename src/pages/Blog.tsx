@@ -17,13 +17,13 @@ interface BlogPost {
   excerpt: string | null;
   featured_image: string | null;
   slug: string;
-  author_name: string | null;
-  tags: string[] | null;
-  status: string | null;
-  meta_title: string | null;
-  meta_description: string | null;
-  created_at: string;
-  updated_at: string;
+  author_name: string;
+  author_type: string;
+  published_at: string;
+  word_count: number | null;
+  specialists?: {
+    specialty: string;
+  } | null;
 }
 
 const Blog = () => {
@@ -69,10 +69,10 @@ const Blog = () => {
       const to = from + POSTS_PER_PAGE - 1;
 
       const { data, error } = await supabase
-        .from('blogs' as any)
+        .from('blog_posts')
         .select('*')
         .eq('status', 'published')
-        .order('created_at', { ascending: false })
+        .order('published_at', { ascending: false })
         .range(from, to);
 
       if (error) {
@@ -85,7 +85,26 @@ const Blog = () => {
         return;
       }
 
-      const newBlogs = (data || []) as unknown as BlogPost[];
+      // Specialist blog yazıları için uzmanlık bilgilerini al
+      const blogsWithSpecialistInfo = await Promise.all(
+        (data || []).map(async (blog) => {
+          if (blog.author_type === 'specialist' && blog.author_id) {
+            const { data: specialistData } = await supabase
+              .from('specialists')
+              .select('specialty')
+              .eq('user_id', blog.author_id)
+              .single();
+            
+            return {
+              ...blog,
+              specialists: specialistData ? { specialty: specialistData.specialty } : null
+            };
+          }
+          return blog;
+        })
+      );
+
+      const newBlogs = blogsWithSpecialistInfo as BlogPost[] || [];
       
       if (isInitial) {
         setBlogs(newBlogs);
@@ -120,18 +139,28 @@ const Blog = () => {
 
   const filteredBlogs = blogs.filter(blog =>
     blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (blog.author_name && blog.author_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    blog.author_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (blog.excerpt && blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const getReadTime = (content: string) => {
-    const wordCount = content.split(' ').length;
+  const getReadTime = (wordCount: number | null) => {
+    if (!wordCount) return "5 dakika";
     const minutes = Math.ceil(wordCount / 200);
     return `${minutes} dakika`;
   };
 
-  const getAuthorTypeText = () => {
-    return "Editör";
+  const getAuthorTypeText = (blog: BlogPost) => {
+    if (blog.author_type === "specialist" && blog.specialists?.specialty) {
+      return blog.specialists.specialty;
+    }
+    
+    switch (blog.author_type) {
+      case "admin": return "Editör";
+      case "staff": return "Editör";
+      case "editor": return "Editör";
+      case "specialist": return "Uzman Doktor";
+      default: return blog.author_type;
+    }
   };
 
   if (loading) {
@@ -218,10 +247,10 @@ const Blog = () => {
                     <div className={`${filteredBlogs[0].featured_image ? 'md:w-1/2' : 'w-full'} p-8`}>
                       <div className="flex items-center gap-2 mb-4">
                         <Badge variant="secondary" className="text-xs font-medium">
-                          {getAuthorTypeText()}
+                          {getAuthorTypeText(filteredBlogs[0])}
                         </Badge>
                         <span className="text-sm text-gray-500">
-                          {filteredBlogs[0].author_name || 'Doktorum Ol'}
+                          {filteredBlogs[0].author_type === 'admin' || filteredBlogs[0].author_type === 'staff' || filteredBlogs[0].author_type === 'editor' ? 'Editör' : filteredBlogs[0].author_name}
                         </span>
                       </div>
                       
@@ -238,16 +267,16 @@ const Blog = () => {
                       <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
-                          <span>{new Date(filteredBlogs[0].created_at).toLocaleDateString('tr-TR')}</span>
+                          <span>{new Date(filteredBlogs[0].published_at).toLocaleDateString('tr-TR')}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
-                          <span>{getReadTime(filteredBlogs[0].content)}</span>
+                          <span>{getReadTime(filteredBlogs[0].word_count)}</span>
                         </div>
                       </div>
                       
                       <Button asChild variant="default" className="bg-gray-900 hover:bg-gray-800 text-white">
-                        <Link to={`/${filteredBlogs[0].slug}`}>
+                        <Link to={`/blog/${filteredBlogs[0].slug}`}>
                           Devamını Oku
                         </Link>
                       </Button>
@@ -282,7 +311,7 @@ const Blog = () => {
                       <div className="p-6">
                         <div className="flex items-center gap-2 mb-3">
                           <Badge variant="outline" className="text-xs">
-                            {getAuthorTypeText()}
+                            {getAuthorTypeText(blog)}
                           </Badge>
                         </div>
 
@@ -299,17 +328,17 @@ const Blog = () => {
                         <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                           <div className="flex items-center gap-1">
                             <span>
-                              {blog.author_name || 'Doktorum Ol'}
+                              {blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' ? 'Editör' : blog.author_name}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            <span>{new Date(blog.created_at).toLocaleDateString('tr-TR')}</span>
+                            <span>{new Date(blog.published_at).toLocaleDateString('tr-TR')}</span>
                           </div>
                         </div>
                         
                         <Button asChild variant="ghost" className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-medium p-0 h-auto py-2">
-                          <Link to={`/${blog.slug}`}>
+                          <Link to={`/blog/${blog.slug}`}>
                             Devamını Oku →
                           </Link>
                         </Button>
