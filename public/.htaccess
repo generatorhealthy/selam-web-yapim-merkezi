@@ -79,16 +79,13 @@ RewriteBase /
     </FilesMatch>
 </IfModule>
 
-# Force MIME types - Critical for module loading
+# Force MIME types - Bu çok önemli
 <IfModule mod_mime.c>
-    # JavaScript files
-    AddType text/javascript .js
-    AddType text/javascript .mjs  
+    AddType application/javascript .js
+    AddType application/javascript .mjs
     AddType application/javascript .jsx
     AddType application/javascript .ts
     AddType application/javascript .tsx
-    
-    # Other file types
     AddType text/css .css
     AddType text/html .html
     AddType application/json .json
@@ -99,18 +96,11 @@ RewriteBase /
     AddType image/webp .webp
 </IfModule>
 
-# Override MIME types with headers - for stubborn servers
-<IfModule mod_headers.c>
-    <FilesMatch "\.(js|mjs)$">
-        Header always set Content-Type "text/javascript; charset=utf-8"
-        Header always set X-Content-Type-Options nosniff
-    </FilesMatch>
-    
-    <FilesMatch "\.(jsx|ts|tsx)$">
-        Header always set Content-Type "application/javascript; charset=utf-8"
-        Header always set X-Content-Type-Options nosniff
-    </FilesMatch>
-</IfModule>
+# Hostinger için özel ayarlar
+<FilesMatch "\.(js|mjs|jsx|ts|tsx)$">
+    Header set Content-Type "application/javascript"
+    Header set X-Content-Type-Options nosniff
+</FilesMatch>
 
 <FilesMatch "\.css$">
     Header set Content-Type "text/css"
