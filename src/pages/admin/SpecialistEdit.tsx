@@ -229,7 +229,8 @@ const SpecialistEdit = () => {
         description: "Uzman bilgileri başarıyla güncellendi.",
       });
 
-      navigate('/divan_paneli/specialists');
+      // Force page refresh to show updated data
+      window.location.href = '/divan_paneli/specialists';
       
     } catch (error) {
       console.error('Beklenmeyen hata:', error);

@@ -375,33 +375,14 @@ const ClientReferrals = () => {
 
       if (error) throw error;
 
-      // Local state'i güncelle - Tüm aylarda aynı dahili numara görünsün
-      setSpecialists(prev => 
-        prev.map(spec => 
-          spec.id === specialistId 
-            ? {
-                ...spec,
-                specialist: { ...spec.specialist, internal_number: newInternalNumber }
-              }
-            : spec
-        )
-      );
+      console.log(`Internal number successfully updated in database for specialist ${specialistId}`);
 
-      // Filtered specialists'i de güncelle
-      setFilteredSpecialists(prev => 
-        prev.map(spec => 
-          spec.id === specialistId 
-            ? {
-                ...spec,
-                specialist: { ...spec.specialist, internal_number: newInternalNumber }
-              }
-            : spec
-        )
-      );
+      // Force refresh data from database to ensure persistence
+      await fetchSpecialistsAndReferrals();
 
       toast({
         title: "Başarılı",
-        description: "Dahili numara tüm aylarda güncellendi",
+        description: "Dahili numara başarıyla kaydedildi",
       });
       
     } catch (error) {
