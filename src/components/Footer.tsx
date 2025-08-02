@@ -30,12 +30,6 @@ const Footer = () => {
             </Link>
           </div>
 
-          {/* Payment Methods */}
-          <div className="flex justify-center items-center gap-2">
-            <div className="flex items-center gap-2 bg-white rounded-md px-3 py-1 border border-gray-200">
-              <img src="/lovable-uploads/034df0a6-00d8-4ba5-9843-e947f0337815.png" alt="Ödeme Yöntemleri" className="h-8" />
-            </div>
-          </div>
         </div>
       </div>
 
