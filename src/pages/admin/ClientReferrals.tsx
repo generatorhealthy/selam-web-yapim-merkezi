@@ -373,6 +373,20 @@ const ClientReferrals = () => {
     try {
       console.log(`🔄 Starting internal number update for specialist ${specialistId}, new number: "${newInternalNumber}"`);
       
+      // Test permission first
+      const { data: readTest, error: readError } = await supabase
+        .from('specialists')
+        .select('id, internal_number, updated_at')
+        .eq('id', specialistId)
+        .single();
+        
+      if (readError) {
+        console.error('❌ Cannot read specialist:', readError);
+        throw new Error('Uzmanı okuma yetkisi yok: ' + readError.message);
+      }
+      
+      console.log('✅ Current data before update:', readTest);
+      
       const { data, error } = await supabase
         .from('specialists')
         .update({ 
@@ -395,7 +409,7 @@ const ClientReferrals = () => {
       // Verify the update by fetching the specific record
       const { data: verification, error: verifyError } = await supabase
         .from('specialists')
-        .select('internal_number')
+        .select('internal_number, updated_at')
         .eq('id', specialistId)
         .single();
 
@@ -403,20 +417,17 @@ const ClientReferrals = () => {
         console.error('❌ Verification error:', verifyError);
       } else {
         console.log(`✅ Verification: Database shows internal_number as "${verification.internal_number}"`);
+        console.log(`📊 Updated_at comparison - Before: ${readTest.updated_at}, After: ${verification.updated_at}`);
       }
 
-      // Force complete page refresh after update
-      console.log('🔄 Forcing page refresh...');
+      // Force complete data refresh
+      console.log('🔄 Refreshing all data from database...');
+      await fetchSpecialistsAndReferrals();
       
       toast({
         title: "Başarılı",
-        description: "Dahili numara başarıyla kaydedildi. Sayfa yenileniyor...",
+        description: "Dahili numara başarıyla kaydedildi.",
       });
-
-      // Sayfayı tamamen yenile
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
       
     } catch (error) {
       console.error('❌ Error updating internal number:', error);

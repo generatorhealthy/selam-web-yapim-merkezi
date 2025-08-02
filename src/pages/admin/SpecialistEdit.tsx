@@ -32,6 +32,7 @@ interface Specialist {
   face_to_face_consultation: boolean;
   is_active: boolean;
   profile_picture?: string;
+  updated_at?: string;
 }
 
 interface FAQItem {
@@ -188,12 +189,51 @@ const SpecialistEdit = () => {
     setSaving(true);
     try {
       console.log('🔄 Starting specialist update for ID:', specialist.id);
+      console.log('👤 Current user:', currentUser);
+      
+      // Test if user can actually update specialists table
+      const { data: testData, error: testError } = await supabase
+        .from('specialists')
+        .select('id, name, updated_at')
+        .eq('id', specialist.id)
+        .single();
+      
+      if (testError) {
+        console.error('❌ Cannot even read specialist:', testError);
+        toast({
+          title: "Yetki Hatası",
+          description: "Bu uzmanı okuma yetkiniz yok: " + testError.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('✅ Can read specialist:', testData);
       
       // FAQ'ları JSON string olarak hazırla
       const validFaqItems = faqItems.filter(item => item.question.trim() && item.answer.trim());
       const faqString = validFaqItems.length > 0 ? JSON.stringify(validFaqItems) : null;
 
-      // Önce güncellemeyi yap ve result'ı al
+      // Test update permission first with a simple field
+      const { data: permissionTest, error: permissionError } = await supabase
+        .from('specialists')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', specialist.id)
+        .select();
+
+      if (permissionError) {
+        console.error('❌ Permission test failed:', permissionError);
+        toast({
+          title: "Yetki Hatası",
+          description: "Bu uzmanı güncelleme yetkiniz yok: " + permissionError.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('✅ Permission test passed:', permissionTest);
+
+      // Now do the actual update
       const { data: updateResult, error } = await supabase
         .from('specialists')
         .update({
@@ -241,6 +281,7 @@ const SpecialistEdit = () => {
         console.error('❌ Verification error:', verifyError);
       } else {
         console.log('✅ Verification data:', verification);
+        console.log('📊 Updated_at comparison - Before:', specialist.updated_at, 'After:', verification.updated_at);
       }
 
       toast({
@@ -248,10 +289,8 @@ const SpecialistEdit = () => {
         description: "Uzman bilgileri başarıyla güncellendi.",
       });
 
-      // Cache'i temizle ve sayfayı yenile
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Navigate back without reload
+      navigate('/divan_paneli/specialists');
       
     } catch (error) {
       console.error('❌ Beklenmeyen hata:', error);
