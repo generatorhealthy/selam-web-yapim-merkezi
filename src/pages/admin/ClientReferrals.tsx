@@ -745,30 +745,49 @@ const ClientReferrals = () => {
                                              className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
                                            />
                                          </div>
-                                         <div className="flex-1">
-                                           <Label className="text-xs text-slate-500 mb-1 block">Dahili Numara</Label>
-                                           <Input
-                                             placeholder="Dahili numara..."
-                                             value={specialistReferral.specialist.internal_number || ''}
-                                             onChange={(e) => {
-                                               setSpecialists(prev => 
-                                                 prev.map(spec => 
-                                                   spec.id === specialistReferral.id 
-                                                     ? {
-                                                         ...spec,
-                                                         specialist: { ...spec.specialist, internal_number: e.target.value }
-                                                       }
-                                                     : spec
-                                                 )
-                                               );
-                                             }}
-                                             onBlur={(e) => updateInternalNumber(
-                                               specialistReferral.id, 
-                                               e.target.value
-                                             )}
-                                             className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
-                                           />
-                                         </div>
+                                          <div className="flex-1">
+                                            <Label className="text-xs text-slate-500 mb-1 block">Dahili Numara</Label>
+                                            <Input
+                                              placeholder="Dahili numara..."
+                                              value={specialistReferral.specialist.internal_number || ''}
+                                              onChange={(e) => {
+                                                const newValue = e.target.value;
+                                                console.log(`Internal number changed for ${specialistReferral.specialist.name}: ${newValue}`);
+                                                setSpecialists(prev => 
+                                                  prev.map(spec => 
+                                                    spec.id === specialistReferral.id 
+                                                      ? {
+                                                          ...spec,
+                                                          specialist: { ...spec.specialist, internal_number: newValue }
+                                                        }
+                                                      : spec
+                                                  )
+                                                );
+                                                setFilteredSpecialists(prev => 
+                                                  prev.map(spec => 
+                                                    spec.id === specialistReferral.id 
+                                                      ? {
+                                                          ...spec,
+                                                          specialist: { ...spec.specialist, internal_number: newValue }
+                                                        }
+                                                      : spec
+                                                  )
+                                                );
+                                              }}
+                                              onBlur={(e) => {
+                                                console.log(`Internal number blur event for ${specialistReferral.specialist.name}: ${e.target.value}`);
+                                                updateInternalNumber(specialistReferral.id, e.target.value);
+                                              }}
+                                              onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                  console.log(`Internal number Enter pressed for ${specialistReferral.specialist.name}: ${e.currentTarget.value}`);
+                                                  updateInternalNumber(specialistReferral.id, e.currentTarget.value);
+                                                  e.currentTarget.blur();
+                                                }
+                                              }}
+                                              className="h-8 text-sm bg-white/80 border-slate-200/50 rounded-lg"
+                                            />
+                                          </div>
                                        </div>
                                   </div>
                                 </div>
