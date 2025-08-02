@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus } from "lucide-react";
+import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle } from "lucide-react";
 
 const DoctorDashboard = () => {
   const [doctor, setDoctor] = useState<any>(null);
@@ -377,83 +377,179 @@ const DoctorDashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
             <div 
-              className={`bg-white rounded-lg border p-6 text-center cursor-pointer transition-all ${activeTab === 'dashboard' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
+              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
+                activeTab === 'dashboard' 
+                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
+                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
+              }`}
               onClick={() => setActiveTab('dashboard')}
             >
-              <BarChart3 className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="text-lg font-semibold text-blue-600 mb-2">Gösterge Paneli</h3>
-              <p className="text-sm text-gray-600">Ana sayfa</p>
+              <div className="p-6 text-center">
+                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
+                  activeTab === 'dashboard' 
+                    ? 'bg-primary text-primary-foreground shadow-lg' 
+                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                }`}>
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Gösterge Paneli</h3>
+                <p className="text-sm text-muted-foreground">Ana sayfa</p>
+              </div>
             </div>
+            
             <div 
-              className={`bg-white rounded-lg border p-6 text-center cursor-pointer transition-all ${activeTab === 'appointments' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
+              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
+                activeTab === 'appointments' 
+                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
+                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
+              }`}
               onClick={() => setActiveTab('appointments')}
             >
-              <Calendar className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="text-lg font-semibold text-blue-600 mb-2">Randevular</h3>
-              <p className="text-sm text-gray-600">Randevu yönetimi</p>
+              <div className="p-6 text-center">
+                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
+                  activeTab === 'appointments' 
+                    ? 'bg-primary text-primary-foreground shadow-lg' 
+                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                }`}>
+                  <Calendar className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Randevular</h3>
+                <p className="text-sm text-muted-foreground">Randevu yönetimi</p>
+              </div>
             </div>
+            
             <div 
-              className={`bg-white rounded-lg border p-6 text-center cursor-pointer transition-all ${activeTab === 'support' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
+              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
+                activeTab === 'support' 
+                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
+                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
+              }`}
               onClick={() => setActiveTab('support')}
             >
-              <MessageSquare className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="text-lg font-semibold text-blue-600 mb-2">Destek Talebi</h3>
-              <p className="text-sm text-gray-600">Destek konuları</p>
+              <div className="p-6 text-center">
+                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
+                  activeTab === 'support' 
+                    ? 'bg-primary text-primary-foreground shadow-lg' 
+                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                }`}>
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Destek Talebi</h3>
+                <p className="text-sm text-muted-foreground">Destek konuları</p>
+              </div>
             </div>
+            
             <div 
-              className={`bg-white rounded-lg border p-6 text-center cursor-pointer transition-all ${activeTab === 'blog' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
+              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
+                activeTab === 'blog' 
+                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
+                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
+              }`}
               onClick={() => setActiveTab('blog')}
             >
-              <FileText className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="text-lg font-semibold text-blue-600 mb-2">Blog Yönetimi</h3>
-              <p className="text-sm text-gray-600">Blog yazıları</p>
+              <div className="p-6 text-center">
+                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
+                  activeTab === 'blog' 
+                    ? 'bg-primary text-primary-foreground shadow-lg' 
+                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                }`}>
+                  <FileText className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Blog Yönetimi</h3>
+                <p className="text-sm text-muted-foreground">Blog yazıları</p>
+              </div>
             </div>
+            
             <div 
-              className={`bg-white rounded-lg border p-6 text-center cursor-pointer transition-all ${activeTab === 'profile' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
+              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
+                activeTab === 'profile' 
+                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
+                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
+              }`}
               onClick={() => setActiveTab('profile')}
             >
-              <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="text-lg font-semibold text-blue-600 mb-2">Profil Düzenle</h3>
-              <p className="text-sm text-gray-600">Profil ayarları</p>
+              <div className="p-6 text-center">
+                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
+                  activeTab === 'profile' 
+                    ? 'bg-primary text-primary-foreground shadow-lg' 
+                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                }`}>
+                  <User className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Profil Düzenle</h3>
+                <p className="text-sm text-muted-foreground">Profil ayarları</p>
+              </div>
             </div>
           </div>
 
-          <TabsContent value="dashboard">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Gösterge Paneli</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium text-gray-500">Toplam Randevu</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">{appointments.length}</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium text-gray-500">Bekleyen Randevular</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-yellow-600">
-                      {appointments.filter(app => app.status === 'pending').length}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium text-gray-500">Onaylanan Randevular</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      {appointments.filter(app => app.status === 'confirmed').length}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+          <TabsContent value="dashboard" className="space-y-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl"></div>
+              <Card className="relative border-0 shadow-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                    Gösterge Paneli
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card className="border border-primary/20 shadow-sm hover:shadow-md transition-all duration-300 group">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                          Toplam Randevu
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <div className="text-3xl font-bold text-foreground">{appointments.length}</div>
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                            <Calendar className="w-5 h-5 text-primary" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border border-yellow-200 shadow-sm hover:shadow-md transition-all duration-300 group">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-yellow-600 transition-colors">
+                          Bekleyen Randevular
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <div className="text-3xl font-bold text-yellow-600">
+                            {appointments.filter(app => app.status === 'pending').length}
+                          </div>
+                          <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
+                            <Clock className="w-5 h-5 text-yellow-600" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border border-green-200 shadow-sm hover:shadow-md transition-all duration-300 group">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-green-600 transition-colors">
+                          Onaylanan Randevular
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <div className="text-3xl font-bold text-green-600">
+                            {appointments.filter(app => app.status === 'confirmed').length}
+                          </div>
+                          <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
