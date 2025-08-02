@@ -18,13 +18,13 @@ interface BlogPost {
   excerpt: string | null;
   featured_image: string | null;
   slug: string;
-  author_name: string;
-  author_type: string;
-  published_at: string;
-  word_count: number | null;
-  specialists?: {
-    specialty: string;
-  } | null;
+  author_name: string | null;
+  tags: string[] | null;
+  status: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const BlogDetail = () => {
@@ -43,11 +43,11 @@ const BlogDetail = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('blog_posts')
+        .from('blogs' as any)
         .select('*')
         .eq('slug', slug)
         .eq('status', 'published')
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Blog yazısı çekilirken hata:', error);
@@ -64,22 +64,7 @@ const BlogDetail = () => {
         return;
       }
 
-      // Eğer specialist yazarsa, uzmanlık bilgisini al
-      let blogWithSpecialist = data as any;
-      if (data.author_type === 'specialist' && data.author_id) {
-        const { data: specialistData } = await supabase
-          .from('specialists')
-          .select('specialty')
-          .eq('user_id', data.author_id)
-          .single();
-        
-        blogWithSpecialist = {
-          ...data,
-          specialists: specialistData ? { specialty: specialistData.specialty } : null
-        };
-      }
-
-      setBlog(blogWithSpecialist);
+      setBlog(data as unknown as BlogPost);
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
       toast({
@@ -92,8 +77,8 @@ const BlogDetail = () => {
     }
   };
 
-  const getReadTime = (wordCount: number | null) => {
-    if (!wordCount) return "5 dakika";
+  const getReadTime = (content: string) => {
+    const wordCount = content.split(' ').length;
     const minutes = Math.ceil(wordCount / 200);
     return `${minutes} dakika`;
   };
@@ -185,11 +170,7 @@ const BlogDetail = () => {
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">
-                    {blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                      ? 'Editör' 
-                      : blog.author_type === 'specialist' && blog.specialists?.specialty
-                        ? blog.specialists.specialty
-                        : blog.author_name}
+                    {blog.author_name || 'Doktorum Ol'}
                   </span>
                 </div>
               </div>
@@ -207,11 +188,11 @@ const BlogDetail = () => {
               <div className="flex items-center gap-6 text-sm text-gray-500 border-t pt-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  <span>{new Date(blog.published_at).toLocaleDateString('tr-TR')}</span>
+                  <span>{new Date(blog.created_at).toLocaleDateString('tr-TR')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>{getReadTime(blog.word_count)}</span>
+                  <span>{getReadTime(blog.content)}</span>
                 </div>
               </div>
             </div>
@@ -223,7 +204,7 @@ const BlogDetail = () => {
           <CardContent className="p-8">
             <div 
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900"
-              dangerouslySetInnerHTML={{ __html: blog.content.replace(/\n/g, '<br>') }}
+              dangerouslySetInnerHTML={{ __html: blog.content }}
             />
           </CardContent>
         </Card>
@@ -235,11 +216,7 @@ const BlogDetail = () => {
               {/* Author Info */}
               <div>
                 <h3 className="font-semibold text-lg mb-2">
-                  {blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                    ? 'Editör' 
-                    : blog.author_type === 'specialist' && blog.specialists?.specialty
-                      ? blog.specialists.specialty
-                      : blog.author_name}
+                  {blog.author_name || 'Doktorum Ol'}
                 </h3>
               </div>
               

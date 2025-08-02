@@ -88,10 +88,8 @@ function App() {
               <Route path="/hakkimizda" element={<About />} />
               <Route path="/iletisim" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogDetail />} />
               <Route path="/yazilar/:slug" element={<BlogPost />} />
               <Route path="/uzmanlar" element={<DoctorList />} />
-              <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />
               <Route path="/randevu-al/:specialtySlug/:doctorName" element={<BookAppointment />} />
               <Route path="/uzmanlik/:specialty" element={<SpecialtyPage />} />
               <Route path="/paketler" element={<Packages />} />
@@ -154,6 +152,10 @@ function App() {
               
               {/* Doctor Routes */}
               <Route path="/doktor-paneli" element={<DoctorDashboard />} />
+              
+              {/* Blog post route - must be at the end to avoid conflicts */}
+              <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />
+              <Route path="/:slug" element={<BlogDetail />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
