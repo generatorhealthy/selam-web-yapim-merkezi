@@ -187,11 +187,14 @@ const SpecialistEdit = () => {
 
     setSaving(true);
     try {
+      console.log('🔄 Starting specialist update for ID:', specialist.id);
+      
       // FAQ'ları JSON string olarak hazırla
       const validFaqItems = faqItems.filter(item => item.question.trim() && item.answer.trim());
       const faqString = validFaqItems.length > 0 ? JSON.stringify(validFaqItems) : null;
 
-      const { error } = await supabase
+      // Önce güncellemeyi yap ve result'ı al
+      const { data: updateResult, error } = await supabase
         .from('specialists')
         .update({
           name: specialist.name,
@@ -212,10 +215,11 @@ const SpecialistEdit = () => {
           profile_picture: specialist.profile_picture,
           updated_at: new Date().toISOString()
         })
-        .eq('id', specialist.id);
+        .eq('id', specialist.id)
+        .select();
 
       if (error) {
-        console.error('Uzman güncellenirken hata:', error);
+        console.error('❌ Uzman güncellenirken hata:', error);
         toast({
           title: "Hata",
           description: "Uzman güncellenirken bir hata oluştu: " + error.message,
@@ -224,16 +228,33 @@ const SpecialistEdit = () => {
         return;
       }
 
+      console.log('✅ Specialist update successful:', updateResult);
+
+      // Doğrulama için veriyi tekrar çek
+      const { data: verification, error: verifyError } = await supabase
+        .from('specialists')
+        .select('*')
+        .eq('id', specialist.id)
+        .single();
+
+      if (verifyError) {
+        console.error('❌ Verification error:', verifyError);
+      } else {
+        console.log('✅ Verification data:', verification);
+      }
+
       toast({
         title: "Başarılı",
         description: "Uzman bilgileri başarıyla güncellendi.",
       });
 
-      // Force page refresh to show updated data
-      window.location.href = '/divan_paneli/specialists';
+      // Cache'i temizle ve sayfayı yenile
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       
     } catch (error) {
-      console.error('Beklenmeyen hata:', error);
+      console.error('❌ Beklenmeyen hata:', error);
       toast({
         title: "Hata",
         description: "Beklenmeyen bir hata oluştu.",

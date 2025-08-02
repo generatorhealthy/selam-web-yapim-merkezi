@@ -389,6 +389,9 @@ const ClientReferrals = () => {
 
       console.log(`✅ Database update successful:`, data);
 
+      // 500ms bekle sonra tekrar veriyi çek
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Verify the update by fetching the specific record
       const { data: verification, error: verifyError } = await supabase
         .from('specialists')
@@ -402,14 +405,18 @@ const ClientReferrals = () => {
         console.log(`✅ Verification: Database shows internal_number as "${verification.internal_number}"`);
       }
 
-      // Force complete data refresh
-      console.log('🔄 Refreshing all data from database...');
-      await fetchSpecialistsAndReferrals();
-
+      // Force complete page refresh after update
+      console.log('🔄 Forcing page refresh...');
+      
       toast({
         title: "Başarılı",
-        description: "Dahili numara başarıyla kaydedildi ve veritabanından doğrulandı",
+        description: "Dahili numara başarıyla kaydedildi. Sayfa yenileniyor...",
       });
+
+      // Sayfayı tamamen yenile
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       
     } catch (error) {
       console.error('❌ Error updating internal number:', error);
@@ -418,9 +425,6 @@ const ClientReferrals = () => {
         description: "Dahili numara güncellenirken hata oluştu: " + (error as Error).message,
         variant: "destructive",
       });
-      
-      // On error, also refresh to show actual database state
-      await fetchSpecialistsAndReferrals();
     }
   };
 
