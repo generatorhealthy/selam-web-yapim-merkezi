@@ -133,6 +133,6 @@ RewriteCond %{REQUEST_URI} !^/assets/
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|webp)$
 RewriteRule ^(.*)$ /index.html [L,QSA]
 
-# Error pages
-ErrorDocument 404 /index.html
-ErrorDocument 500 /index.html
+# Error pages - redirect to homepage
+ErrorDocument 404 /
+ErrorDocument 500 /
