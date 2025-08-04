@@ -76,6 +76,9 @@ AddType text/html .html
 # Dizin görüntülemeyi engelle
 Options -Indexes
 
+# Specific blog post redirects
+RewriteRule ^uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/?$ /blog/uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur [R=301,L]
+
 # Blog post redirects - redirect old URLs to /blog version
 RewriteCond %{REQUEST_URI} !^/blog/
 RewriteCond %{REQUEST_URI} !^/assets/
