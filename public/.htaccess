@@ -126,6 +126,9 @@ RewriteBase /
 # Disable directory browsing
 Options -Indexes
 
+# Specific URL redirects
+RewriteRule ^premium-paket-33-3/?$ /paketler [R=301,L]
+
 # Handle React Router (catch all) - En sonda olmalı
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
