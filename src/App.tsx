@@ -97,6 +97,7 @@ function App() {
               <Route path="/iletisim" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogDetail />} />
+              <Route path="/:slug" element={<BlogDetail />} />
               <Route path="/yazilar/:slug" element={<BlogPost />} />
               <Route path="/uzmanlar" element={<DoctorList />} />
               <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />
