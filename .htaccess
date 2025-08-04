@@ -97,6 +97,6 @@ RewriteCond %{REQUEST_URI} !^/assets/
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml)$
 RewriteRule ^(.*)$ /index.html [L,QSA]
 
-# Hata sayfaları
-ErrorDocument 404 /index.html
-ErrorDocument 500 /index.html
+# Hata sayfaları - anasayfaya yönlendir
+ErrorDocument 404 /
+ErrorDocument 500 /
