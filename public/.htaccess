@@ -129,6 +129,21 @@ Options -Indexes
 # Specific URL redirects
 RewriteRule ^premium-paket-33-3/?$ /paketler [R=301,L]
 
+# Redirect /blog/* URLs to /* (remove /blog from URL)
+RewriteCond %{THE_REQUEST} \s/blog/([^\s?]+)
+RewriteRule ^blog/(.+)$ /$1 [R=301,L]
+
+# Internal rewrite for blog posts - rewrite clean URLs to /blog/* internally
+RewriteCond %{REQUEST_URI} !^/blog/
+RewriteCond %{REQUEST_URI} !^/assets/
+RewriteCond %{REQUEST_URI} !^/(about|hakkimizda|iletisim|uzmanlar|uzmanlik|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|psikolog-paketi|diyetisyen-paketi|fizyoterapist-paketi|aile-danismani-paketi|odeme|odeme-sayfasi|odeme-basarili|privacy|gizlilik-politikasi|disclosure-text|aydinlatma-metni|mesafeli-satis-sozlesmesi|visitor-consultant-agreement|ziyaretci-danisan-sozlesmesi|comment-rules|yorum-kurallari|anasayfa|giris-yap|test|test-al|test-sonuc|divan_paneli|doktor-paneli)
+RewriteCond %{REQUEST_URI} !^/randevu-al/
+RewriteCond %{REQUEST_URI} !^/yazilar/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|webp)$
+RewriteRule ^([^/]+)/?$ /blog/$1 [L]
+
 # Handle React Router (catch all) - En sonda olmalı
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
