@@ -70,7 +70,15 @@ import SmsManagement from "./pages/admin/SmsManagement";
 // Doctor pages
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 
-const queryClient = new QueryClient();
+// Create QueryClient outside of component to prevent re-creation on renders
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 function App() {
   return (
