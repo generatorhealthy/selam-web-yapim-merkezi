@@ -21,10 +21,6 @@ import Packages from "./pages/Packages";
 import CampaignPackage from "./pages/CampaignPackage";
 import CampaignPremiumPackage from "./pages/CampaignPremiumPackage";
 import DiscountedPackage from "./pages/DiscountedPackage";
-import PsychologistPackage from "./pages/PsychologistPackage";
-import DietitianPackage from "./pages/DietitianPackage";
-import PhysiotherapistPackage from "./pages/PhysiotherapistPackage";
-import FamilyCounselorPackage from "./pages/FamilyCounselorPackage";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Privacy from "./pages/Privacy";
@@ -108,10 +104,6 @@ function App() {
               <Route path="/kampanyali-paket" element={<CampaignPackage />} />
               <Route path="/kampanyali-premium-paket" element={<CampaignPremiumPackage />} />
               <Route path="/indirimli-paket" element={<DiscountedPackage />} />
-              <Route path="/psikolog-paketi" element={<PsychologistPackage />} />
-              <Route path="/diyetisyen-paketi" element={<DietitianPackage />} />
-              <Route path="/fizyoterapist-paketi" element={<PhysiotherapistPackage />} />
-              <Route path="/aile-danismani-paketi" element={<FamilyCounselorPackage />} />
               <Route path="/odeme/:packageType" element={<Checkout />} />
               <Route path="/odeme-sayfasi" element={<Checkout />} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
