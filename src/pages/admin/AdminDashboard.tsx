@@ -25,7 +25,8 @@ import {
   Settings,
   Activity,
   Clock,
-  MessageCircle
+  MessageCircle,
+  Phone
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -278,6 +279,17 @@ const AdminDashboard = () => {
       buttonText: "SMS Hizmetini Yönet",
       adminOnly: false,
       staffOnly: true
+    },
+    {
+      title: "Santral Hizmeti",
+      description: "Bulut santral sistemi ve dahili numara yönetimi",
+      icon: Phone,
+      gradient: "from-orange-500 via-red-500 to-pink-600",
+      bgGradient: "from-orange-50 to-pink-50",
+      shadowColor: "shadow-orange-500/20",
+      route: "/divan_paneli/pbx-management",
+      buttonText: "Santral Sistemini Yönet",
+      adminOnly: true
     }
   ];
 
