@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
@@ -52,11 +52,11 @@ import SupportTickets from './pages/admin/SupportTickets';
 import ContractManagement from './pages/admin/ContractManagement';
 import SmsManagement from './pages/admin/SmsManagement';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
-import Privacy from './pages/legal/Privacy';
-import DisclosureText from './pages/legal/DisclosureText';
-import DistanceSalesContract from './pages/legal/DistanceSalesContract';
-import VisitorConsultantAgreement from './pages/legal/VisitorConsultantAgreement';
-import CommentRules from './pages/legal/CommentRules';
+import Privacy from './pages/Privacy';
+import DisclosureText from './pages/DisclosureText';
+import DistanceSalesContract from './pages/DistanceSalesContract';
+import VisitorConsultantAgreement from './pages/VisitorConsultantAgreement';
+import CommentRules from './pages/CommentRules';
 import NotFound from './pages/NotFound';
 import PbxManagement from "@/pages/admin/PbxManagement";
 
