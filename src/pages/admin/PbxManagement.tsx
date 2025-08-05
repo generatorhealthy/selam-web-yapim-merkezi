@@ -4,12 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { AdminTopBar } from "@/components/AdminTopBar";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, Settings, Users, Activity, Edit2, Save, X } from "lucide-react";
+import { Phone, Settings, Users, Activity, Edit2, Save, X, Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Specialist {
@@ -26,6 +29,14 @@ const PbxManagement = () => {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingNumber, setEditingNumber] = useState<string>("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newSpecialist, setNewSpecialist] = useState({
+    name: "",
+    specialty: "",
+    email: "",
+    phone: "",
+    internal_number: ""
+  });
 
   const fetchSpecialists = async () => {
     try {
@@ -112,6 +123,82 @@ const PbxManagement = () => {
   const handleCancel = () => {
     setEditingId(null);
     setEditingNumber("");
+  };
+
+  const handleAddSpecialist = async () => {
+    // Validate required fields
+    if (!newSpecialist.name || !newSpecialist.specialty || !newSpecialist.email) {
+      toast({
+        title: "Hata",
+        description: "Ad, uzmanlık ve e-posta alanları zorunludur.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate internal number if provided
+    if (newSpecialist.internal_number) {
+      const internalNumber = parseInt(newSpecialist.internal_number);
+      if (isNaN(internalNumber) || internalNumber < 100 || internalNumber > 999) {
+        toast({
+          title: "Hata",
+          description: "Dahili numara 100-999 arasında olmalıdır.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if number already exists
+      const existingSpecialist = specialists.find(s => parseInt(s.internal_number || "0") === internalNumber);
+      if (existingSpecialist) {
+        toast({
+          title: "Hata",
+          description: "Bu dahili numara zaten kullanımda.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('specialists')
+        .insert({
+          name: newSpecialist.name,
+          specialty: newSpecialist.specialty,
+          email: newSpecialist.email,
+          phone: newSpecialist.phone || null,
+          internal_number: newSpecialist.internal_number || null,
+          city: 'İstanbul',
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setSpecialists(prev => [...prev, data]);
+      setIsAddDialogOpen(false);
+      setNewSpecialist({
+        name: "",
+        specialty: "",
+        email: "",
+        phone: "",
+        internal_number: ""
+      });
+
+      toast({
+        title: "Başarılı",
+        description: "Yeni uzman eklendi.",
+      });
+    } catch (error) {
+      console.error('Error adding specialist:', error);
+      toast({
+        title: "Hata",
+        description: "Uzman eklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
   };
 
   const assignedCount = specialists.filter(s => s.internal_number).length;
@@ -216,11 +303,110 @@ const PbxManagement = () => {
           {/* Uzman Listesi ve Dahili Numara Atama */}
           <Card>
             <CardHeader>
-              <CardTitle>Uzman Dahili Numaraları</CardTitle>
-              <CardDescription>
-                Uzmanlara 100-999 arası dahili numaralar atayabilirsiniz.
-                Müsait numara sayısı: {availableNumbers.length}
-              </CardDescription>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>Uzman Dahili Numaraları</CardTitle>
+                  <CardDescription>
+                    Uzmanlara 100-999 arası dahili numaralar atayabilirsiniz.
+                    Müsait numara sayısı: {availableNumbers.length}
+                  </CardDescription>
+                </div>
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Yeni Uzman Ekle
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Yeni Uzman Ekle</DialogTitle>
+                      <DialogDescription>
+                        Yeni uzman bilgilerini girin. Dahili numara opsiyoneldir.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">
+                          Ad Soyad *
+                        </Label>
+                        <Input
+                          id="name"
+                          value={newSpecialist.name}
+                          onChange={(e) => setNewSpecialist(prev => ({ ...prev, name: e.target.value }))}
+                          className="col-span-3"
+                          placeholder="Uzman adı ve soyadı"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="specialty" className="text-right">
+                          Uzmanlık *
+                        </Label>
+                        <Select
+                          value={newSpecialist.specialty}
+                          onValueChange={(value) => setNewSpecialist(prev => ({ ...prev, specialty: value }))}
+                        >
+                          <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="Uzmanlık seçin" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Psikolog">Psikolog</SelectItem>
+                            <SelectItem value="Aile Danışmanı">Aile Danışmanı</SelectItem>
+                            <SelectItem value="Psikolojik Danışmanlık">Psikolojik Danışmanlık</SelectItem>
+                            <SelectItem value="Diyetisyen">Diyetisyen</SelectItem>
+                            <SelectItem value="Fizyoterapist">Fizyoterapist</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="email" className="text-right">
+                          E-posta *
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={newSpecialist.email}
+                          onChange={(e) => setNewSpecialist(prev => ({ ...prev, email: e.target.value }))}
+                          className="col-span-3"
+                          placeholder="ornek@email.com"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="phone" className="text-right">
+                          Telefon
+                        </Label>
+                        <Input
+                          id="phone"
+                          value={newSpecialist.phone}
+                          onChange={(e) => setNewSpecialist(prev => ({ ...prev, phone: e.target.value }))}
+                          className="col-span-3"
+                          placeholder="0532 123 45 67"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="internal_number" className="text-right">
+                          Dahili No
+                        </Label>
+                        <Input
+                          id="internal_number"
+                          type="number"
+                          value={newSpecialist.internal_number}
+                          onChange={(e) => setNewSpecialist(prev => ({ ...prev, internal_number: e.target.value }))}
+                          className="col-span-3"
+                          placeholder="100-999"
+                          min="100"
+                          max="999"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" onClick={handleAddSpecialist}>
+                        Uzman Ekle
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
               {loading ? (
