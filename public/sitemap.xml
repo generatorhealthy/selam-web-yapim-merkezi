@@ -81,7 +81,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/psikolojik-danismanlık</loc>
+    <loc>https://doktorumol.com.tr/uzmanlik/psikolojik-danismanlik</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -146,6 +146,12 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/aile-danismani/aile-dan-sevinc-kanat</loc>
+    <lastmod>2025-01-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/aile-danismani/aile-dan-tugba-sercan-guler</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -259,12 +265,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/aile-danismani/melike-yilmaz</loc>
-    <lastmod>2025-01-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/aile-danismani/meryem-ilke-narin</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
@@ -353,7 +353,7 @@
 
   <!-- Kadın Doğum -->
   <url>
-    <loc>https://doktorumol.com.tr/kadin-dogum/prof-dr-nilgun-turhan</loc>
+    <loc>https://doktorumol.com.tr/kadin-dogum/nilgun-turhan</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -361,25 +361,7 @@
 
   <!-- Psikolog -->
   <url>
-    <loc>https://doktorumol.com.tr/psikolog/psk-dan-muruvvet-kara</loc>
-    <lastmod>2025-01-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolog/psk-sibel-acar</loc>
-    <lastmod>2025-01-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolog/uzm-psk-meryem-hotan</loc>
-    <lastmod>2025-01-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolog/dr-kl-psk-handan-kutlusoy-vural</loc>
+    <loc>https://doktorumol.com.tr/psikolog/kl-psk-handan-kutlusoy-vural</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -476,12 +458,6 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-meryem-nur-isik</loc>
-    <lastmod>2025-01-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolog/psk-nehir-yilmaz-ates</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -612,142 +588,130 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://doktorumol.com.tr/psikolog/uzm-psk-meryem-hotan</loc>
+    <lastmod>2025-01-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
 
   <!-- Psikolojik Danışmanlık -->
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-dan-ayca-harmankaya</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/klinik-psikolog-pinar-erdem</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-dan-gulbahar-bumin</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/uzm-psk-dan-ayse-senocak</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-dan-rumeysa-varli</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/betul-kabuk</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/betul-kabuk</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-seyma-keles</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/dr-klinik-psikolog-pinar-erdem</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-salih-serdar-borklu</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/fatmanur-gencoglan</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-gulsen-gurbuz</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-dan-hande-argin-kara</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-elif-camci-kaya</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-dan-humeyra-ozlem-yalcin</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/pdr-sibel-tosuner</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-dan-selen-kaya</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-ayse-akcayol</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-deniz-nur-gozde-aktas</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-ayca-harmankaya</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-ezgi-bedir</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-gulbahar-bumin</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-fatma-ozel</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-rumeysa-varli</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-ilknur-yalim</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/pdr-kubra-koroglu</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-merve-erturk</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-didem-aydin</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-ozlem-gurbuz</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-gurkan-celik</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-seyda-yavuz</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-veysel-hasan-gul</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-tugba-senol</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-muhammet-enbiya-memisoglu</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-tugce-gulfem-onal</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-deniz-deveci</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-tugce-toksoy</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/fatmanur-gencoglan</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/psk-yaren-terzioğlu</loc>
-    <lastmod>2025-01-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/uzm-psk-ayse-ceyda-aydin</loc>
-    <lastmod>2025-01-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/uzm-psk-irem-bilekten</loc>
-    <lastmod>2025-01-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlık/uzm-psk-merve-ipekci</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-dan-zuleyha-eker</loc>
     <lastmod>2025-01-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
