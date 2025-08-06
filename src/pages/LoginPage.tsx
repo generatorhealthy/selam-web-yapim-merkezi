@@ -77,14 +77,13 @@ const LoginPage = () => {
 
       console.log('Auth başarılı, uzman kaydı kontrol ediliyor...');
 
-      // Wait a moment for the session to be established
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       // Kullanıcının specialists tablosunda kayıtlı olup olmadığını kontrol et
+      // Hem user_id hem de email ile kontrol et
       const { data: specialist, error: specialistError } = await supabase
         .from('specialists')
         .select('*')
-        .eq('user_id', authData.user.id)
+        .or(`user_id.eq.${authData.user.id},email.eq.${loginData.email}`)
+        .eq('is_active', true)
         .maybeSingle();
 
       console.log('Uzman sorgu sonucu:', { specialist, specialistError });
@@ -101,46 +100,13 @@ const LoginPage = () => {
       }
 
       if (!specialist) {
-        // E-posta ile de deneyelim
-        const { data: specialistByEmail, error: emailError } = await supabase
-          .from('specialists')
-          .select('*')
-          .eq('email', loginData.email)
-          .maybeSingle();
-
-        console.log('E-posta ile uzman sorgu sonucu:', { specialistByEmail, emailError });
-
-        if (emailError || !specialistByEmail) {
-          await supabase.auth.signOut();
-          toast({
-            title: "Yetkisiz Erişim",
-            description: "Bu e-posta adresi ile kayıtlı bir uzman bulunamadı. Lütfen admin ile iletişime geçin.",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        // E-posta ile bulundu
-        if (!specialistByEmail.is_active) {
-          await supabase.auth.signOut();
-          toast({
-            title: "Hesap Devre Dışı",
-            description: "Uzman hesabınız devre dışı bırakılmış. Lütfen admin ile iletişime geçin.",
-            variant: "destructive"
-          });
-          return;
-        }
-      } else {
-        // user_id ile bulundu
-        if (!specialist.is_active) {
-          await supabase.auth.signOut();
-          toast({
-            title: "Hesap Devre Dışı",
-            description: "Uzman hesabınız devre dışı bırakılmış. Lütfen admin ile iletişime geçin.",
-            variant: "destructive"
-          });
-          return;
-        }
+        await supabase.auth.signOut();
+        toast({
+          title: "Yetkisiz Erişim",
+          description: "Bu e-posta adresi ile kayıtlı bir uzman bulunamadı. Lütfen admin ile iletişime geçin.",
+          variant: "destructive"
+        });
+        return;
       }
 
       // Başarılı giriş - doktor paneline yönlendir
