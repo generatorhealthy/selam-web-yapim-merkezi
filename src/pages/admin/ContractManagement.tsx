@@ -41,6 +41,7 @@ interface ContractOrder {
   amount: number;
   payment_method: string;
   customer_type: string;
+  status: string;
   created_at: string;
   pre_info_pdf_content: string | null;
   distance_sales_pdf_content: string | null;
@@ -89,12 +90,12 @@ const ContractManagement = () => {
             amount,
             payment_method,
             customer_type,
+            status,
             created_at,
             pre_info_pdf_content,
             distance_sales_pdf_content,
             contract_ip_address
           `)
-          .in('status', ['approved', 'completed'])
           .order('created_at', { ascending: false }),
         
         supabase
@@ -495,6 +496,22 @@ const ContractManagement = () => {
                                   }`}
                                 >
                                   {order.customer_type === 'individual' ? 'Bireysel' : 'Kurumsal'}
+                                </Badge>
+                                <Badge 
+                                  className={`px-3 py-1 text-xs font-medium ${
+                                    order.status === 'approved' 
+                                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' 
+                                      : order.status === 'completed'
+                                      ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white'
+                                      : order.status === 'pending'
+                                      ? 'bg-gradient-to-r from-yellow-500 to-orange-600 text-white'
+                                      : 'bg-gradient-to-r from-gray-500 to-slate-600 text-white'
+                                  }`}
+                                >
+                                  {order.status === 'approved' ? 'Onaylandı' 
+                                   : order.status === 'completed' ? 'Tamamlandı'
+                                   : order.status === 'pending' ? 'Bekliyor'
+                                   : order.status}
                                 </Badge>
                                 <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
                                   {format(new Date(order.created_at), 'dd MMM yyyy', { locale: tr })}
