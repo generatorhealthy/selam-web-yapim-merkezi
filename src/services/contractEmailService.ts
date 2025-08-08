@@ -32,6 +32,9 @@ export const sendContractEmailsAfterPurchase = async (
   isFirstMonth: boolean = true
 ) => {
   try {
+    // Email service temporarily disabled
+    console.log('Email sending disabled - would have sent to:', customerData.email);
+    return;
     if (isFirstMonth) {
       // Generate PDFs
       const preInfoPDF = await generatePreInfoPDF(orderId);

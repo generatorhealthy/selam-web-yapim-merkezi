@@ -14,16 +14,12 @@ interface EmailData {
 
 export const sendEmail = async (emailData: EmailData) => {
   try {
-    // Bu fonksiyon gerçek email gönderimi için kullanılacak
-    // Şu an için console.log ile simüle ediyoruz
-    console.log('📧 E-posta gönderiliyor:', {
+    // Email service temporarily disabled
+    console.log('📧 E-posta gönderimi devre dışı:', {
       to: emailData.to,
       subject: emailData.subject,
       attachments: emailData.attachments?.map(att => att.filename) || []
     });
-    
-    // Gerçek email gönderimi buraya implementelenecek
-    // Örneğin: Resend, SendGrid, vb. API'leri kullanılabilir
     
     return { success: true };
   } catch (error) {
