@@ -55,8 +55,10 @@ const Landing = () => {
                   Randevu Al <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-                Doktor Olarak Katıl
+              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
+                <Link to="/kayit-olmak-istiyorum">
+                  Doktor Olarak Katıl
+                </Link>
               </Button>
             </div>
           </div>

@@ -31,6 +31,7 @@ import CommentRules from "./pages/CommentRules";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import LoginPage from "./pages/LoginPage";
+import DoctorRegistration from "./pages/DoctorRegistration";
 import TestInterface from "./components/TestInterface";
 import TestTaking from "./components/TestTaking";
 import TestResult from "./pages/TestResult";
@@ -118,6 +119,7 @@ function App() {
               <Route path="/yorum-kurallari" element={<CommentRules />} />
               <Route path="/anasayfa" element={<Landing />} />
               <Route path="/giris-yap" element={<LoginPage />} />
+              <Route path="/kayit-olmak-istiyorum" element={<DoctorRegistration />} />
               
               {/* Test Routes */}
               <Route path="/test/:testId" element={<TestInterface />} />
