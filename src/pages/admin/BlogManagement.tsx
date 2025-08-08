@@ -142,6 +142,10 @@ const BlogManagement = () => {
         return;
       }
 
+      // Determine author type based on user role
+      const authorType = userProfile?.role === 'staff' ? 'staff' : 'admin';
+      const authorName = userProfile?.role === 'staff' ? 'Staff Editörü' : 'Editör';
+
       const { error } = await supabase
         .from('blog_posts')
         .insert({
@@ -151,8 +155,8 @@ const BlogManagement = () => {
           featured_image: values.featured_image || null,
           slug: slug,
           author_id: user.id,
-          author_name: "Editör",
-          author_type: "editor",
+          author_name: authorName,
+          author_type: authorType,
           status: "published",
           published_at: new Date().toISOString(),
           word_count: wordCount,
