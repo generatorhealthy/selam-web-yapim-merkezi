@@ -38,19 +38,25 @@ const DoctorRegistration = () => {
     setIsSubmitting(true);
 
     try {
+      // Validate required fields
+      if (!formData.name || !formData.email || !formData.phone || !formData.specialty || !formData.city) {
+        toast.error("Lütfen tüm zorunlu alanları doldurun.");
+        return;
+      }
+
       // Insert into specialists table instead of doctor_registrations
       const { data, error } = await supabase
         .from('specialists')
         .insert([
           {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
+            name: formData.name.trim(),
+            email: formData.email.trim().toLowerCase(),
+            phone: formData.phone.trim(),
             specialty: formData.specialty,
-            city: formData.city,
-            experience: parseInt(formData.experience) || 0,
-            education: formData.education,
-            bio: formData.bio,
+            city: formData.city.trim(),
+            experience: formData.experience ? parseInt(formData.experience) : 0,
+            education: formData.education?.trim() || null,
+            bio: formData.bio?.trim() || null,
             is_active: false // Set as inactive until approved by admin
           }
         ])
