@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.iyzico-payment-callback]
 verify_jwt = false
+
+[functions.send-registration-email]
+verify_jwt = false
