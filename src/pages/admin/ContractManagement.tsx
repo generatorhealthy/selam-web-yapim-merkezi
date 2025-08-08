@@ -94,8 +94,11 @@ const ContractManagement = () => {
             created_at,
             pre_info_pdf_content,
             distance_sales_pdf_content,
-            contract_ip_address
+            contract_ip_address,
+            subscription_month,
+            is_first_order
           `)
+          .eq('subscription_month', 1)
           .order('created_at', { ascending: false }),
         
         supabase
