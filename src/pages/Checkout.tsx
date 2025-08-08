@@ -851,6 +851,7 @@ const handleCreditCardPayment = async () => {
         paymentMethod={paymentMethod}
         customerType={customerType}
         clientIP={clientIP}
+        orderCreatedAt={new Date().toISOString()}
       />
       <ContractDialog
         open={showDistanceSalesDialog}
@@ -861,6 +862,7 @@ const handleCreditCardPayment = async () => {
         paymentMethod={paymentMethod}
         customerType={customerType}
         clientIP={clientIP}
+        orderCreatedAt={new Date().toISOString()}
       />
       {showBankInfo && (
         <BankTransferInfo

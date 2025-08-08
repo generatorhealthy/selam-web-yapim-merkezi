@@ -21,6 +21,7 @@ interface ContractDialogProps {
   paymentMethod: string;
   customerType: string;
   clientIP: string;
+  orderCreatedAt: string;
 }
 
 const ContractDialog = ({
@@ -31,7 +32,8 @@ const ContractDialog = ({
   selectedPackage,
   paymentMethod,
   customerType,
-  clientIP
+  clientIP,
+  orderCreatedAt
 }: ContractDialogProps) => {
   const [contractContent, setContractContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -61,8 +63,9 @@ const ContractDialog = ({
         let content = data.content;
         
         // Müşteri bilgilerini forma ekle
-        const currentDate = new Date().toLocaleDateString('tr-TR');
-        const currentDateTime = new Date().toLocaleString('tr-TR');
+        const orderDate = new Date(orderCreatedAt);
+        const contractDate = orderDate.toLocaleDateString('tr-TR');
+        const contractDateTime = orderDate.toLocaleString('tr-TR');
         
         const customerInfo = `
 <div style="background: #f0f9ff; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #0ea5e9;">
@@ -92,8 +95,8 @@ ${selectedPackage.features ? selectedPackage.features.map((feature: string) => `
 </ul>
 
 <h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>
-<p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${currentDate}</p>
-<p><strong>Dijital Onaylama Tarihi:</strong> ${currentDateTime}</p>
+<p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${contractDate}</p>
+<p><strong>Dijital Onaylama Tarihi:</strong> ${contractDateTime}</p>
 <p><strong>IP Adresi:</strong> ${clientIP}</p>
 </div>
 
@@ -181,7 +184,7 @@ Adres: ${formData.address || 'Belirtilmemiş'}
 Fiyat: ${selectedPackage.price.toLocaleString('tr-TR')} ₺
 Ödeme Şekli: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}
 
-Sözleşme Tarihi: ${new Date().toLocaleDateString('tr-TR')}
+Sözleşme Tarihi: ${new Date(orderCreatedAt).toLocaleDateString('tr-TR')}
 IP Adresi: ${clientIP}`;
   };
 

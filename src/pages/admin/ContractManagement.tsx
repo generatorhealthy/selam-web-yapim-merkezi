@@ -613,6 +613,7 @@ const ContractManagement = () => {
             paymentMethod={selectedOrder.payment_method}
             customerType={selectedOrder.customer_type}
             clientIP={selectedOrder.contract_ip_address || '127.0.0.1'}
+            orderCreatedAt={selectedOrder.created_at}
           />
         )}
       </div>
