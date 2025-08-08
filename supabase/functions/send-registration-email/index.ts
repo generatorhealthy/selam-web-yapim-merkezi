@@ -32,29 +32,165 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("BREVO_API_KEY is not configured");
     }
 
-    // Admin'e gönderilecek e-posta içeriği
+    // Admin'e gönderilecek e-posta içeriği - güzel tasarım
     const adminEmailContent = `
-      <h2>Yeni Doktor Kayıt Başvurusu</h2>
-      <p><strong>Ad Soyad:</strong> ${requestData.name}</p>
-      <p><strong>E-posta:</strong> ${requestData.email}</p>
-      <p><strong>Telefon:</strong> ${requestData.phone}</p>
-      <p><strong>Uzmanlık Alanı:</strong> ${requestData.specialty}</p>
-      <p><strong>Şehir:</strong> ${requestData.city}</p>
-      ${requestData.experience ? `<p><strong>Deneyim:</strong> ${requestData.experience} yıl</p>` : ''}
-      ${requestData.education ? `<p><strong>Eğitim:</strong> ${requestData.education}</p>` : ''}
-      ${requestData.about ? `<p><strong>Hakkında:</strong> ${requestData.about}</p>` : ''}
-      <p><strong>Başvuru Tarihi:</strong> ${new Date().toLocaleString('tr-TR')}</p>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Yeni Doktor Kayıt Başvurusu</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">⭐ Yeni Doktor Kayıt Başvurusu</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">doktorumol.com.tr kayıt formundan gönderilmiştir.</p>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 30px 20px;">
+            
+            <div style="margin-bottom: 25px;">
+              <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                👤 Ad Soyad:
+              </h3>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #2d3748;">${requestData.name}</p>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+              <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                📧 E-posta:
+              </h3>
+              <p style="margin: 0; font-size: 16px; color: #4299e1;"><a href="mailto:${requestData.email}" style="color: #4299e1; text-decoration: none;">${requestData.email}</a></p>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+              <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                📞 Telefon:
+              </h3>
+              <p style="margin: 0; font-size: 16px; color: #2d3748;">${requestData.phone}</p>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+              <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                🏥 Uzmanlık Alanı:
+              </h3>
+              <p style="margin: 0; font-size: 16px; color: #2d3748; background-color: #edf2f7; padding: 8px 12px; border-radius: 6px; display: inline-block;">${requestData.specialty}</p>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+              <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                🏢 Şehir:
+              </h3>
+              <p style="margin: 0; font-size: 16px; color: #2d3748;">${requestData.city}</p>
+            </div>
+            
+            ${requestData.experience ? `
+            <div style="margin-bottom: 25px;">
+              <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                📈 Deneyim:
+              </h3>
+              <p style="margin: 0; font-size: 16px; color: #2d3748;">${requestData.experience} yıl</p>
+            </div>
+            ` : ''}
+            
+            ${requestData.education ? `
+            <div style="margin-bottom: 25px;">
+              <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                🎓 Eğitim:
+              </h3>
+              <p style="margin: 0; font-size: 16px; color: #2d3748; background-color: #f7fafc; padding: 12px; border-radius: 6px; border-left: 4px solid #667eea;">${requestData.education}</p>
+            </div>
+            ` : ''}
+            
+            ${requestData.about ? `
+            <div style="margin-bottom: 25px;">
+              <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
+                💬 Hakkında:
+              </h3>
+              <p style="margin: 0; font-size: 16px; color: #2d3748; background-color: #f7fafc; padding: 12px; border-radius: 6px; border-left: 4px solid #764ba2;">${requestData.about}</p>
+            </div>
+            ` : ''}
+            
+            <div style="margin-top: 30px; padding: 20px; background-color: #edf2f7; border-radius: 8px;">
+              <h3 style="color: #4a5568; margin: 0 0 10px 0; font-size: 16px; display: flex; align-items: center;">
+                🕒 Başvuru Tarihi:
+              </h3>
+              <p style="margin: 0; font-size: 14px; color: #718096;">${new Date().toLocaleString('tr-TR')}</p>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #2d3748; color: white; padding: 20px; text-align: center;">
+            <p style="margin: 0; font-size: 14px;">Bu mesaj <strong>doktorumol.com.tr</strong> kayıt formundan gönderilmiştir.</p>
+          </div>
+          
+        </div>
+      </body>
+      </html>
     `;
 
-    // Kullanıcıya gönderilecek onay e-postası
+    // Kullanıcıya gönderilecek onay e-postası - güzel tasarım
     const userEmailContent = `
-      <h2>Başvurunuz Alındı</h2>
-      <p>Sayın ${requestData.name},</p>
-      <p>Doktorumol.com.tr'ye yapmış olduğunuz doktor kayıt başvurunuz tarafımıza ulaşmıştır.</p>
-      <p>Başvurunuz incelendikten sonra en kısa sürede size dönüş yapılacaktır.</p>
-      <p>Herhangi bir sorunuz için info@doktorumol.com.tr adresinden bizimle iletişime geçebilirsiniz.</p>
-      <p>Teşekkür ederiz.</p>
-      <p><strong>Doktorumol.com.tr Ekibi</strong></p>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Başvurunuz Alındı</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">🌟 Yeni İletişim Formu Mesajı</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;"><strong>doktorumol.com.tr</strong> iletişim formundan gönderilmiştir.</p>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 30px 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h2 style="color: #2d3748; margin: 0 0 15px 0; font-size: 22px;">Başvurunuz Başarıyla Alındı!</h2>
+              <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0;">Sayın <strong>${requestData.name}</strong>, Doktorumol.com.tr'ye yapmış olduğunuz başvuru tarafımıza ulaşmıştır.</p>
+            </div>
+            
+            <div style="background-color: #edf2f7; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
+              <h3 style="color: #2d3748; margin: 0 0 15px 0; font-size: 18px;">📋 Başvuru Özeti:</h3>
+              <div style="color: #4a5568; font-size: 14px; line-height: 1.8;">
+                <p style="margin: 8px 0;"><strong>Uzmanlık Alanı:</strong> ${requestData.specialty}</p>
+                <p style="margin: 8px 0;"><strong>Şehir:</strong> ${requestData.city}</p>
+                <p style="margin: 8px 0;"><strong>E-posta:</strong> ${requestData.email}</p>
+                <p style="margin: 8px 0;"><strong>Telefon:</strong> ${requestData.phone}</p>
+              </div>
+            </div>
+            
+            <div style="background-color: #f0fff4; border: 1px solid #9ae6b4; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+              <h3 style="color: #22543d; margin: 0 0 10px 0; font-size: 16px;">✅ Sonraki Adımlar:</h3>
+              <ul style="color: #2f855a; font-size: 14px; line-height: 1.6; margin: 10px 0; padding-left: 20px;">
+                <li>Başvurunuz incelendikten sonra en kısa sürede size dönüş yapılacaktır</li>
+                <li>Gerekli görüldüğü takdirde sizinle iletişime geçilecektir</li>
+                <li>Herhangi bir sorunuz için info@doktorumol.com.tr adresinden bizimle iletişime geçebilirsiniz</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+              <p style="color: #4a5568; font-size: 14px; margin: 0;">Başvurunuz için teşekkür ederiz.</p>
+              <p style="color: #2d3748; font-size: 16px; font-weight: bold; margin: 10px 0 0 0;">Doktorumol.com.tr Ekibi</p>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #2d3748; color: white; padding: 20px; text-align: center;">
+            <p style="margin: 0; font-size: 14px;">Bu mesaj <strong>doktorumol.com.tr</strong> iletişim formundan gönderilmiştir.</p>
+          </div>
+          
+        </div>
+      </body>
+      </html>
     `;
 
     // Admin'e e-posta gönder
