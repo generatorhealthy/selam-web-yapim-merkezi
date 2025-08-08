@@ -42,6 +42,14 @@ const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
         return;
       }
 
+      // E-posta validasyonu
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        toast.error("Geçerli bir e-posta adresi girin.");
+        setIsLoading(false);
+        return;
+      }
+
       // Edge function'a e-posta gönderimi
       const response = await fetch('https://irnfwewabogveofwemvg.supabase.co/functions/v1/send-registration-email', {
         method: 'POST',
@@ -49,14 +57,25 @@ const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          specialty: formData.specialty,
+          city: formData.city,
+          experience: formData.experience || '',
+          education: formData.education || '',
+          about: formData.about || '',
           type: 'doctor_registration'
         }),
       });
 
       if (!response.ok) {
-        throw new Error('E-posta gönderilirken hata oluştu');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'E-posta gönderilirken hata oluştu');
       }
+
+      const result = await response.json();
+      console.log('E-posta gönderim sonucu:', result);
 
       toast.success("Başvurunuz başarıyla gönderildi! En kısa sürede size dönüş yapacağız.");
       
@@ -73,7 +92,7 @@ const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
       });
       onClose();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Kayıt hatası:', error);
       toast.error("Başvuru gönderilirken bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
