@@ -34,6 +34,8 @@ const SuccessStatistics = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStatistic, setEditingStatistic] = useState<SuccessStatistic | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [formData, setFormData] = useState({
     employee_name: "",
     employee_surname: "",
@@ -232,7 +234,7 @@ const SuccessStatistics = () => {
   const getEmployeeStats = () => {
     return employees.map(name => {
       const total = statistics
-        .filter(stat => stat.employee_name === name)
+        .filter(stat => stat.employee_name === name && stat.month === selectedMonth && stat.year === selectedYear)
         .reduce((sum, stat) => sum + stat.specialists_registered, 0);
       return { name, total, color: employeeColors[name as keyof typeof employeeColors] };
     }).sort((a, b) => b.total - a.total);
@@ -244,15 +246,13 @@ const SuccessStatistics = () => {
   };
 
   const getThisMonthTotal = () => {
-    const currentMonth = new Date().getMonth() + 1;
-    const currentYear = new Date().getFullYear();
-    return getMonthlyTotal(currentMonth, currentYear);
+    return getMonthlyTotal(selectedMonth, selectedYear);
   };
 
   const getMonthlyData = () => {
     const monthlyData = months.map(month => {
       const total = statistics
-        .filter(stat => stat.month === month.value && stat.year === new Date().getFullYear())
+        .filter(stat => stat.month === month.value && stat.year === selectedYear)
         .reduce((sum, stat) => sum + stat.specialists_registered, 0);
       return {
         month: month.label,
@@ -297,15 +297,12 @@ const SuccessStatistics = () => {
   };
 
   const getMonthlyEmployeeStats = () => {
-    const currentMonth = new Date().getMonth() + 1;
-    const currentYear = new Date().getFullYear();
-    
     return employees.map(name => {
       const monthlyTotal = statistics
         .filter(stat => 
           stat.employee_name === name && 
-          stat.month === currentMonth && 
-          stat.year === currentYear
+          stat.month === selectedMonth && 
+          stat.year === selectedYear
         )
         .reduce((sum, stat) => sum + stat.specialists_registered, 0);
       
@@ -350,14 +347,46 @@ const SuccessStatistics = () => {
       <HorizontalNavigation />
       <div className="p-6">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-8">
+            <div className="mb-8">
             <AdminBackButton />
-            <div className="flex items-center gap-4 mb-2">
+            <div className="flex items-center gap-4 mb-4">
               <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white">
                 <TrendingUp className="w-8 h-8" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-4xl font-bold text-gray-900">Başarı İstatistikleri</h1>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="month-select" className="text-sm font-medium">Ay:</Label>
+                  <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {months.map(month => (
+                        <SelectItem key={month.value} value={month.value.toString()}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="year-select" className="text-sm font-medium">Yıl:</Label>
+                  <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[2023, 2024, 2025].map(year => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>
@@ -419,7 +448,7 @@ const SuccessStatistics = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Award className="w-5 h-5 text-green-600" />
-                Bu Ay Prim Durumu
+                {months.find(m => m.value === selectedMonth)?.label} {selectedYear} Prim Durumu
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -484,13 +513,13 @@ const SuccessStatistics = () => {
             <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium opacity-90">Bu Ay</CardTitle>
+                  <CardTitle className="text-sm font-medium opacity-90">Seçilen Ay</CardTitle>
                   <Calendar className="w-5 h-5 opacity-80" />
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold mb-1">{getThisMonthTotal()}</div>
-                <p className="text-xs opacity-80">Bu ay toplam kayıt</p>
+                <p className="text-xs opacity-80">{months.find(m => m.value === selectedMonth)?.label} {selectedYear}</p>
               </CardContent>
             </Card>
 
