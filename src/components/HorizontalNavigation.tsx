@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, X } from "lucide-react";
-
+import DoctorRegistrationForm from "./DoctorRegistrationForm";
 import { AdminTopBar } from "./AdminTopBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -16,7 +16,7 @@ export function HorizontalNavigation() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentSession, setCurrentSession] = useState<any>(null);
@@ -357,11 +357,11 @@ export function HorizontalNavigation() {
               {authInitialized && !isLoggedIn && (
                 <div className="flex items-center gap-3">
                   <Button 
-                    asChild
                     variant="outline"
                     className="border-blue-200 text-blue-600 hover:bg-blue-50 rounded-full font-medium px-6 py-2"
+                    onClick={() => setShowRegistrationForm(true)}
                   >
-                    <Link to="/kayit-olmak-istiyorum">Kayıt Olmak İstiyorum</Link>
+                    Kayıt Olmak İstiyorum
                   </Button>
                   <Button 
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2"
@@ -428,16 +428,14 @@ export function HorizontalNavigation() {
                 {authInitialized && !isLoggedIn && (
                   <div className="space-y-2">
                     <Button 
-                      asChild
                       variant="outline"
                       className="w-full border-blue-200 text-blue-600 hover:bg-blue-50 rounded-full font-medium"
+                      onClick={() => {
+                        setShowRegistrationForm(true);
+                        setIsMobileMenuOpen(false);
+                      }}
                     >
-                      <Link 
-                        to="/kayit-olmak-istiyorum"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        Kayıt Olmak İstiyorum
-                      </Link>
+                      Kayıt Olmak İstiyorum
                     </Button>
                     <Button 
                       className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
@@ -457,6 +455,10 @@ export function HorizontalNavigation() {
         </div>
       </div>
 
+      <DoctorRegistrationForm
+          isOpen={showRegistrationForm} 
+          onClose={() => setShowRegistrationForm(false)} 
+        />
       </>
     );
   }
