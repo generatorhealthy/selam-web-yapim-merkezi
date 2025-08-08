@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Menu, X } from "lucide-react";
 
 import { AdminTopBar } from "./AdminTopBar";
+import RegistrationForm from "./RegistrationForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function HorizontalNavigation() {
@@ -21,6 +22,7 @@ export function HorizontalNavigation() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentSession, setCurrentSession] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [authInitialized, setAuthInitialized] = useState(false);
   const isMobile = useIsMobile();
 
@@ -353,14 +355,23 @@ export function HorizontalNavigation() {
                 </div>
               )}
               
-               {/* Giriş butonu */}
+               {/* Kayıt ol ve Giriş butonları */}
                {authInitialized && !isLoggedIn && (
-                 <Button 
-                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2"
-                   onClick={() => navigate('/giris-yap')}
-                 >
-                   Giriş
-                 </Button>
+                 <div className="flex items-center gap-3">
+                   <Button 
+                     variant="outline"
+                     className="border-blue-200 text-blue-600 hover:bg-blue-50 rounded-full font-medium px-6 py-2"
+                     onClick={() => setShowRegistrationForm(true)}
+                   >
+                     Kayıt Olmak İstiyorum
+                   </Button>
+                   <Button 
+                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2"
+                     onClick={() => navigate('/giris-yap')}
+                   >
+                     Giriş
+                   </Button>
+                 </div>
                )}
             </div>
           )}
@@ -417,15 +428,27 @@ export function HorizontalNavigation() {
                 )}
                 
                 {authInitialized && !isLoggedIn && (
-                  <Button 
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-                    onClick={() => {
-                      navigate('/giris-yap');
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    Giriş
-                  </Button>
+                  <div className="space-y-2">
+                    <Button 
+                      variant="outline"
+                      className="w-full border-blue-200 text-blue-600 hover:bg-blue-50 rounded-full font-medium"
+                      onClick={() => {
+                        setShowRegistrationForm(true);
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Kayıt Olmak İstiyorum
+                    </Button>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+                      onClick={() => {
+                        navigate('/giris-yap');
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Giriş
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -434,6 +457,10 @@ export function HorizontalNavigation() {
         </div>
       </div>
 
-      </>
-    );
-  }
+        <RegistrationForm
+          isOpen={showRegistrationForm} 
+          onClose={() => setShowRegistrationForm(false)} 
+        />
+        </>
+      );
+    }
