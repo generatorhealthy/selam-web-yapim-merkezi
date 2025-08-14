@@ -97,7 +97,7 @@ const Packages = () => {
       
       <HorizontalNavigation />
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden pb-8 md:pb-0">
         {/* Background decorations */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
@@ -107,25 +107,25 @@ const Packages = () => {
 
         <div className="relative z-10">
           {/* Header */}
-          <div className="container mx-auto px-4 py-12">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 mb-6 shadow-lg">
-                <Gift className="w-5 h-5 text-blue-500" />
-                <span className="text-sm font-medium text-gray-700">Özel Fırsatlar</span>
+          <div className="container mx-auto px-4 py-6 md:py-12">
+            <div className="text-center mb-8 md:mb-16">
+              <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-4 md:px-6 py-2 md:py-3 mb-4 md:mb-6 shadow-lg">
+                <Gift className="w-4 md:w-5 h-4 md:h-5 text-blue-500" />
+                <span className="text-xs md:text-sm font-medium text-gray-700">Özel Fırsatlar</span>
               </div>
               
-              <h1 className="text-5xl font-bold text-gray-900 mb-6 leading-tight">
+              <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
                 Paketler
               </h1>
               
-              <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-6 py-3 rounded-full font-semibold shadow-sm">
+              <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 md:px-6 py-2 md:py-3 rounded-full font-semibold shadow-sm">
                 <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                Aylık Ödeme
+                <span className="text-sm md:text-base">Aylık Ödeme</span>
               </div>
             </div>
 
             {/* Packages Grid */}
-            <div className="grid lg:grid-cols-2 gap-8 mb-16 max-w-5xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-16 max-w-5xl mx-auto">
               {packages.map((pkg) => {
                 const IconComponent = pkg.icon;
                 return (
@@ -146,41 +146,41 @@ const Packages = () => {
                       </div>
                     )}
                     
-                    <CardHeader className="text-center pb-4 pt-8">
+                    <CardHeader className="text-center pb-4 pt-6 md:pt-8">
                       <div className="mb-4">
-                        <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r ${pkg.color} p-4 shadow-lg`}>
-                          <IconComponent className="w-8 h-8 text-white" />
+                        <div className={`w-12 md:w-16 h-12 md:h-16 mx-auto rounded-2xl bg-gradient-to-r ${pkg.color} p-3 md:p-4 shadow-lg`}>
+                          <IconComponent className="w-6 md:w-8 h-6 md:h-8 text-white" />
                         </div>
                       </div>
                       
-                      <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
+                      <CardTitle className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
                         {pkg.name}
                       </CardTitle>
                       
                       <div className="space-y-2">
-                        <div className="text-lg text-gray-500 line-through">
+                        <div className="text-base md:text-lg text-gray-500 line-through">
                           {pkg.originalPrice.toLocaleString('tr-TR')} ₺
                         </div>
-                        <div className="text-5xl font-bold text-gray-900 mb-2">
+                        <div className="text-3xl md:text-5xl font-bold text-gray-900 mb-2">
                           {pkg.price.toLocaleString('tr-TR')} ₺
                         </div>
-                        <div className="text-sm text-gray-600 mb-4">
+                        <div className="text-xs md:text-sm text-gray-600 mb-4">
                           /aylık KDV Dahil
                         </div>
-                        <Badge variant="destructive" className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-1">
+                        <Badge variant="destructive" className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 md:px-4 py-1 text-xs md:text-sm">
                           %{Math.round(((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100)} İndirim
                         </Badge>
                       </div>
                     </CardHeader>
 
-                    <CardContent className="px-6 pb-8">
-                      <div className="space-y-4 mb-8">
+                    <CardContent className="px-4 md:px-6 pb-6 md:pb-8">
+                      <div className="space-y-3 md:space-y-4 mb-6 md:mb-8">
                         {pkg.features.map((feature, index) => (
                           <div key={index} className="flex items-start gap-3 group">
-                            <div className="flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center mt-0.5 shadow-sm">
-                              <Check className="w-3 h-3 text-white" />
+                            <div className="flex-shrink-0 w-4 md:w-5 h-4 md:h-5 rounded-full bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center mt-0.5 shadow-sm">
+                              <Check className="w-2.5 md:w-3 h-2.5 md:h-3 text-white" />
                             </div>
-                            <span className="text-gray-700 text-sm leading-relaxed group-hover:text-gray-900 transition-colors">
+                            <span className="text-gray-700 text-xs md:text-sm leading-relaxed group-hover:text-gray-900 transition-colors">
                               {feature}
                             </span>
                           </div>
@@ -189,7 +189,7 @@ const Packages = () => {
 
                       <Button 
                         asChild
-                        className={`w-full py-6 text-lg font-semibold shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0`}
+                        className={`w-full py-4 md:py-6 text-base md:text-lg font-semibold shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0`}
                       >
                         <Link 
                           to="/odeme-sayfasi" 
@@ -204,7 +204,7 @@ const Packages = () => {
                             }
                           }}
                         >
-                          <Sparkles className="w-5 h-5 mr-2" />
+                          <Sparkles className="w-4 md:w-5 h-4 md:h-5 mr-2" />
                           Satın Al
                         </Link>
                       </Button>
@@ -215,11 +215,11 @@ const Packages = () => {
             </div>
 
             {/* Features Section */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border-0 mb-12">
-              <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-xl border-0 mb-8 md:mb-12">
+              <h3 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-8 md:mb-12">
                 Tüm Paketlerde Standart Özellikler
               </h3>
-              <div className="grid md:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
                 <div className="text-center group">
                   <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <Target className="w-8 h-8 text-white" />
@@ -251,18 +251,18 @@ const Packages = () => {
               </div>
             </div>
 
-            <div className="text-center bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-12 text-white shadow-xl">
-              <h3 className="text-3xl font-bold mb-4">
+            <div className="text-center bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl md:rounded-3xl p-8 md:p-12 text-white shadow-xl">
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">
                 Sorularınız mı var?
               </h3>
-              <p className="text-gray-300 mb-8 text-lg">
+              <p className="text-gray-300 mb-6 md:mb-8 text-base md:text-lg">
                 Size yardımcı olmaktan mutluluk duyarız. Uzman ekibimiz her zaman yanınızda.
               </p>
               <Button 
                 variant="outline" 
                 size="lg" 
                 onClick={handleWhatsAppContact}
-                className="bg-white text-gray-900 hover:bg-gray-100 border-0 shadow-lg"
+                className="bg-white text-gray-900 hover:bg-gray-100 border-0 shadow-lg text-sm md:text-base"
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
