@@ -21,6 +21,7 @@ interface Specialist {
   internal_number?: string;
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
+  created_at?: string;
 }
 
 interface MonthlyReferral {
@@ -60,7 +61,7 @@ const ClientReferrals = () => {
         // Tüm aktif uzmanları getir
         supabase
           .from('specialists')
-          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation')
+          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation, created_at')
           .eq('is_active', true)
           .order('name'),
         
@@ -734,12 +735,21 @@ const ClientReferrals = () => {
                                         </Badge>
                                       )}
                                      </div>
-                                     <div className="flex items-center gap-2 mb-3">
-                                       <span className="font-medium text-slate-600">{specialistReferral.specialist.specialty}</span>
-                                       <div className="flex gap-2">
-                                         {getConsultationBadges(specialistReferral.specialist)}
-                                       </div>
-                                     </div>
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <span className="font-medium text-slate-600">{specialistReferral.specialist.specialty}</span>
+                                        <div className="flex gap-2">
+                                          {getConsultationBadges(specialistReferral.specialist)}
+                                        </div>
+                                      </div>
+                                      {specialistReferral.specialist.created_at && (
+                                        <div className="text-sm text-slate-500 mb-2">
+                                          <span className="font-medium">Kayıt Tarihi:</span> {new Date(specialistReferral.specialist.created_at).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                          })}
+                                        </div>
+                                      )}
                                       
                                          {/* Editable Fields */}
                                        <div className="flex gap-3">
