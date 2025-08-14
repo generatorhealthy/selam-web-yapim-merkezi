@@ -21,7 +21,7 @@ interface Specialist {
   internal_number?: string;
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
-  created_at?: string;
+  payment_day?: number;
 }
 
 interface MonthlyReferral {
@@ -61,7 +61,7 @@ const ClientReferrals = () => {
         // Tüm aktif uzmanları getir
         supabase
           .from('specialists')
-          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation, created_at')
+          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation, payment_day')
           .eq('is_active', true)
           .order('name'),
         
@@ -741,13 +741,9 @@ const ClientReferrals = () => {
                                           {getConsultationBadges(specialistReferral.specialist)}
                                         </div>
                                       </div>
-                                      {specialistReferral.specialist.created_at && (
+                                      {specialistReferral.specialist.payment_day && (
                                         <div className="text-sm text-slate-500 mb-2">
-                                          <span className="font-medium">Kayıt Tarihi:</span> {new Date(specialistReferral.specialist.created_at).toLocaleDateString('tr-TR', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                          })}
+                                          <span className="font-medium">Ödeme Günü:</span> Her ayın {specialistReferral.specialist.payment_day}'ı
                                         </div>
                                       )}
                                       
