@@ -24,7 +24,7 @@ interface Specialist {
 }
 
 const TestInterface = () => {
-  const { testId, specialistId } = useParams();
+  const { testId, specialistId, specialtySlug, specialistName } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -72,6 +72,20 @@ const TestInterface = () => {
         if (!specialistError && specialistData) {
           setSpecialist(specialistData);
         }
+      } else if (specialistName) {
+        // specialistName parametresinden uzman bilgisini bul
+        const formattedName = specialistName.replace(/-/g, ' ');
+        const { data: specialistData, error: specialistError } = await supabase
+          .from('specialists')
+          .select('*')
+          .ilike('name', `%${formattedName}%`)
+          .eq('is_active', true)
+          .limit(1)
+          .single();
+
+        if (!specialistError && specialistData) {
+          setSpecialist(specialistData);
+        }
       }
     } catch (error) {
       console.error('Veri alınırken hata:', error);
@@ -86,7 +100,9 @@ const TestInterface = () => {
   };
 
   const handleStartTest = () => {
-    if (specialistId) {
+    if (specialist && specialist.id) {
+      navigate(`/test-al/${testId}/${specialist.id}`);
+    } else if (specialistId) {
       navigate(`/test-al/${testId}/${specialistId}`);
     } else {
       // Specialist olmadan test alınması durumu

@@ -125,6 +125,7 @@ function App() {
               <Route path="/test-al/:testId" element={<TestTaking />} />
               <Route path="/test-al/:testId/:specialistId" element={<TestTaking />} />
               <Route path="/test-sonuc/:testId/:specialistId" element={<TestResult />} />
+              <Route path="/:specialtySlug/:specialistName/test/:testId" element={<TestInterface />} />
               
               {/* Admin Routes */}
               <Route path="/divan_paneli" element={<AdminAuth />} />
