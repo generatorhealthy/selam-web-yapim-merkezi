@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ interface RegistrationFormProps {
 
 const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -91,6 +93,9 @@ const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
         about: ''
       });
       onClose();
+      
+      // Paketler sayfasına yönlendir
+      navigate('/paketler');
 
     } catch (error: any) {
       console.error('Kayıt hatası:', error);
