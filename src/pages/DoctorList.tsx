@@ -190,11 +190,8 @@ const DoctorList = () => {
   };
 
   const handleWhatsAppClick = (phone?: string) => {
-    if (phone) {
-      const cleanPhone = phone.replace(/\D/g, '');
-      const whatsappUrl = `https://wa.me/90${cleanPhone}`;
-      window.open(whatsappUrl, '_blank');
-    }
+    const whatsappUrl = `https://wa.me/902162350650`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleCallClick = (phone?: string) => {
