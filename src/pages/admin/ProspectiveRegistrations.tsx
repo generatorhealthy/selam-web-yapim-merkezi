@@ -61,12 +61,12 @@ export default function ProspectiveRegistrations() {
   const fetchRegistrations = async () => {
     try {
       const { data, error } = await supabase
-        .from('prospective_registrations')
+        .from('prospective_registrations' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRegistrations((data || []) as ProspectiveRegistration[]);
+      setRegistrations((data || []) as unknown as ProspectiveRegistration[]);
     } catch (error) {
       console.error('Error fetching registrations:', error);
       toast({
@@ -85,7 +85,7 @@ export default function ProspectiveRegistrations() {
     try {
       if (editingId) {
         const { error } = await supabase
-          .from('prospective_registrations')
+          .from('prospective_registrations' as any)
           .update(formData)
           .eq('id', editingId);
 
@@ -97,7 +97,7 @@ export default function ProspectiveRegistrations() {
         });
       } else {
         const { error } = await supabase
-          .from('prospective_registrations')
+          .from('prospective_registrations' as any)
           .insert([formData]);
 
         if (error) throw error;
@@ -145,7 +145,7 @@ export default function ProspectiveRegistrations() {
 
     try {
       const { error } = await supabase
-        .from('prospective_registrations')
+        .from('prospective_registrations' as any)
         .delete()
         .eq('id', id);
 
@@ -303,7 +303,7 @@ export default function ProspectiveRegistrations() {
                       
                       <div>
                         <Label htmlFor="status">Kayıt Durumu</Label>
-                        <Select value={formData.status} onValueChange={(value: any) => setFormData(prev => ({...prev, status: value}))}>
+                        <Select value={formData.status} onValueChange={(value: 'payment_pending' | 'order_pending' | 'cancelled' | 'completed') => setFormData(prev => ({...prev, status: value}))}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
