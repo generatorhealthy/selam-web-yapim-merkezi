@@ -290,6 +290,18 @@ const AdminDashboard = () => {
       route: "/divan_paneli/pbx-management",
       buttonText: "Santral Sistemini Yönet",
       adminOnly: true
+    },
+    {
+      title: "Muhtemel Kayıt",
+      description: "Potansiyel danışman kayıtlarını takip edin ve yönetin",
+      icon: UserPlus,
+      gradient: "from-purple-500 via-violet-500 to-indigo-600",
+      bgGradient: "from-purple-50 to-indigo-50",
+      shadowColor: "shadow-purple-500/20",
+      route: "/divan_paneli/prospective-registrations",
+      buttonText: "Muhtemel Kayıtları Yönet",
+      adminOnly: false,
+      staffOnly: true
     }
   ];
 
