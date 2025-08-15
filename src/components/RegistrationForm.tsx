@@ -81,6 +81,9 @@ const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
 
       toast.success("Başvurunuz başarıyla gönderildi! En kısa sürede size dönüş yapacağız.");
       
+      // Paketler sayfasına yönlendir
+      navigate('/paketler');
+      
       // Formu temizle ve kapat
       setFormData({
         name: '',
@@ -93,9 +96,6 @@ const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
         about: ''
       });
       onClose();
-      
-      // Paketler sayfasına yönlendir
-      navigate('/paketler');
 
     } catch (error: any) {
       console.error('Kayıt hatası:', error);
