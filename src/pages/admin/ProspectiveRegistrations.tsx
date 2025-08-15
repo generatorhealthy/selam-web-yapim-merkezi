@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Helmet } from "react-helmet-async";
-import { AdminBackButton } from "@/components/AdminBackButton";
+import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Edit, Trash2, Filter, Search, Plus } from "lucide-react";
@@ -40,11 +40,17 @@ export default function ProspectiveRegistrations() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    consultant_name: string;
+    consultant_surname: string;
+    consultant_phone: string;
+    status: 'payment_pending' | 'order_pending' | 'cancelled' | 'completed';
+    notes: string;
+  }>({
     consultant_name: "",
     consultant_surname: "",
     consultant_phone: "",
-    status: "payment_pending" as const,
+    status: "payment_pending",
     notes: ""
   });
 
@@ -60,7 +66,7 @@ export default function ProspectiveRegistrations() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRegistrations(data || []);
+      setRegistrations((data || []) as ProspectiveRegistration[]);
     } catch (error) {
       console.error('Error fetching registrations:', error);
       toast({

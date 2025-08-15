@@ -674,6 +674,39 @@ export type Database = {
         }
         Relationships: []
       }
+      prospective_registrations: {
+        Row: {
+          consultant_name: string
+          consultant_phone: string
+          consultant_surname: string
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          consultant_name: string
+          consultant_phone: string
+          consultant_surname: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          consultant_name?: string
+          consultant_phone?: string
+          consultant_surname?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string
