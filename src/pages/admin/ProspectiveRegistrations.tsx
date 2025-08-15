@@ -19,7 +19,7 @@ interface ProspectiveRegistration {
   consultant_name: string;
   consultant_surname: string;
   consultant_phone: string;
-  status: 'payment_pending' | 'order_pending' | 'cancelled' | 'completed';
+  status: 'payment_pending' | 'order_pending' | 'payment_order_pending' | 'cancelled' | 'completed';
   notes?: string;
   created_at: string;
 }
@@ -27,6 +27,7 @@ interface ProspectiveRegistration {
 const statusOptions = [
   { value: 'payment_pending', label: 'Ödeme Bekleniyor', color: 'bg-yellow-100 text-yellow-800' },
   { value: 'order_pending', label: 'Sipariş Bekleniyor', color: 'bg-blue-100 text-blue-800' },
+  { value: 'payment_order_pending', label: 'Ödeme+Sipariş Bekleniyor', color: 'bg-orange-100 text-orange-800' },
   { value: 'cancelled', label: 'İptal Oldu', color: 'bg-red-100 text-red-800' },
   { value: 'completed', label: 'Tamamlandı', color: 'bg-green-100 text-green-800' }
 ];
@@ -44,7 +45,7 @@ export default function ProspectiveRegistrations() {
     consultant_name: string;
     consultant_surname: string;
     consultant_phone: string;
-    status: 'payment_pending' | 'order_pending' | 'cancelled' | 'completed';
+    status: 'payment_pending' | 'order_pending' | 'payment_order_pending' | 'cancelled' | 'completed';
     notes: string;
   }>({
     consultant_name: "",
@@ -303,7 +304,7 @@ export default function ProspectiveRegistrations() {
                       
                       <div>
                         <Label htmlFor="status">Kayıt Durumu</Label>
-                        <Select value={formData.status} onValueChange={(value: 'payment_pending' | 'order_pending' | 'cancelled' | 'completed') => setFormData(prev => ({...prev, status: value}))}>
+                        <Select value={formData.status} onValueChange={(value: 'payment_pending' | 'order_pending' | 'payment_order_pending' | 'cancelled' | 'completed') => setFormData(prev => ({...prev, status: value}))}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -359,6 +360,7 @@ export default function ProspectiveRegistrations() {
                         <TableHead>Danışman Adı</TableHead>
                         <TableHead>Telefon</TableHead>
                         <TableHead>Durum</TableHead>
+                        <TableHead>Notlar</TableHead>
                         <TableHead>Oluşturulma Tarihi</TableHead>
                         <TableHead className="text-right">İşlemler</TableHead>
                       </TableRow>
@@ -366,7 +368,7 @@ export default function ProspectiveRegistrations() {
                     <TableBody>
                       {filteredRegistrations.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                             Kayıt bulunamadı
                           </TableCell>
                         </TableRow>
@@ -378,6 +380,15 @@ export default function ProspectiveRegistrations() {
                             </TableCell>
                             <TableCell>{registration.consultant_phone}</TableCell>
                             <TableCell>{getStatusBadge(registration.status)}</TableCell>
+                            <TableCell className="max-w-xs">
+                              {registration.notes ? (
+                                <span className="text-sm text-gray-600 truncate block" title={registration.notes}>
+                                  {registration.notes}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 text-sm">-</span>
+                              )}
+                            </TableCell>
                             <TableCell>
                               {new Date(registration.created_at).toLocaleDateString('tr-TR')}
                             </TableCell>
