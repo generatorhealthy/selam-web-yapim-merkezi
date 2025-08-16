@@ -28,6 +28,7 @@ import DisclosureText from "./pages/DisclosureText";
 import DistanceSalesContract from "./pages/DistanceSalesContract";
 import VisitorConsultantAgreement from "./pages/VisitorConsultantAgreement";
 import CommentRules from "./pages/CommentRules";
+import Paket from "./pages/Paket";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import LoginPage from "./pages/LoginPage";
@@ -102,6 +103,7 @@ function App() {
               <Route path="/randevu-al/:specialtySlug/:doctorName" element={<BookAppointment />} />
               <Route path="/uzmanlik/:specialty" element={<SpecialtyPage />} />
               <Route path="/paketler" element={<Packages />} />
+              <Route path="/paket" element={<Paket />} />
               <Route path="/kampanyali-paket" element={<CampaignPackage />} />
               <Route path="/kampanyali-premium-paket" element={<CampaignPremiumPackage />} />
               <Route path="/indirimli-paket" element={<DiscountedPackage />} />
