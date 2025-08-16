@@ -30,7 +30,7 @@ const Paket = () => {
     {
       icon: UserCheck,
       title: "Her Ay Danışan Yönlendirme Garantisi",
-      description: "Aylık garantili danışan akışı ile sürekli gelir kaynağı",
+      description: "Aylık danışan yönlendirmesi.",
       color: "from-blue-500 to-blue-600"
     },
     {
@@ -42,7 +42,7 @@ const Paket = () => {
     {
       icon: Crown,
       title: "Branş (Doktorum Ol Üyeliği 1)",
-      description: "Premium üyelik ile öncelikli görünürlük",
+      description: "Premium üyelik",
       color: "from-amber-500 to-amber-600"
     },
     {
