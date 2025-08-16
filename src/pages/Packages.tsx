@@ -162,19 +162,6 @@ const Packages = () => {
                         : 'hover:shadow-2xl bg-gradient-to-br from-white via-gray-50/50 to-blue-50/20'
                     } ${selectedPackage === pkg.id ? 'ring-4 ring-blue-400/50 scale-[1.03]' : ''} backdrop-blur-sm border-0 overflow-hidden`}
                   >
-                    {/* Enhanced popular badge */}
-                    {pkg.popular && (
-                      <>
-                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-10">
-                          <Badge className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white px-8 py-3 text-base font-bold shadow-xl rounded-full">
-                            <Star className="w-5 h-5 mr-2 fill-current animate-pulse" />
-                            En Popüler Seçim
-                          </Badge>
-                        </div>
-                        {/* Decorative corner */}
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-blue-500/20 to-transparent"></div>
-                      </>
-                    )}
                     
                     <CardHeader className="text-center pb-6 pt-12">
                       {/* Enhanced icon container */}
