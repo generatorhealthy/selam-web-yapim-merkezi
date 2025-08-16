@@ -26,6 +26,7 @@ interface Specialist {
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
   phone?: string;
+  referral_count?: number;
 }
 
 const DoctorList = () => {
@@ -100,14 +101,14 @@ const DoctorList = () => {
     try {
       setLoading(true);
       
-      // Rastgele sıralama ile tüm uzmanları çek
-      const { data, error } = await supabase
+      // Uzmanları çek
+      const { data: specialistsData, error: specialistsError } = await supabase
         .from('specialists')
         .select('*')
         .eq('is_active', true);
 
-      if (error) {
-        console.error('Uzmanlar çekilirken hata:', error);
+      if (specialistsError) {
+        console.error('Uzmanlar çekilirken hata:', specialistsError);
         toast({
           title: "Hata",
           description: "Uzmanlar yüklenirken bir hata oluştu.",
@@ -116,9 +117,47 @@ const DoctorList = () => {
         return;
       }
 
-      // Rastgele karıştır
-      const shuffledData = (data || []).sort(() => Math.random() - 0.5);
-      setSpecialists(shuffledData);
+      // Mevcut ay ve yıl için danışan yönlendirme verilerini çek
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+
+      const { data: referralData, error: referralError } = await supabase
+        .from('client_referrals')
+        .select('specialist_id, referral_count')
+        .eq('year', currentYear)
+        .eq('month', currentMonth);
+
+      if (referralError) {
+        console.error('Danışan yönlendirme verileri çekilirken hata:', referralError);
+      }
+
+      // Uzman verilerini danışan yönlendirme sayıları ile birleştir
+      const specialistsWithReferrals = (specialistsData || []).map(specialist => {
+        const referral = referralData?.find(r => r.specialist_id === specialist.id);
+        return {
+          ...specialist,
+          referral_count: referral?.referral_count || 0
+        };
+      });
+
+      // Danışan yönlendirme sayısına göre sırala
+      // Önce 0 danışan yönlendirmesi olanlar (rastgele sıralanır)
+      // Sonra diğerleri danışan sayısına göre artan sırayla (aynı sayıda olanlar rastgele)
+      const zeroReferrals = specialistsWithReferrals
+        .filter(s => s.referral_count === 0)
+        .sort(() => Math.random() - 0.5);
+      
+      const nonZeroReferrals = specialistsWithReferrals
+        .filter(s => s.referral_count > 0)
+        .sort((a, b) => {
+          if (a.referral_count === b.referral_count) {
+            return Math.random() - 0.5; // Aynı sayıda olanları rastgele sırala
+          }
+          return a.referral_count - b.referral_count; // Artan sırayla
+        });
+
+      const sortedSpecialists = [...zeroReferrals, ...nonZeroReferrals];
+      setSpecialists(sortedSpecialists);
       
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
