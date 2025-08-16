@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, DollarSign, Users, RefreshCw, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
@@ -46,31 +46,6 @@ interface Order {
   distance_sales_pdf_content?: string | null;
 }
 
-interface AutomaticOrder {
-  id: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  customer_address: string;
-  customer_city: string;
-  customer_tc_no: string;
-  company_name: string;
-  company_tax_no: string;
-  company_tax_office: string;
-  package_name: string;
-  amount: number;
-  created_at: string;
-  package_type: string;
-  payment_method: string;
-  is_active: boolean;
-  customer_type: string;
-  registration_date: string;
-  monthly_payment_day: number;
-  total_months: number;
-  paid_months: number[];
-  current_month: number;
-  updated_at: string;
-}
 
 const OrderManagement = () => {
   const { toast } = useToast();
@@ -117,21 +92,6 @@ const OrderManagement = () => {
     },
   });
 
-  const {
-    data: automaticOrders,
-    isLoading: isAutomaticOrdersLoading,
-    error: automaticOrdersError,
-  } = useQuery({
-    queryKey: ["automatic_orders"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("automatic_orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as AutomaticOrder[];
-    },
-  });
 
   const updateOrderMutation = useMutation({
     mutationFn: async (order: Order) => {
@@ -305,31 +265,6 @@ const OrderManagement = () => {
     },
   });
 
-  const generateOrdersMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('generate-monthly-orders', {
-        body: { manual: true }
-      });
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Otomatik Siparişler Oluşturuldu",
-        description: `${data.details?.orders_created || 0} yeni sipariş oluşturuldu`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Hata",
-        description: "Otomatik siparişler oluşturulurken hata oluştu",
-        variant: "destructive",
-      });
-      console.error("Error generating orders:", error);
-    },
-  });
 
   // Copy order mutation
   const copyOrderMutation = useMutation({
@@ -819,11 +754,6 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
     return matchesSearch && matchesStatus;
   });
 
-  const filteredAutomaticOrders = automaticOrders?.filter(order => {
-    return order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           order.package_name.toLowerCase().includes(searchTerm.toLowerCase());
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -838,18 +768,8 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
               <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
                 Sipariş Yönetimi
               </h1>
-              <p className="text-blue-100 text-lg">Tüm siparişleri ve otomatik sipariş sistemini yönetin</p>
+              <p className="text-blue-100 text-lg">Tüm siparişleri yönetin</p>
             </div>
-            <Button
-              onClick={() => generateOrdersMutation.mutate()}
-              disabled={generateOrdersMutation.isPending}
-              variant="secondary"
-              size="lg"
-              className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all duration-300 shadow-lg"
-            >
-              <RefreshCw className={`w-5 h-5 mr-2 ${generateOrdersMutation.isPending ? 'animate-spin' : ''}`} />
-              Otomatik Sipariş Oluştur
-            </Button>
           </div>
         </div>
 
@@ -932,7 +852,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-            <TabsList className="grid w-full lg:w-auto grid-cols-3 bg-white/60 backdrop-blur-sm border border-white/20 shadow-lg rounded-xl p-1">
+            <TabsList className="grid w-full lg:w-auto grid-cols-2 bg-white/60 backdrop-blur-sm border border-white/20 shadow-lg rounded-xl p-1">
               <TabsTrigger value="orders" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg">
                 <Calendar className="w-4 h-4" />
                 Siparişler
@@ -940,10 +860,6 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
               <TabsTrigger value="trash" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg">
                 <Trash2 className="w-4 h-4" />
                 Çöp Kutusu
-              </TabsTrigger>
-              <TabsTrigger value="automatic" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg">
-                <Clock className="w-4 h-4" />
-                Otomatik Siparişler
               </TabsTrigger>
             </TabsList>
           </div>
@@ -1392,165 +1308,6 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
           </Card>
         </TabsContent>
 
-        <TabsContent value="automatic" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Otomatik Sipariş Sistemi
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-blue-900 mb-2">Sistem Durumu</h3>
-                  <p className="text-blue-700 text-sm">
-                    Otomatik sipariş sistemi her gün saat 09:00'da çalışır ve ödeme tarihi gelen müşteriler için otomatik sipariş oluşturur.
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-5 h-5 text-green-600" />
-                        <div>
-                          <p className="text-sm text-gray-600">Aktif Müşteriler</p>
-                          <p className="text-2xl font-bold text-green-600">
-                            {automaticOrders?.filter(order => order.is_active).length || 0}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm text-gray-600">Bu Ay Bekleyen</p>
-                          <p className="text-2xl font-bold text-blue-600">
-                            {orders?.filter(order => 
-                              order.status === 'pending' && 
-                              order.subscription_month && 
-                              order.subscription_month > 1
-                            ).length || 0}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-5 h-5 text-purple-600" />
-                        <div>
-                          <p className="text-sm text-gray-600">Toplam Tutar</p>
-                          <p className="text-2xl font-bold text-purple-600">
-                            {automaticOrders?.reduce((sum, order) => sum + order.amount, 0).toLocaleString('tr-TR')} ₺
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <Button
-                  onClick={() => generateOrdersMutation.mutate()}
-                  disabled={generateOrdersMutation.isPending}
-                  className="w-full"
-                >
-                  {generateOrdersMutation.isPending ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Otomatik Siparişler Oluşturuluyor...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Manuel Otomatik Sipariş Oluştur
-                    </>
-                  )}
-                </Button>
-
-                {/* Automatic Orders Table */}
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-4">Otomatik Sipariş Listesi ({filteredAutomaticOrders?.length || 0})</h3>
-                  {isAutomaticOrdersLoading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                    </div>
-                  ) : automaticOrdersError ? (
-                    <div className="text-center py-8 text-red-600">
-                      Hata: {automaticOrdersError.message}
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Müşteri</TableHead>
-                            <TableHead>Paket</TableHead>
-                            <TableHead>Tutar</TableHead>
-                            <TableHead>Ödeme Günü</TableHead>
-                            <TableHead>Ödenen Aylar</TableHead>
-                            <TableHead>Toplam Ay</TableHead>
-                            <TableHead>Durum</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredAutomaticOrders?.map((order) => (
-                            <TableRow key={order.id} className="hover:bg-gray-50">
-                              <TableCell>
-                                <div>
-                                  <div className="font-medium">{order.customer_name}</div>
-                                  <div className="text-sm text-gray-500">{order.customer_email}</div>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="font-medium">{order.package_name}</div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="font-semibold">{order.amount.toLocaleString('tr-TR')} ₺</div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline">{order.monthly_payment_day}. Gün</Badge>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex flex-wrap gap-1">
-                                  {order.paid_months?.slice(0, 6).map((month) => (
-                                    <Badge key={month} variant="secondary" className="text-xs">
-                                      {month}
-                                    </Badge>
-                                  ))}
-                                  {order.paid_months?.length > 6 && (
-                                    <Badge variant="outline" className="text-xs">
-                                      +{order.paid_months.length - 6}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline">{order.total_months} Ay</Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant={order.is_active ? "default" : "destructive"}>
-                                  {order.is_active ? "Aktif" : "Pasif"}
-                                </Badge>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
       </div>
     </div>
