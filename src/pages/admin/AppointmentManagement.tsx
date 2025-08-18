@@ -10,8 +10,6 @@ import { Calendar, Clock, User, Phone, Mail, Search, UserCheck, Trash2, CheckCir
 import AdminBackButton from "@/components/AdminBackButton";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, addMonths, isSameMonth } from "date-fns";
-import { tr } from "date-fns/locale";
 
 interface Appointment {
   id: string;
@@ -172,8 +170,10 @@ const AppointmentManagement = () => {
       (appointment.specialists?.name && appointment.specialists.name.toLowerCase().includes(searchTerm.toLowerCase()));
     
     if (viewMode === 'monthly') {
-      const appointmentDate = parseISO(appointment.appointment_date);
-      return matchesSearch && isSameMonth(appointmentDate, selectedMonth);
+      const appointmentDate = new Date(appointment.appointment_date);
+      const selectedMonthStart = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+      const selectedMonthEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+      return matchesSearch && appointmentDate >= selectedMonthStart && appointmentDate <= selectedMonthEnd;
     }
     
     return matchesSearch;
@@ -183,9 +183,8 @@ const AppointmentManagement = () => {
     const appointmentsByMonth: { [key: string]: Appointment[] } = {};
     
     filteredAppointments.forEach(appointment => {
-      const date = parseISO(appointment.appointment_date);
-      const monthKey = format(date, 'yyyy-MM', { locale: tr });
-      const monthLabel = format(date, 'MMMM yyyy', { locale: tr });
+      const date = new Date(appointment.appointment_date);
+      const monthLabel = date.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
       
       if (!appointmentsByMonth[monthLabel]) {
         appointmentsByMonth[monthLabel] = [];
@@ -359,20 +358,28 @@ const AppointmentManagement = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setSelectedMonth(subMonths(selectedMonth, 1))}
+                    onClick={() => {
+                      const newMonth = new Date(selectedMonth);
+                      newMonth.setMonth(newMonth.getMonth() - 1);
+                      setSelectedMonth(newMonth);
+                    }}
                     className="bg-white/50 border-primary/20 hover:bg-primary/10"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
                   
                   <h3 className="text-lg font-semibold text-foreground">
-                    {format(selectedMonth, 'MMMM yyyy', { locale: tr })}
+                    {selectedMonth.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })}
                   </h3>
                   
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setSelectedMonth(addMonths(selectedMonth, 1))}
+                    onClick={() => {
+                      const newMonth = new Date(selectedMonth);
+                      newMonth.setMonth(newMonth.getMonth() + 1);
+                      setSelectedMonth(newMonth);
+                    }}
                     className="bg-white/50 border-primary/20 hover:bg-primary/10"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -408,7 +415,7 @@ const AppointmentManagement = () => {
               </div>
               <p className="text-muted-foreground text-lg">
                 {viewMode === 'monthly' 
-                  ? `${format(selectedMonth, 'MMMM yyyy', { locale: tr })} ayında randevu bulunmuyor.`
+                  ? `${selectedMonth.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })} ayında randevu bulunmuyor.`
                   : 'Henüz randevu bulunmuyor.'
                 }
               </p>
@@ -418,7 +425,7 @@ const AppointmentManagement = () => {
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 rounded-xl border border-primary/20">
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                {format(selectedMonth, 'MMMM yyyy', { locale: tr })}
+                {selectedMonth.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })}
               </h2>
               <p className="text-muted-foreground">
                 {filteredAppointments.length} randevu bulundu
