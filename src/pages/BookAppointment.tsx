@@ -334,9 +334,19 @@ const BookAppointment = () => {
         <div className="max-w-2xl mx-auto">
           <Card className="mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardHeader className="text-center pb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="w-10 h-10 text-white" />
-              </div>
+              {specialist.profile_picture ? (
+                <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 ring-4 ring-blue-100">
+                  <img 
+                    src={specialist.profile_picture} 
+                    alt={specialist.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <User className="w-10 h-10 text-white" />
+                </div>
+              )}
               <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
                 {specialist.name}
               </CardTitle>
