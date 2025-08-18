@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Clock, User, Phone, Mail, Search, UserCheck } from "lucide-react";
+import { Calendar, Clock, User, Phone, Mail, Search, UserCheck, Trash2, CheckCircle, XCircle } from "lucide-react";
 import AdminBackButton from "@/components/AdminBackButton";
 import { useUserRole } from "@/hooks/useUserRole";
 
@@ -113,12 +113,42 @@ const AppointmentManagement = () => {
     }
   };
 
+  const deleteAppointment = async (appointmentId: string) => {
+    try {
+      console.log('Deleting appointment:', appointmentId);
+      
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', appointmentId);
+
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
+
+      setAppointments(prev => prev.filter(appointment => appointment.id !== appointmentId));
+
+      toast({
+        title: "Başarılı",
+        description: "Randevu silindi.",
+      });
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      toast({
+        title: "Hata",
+        description: "Randevu silinirken bir hata oluştu.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'cancelled': return 'bg-rose-100 text-rose-800 border-rose-200';
+      case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200';
+      default: return 'bg-amber-100 text-amber-800 border-amber-200';
     }
   };
 
@@ -140,115 +170,153 @@ const AppointmentManagement = () => {
   const isStaff = userProfile?.role === 'staff';
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="container mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
+      <div className="container mx-auto max-w-7xl">
         <AdminBackButton />
         
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Randevu Yönetimi</h1>
-          <p className="text-gray-600">Tüm randevuları görüntüleyin ve yönetin</p>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <Calendar className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
+                Randevu Yönetimi
+              </h1>
+              <p className="text-muted-foreground">Tüm randevuları görüntüleyin ve yönetin</p>
+            </div>
+          </div>
         </div>
 
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <div className="mb-8">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               placeholder="Hasta adı, email veya uzman adı ile ara..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-12 h-12 bg-white/80 backdrop-blur-sm border-primary/20 focus:border-primary/40 shadow-sm"
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="text-center py-8">Randevular yükleniyor...</div>
+          <div className="text-center py-12">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+              <span className="text-muted-foreground">Randevular yükleniyor...</span>
+            </div>
+          </div>
         ) : filteredAppointments.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-8">
-              <p className="text-gray-500">Henüz randevu bulunmuyor.</p>
+          <Card className="bg-white/80 backdrop-blur-sm border-primary/20 shadow-sm">
+            <CardContent className="text-center py-12">
+              <div className="p-4 bg-muted/20 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <Calendar className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground text-lg">Henüz randevu bulunmuyor.</p>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-6">
             {filteredAppointments.map((appointment) => (
-              <Card key={appointment.id}>
-                <CardHeader>
+              <Card key={appointment.id} className="bg-white/80 backdrop-blur-sm border-primary/20 shadow-sm hover:shadow-md transition-all duration-200">
+                <CardHeader className="pb-4">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{appointment.patient_name}</CardTitle>
+                    <div className="flex-1">
+                      <CardTitle className="text-xl font-semibold text-foreground mb-3">
+                        {appointment.patient_name}
+                      </CardTitle>
                       {appointment.specialists ? (
-                        <div className="flex items-center gap-2 mt-1">
-                          <UserCheck className="w-4 h-4 text-blue-600" />
-                          <p className="text-sm text-blue-600 font-medium">
+                        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg">
+                          <UserCheck className="w-4 h-4 text-primary" />
+                          <p className="text-sm text-primary font-medium">
                             {appointment.specialists.name} - {appointment.specialists.specialty}
                           </p>
                         </div>
                       ) : appointment.specialist_id ? (
-                        <p className="text-sm text-orange-600 mt-1">
-                          Uzman ID: {appointment.specialist_id} (Uzman kaydı bulunamadı)
-                        </p>
+                        <div className="flex items-center gap-2 p-2 bg-orange-50 rounded-lg">
+                          <User className="w-4 h-4 text-orange-600" />
+                          <p className="text-sm text-orange-600 font-medium">
+                            Uzman ID: {appointment.specialist_id} (Uzman kaydı bulunamadı)
+                          </p>
+                        </div>
                       ) : (
-                        <p className="text-sm text-gray-500 mt-1">Uzman bilgisi belirtilmemiş</p>
+                        <div className="flex items-center gap-2 p-2 bg-muted/20 rounded-lg">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">Uzman bilgisi belirtilmemiş</p>
+                        </div>
                       )}
                     </div>
-                    <Badge className={getStatusColor(appointment.status)}>
+                    <Badge className={`${getStatusColor(appointment.status)} border font-medium px-3 py-1`}>
                       {getStatusText(appointment.status)}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm">{new Date(appointment.appointment_date).toLocaleDateString('tr-TR')}</span>
+                <CardContent className="pt-0">
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
+                        <Calendar className="w-5 h-5 text-primary" />
+                        <span className="font-medium">{new Date(appointment.appointment_date).toLocaleDateString('tr-TR')}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm">{appointment.appointment_time}</span>
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
+                        <Clock className="w-5 h-5 text-primary" />
+                        <span className="font-medium">{appointment.appointment_time}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm">{appointment.appointment_type}</span>
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
+                        <User className="w-5 h-5 text-primary" />
+                        <span className="font-medium">{appointment.appointment_type}</span>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm">{appointment.patient_email}</span>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
+                        <Mail className="w-5 h-5 text-primary" />
+                        <span className="font-medium text-sm">{appointment.patient_email}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm">{appointment.patient_phone}</span>
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
+                        <Phone className="w-5 h-5 text-primary" />
+                        <span className="font-medium">{appointment.patient_phone}</span>
                       </div>
                     </div>
                   </div>
                   
                   {appointment.notes && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-700">{appointment.notes}</p>
+                    <div className="mb-6 p-4 bg-accent/20 border border-accent/30 rounded-lg">
+                      <h4 className="font-medium text-foreground mb-2">Notlar:</h4>
+                      <p className="text-muted-foreground leading-relaxed">{appointment.notes}</p>
                     </div>
                   )}
                   
                   {!isStaff && (
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex flex-wrap gap-3">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
                         disabled={appointment.status === 'confirmed'}
-                        className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                        className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 font-medium"
                       >
+                        <CheckCircle className="w-4 h-4 mr-2" />
                         Onayla
                       </Button>
                       <Button
                         size="sm"
-                        variant="destructive"
+                        variant="outline"
                         onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
                         disabled={appointment.status === 'cancelled'}
+                        className="bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 font-medium"
                       >
+                        <XCircle className="w-4 h-4 mr-2" />
                         İptal Et
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => deleteAppointment(appointment.id)}
+                        className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 font-medium"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Sil
                       </Button>
                     </div>
                   )}
