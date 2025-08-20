@@ -175,20 +175,6 @@ const Index = () => {
         
         <div className="container mx-auto px-4 py-12 md:py-20 relative z-10">
           <div className="max-w-6xl mx-auto">
-            {/* Main Title with Animation */}
-            <div className="text-center mb-8 md:mb-12">
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 animate-fade-in">
-                <span className="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                  Sağlığınız İçin
-                </span>
-                <br />
-                <span className="text-white">En İyi Uzmanlar</span>
-              </h1>
-              <p className="text-lg md:text-xl text-blue-100 animate-fade-in delay-300 max-w-2xl mx-auto">
-                Türkiye'nin en deneyimli sağlık uzmanlarıyla hemen randevu alın
-              </p>
-            </div>
-
             {/* Enhanced Search Form */}
             <div ref={searchContainerRef} className="bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0 border border-white/20 animate-scale-in">
               <div className="space-y-6 md:space-y-8">
