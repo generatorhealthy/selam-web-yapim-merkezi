@@ -158,94 +158,123 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <HorizontalNavigation />
       
-      {/* Hero Section with Search - Improved Mobile Layout */}
-      <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700 text-white relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute top-40 right-20 w-24 h-24 bg-white rounded-full blur-2xl"></div>
-          <div className="absolute bottom-20 left-1/3 w-40 h-40 bg-white rounded-full blur-3xl"></div>
+      {/* Hero Section with Enhanced Dynamic Design */}
+      <div className="bg-gradient-to-br from-primary via-blue-600 to-purple-700 text-white relative overflow-hidden min-h-[70vh]">
+        {/* Enhanced Background Pattern with Animation */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-white/30 to-transparent rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-l from-white/20 to-transparent rounded-full blur-2xl animate-pulse delay-1000"></div>
+          <div className="absolute bottom-20 left-1/3 w-40 h-40 bg-gradient-to-t from-white/25 to-transparent rounded-full blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute top-1/2 right-1/4 w-20 h-20 bg-gradient-to-br from-purple-300/20 to-transparent rounded-full blur-xl animate-pulse delay-2000"></div>
+          
+          {/* Floating Elements */}
+          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/40 rounded-full animate-bounce delay-300"></div>
+          <div className="absolute top-3/4 right-1/3 w-3 h-3 bg-white/30 rounded-full animate-bounce delay-700"></div>
+          <div className="absolute bottom-1/3 left-1/2 w-1 h-1 bg-white/50 rounded-full animate-bounce delay-1500"></div>
         </div>
         
-        <div className="container mx-auto px-4 py-8 md:py-16 relative z-10">
-          <div className="max-w-5xl mx-auto text-center">
-            {/* Search Form - Mobile Optimized */}
-            <div ref={searchContainerRef} className="bg-white rounded-2xl p-4 md:p-8 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0">
-              <div className="grid gap-4 md:gap-6">
-                {/* Appointment Type Toggle - Mobile Friendly */}
-                <div className="flex justify-center mb-4 md:mb-6">
+        <div className="container mx-auto px-4 py-12 md:py-20 relative z-10">
+          <div className="max-w-6xl mx-auto">
+            {/* Main Title with Animation */}
+            <div className="text-center mb-8 md:mb-12">
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 animate-fade-in">
+                <span className="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                  Sağlığınız İçin
+                </span>
+                <br />
+                <span className="text-white">En İyi Uzmanlar</span>
+              </h1>
+              <p className="text-lg md:text-xl text-blue-100 animate-fade-in delay-300 max-w-2xl mx-auto">
+                Türkiye'nin en deneyimli sağlık uzmanlarıyla hemen randevu alın
+              </p>
+            </div>
+
+            {/* Enhanced Search Form */}
+            <div ref={searchContainerRef} className="bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0 border border-white/20 animate-scale-in">
+              <div className="space-y-6 md:space-y-8">
+                {/* Appointment Type Toggle - Enhanced Design */}
+                <div className="flex justify-center">
                   <RadioGroup 
                     value={appointmentType} 
                     onValueChange={setAppointmentType}
-                    className="flex gap-0 bg-gray-100 rounded-xl p-1 w-full max-w-md"
+                    className="flex gap-1 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-2 w-full max-w-lg border border-gray-200/50"
                   >
                     <div className="flex items-center flex-1">
                       <RadioGroupItem value="yüzyüze" id="yüzyüze" className="sr-only" />
                       <label 
                         htmlFor="yüzyüze" 
-                        className={`flex items-center justify-center gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-4 rounded-xl cursor-pointer transition-all font-medium text-sm md:text-base flex-1 ${
+                        className={`flex items-center justify-center gap-3 px-6 py-4 rounded-xl cursor-pointer transition-all duration-300 font-semibold text-base flex-1 group ${
                           appointmentType === "yüzyüze" 
-                            ? "bg-blue-600 text-white shadow-lg" 
-                            : "text-gray-600 hover:bg-gray-200"
+                            ? "bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg transform scale-[1.02]" 
+                            : "text-gray-600 hover:bg-white/80 hover:shadow-md"
                         }`}
                       >
-                        <User className="w-4 h-4 md:w-5 md:h-5" />
-                        <span className="hidden sm:inline">Yüz Yüze</span>
-                        <span className="sm:hidden">Yüz Yüze</span>
+                        <div className={`p-1 rounded-lg ${appointmentType === "yüzyüze" ? "bg-white/20" : "bg-gray-200/50"}`}>
+                          <User className="w-5 h-5" />
+                        </div>
+                        <span>Yüz Yüze</span>
                       </label>
                     </div>
                     <div className="flex items-center flex-1">
                       <RadioGroupItem value="online" id="online" className="sr-only" />
                       <label 
                         htmlFor="online" 
-                        className={`flex items-center justify-center gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-4 rounded-xl cursor-pointer transition-all font-medium text-sm md:text-base flex-1 ${
+                        className={`flex items-center justify-center gap-3 px-6 py-4 rounded-xl cursor-pointer transition-all duration-300 font-semibold text-base flex-1 group ${
                           appointmentType === "online" 
-                            ? "bg-blue-600 text-white shadow-lg" 
-                            : "text-gray-600 hover:bg-gray-200"
+                            ? "bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg transform scale-[1.02]" 
+                            : "text-gray-600 hover:bg-white/80 hover:shadow-md"
                         }`}
                       >
-                        <Circle className="w-4 h-4 md:w-5 md:h-5" />
+                        <div className={`p-1 rounded-lg ${appointmentType === "online" ? "bg-white/20" : "bg-gray-200/50"}`}>
+                          <Circle className="w-5 h-5" />
+                        </div>
                         <span>Online</span>
                       </label>
                     </div>
                   </RadioGroup>
                 </div>
 
-                {/* Search Inputs - Mobile Stack Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
-                  {/* Search Input */}
-                  <div className="md:col-span-6 relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      placeholder="Uzman, branş veya kurum ara..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-12 h-14 md:h-16 text-gray-900 border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-base md:text-lg"
-                    />
+                {/* Enhanced Search Inputs */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+                  {/* Search Input with Enhanced Design */}
+                  <div className="lg:col-span-6 relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative">
+                      <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-primary z-10" />
+                      <Input
+                        placeholder="Uzman, branş veya kurum ara..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-14 h-16 text-gray-900 border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/20 text-lg rounded-xl bg-white/90 backdrop-blur-sm transition-all duration-300 hover:border-primary/50"
+                      />
+                    </div>
                   </div>
                   
-                  {/* City Select */}
-                  <div className="md:col-span-3 relative">
-                    <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
-                    <Select value={selectedCity} onValueChange={setSelectedCity}>
-                      <SelectTrigger className="pl-12 h-14 md:h-16 text-gray-900 border-gray-200 focus:border-blue-500 text-base md:text-lg">
-                        <SelectValue placeholder="Şehir seçin" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60 overflow-y-auto">
-                        {cities.map((city) => (
-                          <SelectItem key={city} value={city} className="text-base">{city}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  {/* City Select with Enhanced Design */}
+                  <div className="lg:col-span-3 relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative">
+                      <MapPin className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-primary z-20" />
+                      <Select value={selectedCity} onValueChange={setSelectedCity}>
+                        <SelectTrigger className="pl-14 h-16 text-gray-900 border-2 border-gray-200 focus:border-primary text-lg rounded-xl bg-white/90 backdrop-blur-sm transition-all duration-300 hover:border-primary/50">
+                          <SelectValue placeholder="Şehir seçin" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white/95 backdrop-blur-lg border-2 border-gray-200 shadow-xl max-h-60 overflow-y-auto rounded-xl">
+                          {cities.map((city) => (
+                            <SelectItem key={city} value={city} className="text-base hover:bg-primary/10 transition-colors">{city}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   
-                  {/* Search Button */}
-                  <div className="md:col-span-3">
+                  {/* Enhanced Search Button */}
+                  <div className="lg:col-span-3">
                     <Button 
                       onClick={handleSearch}
-                      className="w-full h-14 md:h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold text-base md:text-lg rounded-lg shadow-lg"
+                      className="w-full h-16 bg-gradient-to-r from-primary via-blue-600 to-purple-600 hover:from-primary/90 hover:via-blue-700 hover:to-purple-700 text-white font-bold text-lg rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 border-2 border-white/20"
                     >
-                      <Search className="w-5 h-5 mr-2" />
+                      <Search className="w-6 h-6 mr-3" />
                       <span className="hidden sm:inline">Randevu Ara</span>
                       <span className="sm:hidden">Ara</span>
                     </Button>
