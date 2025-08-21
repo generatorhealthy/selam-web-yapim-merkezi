@@ -85,18 +85,18 @@ const Blog = () => {
         return;
       }
 
-      const newBlogs = data as BlogPost[] || [];
+      const newBlogs = (data as BlogPost[]) || [];
       
-      if (isInitial) {
-        setBlogs(newBlogs);
-      } else {
-        setBlogs(prev => [...prev, ...newBlogs]);
-      }
+      // Kopya kayıtları önlemek için tekilleştirerek state'e yaz
+      setBlogs((prev) => {
+        const combined = isInitial ? newBlogs : [...prev, ...newBlogs];
+        const uniqueMap = new Map<string, BlogPost>();
+        combined.forEach((b) => uniqueMap.set(b.id, b));
+        return Array.from(uniqueMap.values());
+      });
 
-      // Eğer dönen veri sayısı POSTS_PER_PAGE'den azsa, daha fazla veri yok demektir
-      if (newBlogs.length < POSTS_PER_PAGE) {
-        setHasMore(false);
-      }
+      // Sayfalama: gelen kayıt sayısı tam sayfa değilse daha fazlası yoktur
+      setHasMore(newBlogs.length === POSTS_PER_PAGE);
 
       setPage(pageNum);
     } catch (error) {
