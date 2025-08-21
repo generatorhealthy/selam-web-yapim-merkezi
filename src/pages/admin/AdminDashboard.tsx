@@ -433,7 +433,13 @@ const AdminDashboard = () => {
                     <Card 
                       key={card.route}
                       className="group relative overflow-hidden border-0 bg-white/80 backdrop-blur-xl hover:bg-white/95 transition-all duration-500 cursor-pointer hover:scale-[1.05] hover:-translate-y-3 shadow-xl hover:shadow-2xl rounded-3xl animate-fade-in"
-                      onClick={() => navigate(card.route)}
+                      onClick={(e) => {
+                        if (e.ctrlKey || e.metaKey) {
+                          window.open(card.route, '_blank');
+                        } else {
+                          navigate(card.route);
+                        }
+                      }}
                       style={{
                         animationDelay: `${index * 120}ms`,
                         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
