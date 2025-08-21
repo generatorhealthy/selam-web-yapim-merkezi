@@ -146,7 +146,8 @@ const BlogManagement = () => {
       const authorType = userProfile?.role === 'staff' ? 'staff' : 'admin';
       const authorName = userProfile?.role === 'staff' ? 'Staff Editörü' : 'Editör';
 
-      const { error } = await supabase
+      // İlk olarak blog_posts tablosuna ekle
+      const { data: insertedBlogPost, error: blogPostError } = await supabase
         .from('blog_posts')
         .insert({
           title: values.title,
@@ -163,13 +164,43 @@ const BlogManagement = () => {
           seo_title: values.seo_title || null,
           seo_description: values.seo_description || null,
           keywords: values.keywords || null,
-        });
+        })
+        .select()
+        .single();
 
-      if (error) {
-        console.error('Blog oluşturma hatası:', error);
+      if (blogPostError) {
+        console.error('Blog oluşturma hatası:', blogPostError);
         toast({
           title: "Hata",
           description: "Blog oluşturulurken bir hata oluştu.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Sonra blogs tablosuna da ekle (public görünüm için)
+      const { error: blogsError } = await supabase
+        .from('blogs')
+        .insert({
+          title: values.title,
+          content: values.content,
+          excerpt: values.excerpt || null,
+          featured_image: values.featured_image || null,
+          slug: slug,
+          author_name: authorName,
+          status: "published",
+          meta_title: values.seo_title || null,
+          meta_description: values.seo_description || null,
+          tags: values.keywords ? values.keywords.split(',').map(tag => tag.trim()) : null,
+        });
+
+      if (blogsError) {
+        console.error('Blogs tablosuna ekleme hatası:', blogsError);
+        // blogs tablosuna ekleme başarısız olursa blog_posts'tan da sil
+        await supabase.from('blog_posts').delete().eq('id', insertedBlogPost.id);
+        toast({
+          title: "Hata",
+          description: "Blog yayınlanırken bir hata oluştu.",
           variant: "destructive"
         });
         return;
@@ -218,7 +249,8 @@ const BlogManagement = () => {
   const handleApprove = async (blogId: string) => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase
+      // İlk olarak blog_posts tablosunu güncelle
+      const { error: updateError } = await supabase
         .from('blog_posts')
         .update({ 
           status: 'published',
@@ -227,14 +259,54 @@ const BlogManagement = () => {
         })
         .eq('id', blogId);
 
-      if (error) {
-        console.error('Blog onaylama hatası:', error);
+      if (updateError) {
+        console.error('Blog onaylama hatası:', updateError);
         toast({
           title: "Hata",
           description: "Blog onaylanırken bir hata oluştu.",
           variant: "destructive"
         });
         return;
+      }
+
+      // Blog bilgilerini al
+      const { data: blogData, error: fetchError } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('id', blogId)
+        .single();
+
+      if (fetchError || !blogData) {
+        console.error('Blog verisi alınamadı:', fetchError);
+        toast({
+          title: "Hata",
+          description: "Blog verisi alınamadı.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // blogs tablosuna da ekle (eğer yoksa)
+      const { error: insertError } = await supabase
+        .from('blogs')
+        .upsert({
+          title: blogData.title,
+          content: blogData.content,
+          excerpt: blogData.excerpt,
+          featured_image: blogData.featured_image,
+          slug: blogData.slug,
+          author_name: blogData.author_name,
+          status: "published",
+          meta_title: blogData.seo_title,
+          meta_description: blogData.seo_description,
+          tags: blogData.keywords ? blogData.keywords.split(',').map((tag: string) => tag.trim()) : null,
+          created_at: blogData.published_at || blogData.created_at,
+        }, {
+          onConflict: 'slug'
+        });
+
+      if (insertError) {
+        console.error('Blogs tablosuna ekleme hatası:', insertError);
       }
 
       toast({
