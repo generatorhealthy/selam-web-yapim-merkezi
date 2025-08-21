@@ -68,15 +68,24 @@ const Blog = () => {
       const from = pageNum * POSTS_PER_PAGE;
       const to = from + POSTS_PER_PAGE - 1;
 
-      const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .range(from, to);
+      // Yayınlanan blogları blogs ve blog_posts tablolarından paralel çek
+      const [blogsRes, blogPostsRes] = await Promise.all([
+        supabase
+          .from('blogs')
+          .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false })
+          .range(from, to),
+        supabase
+          .from('blog_posts')
+          .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
+          .eq('status', 'published')
+          .order('published_at', { ascending: false })
+          .range(from, to)
+      ]);
 
-      if (error) {
-        console.error('Blog yazıları çekilirken hata:', error);
+      if (blogsRes.error || blogPostsRes.error) {
+        console.error('Blog yazıları çekilirken hata:', blogsRes.error || blogPostsRes.error);
         toast({
           title: "Hata",
           description: "Blog yazıları yüklenirken bir hata oluştu.",
@@ -85,18 +94,63 @@ const Blog = () => {
         return;
       }
 
-      const newBlogs = (data as BlogPost[]) || [];
-      
-      // Kopya kayıtları önlemek için tekilleştirerek state'e yaz
-      setBlogs((prev) => {
-        const combined = isInitial ? newBlogs : [...prev, ...newBlogs];
-        const uniqueMap = new Map<string, BlogPost>();
-        combined.forEach((b) => uniqueMap.set(b.id, b));
-        return Array.from(uniqueMap.values());
+      const blogsData = (blogsRes.data as BlogPost[]) || [];
+
+      // blog_posts kayıtlarını BlogPost şekline map'le (özellikle staff yazıları için)
+      const mappedFromBlogPosts: BlogPost[] = (blogPostsRes.data || []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        content: p.content,
+        excerpt: p.excerpt ?? null,
+        featured_image: p.featured_image ?? null,
+        slug: p.slug,
+        author_name: p.author_name,
+        created_at: p.published_at || p.created_at,
+        updated_at: p.published_at || p.created_at,
+        status: p.status,
+        meta_title: p.seo_title ?? null,
+        meta_description: p.seo_description ?? null,
+        tags: p.keywords ? String(p.keywords).split(',').map((t: string) => t.trim()) : null,
+      }));
+
+      // Önce birleşik listeyi oluştur, sonra slug bazında tekilleştir ve eksik görseli blog_posts'dan doldur
+      const combinedRaw = [...blogsData, ...mappedFromBlogPosts];
+      const bySlug = new Map<string, BlogPost>();
+      combinedRaw.forEach((item) => {
+        const existing = bySlug.get(item.slug);
+        if (!existing) {
+          bySlug.set(item.slug, item);
+        } else {
+          bySlug.set(item.slug, {
+            ...existing,
+            featured_image: existing.featured_image || item.featured_image || null,
+            excerpt: existing.excerpt ?? item.excerpt ?? null,
+            meta_title: existing.meta_title ?? item.meta_title ?? null,
+            meta_description: existing.meta_description ?? item.meta_description ?? null,
+            tags: existing.tags ?? item.tags ?? null,
+            created_at: existing.created_at || item.created_at,
+          });
+        }
       });
 
-      // Sayfalama: gelen kayıt sayısı tam sayfa değilse daha fazlası yoktur
-      setHasMore(newBlogs.length === POSTS_PER_PAGE);
+      const mergedList = Array.from(bySlug.values()).sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setBlogs((prev) => {
+        const base = isInitial ? [] : prev;
+        const nextCombined = [...base, ...mergedList];
+        const uniqueBySlug = new Map<string, BlogPost>();
+        nextCombined.forEach((b) => {
+          const exist = uniqueBySlug.get(b.slug);
+          if (!exist) uniqueBySlug.set(b.slug, b);
+        });
+        return Array.from(uniqueBySlug.values());
+      });
+
+      // En az bir kaynaktan tam sayfa geldiyse devam var kabul edelim
+      const hasMoreFromEither = ((blogsData.length || 0) === POSTS_PER_PAGE) || ((mappedFromBlogPosts.length || 0) === POSTS_PER_PAGE);
+      setHasMore(hasMoreFromEither);
 
       setPage(pageNum);
     } catch (error) {
