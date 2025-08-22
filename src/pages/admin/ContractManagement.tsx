@@ -556,52 +556,24 @@ const ContractManagement = () => {
                           </div>
                           
                           <div className="flex flex-col sm:flex-row items-center gap-2 flex-wrap">
-                            <div className="flex gap-1">
-                              <Button
-                                onClick={() => openContractDialog(order, "preInfo")}
-                                size="sm"
-                                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-3"
-                              >
-                                <Eye className="w-4 h-4" />
-                                Görüntüle
-                              </Button>
-                              <Button
-                                onClick={() => downloadPreInfoPDF(order)}
-                                size="sm"
-                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-3"
-                              >
-                                <Download className="w-4 h-4" />
-                                İndir
-                              </Button>
-                            </div>
-                            
-                            <div className="flex gap-1">
-                              <Button
-                                onClick={() => openContractDialog(order, "distanceSales")}
-                                size="sm"
-                                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-3"
-                              >
-                                <Eye className="w-4 h-4" />
-                                Görüntüle
-                              </Button>
-                              <Button
-                                onClick={() => downloadDistanceSalesPDF(order)}
-                                size="sm"
-                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-3"
-                              >
-                                <Download className="w-4 h-4" />
-                                İndir
-                              </Button>
-                            </div>
-
                             <Button
-                              onClick={() => deleteContract(order)}
+                              onClick={() => openContractDialog(order, "preInfo")}
                               size="sm"
-                              className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-4"
                             >
-                              <Trash2 className="w-4 h-4" />
-                              Sil
+                              <Eye className="w-4 h-4" />
+                              Ön Bilgi
                             </Button>
+                            
+                            <Button
+                              onClick={() => openContractDialog(order, "distanceSales")}
+                              size="sm"
+                              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-4"
+                            >
+                              <Eye className="w-4 h-4" />
+                              Mesafeli Satış
+                            </Button>
+
                           </div>
                         </div>
                       </CardContent>
