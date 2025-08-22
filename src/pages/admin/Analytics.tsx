@@ -83,24 +83,24 @@ const Analytics = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        // Get current active sessions (last 30 minutes)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-        const { data: activeSessions } = await supabase
+        // Get current active sessions (last 45 seconds to reflect "anlık" visitors)
+        const fortyFiveSecondsAgo = new Date(Date.now() - 45 * 1000).toISOString();
+        const { count: activeCount, error: activeErr } = await supabase
           .from('website_analytics')
-          .select('session_id')
-          .gte('last_active', thirtyMinutesAgo);
+          .select('session_id', { count: 'exact', head: true })
+          .gte('last_active', fortyFiveSecondsAgo);
+        if (activeErr) throw activeErr;
+        setRealTimeUsers(activeCount || 0);
 
-        setRealTimeUsers(activeSessions?.length || 0);
-
-        // Get today's unique visitors
+        // Get today's unique visitors (count only)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const { data: todaySessions } = await supabase
+        const { count: todayCount, error: todayErr } = await supabase
           .from('website_analytics')
-          .select('session_id')
+          .select('session_id', { count: 'exact', head: true })
           .gte('created_at', today.toISOString());
-
-        setTodayVisitors(todaySessions?.length || 0);
+        if (todayErr) throw todayErr;
+        setTodayVisitors(todayCount || 0);
       } catch (error) {
         console.error('Failed to fetch analytics:', error);
       }
@@ -124,8 +124,8 @@ const Analytics = () => {
       )
       .subscribe();
 
-    // Refresh data every 30 seconds
-    const interval = setInterval(fetchAnalytics, 30000);
+    // Refresh data every 10 seconds for snappier updates
+    const interval = setInterval(fetchAnalytics, 10000);
 
     return () => {
       supabase.removeChannel(channel);

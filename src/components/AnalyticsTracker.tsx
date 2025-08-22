@@ -55,8 +55,8 @@ const AnalyticsTracker = () => {
     // Track initial page visit
     trackPageVisit();
 
-    // Update last_active every 30 seconds
-    const interval = setInterval(updateLastActive, 30000);
+    // Update last_active every 15 seconds
+    const interval = setInterval(updateLastActive, 15000);
 
     // Track when user becomes active again (after being idle)
     const handleActivity = () => {
