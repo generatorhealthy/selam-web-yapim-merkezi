@@ -99,12 +99,12 @@ export const generatePreInfoPDF = async (orderId: string) => {
       creator: 'Doktorum Ol System'
     });
 
-    // Sayfa boyutları ve marjinlar
+    // Sayfa boyutları ve marjinlar - Daha geniş içerik alanı
     let yPosition = 25;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const marginLeft = 20;
-    const marginRight = 20;
+    const marginLeft = 15;
+    const marginRight = 15;
     const contentWidth = pageWidth - marginLeft - marginRight;
 
     // Yardımcı fonksiyonlar
@@ -119,7 +119,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
       doc.setFontSize(size);
       doc.setTextColor(textColor[0], textColor[1], textColor[2]);
       
-      // Metin satırlarına böl
+      // Metin satırlarına böl - Daha geniş alan kullan
       const lines = doc.splitTextToSize(text, contentWidth - 10);
       
       lines.forEach((line: string) => {
@@ -130,14 +130,14 @@ export const generatePreInfoPDF = async (orderId: string) => {
         }
         
         // Ortalama veya sol hizalama
-        let xPos = marginLeft + 5; // Sol margin ekle
+        let xPos = marginLeft + 5;
         if (center) {
           const textWidth = doc.getTextWidth(line);
           xPos = (pageWidth - textWidth) / 2;
         }
         
         doc.text(line, xPos, yPosition);
-        yPosition += size * 0.5 + 1;
+        yPosition += size * 0.4 + 2; // Daha iyi satır aralığı
       });
     };
 
@@ -146,17 +146,23 @@ export const generatePreInfoPDF = async (orderId: string) => {
     };
 
     const addBlueBox = (content: string[], title: string) => {
-      // Başlık kutusu
+      // Sayfa sonu kontrolü
+      if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = 25;
+      }
+
+      // Başlık kutusu - Daha iyi boyutlandırma
       doc.setFillColor(33, 150, 243); // Mavi arka plan
       doc.setTextColor(255, 255, 255); // Beyaz yazı
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       
-      const titleHeight = 10;
+      const titleHeight = 8;
       const boxWidth = contentWidth;
-      doc.rect(marginLeft, yPosition - 2, boxWidth, titleHeight, 'F');
-      doc.text(title, marginLeft + 5, yPosition + 6);
-      yPosition += titleHeight + 2;
+      doc.rect(marginLeft, yPosition - 1, boxWidth, titleHeight, 'F');
+      doc.text(title, marginLeft + 3, yPosition + 5);
+      yPosition += titleHeight + 1;
       
       // İçerik kutusu
       doc.setDrawColor(33, 150, 243);
@@ -165,27 +171,32 @@ export const generatePreInfoPDF = async (orderId: string) => {
       
       doc.setTextColor(0, 0, 0);
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(11);
+      doc.setFontSize(10);
       
       content.forEach((item) => {
         if (yPosition > pageHeight - 25) {
           doc.addPage();
           yPosition = 25;
         }
-        doc.text(item, marginLeft + 5, yPosition);
-        yPosition += 7;
+        // Daha geniş alan kullan
+        const lines = doc.splitTextToSize(item, contentWidth - 10);
+        lines.forEach((line: string) => {
+          doc.text(line, marginLeft + 3, yPosition);
+          yPosition += 5;
+        });
+        yPosition += 1; // Satırlar arası boşluk
       });
       
       yPosition += 3;
       const boxHeight = yPosition - contentStartY;
-      doc.rect(marginLeft, contentStartY - 2, boxWidth, boxHeight, 'S');
+      doc.rect(marginLeft, contentStartY - 1, boxWidth, boxHeight, 'S');
       
-      addSpacing(15);
+      addSpacing(10);
     };
 
     // BAŞLIK - Ortalanmış
-    addTextBlock('ÖN BİLGİLENDİRME FORMU', 18, 'bold', true, [33, 150, 243]);
-    addSpacing(25);
+    addTextBlock('ÖN BİLGİLENDİRME FORMU', 16, 'bold', true, [33, 150, 243]);
+    addSpacing(20);
 
     // MÜŞTERİ BİLGİLERİ
     const customerInfo = [
@@ -195,7 +206,7 @@ export const generatePreInfoPDF = async (orderId: string) => {
       `TC Kimlik No: ${orderData.customer_tc_no || 'Belirtilmemiş'}`,
       `Adres: ${orderData.customer_address || 'Belirtilmemiş'}`,
       `Şehir: ${orderData.customer_city || 'Belirtilmemiş'}`,
-      `Müşteri Tipi: ${orderData.customer_type === 'corporate' ? 'Kurumsal' : 'Bireysel'}`
+      `Müşteri Tipi: ${orderData.customer_type === 'company' ? 'Kurumsal' : 'Bireysel'}`
     ];
     
     addBlueBox(customerInfo, 'MÜŞTERİ BİLGİLERİ:');
@@ -226,8 +237,8 @@ export const generatePreInfoPDF = async (orderId: string) => {
 
     // SÖZLEŞME İÇERİĞİ BAŞLIĞI - Ortalanmış
     addSpacing(15);
-    addTextBlock('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 16, 'bold', true, [0, 0, 0]);
-    addSpacing(20);
+    addTextBlock('DOKTORUM OL ÜYELİK SÖZLEŞMESİ', 14, 'bold', true, [0, 0, 0]);
+    addSpacing(15);
     
     // Form içeriğini ekle - HTML etiketlerini temizle ve düzenle
     if (formContent && formContent !== 'DOKTORUM OL ÜYELİK SÖZLEŞMESİ') {
@@ -280,20 +291,20 @@ export const generatePreInfoPDF = async (orderId: string) => {
         const isSubArticle = /^\d+\.\d+/.test(trimmedLine);
         
         if (isMainTitle) {
-          addSpacing(15);
-          addTextBlock(trimmedLine, 14, 'bold', false, [33, 150, 243]);
-          addSpacing(10);
+          addSpacing(12);
+          addTextBlock(trimmedLine, 12, 'bold', false, [33, 150, 243]);
+          addSpacing(8);
         } else if (isArticle) {
-          addSpacing(10);
-          addTextBlock(trimmedLine, 12, 'bold', false, [0, 0, 0]);
-          addSpacing(5);
-        } else if (isSubArticle) {
           addSpacing(8);
           addTextBlock(trimmedLine, 11, 'bold', false, [0, 0, 0]);
-          addSpacing(5);
-        } else {
-          addTextBlock(trimmedLine, 10, 'normal', false, [0, 0, 0]);
           addSpacing(4);
+        } else if (isSubArticle) {
+          addSpacing(6);
+          addTextBlock(trimmedLine, 10, 'bold', false, [0, 0, 0]);
+          addSpacing(3);
+        } else {
+          addTextBlock(trimmedLine, 9, 'normal', false, [0, 0, 0]);
+          addSpacing(3);
         }
       });
     }
