@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import CookieConsent from "@/components/CookieConsent";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -88,6 +89,7 @@ function App() {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <AnalyticsTracker />
             <CookieConsent />
             <FloatingWhatsAppButton />
             <Routes>

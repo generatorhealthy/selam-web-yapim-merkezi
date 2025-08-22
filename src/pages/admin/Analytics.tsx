@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Users, Eye, Globe, TrendingUp, Clock, MousePointer, Smartphone, Monitor, MapPin, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Analytics = () => {
-  // Simulated real-time data (in production, this would come from Google Analytics API or similar)
-  const realTimeUsers = 23;
-  const todayVisitors = 156;
+  const [realTimeUsers, setRealTimeUsers] = useState(0);
+  const [todayVisitors, setTodayVisitors] = useState(0);
   const pageViews = 423;
   const bounceRate = 42.5;
   const avgSessionDuration = "2m 34s";
@@ -77,6 +78,60 @@ const Analytics = () => {
     { city: "Adana", visitors: 8, percentage: 5.1 },
     { city: "Diğer", visitors: 39, percentage: 25.1 }
   ];
+
+  // Fetch real-time and daily analytics data
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        // Get current active sessions (last 30 minutes)
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        const { data: activeSessions } = await supabase
+          .from('website_analytics')
+          .select('session_id')
+          .gte('last_active', thirtyMinutesAgo);
+
+        setRealTimeUsers(activeSessions?.length || 0);
+
+        // Get today's unique visitors
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const { data: todaySessions } = await supabase
+          .from('website_analytics')
+          .select('session_id')
+          .gte('created_at', today.toISOString());
+
+        setTodayVisitors(todaySessions?.length || 0);
+      } catch (error) {
+        console.error('Failed to fetch analytics:', error);
+      }
+    };
+
+    fetchAnalytics();
+
+    // Set up real-time subscription for live updates
+    const channel = supabase
+      .channel('analytics-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'website_analytics'
+        },
+        () => {
+          fetchAnalytics(); // Refresh data when changes occur
+        }
+      )
+      .subscribe();
+
+    // Refresh data every 30 seconds
+    const interval = setInterval(fetchAnalytics, 30000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
+  }, []);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
