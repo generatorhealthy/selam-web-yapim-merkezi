@@ -1211,6 +1211,39 @@ export type Database = {
         }
         Relationships: []
       }
+      website_analytics: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          last_active: string
+          page_url: string
+          referrer: string | null
+          session_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          last_active?: string
+          page_url: string
+          referrer?: string | null
+          session_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          last_active?: string
+          page_url?: string
+          referrer?: string | null
+          session_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1219,6 +1252,10 @@ export type Database = {
       can_manage_users: {
         Args: { target_user_id?: string }
         Returns: boolean
+      }
+      cleanup_old_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       create_specialist_profile: {
         Args: { p_specialist_id: string; p_user_id: string }
