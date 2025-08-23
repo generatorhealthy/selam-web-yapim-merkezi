@@ -29,7 +29,8 @@ import {
   Activity,
   Clock,
   MessageCircle,
-  Phone
+  Phone,
+  Database
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -330,6 +331,17 @@ const AdminDashboard = () => {
       buttonText: "Muhtemel Kayıtları Yönet",
       adminOnly: false,
       staffOnly: true
+    },
+    {
+      title: "Log Kayıtları",
+      description: "Site hataları, müşteri hareketleri ve IP takibi",
+      icon: Database,
+      gradient: "from-slate-500 via-gray-500 to-zinc-600",
+      bgGradient: "from-slate-50 to-zinc-50",
+      shadowColor: "shadow-slate-500/20",
+      route: "/divan_paneli/log-management",
+      buttonText: "Logları Görüntüle",
+      adminOnly: true
     }
   ];
 

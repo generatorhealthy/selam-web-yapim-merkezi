@@ -67,6 +67,7 @@ import ContractManagement from "./pages/admin/ContractManagement";
 import SmsManagement from "./pages/admin/SmsManagement";
 import PbxManagement from "./pages/admin/PbxManagement";
 import ProspectiveRegistrations from "./pages/admin/ProspectiveRegistrations";
+import LogManagement from "./pages/admin/LogManagement";
 
 // Doctor pages
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
@@ -164,6 +165,7 @@ function App() {
               <Route path="/divan_paneli/sms-management" element={<SmsManagement />} />
               <Route path="/divan_paneli/pbx-management" element={<PbxManagement />} />
               <Route path="/divan_paneli/prospective-registrations" element={<ProspectiveRegistrations />} />
+              <Route path="/divan_paneli/log-management" element={<LogManagement />} />
               
               {/* Doctor Routes */}
               <Route path="/doktor-paneli" element={<DoctorDashboard />} />
