@@ -33,10 +33,12 @@ interface OrderLog {
   id: string;
   customer_name: string;
   customer_email: string;
+  customer_phone: string;
   package_name: string;
   amount: number;
   status: string;
   contract_ip_address: string;
+  payment_method: string;
   created_at: string;
 }
 
@@ -91,7 +93,7 @@ export default function LogManagement() {
       // Fetch order logs
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('id, customer_name, customer_email, package_name, amount, status, contract_ip_address, created_at')
+        .select('id, customer_name, customer_email, customer_phone, package_name, amount, status, contract_ip_address, payment_method, created_at')
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -258,39 +260,115 @@ export default function LogManagement() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ShoppingCart className="w-5 h-5" />
-                  Sipariş İşlem Logları
+                  Detaylı Sipariş İşlem Logları
                 </CardTitle>
                 <CardDescription>
-                  Yeni siparişler ve müşteri IP takibi
+                  Müşterilerin site gezintilerinden siparişe kadar tüm aktiviteleri
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {orderLogs.map((log) => (
-                    <div key={log.id} className="border rounded-lg p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <ShoppingCart className="w-4 h-4 text-green-600" />
-                          <span className="font-medium">{log.customer_name}</span>
+                <div className="space-y-6">
+                  {orderLogs.map((order) => {
+                    // Bu siparişle ilişkili session verilerini bul
+                    const relatedSessions = websiteAnalytics.filter(session => 
+                      session.ip_address === order.contract_ip_address &&
+                      new Date(session.created_at) <= new Date(order.created_at) &&
+                      new Date(session.last_active) >= new Date(new Date(order.created_at).getTime() - 3600000) // 1 saat öncesine kadar
+                    );
+
+                    return (
+                      <div key={order.id} className="border-2 border-slate-200 rounded-lg p-6 space-y-4 bg-slate-50">
+                        {/* Sipariş Başlığı */}
+                        <div className="flex items-center justify-between bg-white rounded-lg p-4 border">
+                          <div className="flex items-center gap-3">
+                            <ShoppingCart className="w-6 h-6 text-green-600" />
+                            <div>
+                              <h3 className="font-bold text-lg">{order.customer_name}</h3>
+                              <p className="text-sm text-slate-600">{order.customer_email}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant={getStatusBadgeVariant(order.status)} className="mb-2">
+                              {order.status}
+                            </Badge>
+                            <p className="text-sm font-medium">{order.amount} ₺ - {order.package_name}</p>
+                          </div>
                         </div>
-                        <Badge variant={getStatusBadgeVariant(log.status)}>
-                          {log.status}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-slate-600">
-                        <div>Email: {log.customer_email}</div>
-                        <div>Paket: {log.package_name}</div>
-                        <div>Tutar: {log.amount} ₺</div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          IP: {log.contract_ip_address || 'Bilinmiyor'}
+
+                        {/* Sipariş Detayları */}
+                        <div className="bg-white rounded-lg p-4 border">
+                          <h4 className="font-medium text-slate-900 mb-2">Sipariş Bilgileri</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-slate-500">Telefon:</span>
+                              <p className="font-medium">{order.customer_phone || 'Belirtilmemiş'}</p>
+                            </div>
+                            <div>
+                              <span className="text-slate-500">Ödeme:</span>
+                              <p className="font-medium">
+                                {order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi'}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-slate-500">IP Adresi:</span>
+                              <p className="font-medium flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {order.contract_ip_address || 'Bilinmiyor'}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-slate-500">Sipariş Zamanı:</span>
+                              <p className="font-medium">
+                                {format(new Date(order.created_at), 'dd.MM.yyyy HH:mm:ss', { locale: tr })}
+                              </p>
+                            </div>
+                          </div>
                         </div>
+
+                        {/* Session Gezintileri */}
+                        {relatedSessions.length > 0 && (
+                          <div className="bg-white rounded-lg p-4 border">
+                            <h4 className="font-medium text-slate-900 mb-3 flex items-center gap-2">
+                              <Activity className="w-4 h-4" />
+                              Site Gezinti Logları ({relatedSessions.length} sayfa ziyareti)
+                            </h4>
+                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                              {relatedSessions
+                                .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                                .map((session, index) => (
+                                <div key={session.id} className="flex items-center gap-3 p-2 bg-slate-50 rounded border-l-4 border-blue-200">
+                                  <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs flex items-center justify-center font-medium">
+                                    {index + 1}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <Globe className="w-3 h-3 text-blue-600" />
+                                      <span className="font-medium text-sm">{session.page_url}</span>
+                                    </div>
+                                    <div className="flex items-center gap-4 mt-1 text-xs text-slate-500">
+                                      <span>Giriş: {format(new Date(session.created_at), 'HH:mm:ss')}</span>
+                                      <span>Son Aktivite: {format(new Date(session.last_active), 'HH:mm:ss')}</span>
+                                      {session.referrer && <span>Referans: {session.referrer}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Session bulunamadıysa */}
+                        {relatedSessions.length === 0 && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 text-amber-700">
+                              <AlertCircle className="w-4 h-4" />
+                              <span className="text-sm">Bu sipariş için detaylı gezinti logları bulunamadı.</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="text-xs text-slate-500">
-                        {format(new Date(log.created_at), 'dd.MM.yyyy HH:mm:ss', { locale: tr })}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
