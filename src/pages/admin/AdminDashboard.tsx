@@ -408,51 +408,8 @@ const AdminDashboard = () => {
         <HorizontalNavigation />
         
         <div className="relative z-10">
-          {/* Enhanced Header Section */}
-          <div className="px-6 py-12">
-            <div className="mx-auto max-w-7xl">
-              <div className="text-center mb-12">
-                <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500 text-white rounded-full text-sm font-semibold mb-8 shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-500">
-                  <Sparkles className="w-5 h-5 animate-spin" />
-                  <span className="bg-gradient-to-r from-white to-purple-100 bg-clip-text text-transparent font-bold">
-                    Admin Panel
-                  </span>
-                  <Sparkles className="w-5 h-5 animate-spin" />
-                </div>
-                
-                <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tight">
-                  <span className="bg-gradient-to-r from-slate-900 via-purple-800 to-indigo-800 bg-clip-text text-transparent drop-shadow-sm">
-                    Merhaba
-                  </span>
-                </h1>
-                
-                <div className="max-w-2xl mx-auto mb-8">
-                  <p className="text-lg text-slate-600 leading-relaxed">
-                    Profesyonel yönetim paneline hoş geldiniz. Tüm işlemlerinizi kolayca gerçekleştirebilirsiniz.
-                  </p>
-                </div>
-                
-                <div className="flex items-center justify-center gap-8 text-sm">
-                  <div className="flex items-center gap-3 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-lg border border-white/50">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-                    <span className="font-semibold text-slate-700">Sistem Aktif</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-lg border border-white/50">
-                    <Activity className="w-4 h-4 text-indigo-600" />
-                    <span className="font-semibold text-slate-700">{visibleCards.length} Modül</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-lg border border-white/50">
-                    <Badge variant="secondary" className="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border-purple-200">
-                      {getRoleDisplayName()}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Enhanced Cards Grid */}
-          <div className="px-6 pb-16">
+          <div className="px-6 pb-16 pt-8">
             <div className="mx-auto max-w-7xl">
               <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {visibleCards.map((card, index) => {
