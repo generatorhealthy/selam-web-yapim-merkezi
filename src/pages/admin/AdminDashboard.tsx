@@ -252,28 +252,6 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
-      title: "Analitik Raporu",
-      description: "Site trafiği, ziyaretçi analitiği ve detaylı raporlar",
-      icon: BarChart3,
-      gradient: "from-violet-500 via-purple-500 to-indigo-600",
-      bgGradient: "from-violet-50 to-indigo-50",
-      shadowColor: "shadow-violet-500/20",
-      route: "/divan_paneli/analytics",
-      buttonText: "Analitikleri Görüntüle",
-      adminOnly: true
-    },
-    {
-      title: "Raporlar",
-      description: "Detaylı raporları görüntüle",
-      icon: BarChart3,
-      gradient: "from-violet-500 via-purple-500 to-indigo-600",
-      bgGradient: "from-violet-50 to-indigo-50",
-      shadowColor: "shadow-violet-500/20",
-      route: "/divan_paneli/reports",
-      buttonText: "Raporları Görüntüle",
-      adminOnly: true
-    },
-    {
       title: "Başarı İstatistikleri",
       description: "Performans istatistiklerini görüntüle",
       icon: Trophy,
