@@ -6,6 +6,9 @@ import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { 
   Users, 
   UserPlus, 
@@ -32,6 +35,42 @@ import {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
+  const [newOrderCount, setNewOrderCount] = useState(0);
+
+  // Listen for new orders
+  useEffect(() => {
+    if (!userProfile || userProfile.role !== 'admin') return;
+
+    const channel = supabase
+      .channel('admin-order-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('Yeni sipariş alındı:', payload);
+          setNewOrderCount(prev => prev + 1);
+          
+          // Show notification
+          toast.success("Yeni Sipariş Alındı!", {
+            description: `${payload.new.customer_name} tarafından ${payload.new.package_name} siparişi verildi.`,
+            duration: 10000,
+            action: {
+              label: "Siparişleri Görüntüle",
+              onClick: () => navigate("/divan_paneli/orders")
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userProfile, navigate]);
 
   // Always call all hooks first, then handle conditional rendering
   const isAdmin = userProfile?.role === 'admin';
