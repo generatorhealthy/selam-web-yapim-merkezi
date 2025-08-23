@@ -384,7 +384,6 @@ const DoctorProfile = () => {
               <div className="flex items-center gap-1 mb-6">
                 <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                 <span className="font-medium text-lg">{numericRating}</span>
-                <span className="text-sm text-gray-600">({specialist.reviews_count || 0} değerlendirme)</span>
               </div>
 
               <div className="flex flex-wrap justify-center gap-3 mb-6">
