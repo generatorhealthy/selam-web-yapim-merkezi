@@ -9,11 +9,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { CalendarIcon, Clock, User, Mail, Phone, MapPin, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { CalendarIcon, Clock, User, Mail, Phone, MapPin, ChevronLeft, ChevronRight, CheckCircle, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Specialist {
   id: string;
@@ -21,29 +22,99 @@ interface Specialist {
   specialty: string;
   city: string;
   hospital: string;
-  consultation_fee: number;
   online_consultation: boolean;
   face_to_face_consultation: boolean;
   working_hours_start: string;
   working_hours_end: string;
   available_days: string[];
+  profile_picture?: string;
+  bio?: string;
 }
 
-// Specialty topics mapping
-const specialtyTopics: Record<string, string[]> = {
-  'Aile Danışmanı': ['Aile Danışmanı', 'Kadın Doğum', 'Psikolog', 'Uzm. Psikolog', 'Psikolojik Danışmanlık', 'Çiftlik', 'Dil ve Konuşma Terapisti', 'İlişki Danışmanı', 'Eğitim Danışmanlığı', 'Sosyolog'],
-  'Psikolog': ['Psikolog', 'Uzm. Psikolog', 'Klinik Psikolog', 'Çocuk Psikoloğu', 'Psikolojik Danışmanlık'],
-  'Doktor': ['Genel Tıp', 'Dahiliye', 'Kardiyoloji', 'Nöroloji', 'Psikiyatri'],
-  'Diyetisyen': ['Beslenme Danışmanlığı', 'Spor Diyetisyeni', 'Klinik Beslenme'],
-  'Fizyoterapist': ['Ortopedik Fizyoterapi', 'Nörolojik Fizyoterapi', 'Spor Fizyoterapisi']
+// Consultation types mapping with images and descriptions
+const consultationTypes: Record<string, { 
+  name: string; 
+  description: string; 
+  icon: string; 
+  specialties: string[];
+  gradient: string;
+}> = {
+  'travma-terapisi': {
+    name: 'Travma Terapisi',
+    description: 'Geçmiş travmatik deneyimlerin işlenmesi ve iyileştirilmesi için profesyonel destek',
+    icon: '🧠',
+    specialties: ['Psikolog', 'Uzm. Psikolog', 'Klinik Psikolog', 'Psikiyatri'],
+    gradient: 'from-blue-500 to-purple-600'
+  },
+  'bosanma-terapisi': {
+    name: 'Boşanma Terapisi',
+    description: 'Boşanma sürecinde duygusal destek ve yeni yaşam düzenine adaptasyon',
+    icon: '💔',
+    specialties: ['Aile Danışmanı', 'Psikolog', 'İlişki Danışmanı'],
+    gradient: 'from-rose-400 to-pink-600'
+  },
+  'cift-terapisi': {
+    name: 'Çift Terapisi',
+    description: 'İlişkilerde iletişim sorunları ve uyum problemlerinin çözümü',
+    icon: '💕',
+    specialties: ['Aile Danışmanı', 'İlişki Danışmanı', 'Psikolog'],
+    gradient: 'from-red-400 to-rose-600'
+  },
+  'anksiyete-terapisi': {
+    name: 'Anksiyete Terapisi',
+    description: 'Kaygı bozuklukları, panik atak ve stres yönetimi için uzman desteği',
+    icon: '😰',
+    specialties: ['Psikolog', 'Uzm. Psikolog', 'Klinik Psikolog', 'Psikiyatri'],
+    gradient: 'from-yellow-400 to-orange-600'
+  },
+  'depresyon-terapisi': {
+    name: 'Depresyon Terapisi',
+    description: 'Depresif belirtiler ve ruh hali bozukluklarında psikolojik destek',
+    icon: '😔',
+    specialties: ['Psikolog', 'Uzm. Psikolog', 'Klinik Psikolog', 'Psikiyatri'],
+    gradient: 'from-indigo-400 to-blue-600'
+  },
+  'cocuk-gelisimi': {
+    name: 'Çocuk Gelişimi',
+    description: 'Çocuklarda davranış problemleri ve gelişimsel süreçlerde rehberlik',
+    icon: '👶',
+    specialties: ['Çocuk Psikoloğu', 'Dil ve Konuşma Terapisti', 'Eğitim Danışmanlığı'],
+    gradient: 'from-green-400 to-emerald-600'
+  },
+  'beslenme-danismanligi': {
+    name: 'Beslenme Danışmanlığı',
+    description: 'Sağlıklı beslenme alışkanlıkları ve kişiselleştirilmiş diyet programları',
+    icon: '🍎',
+    specialties: ['Diyetisyen', 'Beslenme Danışmanlığı', 'Spor Diyetisyeni'],
+    gradient: 'from-lime-400 to-green-600'
+  },
+  'fizik-tedavi': {
+    name: 'Fizik Tedavi',
+    description: 'Kas-iskelet sistemi problemleri ve fiziksel rehabilitasyon',
+    icon: '🏃‍♂️',
+    specialties: ['Fizyoterapist', 'Ortopedik Fizyoterapi', 'Spor Fizyoterapisi'],
+    gradient: 'from-cyan-400 to-teal-600'
+  },
+  'genel-saglik': {
+    name: 'Genel Sağlık Danışmanlığı',
+    description: 'Genel sağlık kontrolü, önleyici tıp ve sağlık rehberliği',
+    icon: '🩺',
+    specialties: ['Genel Tıp', 'Dahiliye'],
+    gradient: 'from-teal-400 to-cyan-600'
+  },
+  'egitim-danismanligi': {
+    name: 'Eğitim Danışmanlığı',
+    description: 'Öğrenme güçlükleri ve akademik başarı için özel destek programları',
+    icon: '📚',
+    specialties: ['Eğitim Danışmanlığı', 'Psikolog'],
+    gradient: 'from-violet-400 to-purple-600'
+  }
 };
 
 const RandevuSayfasi = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
-  const [specialties, setSpecialties] = useState<string[]>([]);
-  const [selectedSpecialty, setSelectedSpecialty] = useState('');
-  const [selectedTopic, setSelectedTopic] = useState('');
+  const [selectedConsultationType, setSelectedConsultationType] = useState('');
   const [selectedSpecialist, setSelectedSpecialist] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState('');
@@ -58,7 +129,7 @@ const RandevuSayfasi = () => {
     notes: ''
   });
 
-  // Fetch specialists and specialties
+  // Fetch specialists
   useEffect(() => {
     fetchSpecialists();
   }, []);
@@ -72,12 +143,7 @@ const RandevuSayfasi = () => {
         .eq('is_active', true);
 
       if (error) throw error;
-
       setSpecialists(data || []);
-      
-      // Extract unique specialties
-      const uniqueSpecialties = [...new Set(data?.map(s => s.specialty) || [])];
-      setSpecialties(uniqueSpecialties);
     } catch (error) {
       console.error('Error fetching specialists:', error);
       toast({
@@ -90,23 +156,25 @@ const RandevuSayfasi = () => {
     }
   };
 
-  const filteredSpecialists = specialists.filter(s => 
-    selectedTopic ? s.specialty === selectedTopic : (selectedSpecialty ? s.specialty === selectedSpecialty : true)
-  );
+  // Filter specialists based on selected consultation type
+  const filteredSpecialists = specialists.filter(s => {
+    if (!selectedConsultationType) return true;
+    const consultationType = consultationTypes[selectedConsultationType];
+    return consultationType?.specialties.includes(s.specialty);
+  });
 
   const canGoNext = (step: number) => {
     switch (step) {
-      case 1: return selectedSpecialty;
-      case 2: return selectedTopic;
-      case 3: return selectedSpecialist;
-      case 4: return appointmentType;
-      case 5: return selectedDate && selectedTime;
+      case 1: return selectedConsultationType;
+      case 2: return selectedSpecialist;
+      case 3: return appointmentType;
+      case 4: return selectedDate && selectedTime;
       default: return false;
     }
   };
 
   const nextStep = () => {
-    if (currentStep < 6 && canGoNext(currentStep)) {
+    if (currentStep < 5 && canGoNext(currentStep)) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -119,8 +187,7 @@ const RandevuSayfasi = () => {
 
   const resetForm = () => {
     setCurrentStep(1);
-    setSelectedSpecialty('');
-    setSelectedTopic('');
+    setSelectedConsultationType('');
     setSelectedSpecialist('');
     setSelectedDate(undefined);
     setSelectedTime('');
@@ -208,7 +275,6 @@ const RandevuSayfasi = () => {
         description: "Randevunuz başarıyla oluşturuldu. En kısa sürede size dönüş yapılacaktır.",
       });
 
-      // Reset form
       resetForm();
 
     } catch (error) {
@@ -227,59 +293,40 @@ const RandevuSayfasi = () => {
     switch (currentStep) {
       case 1:
         return (
-          <Card className="w-full max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-                <User className="h-6 w-6 text-primary" />
-                Uzmanlık Alanı Seçimi
+          <Card className="w-full max-w-4xl mx-auto shadow-lg">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold">
+                <User className="h-8 w-8 text-primary" />
+                Danışmanlık Türü Seçimi
               </CardTitle>
-              <CardDescription className="text-base">
-                Hangi alanda uzman arıyorsunuz?
+              <CardDescription className="text-lg mt-2">
+                Size uygun danışmanlık türünü seçin
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
-                <SelectTrigger className="h-12 text-base">
-                  <SelectValue placeholder="Uzmanlık alanı seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(specialtyTopics).map((specialty) => (
-                    <SelectItem key={specialty} value={specialty} className="text-base py-3">
-                      {specialty}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-        );
-
-      case 2:
-        return (
-          <Card className="w-full max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-                <User className="h-6 w-6 text-primary" />
-                Konu Seçimi
-              </CardTitle>
-              <CardDescription className="text-base">
-                {selectedSpecialty} alanında hangi konuda destek almak istiyorsunuz?
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3">
-                {specialtyTopics[selectedSpecialty]?.map((topic) => (
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(consultationTypes).map(([key, type]) => (
                   <div
-                    key={topic}
+                    key={key}
                     className={cn(
-                      "p-4 border-2 rounded-lg cursor-pointer transition-all hover:scale-[1.02]",
-                      selectedTopic === topic
-                        ? "border-primary bg-primary/5 shadow-md"
-                        : "border-border hover:border-primary/50"
+                      "relative p-6 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 border-2",
+                      selectedConsultationType === key
+                        ? "border-primary bg-primary/10 shadow-lg scale-105"
+                        : "border-border hover:border-primary/50 hover:shadow-md"
                     )}
-                    onClick={() => setSelectedTopic(topic)}
+                    onClick={() => setSelectedConsultationType(key)}
                   >
-                    <span className="font-medium">{topic}</span>
+                    <div className={cn(
+                      "absolute inset-0 rounded-xl opacity-5 bg-gradient-to-br",
+                      type.gradient
+                    )} />
+                    <div className="relative z-10">
+                      <div className="text-4xl mb-4 text-center">{type.icon}</div>
+                      <h3 className="font-bold text-lg text-center mb-3">{type.name}</h3>
+                      <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                        {type.description}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -287,52 +334,71 @@ const RandevuSayfasi = () => {
           </Card>
         );
 
-      case 3:
+      case 2:
         return (
-          <Card className="w-full max-w-3xl mx-auto">
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-                <User className="h-6 w-6 text-primary" />
+          <Card className="w-full max-w-4xl mx-auto shadow-lg">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold">
+                <User className="h-8 w-8 text-primary" />
                 Uzman Seçimi
               </CardTitle>
-              <CardDescription className="text-base">
-                {selectedTopic} konusunda çalışan uzmanlarımız
+              <CardDescription className="text-lg mt-2">
+                {consultationTypes[selectedConsultationType]?.name} konusunda uzmanlarımız
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4">
+              <div className="grid gap-6">
                 {filteredSpecialists.map((specialist) => (
                   <div
                     key={specialist.id}
                     className={cn(
-                      "p-4 border-2 rounded-lg cursor-pointer transition-all hover:scale-[1.01]",
+                      "p-6 border-2 rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.02]",
                       selectedSpecialist === specialist.id
-                        ? "border-primary bg-primary/5 shadow-md"
-                        : "border-border hover:border-primary/50"
+                        ? "border-primary bg-primary/5 shadow-lg"
+                        : "border-border hover:border-primary/50 hover:shadow-md"
                     )}
                     onClick={() => setSelectedSpecialist(specialist.id)}
                   >
-                    <div className="flex justify-between items-start">
+                    <div className="flex gap-6 items-start">
+                      <Avatar className="h-20 w-20 border-2 border-primary/20">
+                        <AvatarImage src={specialist.profile_picture} alt={specialist.name} />
+                        <AvatarFallback className="text-lg font-semibold bg-primary/10">
+                          {specialist.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{specialist.name}</h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-                          <span className="flex items-center gap-1">
+                        <h3 className="font-bold text-xl mb-2">{specialist.name}</h3>
+                        <p className="text-primary font-medium mb-3">{specialist.specialty}</p>
+                        
+                        <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4">
+                          <span className="flex items-center gap-2">
                             <MapPin className="h-4 w-4" />
                             {specialist.city}
                           </span>
                           {specialist.hospital && (
-                            <span>{specialist.hospital}</span>
+                            <span className="flex items-center gap-2">
+                              <span>🏥</span>
+                              {specialist.hospital}
+                            </span>
                           )}
                         </div>
-                        <div className="flex gap-2 mt-3">
+                        
+                        {specialist.bio && (
+                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                            {specialist.bio}
+                          </p>
+                        )}
+                        
+                        <div className="flex gap-3">
                           {specialist.face_to_face_consultation && (
-                            <span className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full">
-                              Yüz yüze
+                            <span className="px-4 py-2 bg-primary/10 text-primary text-sm rounded-full font-medium">
+                              👥 Yüz yüze
                             </span>
                           )}
                           {specialist.online_consultation && (
-                            <span className="px-3 py-1 bg-secondary/10 text-secondary-foreground text-sm rounded-full">
-                              Online
+                            <span className="px-4 py-2 bg-secondary/10 text-secondary-foreground text-sm rounded-full font-medium">
+                              💻 Online
                             </span>
                           )}
                         </div>
@@ -345,24 +411,27 @@ const RandevuSayfasi = () => {
           </Card>
         );
 
-      case 4:
+      case 3:
         return (
-          <Card className="w-full max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-                <User className="h-6 w-6 text-primary" />
+          <Card className="w-full max-w-2xl mx-auto shadow-lg">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold">
+                <User className="h-8 w-8 text-primary" />
                 Randevu Türü
               </CardTitle>
-              <CardDescription className="text-base">
+              <CardDescription className="text-lg mt-2">
                 Randevu türünü seçin
               </CardDescription>
             </CardHeader>
             <CardContent>
               <RadioGroup value={appointmentType} onValueChange={setAppointmentType} className="space-y-4">
                 {availableAppointmentTypes.map((type) => (
-                  <div key={type} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50">
-                    <RadioGroupItem value={type} id={type} className="h-5 w-5" />
-                    <Label htmlFor={type} className="text-base font-medium cursor-pointer flex-1">{type}</Label>
+                  <div key={type} className="flex items-center space-x-4 p-6 border-2 rounded-xl hover:bg-muted/30 transition-colors">
+                    <RadioGroupItem value={type} id={type} className="h-6 w-6" />
+                    <Label htmlFor={type} className="text-lg font-medium cursor-pointer flex-1 flex items-center gap-3">
+                      {type === 'Yüz yüze' ? '👥' : '💻'}
+                      {type}
+                    </Label>
                   </div>
                 ))}
               </RadioGroup>
@@ -370,31 +439,31 @@ const RandevuSayfasi = () => {
           </Card>
         );
 
-      case 5:
+      case 4:
         return (
-          <Card className="w-full max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-                <CalendarIcon className="h-6 w-6 text-primary" />
+          <Card className="w-full max-w-2xl mx-auto shadow-lg">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold">
+                <CalendarIcon className="h-8 w-8 text-primary" />
                 Tarih ve Saat Seçimi
               </CardTitle>
-              <CardDescription className="text-base">
+              <CardDescription className="text-lg mt-2">
                 Size uygun tarih ve saati seçin
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-8">
               <div>
-                <Label className="text-base font-medium">Randevu Tarihi</Label>
+                <Label className="text-lg font-semibold mb-3 block">Randevu Tarihi</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal h-12 text-base mt-2",
+                        "w-full justify-start text-left font-normal h-14 text-lg",
                         !selectedDate && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-5 w-5" />
+                      <CalendarIcon className="mr-3 h-6 w-6" />
                       {selectedDate ? (
                         format(selectedDate, "dd MMMM yyyy", { locale: tr })
                       ) : (
@@ -416,16 +485,16 @@ const RandevuSayfasi = () => {
 
               {selectedDate && (
                 <div>
-                  <Label className="text-base font-medium">Randevu Saati</Label>
+                  <Label className="text-lg font-semibold mb-3 block">Randevu Saati</Label>
                   <Select value={selectedTime} onValueChange={setSelectedTime}>
-                    <SelectTrigger className="h-12 text-base mt-2">
+                    <SelectTrigger className="h-14 text-lg">
                       <SelectValue placeholder="Saat seçin" />
                     </SelectTrigger>
                     <SelectContent>
                       {generateTimeSlots().map((time) => (
-                        <SelectItem key={time} value={time} className="text-base py-3">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
+                        <SelectItem key={time} value={time} className="text-lg py-4">
+                          <div className="flex items-center gap-3">
+                            <Clock className="h-5 w-5" />
                             {time}
                           </div>
                         </SelectItem>
@@ -438,46 +507,46 @@ const RandevuSayfasi = () => {
           </Card>
         );
 
-      case 6:
+      case 5:
         return (
-          <Card className="w-full max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-                <User className="h-6 w-6 text-primary" />
+          <Card className="w-full max-w-2xl mx-auto shadow-lg">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold">
+                <User className="h-8 w-8 text-primary" />
                 Kişisel Bilgiler
               </CardTitle>
-              <CardDescription className="text-base">
+              <CardDescription className="text-lg mt-2">
                 Randevu için gerekli bilgilerinizi girin
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="patientName" className="text-base font-medium">Ad Soyad *</Label>
+                  <Label htmlFor="patientName" className="text-lg font-semibold mb-2 block">Ad Soyad *</Label>
                   <Input
                     id="patientName"
                     value={formData.patientName}
                     onChange={(e) => handleInputChange('patientName', e.target.value)}
                     placeholder="Adınızı ve soyadınızı girin"
-                    className="h-12 text-base mt-2"
+                    className="h-14 text-lg"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="patientPhone" className="text-base font-medium">Telefon *</Label>
+                  <Label htmlFor="patientPhone" className="text-lg font-semibold mb-2 block">Telefon *</Label>
                   <Input
                     id="patientPhone"
                     value={formData.patientPhone}
                     onChange={(e) => handleInputChange('patientPhone', e.target.value)}
                     placeholder="Telefon numaranızı girin"
-                    className="h-12 text-base mt-2"
+                    className="h-14 text-lg"
                     required
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="patientEmail" className="flex items-center gap-2 text-base font-medium">
-                  <Mail className="h-4 w-4" />
+                <Label htmlFor="patientEmail" className="flex items-center gap-2 text-lg font-semibold mb-2">
+                  <Mail className="h-5 w-5" />
                   E-posta *
                 </Label>
                 <Input
@@ -486,19 +555,19 @@ const RandevuSayfasi = () => {
                   value={formData.patientEmail}
                   onChange={(e) => handleInputChange('patientEmail', e.target.value)}
                   placeholder="E-posta adresinizi girin"
-                  className="h-12 text-base mt-2"
+                  className="h-14 text-lg"
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="notes" className="text-base font-medium">Notlar (Opsiyonel)</Label>
+                <Label htmlFor="notes" className="text-lg font-semibold mb-2 block">Notlar (Opsiyonel)</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => handleInputChange('notes', e.target.value)}
                   placeholder="Randevunuzla ilgili özel notlarınız varsa yazabilirsiniz"
-                  rows={3}
-                  className="text-base mt-2"
+                  rows={4}
+                  className="text-lg resize-none"
                 />
               </div>
             </CardContent>
@@ -511,39 +580,41 @@ const RandevuSayfasi = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-4">Randevu Al</h1>
-            <p className="text-muted-foreground text-lg">
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-bold text-foreground mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Randevu Al
+            </h1>
+            <p className="text-muted-foreground text-xl max-w-2xl mx-auto leading-relaxed">
               Uzmanlarımızdan kolayca randevu alabilir, size en uygun tarih ve saati seçebilirsiniz.
             </p>
           </div>
 
           {/* Progress Steps */}
-          <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center space-x-4">
-              {[1, 2, 3, 4, 5, 6].map((step) => (
+          <div className="flex items-center justify-center mb-12">
+            <div className="flex items-center space-x-6">
+              {[1, 2, 3, 4, 5].map((step) => (
                 <div key={step} className="flex items-center">
                   <div
                     className={cn(
-                      "w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-medium",
+                      "w-12 h-12 rounded-full border-2 flex items-center justify-center text-sm font-semibold transition-all duration-300",
                       step < currentStep
-                        ? "bg-primary text-primary-foreground border-primary"
+                        ? "bg-primary text-primary-foreground border-primary shadow-lg"
                         : step === currentStep
-                        ? "border-primary text-primary bg-primary/10"
+                        ? "border-primary text-primary bg-primary/10 shadow-md scale-110"
                         : "border-muted-foreground/30 text-muted-foreground"
                     )}
                   >
-                    {step < currentStep ? <CheckCircle className="h-5 w-5" /> : step}
+                    {step < currentStep ? <CheckCircle className="h-6 w-6" /> : step}
                   </div>
-                  {step < 6 && (
+                  {step < 5 && (
                     <div
                       className={cn(
-                        "w-8 h-0.5 mx-2",
-                        step < currentStep ? "bg-primary" : "bg-muted-foreground/30"
+                        "w-12 h-1 mx-3 rounded-full transition-all duration-300",
+                        step < currentStep ? "bg-primary shadow-sm" : "bg-muted-foreground/30"
                       )}
                     />
                   )}
@@ -553,7 +624,7 @@ const RandevuSayfasi = () => {
           </div>
 
           {/* Step Content */}
-          <div className="mb-8">
+          <div className="mb-12">
             {renderStep()}
           </div>
 
@@ -563,33 +634,33 @@ const RandevuSayfasi = () => {
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 h-12 px-6 text-lg"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
               Geri
             </Button>
 
-            <div className="text-sm text-muted-foreground">
-              {currentStep} / 6
+            <div className="text-lg text-muted-foreground font-medium">
+              {currentStep} / 5
             </div>
 
-            {currentStep < 6 ? (
+            {currentStep < 5 ? (
               <Button
                 onClick={nextStep}
                 disabled={!canGoNext(currentStep)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 h-12 px-6 text-lg"
               >
                 İleri
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-5 w-5" />
               </Button>
             ) : (
               <Button
                 onClick={handleSubmit}
                 disabled={submitting || !formData.patientName || !formData.patientEmail || !formData.patientPhone}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 h-12 px-6 text-lg"
               >
                 {submitting ? "Randevu Oluşturuluyor..." : "Randevu Al"}
-                <CheckCircle className="h-4 w-4" />
+                <CheckCircle className="h-5 w-5" />
               </Button>
             )}
           </div>
