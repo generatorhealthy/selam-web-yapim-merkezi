@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield } from "lucide-react";
+import { useRateLimit } from "@/hooks/useRateLimit";
 
 const LoginPage = () => {
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -19,6 +20,12 @@ const LoginPage = () => {
   const [isResetLoading, setIsResetLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Rate limiting - 5 attempts per 15 minutes
+  const rateLimit = useRateLimit({
+    maxAttempts: 5,
+    windowMs: 15 * 60 * 1000 // 15 minutes
+  });
 
   // Check if user is already logged in
   useEffect(() => {
@@ -45,10 +52,31 @@ const LoginPage = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check rate limiting
+    if (rateLimit.isRateLimited()) {
+      toast({
+        title: "Çok Fazla Deneme",
+        description: `Çok fazla başarısız giriş denemesi. ${rateLimit.remainingAttempts} deneme hakkınız kaldı. 15 dakika sonra tekrar deneyin.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Record attempt
+    if (!rateLimit.recordAttempt()) {
+      toast({
+        title: "Giriş Denemesi Sınırı",
+        description: "15 dakika içinde maksimum 5 deneme yapabilirsiniz. Lütfen daha sonra tekrar deneyin.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      console.log('Uzman giriş denemesi:', loginData.email);
+      // Security: Remove sensitive console logs in production
 
       // Supabase Auth ile giriş yap
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -57,7 +85,7 @@ const LoginPage = () => {
       });
 
       if (authError) {
-        console.log('Auth hatası:', authError);
+        // Security: Don't log sensitive auth errors in production
         toast({
           title: "Giriş Hatası",
           description: "E-posta veya şifre hatalı.",
@@ -75,7 +103,7 @@ const LoginPage = () => {
         return;
       }
 
-      console.log('Auth başarılı, uzman kaydı kontrol ediliyor...');
+      // Security: Remove detailed logs in production
 
       // Kullanıcının specialists tablosunda kayıtlı olup olmadığını kontrol et
       // Hem user_id hem de email ile kontrol et
@@ -86,7 +114,7 @@ const LoginPage = () => {
         .eq('is_active', true)
         .maybeSingle();
 
-      console.log('Uzman sorgu sonucu:', { specialist, specialistError });
+      // Security: Remove detailed query logs in production
 
       if (specialistError) {
         console.error('Uzman sorgu hatası:', specialistError);
@@ -109,6 +137,9 @@ const LoginPage = () => {
         return;
       }
 
+      // Reset rate limiting on successful login
+      rateLimit.reset();
+      
       // Başarılı giriş - doktor paneline yönlendir
       toast({
         title: "Giriş Başarılı",

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff } from "lucide-react";
+import { useRateLimit } from "@/hooks/useRateLimit";
 
 const AdminAuth = () => {
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -17,25 +18,57 @@ const AdminAuth = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Rate limiting - 5 attempts per 15 minutes
+  const rateLimit = useRateLimit({
+    maxAttempts: 5,
+    windowMs: 15 * 60 * 1000 // 15 minutes
+  });
 
-  // Sayfa yüklendiğinde kaydedilmiş bilgileri yükle
+  // Password complexity validation
+  const validatePassword = (password: string): boolean => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
+  };
+
+  // Do not load credentials from localStorage for security
   useEffect(() => {
-    const savedCredentials = localStorage.getItem('adminCredentials');
-    if (savedCredentials) {
-      const { email, password, remember } = JSON.parse(savedCredentials);
-      if (remember) {
-        setLoginData({ email, password });
-        setRememberMe(true);
-      }
-    }
+    // Security: Remove any existing credentials from localStorage
+    localStorage.removeItem('adminCredentials');
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check rate limiting
+    if (rateLimit.isRateLimited()) {
+      toast({
+        title: "Çok Fazla Deneme",
+        description: `Çok fazla başarısız giriş denemesi. ${rateLimit.remainingAttempts} deneme hakkınız kaldı. 15 dakika sonra tekrar deneyin.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Record attempt
+    if (!rateLimit.recordAttempt()) {
+      toast({
+        title: "Giriş Denemesi Sınırı",
+        description: "15 dakika içinde maksimum 5 deneme yapabilirsiniz. Lütfen daha sonra tekrar deneyin.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      console.log('Admin giriş denemesi başlıyor...', loginData.email);
+      // Security: Remove sensitive console logs in production
       
       // Supabase Auth ile giriş yap
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -43,7 +76,7 @@ const AdminAuth = () => {
         password: loginData.password,
       });
 
-      console.log('Auth sonucu:', { authData, authError });
+      // Security: Remove auth result logs in production
 
       if (authError) {
         console.error('Giriş hatası:', authError);
@@ -79,7 +112,7 @@ const AdminAuth = () => {
         return;
       }
 
-      console.log('Kullanıcı girişi başarılı, profil kontrol ediliyor...', authData.user.id);
+      // Security: Remove user ID logs in production
 
       // Wait a moment for the session to be established
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -91,7 +124,7 @@ const AdminAuth = () => {
         .eq('user_id', authData.user.id)
         .maybeSingle();
 
-      console.log('Profil sorgusu sonucu:', { profile, profileError });
+      // Security: Remove profile query logs in production
 
       if (profileError) {
         console.error('Profil sorgu hatası:', profileError);
@@ -112,7 +145,7 @@ const AdminAuth = () => {
         return;
       }
 
-      console.log('Kullanıcı rolü:', profile.role, 'Onaylanmış mı:', profile.is_approved);
+      // Security: Remove role and approval status logs in production
 
       // Admin, staff veya legal kontrolü
       if (!['admin', 'staff', 'legal'].includes(profile.role)) {
@@ -136,17 +169,16 @@ const AdminAuth = () => {
         return;
       }
 
-      // Beni hatırla seçiliyse bilgileri kaydet
+      // Security: Never store credentials in localStorage
+      // If remember me is checked, only remember the email (not password)
       if (rememberMe) {
-        localStorage.setItem('adminCredentials', JSON.stringify({
-          email: loginData.email,
-          password: loginData.password,
-          remember: true
-        }));
+        sessionStorage.setItem('rememberedEmail', loginData.email);
       } else {
-        // Beni hatırla seçili değilse kaydedilmiş bilgileri sil
-        localStorage.removeItem('adminCredentials');
+        sessionStorage.removeItem('rememberedEmail');
       }
+      
+      // Reset rate limiting on successful login
+      rateLimit.reset();
 
       // Başarılı giriş
       const roleText = profile.role === 'admin' ? 'Admin' : 

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useRateLimit } from "@/hooks/useRateLimit";
 
 interface DoctorAuthProps {
   onLogin: (doctor: any) => void;
@@ -20,13 +21,40 @@ const DoctorAuth = ({ onLogin }: DoctorAuthProps) => {
   const [isResetLoading, setIsResetLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Rate limiting - 5 attempts per 15 minutes
+  const rateLimit = useRateLimit({
+    maxAttempts: 5,
+    windowMs: 15 * 60 * 1000 // 15 minutes
+  });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check rate limiting
+    if (rateLimit.isRateLimited()) {
+      toast({
+        title: "Çok Fazla Deneme",
+        description: `Çok fazla başarısız giriş denemesi. ${rateLimit.remainingAttempts} deneme hakkınız kaldı. 15 dakika sonra tekrar deneyin.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Record attempt
+    if (!rateLimit.recordAttempt()) {
+      toast({
+        title: "Giriş Denemesi Sınırı",
+        description: "15 dakika içinde maksimum 5 deneme yapabilirsiniz. Lütfen daha sonra tekrar deneyin.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      console.log('Uzman giriş denemesi:', loginData.email);
+      // Security: Remove sensitive console logs in production
 
       // Önce Supabase Auth ile giriş yapmayı dene
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -35,7 +63,7 @@ const DoctorAuth = ({ onLogin }: DoctorAuthProps) => {
       });
 
       if (authError) {
-        console.log('Auth hatası:', authError);
+        // Security: Don't log sensitive auth errors in production
         toast({
           title: "Giriş Hatası",
           description: "E-posta veya şifre hatalı.",
@@ -53,7 +81,7 @@ const DoctorAuth = ({ onLogin }: DoctorAuthProps) => {
         return;
       }
 
-      console.log('Auth başarılı, uzman kaydı kontrol ediliyor...');
+      // Security: Remove detailed logs in production
 
       // Kullanıcının specialists tablosunda kayıtlı olup olmadığını kontrol et
       // Hem user_id hem de email ile kontrol et
@@ -64,7 +92,7 @@ const DoctorAuth = ({ onLogin }: DoctorAuthProps) => {
         .eq('is_active', true)
         .maybeSingle();
 
-      console.log('Uzman sorgu sonucu:', { specialist, specialistError });
+      // Security: Remove detailed query logs in production
 
       if (specialistError) {
         console.error('Uzman sorgu hatası:', specialistError);
@@ -87,6 +115,9 @@ const DoctorAuth = ({ onLogin }: DoctorAuthProps) => {
         return;
       }
 
+      // Reset rate limiting on successful login
+      rateLimit.reset();
+      
       // Başarılı giriş
       onLogin(specialist);
       toast({
