@@ -17,6 +17,7 @@ import BlogPost from "./pages/BlogPost";
 import DoctorList from "./pages/DoctorList";
 import DoctorProfile from "./pages/DoctorProfile";
 import BookAppointment from "./pages/BookAppointment";
+import RandevuSayfasi from "./pages/RandevuSayfasi";
 import SpecialtyPage from "./pages/SpecialtyPage";
 import Packages from "./pages/Packages";
 import CampaignPackage from "./pages/CampaignPackage";
@@ -105,6 +106,7 @@ function App() {
               <Route path="/uzmanlar" element={<DoctorList />} />
               <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />
               <Route path="/randevu-al/:specialtySlug/:doctorName" element={<BookAppointment />} />
+              <Route path="/randevu-sayfasi" element={<RandevuSayfasi />} />
               <Route path="/uzmanlik/:specialty" element={<SpecialtyPage />} />
               <Route path="/paketler" element={<Packages />} />
               
