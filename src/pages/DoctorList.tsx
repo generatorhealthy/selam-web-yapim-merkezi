@@ -101,11 +101,9 @@ const DoctorList = () => {
     try {
       setLoading(true);
       
-      // Uzmanları çek
+      // SECURITY: Use secure function to get specialists without personal contact info
       const { data: specialistsData, error: specialistsError } = await supabase
-        .from('specialists')
-        .select('*')
-        .eq('is_active', true);
+        .rpc('get_public_specialists');
 
       if (specialistsError) {
         console.error('Uzmanlar çekilirken hata:', specialistsError);

@@ -88,39 +88,32 @@ const SpecialtyPage = () => {
       setLoading(true);
       console.log('Fetching specialists for specialty:', specialty);
       
-      // Tam eşleşme ara
-      const { data: exactMatch, error: exactError } = await supabase
-        .from('specialists')
-        .select('*')
-        .eq('specialty', specialty)
-        .eq('is_active', true);
+      // SECURITY: Use secure function to get specialists without personal contact info
+      const { data: allSpecialists, error: exactError } = await supabase
+        .rpc('get_public_specialists');
 
       if (exactError) {
-        console.error('Exact match error:', exactError);
+        console.error('Error fetching specialists:', exactError);
         throw exactError;
       }
 
-      console.log('Exact match results:', exactMatch);
+      // Filter specialists by specialty
+      const exactMatch = allSpecialists?.filter(s => 
+        s.specialty.toLowerCase() === specialty.toLowerCase()
+      ) || [];
 
-      // Eğer tam eşleşme yoksa, kısmi eşleşme dene
+      // If no exact match, try partial match
+      let finalSpecialists = exactMatch;
       if (!exactMatch || exactMatch.length === 0) {
         console.log('Trying partial match...');
-        const { data: partialMatch, error: partialError } = await supabase
-          .from('specialists')
-          .select('*')
-          .ilike('specialty', `%${specialty}%`)
-          .eq('is_active', true);
-
-        if (partialError) {
-          console.error('Partial match error:', partialError);
-          throw partialError;
-        }
-
-        console.log('Partial match results:', partialMatch);
-        setSpecialists(partialMatch || []);
-      } else {
-        setSpecialists(exactMatch || []);
+        const partialMatch = allSpecialists?.filter(s => 
+          s.specialty.toLowerCase().includes(specialty.toLowerCase())
+        ) || [];
+        
+        finalSpecialists = partialMatch;
       }
+      
+      setSpecialists(finalSpecialists);
       
     } catch (error) {
       console.error('Beklenmeyen hata:', error);

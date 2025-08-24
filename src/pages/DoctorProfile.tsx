@@ -58,7 +58,7 @@ interface BlogPost {
 
 interface Review {
   id: string;
-  reviewer_name: string;
+  reviewer_display_name: string; // SECURITY: Use display name instead of real name
   rating: number;
   comment: string;
   created_at: string;
@@ -218,14 +218,10 @@ const DoctorProfile = () => {
   const fetchReviews = async (specialistId: string) => {
     try {
       setReviewsLoading(true);
-      console.log('Fetching reviews for specialist:', specialistId);
       
+      // SECURITY: Use secure function instead of direct table access
       const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('specialist_id', specialistId)
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false });
+        .rpc('get_public_reviews', { p_specialist_id: specialistId });
 
       if (error) {
         console.error('Değerlendirmeler çekilirken hata:', error);
@@ -618,7 +614,7 @@ const DoctorProfile = () => {
                           <div key={review.id} className="border-b pb-6 last:border-b-0">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                                <div className="flex items-center gap-2">
-                                 <span className="font-medium">{maskName(review.reviewer_name)}</span>
+                                 <span className="font-medium">{review.reviewer_display_name}</span>
                                 <div className="flex items-center gap-1">
                                   {renderStars(review.rating)}
                                 </div>

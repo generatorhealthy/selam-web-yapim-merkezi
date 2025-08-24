@@ -65,13 +65,6 @@ export type Database = {
             referencedRelation: "specialists"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "appointments_specialist_id_fkey"
-            columns: ["specialist_id"]
-            isOneToOne: false
-            referencedRelation: "specialists_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       automatic_orders: {
@@ -366,13 +359,6 @@ export type Database = {
             columns: ["specialist_id"]
             isOneToOne: false
             referencedRelation: "specialists"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "client_referrals_specialist_id_fkey"
-            columns: ["specialist_id"]
-            isOneToOne: false
-            referencedRelation: "specialists_public"
             referencedColumns: ["id"]
           },
         ]
@@ -763,13 +749,6 @@ export type Database = {
             referencedRelation: "specialists"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "reviews_specialist_id_fkey"
-            columns: ["specialist_id"]
-            isOneToOne: false
-            referencedRelation: "specialists_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       specialist_tests: {
@@ -806,13 +785,6 @@ export type Database = {
             columns: ["specialist_id"]
             isOneToOne: false
             referencedRelation: "specialists"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "specialist_tests_specialist_id_fkey"
-            columns: ["specialist_id"]
-            isOneToOne: false
-            referencedRelation: "specialists_public"
             referencedColumns: ["id"]
           },
           {
@@ -1145,13 +1117,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "test_results_specialist_id_fkey"
-            columns: ["specialist_id"]
-            isOneToOne: false
-            referencedRelation: "specialists_public"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "test_results_test_id_fkey"
             columns: ["test_id"]
             isOneToOne: false
@@ -1209,13 +1174,6 @@ export type Database = {
             columns: ["specialist_id"]
             isOneToOne: false
             referencedRelation: "specialists"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tests_specialist_id_fkey"
-            columns: ["specialist_id"]
-            isOneToOne: false
-            referencedRelation: "specialists_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1288,141 +1246,7 @@ export type Database = {
       }
     }
     Views: {
-      reviews_public: {
-        Row: {
-          comment: string | null
-          created_at: string | null
-          id: string | null
-          rating: number | null
-          reviewer_display_name: string | null
-          reviewer_name: string | null
-          specialist_id: string | null
-        }
-        Insert: {
-          comment?: string | null
-          created_at?: string | null
-          id?: string | null
-          rating?: number | null
-          reviewer_display_name?: never
-          reviewer_name?: string | null
-          specialist_id?: string | null
-        }
-        Update: {
-          comment?: string | null
-          created_at?: string | null
-          id?: string | null
-          rating?: number | null
-          reviewer_display_name?: never
-          reviewer_name?: string | null
-          specialist_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reviews_specialist_id_fkey"
-            columns: ["specialist_id"]
-            isOneToOne: false
-            referencedRelation: "specialists"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_specialist_id_fkey"
-            columns: ["specialist_id"]
-            isOneToOne: false
-            referencedRelation: "specialists_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      specialists_public: {
-        Row: {
-          address_summary: string | null
-          available_days: string[] | null
-          bio: string | null
-          certifications: string | null
-          city: string | null
-          consultation_fee: number | null
-          consultation_type: string | null
-          created_at: string | null
-          education: string | null
-          experience: number | null
-          face_to_face_consultation: boolean | null
-          faq: string | null
-          hospital: string | null
-          id: string | null
-          name: string | null
-          online_consultation: boolean | null
-          profile_picture: string | null
-          rating: number | null
-          reviews_count: number | null
-          seo_description: string | null
-          seo_keywords: string | null
-          seo_title: string | null
-          specialty: string | null
-          university: string | null
-          updated_at: string | null
-          working_hours_end: string | null
-          working_hours_start: string | null
-        }
-        Insert: {
-          address_summary?: never
-          available_days?: string[] | null
-          bio?: string | null
-          certifications?: string | null
-          city?: string | null
-          consultation_fee?: number | null
-          consultation_type?: string | null
-          created_at?: string | null
-          education?: string | null
-          experience?: number | null
-          face_to_face_consultation?: boolean | null
-          faq?: string | null
-          hospital?: string | null
-          id?: string | null
-          name?: string | null
-          online_consultation?: boolean | null
-          profile_picture?: string | null
-          rating?: number | null
-          reviews_count?: number | null
-          seo_description?: string | null
-          seo_keywords?: string | null
-          seo_title?: string | null
-          specialty?: string | null
-          university?: string | null
-          updated_at?: string | null
-          working_hours_end?: string | null
-          working_hours_start?: string | null
-        }
-        Update: {
-          address_summary?: never
-          available_days?: string[] | null
-          bio?: string | null
-          certifications?: string | null
-          city?: string | null
-          consultation_fee?: number | null
-          consultation_type?: string | null
-          created_at?: string | null
-          education?: string | null
-          experience?: number | null
-          face_to_face_consultation?: boolean | null
-          faq?: string | null
-          hospital?: string | null
-          id?: string | null
-          name?: string | null
-          online_consultation?: boolean | null
-          profile_picture?: string | null
-          rating?: number | null
-          reviews_count?: number | null
-          seo_description?: string | null
-          seo_keywords?: string | null
-          seo_title?: string | null
-          specialty?: string | null
-          university?: string | null
-          updated_at?: string | null
-          working_hours_end?: string | null
-          working_hours_start?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       can_manage_users: {
@@ -1456,11 +1280,36 @@ export type Database = {
           specialist_id: string
         }[]
       }
-      get_specialist_contact_for_appointment: {
-        Args: { p_specialist_id: string }
+      get_public_specialists: {
+        Args: Record<PropertyKey, never>
         Returns: {
-          email: string
-          phone: string
+          address_summary: string
+          available_days: string[]
+          bio: string
+          certifications: string
+          city: string
+          consultation_fee: number
+          consultation_type: string
+          created_at: string
+          education: string
+          experience: number
+          face_to_face_consultation: boolean
+          faq: string
+          hospital: string
+          id: string
+          name: string
+          online_consultation: boolean
+          profile_picture: string
+          rating: number
+          reviews_count: number
+          seo_description: string
+          seo_keywords: string
+          seo_title: string
+          specialty: string
+          university: string
+          updated_at: string
+          working_hours_end: string
+          working_hours_start: string
         }[]
       }
       is_admin_or_staff_user: {

@@ -137,10 +137,9 @@ const RandevuSayfasi = () => {
   const fetchSpecialists = async () => {
     setLoading(true);
     try {
+      // SECURITY: Use secure function to get specialists without personal contact info
       const { data, error } = await supabase
-        .from('specialists')
-        .select('*')
-        .eq('is_active', true);
+        .rpc('get_public_specialists');
 
       if (error) throw error;
       

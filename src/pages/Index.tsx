@@ -75,16 +75,19 @@ const Index = () => {
       setIsSearching(true);
       
       try {
-        const { data, error } = await supabase
-          .from('specialists')
-          .select('id, name, specialty, city, rating, bio, profile_picture')
-          .eq('is_active', true)
-          .or(`name.ilike.%${searchTerm}%,specialty.ilike.%${searchTerm}%`)
-          .limit(3);
+        // SECURITY: Use secure function for search
+        const { data: allSpecialists, error } = await supabase
+          .rpc('get_public_specialists');
         
         if (error) throw error;
         
-        setSearchResults(data || []);
+        // Filter search results
+        const filtered = allSpecialists?.filter(specialist =>
+          specialist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          specialist.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+        ).slice(0, 3) || [];
+        
+        setSearchResults(filtered);
         setShowResults(true);
       } catch (error) {
         console.error('Error searching specialists:', error);
