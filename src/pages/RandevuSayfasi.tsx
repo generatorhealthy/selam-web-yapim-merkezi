@@ -179,6 +179,36 @@ const RandevuSayfasi = () => {
     }
   };
 
+  // Auto-advance functions
+  const handleConsultationTypeSelect = (type: string) => {
+    setSelectedConsultationType(type);
+    setTimeout(() => {
+      setCurrentStep(2);
+    }, 300);
+  };
+
+  const handleSpecialistSelect = (specialistId: string) => {
+    setSelectedSpecialist(specialistId);
+    setTimeout(() => {
+      setCurrentStep(3);
+    }, 300);
+  };
+
+  const handleAppointmentTypeSelect = (type: string) => {
+    setAppointmentType(type);
+    setTimeout(() => {
+      setCurrentStep(4);
+    }, 300);
+  };
+
+  const handleDateTimeComplete = () => {
+    if (selectedDate && selectedTime) {
+      setTimeout(() => {
+        setCurrentStep(5);
+      }, 300);
+    }
+  };
+
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
@@ -314,7 +344,7 @@ const RandevuSayfasi = () => {
                         ? "border-primary bg-primary/10 shadow-lg scale-105"
                         : "border-border hover:border-primary/50 hover:shadow-md"
                     )}
-                    onClick={() => setSelectedConsultationType(key)}
+                    onClick={() => handleConsultationTypeSelect(key)}
                   >
                     <div className={cn(
                       "absolute inset-0 rounded-xl opacity-5 bg-gradient-to-br",
@@ -357,7 +387,7 @@ const RandevuSayfasi = () => {
                         ? "border-primary bg-primary/5 shadow-lg"
                         : "border-border hover:border-primary/50 hover:shadow-md"
                     )}
-                    onClick={() => setSelectedSpecialist(specialist.id)}
+                    onClick={() => handleSpecialistSelect(specialist.id)}
                   >
                     <div className="flex gap-6 items-start">
                       <Avatar className="h-20 w-20 border-2 border-primary/20">
@@ -424,7 +454,7 @@ const RandevuSayfasi = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <RadioGroup value={appointmentType} onValueChange={setAppointmentType} className="space-y-4">
+              <RadioGroup value={appointmentType} onValueChange={handleAppointmentTypeSelect} className="space-y-4">
                 {availableAppointmentTypes.map((type) => (
                   <div key={type} className="flex items-center space-x-4 p-6 border-2 rounded-xl hover:bg-muted/30 transition-colors">
                     <RadioGroupItem value={type} id={type} className="h-6 w-6" />
@@ -475,7 +505,12 @@ const RandevuSayfasi = () => {
                     <Calendar
                       mode="single"
                       selected={selectedDate}
-                      onSelect={setSelectedDate}
+                      onSelect={(date) => {
+                        setSelectedDate(date);
+                        if (date && selectedTime) {
+                          handleDateTimeComplete();
+                        }
+                      }}
                       disabled={(date) => date < new Date()}
                       initialFocus
                     />
@@ -486,7 +521,12 @@ const RandevuSayfasi = () => {
               {selectedDate && (
                 <div>
                   <Label className="text-lg font-semibold mb-3 block">Randevu Saati</Label>
-                  <Select value={selectedTime} onValueChange={setSelectedTime}>
+                  <Select value={selectedTime} onValueChange={(time) => {
+                    setSelectedTime(time);
+                    if (selectedDate && time) {
+                      handleDateTimeComplete();
+                    }
+                  }}>
                     <SelectTrigger className="h-14 text-lg">
                       <SelectValue placeholder="Saat seçin" />
                     </SelectTrigger>
@@ -594,13 +634,13 @@ const RandevuSayfasi = () => {
           </div>
 
           {/* Progress Steps */}
-          <div className="flex items-center justify-center mb-12">
-            <div className="flex items-center space-x-6">
+          <div className="flex items-center justify-center mb-12 overflow-x-auto px-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6 min-w-max">
               {[1, 2, 3, 4, 5].map((step) => (
                 <div key={step} className="flex items-center">
                   <div
                     className={cn(
-                      "w-12 h-12 rounded-full border-2 flex items-center justify-center text-sm font-semibold transition-all duration-300",
+                      "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center text-xs sm:text-sm font-semibold transition-all duration-300",
                       step < currentStep
                         ? "bg-primary text-primary-foreground border-primary shadow-lg"
                         : step === currentStep
@@ -608,12 +648,12 @@ const RandevuSayfasi = () => {
                         : "border-muted-foreground/30 text-muted-foreground"
                     )}
                   >
-                    {step < currentStep ? <CheckCircle className="h-6 w-6" /> : step}
+                    {step < currentStep ? <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 md:h-6 md:w-6" /> : step}
                   </div>
                   {step < 5 && (
                     <div
                       className={cn(
-                        "w-12 h-1 mx-3 rounded-full transition-all duration-300",
+                        "w-6 sm:w-8 md:w-12 h-0.5 sm:h-1 mx-1 sm:mx-2 md:mx-3 rounded-full transition-all duration-300",
                         step < currentStep ? "bg-primary shadow-sm" : "bg-muted-foreground/30"
                       )}
                     />
@@ -644,16 +684,7 @@ const RandevuSayfasi = () => {
               {currentStep} / 5
             </div>
 
-            {currentStep < 5 ? (
-              <Button
-                onClick={nextStep}
-                disabled={!canGoNext(currentStep)}
-                className="flex items-center gap-2 h-12 px-6 text-lg"
-              >
-                İleri
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            ) : (
+            {currentStep === 5 ? (
               <Button
                 onClick={handleSubmit}
                 disabled={submitting || !formData.patientName || !formData.patientEmail || !formData.patientPhone}
@@ -662,6 +693,8 @@ const RandevuSayfasi = () => {
                 {submitting ? "Randevu Oluşturuluyor..." : "Randevu Al"}
                 <CheckCircle className="h-5 w-5" />
               </Button>
+            ) : (
+              <div className="w-32" /> // Placeholder to maintain layout
             )}
           </div>
         </div>
