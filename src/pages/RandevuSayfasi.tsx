@@ -143,7 +143,10 @@ const RandevuSayfasi = () => {
         .eq('is_active', true);
 
       if (error) throw error;
-      setSpecialists(data || []);
+      
+      // Shuffle the specialists array to show different order each time
+      const shuffledSpecialists = (data || []).sort(() => Math.random() - 0.5);
+      setSpecialists(shuffledSpecialists);
     } catch (error) {
       console.error('Error fetching specialists:', error);
       toast({
