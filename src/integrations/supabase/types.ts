@@ -20,6 +20,7 @@ export type Database = {
           appointment_time: string
           appointment_type: string
           created_at: string | null
+          created_by_specialist: boolean | null
           id: string
           notes: string | null
           patient_email: string
@@ -34,6 +35,7 @@ export type Database = {
           appointment_time: string
           appointment_type: string
           created_at?: string | null
+          created_by_specialist?: boolean | null
           id?: string
           notes?: string | null
           patient_email: string
@@ -48,6 +50,7 @@ export type Database = {
           appointment_time?: string
           appointment_type?: string
           created_at?: string | null
+          created_by_specialist?: boolean | null
           id?: string
           notes?: string | null
           patient_email?: string

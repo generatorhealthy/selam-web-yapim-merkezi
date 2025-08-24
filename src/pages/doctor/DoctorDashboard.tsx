@@ -17,6 +17,160 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle } from "lucide-react";
 
+// Appointment Form Component
+const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; onSuccess: () => void }) => {
+  const [formData, setFormData] = useState({
+    patient_name: '',
+    patient_email: '',
+    patient_phone: '',
+    appointment_date: '',
+    appointment_time: '',
+    appointment_type: 'Online Danışmanlık',
+    notes: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .insert({
+          ...formData,
+          specialist_id: doctorId,
+          status: 'pending',
+          created_by_specialist: true // Mark as created by specialist
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Başarılı",
+        description: "Randevu başarıyla eklendi.",
+      });
+
+      // Reset form
+      setFormData({
+        patient_name: '',
+        patient_email: '',
+        patient_phone: '',
+        appointment_date: '',
+        appointment_time: '',
+        appointment_type: 'Online Danışmanlık',
+        notes: ''
+      });
+
+      onSuccess();
+    } catch (error) {
+      console.error('Randevu eklenirken hata:', error);
+      toast({
+        title: "Hata",
+        description: "Randevu eklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="patient_name">Hasta Adı *</Label>
+          <Input
+            id="patient_name"
+            value={formData.patient_name}
+            onChange={(e) => setFormData(prev => ({ ...prev, patient_name: e.target.value }))}
+            placeholder="Hasta adı ve soyadı"
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="patient_email">E-posta *</Label>
+          <Input
+            id="patient_email"
+            type="email"
+            value={formData.patient_email}
+            onChange={(e) => setFormData(prev => ({ ...prev, patient_email: e.target.value }))}
+            placeholder="hasta@email.com"
+            required
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="patient_phone">Telefon *</Label>
+          <Input
+            id="patient_phone"
+            value={formData.patient_phone}
+            onChange={(e) => setFormData(prev => ({ ...prev, patient_phone: e.target.value }))}
+            placeholder="0555 123 45 67"
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="appointment_type">Randevu Türü *</Label>
+          <Select value={formData.appointment_type} onValueChange={(value) => setFormData(prev => ({ ...prev, appointment_type: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Online Danışmanlık">Online Danışmanlık</SelectItem>
+              <SelectItem value="Yüz Yüze Danışmanlık">Yüz Yüze Danışmanlık</SelectItem>
+              <SelectItem value="Telefon Danışmanlık">Telefon Danışmanlık</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="appointment_date">Tarih *</Label>
+          <Input
+            id="appointment_date"
+            type="date"
+            value={formData.appointment_date}
+            onChange={(e) => setFormData(prev => ({ ...prev, appointment_date: e.target.value }))}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="appointment_time">Saat *</Label>
+          <Input
+            id="appointment_time"
+            type="time"
+            value={formData.appointment_time}
+            onChange={(e) => setFormData(prev => ({ ...prev, appointment_time: e.target.value }))}
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="notes">Notlar</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+          placeholder="Randevu ile ilgili özel notlar..."
+          rows={3}
+        />
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4">
+        <Button type="submit" disabled={loading}>
+          {loading ? "Ekleniyor..." : "Randevu Ekle"}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 const DoctorDashboard = () => {
   const [doctor, setDoctor] = useState<any>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -556,8 +710,29 @@ const DoctorDashboard = () => {
           <TabsContent value="appointments">
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b">
-                <h2 className="text-2xl font-bold text-gray-900">Randevu Yönetimi</h2>
-                <p className="text-gray-600 mt-2">Randevularınızı görüntüleyin ve yönetin</p>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Randevu Yönetimi</h2>
+                    <p className="text-gray-600 mt-2">Randevularınızı görüntüleyin ve yönetin</p>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Randevu Ekle
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Yeni Randevu Ekle</DialogTitle>
+                        <DialogDescription>
+                          Profilinize yeni bir randevu ekleyin.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <AppointmentFormComponent doctorId={doctor.id} onSuccess={() => fetchAppointments(doctor.id)} />
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
               <div className="p-6">
                 {appointments.length === 0 ? (

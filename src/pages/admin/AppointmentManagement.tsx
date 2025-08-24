@@ -57,6 +57,7 @@ const AppointmentManagement = () => {
             specialty
           )
         `)
+        .eq('created_by_specialist', false)
         .order('appointment_date', { ascending: false });
 
       console.log('Appointments data:', data);
