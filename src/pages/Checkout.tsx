@@ -446,11 +446,9 @@ const handleCreditCardPayment = async () => {
       console.log('Mobile debug - User agent:', navigator.userAgent);
       console.log('Mobile debug - Client IP:', clientIP);
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
+        .insert(orderData);
 
       if (error) {
         console.error('Mobile debug - Order save error:', error);
@@ -459,7 +457,7 @@ const handleCreditCardPayment = async () => {
       }
 
       localStorage.setItem('lastOrder', JSON.stringify({
-        id: data.id,
+        id: null, // anonim kullanıcılar için SELECT izni yok; id dönmüyor
         orderNumber: `DRP-${Date.now()}`,
         package: selectedPackage.name,
         amount: selectedPackage.price,
