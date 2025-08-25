@@ -442,6 +442,10 @@ const handleCreditCardPayment = async () => {
         contract_ip_address: clientIP
       };
 
+      console.log('Mobile debug - Order data being saved:', orderData);
+      console.log('Mobile debug - User agent:', navigator.userAgent);
+      console.log('Mobile debug - Client IP:', clientIP);
+
       const { data, error } = await supabase
         .from('orders')
         .insert(orderData)
@@ -449,8 +453,9 @@ const handleCreditCardPayment = async () => {
         .single();
 
       if (error) {
-        console.error('Order save error:', error);
-        throw new Error('Sipariş kaydedilemedi');
+        console.error('Mobile debug - Order save error:', error);
+        console.error('Mobile debug - Error details:', JSON.stringify(error, null, 2));
+        throw new Error(`Sipariş kaydedilemedi: ${error.message || 'Bilinmeyen hata'}`);
       }
 
       localStorage.setItem('lastOrder', JSON.stringify({
