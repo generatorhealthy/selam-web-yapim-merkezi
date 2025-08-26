@@ -60,7 +60,7 @@ import SuccessStatistics from "./pages/admin/SuccessStatistics";
 import LegalProceedings from "./pages/admin/LegalProceedings";
 import EmployeeSalaryManagement from "./pages/admin/EmployeeSalaryManagement";
 import ClientReferrals from "./pages/admin/ClientReferrals";
-import BankingManagement from "./pages/admin/BankingManagement";
+
 import PreInfoFormManagement from "./pages/admin/PreInfoFormManagement";
 import PackageManagement from "./pages/admin/PackageManagement";
 import TestManagement from "./pages/admin/TestManagement";
@@ -169,7 +169,7 @@ function App() {
               <Route path="/divan_paneli/pbx-management" element={<PbxManagement />} />
               <Route path="/divan_paneli/prospective-registrations" element={<ProspectiveRegistrations />} />
                 <Route path="/divan_paneli/log-management" element={<LogManagement />} />
-                <Route path="/divan_paneli/banking" element={<BankingManagement />} />
+                
               
               {/* Doctor Routes */}
               <Route path="/doktor-paneli" element={<DoctorDashboard />} />
