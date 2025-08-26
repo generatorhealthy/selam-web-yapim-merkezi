@@ -30,7 +30,8 @@ import {
   Clock,
   MessageCircle,
   Phone,
-  Database
+  Database,
+  Banknote
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -341,6 +342,17 @@ const AdminDashboard = () => {
       shadowColor: "shadow-slate-500/20",
       route: "/divan_paneli/log-management",
       buttonText: "Logları Görüntüle",
+      adminOnly: true
+    },
+    {
+      title: "Akbank Hesap Yönetimi",
+      description: "Banka hesabı hareketleri ve bakiye takibi",
+      icon: Banknote,
+      gradient: "from-emerald-500 via-green-500 to-teal-600",
+      bgGradient: "from-emerald-50 to-teal-50",
+      shadowColor: "shadow-emerald-500/20",
+      route: "/divan_paneli/banking",
+      buttonText: "Hesap Hareketlerini Görüntüle",
       adminOnly: true
     }
   ];
