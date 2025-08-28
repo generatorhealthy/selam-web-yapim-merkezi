@@ -135,6 +135,7 @@ RewriteRule ^blog/(.+)$ /$1 [R=301,L]
 
 # Internal rewrite for blog posts - rewrite clean URLs to /blog/* internally
 RewriteCond %{REQUEST_URI} !^/blog/
+RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/assets/
 RewriteCond %{REQUEST_URI} !^/(about|hakkimizda|iletisim|uzmanlar|uzmanlik|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|psikolog-paketi|diyetisyen-paketi|fizyoterapist-paketi|aile-danismani-paketi|odeme|odeme-sayfasi|odeme-basarili|privacy|gizlilik-politikasi|disclosure-text|aydinlatma-metni|mesafeli-satis-sozlesmesi|visitor-consultant-agreement|ziyaretci-danisan-sozlesmesi|comment-rules|yorum-kurallari|anasayfa|giris-yap|test|test-al|test-sonuc|divan_paneli|doktor-paneli)
 RewriteCond %{REQUEST_URI} !^/randevu-al/
@@ -144,10 +145,30 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|webp)$
 RewriteRule ^([^/]+)/?$ /blog/$1 [L]
 
+# BirFatura API proxy routes
+<IfModule mod_proxy.c>
+  ProxyRequests Off
+  ProxyPreserveHost On
+  RewriteRule ^api/orderStatus/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-status [P,L]
+  RewriteRule ^api/paymentMethods/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-payment-methods [P,L]
+  RewriteRule ^api/orders/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-orders [P,L]
+  RewriteRule ^api/orderCargoUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-cargo-update [P,L]
+  RewriteRule ^api/invoiceLinkUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-invoice-link-update [P,L]
+</IfModule>
+
+<IfModule !mod_proxy.c>
+  RedirectMatch 307 ^/api/orderStatus/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-status
+  RedirectMatch 307 ^/api/paymentMethods/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-payment-methods
+  RedirectMatch 307 ^/api/orders/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-orders
+  RedirectMatch 307 ^/api/orderCargoUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-cargo-update
+  RedirectMatch 307 ^/api/invoiceLinkUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-invoice-link-update
+</IfModule>
+
 # Handle React Router (catch all) - En sonda olmalı
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/assets/
+RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|webp)$
 RewriteRule ^(.*)$ /index.html [L,QSA]
 
