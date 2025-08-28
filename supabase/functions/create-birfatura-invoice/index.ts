@@ -92,20 +92,28 @@ serve(async (req) => {
     };
 
     // Call BirFatura API to create invoice
-    // Note: This is a placeholder URL - you'll need to use the actual BirFatura invoice creation endpoint
-    const birfaturaResponse = await fetch('https://api.birfatura.com/v1/invoice/create', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${birfaturaApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(invoiceData)
-    });
-
-    if (!birfaturaResponse.ok) {
-      console.error('BirFatura API error:', await birfaturaResponse.text());
-      // For now, we'll simulate success and just update our database
-      console.log('Simulating successful invoice creation...');
+    // Note: Since we don't have the actual BirFatura API endpoint yet, we'll simulate this
+    let birfaturaSuccess = false;
+    
+    try {
+      // This would be the real BirFatura API call when you have the endpoint
+      // const birfaturaResponse = await fetch('https://api.birfatura.com/v1/invoice/create', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Authorization': `Bearer ${birfaturaApiKey}`,
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(invoiceData)
+      // });
+      
+      // For now, we'll simulate success
+      console.log('Invoice data prepared for BirFatura:', JSON.stringify(invoiceData, null, 2));
+      birfaturaSuccess = true;
+      
+    } catch (error) {
+      console.error('BirFatura API error:', error);
+      // Even if BirFatura fails, we'll still update our database
+      birfaturaSuccess = false;
     }
 
     // Update order with invoice information
