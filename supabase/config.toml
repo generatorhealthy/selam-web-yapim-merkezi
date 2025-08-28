@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.birfatura-invoice-link-update]
 verify_jwt = false
+
+[functions.create-birfatura-invoice]
+verify_jwt = false

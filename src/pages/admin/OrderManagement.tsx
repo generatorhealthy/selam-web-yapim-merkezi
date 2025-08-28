@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
@@ -44,6 +44,9 @@ interface Order {
   deleted_at?: string | null;
   pre_info_pdf_content?: string | null;
   distance_sales_pdf_content?: string | null;
+  invoice_sent?: boolean;
+  invoice_number?: string | null;
+  invoice_date?: string | null;
 }
 
 
@@ -317,6 +320,36 @@ const OrderManagement = () => {
 
   const handleCopyOrder = (order: Order) => {
     copyOrderMutation.mutate(order);
+  };
+
+  // Create BirFatura invoice mutation
+  const createInvoiceMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const { data, error } = await supabase.functions.invoke('create-birfatura-invoice', {
+        body: { orderId }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Fatura Oluşturuldu",
+        description: `Fatura numarası: ${data.invoiceNumber}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fatura Oluşturma Hatası",
+        description: error.message || "BirFatura'da fatura oluşturulurken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error creating invoice:", error);
+    },
+  });
+
+  const handleCreateInvoice = (orderId: string) => {
+    createInvoiceMutation.mutate(orderId);
   };
 
   const handleUpdateOrder = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, field: string) => {
@@ -1063,8 +1096,29 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                 )
                               )}
                             </TableCell>
-                            <TableCell className="text-right py-4 min-w-[180px]">
+                            <TableCell className="text-right py-4 min-w-[240px]">
                               <div className="flex items-center justify-end gap-1 flex-wrap">
+                                {/* BirFatura Invoice Button - only for completed/approved orders */}
+                                {(order.status === 'completed' || order.status === 'approved') && !order.invoice_sent && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleCreateInvoice(order.id)}
+                                    disabled={createInvoiceMutation.isPending}
+                                    className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                                  >
+                                    <Receipt className="w-3 h-3" />
+                                    {createInvoiceMutation.isPending ? 'Kesiliyor...' : 'Fatura Kes'}
+                                  </Button>
+                                )}
+                                
+                                {/* Invoice sent indicator */}
+                                {order.invoice_sent && (
+                                  <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs">
+                                    Fatura Gönderildi
+                                  </Badge>
+                                )}
+                                
                                 <Button
                                   variant="outline"
                                   size="sm"
