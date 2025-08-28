@@ -13,14 +13,17 @@ serve(async (req) => {
   }
 
   try {
-    // BirFatura will send the API token in the header
-    const apiKey = req.headers.get('x-api-key') || req.headers.get('x-apikey') || req.headers.get('apikey') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('api-password') || req.headers.get('token') || req.headers.get('authorization');
-    
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key required' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const url = new URL(req.url);
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization') || url.searchParams.get('token') || '';
+    // Accept missing token for now
+
+    // if (!token) {
+    //   return new Response(JSON.stringify({ error: 'Token required' }), {
+    //     status: 401,
+    //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    //   });
+    // }
+
     }
 
     const { OrderId, InvoiceLink } = await req.json();

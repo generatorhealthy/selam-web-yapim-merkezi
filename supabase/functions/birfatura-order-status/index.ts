@@ -12,11 +12,12 @@ serve(async (req) => {
   }
 
   try {
-    // BirFatura sends token in header as 'token' (not x-api-key)
-    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization');
+    // Token from header or query string
+    const url = new URL(req.url);
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization') || url.searchParams.get('token') || '';
     
-    console.log('BirFatura order status request received with token:', token ? 'present' : 'missing');
-    console.log('All headers:', Object.fromEntries(req.headers.entries()));
+    console.log('BirFatura order status request received. Token present:', !!token);
+
 
     // For now, we'll accept any token (you can validate specific tokens later)
     if (!token) {

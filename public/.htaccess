@@ -145,23 +145,34 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|webp)$
 RewriteRule ^([^/]+)/?$ /blog/$1 [L]
 
-# BirFatura API proxy routes
-<IfModule mod_proxy.c>
-  ProxyRequests Off
-  ProxyPreserveHost On
-  RewriteRule ^api/orderStatus/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-status [P,L]
-  RewriteRule ^api/paymentMethods/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-payment-methods [P,L]
-  RewriteRule ^api/orders/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-orders [P,L]
-  RewriteRule ^api/orderCargoUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-cargo-update [P,L]
-  RewriteRule ^api/invoiceLinkUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-invoice-link-update [P,L]
-</IfModule>
-
-<IfModule !mod_proxy.c>
-  RedirectMatch 307 ^/api/orderStatus/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-status
-  RedirectMatch 307 ^/api/paymentMethods/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-payment-methods
-  RedirectMatch 307 ^/api/orders/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-orders
-  RedirectMatch 307 ^/api/orderCargoUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-cargo-update
-  RedirectMatch 307 ^/api/invoiceLinkUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-invoice-link-update
+# BirFatura API proxy routes (with token passthrough)
+# Try proxy first
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # orderStatus
+  RewriteCond %{HTTP:token} (.+)
+  RewriteRule ^api/orderStatus/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-status?token=%1 [R=307,L]
+  RewriteRule ^api/orderStatus/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-status [R=307,L]
+  
+  # paymentMethods
+  RewriteCond %{HTTP:token} (.+)
+  RewriteRule ^api/paymentMethods/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-payment-methods?token=%1 [R=307,L]
+  RewriteRule ^api/paymentMethods/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-payment-methods [R=307,L]
+  
+  # orders
+  RewriteCond %{HTTP:token} (.+)
+  RewriteRule ^api/orders/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-orders?token=%1 [R=307,L]
+  RewriteRule ^api/orders/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-orders [R=307,L]
+  
+  # orderCargoUpdate
+  RewriteCond %{HTTP:token} (.+)
+  RewriteRule ^api/orderCargoUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-cargo-update?token=%1 [R=307,L]
+  RewriteRule ^api/orderCargoUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-order-cargo-update [R=307,L]
+  
+  # invoiceLinkUpdate
+  RewriteCond %{HTTP:token} (.+)
+  RewriteRule ^api/invoiceLinkUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-invoice-link-update?token=%1 [R=307,L]
+  RewriteRule ^api/invoiceLinkUpdate/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/birfatura-invoice-link-update [R=307,L]
 </IfModule>
 
 # Handle React Router (catch all) - En sonda olmalı
@@ -171,6 +182,7 @@ RewriteCond %{REQUEST_URI} !^/assets/
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|webp)$
 RewriteRule ^(.*)$ /index.html [L,QSA]
+
 
 # Error pages - redirect to homepage
 ErrorDocument 404 /

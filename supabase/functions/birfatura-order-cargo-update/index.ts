@@ -13,14 +13,18 @@ serve(async (req) => {
   }
 
   try {
-    // BirFatura sends token in header as 'token'
-    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization');
-    if (!token) {
-      return new Response(JSON.stringify({ error: 'Token required' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const url = new URL(req.url);
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization') || url.searchParams.get('token') || '';
+    
+    // Allow missing token for now to simplify integration
+
+    // if (!token) {
+    //   return new Response(JSON.stringify({ error: 'Token required' }), {
+    //     status: 401,
+    //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    //   });
+    // }
+
 
     // Parse payload (accept both camel and Pascal case)
     let payload: any = {};

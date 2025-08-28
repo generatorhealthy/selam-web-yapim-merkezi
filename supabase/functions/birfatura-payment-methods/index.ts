@@ -12,10 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    // BirFatura sends token in header as 'token'
-    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization');
-    
-    console.log('BirFatura payment methods request received with token:', token ? 'present' : 'missing');
+    const url = new URL(req.url);
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization') || url.searchParams.get('token') || '';
+    console.log('BirFatura payment methods request. Token present:', !!token);
+
 
     if (!token) {
       return new Response(JSON.stringify({ error: 'Token required' }), {

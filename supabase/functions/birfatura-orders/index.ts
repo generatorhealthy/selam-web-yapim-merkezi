@@ -13,8 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    // BirFatura sends token in header as 'token'
-    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization');
+    const url = new URL(req.url);
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization') || url.searchParams.get('token') || '';
+
     
     if (!token) {
       return new Response(JSON.stringify({ error: 'Token required' }), {
