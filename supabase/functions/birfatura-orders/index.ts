@@ -13,19 +13,46 @@ serve(async (req) => {
   }
 
   try {
-    // BirFatura will send the API token in the header
-    const apiKey = req.headers.get('x-api-key') || req.headers.get('x-apikey') || req.headers.get('apikey') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('api-password') || req.headers.get('token') || req.headers.get('authorization');
+    // BirFatura sends token in header as 'token'
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization');
     
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key required' }), {
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Token required' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const { startDate, endDate, orderStatusId } = await req.json();
-    
-    console.log('BirFatura orders request received:', { startDate, endDate, orderStatusId });
+    // Check token
+    if (token !== 'doktorumol-2025-api-key' && !token.includes('doktorumol-2025-api-key')) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Parse BirFatura body: { orderStatusId, startDateTime, endDateTime }
+    let payload: any = {};
+    try { payload = await req.json(); } catch (_) { payload = {}; }
+
+    const orderStatusId: number | undefined = payload.orderStatusId ?? payload.OrderStatusId;
+    const startDateTime: string | undefined = payload.startDateTime ?? payload.StartDateTime;
+    const endDateTime: string | undefined = payload.endDateTime ?? payload.EndDateTime;
+
+    function parseBirFaturaDate(s?: string): string {
+      if (!s || typeof s !== 'string') {
+        return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      }
+      // Expected format: DD.MM.YYYY HH:mm:ss
+      const [datePart, timePart = '00:00:00'] = s.split(' ');
+      const [dd, mm, yyyy] = datePart.split('.').map(Number);
+      const [HH, MM, SS] = timePart.split(':').map((v) => Number(v));
+      const d = new Date(yyyy, (mm || 1) - 1, dd || 1, HH || 0, MM || 0, SS || 0);
+      return d.toISOString();
+    }
+
+    const startISO = parseBirFaturaDate(startDateTime);
+    const endISO = parseBirFaturaDate(endDateTime || new Date().toISOString());
 
     // Create Supabase client
     const supabase = createClient(
@@ -37,8 +64,8 @@ serve(async (req) => {
     let query = supabase
       .from('orders')
       .select('*')
-      .gte('created_at', startDate)
-      .lte('created_at', endDate);
+      .gte('created_at', startISO)
+      .lte('created_at', endISO);
 
     // Filter by status if provided
     if (orderStatusId) {
@@ -50,11 +77,8 @@ serve(async (req) => {
         5: 'completed',
         6: 'cancelled'
       };
-      
       const status = statusMapping[orderStatusId];
-      if (status) {
-        query = query.eq('status', status);
-      }
+      if (status) query = query.eq('status', status);
     }
 
     const { data: orders, error } = await query;
@@ -123,8 +147,10 @@ serve(async (req) => {
       "CargoTrackingNumber": "",
       "InvoiceLink": ""
     })) || [];
+    // Wrap exactly as BirFatura expects
+    const response = { "Orders": birfaturaOrders };
 
-    return new Response(JSON.stringify(birfaturaOrders), {
+    return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

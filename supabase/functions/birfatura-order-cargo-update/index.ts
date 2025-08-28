@@ -13,19 +13,24 @@ serve(async (req) => {
   }
 
   try {
-    // BirFatura will send the API token in the header
-    const apiKey = req.headers.get('x-api-key') || req.headers.get('x-apikey') || req.headers.get('apikey') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('api-password') || req.headers.get('token') || req.headers.get('authorization');
-    
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key required' }), {
+    // BirFatura sends token in header as 'token'
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization');
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Token required' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const { OrderId, OrderStatusId, CargoTrackingNumber } = await req.json();
-    
-    console.log('BirFatura cargo update request received:', { OrderId, OrderStatusId, CargoTrackingNumber });
+    // Parse payload (accept both camel and Pascal case)
+    let payload: any = {};
+    try { payload = await req.json(); } catch (_) { payload = {}; }
+
+    const orderId = payload.orderId ?? payload.OrderId;
+    const orderStatusId = payload.orderStatusId ?? payload.OrderStatusId;
+    const cargoTrackingCode = payload.cargoTrackingCode ?? payload.CargoTrackingNumber ?? payload.CargoTrackingCode;
+
+    console.log('BirFatura cargo update request received:', { orderId, orderStatusId, cargoTrackingCode });
 
     // Create Supabase client
     const supabase = createClient(
@@ -43,10 +48,10 @@ serve(async (req) => {
       6: 'cancelled'
     };
 
-    const newStatus = statusMapping[OrderStatusId];
+    const newStatus = statusMapping[Number(orderStatusId)];
     
-    if (!newStatus) {
-      return new Response(JSON.stringify({ error: 'Invalid status ID' }), {
+    if (!orderId || !newStatus) {
+      return new Response(JSON.stringify({ error: 'Invalid payload' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -55,13 +60,10 @@ serve(async (req) => {
     // Update order status
     const updateData: any = { status: newStatus };
     
-    // If cargo tracking number is provided, we could add it to a new column
-    // For now, we'll just update the status
-    
     const { error } = await supabase
       .from('orders')
       .update(updateData)
-      .eq('id', OrderId);
+      .eq('id', orderId);
 
     if (error) {
       console.error('Database error:', error);

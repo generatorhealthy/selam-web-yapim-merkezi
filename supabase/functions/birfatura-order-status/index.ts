@@ -12,49 +12,63 @@ serve(async (req) => {
   }
 
   try {
-    // BirFatura will send the API token in the header
-    const apiKey = req.headers.get('x-api-key') || req.headers.get('x-apikey') || req.headers.get('apikey') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('api-password') || req.headers.get('token') || req.headers.get('authorization');
+    // BirFatura sends token in header as 'token' (not x-api-key)
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization');
     
-    // For now, we'll validate that a key is provided
-    // In production, you'd validate against your stored API keys
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key required' }), {
+    console.log('BirFatura order status request received with token:', token ? 'present' : 'missing');
+    console.log('All headers:', Object.fromEntries(req.headers.entries()));
+
+    // For now, we'll accept any token (you can validate specific tokens later)
+    if (!token) {
+      console.log('No token provided');
+      return new Response(JSON.stringify({ error: 'Token required' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('BirFatura order status request received');
+    // Check if token matches what was configured in BirFatura
+    if (token !== 'doktorumol-2025-api-key' && !token.includes('doktorumol-2025-api-key')) {
+      console.log('Invalid token:', token);
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    // Return order statuses as per BirFatura specification
-    const orderStatuses = [
-      {
-        "OrderStatusId": 1,
-        "OrderStatusName": "Beklemede"
-      },
-      {
-        "OrderStatusId": 2,
-        "OrderStatusName": "Onaylandı"
-      },
-      {
-        "OrderStatusId": 3,
-        "OrderStatusName": "Hazırlanıyor"
-      },
-      {
-        "OrderStatusId": 4,
-        "OrderStatusName": "Kargoya Verildi"
-      },
-      {
-        "OrderStatusId": 5,
-        "OrderStatusName": "Teslim Edildi"
-      },
-      {
-        "OrderStatusId": 6,
-        "OrderStatusName": "İptal Edildi"
-      }
-    ];
+    // Return order statuses exactly as per BirFatura specification
+    const response = {
+      "OrderStatus": [
+        {
+          "Id": 1,
+          "Value": "Beklemede"
+        },
+        {
+          "Id": 2,
+          "Value": "Onaylandı"
+        },
+        {
+          "Id": 3,
+          "Value": "Hazırlanıyor"
+        },
+        {
+          "Id": 4,
+          "Value": "Kargoya Verildi"
+        },
+        {
+          "Id": 5,
+          "Value": "Teslim Edildi"
+        },
+        {
+          "Id": 6,
+          "Value": "İptal Edildi"
+        }
+      ]
+    };
 
-    return new Response(JSON.stringify(orderStatuses), {
+    console.log('Returning order statuses:', JSON.stringify(response));
+
+    return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

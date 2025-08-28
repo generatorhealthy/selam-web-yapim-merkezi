@@ -81,6 +81,7 @@ RewriteRule ^uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/?$ /blog/uzun-sure-ci
 
 # Blog post redirects - redirect old URLs to /blog version
 RewriteCond %{REQUEST_URI} !^/blog/
+RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/assets/
 RewriteCond %{REQUEST_URI} !^/(about|hakkimizda|iletisim|uzmanlar|uzmanlik|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|psikolog-paketi|diyetisyen-paketi|fizyoterapist-paketi|aile-danismani-paketi|odeme|odeme-sayfasi|odeme-basarili|privacy|gizlilik-politikasi|disclosure-text|aydinlatma-metni|mesafeli-satis-sozlesmesi|visitor-consultant-agreement|ziyaretci-danisan-sozlesmesi|comment-rules|yorum-kurallari|anasayfa|giris-yap|test|test-al|test-sonuc|divan_paneli|doktor-paneli)
 RewriteCond %{REQUEST_URI} !^/randevu-al/

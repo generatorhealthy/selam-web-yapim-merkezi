@@ -12,39 +12,49 @@ serve(async (req) => {
   }
 
   try {
-    // BirFatura will send the API token in the header
-    const apiKey = req.headers.get('x-api-key') || req.headers.get('x-apikey') || req.headers.get('apikey') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('api-password') || req.headers.get('token') || req.headers.get('authorization');
+    // BirFatura sends token in header as 'token'
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization');
     
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key required' }), {
+    console.log('BirFatura payment methods request received with token:', token ? 'present' : 'missing');
+
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Token required' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('BirFatura payment methods request received');
+    // Check token
+    if (token !== 'doktorumol-2025-api-key' && !token.includes('doktorumol-2025-api-key')) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    // Return payment methods as per BirFatura specification
-    const paymentMethods = [
-      {
-        "PaymentMethodId": 1,
-        "PaymentMethodName": "Kredi Kartı"
-      },
-      {
-        "PaymentMethodId": 2,
-        "PaymentMethodName": "Banka Havalesi/EFT"
-      },
-      {
-        "PaymentMethodId": 3,
-        "PaymentMethodName": "Kapıda Ödeme"
-      },
-      {
-        "PaymentMethodId": 4,
-        "PaymentMethodName": "PayPal"
-      }
-    ];
+    // Return payment methods exactly as per BirFatura specification  
+    const response = {
+      "PaymentMethods": [
+        {
+          "Id": 1,
+          "Value": "Kredi Kartı"
+        },
+        {
+          "Id": 2,
+          "Value": "Banka Havalesi/EFT"
+        },
+        {
+          "Id": 3,
+          "Value": "Kapıda Ödeme"
+        },
+        {
+          "Id": 4,
+          "Value": "PayPal"
+        }
+      ]
+    };
 
-    return new Response(JSON.stringify(paymentMethods), {
+    return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
