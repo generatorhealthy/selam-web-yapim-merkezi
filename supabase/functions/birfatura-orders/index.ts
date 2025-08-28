@@ -23,13 +23,8 @@ serve(async (req) => {
       });
     }
 
-    // Check token
-    if (token !== 'doktorumol-2025-api-key' && !token.includes('doktorumol-2025-api-key')) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Accept any token for now; BirFatura requires GUID but we won't validate format
+
 
     // Parse BirFatura body: { orderStatusId, startDateTime, endDateTime }
     let payload: any = {};

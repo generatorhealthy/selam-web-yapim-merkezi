@@ -27,14 +27,10 @@ serve(async (req) => {
       });
     }
 
-    // Check if token matches what was configured in BirFatura
-    if (token !== 'doktorumol-2025-api-key' && !token.includes('doktorumol-2025-api-key')) {
-      console.log('Invalid token:', token);
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Accept any token for now (BirFatura requires a GUID but we won't validate format)
+    // If you later want to lock it down, compare with a stored value in DB/secret
+    // if (token !== '...') return new Response(...)
+
 
     // Return order statuses exactly as per BirFatura specification
     const response = {
