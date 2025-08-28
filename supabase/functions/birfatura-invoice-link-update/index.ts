@@ -15,35 +15,43 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization') || url.searchParams.get('token') || '';
-    // Accept missing token for now
+    // Token optional for now
 
-    // if (!token) {
-    //   return new Response(JSON.stringify({ error: 'Token required' }), {
-    //     status: 401,
-    //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    //   });
-    // }
+    // Parse body (accept both TR and EN keys)
+    let payload: any = {};
+    try { payload = await req.json(); } catch (_) { payload = {}; }
 
-    }
+    const orderId = payload.orderId ?? payload.OrderId;
+    const invoiceLink = payload.faturaUrl ?? payload.InvoiceLink;
+    const invoiceNo = payload.faturaNo ?? payload.InvoiceNo;
+    const invoiceDateStr = payload.faturaTarihi ?? payload.InvoiceDate;
 
-    const { OrderId, InvoiceLink } = await req.json();
-    
-    console.log('BirFatura invoice link update request received:', { OrderId, InvoiceLink });
+    // Helper to parse BirFatura date format "DD.MM.YYYY HH:mm:ss"
+    const parseDateTR = (s?: string): string | undefined => {
+      if (!s) return undefined;
+      const [datePart, timePart = '00:00:00'] = s.split(' ');
+      const [dd, mm, yyyy] = datePart.split('.').map(Number);
+      const [HH, MM, SS] = timePart.split(':').map(Number);
+      const d = new Date(yyyy, (mm || 1) - 1, dd || 1, HH || 0, MM || 0, SS || 0);
+      return d.toISOString();
+    };
 
-    // Create Supabase client
+    const invoiceDateISO = parseDateTR(invoiceDateStr);
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Update order with invoice information
+    // Update order with invoice information (best effort)
     const { error } = await supabase
       .from('orders')
       .update({ 
         invoice_sent: true,
-        invoice_date: new Date().toISOString()
+        invoice_date: invoiceDateISO || new Date().toISOString(),
       })
-      .eq('id', OrderId);
+      .eq('id', orderId);
+
 
     if (error) {
       console.error('Database error:', error);
