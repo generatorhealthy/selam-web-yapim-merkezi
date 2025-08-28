@@ -482,10 +482,12 @@ export type Database = {
       }
       legal_proceedings: {
         Row: {
+          contract_pdf_url: string | null
           created_at: string
           created_by: string | null
           customer_name: string
           id: string
+          invoice_pdf_url: string | null
           is_paid: boolean
           notes: string | null
           proceeding_amount: number
@@ -495,10 +497,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          contract_pdf_url?: string | null
           created_at?: string
           created_by?: string | null
           customer_name: string
           id?: string
+          invoice_pdf_url?: string | null
           is_paid?: boolean
           notes?: string | null
           proceeding_amount: number
@@ -508,10 +512,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          contract_pdf_url?: string | null
           created_at?: string
           created_by?: string | null
           customer_name?: string
           id?: string
+          invoice_pdf_url?: string | null
           is_paid?: boolean
           notes?: string | null
           proceeding_amount?: number
