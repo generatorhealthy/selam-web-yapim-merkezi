@@ -109,26 +109,9 @@ serve(async (req) => {
         "CustomerTcNo": order.customer_tc_no || "",
         "CustomerTaxNo": order.company_tax_no || "",
         "CustomerTaxOffice": order.company_tax_office || "",
-        "BillingAddress": {
-          "AddressTitle": "Fatura Adresi",
-          "Name": order.customer_name,
-          "Surname": "",
-          "Address": order.customer_address || "",
-          "District": "",
-          "City": order.customer_city || "",
-          "PostalCode": "",
-          "Country": "Türkiye"
-        },
-        "ShippingAddress": {
-          "AddressTitle": "Teslimat Adresi",
-          "Name": order.customer_name,
-          "Surname": "",
-          "Address": order.customer_address || "",
-          "District": "",
-          "City": order.customer_city || "",
-          "PostalCode": "",
-          "Country": "Türkiye"
-        },
+        "BillingAddress": order.customer_address || "",
+        "ShippingAddress": order.customer_address || "",
+
         "OrderProducts": [
           {
             "ProductId": 1,
