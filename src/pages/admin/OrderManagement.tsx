@@ -332,9 +332,17 @@ const OrderManagement = () => {
       return data;
     },
     onSuccess: (data) => {
+      if (data && data.success === false) {
+        toast({
+          title: "Fatura Oluşturma Hatası",
+          description: data.error || "BirFatura'dan başarısız yanıt alındı",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Fatura Oluşturuldu",
-        description: `Fatura numarası: ${data.invoiceNumber}`,
+        description: `Fatura numarası: ${data?.invoiceNumber || 'Oluşturuldu'}`,
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },

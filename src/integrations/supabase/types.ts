@@ -550,6 +550,9 @@ export type Database = {
           deleted_at: string | null
           distance_sales_pdf_content: string | null
           id: string
+          invoice_date: string | null
+          invoice_number: string | null
+          invoice_sent: boolean
           is_first_order: boolean | null
           package_name: string
           package_type: string
@@ -582,6 +585,9 @@ export type Database = {
           deleted_at?: string | null
           distance_sales_pdf_content?: string | null
           id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          invoice_sent?: boolean
           is_first_order?: boolean | null
           package_name: string
           package_type: string
@@ -614,6 +620,9 @@ export type Database = {
           deleted_at?: string | null
           distance_sales_pdf_content?: string | null
           id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          invoice_sent?: boolean
           is_first_order?: boolean | null
           package_name?: string
           package_type?: string

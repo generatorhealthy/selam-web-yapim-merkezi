@@ -32,24 +32,23 @@ serve(async (req) => {
 
     if (orderError || !order) {
       console.error('Order not found:', orderError);
-      return new Response(JSON.stringify({ error: 'Order not found' }), {
-        status: 404,
+      return new Response(JSON.stringify({ success: false, error: 'Order not found' }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Check if order is completed/approved
+    // If not in correct status, return success:false but 200
     if (order.status !== 'completed' && order.status !== 'approved') {
-      return new Response(JSON.stringify({ error: 'Order is not in completed/approved status' }), {
-        status: 400,
+      return new Response(JSON.stringify({ success: false, error: 'Order is not in completed/approved status' }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Check if invoice already sent
     if (order.invoice_sent) {
-      return new Response(JSON.stringify({ error: 'Invoice already sent for this order' }), {
-        status: 400,
+      return new Response(JSON.stringify({ success: false, error: 'Invoice already sent for this order' }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
