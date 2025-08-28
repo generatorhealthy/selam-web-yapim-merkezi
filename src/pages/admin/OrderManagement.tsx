@@ -1106,8 +1106,8 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                             </TableCell>
                             <TableCell className="text-right py-4 min-w-[240px]">
                               <div className="flex items-center justify-end gap-1 flex-wrap">
-                                {/* BirFatura Invoice Button - only for completed/approved orders */}
-                                {(order.status === 'completed' || order.status === 'approved') && !order.invoice_sent && (
+                                {/* BirFatura Invoice Button - only for approved orders */}
+                                {(order.status === 'approved') && !order.invoice_sent && (
                                   <Button
                                     variant="outline"
                                     size="sm"

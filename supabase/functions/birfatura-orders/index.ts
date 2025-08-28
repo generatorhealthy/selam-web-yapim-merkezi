@@ -63,7 +63,7 @@ serve(async (req) => {
       .gte('created_at', startISO)
       .lte('created_at', endISO);
 
-    // Filter by status if provided
+    // Filter by status if provided; default to approved orders
     if (orderStatusId) {
       const statusMapping: { [key: number]: string } = {
         1: 'pending',
@@ -75,6 +75,9 @@ serve(async (req) => {
       };
       const status = statusMapping[orderStatusId];
       if (status) query = query.eq('status', status);
+    } else {
+      // Show only approved orders by default for BirFatura
+      query = query.eq('status', 'approved');
     }
 
     const { data: orders, error } = await query;
@@ -88,61 +91,67 @@ serve(async (req) => {
     }
 
     // Convert orders to BirFatura format
-    const birfaturaOrders = orders?.map(order => ({
-      "OrderId": order.id,
-      "OrderNumber": order.id.substring(0, 8),
-      "OrderDate": order.created_at,
-      "OrderStatusId": getStatusId(order.status),
-      "PaymentMethodId": order.payment_method === 'credit_card' ? 1 : 2,
-      "CustomerName": order.customer_name,
-      "CustomerSurname": "",
-      "CustomerEmail": order.customer_email,
-      "CustomerPhone": order.customer_phone || "",
-      "CustomerTcNo": order.customer_tc_no || "",
-      "CustomerTaxNo": order.company_tax_no || "",
-      "CustomerTaxOffice": order.company_tax_office || "",
-      "BillingAddress": {
-        "AddressTitle": "Fatura Adresi",
-        "Name": order.customer_name,
-        "Surname": "",
-        "Address": order.customer_address || "",
-        "District": "",
-        "City": order.customer_city || "",
-        "PostalCode": "",
-        "Country": "Türkiye"
-      },
-      "ShippingAddress": {
-        "AddressTitle": "Teslimat Adresi",
-        "Name": order.customer_name,
-        "Surname": "",
-        "Address": order.customer_address || "",
-        "District": "",
-        "City": order.customer_city || "",
-        "PostalCode": "",
-        "Country": "Türkiye"
-      },
-      "OrderProducts": [
-        {
-          "ProductId": 1,
-          "ProductName": order.package_name,
-          "ProductQuantity": 1,
-          "ProductUnitPriceTaxExcluding": Number(order.amount) / 1.20,
-          "ProductUnitPriceTaxIncluding": Number(order.amount),
-          "ProductTotalPriceTaxExcluding": Number(order.amount) / 1.20,
-          "ProductTotalPriceTaxIncluding": Number(order.amount),
-          "ProductVatRate": 20,
-          "ProductVatAmount": Number(order.amount) - (Number(order.amount) / 1.20),
-          "ProductCurrency": "TRY"
-        }
-      ],
-      "OrderTotalTaxExcluding": Number(order.amount) / 1.20,
-      "OrderTotalTaxIncluding": Number(order.amount),
-      "OrderTotalVatAmount": Number(order.amount) - (Number(order.amount) / 1.20),
-      "OrderCurrency": "TRY",
-      "OrderNote": "",
-      "CargoTrackingNumber": "",
-      "InvoiceLink": ""
-    })) || [];
+    const birfaturaOrders = (orders || []).map((order) => {
+      // BirFatura bazı alanları Int64 bekliyor; UUID gönderirsek hata veriyor.
+      // Stabil ve sayısal bir kimlik için oluşturulma zamanını kullanıyoruz.
+      const orderIdNum = Date.parse(order.created_at || new Date().toISOString());
+
+      return {
+        "OrderId": orderIdNum, // Int64 uyumlu
+        "OrderNumber": String(orderIdNum),
+        "OrderDate": order.created_at,
+        "OrderStatusId": getStatusId(order.status),
+        "PaymentMethodId": order.payment_method === 'credit_card' ? 1 : 2,
+        "CustomerName": order.customer_name,
+        "CustomerSurname": "",
+        "CustomerEmail": order.customer_email,
+        "CustomerPhone": order.customer_phone || "",
+        "CustomerTcNo": order.customer_tc_no || "",
+        "CustomerTaxNo": order.company_tax_no || "",
+        "CustomerTaxOffice": order.company_tax_office || "",
+        "BillingAddress": {
+          "AddressTitle": "Fatura Adresi",
+          "Name": order.customer_name,
+          "Surname": "",
+          "Address": order.customer_address || "",
+          "District": "",
+          "City": order.customer_city || "",
+          "PostalCode": "",
+          "Country": "Türkiye"
+        },
+        "ShippingAddress": {
+          "AddressTitle": "Teslimat Adresi",
+          "Name": order.customer_name,
+          "Surname": "",
+          "Address": order.customer_address || "",
+          "District": "",
+          "City": order.customer_city || "",
+          "PostalCode": "",
+          "Country": "Türkiye"
+        },
+        "OrderProducts": [
+          {
+            "ProductId": 1,
+            "ProductName": order.package_name,
+            "ProductQuantity": 1,
+            "ProductUnitPriceTaxExcluding": Number(order.amount) / 1.20,
+            "ProductUnitPriceTaxIncluding": Number(order.amount),
+            "ProductTotalPriceTaxExcluding": Number(order.amount) / 1.20,
+            "ProductTotalPriceTaxIncluding": Number(order.amount),
+            "ProductVatRate": 20,
+            "ProductVatAmount": Number(order.amount) - (Number(order.amount) / 1.20),
+            "ProductCurrency": "TRY"
+          }
+        ],
+        "OrderTotalTaxExcluding": Number(order.amount) / 1.20,
+        "OrderTotalTaxIncluding": Number(order.amount),
+        "OrderTotalVatAmount": Number(order.amount) - (Number(order.amount) / 1.20),
+        "OrderCurrency": "TRY",
+        "OrderNote": "",
+        "CargoTrackingNumber": "",
+        "InvoiceLink": ""
+      };
+    });
     // Wrap exactly as BirFatura expects
     const response = { "Orders": birfaturaOrders };
 
