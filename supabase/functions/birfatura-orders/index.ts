@@ -47,6 +47,12 @@ serve(async (req) => {
       return d.toISOString();
     }
 
+    function formatBirFaturaDate(iso?: string): string {
+      const d = iso ? new Date(iso) : new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
     const startISO = parseBirFaturaDate(startDateTime);
     const endISO = parseBirFaturaDate(endDateTime || new Date().toISOString());
 
@@ -99,7 +105,7 @@ serve(async (req) => {
       return {
         "OrderId": orderIdNum, // Int64 uyumlu
         "OrderNumber": String(orderIdNum),
-        "OrderDate": order.created_at || new Date().toISOString(),
+        "OrderDate": formatBirFaturaDate(order.created_at || new Date().toISOString()),
         "OrderStatusId": getStatusId(order.status),
         "PaymentMethodId": order.payment_method === 'credit_card' ? 1 : 2,
         "CustomerName": order.customer_name || "Müşteri",
