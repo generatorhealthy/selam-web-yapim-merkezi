@@ -1,7 +1,7 @@
 
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, CheckCircle } from 'lucide-react';
+import { Upload, X, CheckCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,24 +33,40 @@ const FileUpload: React.FC<FileUploadProps> = ({
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
+      // Determine bucket based on file type
+      const isPdf = file.type === 'application/pdf' || fileExt?.toLowerCase() === 'pdf';
+      const bucketName = isPdf ? 'legal-documents' : 'profile-pictures';
+
       const { error: uploadError } = await supabase.storage
-        .from('profile-pictures')
+        .from(bucketName)
         .upload(filePath, file);
 
       if (uploadError) {
         throw uploadError;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-pictures')
-        .getPublicUrl(filePath);
+      // For legal documents, create a signed URL; for profile pictures, use public URL
+      let fileUrl: string;
+      if (isPdf) {
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from(bucketName)
+          .createSignedUrl(filePath, 3600); // 1 hour expiry
 
-      setUploadedUrl(publicUrl);
-      onUpload(publicUrl);
+        if (signedError) throw signedError;
+        fileUrl = signedData.signedUrl;
+      } else {
+        const { data: { publicUrl } } = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(filePath);
+        fileUrl = publicUrl;
+      }
+
+      setUploadedUrl(fileUrl);
+      onUpload(fileUrl);
       
       toast({
         title: "Başarılı",
-        description: "Fotoğraf başarıyla yüklendi.",
+        description: isPdf ? "PDF başarıyla yüklendi." : "Fotoğraf başarıyla yüklendi.",
       });
     } catch (error) {
       console.error('Dosya yükleme hatası:', error);
@@ -76,15 +92,28 @@ const FileUpload: React.FC<FileUploadProps> = ({
     onUpload('');
   };
 
+  const isPdf = accept.includes('pdf') || accept === '.pdf';
+  const maxSizeMB = Math.round(maxSize / (1024 * 1024));
+  
   return (
     <div className="space-y-4">
       {uploadedUrl ? (
         <div className="relative">
-          <img
-            src={uploadedUrl}
-            alt="Yüklenen fotoğraf"
-            className="w-32 h-32 object-cover rounded-lg border"
-          />
+          {isPdf ? (
+            <div className="flex items-center gap-2 p-4 border rounded-lg bg-gray-50">
+              <FileText className="w-8 h-8 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">PDF Dosyası Yüklendi</p>
+                <p className="text-xs text-gray-500">Başarıyla yüklendi</p>
+              </div>
+            </div>
+          ) : (
+            <img
+              src={uploadedUrl}
+              alt="Yüklenen fotoğraf"
+              className="w-32 h-32 object-cover rounded-lg border"
+            />
+          )}
           <Button
             type="button"
             variant="destructive"
@@ -108,7 +137,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
           }`}
         >
           <input {...getInputProps()} />
-          <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          {isPdf ? (
+            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          ) : (
+            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          )}
           {uploading ? (
             <p className="text-gray-600">Yükleniyor...</p>
           ) : (
@@ -119,7 +152,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
                   : 'Dosyayı sürükleyin veya tıklayın'}
               </p>
               <p className="text-sm text-gray-500">
-                PNG, JPG, JPEG formatları desteklenir (Maks. 5MB)
+                {isPdf 
+                  ? `PDF formatı desteklenir (Maks. ${maxSizeMB}MB)`
+                  : `PNG, JPG, JPEG formatları desteklenir (Maks. ${maxSizeMB}MB)`
+                }
               </p>
             </div>
           )}

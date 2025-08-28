@@ -13,8 +13,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import AdminBackButton from "@/components/AdminBackButton";
-import { Plus, Gavel, Edit, Trash2, Check } from "lucide-react";
+import { Plus, Gavel, Edit, Trash2, Check, FileText, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import FileUpload from "@/components/FileUpload";
 
 interface LegalProceeding {
   id: string;
@@ -24,6 +25,8 @@ interface LegalProceeding {
   is_paid: boolean;
   created_at: string;
   notes?: string;
+  contract_pdf_url?: string;
+  invoice_pdf_url?: string;
 }
 
 const LegalProceedings = () => {
@@ -37,7 +40,9 @@ const LegalProceedings = () => {
     customer_name: "",
     proceeding_amount: "",
     status: "YENİ_İCRA_TALEBİ",
-    notes: ""
+    notes: "",
+    contract_pdf_url: "",
+    invoice_pdf_url: ""
   });
 
   const statusOptions = [
@@ -115,6 +120,8 @@ const LegalProceedings = () => {
         proceeding_amount: proceedingAmount,
         status: formData.status,
         notes: formData.notes.trim(),
+        contract_pdf_url: formData.contract_pdf_url || null,
+        invoice_pdf_url: formData.invoice_pdf_url || null,
         unpaid_months: 1, // Yeni icra talebi için varsayılan değer
         total_months: 1   // Yeni icra talebi için varsayılan değer
       };
@@ -150,7 +157,9 @@ const LegalProceedings = () => {
         customer_name: "",
         proceeding_amount: "",
         status: "YENİ_İCRA_TALEBİ",
-        notes: ""
+        notes: "",
+        contract_pdf_url: "",
+        invoice_pdf_url: ""
       });
       fetchProceedings();
     } catch (error) {
@@ -219,7 +228,9 @@ const LegalProceedings = () => {
       customer_name: proceeding.customer_name,
       proceeding_amount: formatCurrency(proceeding.proceeding_amount),
       status: proceeding.status,
-      notes: proceeding.notes || ""
+      notes: proceeding.notes || "",
+      contract_pdf_url: proceeding.contract_pdf_url || "",
+      invoice_pdf_url: proceeding.invoice_pdf_url || ""
     });
     setDialogOpen(true);
   };
@@ -247,6 +258,40 @@ const LegalProceedings = () => {
 
   const isProcessCompleted = (status: string) => {
     return status === "İCRA_TAMAMLANDI";
+  };
+
+  const downloadPDF = async (url: string, filename: string) => {
+    try {
+      // Extract file path from URL and create a new signed URL for download
+      const urlPath = new URL(url);
+      const pathSegments = urlPath.pathname.split('/');
+      const filePath = pathSegments[pathSegments.length - 1].split('?')[0]; // Remove query params if any
+      
+      // Create a new signed URL with longer expiry for download
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from('legal-documents')
+        .createSignedUrl(filePath, 300); // 5 minutes should be enough for download
+
+      if (signedError) throw signedError;
+
+      const response = await fetch(signedData.signedUrl);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('PDF indirilirken hata:', error);
+      toast({
+        title: "Hata",
+        description: "PDF indirilemedi.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -389,6 +434,24 @@ const LegalProceedings = () => {
                           rows={3}
                         />
                       </div>
+                      <div>
+                        <Label>Sözleşme PDF</Label>
+                        <FileUpload
+                          onUpload={(url) => setFormData({ ...formData, contract_pdf_url: url })}
+                          currentImage={formData.contract_pdf_url}
+                          accept=".pdf"
+                          maxSize={10 * 1024 * 1024} // 10MB
+                        />
+                      </div>
+                      <div>
+                        <Label>Fatura PDF</Label>
+                        <FileUpload
+                          onUpload={(url) => setFormData({ ...formData, invoice_pdf_url: url })}
+                          currentImage={formData.invoice_pdf_url}
+                          accept=".pdf"
+                          maxSize={10 * 1024 * 1024} // 10MB
+                        />
+                      </div>
                       <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                           İptal
@@ -410,6 +473,7 @@ const LegalProceedings = () => {
                     <TableHead>İcra Tutarı</TableHead>
                     <TableHead>Durum</TableHead>
                     <TableHead>Ödeme Durumu</TableHead>
+                    <TableHead>Belgeler</TableHead>
                     <TableHead>Açıklama</TableHead>
                     <TableHead>Tarih</TableHead>
                     <TableHead>İşlemler</TableHead>
@@ -443,6 +507,35 @@ const LegalProceedings = () => {
                             <div className="flex items-center text-red-600 font-medium">
                               Ödenmemiş - ₺{formatCurrency(proceeding.proceeding_amount)}
                             </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {proceeding.contract_pdf_url && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadPDF(proceeding.contract_pdf_url!, `${proceeding.customer_name}_sozlesme.pdf`)}
+                              title="Sözleşme İndir"
+                            >
+                              <FileText className="w-4 h-4 mr-1" />
+                              Sözleşme
+                            </Button>
+                          )}
+                          {proceeding.invoice_pdf_url && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadPDF(proceeding.invoice_pdf_url!, `${proceeding.customer_name}_fatura.pdf`)}
+                              title="Fatura İndir"
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Fatura
+                            </Button>
+                          )}
+                          {!proceeding.contract_pdf_url && !proceeding.invoice_pdf_url && (
+                            <span className="text-sm text-gray-400">Belge yok</span>
                           )}
                         </div>
                       </TableCell>
