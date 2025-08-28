@@ -68,3 +68,18 @@ verify_jwt = false
 
 [functions.send-order-status-email]
 verify_jwt = false
+
+[functions.birfatura-order-status]
+verify_jwt = false
+
+[functions.birfatura-payment-methods]
+verify_jwt = false
+
+[functions.birfatura-orders]
+verify_jwt = false
+
+[functions.birfatura-order-cargo-update]
+verify_jwt = false
+
+[functions.birfatura-invoice-link-update]
+verify_jwt = false
