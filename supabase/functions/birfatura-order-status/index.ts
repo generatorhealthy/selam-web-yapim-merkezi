@@ -13,7 +13,7 @@ serve(async (req) => {
 
   try {
     // BirFatura will send the API token in the header
-    const apiKey = req.headers.get('x-api-key') || req.headers.get('authorization');
+    const apiKey = req.headers.get('x-api-key') || req.headers.get('x-apikey') || req.headers.get('apikey') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('api-password') || req.headers.get('token') || req.headers.get('authorization');
     
     // For now, we'll validate that a key is provided
     // In production, you'd validate against your stored API keys

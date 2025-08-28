@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     // BirFatura will send the API token in the header
-    const apiKey = req.headers.get('x-api-key') || req.headers.get('authorization');
+    const apiKey = req.headers.get('x-api-key') || req.headers.get('x-apikey') || req.headers.get('apikey') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('api-password') || req.headers.get('token') || req.headers.get('authorization');
     
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'API key required' }), {
