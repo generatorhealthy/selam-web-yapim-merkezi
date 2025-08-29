@@ -146,12 +146,17 @@ serve(async (req) => {
       const o = birfaturaOrders[0];
       console.log('birfatura-orders: sample order preview', {
         OrderId: o.OrderId,
-        OrderStatusId: o.OrderStatusId,
-        PaymentMethodId: o.PaymentMethodId,
-        OrderTotalPriceTaxIncluding: o.OrderTotalPriceTaxIncluding,
+        OrderNumber: o.OrderNumber,
+        OrderDate: o.OrderDate,
         CustomerName: o.CustomerName,
-        CreatedBetween: { startISO, endISO }
+        CustomerSurname: o.CustomerSurname,
+        CustomerEmail: o.CustomerEmail,
+        CustomerPhone: o.CustomerPhone,
+        CustomerTcNo: o.CustomerTcNo,
+        OrderTotalPriceTaxIncluding: o.OrderTotalPriceTaxIncluding,
+        ProductsCount: o.OrderProducts.length
       });
+      console.log('birfatura-orders: full order data =', JSON.stringify(o, null, 2));
     }
 
     return new Response(JSON.stringify(response), {
