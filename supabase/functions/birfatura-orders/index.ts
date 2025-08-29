@@ -72,35 +72,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Build query
-    let query = supabase
+    // Build query - start with simple query to prevent timeout
+    let { data: orders, error } = await supabase
       .from('orders')
       .select('*')
-      .gte('created_at', startISO)
-      .lte('created_at', endISO);
-
-    // Filter by status if provided; default to approved orders
-    if (orderStatusId) {
-      // BirFatura status mapping:
-      // 1: Onaylandı (we map both approved & completed)
-      // 2: Kargolandı (we map shipped/processing)
-      // 3: İptal Edildi (cancelled)
-      const statusMapping: { [key: number]: string[] } = {
-        1: ['approved', 'completed'],
-        2: ['shipped'],
-        3: ['cancelled']
-      };
-      const statuses = statusMapping[orderStatusId];
-      if (statuses) {
-        if (statuses.length === 1) query = query.eq('status', statuses[0]);
-        else query = query.in('status', statuses);
-      }
-    } else {
-      // Show approved and completed orders by default for BirFatura
-      query = query.in('status', ['approved', 'completed']);
-    }
-
-    let { data: orders, error } = await query.order('created_at', { ascending: false });
+      .in('status', ['approved', 'completed'])
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) {
       console.error('Database error:', error);
@@ -110,24 +88,28 @@ serve(async (req) => {
       });
     }
 
-    // Fallback: If no orders match the provided date range, return last 60 days approved/completed
-    if (!orders || orders.length === 0) {
-      const fallbackStart = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: fallbackOrders, error: fallbackError } = await supabase
-        .from('orders')
-        .select('*')
-        .gte('created_at', fallbackStart)
-        .in('status', ['approved', 'completed'])
-        .order('created_at', { ascending: false })
-        .limit(100);
+    // Filter orders by date range and status if provided  
+    if (orders && orders.length > 0) {
+      orders = orders.filter(order => {
+        const orderDate = new Date(order.created_at);
+        return orderDate >= new Date(startISO) && orderDate <= new Date(endISO);
+      });
 
-      if (!fallbackError && fallbackOrders) {
-        orders = fallbackOrders;
-        console.log('birfatura-orders: primary query empty, using fallback count =', orders.length);
-      } else if (fallbackError) {
-        console.error('Fallback database error:', fallbackError);
+      // Apply status filter if provided
+      if (orderStatusId) {
+        const statusMapping: { [key: number]: string[] } = {
+          1: ['approved', 'completed'],
+          2: ['shipped'],
+          3: ['cancelled']
+        };
+        const statuses = statusMapping[orderStatusId];
+        if (statuses) {
+          orders = orders.filter(order => statuses.includes(order.status));
+        }
       }
     }
+
+    console.log('birfatura-orders: found orders count =', orders?.length || 0);
 
     // Convert orders to BirFatura format
     const birfaturaOrders = (orders || []).map((order) => {
