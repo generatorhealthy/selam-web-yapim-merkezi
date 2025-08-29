@@ -3,7 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, token, x-token, x-api-key, api-key, api_password',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
@@ -14,7 +15,7 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization') || url.searchParams.get('token') || '';
+    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('x-api-key') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('authorization') || url.searchParams.get('token') || url.searchParams.get('apikey') || url.searchParams.get('apiKey') || '';
     // Token optional for now
 
     // Parse body (accept both TR and EN keys)

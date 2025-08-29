@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, token, x-token, x-api-key, api-key, api_password',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
@@ -123,18 +123,18 @@ serve(async (req) => {
             "ProductId": 1,
             "ProductName": order.package_name || "Paket",
             "ProductQuantity": 1,
-            "ProductUnitPriceTaxExcluding": Number(((Number(order.amount ?? 0) || 1) / 1.20).toFixed(2)),
-            "ProductUnitPriceTaxIncluding": Number(((Number(order.amount ?? 0) || 1)).toFixed(2)),
-            "ProductTotalPriceTaxExcluding": Number(((Number(order.amount ?? 0) || 1) / 1.20).toFixed(2)),
-            "ProductTotalPriceTaxIncluding": Number(((Number(order.amount ?? 0) || 1)).toFixed(2)),
+            "ProductUnitPriceTaxExcluding": Number((Number(order.amount ?? 0) || 1) / 1.20),
+            "ProductUnitPriceTaxIncluding": Number((Number(order.amount ?? 0) || 1)),
+            "ProductTotalPriceTaxExcluding": Number((Number(order.amount ?? 0) || 1) / 1.20),
+            "ProductTotalPriceTaxIncluding": Number((Number(order.amount ?? 0) || 1)),
             "ProductVatRate": 20,
-            "ProductVatAmount": Number(((Number(order.amount ?? 0) || 1) - (Number(order.amount ?? 0) || 1) / 1.20).toFixed(2)),
+            "ProductVatAmount": Number((Number(order.amount ?? 0) || 1) - (Number(order.amount ?? 0) || 1) / 1.20),
             "ProductCurrency": "TRY"
           }
         ],
-        "OrderTotalPriceTaxExcluding": Number(((Number(order.amount ?? 0) || 1) / 1.20).toFixed(2)),
-        "OrderTotalPriceTaxIncluding": Number(((Number(order.amount ?? 0) || 1)).toFixed(2)),
-        "OrderTotalVatAmount": Number(((Number(order.amount ?? 0) || 1) - (Number(order.amount ?? 0) || 1) / 1.20).toFixed(2)),
+        "OrderTotalPriceTaxExcluding": Number((Number(order.amount ?? 0) || 1) / 1.20),
+        "OrderTotalPriceTaxIncluding": Number((Number(order.amount ?? 0) || 1)),
+        "OrderTotalVatAmount": Number((Number(order.amount ?? 0) || 1) - (Number(order.amount ?? 0) || 1) / 1.20),
         "OrderCurrency": "TRY",
         "OrderNote": "",
         "CargoTrackingNumber": "",
