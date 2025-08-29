@@ -72,13 +72,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Build query - start with simple query to prevent timeout
-    let { data: orders, error } = await supabase
+    // Simple approach: get recent approved orders without complex date filtering
+    console.log('birfatura-orders: fetching recent approved orders...');
+    
+    const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
       .in('status', ['approved', 'completed'])
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(50); // Reduced to 50 for faster response
 
     if (error) {
       console.error('Database error:', error);
@@ -86,27 +88,6 @@ serve(async (req) => {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-    }
-
-    // Filter orders by date range and status if provided  
-    if (orders && orders.length > 0) {
-      orders = orders.filter(order => {
-        const orderDate = new Date(order.created_at);
-        return orderDate >= new Date(startISO) && orderDate <= new Date(endISO);
-      });
-
-      // Apply status filter if provided
-      if (orderStatusId) {
-        const statusMapping: { [key: number]: string[] } = {
-          1: ['approved', 'completed'],
-          2: ['shipped'],
-          3: ['cancelled']
-        };
-        const statuses = statusMapping[orderStatusId];
-        if (statuses) {
-          orders = orders.filter(order => statuses.includes(order.status));
-        }
-      }
     }
 
     console.log('birfatura-orders: found orders count =', orders?.length || 0);
