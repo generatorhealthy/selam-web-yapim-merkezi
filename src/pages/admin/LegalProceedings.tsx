@@ -140,14 +140,38 @@ const LegalProceedings = () => {
           description: "İcralık güncellendi.",
         });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("legal_proceedings")
-          .insert([dataToSubmit]);
+          .insert([dataToSubmit])
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Send notification email for new legal proceeding
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-legal-proceeding-notification', {
+            body: {
+              customerName: dataToSubmit.customer_name,
+              proceedingAmount: dataToSubmit.proceeding_amount,
+              status: dataToSubmit.status,
+              notes: dataToSubmit.notes,
+              createdAt: new Date().toISOString()
+            }
+          });
+
+          if (emailError) {
+            console.error('Email notification error:', emailError);
+            // Don't fail the main operation if email fails
+          }
+        } catch (emailError) {
+          console.error('Failed to send notification email:', emailError);
+          // Don't fail the main operation if email fails
+        }
+
         toast({
           title: "Başarılı",
-          description: "İcralık eklendi.",
+          description: "İcralık eklendi ve bildirim e-postası gönderildi.",
         });
       }
 
