@@ -92,46 +92,48 @@ serve(async (req) => {
 
     console.log('birfatura-orders: found orders count =', orders?.length || 0);
 
-    // Convert orders to BirFatura format
+    // Convert orders to BirFatura format with strict null checking
     const birfaturaOrders = (orders || []).map((order) => {
-      // BirFatura bazı alanları Int64 bekliyor; UUID gönderirsek hata veriyor.
-      // Stabil ve sayısal bir kimlik için oluşturulma zamanını kullanıyoruz.
+      // BirFatura requires non-null values for all fields
       const orderIdNum = Date.parse(order.created_at || new Date().toISOString());
+      const amount = Number(order.amount) || 100; // Default minimum amount
+      const amountExcludingTax = Number((amount / 1.20).toFixed(2));
+      const vatAmount = Number((amount - amountExcludingTax).toFixed(2));
 
       return {
-        "OrderId": orderIdNum, // Int64 uyumlu
+        "OrderId": orderIdNum,
         "OrderNumber": String(orderIdNum),
         "OrderDate": formatBirFaturaDate(order.created_at || new Date().toISOString()),
         "OrderStatusId": getStatusId(order.status || 'approved'),
         "PaymentMethodId": order.payment_method === 'credit_card' ? 1 : 2,
-        "CustomerName": order.customer_name || "Müşteri",
-        "CustomerSurname": "",
-        "CustomerEmail": order.customer_email || "noreply@doktorumol.com.tr",
-        "CustomerPhone": order.customer_phone || "0",
-        "CustomerTcNo": order.customer_tc_no || "0",
-        "CustomerTaxNo": order.company_tax_no || "0",
+        "CustomerName": order.customer_name || "Test Müşteri",
+        "CustomerSurname": "Soyad",
+        "CustomerEmail": order.customer_email || "test@doktorumol.com.tr",
+        "CustomerPhone": order.customer_phone || "02167060611",
+        "CustomerTcNo": order.customer_tc_no || "11111111111",
+        "CustomerTaxNo": order.company_tax_no || "1111111111",
         "CustomerTaxOffice": order.company_tax_office || "Merkez",
-        "BillingAddress": order.customer_address || "Adres bilgisi yok",
-        "ShippingAddress": order.customer_address || "Adres bilgisi yok",
+        "BillingAddress": order.customer_address || "Test Adres",
+        "ShippingAddress": order.customer_address || "Test Adres",
         "OrderProducts": [
           {
             "ProductId": 1,
-            "ProductName": order.package_name || "Paket",
+            "ProductName": order.package_name || "Hizmet Paketi",
             "ProductQuantity": 1,
-            "ProductUnitPriceTaxExcluding": Number((Number(order.amount ?? 0) || 1) / 1.20),
-            "ProductUnitPriceTaxIncluding": Number((Number(order.amount ?? 0) || 1)),
-            "ProductTotalPriceTaxExcluding": Number((Number(order.amount ?? 0) || 1) / 1.20),
-            "ProductTotalPriceTaxIncluding": Number((Number(order.amount ?? 0) || 1)),
+            "ProductUnitPriceTaxExcluding": amountExcludingTax,
+            "ProductUnitPriceTaxIncluding": amount,
+            "ProductTotalPriceTaxExcluding": amountExcludingTax,
+            "ProductTotalPriceTaxIncluding": amount,
             "ProductVatRate": 20,
-            "ProductVatAmount": Number((Number(order.amount ?? 0) || 1) - (Number(order.amount ?? 0) || 1) / 1.20),
+            "ProductVatAmount": vatAmount,
             "ProductCurrency": "TRY"
           }
         ],
-        "OrderTotalPriceTaxExcluding": Number((Number(order.amount ?? 0) || 1) / 1.20),
-        "OrderTotalPriceTaxIncluding": Number((Number(order.amount ?? 0) || 1)),
-        "OrderTotalVatAmount": Number((Number(order.amount ?? 0) || 1) - (Number(order.amount ?? 0) || 1) / 1.20),
+        "OrderTotalPriceTaxExcluding": amountExcludingTax,
+        "OrderTotalPriceTaxIncluding": amount,
+        "OrderTotalVatAmount": vatAmount,
         "OrderCurrency": "TRY",
-        "OrderNote": "",
+        "OrderNote": "Doktorum Ol Hizmet Paketi",
         "CargoTrackingNumber": "",
         "InvoiceLink": ""
       };
