@@ -38,13 +38,22 @@ serve(async (req) => {
 
     function parseBirFaturaDate(s?: string): string {
       if (!s || typeof s !== 'string') {
+        // Default: 30 days ago
         return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       }
       // Expected format: DD.MM.YYYY HH:mm:ss
       const [datePart, timePart = '00:00:00'] = s.split(' ');
       const [dd, mm, yyyy] = datePart.split('.').map(Number);
-      const [HH, MM, SS] = timePart.split(':').map((v) => Number(v));
-      const d = new Date(yyyy, (mm || 1) - 1, dd || 1, HH || 0, MM || 0, SS || 0);
+      const [HH, MM, SS] = timePart.split(':').map((v) => Number(v) || 0);
+      
+      // Validate date parts
+      if (!dd || !mm || !yyyy || dd > 31 || mm > 12 || yyyy < 2020) {
+        console.log('Invalid date format:', s, 'parsed as:', { dd, mm, yyyy });
+        return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      }
+      
+      const d = new Date(yyyy, mm - 1, dd, HH || 0, MM || 0, SS || 0);
+      console.log('Parsed date:', s, '→', d.toISOString());
       return d.toISOString();
     }
 
