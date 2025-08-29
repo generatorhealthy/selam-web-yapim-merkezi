@@ -72,16 +72,20 @@ serve(async (req) => {
 
     // Filter by status if provided; default to approved orders
     if (orderStatusId) {
-      const statusMapping: { [key: number]: string } = {
-        1: 'pending',
-        2: 'approved',
-        3: 'processing',
-        4: 'shipped',
-        5: 'completed',
-        6: 'cancelled'
+      // BirFatura status mapping:
+      // 1: Onaylandı (we map both approved & completed)
+      // 2: Kargolandı (we map shipped/processing)
+      // 3: İptal Edildi (cancelled)
+      const statusMapping: { [key: number]: string[] } = {
+        1: ['approved', 'completed'],
+        2: ['shipped'],
+        3: ['cancelled']
       };
-      const status = statusMapping[orderStatusId];
-      if (status) query = query.eq('status', status);
+      const statuses = statusMapping[orderStatusId];
+      if (statuses) {
+        if (statuses.length === 1) query = query.eq('status', statuses[0]);
+        else query = query.in('status', statuses);
+      }
     } else {
       // Show approved and completed orders by default for BirFatura
       query = query.in('status', ['approved', 'completed']);
@@ -163,14 +167,11 @@ serve(async (req) => {
 });
 
 function getStatusId(status: string): number {
-  const statusMapping: { [key: string]: number } = {
-    'pending': 1,
-    'approved': 2,
-    'processing': 3,
-    'shipped': 4,
-    'completed': 5,
-    'cancelled': 6
-  };
-  
-  return statusMapping[status] || 1;
+  // Map internal statuses to BirFatura status IDs
+  // 1: Onaylandı, 2: Kargolandı, 3: İptal Edildi
+  const s = (status || '').toLowerCase();
+  if (s === 'approved' || s === 'completed' || s === 'pending') return 1;
+  if (s === 'shipped' || s === 'processing') return 2;
+  if (s === 'cancelled') return 3;
+  return 1;
 }
