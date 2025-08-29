@@ -100,25 +100,37 @@ serve(async (req) => {
       const amountExcludingTax = Number((amount / 1.20).toFixed(2));
       const vatAmount = Number((amount - amountExcludingTax).toFixed(2));
 
+      // Handle null values from database properly
+      const customerName = (order.customer_name || "").trim() || "Test Müşteri";
+      const customerEmail = (order.customer_email || "").trim() || "test@doktorumol.com.tr";
+      const customerPhone = (order.customer_phone || "").trim() || "02167060611";
+      const customerTcNo = (order.customer_tc_no || "").trim() || "11111111111";
+      const customerAddress = (order.customer_address || "").trim() || "Test Adres";
+      const packageName = (order.package_name || "").trim() || "Hizmet Paketi";
+      
+      // For company fields, use empty string if null - BirFatura might not like "0"
+      const companyTaxNo = (order.company_tax_no || "").trim() || "";
+      const companyTaxOffice = (order.company_tax_office || "").trim() || "";
+
       return {
         "OrderId": orderIdNum,
         "OrderNumber": String(orderIdNum),
         "OrderDate": formatBirFaturaDate(order.created_at || new Date().toISOString()),
         "OrderStatusId": getStatusId(order.status || 'approved'),
         "PaymentMethodId": order.payment_method === 'credit_card' ? 1 : 2,
-        "CustomerName": order.customer_name || "Test Müşteri",
+        "CustomerName": customerName,
         "CustomerSurname": "Soyad",
-        "CustomerEmail": order.customer_email || "test@doktorumol.com.tr",
-        "CustomerPhone": order.customer_phone || "02167060611",
-        "CustomerTcNo": order.customer_tc_no || "11111111111",
-        "CustomerTaxNo": order.company_tax_no || "1111111111",
-        "CustomerTaxOffice": order.company_tax_office || "Merkez",
-        "BillingAddress": order.customer_address || "Test Adres",
-        "ShippingAddress": order.customer_address || "Test Adres",
+        "CustomerEmail": customerEmail,
+        "CustomerPhone": customerPhone,
+        "CustomerTcNo": customerTcNo,
+        "CustomerTaxNo": companyTaxNo,
+        "CustomerTaxOffice": companyTaxOffice || "Merkez",
+        "BillingAddress": customerAddress,
+        "ShippingAddress": customerAddress,
         "OrderProducts": [
           {
             "ProductId": 1,
-            "ProductName": order.package_name || "Hizmet Paketi",
+            "ProductName": packageName,
             "ProductQuantity": 1,
             "ProductUnitPriceTaxExcluding": amountExcludingTax,
             "ProductUnitPriceTaxIncluding": amount,
