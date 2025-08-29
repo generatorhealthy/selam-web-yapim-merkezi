@@ -100,7 +100,7 @@ serve(async (req) => {
       query = query.in('status', ['approved', 'completed']);
     }
 
-    const { data: orders, error } = await query;
+    let { data: orders, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('Database error:', error);
@@ -108,6 +108,25 @@ serve(async (req) => {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Fallback: If no orders match the provided date range, return last 60 days approved/completed
+    if (!orders || orders.length === 0) {
+      const fallbackStart = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: fallbackOrders, error: fallbackError } = await supabase
+        .from('orders')
+        .select('*')
+        .gte('created_at', fallbackStart)
+        .in('status', ['approved', 'completed'])
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (!fallbackError && fallbackOrders) {
+        orders = fallbackOrders;
+        console.log('birfatura-orders: primary query empty, using fallback count =', orders.length);
+      } else if (fallbackError) {
+        console.error('Fallback database error:', fallbackError);
+      }
     }
 
     // Convert orders to BirFatura format
