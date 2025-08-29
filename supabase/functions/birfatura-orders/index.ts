@@ -83,8 +83,8 @@ serve(async (req) => {
       const status = statusMapping[orderStatusId];
       if (status) query = query.eq('status', status);
     } else {
-      // Show only approved orders by default for BirFatura
-      query = query.eq('status', 'approved');
+      // Show approved and completed orders by default for BirFatura
+      query = query.in('status', ['approved', 'completed']);
     }
 
     const { data: orders, error } = await query;
