@@ -178,7 +178,15 @@ serve(async (req) => {
 
     console.log('birfatura-orders: returning orders count =', birfaturaOrders.length);
     if (birfaturaOrders.length > 0) {
-      console.log('birfatura-orders: sample order keys =', Object.keys(birfaturaOrders[0]));
+      const o = birfaturaOrders[0];
+      console.log('birfatura-orders: sample order preview', {
+        OrderId: o.OrderId,
+        OrderStatusId: o.OrderStatusId,
+        PaymentMethodId: o.PaymentMethodId,
+        OrderTotalPriceTaxIncluding: o.OrderTotalPriceTaxIncluding,
+        CustomerName: o.CustomerName,
+        CreatedBetween: { startISO, endISO }
+      });
     }
 
     return new Response(JSON.stringify(response), {
