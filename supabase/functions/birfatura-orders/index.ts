@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization') || url.searchParams.get('token') || '';
+    const token = req.headers.get('x-api-key') || req.headers.get('token') || req.headers.get('x-token') || req.headers.get('authorization') || url.searchParams.get('token') || url.searchParams.get('apiKey') || url.searchParams.get('apikey') || '';
 
     
     if (!token) {
