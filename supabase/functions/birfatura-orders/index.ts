@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
 serve(async (req) => {
@@ -131,8 +132,8 @@ serve(async (req) => {
             "ProductCurrency": "TRY"
           }
         ],
-        "OrderTotalTaxExcluding": Number(((Number(order.amount ?? 0) || 1) / 1.20).toFixed(2)),
-        "OrderTotalTaxIncluding": Number(((Number(order.amount ?? 0) || 1)).toFixed(2)),
+        "OrderTotalPriceTaxExcluding": Number(((Number(order.amount ?? 0) || 1) / 1.20).toFixed(2)),
+        "OrderTotalPriceTaxIncluding": Number(((Number(order.amount ?? 0) || 1)).toFixed(2)),
         "OrderTotalVatAmount": Number(((Number(order.amount ?? 0) || 1) - (Number(order.amount ?? 0) || 1) / 1.20).toFixed(2)),
         "OrderCurrency": "TRY",
         "OrderNote": "",
@@ -142,6 +143,11 @@ serve(async (req) => {
     });
     // Wrap exactly as BirFatura expects
     const response = { "Orders": birfaturaOrders };
+
+    console.log('birfatura-orders: returning orders count =', birfaturaOrders.length);
+    if (birfaturaOrders.length > 0) {
+      console.log('birfatura-orders: sample order keys =', Object.keys(birfaturaOrders[0]));
+    }
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
