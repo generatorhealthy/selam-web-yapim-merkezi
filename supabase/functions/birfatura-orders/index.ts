@@ -72,14 +72,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Test with just 1 order to find the exact issue
-    console.log('birfatura-orders: fetching single test order...');
+    // Get recent approved orders for BirFatura
+    console.log('birfatura-orders: fetching approved orders...');
     
     const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
-      .eq('status', 'approved')
-      .limit(1);
+      .in('status', ['approved', 'completed'])
+      .order('created_at', { ascending: false })
+      .limit(20);
 
     if (error) {
       console.error('Database error:', error);
@@ -90,9 +91,6 @@ serve(async (req) => {
     }
 
     console.log('birfatura-orders: found orders count =', orders?.length || 0);
-    if (orders && orders.length > 0) {
-      console.log('birfatura-orders: order data =', JSON.stringify(orders[0], null, 2));
-    }
 
     // Convert orders to BirFatura format
     const birfaturaOrders = (orders || []).map((order) => {
