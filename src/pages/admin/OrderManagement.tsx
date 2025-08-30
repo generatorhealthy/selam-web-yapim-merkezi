@@ -1213,6 +1213,33 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                       </Select>
                     </div>
                     <div>
+                      <Label htmlFor="customer_tc_no">TC Kimlik No</Label>
+                      <Input
+                        type="text"
+                        id="customer_tc_no"
+                        value={editingOrder.customer_tc_no || ''}
+                        onChange={(e) => handleUpdateOrder(e, "customer_tc_no")}
+                        placeholder="TC Kimlik numarasını girin"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="payment_method">Ödeme Yöntemi</Label>
+                      <Select
+                        value={editingOrder.payment_method}
+                        onValueChange={(value) =>
+                          setEditingOrder({ ...editingOrder, payment_method: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Ödeme yöntemi seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="credit_card">Kredi Kartı</SelectItem>
+                          <SelectItem value="banka_havalesi">Banka Havalesi</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
                       <Label htmlFor="subscription_month">Sipariş Ayı</Label>
                       <Input
                         type="number"
