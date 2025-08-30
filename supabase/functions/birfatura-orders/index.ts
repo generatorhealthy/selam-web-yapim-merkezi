@@ -168,7 +168,37 @@ serve(async (req) => {
         OrderTotalPriceTaxIncluding: o.OrderTotalPriceTaxIncluding,
         ProductsCount: o.OrderProducts.length
       });
-      console.log('birfatura-orders: full order data =', JSON.stringify(o, null, 2));
+      
+      // Log the COMPLETE JSON being sent to BirFatura to find null values
+      console.log('birfatura-orders: COMPLETE ORDER JSON =', JSON.stringify(o, null, 2));
+      console.log('birfatura-orders: COMPLETE RESPONSE JSON =', JSON.stringify(response, null, 2));
+      
+      // Check for any null values in the object
+      const checkForNulls = (obj: any, path = ''): string[] => {
+        const nulls: string[] = [];
+        for (const [key, value] of Object.entries(obj)) {
+          const currentPath = path ? `${path}.${key}` : key;
+          if (value === null || value === undefined) {
+            nulls.push(currentPath);
+          } else if (typeof value === 'object' && !Array.isArray(value)) {
+            nulls.push(...checkForNulls(value, currentPath));
+          } else if (Array.isArray(value)) {
+            value.forEach((item, index) => {
+              if (typeof item === 'object') {
+                nulls.push(...checkForNulls(item, `${currentPath}[${index}]`));
+              }
+            });
+          }
+        }
+        return nulls;
+      };
+      
+      const nullFields = checkForNulls(response);
+      if (nullFields.length > 0) {
+        console.log('birfatura-orders: NULL FIELDS FOUND =', nullFields);
+      } else {
+        console.log('birfatura-orders: NO NULL FIELDS DETECTED');
+      }
     }
 
     return new Response(JSON.stringify(response), {
