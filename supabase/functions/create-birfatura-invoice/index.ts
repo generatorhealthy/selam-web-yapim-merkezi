@@ -91,28 +91,39 @@ serve(async (req) => {
     };
 
     // Call BirFatura API to create invoice
-    // Note: Since we don't have the actual BirFatura API endpoint yet, we'll simulate this
     let birfaturaSuccess = false;
     
     try {
-      // This would be the real BirFatura API call when you have the endpoint
-      // const birfaturaResponse = await fetch('https://api.birfatura.com/v1/invoice/create', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${birfaturaApiKey}`,
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(invoiceData)
-      // });
+      console.log('Sending invoice data to BirFatura:', JSON.stringify(invoiceData, null, 2));
       
-      // For now, we'll simulate success
-      console.log('Invoice data prepared for BirFatura:', JSON.stringify(invoiceData, null, 2));
+      // Real BirFatura API call - replace with actual endpoint
+      const birfaturaResponse = await fetch('https://api.birfatura.com/orders', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${birfaturaApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(invoiceData)
+      });
+      
+      if (!birfaturaResponse.ok) {
+        throw new Error(`BirFatura API responded with status: ${birfaturaResponse.status}`);
+      }
+      
+      const birfaturaResult = await birfaturaResponse.json();
+      console.log('BirFatura API response:', birfaturaResult);
       birfaturaSuccess = true;
       
     } catch (error) {
       console.error('BirFatura API error:', error);
-      // Even if BirFatura fails, we'll still update our database
-      birfaturaSuccess = false;
+      // Return error if BirFatura fails
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: `BirFatura API error: ${error.message}` 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Update order with invoice information
