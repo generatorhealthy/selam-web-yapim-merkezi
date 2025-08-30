@@ -1009,167 +1009,140 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                   </div>
                 </div>
               ) : (
-                <div className="w-full relative">
-                  <div className="overflow-x-auto max-w-full">
-                    <Table className="w-full">
-                      <TableHeader>
-                        <TableRow className="border-b bg-muted/30">
-                          <TableHead className="w-12 font-semibold sticky left-0 bg-muted/30 z-10">
-                            <Checkbox
-                              checked={selectAll}
-                              onCheckedChange={() => handleSelectAll(filteredOrders || [])}
-                            />
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[200px] sticky left-12 bg-muted/30 z-10">Müşteri</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[120px] hidden md:table-cell">Telefon</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[200px] hidden lg:table-cell">Adres</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[130px] hidden lg:table-cell">TC Kimlik No</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[150px]">Paket</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[120px]">Tutar</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[100px]">Durum</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[120px] hidden md:table-cell">Tarih</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[80px] hidden lg:table-cell">Ay</TableHead>
-                          <TableHead className="text-center font-semibold text-gray-700 min-w-[240px] sticky right-0 bg-muted/30 z-10">İşlemler</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredOrders?.map((order) => (
-                          <TableRow key={order.id} className="hover:bg-muted/20 transition-colors border-b border-gray-100">
-                            <TableCell className="py-4 sticky left-0 bg-background z-10">
-                              <Checkbox
-                                checked={selectedOrderIds.includes(order.id)}
-                                onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
-                              />
-                            </TableCell>
-                            <TableCell className="py-4 min-w-[200px] sticky left-12 bg-background z-10">
-                              <div className="space-y-1">
-                                <div className="font-semibold text-gray-900 text-sm">{order.customer_name}</div>
-                                <div className="text-xs text-muted-foreground">{order.customer_email}</div>
-                                {/* Show phone on mobile */}
-                                <div className="text-xs text-muted-foreground md:hidden">
-                                  {order.customer_phone || 'Tel: -'}
+                <div className="w-full space-y-4">
+                  {filteredOrders && filteredOrders.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                      {filteredOrders.map((order) => (
+                        <Card key={order.id} className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl overflow-hidden">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <Checkbox
+                                  checked={selectedOrderIds.includes(order.id)}
+                                  onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
+                                />
+                                <Badge variant={getStatusBadgeVariant(order.status)} className="flex items-center gap-1 font-medium text-xs">
+                                  {getStatusIcon(order.status)}
+                                  {order.status === 'pending' ? 'Bekleyen' : 
+                                   order.status === 'approved' ? 'Onaylanan' :
+                                   order.status === 'completed' ? 'Tamamlanan' : 'İptal'}
+                                </Badge>
+                              </div>
+                              {order.subscription_month ? (
+                                <Badge variant="outline" className="font-medium text-xs">{order.subscription_month}. Ay</Badge>
+                              ) : (
+                                <Badge variant="secondary" className="font-medium text-xs">İlk</Badge>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {/* Customer Info */}
+                            <div className="space-y-2">
+                              <div className="font-semibold text-gray-900 text-lg">{order.customer_name}</div>
+                              <div className="text-sm text-muted-foreground">{order.customer_email}</div>
+                              <div className="text-sm text-gray-600">{order.customer_phone || 'Telefon belirtilmemiş'}</div>
+                            </div>
+
+                            {/* Address Info */}
+                            {order.customer_address && (
+                              <div className="bg-gray-50 p-3 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">Adres</div>
+                                <div className="text-sm text-gray-700">{order.customer_address}</div>
+                                {order.customer_city && (
+                                  <div className="text-xs text-gray-500 mt-1">{order.customer_city}</div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Package & Payment Info */}
+                            <div className="space-y-2">
+                              <div>
+                                <div className="font-semibold text-gray-900">{order.package_name}</div>
+                                <div className="text-sm text-muted-foreground">{order.package_type}</div>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="font-bold text-xl text-primary">{order.amount.toLocaleString('tr-TR')} ₺</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi'}
                                 </div>
                               </div>
-                            </TableCell>
-                            <TableCell className="py-4 min-w-[120px] hidden md:table-cell">
-                              <div className="text-sm">
-                                {order.customer_phone || 'Belirtilmemiş'}
+                            </div>
+
+                            {/* TC & Date Info */}
+                            <div className="flex justify-between items-center text-sm">
+                              <div>
+                                <div className="text-xs text-gray-500">TC Kimlik No</div>
+                                <div className="text-gray-700">{order.customer_tc_no || 'Belirtilmemiş'}</div>
                               </div>
-                            </TableCell>
-                            <TableCell className="py-4 min-w-[200px] hidden lg:table-cell">
-                              <div className="text-sm">
-                                {order.customer_address ? (
-                                  <div>
-                                    <div className="line-clamp-2">{order.customer_address}</div>
-                                    {order.customer_city && (
-                                      <div className="text-gray-500 text-xs">{order.customer_city}</div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  'Belirtilmemiş'
-                                )}
+                              <div className="text-right">
+                                <div className="font-medium text-gray-900">
+                                  {format(new Date(order.created_at), "dd MMM yyyy", { locale: tr })}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {format(new Date(order.created_at), "HH:mm", { locale: tr })}
+                                </div>
                               </div>
-                            </TableCell>
-                            <TableCell className="py-4 min-w-[130px] hidden lg:table-cell">
-                              <div className="text-sm">
-                                {order.customer_tc_no || 'Belirtilmemiş'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-4 min-w-[150px]">
-                              <div className="font-semibold text-gray-900 text-sm">{order.package_name}</div>
-                              <div className="text-xs text-muted-foreground">{order.package_type}</div>
-                            </TableCell>
-                            <TableCell className="py-4 min-w-[120px]">
-                              <div className="font-bold text-base text-primary">{order.amount.toLocaleString('tr-TR')} ₺</div>
-                              <div className="text-xs text-muted-foreground">
-                                {order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-4 min-w-[100px]">
-                              <Badge variant={getStatusBadgeVariant(order.status)} className="flex items-center gap-1 w-fit font-medium text-xs">
-                                {getStatusIcon(order.status)}
-                                {order.status === 'pending' ? 'Bekleyen' : 
-                                 order.status === 'approved' ? 'Onaylanan' :
-                                 order.status === 'completed' ? 'Tamamlanan' : 'İptal'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="py-4 min-w-[120px] hidden md:table-cell">
-                              <div className="font-medium text-gray-900 text-sm">
-                                {format(new Date(order.created_at), "dd MMM yyyy", { locale: tr })}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {format(new Date(order.created_at), "HH:mm", { locale: tr })}
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-4 min-w-[80px] hidden lg:table-cell">
-                              {editingOrder && editingOrder.id === order.id ? (
-                                <Input
-                                  type="number"
-                                  value={editingOrder.subscription_month || 1}
-                                  onChange={(e) => handleUpdateOrder(e, "subscription_month")}
-                                  className="w-16 h-8 text-center text-xs"
-                                  min="1"
-                                />
-                              ) : (
-                                order.subscription_month ? (
-                                  <Badge variant="outline" className="font-medium text-xs">{order.subscription_month}. Ay</Badge>
-                                ) : (
-                                  <Badge variant="secondary" className="font-medium text-xs">İlk</Badge>
-                                )
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
+                              {/* BirFatura Invoice Button - only for approved orders */}
+                              {(order.status === 'approved') && !order.invoice_sent && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCreateInvoice(order.id)}
+                                  disabled={createInvoiceMutation.isPending}
+                                  className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 text-xs flex-1"
+                                >
+                                  <Receipt className="w-3 h-3" />
+                                  {createInvoiceMutation.isPending ? 'Kesiliyor...' : 'Fatura Kes'}
+                                </Button>
                               )}
-                            </TableCell>
-                            <TableCell className="text-center py-4 min-w-[240px] sticky right-0 bg-background z-10">
-                              <div className="flex items-center justify-center gap-1 flex-wrap">
-                                {/* BirFatura Invoice Button - only for approved orders */}
-                                {(order.status === 'approved') && !order.invoice_sent && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleCreateInvoice(order.id)}
-                                    disabled={createInvoiceMutation.isPending}
-                                    className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 text-xs px-2 py-1 h-7"
-                                  >
-                                    <Receipt className="w-3 h-3" />
-                                    {createInvoiceMutation.isPending ? 'Kesiliyor...' : 'Fatura'}
-                                  </Button>
-                                )}
-                                
-                                {/* Invoice sent indicator */}
-                                {order.invoice_sent && (
-                                  <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs px-1 py-0.5">
-                                    Fatura OK
-                                  </Badge>
-                                )}
-                                
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleCopyOrder(order)}
-                                  disabled={copyOrderMutation.isPending}
-                                  className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 text-xs px-2 py-1 h-7"
-                                >
-                                  <Copy className="w-3 h-3" />
-                                  Kopya
-                                </Button>
-                                
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedOrder(order);
-                                    setEditingOrder(order);
-                                  }}
-                                  className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 text-xs px-2 py-1 h-7"
-                                >
-                                  Düzenle
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                              
+                              {/* Invoice sent indicator */}
+                              {order.invoice_sent && (
+                                <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs">
+                                  Fatura Gönderildi
+                                </Badge>
+                              )}
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCopyOrder(order)}
+                                disabled={copyOrderMutation.isPending}
+                                className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 text-xs flex-1"
+                              >
+                                <Copy className="w-3 h-3" />
+                                Kopyala
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setEditingOrder(order);
+                                }}
+                                className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 text-xs flex-1"
+                              >
+                                Düzenle
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="p-6 bg-gray-50 text-gray-600 rounded-lg border-2 border-dashed border-gray-200 inline-block">
+                        <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                        <div className="text-lg font-medium mb-2">Sipariş bulunamadı</div>
+                        <div className="text-sm">Arama kriterlerinize uygun sipariş bulunmuyor.</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
