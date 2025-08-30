@@ -1,9 +1,30 @@
 
 import { Link } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Footer = () => {
   return (
     <footer className="bg-gray-100 text-gray-700">
+      {/* FAQ Tabs */}
+      <div className="container mx-auto px-4 py-6">
+        <Tabs defaultValue="reviews" className="w-full max-w-2xl mx-auto">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="reviews" className="text-xs">Doktorum Ol Yorumları</TabsTrigger>
+            <TabsTrigger value="trust" className="text-xs">Doktorum Ol Güvenilir mi?</TabsTrigger>
+            <TabsTrigger value="complaints" className="text-xs">Doktorum Ol Şikayet</TabsTrigger>
+          </TabsList>
+          <TabsContent value="reviews" className="text-center text-sm text-muted-foreground">
+            Kullanıcılarımızın deneyimlerini <Link to="/blog" className="text-primary hover:underline">blog sayfamızdan</Link> inceleyebilirsiniz.
+          </TabsContent>
+          <TabsContent value="trust" className="text-center text-sm text-muted-foreground">
+            Tüm uzmanlarımızın belgeleri kontrol edilmektedir.
+          </TabsContent>
+          <TabsContent value="complaints" className="text-center text-sm text-muted-foreground">
+            Her türlü geri bildirimi dikkate alıyor, çözüm odaklı yaklaşıyoruz.
+          </TabsContent>
+        </Tabs>
+      </div>
+
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-4">
         <div className="text-center space-y-3">
