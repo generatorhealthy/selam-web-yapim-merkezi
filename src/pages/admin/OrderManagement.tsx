@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -107,7 +108,16 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      const previousOrder = orders?.find(o => o.id === data.id);
+      
+      // Otomatik fatura oluştur eğer durum approved'a değişti
+      if (data.status === 'approved' && previousOrder?.status !== 'approved') {
+        setTimeout(() => {
+          createInvoiceMutation.mutate(data.id);
+        }, 1000);
+      }
+      
       toast({
         title: "Sipariş Güncellendi",
         description: "Sipariş başarıyla güncellendi",
@@ -1161,14 +1171,15 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
              </CardContent>
           </Card>
 
-          {selectedOrder && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Sipariş Detayları</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {editingOrder ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Edit Order Dialog */}
+          <Dialog open={!!editingOrder} onOpenChange={(open) => !open && handleCancelEdit()}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Sipariş Düzenle</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                {editingOrder && (
+                  <>
                     <div>
                       <Label htmlFor="customer_name">Müşteri Adı</Label>
                       <Input
@@ -1234,24 +1245,27 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                         min="1"
                       />
                     </div>
-                    <div className="flex justify-end gap-2 md:col-span-2">
+                    <div className="flex justify-end gap-2 md:col-span-2 pt-4">
                       <Button variant="ghost" onClick={handleCancelEdit}>
                         İptal
                       </Button>
                       <Button onClick={handleSaveOrder}>Kaydet</Button>
                       <Button
                         variant="destructive"
-                        onClick={() => handleSoftDeleteOrder(selectedOrder.id)}
+                        onClick={() => {
+                          handleSoftDeleteOrder(editingOrder.id);
+                          setEditingOrder(null);
+                        }}
                         disabled={softDeleteOrderMutation.isPending}
                       >
                         {softDeleteOrderMutation.isPending ? "Siliniyor..." : "Sil"}
                       </Button>
                     </div>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-          )}
+                  </>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="trash" className="space-y-6">
