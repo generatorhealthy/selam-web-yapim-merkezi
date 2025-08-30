@@ -1009,50 +1009,54 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                   </div>
                 </div>
               ) : (
-                <div className="w-full">
-                  <div className="overflow-x-auto">
-                    <Table>
+                <div className="w-full relative">
+                  <div className="overflow-x-auto max-w-full">
+                    <Table className="w-full">
                       <TableHeader>
                         <TableRow className="border-b bg-muted/30">
-                          <TableHead className="w-12 font-semibold">
+                          <TableHead className="w-12 font-semibold sticky left-0 bg-muted/30 z-10">
                             <Checkbox
                               checked={selectAll}
                               onCheckedChange={() => handleSelectAll(filteredOrders || [])}
                             />
                           </TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[200px]">Müşteri</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[120px]">Telefon</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[250px]">Adres</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[130px]">TC Kimlik No</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[200px] sticky left-12 bg-muted/30 z-10">Müşteri</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[120px] hidden md:table-cell">Telefon</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[200px] hidden lg:table-cell">Adres</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[130px] hidden lg:table-cell">TC Kimlik No</TableHead>
                           <TableHead className="font-semibold text-gray-700 min-w-[150px]">Paket</TableHead>
                           <TableHead className="font-semibold text-gray-700 min-w-[120px]">Tutar</TableHead>
                           <TableHead className="font-semibold text-gray-700 min-w-[100px]">Durum</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[120px]">Tarih</TableHead>
-                          <TableHead className="font-semibold text-gray-700 min-w-[80px]">Ay</TableHead>
-                          <TableHead className="text-right font-semibold text-gray-700 min-w-[180px]">İşlemler</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[120px] hidden md:table-cell">Tarih</TableHead>
+                          <TableHead className="font-semibold text-gray-700 min-w-[80px] hidden lg:table-cell">Ay</TableHead>
+                          <TableHead className="text-center font-semibold text-gray-700 min-w-[240px] sticky right-0 bg-muted/30 z-10">İşlemler</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredOrders?.map((order) => (
                           <TableRow key={order.id} className="hover:bg-muted/20 transition-colors border-b border-gray-100">
-                            <TableCell className="py-4">
+                            <TableCell className="py-4 sticky left-0 bg-background z-10">
                               <Checkbox
                                 checked={selectedOrderIds.includes(order.id)}
                                 onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
                               />
                             </TableCell>
-                            <TableCell className="py-4 min-w-[200px]">
+                            <TableCell className="py-4 min-w-[200px] sticky left-12 bg-background z-10">
                               <div className="space-y-1">
-                                <div className="font-semibold text-gray-900">{order.customer_name}</div>
-                                <div className="text-sm text-muted-foreground">{order.customer_email}</div>
+                                <div className="font-semibold text-gray-900 text-sm">{order.customer_name}</div>
+                                <div className="text-xs text-muted-foreground">{order.customer_email}</div>
+                                {/* Show phone on mobile */}
+                                <div className="text-xs text-muted-foreground md:hidden">
+                                  {order.customer_phone || 'Tel: -'}
+                                </div>
                               </div>
                             </TableCell>
-                            <TableCell className="py-4 min-w-[120px]">
+                            <TableCell className="py-4 min-w-[120px] hidden md:table-cell">
                               <div className="text-sm">
                                 {order.customer_phone || 'Belirtilmemiş'}
                               </div>
                             </TableCell>
-                            <TableCell className="py-4 min-w-[250px]">
+                            <TableCell className="py-4 min-w-[200px] hidden lg:table-cell">
                               <div className="text-sm">
                                 {order.customer_address ? (
                                   <div>
@@ -1066,56 +1070,56 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell className="py-4 min-w-[130px]">
+                            <TableCell className="py-4 min-w-[130px] hidden lg:table-cell">
                               <div className="text-sm">
                                 {order.customer_tc_no || 'Belirtilmemiş'}
                               </div>
                             </TableCell>
                             <TableCell className="py-4 min-w-[150px]">
-                              <div className="font-semibold text-gray-900">{order.package_name}</div>
-                              <div className="text-sm text-muted-foreground">{order.package_type}</div>
+                              <div className="font-semibold text-gray-900 text-sm">{order.package_name}</div>
+                              <div className="text-xs text-muted-foreground">{order.package_type}</div>
                             </TableCell>
                             <TableCell className="py-4 min-w-[120px]">
-                              <div className="font-bold text-lg text-primary">{order.amount.toLocaleString('tr-TR')} ₺</div>
+                              <div className="font-bold text-base text-primary">{order.amount.toLocaleString('tr-TR')} ₺</div>
                               <div className="text-xs text-muted-foreground">
                                 {order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi'}
                               </div>
                             </TableCell>
                             <TableCell className="py-4 min-w-[100px]">
-                              <Badge variant={getStatusBadgeVariant(order.status)} className="flex items-center gap-1 w-fit font-medium">
+                              <Badge variant={getStatusBadgeVariant(order.status)} className="flex items-center gap-1 w-fit font-medium text-xs">
                                 {getStatusIcon(order.status)}
                                 {order.status === 'pending' ? 'Bekleyen' : 
                                  order.status === 'approved' ? 'Onaylanan' :
                                  order.status === 'completed' ? 'Tamamlanan' : 'İptal'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="py-4 min-w-[120px]">
-                              <div className="font-medium text-gray-900">
+                            <TableCell className="py-4 min-w-[120px] hidden md:table-cell">
+                              <div className="font-medium text-gray-900 text-sm">
                                 {format(new Date(order.created_at), "dd MMM yyyy", { locale: tr })}
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {format(new Date(order.created_at), "HH:mm", { locale: tr })}
                               </div>
                             </TableCell>
-                            <TableCell className="py-4 min-w-[80px]">
+                            <TableCell className="py-4 min-w-[80px] hidden lg:table-cell">
                               {editingOrder && editingOrder.id === order.id ? (
                                 <Input
                                   type="number"
                                   value={editingOrder.subscription_month || 1}
                                   onChange={(e) => handleUpdateOrder(e, "subscription_month")}
-                                  className="w-20 h-8 text-center"
+                                  className="w-16 h-8 text-center text-xs"
                                   min="1"
                                 />
                               ) : (
                                 order.subscription_month ? (
-                                  <Badge variant="outline" className="font-medium">{order.subscription_month}. Ay</Badge>
+                                  <Badge variant="outline" className="font-medium text-xs">{order.subscription_month}. Ay</Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="font-medium">İlk Sipariş</Badge>
+                                  <Badge variant="secondary" className="font-medium text-xs">İlk</Badge>
                                 )
                               )}
                             </TableCell>
-                            <TableCell className="text-right py-4 min-w-[240px]">
-                              <div className="flex items-center justify-end gap-1 flex-wrap">
+                            <TableCell className="text-center py-4 min-w-[240px] sticky right-0 bg-background z-10">
+                              <div className="flex items-center justify-center gap-1 flex-wrap">
                                 {/* BirFatura Invoice Button - only for approved orders */}
                                 {(order.status === 'approved') && !order.invoice_sent && (
                                   <Button
@@ -1123,17 +1127,17 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                     size="sm"
                                     onClick={() => handleCreateInvoice(order.id)}
                                     disabled={createInvoiceMutation.isPending}
-                                    className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                                    className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 text-xs px-2 py-1 h-7"
                                   >
                                     <Receipt className="w-3 h-3" />
-                                    {createInvoiceMutation.isPending ? 'Kesiliyor...' : 'Fatura Kes'}
+                                    {createInvoiceMutation.isPending ? 'Kesiliyor...' : 'Fatura'}
                                   </Button>
                                 )}
                                 
                                 {/* Invoice sent indicator */}
                                 {order.invoice_sent && (
-                                  <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs">
-                                    Fatura Gönderildi
+                                  <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs px-1 py-0.5">
+                                    Fatura OK
                                   </Badge>
                                 )}
                                 
@@ -1142,10 +1146,10 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                   size="sm"
                                   onClick={() => handleCopyOrder(order)}
                                   disabled={copyOrderMutation.isPending}
-                                  className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                                  className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 text-xs px-2 py-1 h-7"
                                 >
                                   <Copy className="w-3 h-3" />
-                                  Kopyala
+                                  Kopya
                                 </Button>
                                 
                                 <Button
@@ -1155,7 +1159,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                     setSelectedOrder(order);
                                     setEditingOrder(order);
                                   }}
-                                  className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                  className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 text-xs px-2 py-1 h-7"
                                 >
                                   Düzenle
                                 </Button>
@@ -1166,9 +1170,9 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                       </TableBody>
                     </Table>
                   </div>
-                 </div>
-               )}
-             </CardContent>
+                </div>
+              )}
+            </CardContent>
           </Card>
 
           {/* Edit Order Dialog */}
