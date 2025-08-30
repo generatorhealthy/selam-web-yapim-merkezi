@@ -41,26 +41,32 @@ serve(async (req) => {
         updateData = JSON.parse(body);
         console.log('Parsed update data:', updateData);
       } catch (e) {
-        console.log('Could not parse JSON body');
+        console.log('Could not parse JSON body, might be orders request');
       }
 
-      // Return success for any update request
-      const updateResponse = {
-        success: true,
-        message: "Order status updated successfully",
-        timestamp: new Date().toISOString()
-      };
-      
-      console.log('Sending update response:', updateResponse);
-      console.log('===== BIRFATURA REQUEST END =====');
+      // Check if this is actually an orders request with filters
+      if (body.includes('startDateTime') || body.includes('endDateTime') || body.includes('orderStatusId')) {
+        console.log('POST request seems to be orders fetch with filters, proceeding to orders logic');
+        // Continue to orders logic below
+      } else {
+        // Return success for any update request
+        const updateResponse = {
+          success: true,
+          message: "Order status updated successfully",
+          timestamp: new Date().toISOString()
+        };
+        
+        console.log('Sending update response:', updateResponse);
+        console.log('===== BIRFATURA REQUEST END =====');
 
-      return new Response(JSON.stringify(updateResponse), {
-        status: 200,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json; charset=utf-8'
-        },
-      });
+        return new Response(JSON.stringify(updateResponse), {
+          status: 200,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json; charset=utf-8'
+          },
+        });
+      }
     }
 
     // For GET requests or when no body, return orders
