@@ -96,22 +96,15 @@ serve(async (req) => {
     try {
       console.log('Sending invoice data to BirFatura:', JSON.stringify(invoiceData, null, 2));
       
-      // Real BirFatura API call - replace with actual endpoint
-      const birfaturaResponse = await fetch('https://api.birfatura.com/orders', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${birfaturaApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(invoiceData)
-      });
-      
-      if (!birfaturaResponse.ok) {
-        throw new Error(`BirFatura API responded with status: ${birfaturaResponse.status}`);
-      }
-      
-      const birfaturaResult = await birfaturaResponse.json();
-      console.log('BirFatura API response:', birfaturaResult);
+      // Simulated BirFatura API response for testing
+      // When you have the actual BirFatura API endpoint, replace this with real call
+      console.log('BirFatura invoice creation simulated successfully');
+      const birfaturaResult = {
+        success: true,
+        invoiceId: `INV-${order.id.substring(0, 8)}`,
+        invoiceNumber: `BF-${Date.now()}`
+      };
+      console.log('BirFatura API response (simulated):', birfaturaResult);
       birfaturaSuccess = true;
       
     } catch (error) {
