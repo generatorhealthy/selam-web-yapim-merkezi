@@ -89,7 +89,7 @@ serve(async (req) => {
     let statusFilter: string[] = ['approved', 'completed'];
     switch (Number(filters.orderStatusId)) {
       case 1: statusFilter = ['approved']; break;         // Onaylandı
-      case 2: statusFilter = ['shipped']; break;          // Kargolandı
+      case 2: statusFilter = ['approved', 'completed']; break; // Kargolandı -> bizde onaylanmış/tamamlanmış kabul
       case 3: statusFilter = ['cancelled']; break;        // İptal
       default: statusFilter = ['approved', 'completed'];
     }
@@ -98,11 +98,11 @@ serve(async (req) => {
     const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
-      .gte('created_at', startIso)
-      .lte('created_at', endIso)
+      .gte('invoice_date', startIso)
+      .lte('invoice_date', endIso)
       .in('status', statusFilter)
-      .eq('invoice_sent', false)
-      .order('created_at', { ascending: false })
+      .eq('invoice_sent', true)
+      .order('invoice_date', { ascending: false })
       .limit(100);
 
     if (error) {
