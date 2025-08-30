@@ -78,13 +78,22 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get recent approved orders
+    // Parse filters from body if provided
+    let filters: any = {};
+    try { if (body) filters = JSON.parse(body); } catch (_) {}
+
+    const startIso = filters.startDateTime ? parseBirFaturaDate(filters.startDateTime) : new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString();
+    const endIso = filters.endDateTime ? parseBirFaturaDate(filters.endDateTime) : new Date().toISOString();
+
+    // Fetch orders within date range and approved/completed statuses
     const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
+      .gte('created_at', startIso)
+      .lte('created_at', endIso)
       .in('status', ['approved', 'completed'])
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(100);
 
     if (error) {
       console.error('Database error:', error);
@@ -92,47 +101,82 @@ serve(async (req) => {
 
     console.log('Found orders:', orders?.length || 0);
 
-    // Format orders for BirFatura
-    const birfaturaOrders = (orders || []).map((order, index) => {
-      const orderIdNum = Date.parse(order.created_at || new Date().toISOString());
-      const amount = Number(order.amount) || 100;
+    // Format orders for BirFatura (strict schema)
+    const birfaturaOrders = (orders || []).map((order) => {
+      const createdAt = order.created_at || new Date().toISOString();
+      const orderIdNum = Date.parse(createdAt);
+      const amount = Number(order.amount) || 0;
       const amountExcludingTax = Number((amount / 1.20).toFixed(2));
-      const vatAmount = Number((amount - amountExcludingTax).toFixed(2));
+      const paymentTypeId = order.payment_method === 'credit_card' ? 1 : 2; // 1: Kredi Kartı, 2: Banka EFT-Havale
+      const paymentTypeText = paymentTypeId === 1 ? 'Kredi Kartı' : 'Banka EFT-Havale';
 
       return {
         OrderId: orderIdNum,
-        OrderNumber: `ORD-${orderIdNum}`,
-        OrderDate: formatBirFaturaDate(order.created_at || new Date().toISOString()),
-        OrderStatusId: 1, // Always approved
-        PaymentMethodId: order.payment_method === 'credit_card' ? 1 : 2,
-        CustomerName: (order.customer_name || "").trim() || "Müşteri",
-        CustomerSurname: "Test",
-        CustomerEmail: (order.customer_email || "").trim() || "test@doktorumol.com.tr",
-        CustomerPhone: (order.customer_phone || "").trim() || "02167060611",
-        CustomerTcNo: (order.customer_tc_no || "").trim() || "11111111111",
-        CustomerTaxNo: (order.company_tax_no || "").trim() || "1111111111",
-        CustomerTaxOffice: (order.company_tax_office || "").trim() || "Merkez",
-        BillingAddress: (order.customer_address || "").trim() || "Test Adres",
-        ShippingAddress: (order.customer_address || "").trim() || "Test Adres",
-        OrderProducts: [{
-          ProductId: 1,
-          ProductName: (order.package_name || "").trim() || "Hizmet Paketi",
-          ProductQuantity: 1,
-          ProductUnitPriceTaxExcluding: amountExcludingTax,
-          ProductUnitPriceTaxIncluding: amount,
-          ProductTotalPriceTaxExcluding: amountExcludingTax,
-          ProductTotalPriceTaxIncluding: amount,
-          ProductVatRate: 20,
-          ProductVatAmount: vatAmount,
-          ProductCurrency: "TRY"
-        }],
-        OrderTotalPriceTaxExcluding: amountExcludingTax,
-        OrderTotalPriceTaxIncluding: amount,
-        OrderTotalVatAmount: vatAmount,
-        OrderCurrency: "TRY",
-        OrderNote: "",
-        CargoTrackingNumber: "", // Always empty since we don't have shipping
-        InvoiceLink: ""
+        OrderCode: `ORD-${orderIdNum}`,
+        OrderDate: formatBirFaturaDate(createdAt),
+        CustomerId: orderIdNum % 1000000,
+        BillingName: (order.customer_name || 'Müşteri'),
+        BillingAddress: (order.customer_address || ''),
+        BillingTown: '',
+        BillingCity: (order.customer_city || ''),
+        BillingMobilePhone: (order.customer_phone || ''),
+        BillingPhone: (order.customer_phone || ''),
+        SSNTCNo: (order.customer_tc_no || ''),
+        Email: (order.customer_email || ''),
+        ShippingId: (orderIdNum % 1000000),
+        ShippingName: (order.customer_name || 'Müşteri'),
+        ShippingAddress: (order.customer_address || ''),
+        ShippingTown: '',
+        ShippingCity: (order.customer_city || ''),
+        ShippingCountry: 'Türkiye',
+        ShippingZipCode: '',
+        ShippingPhone: (order.customer_phone || ''),
+        ShipCompany: '',
+        CargoCampaignCode: '',
+        SalesChannelWebSite: 'doktorumol.com.tr',
+        PaymentTypeId: paymentTypeId,
+        PaymentType: paymentTypeText,
+        Currency: 'TRY',
+        CurrencyRate: 1,
+        TotalPaidTaxExcluding: amountExcludingTax,
+        TotalPaidTaxIncluding: amount,
+        ProductsTotalTaxExcluding: amountExcludingTax,
+        ProductsTotalTaxIncluding: amount,
+        CommissionTotalTaxExcluding: 0,
+        CommissionTotalTaxIncluding: 0,
+        ShippingChargeTotalTaxExcluding: 0,
+        ShippingChargeTotalTaxIncluding: 0,
+        PayingAtTheDoorChargeTotalTaxExcluding: 0,
+        PayingAtTheDoorChargeTotalTaxIncluding: 0,
+        DiscountTotalTaxExcluding: 0,
+        DiscountTotalTaxIncluding: 0,
+        InstallmentChargeTotalTaxExcluding: 0,
+        InstallmentChargeTotalTaxIncluding: 0,
+        BankTransferDiscountTotalTaxExcluding: 0,
+        BankTransferDiscountTotalTaxIncluding: 0,
+        ExtraFees: [],
+        OrderDetails: [
+          {
+            ProductId: 1,
+            ProductCode: '',
+            Barcode: '',
+            ProductBrand: '',
+            ProductName: (order.package_name || 'Hizmet Paketi'),
+            ProductNote: '',
+            ProductImage: '',
+            Variants: [],
+            ProductQuantityType: 'Adet',
+            ProductQuantity: 1,
+            VatRate: 20,
+            ProductUnitPriceTaxExcluding: amountExcludingTax,
+            ProductUnitPriceTaxIncluding: amount,
+            CommissionUnitTaxExcluding: 0,
+            CommissionUnitTaxIncluding: 0,
+            DiscountUnitTaxExcluding: 0,
+            DiscountUnitTaxIncluding: 0,
+            ExtraFeesUnit: []
+          }
+        ]
       };
     });
 
@@ -166,4 +210,17 @@ function formatBirFaturaDate(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function parseBirFaturaDate(tr: string): string {
+  // Expecting dd.MM.yyyy HH:mm:ss
+  try {
+    const [datePart, timePart = '00:00:00'] = tr.split(' ');
+    const [dd, MM, yyyy] = datePart.split('.');
+    const [HH = '00', mm = '00', ss = '00'] = timePart.split(':');
+    const iso = `${yyyy}-${MM.padStart(2, '0')}-${dd.padStart(2, '0')}T${HH.padStart(2, '0')}:${mm.padStart(2, '0')}:${ss.padStart(2, '0')}Z`;
+    return new Date(iso).toISOString();
+  } catch (_) {
+    return new Date().toISOString();
+  }
 }
