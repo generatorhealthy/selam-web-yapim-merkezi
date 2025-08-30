@@ -85,13 +85,23 @@ serve(async (req) => {
     const startIso = filters.startDateTime ? parseBirFaturaDate(filters.startDateTime) : new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString();
     const endIso = filters.endDateTime ? parseBirFaturaDate(filters.endDateTime) : new Date().toISOString();
 
-    // Fetch orders within date range and approved/completed statuses
+    // Map BirFatura orderStatusId to our internal statuses
+    let statusFilter: string[] = ['approved', 'completed'];
+    switch (Number(filters.orderStatusId)) {
+      case 1: statusFilter = ['approved']; break;         // Onaylandı
+      case 2: statusFilter = ['shipped']; break;          // Kargolandı
+      case 3: statusFilter = ['cancelled']; break;        // İptal
+      default: statusFilter = ['approved', 'completed'];
+    }
+
+    // Fetch orders within date range, status, and NOT invoiced yet
     const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
       .gte('created_at', startIso)
       .lte('created_at', endIso)
-      .in('status', ['approved', 'completed'])
+      .in('status', statusFilter)
+      .eq('invoice_sent', false)
       .order('created_at', { ascending: false })
       .limit(100);
 
