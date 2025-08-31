@@ -15,7 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle } from "lucide-react";
+import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature } from "lucide-react";
+import ContractDialog from "@/components/ContractDialog";
 
 // Appointment Form Component
 const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; onSuccess: () => void }) => {
@@ -175,9 +176,13 @@ const DoctorDashboard = () => {
   const [doctor, setDoctor] = useState<any>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
+  const [isContractDialogOpen, setIsContractDialogOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [contractType, setContractType] = useState<'preInfo' | 'distanceSales'>('preInfo');
   const [newTicket, setNewTicket] = useState({
     title: '',
     description: '',
@@ -226,6 +231,7 @@ const DoctorDashboard = () => {
             setDoctor(specialist);
             await fetchAppointments(specialist.id);
             await fetchSupportTickets(specialist.id);
+            await fetchContracts(specialist.email);
           }
         } else {
           // Try by email if user_id doesn't match
@@ -242,6 +248,7 @@ const DoctorDashboard = () => {
               setDoctor(specialistByEmail);
               await fetchAppointments(specialistByEmail.id);
               await fetchSupportTickets(specialistByEmail.id);
+              await fetchContracts(specialistByEmail.email);
             }
           } else {
             console.log('No specialist profile found');
@@ -273,6 +280,7 @@ const DoctorDashboard = () => {
           setDoctor(null);
           setAppointments([]);
           setSupportTickets([]);
+          setContracts([]);
           setIsLoading(false);
         } else if (event === 'SIGNED_IN' && session) {
           // Re-initialize when signed in
@@ -328,6 +336,29 @@ const DoctorDashboard = () => {
       setSupportTickets(ticketsData || []);
     } catch (error) {
       console.error('Destek talepleri yüklenirken beklenmeyen hata:', error);
+    }
+  };
+
+  const fetchContracts = async (specialistEmail: string) => {
+    try {
+      const { data: contractsData, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          packages!inner(name, price)
+        `)
+        .eq('customer_email', specialistEmail)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Sözleşmeler yüklenirken hata:', error);
+        return;
+      }
+
+      setContracts(contractsData || []);
+    } catch (error) {
+      console.error('Sözleşmeler yüklenirken beklenmeyen hata:', error);
     }
   };
 
@@ -477,6 +508,12 @@ const DoctorDashboard = () => {
     navigate('/');
   };
 
+  const openContractDialog = (contract: any, type: 'preInfo' | 'distanceSales') => {
+    setSelectedContract(contract);
+    setContractType(type);
+    setIsContractDialogOpen(true);
+  };
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'confirmed': return 'Onaylandı';
@@ -575,6 +612,27 @@ const DoctorDashboard = () => {
               </div>
             </div>
             
+            <div 
+              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
+                activeTab === 'contracts' 
+                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
+                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
+              }`}
+              onClick={() => setActiveTab('contracts')}
+            >
+              <div className="p-6 text-center">
+                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
+                  activeTab === 'contracts' 
+                    ? 'bg-primary text-primary-foreground shadow-lg' 
+                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                }`}>
+                  <FileSignature className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Sözleşmeler</h3>
+                <p className="text-sm text-muted-foreground">Müşteri sözleşmeleri</p>
+              </div>
+            </div>
+
             <div 
               className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
                 activeTab === 'support' 
@@ -812,6 +870,80 @@ const DoctorDashboard = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="contracts">
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Sözleşmeler</h2>
+                    <p className="text-gray-600 mt-2">Müşteri ön bilgilendirme ve mesafeli satış sözleşmeleri</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                {contracts.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileSignature className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Henüz sözleşmeniz bulunmamaktadır.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {contracts.map((contract) => (
+                      <Card key={contract.id}>
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                  {contract.customer_name}
+                                </h3>
+                                <Badge className="bg-green-100 text-green-800">
+                                  Onaylandı
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                                <div>
+                                  <p><strong>Paket:</strong> {contract.packages?.name || contract.package_name}</p>
+                                  <p><strong>Tutar:</strong> ₺{contract.amount}</p>
+                                </div>
+                                <div>
+                                  <p><strong>Ödeme Yöntemi:</strong> {contract.payment_method}</p>
+                                  <p><strong>Tarih:</strong> {new Date(contract.created_at).toLocaleDateString('tr-TR')}</p>
+                                </div>
+                              </div>
+                              <div className="mt-2">
+                                <p><strong>E-posta:</strong> {contract.customer_email}</p>
+                                <p><strong>Telefon:</strong> {contract.customer_phone}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-4">
+                            <Button
+                              size="sm"
+                              onClick={() => openContractDialog(contract, 'preInfo')}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <FileText className="w-4 h-4 mr-2" />
+                              Ön Bilgi
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => openContractDialog(contract, 'distanceSales')}
+                              className="bg-purple-600 hover:bg-purple-700"
+                            >
+                              <FileSignature className="w-4 h-4 mr-2" />
+                              Mesafeli Satış
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="support">
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b">
@@ -955,6 +1087,34 @@ const DoctorDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {selectedContract && (
+        <ContractDialog
+          open={isContractDialogOpen}
+          onClose={() => setIsContractDialogOpen(false)}
+          contractType={contractType}
+          formData={{
+            customerName: selectedContract.customer_name,
+            customerEmail: selectedContract.customer_email,
+            customerPhone: selectedContract.customer_phone || '',
+            customerType: selectedContract.customer_type,
+            customerAddress: selectedContract.customer_address || '',
+            customerCity: selectedContract.customer_city || '',
+            customerTCNo: selectedContract.customer_tc_no || '',
+            companyName: selectedContract.company_name || '',
+            companyTaxNo: selectedContract.company_tax_no || '',
+            companyTaxOffice: selectedContract.company_tax_office || ''
+          }}
+          selectedPackage={{
+            name: selectedContract.packages?.name || selectedContract.package_name,
+            price: selectedContract.amount
+          }}
+          paymentMethod={selectedContract.payment_method}
+          customerType={selectedContract.customer_type}
+          clientIP={selectedContract.contract_ip_address || ''}
+          orderCreatedAt={selectedContract.created_at}
+        />
+      )}
 
       <footer className="bg-white border-t mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
