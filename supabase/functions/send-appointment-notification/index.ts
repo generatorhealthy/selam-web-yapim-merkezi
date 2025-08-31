@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,7 @@ interface AppointmentNotificationRequest {
   patientPhone: string;
   specialistEmail: string;
   specialistName: string;
+  specialistPhone?: string;
   appointmentDate: string;
   appointmentTime: string;
   appointmentType: string;
@@ -26,6 +28,8 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const brevoApiKey = Deno.env.get('BREVO_API_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
     if (!brevoApiKey) {
       console.error('BREVO_API_KEY not found');
@@ -38,6 +42,19 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration not found');
+      return new Response(
+        JSON.stringify({ error: 'Supabase service not configured' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     const {
       appointmentId,
       patientName,
@@ -45,6 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
       patientPhone,
       specialistEmail,
       specialistName,
+      specialistPhone,
       appointmentDate,
       appointmentTime,
       appointmentType,
@@ -144,10 +162,39 @@ const handler = async (req: Request): Promise<Response> => {
     const brevoResult = await brevoResponse.json();
     console.log('Appointment notification email sent successfully via Brevo:', brevoResult);
 
+    // Send SMS notification to specialist if phone number is available
+    let smsResult = null;
+    if (specialistPhone) {
+      try {
+        console.log('Sending SMS notification to specialist:', specialistPhone);
+        
+        const smsMessage = `Yeni randevu alındı!\nHasta: ${patientName}\nTarih: ${formattedDate}\nSaat: ${appointmentTime}\nTür: ${appointmentTypeText}\nTelefon: ${patientPhone}${notes ? `\nNot: ${notes}` : ''}`;
+        
+        const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
+          body: {
+            phone: specialistPhone,
+            message: smsMessage
+          }
+        });
+
+        if (smsError) {
+          console.error('SMS sending error:', smsError);
+        } else {
+          console.log('SMS sent successfully to specialist:', smsData);
+          smsResult = smsData;
+        }
+      } catch (smsError) {
+        console.error('SMS sending failed:', smsError);
+      }
+    } else {
+      console.log('No specialist phone number provided, skipping SMS');
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        messageId: brevoResult.messageId 
+        messageId: brevoResult.messageId,
+        smsResult: smsResult
       }),
       {
         status: 200,
