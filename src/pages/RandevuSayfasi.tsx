@@ -523,7 +523,9 @@ const RandevuSayfasi = () => {
                         }
                       }}
                       disabled={(date) => date < new Date()}
+                      locale={tr}
                       initialFocus
+                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
