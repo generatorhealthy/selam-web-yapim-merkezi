@@ -23,17 +23,18 @@ const handler = async (req: Request): Promise<Response> => {
     const username = Deno.env.get('VERIMOR_USERNAME');
     const password = Deno.env.get('VERIMOR_PASSWORD');
     
-    // ScrapingBee proxy credentials (statik IP proxy servisi)
+    // Relay and ScrapingBee configuration
+    const relayUrl = Deno.env.get('SMS_RELAY_URL');
+    const relayToken = Deno.env.get('SMS_RELAY_TOKEN');
     const scrapingBeeApiKey = Deno.env.get('SCRAPINGBEE_API_KEY');
     
     if (!username || !password) {
       throw new Error('Verimor credentials not configured');
     }
 
-    if (!scrapingBeeApiKey) {
-      throw new Error('ScrapingBee API key not configured');
+    if (!relayUrl && !scrapingBeeApiKey) {
+      throw new Error('No proxy configured: set SMS_RELAY_URL or SCRAPINGBEE_API_KEY');
     }
-
     // Clean phone number (remove spaces, dashes, etc.)
     let cleanPhone = phone.replace(/[^\d+]/g, '');
     
@@ -64,29 +65,38 @@ const handler = async (req: Request): Promise<Response> => {
       ]
     };
 
-    console.log('Sending SMS via ScrapingBee proxy to:', cleanPhone);
+    const useRelay = !!relayUrl;
+    console.log(useRelay ? 'Using RELAY to send SMS' : 'Using ScrapingBee proxy to send SMS', { to: cleanPhone });
     console.log('Message:', message);
 
-    // ScrapingBee proxy endpoint with POST forwarding
-    const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}&url=${encodeURIComponent('https://sms.verimor.com.tr/v2/send.json')}&render_js=false&premium_proxy=true&method=POST&forward_headers=true`;
-    
-    // Make POST request through ScrapingBee proxy (forward JSON body and headers)
-    const response = await fetch(scrapingBeeUrl, {
+    let fetchUrl = '';
+    let fetchOptions: RequestInit = {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Forwarded to target by ScrapingBee because forward_headers=true
-        'Spb-Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(smsData)
-    });
+    };
 
-    console.log('ScrapingBee proxy response status:', response.status);
-    console.log('ScrapingBee proxy response headers:', Object.fromEntries(response.headers.entries()));
+    if (useRelay && relayUrl) {
+      // Use user's static IP relay
+      fetchUrl = relayUrl;
+      if (relayToken) {
+        (fetchOptions.headers as Record<string, string>)['Authorization'] = `Bearer ${relayToken}`;
+      }
+    } else {
+      // Fallback to ScrapingBee static proxy
+      const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}&url=${encodeURIComponent('https://sms.verimor.com.tr/v2/send.json')}&render_js=false&premium_proxy=true&method=POST&forward_headers=true`;
+      fetchUrl = scrapingBeeUrl;
+      (fetchOptions.headers as Record<string, string>)['Spb-Content-Type'] = 'application/json';
+    }
+
+    const response = await fetch(fetchUrl, fetchOptions);
+
+    console.log('Proxy response status:', response.status);
+    console.log('Proxy response headers:', Object.fromEntries(response.headers.entries()));
     
     let result;
     const responseText = await response.text();
-    console.log('Verimor raw response via ScrapingBee:', responseText);
+    console.log('Raw proxy response:', responseText);
     
     try {
       result = JSON.parse(responseText);
@@ -95,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
       result = { message: responseText, raw_response: responseText };
     }
     
-    console.log('Verimor parsed response:', result);
+    console.log('Parsed response:', result);
 
     if (!response.ok) {
       console.error('Proxy request error details:', {
@@ -108,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      message: 'SMS sent successfully via static IP proxy',
+      message: useRelay ? 'SMS sent successfully via relay' : 'SMS sent successfully via static IP proxy',
       data: result 
     }), {
       status: 200,
