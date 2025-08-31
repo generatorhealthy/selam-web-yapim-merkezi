@@ -64,6 +64,11 @@ const SmsManagement = () => {
 
   useEffect(() => {
     fetchSpecialists();
+    
+    // Auto-refresh specialist list every 30 seconds
+    const interval = setInterval(fetchSpecialists, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchSpecialists = async () => {
@@ -133,10 +138,13 @@ const SmsManagement = () => {
           title: "Başarılı",
           description: "SMS başarıyla gönderildi.",
         });
-        // Reset form
+        // Reset form and refresh specialist list
         setMessage('');
         setPhoneNumber('');
         setSelectedSpecialist('');
+        
+        // Refresh specialist list to get any new specialists
+        fetchSpecialists();
       } else {
         throw new Error(data.error || 'SMS gönderim hatası');
       }
@@ -235,14 +243,25 @@ const SmsManagement = () => {
               
               <Card className="border-0 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Users className="w-5 h-5 text-blue-600" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Users className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-600 font-medium">Aktif Uzmanlar</p>
+                        <p className="text-blue-800 font-bold">{specialists.length}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-blue-600 font-medium">Aktif Uzmanlar</p>
-                      <p className="text-blue-800 font-bold">{specialists.length}</p>
-                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={fetchSpecialists}
+                      className="text-blue-600 hover:text-blue-800"
+                      title="Uzman listesini yenile"
+                    >
+                      🔄
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
