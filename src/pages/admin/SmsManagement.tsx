@@ -99,6 +99,8 @@ const SmsManagement = () => {
     const specialist = specialists.find(s => s.id === specialistId);
     if (specialist) {
       setPhoneNumber(specialist.phone || '');
+    } else {
+      setPhoneNumber('');
     }
   };
 
@@ -300,23 +302,24 @@ const SmsManagement = () => {
                   <Label htmlFor="specialist" className="text-sm font-medium text-slate-700">
                     Uzman Seçiniz
                   </Label>
-                  <Select value={selectedSpecialist} onValueChange={handleSpecialistChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Uzman seçiniz..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {specialists.map((specialist) => (
-                        <SelectItem key={specialist.id} value={specialist.id}>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{specialist.name}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {specialist.specialty}
-                            </Badge>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                   <Select value={selectedSpecialist} onValueChange={handleSpecialistChange}>
+                     <SelectTrigger className="w-full">
+                       <SelectValue placeholder="Uzman seçiniz..." />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="">Manuel numara girişi</SelectItem>
+                       {specialists.map((specialist) => (
+                         <SelectItem key={specialist.id} value={specialist.id}>
+                           <div className="flex items-center gap-2">
+                             <span className="font-medium">{specialist.name}</span>
+                             <Badge variant="secondary" className="text-xs">
+                               {specialist.specialty}
+                             </Badge>
+                           </div>
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
                 </div>
 
                 {/* Manuel Telefon Girişi */}
@@ -324,17 +327,21 @@ const SmsManagement = () => {
                   <Label htmlFor="phone" className="text-sm font-medium text-slate-700">
                     Telefon Numarası
                   </Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="0 532 123 45 67"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-slate-500">
-                    Manuel olarak telefon numarası girebilir veya uzman seçerek otomatik doldurabilirsiniz
-                  </p>
+                   <Input
+                     id="phone"
+                     type="tel"
+                     placeholder={selectedSpecialist && selectedSpecialist !== '' ? "Uzman telefonu otomatik seçildi" : "0 532 123 45 67"}
+                     value={phoneNumber}
+                     onChange={(e) => setPhoneNumber(e.target.value)}
+                     disabled={selectedSpecialist && selectedSpecialist !== ''}
+                     className="w-full"
+                   />
+                   <p className="text-xs text-slate-500">
+                     {selectedSpecialist && selectedSpecialist !== '' 
+                       ? "Uzman seçildiğinde telefon numarası otomatik doldurulur. Manuel giriş için 'Manuel numara girişi' seçiniz."
+                       : "Manuel olarak telefon numarası girebilir veya uzman seçerek otomatik doldurabilirsiniz"
+                     }
+                   </p>
                 </div>
 
                 {/* Mesaj İçeriği */}
