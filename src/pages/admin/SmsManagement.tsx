@@ -75,25 +75,15 @@ const SmsManagement = () => {
     try {
       setIsFetching(true);
 
-      // Verimor'dan uzman listesini dene (5sn zaman aşımı ile), olmazsa local'e düş
-      const timeout = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
-      try {
-        const { data: verimoreData }: any = await Promise.race([
-          supabase.functions.invoke('get-verimor-contacts'),
-          timeout(5000)
-        ]);
-
-        if (verimoreData?.success && verimoreData?.contacts?.length) {
-          setSpecialists(verimoreData.contacts);
-        } else {
-          await fetchLocalSpecialists();
-        }
-      } catch (e) {
-        await fetchLocalSpecialists();
-      }
+      // Sadece kayıtlı uzmanları (yerel DB) getir
+      await fetchLocalSpecialists();
     } catch (error: any) {
       console.error('Error fetching specialists:', error);
-      await fetchLocalSpecialists();
+      toast({
+        title: 'Hata',
+        description: 'Uzmanlar yüklenirken bir hata oluştu.',
+        variant: 'destructive'
+      });
     } finally {
       setIsFetching(false);
     }
