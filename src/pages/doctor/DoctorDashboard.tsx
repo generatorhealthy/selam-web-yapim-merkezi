@@ -339,16 +339,12 @@ const DoctorDashboard = () => {
     }
   };
 
-  const fetchContracts = async (specialistEmail: string) => {
+  const fetchContracts = async (_specialistEmail?: string) => {
     try {
-      if (!specialistEmail) {
-        setContracts([]);
-        return;
-      }
+      // RLS already limits rows to the signed-in specialist
       const { data: contractsData, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('customer_email', specialistEmail)
         .in('status', ['approved', 'completed'])
         .order('created_at', { ascending: false });
 
@@ -358,6 +354,7 @@ const DoctorDashboard = () => {
       }
 
       setContracts(contractsData || []);
+      console.log('Sözleşmeler yüklendi:', contractsData?.length || 0);
     } catch (error) {
       console.error('Sözleşmeler yüklenirken beklenmeyen hata:', error);
     }
