@@ -63,7 +63,6 @@ const SmsManagement = () => {
   ];
 
   useEffect(() => {
-    console.log('[SMS-Management] mount');
     fetchSpecialists();
     
     // Auto-refresh specialist list every 30 seconds
@@ -75,24 +74,6 @@ const SmsManagement = () => {
   const fetchSpecialists = async () => {
     try {
       setIsFetching(true);
-
-      // Sadece kayıtlı uzmanları (yerel DB) getir
-      await fetchLocalSpecialists();
-    } catch (error: any) {
-      console.error('Error fetching specialists:', error);
-      toast({
-        title: 'Hata',
-        description: 'Uzmanlar yüklenirken bir hata oluştu.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
-  const fetchLocalSpecialists = async () => {
-    try {
-      console.log('[SMS-Management] fetching local specialists...');
       const { data, error } = await supabase
         .from('specialists')
         .select('id, name, phone, specialty, is_active')
@@ -100,16 +81,16 @@ const SmsManagement = () => {
         .order('name');
 
       if (error) throw error;
-      console.log('[SMS-Management] specialists loaded:', data?.length || 0);
       setSpecialists(data || []);
     } catch (error: any) {
-      console.error('[SMS-Management] error fetching local specialists:', error);
+      console.error('Error fetching specialists:', error);
       toast({
         title: "Hata",
         description: "Uzmanlar yüklenirken bir hata oluştu.",
         variant: "destructive"
       });
-      setSpecialists([]);
+    } finally {
+      setIsFetching(false);
     }
   };
 

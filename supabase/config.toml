@@ -1,8 +1,5 @@
 project_id = "irnfwewabogveofwemvg"
 
-[functions.get-verimor-contacts]
-verify_jwt = false
-
 [api]
 enabled = true
 port = 54321

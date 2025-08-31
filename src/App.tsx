@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import CookieConsent from "@/components/CookieConsent";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
@@ -174,8 +174,6 @@ function App() {
               {/* Doctor Routes */}
               <Route path="/doktor-paneli" element={<DoctorDashboard />} />
               
-              {/* Short link redirect for old path */}
-              <Route path="/sms-management" element={<Navigate to="/divan_paneli/sms-management" replace />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
