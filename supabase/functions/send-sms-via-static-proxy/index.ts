@@ -67,17 +67,18 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Sending SMS via ScrapingBee proxy to:', cleanPhone);
     console.log('Message:', message);
 
-    // ScrapingBee proxy endpoint
-    const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}&url=${encodeURIComponent('https://sms.verimor.com.tr/v2/send.json')}&render_js=false&premium_proxy=true`;
+    // ScrapingBee proxy endpoint with POST forwarding
+    const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}&url=${encodeURIComponent('https://sms.verimor.com.tr/v2/send.json')}&render_js=false&premium_proxy=true&method=POST&forward_headers=true`;
     
-    // Make POST request through ScrapingBee proxy
+    // Make POST request through ScrapingBee proxy (forward JSON body and headers)
     const response = await fetch(scrapingBeeUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Spb-Http-Method': 'POST',
-        'Spb-Post-Data': JSON.stringify(smsData),
-      }
+        // Forwarded to target by ScrapingBee because forward_headers=true
+        'Spb-Content-Type': 'application/json',
+      },
+      body: JSON.stringify(smsData)
     });
 
     console.log('ScrapingBee proxy response status:', response.status);
