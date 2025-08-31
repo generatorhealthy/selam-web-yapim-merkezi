@@ -74,6 +74,32 @@ const SmsManagement = () => {
   const fetchSpecialists = async () => {
     try {
       setIsFetching(true);
+      
+      // Önce Verimor'dan uzman listesini çek
+      const { data: verimoreData, error: verimoreError } = await supabase.functions.invoke('get-verimor-contacts');
+      
+      if (verimoreError) {
+        console.error('Verimor fetch error:', verimoreError);
+        // Verimor hatası varsa, local uzmanları kullan
+        await fetchLocalSpecialists();
+      } else if (verimoreData?.success && verimoreData?.contacts) {
+        console.log('Verimor contacts fetched:', verimoreData.contacts);
+        setSpecialists(verimoreData.contacts);
+      } else {
+        console.warn('No contacts from Verimor, falling back to local specialists');
+        await fetchLocalSpecialists();
+      }
+    } catch (error: any) {
+      console.error('Error fetching specialists:', error);
+      // Hata durumunda local uzmanları kullan
+      await fetchLocalSpecialists();
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const fetchLocalSpecialists = async () => {
+    try {
       const { data, error } = await supabase
         .from('specialists')
         .select('id, name, phone, specialty, is_active')
@@ -83,14 +109,13 @@ const SmsManagement = () => {
       if (error) throw error;
       setSpecialists(data || []);
     } catch (error: any) {
-      console.error('Error fetching specialists:', error);
+      console.error('Error fetching local specialists:', error);
       toast({
         title: "Hata",
         description: "Uzmanlar yüklenirken bir hata oluştu.",
         variant: "destructive"
       });
-    } finally {
-      setIsFetching(false);
+      setSpecialists([]);
     }
   };
 
