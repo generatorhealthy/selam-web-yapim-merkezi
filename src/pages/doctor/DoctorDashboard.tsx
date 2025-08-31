@@ -342,19 +342,33 @@ const DoctorDashboard = () => {
   const fetchContracts = async (_specialistEmail?: string) => {
     try {
       // RLS already limits rows to the signed-in specialist
-      const { data: contractsData, error } = await supabase
-        .from('orders')
-        .select('*')
-        .in('status', ['approved', 'completed'])
-        .order('created_at', { ascending: false });
+      const [ordersResponse, packagesResponse] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('*')
+          .in('status', ['approved', 'completed'])
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('packages')
+          .select('name, features')
+      ]);
 
-      if (error) {
-        console.error('Sözleşmeler yüklenirken hata:', error);
+      if (ordersResponse.error) {
+        console.error('Sözleşmeler yüklenirken hata:', ordersResponse.error);
         return;
       }
 
-      setContracts(contractsData || []);
-      console.log('Sözleşmeler yüklendi:', contractsData?.length || 0);
+      if (packagesResponse.error) {
+        console.warn('Paket verileri alınamadı:', packagesResponse.error);
+      }
+
+      const withFeatures = (ordersResponse.data || []).map((order: any) => {
+        const pkg = (packagesResponse.data || []).find((p: any) => p.name === order.package_name);
+        return { ...order, package_features: pkg?.features || [] };
+      });
+
+      setContracts(withFeatures);
+      console.log('Sözleşmeler yüklendi:', withFeatures?.length || 0);
     } catch (error) {
       console.error('Sözleşmeler yüklenirken beklenmeyen hata:', error);
     }
@@ -1174,12 +1188,15 @@ const DoctorDashboard = () => {
           }}
           selectedPackage={{
             name: selectedContract.packages?.name || selectedContract.package_name,
-            price: selectedContract.amount
+            price: selectedContract.amount,
+            features: selectedContract.package_features || []
           }}
           paymentMethod={selectedContract.payment_method}
           customerType={selectedContract.customer_type}
           clientIP={selectedContract.contract_ip_address || ''}
           orderCreatedAt={selectedContract.created_at}
+          savedPreInfoHtml={selectedContract.pre_info_pdf_content}
+          savedDistanceSalesHtml={selectedContract.distance_sales_pdf_content}
         />
       )}
 

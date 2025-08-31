@@ -22,6 +22,8 @@ interface ContractDialogProps {
   customerType: string;
   clientIP: string;
   orderCreatedAt: string;
+  savedPreInfoHtml?: string;
+  savedDistanceSalesHtml?: string;
 }
 
 const ContractDialog = ({
@@ -33,16 +35,24 @@ const ContractDialog = ({
   paymentMethod,
   customerType,
   clientIP,
-  orderCreatedAt
+  orderCreatedAt,
+  savedPreInfoHtml,
+  savedDistanceSalesHtml
 }: ContractDialogProps) => {
   const [contractContent, setContractContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (open && contractType === "preInfo") {
+useEffect(() => {
+  if (!open) return;
+  if (contractType === "preInfo") {
+    if (savedPreInfoHtml) {
+      setContractContent(savedPreInfoHtml);
+      setIsLoading(false);
+    } else {
       loadFormContent();
     }
-  }, [open, contractType]);
+  }
+}, [open, contractType, savedPreInfoHtml]);
 
   const loadFormContent = async () => {
     setIsLoading(true);
@@ -121,6 +131,9 @@ ${selectedPackage.features ? selectedPackage.features.map((feature: string) => `
   };
 
   const getDistanceSalesContent = () => {
+    if (savedDistanceSalesHtml) {
+      return savedDistanceSalesHtml;
+    }
     return `KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ
 
 Doktorumol.com.tr ("doktorumol" veya "Şirket") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
