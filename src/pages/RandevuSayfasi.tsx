@@ -207,7 +207,16 @@ const RandevuSayfasi = () => {
     if (selectedDate && selectedTime) {
       setTimeout(() => {
         setCurrentStep(5);
-      }, 300);
+      }, 500);
+    }
+  };
+
+  const handleTimeSelection = (time: string) => {
+    setSelectedTime(time);
+    if (selectedDate && time) {
+      setTimeout(() => {
+        setCurrentStep(5);
+      }, 500);
     }
   };
 
@@ -523,12 +532,7 @@ const RandevuSayfasi = () => {
               {selectedDate && (
                 <div>
                   <Label className="text-lg font-semibold mb-3 block">Randevu Saati</Label>
-                  <Select value={selectedTime} onValueChange={(time) => {
-                    setSelectedTime(time);
-                    if (selectedDate && time) {
-                      handleDateTimeComplete();
-                    }
-                  }}>
+                  <Select value={selectedTime} onValueChange={handleTimeSelection}>
                     <SelectTrigger className="h-14 text-lg">
                       <SelectValue placeholder="Saat seçin" />
                     </SelectTrigger>
