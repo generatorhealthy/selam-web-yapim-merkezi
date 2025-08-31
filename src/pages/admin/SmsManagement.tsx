@@ -119,7 +119,7 @@ const SmsManagement = () => {
       setIsLoading(true);
       setSmsStatus({type: null, message: ''});
 
-      const { data, error } = await supabase.functions.invoke('send-verimor-sms', {
+      const { data, error } = await supabase.functions.invoke('send-sms-via-static-proxy', {
         body: {
           phone: phoneNumber,
           message: message
