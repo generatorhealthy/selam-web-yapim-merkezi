@@ -904,7 +904,7 @@ const DoctorDashboard = () => {
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                                 <div>
-                                  <p><strong>Paket:</strong> {contract.packages?.name || contract.package_name}</p>
+                                  <p><strong>Paket:</strong> {contract.package_name}</p>
                                   <p><strong>Tutar:</strong> ₺{contract.amount}</p>
                                 </div>
                                 <div>
