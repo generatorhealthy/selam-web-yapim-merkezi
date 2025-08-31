@@ -23,13 +23,14 @@ if (isset($_GET['check']) && $_GET['check'] === 'ip') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Log the request for debugging
-    error_log('SMS Relay Request: ' . file_get_contents('php://input'));
+    // Read input once and log
+    $raw = file_get_contents('php://input');
+    error_log('SMS Relay Request: ' . $raw);
     
     // Get POST data
-    $input = json_decode(file_get_contents('php://input'), true);
+    $input = json_decode($raw, true);
     
-    if (!$input) {
+    if (!is_array($input)) {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid JSON input']);
         exit();
