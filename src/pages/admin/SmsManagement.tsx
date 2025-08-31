@@ -309,18 +309,18 @@ const SmsManagement = () => {
                        <SelectValue placeholder="Uzman seçiniz..." />
                      </SelectTrigger>
                      <SelectContent>
-                       <SelectItem value="">Manuel numara girişi</SelectItem>
-                       {specialists.map((specialist) => (
-                         <SelectItem key={specialist.id} value={specialist.id}>
-                           <div className="flex items-center gap-2">
-                             <span className="font-medium">{specialist.name}</span>
-                             <Badge variant="secondary" className="text-xs">
-                               {specialist.specialty}
-                             </Badge>
-                           </div>
-                         </SelectItem>
-                       ))}
-                     </SelectContent>
+                        <SelectItem value="manual">Manuel numara girişi</SelectItem>
+                        {specialists.map((specialist) => (
+                          <SelectItem key={specialist.id} value={specialist.id}>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{specialist.name}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {specialist.specialty}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                    </Select>
                 </div>
 
@@ -332,14 +332,14 @@ const SmsManagement = () => {
                    <Input
                      id="phone"
                      type="tel"
-                     placeholder={selectedSpecialist && selectedSpecialist !== '' ? "Uzman telefonu otomatik seçildi" : "0 532 123 45 67"}
+                     placeholder={selectedSpecialist && selectedSpecialist !== '' && selectedSpecialist !== 'manual' ? "Uzman telefonu otomatik seçildi" : "0 532 123 45 67"}
                      value={phoneNumber}
                      onChange={(e) => setPhoneNumber(e.target.value)}
-                     disabled={selectedSpecialist && selectedSpecialist !== ''}
+                     disabled={selectedSpecialist && selectedSpecialist !== '' && selectedSpecialist !== 'manual'}
                      className="w-full"
                    />
                    <p className="text-xs text-slate-500">
-                     {selectedSpecialist && selectedSpecialist !== '' 
+                     {selectedSpecialist && selectedSpecialist !== '' && selectedSpecialist !== 'manual'
                        ? "Uzman seçildiğinde telefon numarası otomatik doldurulur. Manuel giriş için 'Manuel numara girişi' seçiniz."
                        : "Manuel olarak telefon numarası girebilir veya uzman seçerek otomatik doldurabilirsiniz"
                      }
