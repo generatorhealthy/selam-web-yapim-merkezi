@@ -46,12 +46,18 @@ const handler = async (req: Request): Promise<Response> => {
     }
     
     // Verimor API data
+    const sender = (Deno.env.get('SMS_SENDER') || Deno.env.get('VERIMOR_SENDER') || '').trim();
+    if (!sender) {
+      throw new Error('Missing SMS_SENDER secret (approved Verimor sender title)');
+    }
+
+    console.log('Using sender (source_addr):', sender);
+
     const smsData = {
       username: username,
       password: password,
-      source_addr: '902167060611',
-      source_addr_type: '5',
-      msg_header: 'Doktorum Ol',
+      source_addr: sender, // Must match an approved Verimor sender title
+      source_addr_type: '5', // 5 = Alphanumeric sender
       custom_id: Date.now().toString(),
       datacoding: '0',
       valid_for: '48:00',
@@ -60,9 +66,9 @@ const handler = async (req: Request): Promise<Response> => {
       messages: [
         {
           msg: message,
-          dest: cleanPhone
-        }
-      ]
+          dest: cleanPhone,
+        },
+      ],
     };
 
     const useRelay = !!relayUrl;
