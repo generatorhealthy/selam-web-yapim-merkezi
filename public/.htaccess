@@ -115,13 +115,8 @@ RewriteBase /
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
 
-# Preload critical resources
-<IfModule mod_headers.c>
-    <FilesMatch "index\.html$">
-        Header add Link "</assets/index.css>; rel=preload; as=style"
-        Header add Link "</assets/index.js>; rel=preload; as=script"
-    </FilesMatch>
-</IfModule>
+# Removed incorrect asset preload headers to prevent 404 HTML being served as CSS/JS
+
 
 # Disable directory browsing
 Options -Indexes
