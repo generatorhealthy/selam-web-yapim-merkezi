@@ -89,13 +89,13 @@ const handler = async (req: Request): Promise<Response> => {
       (fetchOptions.headers as Record<string, string>)['Spb-Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(fetchUrl, fetchOptions);
+    let response = await fetch(fetchUrl, fetchOptions);
 
     console.log('Proxy response status:', response.status);
     console.log('Proxy response headers:', Object.fromEntries(response.headers.entries()));
     
     let result;
-    const responseText = await response.text();
+    let responseText = await response.text();
     console.log('Raw proxy response:', responseText);
     
     try {
@@ -107,18 +107,57 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('Parsed response:', result);
 
+    let attemptedFallback = false;
+
     if (!response.ok) {
       console.error('Proxy request error details:', {
         status: response.status,
         statusText: response.statusText,
         response: result
       });
-      throw new Error(`Proxy request error (${response.status}): ${result.message || responseText || 'Unknown error'}`);
-    }
 
+      const shouldTryFallback = useRelay && !!scrapingBeeApiKey && (
+        response.status === 403 ||
+        (typeof responseText === 'string' && responseText.toLowerCase().includes('izin'))
+      );
+
+      if (shouldTryFallback) {
+        try {
+          console.log('Trying fallback via ScrapingBee static proxy...');
+          const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}&url=${encodeURIComponent('https://sms.verimor.com.tr/v2/send.json')}&render_js=false&premium_proxy=true&country_code=tr&method=POST&forward_headers=true`;
+          const fbOptions: RequestInit = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Spb-Content-Type': 'application/json',
+            },
+            body: JSON.stringify(smsData),
+          };
+          response = await fetch(scrapingBeeUrl, fbOptions);
+          console.log('Fallback ScrapingBee response status:', response.status);
+          responseText = await response.text();
+          console.log('Raw fallback response:', responseText);
+          try {
+            result = JSON.parse(responseText);
+          } catch {
+            console.log('Failed to parse fallback as JSON, treating as text');
+            result = { message: responseText, raw_response: responseText };
+          }
+          attemptedFallback = true;
+        } catch (fbErr) {
+          console.error('Fallback via ScrapingBee failed:', fbErr);
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(`Proxy request error (${response.status}): ${result.message || responseText || 'Unknown error'}`);
+      }
+    }
     return new Response(JSON.stringify({ 
       success: true, 
-      message: useRelay ? 'SMS sent successfully via relay' : 'SMS sent successfully via static IP proxy',
+      message: attemptedFallback
+        ? 'SMS sent successfully via static IP proxy (fallback)'
+        : (useRelay ? 'SMS sent successfully via relay' : 'SMS sent successfully via static IP proxy'),
       data: result 
     }), {
       status: 200,
