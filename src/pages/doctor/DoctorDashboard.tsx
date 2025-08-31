@@ -341,14 +341,15 @@ const DoctorDashboard = () => {
 
   const fetchContracts = async (specialistEmail: string) => {
     try {
+      if (!specialistEmail) {
+        setContracts([]);
+        return;
+      }
       const { data: contractsData, error } = await supabase
         .from('orders')
-        .select(`
-          *,
-          packages!inner(name, price)
-        `)
+        .select('*')
         .eq('customer_email', specialistEmail)
-        .eq('status', 'approved')
+        .in('status', ['approved', 'completed'])
         .order('created_at', { ascending: false });
 
       if (error) {
