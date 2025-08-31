@@ -74,6 +74,7 @@ const SmsManagement = () => {
   const fetchSpecialists = async () => {
     try {
       setIsFetching(true);
+      console.info('[SmsManagement] fetchSpecialists: start');
       const { data, error } = await supabase
         .from('specialists')
         .select('id, name, phone, specialty, is_active')
@@ -81,6 +82,7 @@ const SmsManagement = () => {
         .order('name');
 
       if (error) throw error;
+      console.info('[SmsManagement] fetchSpecialists: loaded', data?.length || 0);
       setSpecialists(data || []);
     } catch (error: any) {
       console.error('Error fetching specialists:', error);
