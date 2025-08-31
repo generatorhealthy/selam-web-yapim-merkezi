@@ -22,14 +22,29 @@ Deno.serve(async (req) => {
 
     // Verimor API'sine dahili numaraları almak için istek gönder
     const verimoreApiUrl = 'https://api.verimor.com.tr/v2/contacts';
-    
-    const response = await fetch(verimoreApiUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Basic ${btoa(`${verimoreUsername}:${verimorePassword}`)}`,
-        'Content-Type': 'application/json',
-      },
-    });
+
+    // 4 saniyelik zaman aşımı ile isteği yap
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    let response: Response;
+    try {
+      response = await fetch(verimoreApiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${btoa(`${verimoreUsername}:${verimorePassword}`)}`,
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+      });
+    } catch (e) {
+      clearTimeout(timer);
+      console.error('Verimor fetch aborted or failed:', e);
+      return new Response(
+        JSON.stringify({ success: false, error: 'timeout_or_network_error' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 504 }
+      );
+    }
+    clearTimeout(timer);
 
     if (!response.ok) {
       console.error('Verimor API error:', response.status, response.statusText);
