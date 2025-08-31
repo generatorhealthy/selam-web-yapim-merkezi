@@ -49,20 +49,16 @@ const SmsManagement = () => {
   // SMS template messages
   const templates = [
     {
-      title: "Randevu Hatırlatması",
-      message: "Merhaba, yarınki randevunuzu hatırlatmak istedik. Randevu saatiniz: [SAAT]. İyi günler dileriz."
+      title: "Danışana Ulaşım Sağlanmamış",
+      message: "Merhaba  Hanım sizlere danışan yönlendirmesi sağlanmış ancak danışana ulaşım sağlanmamış, danışana ulaşıp bilgi verebilirsiniz. \n\nDanışan Bilgileri; 📞  Online danışmanlık"
     },
     {
-      title: "Randevu Onayı", 
-      message: "Randevunuz onaylanmıştır. Tarih: [TARİH], Saat: [SAAT]. Randevu için bekliyoruz."
+      title: "Danışan Yönlendirmesi Sağlanmıştır", 
+      message: "Merhaba XXX hanım,danışan yönlendirilimesi sağlanmıştır, danışana ulaşarak bilgi verebilirsiniz. 😊 🚩Danışan bilgileri: XXX 📲555 🌟Online Danismanlik"
     },
     {
-      title: "İptal Bildirimi",
-      message: "Randevunuz iptal edilmiştir. Yeni randevu almak için lütfen bizimle iletişime geçin."
-    },
-    {
-      title: "Genel Bilgilendirme",
-      message: "Merhaba, size önemli bir bilgilendirme yapmak istiyoruz..."
+      title: "Gecikmiş Ödeme",
+      message: "XXX Hanım gecikmiş ödemeniz bulunmaktadır. En kısa sürede ödeme yapmanız gerekmektedir."
     }
   ];
 
