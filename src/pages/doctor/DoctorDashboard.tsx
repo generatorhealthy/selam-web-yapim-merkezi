@@ -1161,16 +1161,16 @@ const DoctorDashboard = () => {
           onClose={() => setIsContractDialogOpen(false)}
           contractType={contractType}
           formData={{
-            customerName: selectedContract.customer_name,
-            customerEmail: selectedContract.customer_email,
-            customerPhone: selectedContract.customer_phone || '',
-            customerType: selectedContract.customer_type,
-            customerAddress: selectedContract.customer_address || '',
-            customerCity: selectedContract.customer_city || '',
-            customerTCNo: selectedContract.customer_tc_no || '',
+            name: (selectedContract.customer_name || '').split(' ')[0] || selectedContract.customer_name,
+            surname: (selectedContract.customer_name || '').split(' ').slice(1).join(' '),
+            email: selectedContract.customer_email,
+            phone: selectedContract.customer_phone || '',
+            tcNo: selectedContract.customer_tc_no || '',
+            address: selectedContract.customer_address || '',
+            city: selectedContract.customer_city || '',
             companyName: selectedContract.company_name || '',
-            companyTaxNo: selectedContract.company_tax_no || '',
-            companyTaxOffice: selectedContract.company_tax_office || ''
+            taxNumber: selectedContract.company_tax_no || '',
+            taxOffice: selectedContract.company_tax_office || ''
           }}
           selectedPackage={{
             name: selectedContract.packages?.name || selectedContract.package_name,
