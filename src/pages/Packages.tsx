@@ -255,7 +255,7 @@ const Packages = () => {
                   {
                     icon: Target,
                     title: "Aylık Garantili Danışan Yönlendirme",
-                    description: "Aylık garantili danışan yönlendirme sistemimiz ile sürekli danışan akışı",
+                    description: "Aylık Danışan Yönlendirme Garantisi ile sürekli danışan akışı",
                     color: "from-green-500 to-emerald-600"
                   },
                   {

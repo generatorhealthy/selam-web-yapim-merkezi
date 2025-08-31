@@ -623,7 +623,7 @@ const Index = () => {
                     <div className="w-6 h-6 bg-green-400 rounded-full flex items-center justify-center flex-shrink-0">
                       <Check className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-lg text-white">Aylık garantili danışan yönlendirme sistemi</span>
+                    <span className="text-lg text-white">Aylık Danışan Yönlendirme Garantisi</span>
                   </div>
                 </div>
               </div>
