@@ -10,6 +10,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Diagnostics: return server public IP for whitelisting
+if (isset($_GET['check']) && $_GET['check'] === 'ip') {
+    $ipResponse = @file_get_contents('https://api.ipify.org?format=json');
+    if ($ipResponse === false) {
+        $fallbackIp = $_SERVER['SERVER_ADDR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        echo json_encode(['ip' => $fallbackIp]);
+    } else {
+        echo $ipResponse;
+    }
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Log the request for debugging
     error_log('SMS Relay Request: ' . file_get_contents('php://input'));
