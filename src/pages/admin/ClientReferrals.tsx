@@ -458,6 +458,40 @@ const ClientReferrals = () => {
     };
   };
 
+  // Copy August notes to other months
+  const copyAugustNotesToAllMonths = async () => {
+    try {
+      console.log('🔄 Copying August notes to all months...');
+      
+      for (const specialist of specialists) {
+        const augustReferral = specialist.referrals.find(ref => ref.month === 8);
+        if (augustReferral && augustReferral.notes) {
+          console.log(`📝 Copying notes for ${specialist.specialist.name}: "${augustReferral.notes}"`);
+          
+          // Copy to all months (1-12)
+          for (let month = 1; month <= 12; month++) {
+            if (month !== 8) { // Skip August itself
+              await updateNotes(specialist.id, month, augustReferral.notes);
+            }
+          }
+        }
+      }
+      
+      toast({
+        title: "Başarılı",
+        description: "Ağustos ayındaki notlar tüm aylara kopyalandı.",
+      });
+      
+    } catch (error) {
+      console.error('❌ Error copying August notes:', error);
+      toast({
+        title: "Hata",
+        description: "Notlar kopyalanırken hata oluştu: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  };
+
   // Color generator for internal numbers
   const getInternalNumberColor = (internalNumber?: string) => {
     if (!internalNumber) return "bg-gray-100 text-gray-600";
@@ -675,14 +709,23 @@ const ClientReferrals = () => {
               {monthNames.map((_, monthIndex) => (
                 <TabsContent key={monthIndex + 1} value={(monthIndex + 1).toString()}>
                   <div className="space-y-6">
-                    <div className="text-center mb-6">
-                      <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                        {monthNames[monthIndex]} {currentYear}
-                      </h3>
-                      <p className="text-gray-600">
-                        Bu ay toplam {getMonthlyTotal(monthIndex + 1)} yönlendirme yapıldı
-                      </p>
-                    </div>
+                     <div className="text-center mb-6">
+                       <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                         {monthNames[monthIndex]} {currentYear}
+                       </h3>
+                       <p className="text-gray-600">
+                         Bu ay toplam {getMonthlyTotal(monthIndex + 1)} yönlendirme yapıldı
+                       </p>
+                       <div className="mt-4">
+                         <Button
+                           onClick={copyAugustNotesToAllMonths}
+                           variant="outline"
+                           className="bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-600"
+                         >
+                           Ağustos Notlarını Tüm Aylara Kopyala
+                         </Button>
+                       </div>
+                     </div>
 
                     {/* Enhanced Search Section */}
                     <div className="relative mb-8">
