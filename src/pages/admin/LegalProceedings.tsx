@@ -36,6 +36,7 @@ const LegalProceedings = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProceeding, setEditingProceeding] = useState<LegalProceeding | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [formData, setFormData] = useState({
     customer_name: "",
     proceeding_amount: "",
@@ -285,6 +286,11 @@ const LegalProceedings = () => {
     return status === "İCRA_TAMAMLANDI";
   };
 
+  // Filter proceedings based on status
+  const filteredProceedings = statusFilter === "all" 
+    ? proceedings 
+    : proceedings.filter(proc => proc.status === statusFilter);
+
   const downloadPDF = async (url: string, filename: string) => {
     try {
       // Extract file path from URL and create a new signed URL for download
@@ -394,7 +400,7 @@ const LegalProceedings = () => {
 
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mb-4">
                 <CardTitle>İcralıklar</CardTitle>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
@@ -489,6 +495,27 @@ const LegalProceedings = () => {
                   </DialogContent>
                 </Dialog>
               </div>
+              
+              {/* Status Filter */}
+              <div className="flex items-center gap-4">
+                <Label htmlFor="statusFilter" className="text-sm font-medium">Durum Filtresi:</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Durum seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tümü</SelectItem>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-gray-500">
+                  {filteredProceedings.length} / {proceedings.length} kayıt gösteriliyor
+                </span>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -505,7 +532,7 @@ const LegalProceedings = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {proceedings.map((proceeding) => (
+                  {filteredProceedings.map((proceeding) => (
                     <TableRow key={proceeding.id}>
                       <TableCell className="font-medium">
                         {proceeding.customer_name}
