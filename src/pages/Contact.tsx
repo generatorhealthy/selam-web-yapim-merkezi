@@ -25,7 +25,7 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.message) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.message) {
       toast({
         title: "Eksik Bilgi",
         description: "Lütfen zorunlu alanları doldurun.",
@@ -160,7 +160,7 @@ const Contact = () => {
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="text-gray-700 font-semibold">Telefon Numarası</Label>
+                      <Label htmlFor="phone" className="text-gray-700 font-semibold">Telefon Numarası *</Label>
                       <Input
                         id="phone"
                         name="phone"
@@ -168,6 +168,7 @@ const Contact = () => {
                         value={formData.phone}
                         onChange={handleChange}
                         placeholder="Telefon numaranızı girin"
+                        required
                         className="border-2 border-gray-200 focus:border-blue-500 transition-colors h-12"
                       />
                     </div>
