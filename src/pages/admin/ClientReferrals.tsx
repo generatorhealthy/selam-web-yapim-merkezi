@@ -202,7 +202,7 @@ const ClientReferrals = () => {
         .eq('specialist_id', specialistId)
         .eq('year', currentYear)
         .eq('month', month)
-        .single();
+        .maybeSingle();
 
       if (existingRecord) {
         // Güncelle
@@ -276,7 +276,7 @@ const ClientReferrals = () => {
         .eq('specialist_id', specialistId)
         .eq('year', currentYear)
         .eq('month', month)
-        .single();
+        .maybeSingle();
 
       if (existingRecord) {
         // Güncelle
