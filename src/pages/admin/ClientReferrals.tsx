@@ -115,12 +115,20 @@ const ClientReferrals = () => {
         
         const monthlyReferrals: MonthlyReferral[] = Array.from({ length: 12 }, (_, index) => {
           const month = index + 1;
-          const existingReferral = specialistReferrals.find(r => r.month === month);
+          // Aynı ay için birden fazla kayıt varsa en güncel olanı seç
+          const matches = (specialistReferrals as any[]).filter((r: any) => r.month === month);
+          let chosen: any = undefined;
+          if (matches.length > 1) {
+            matches.sort((a: any, b: any) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime());
+            chosen = matches[0];
+          } else {
+            chosen = matches[0];
+          }
           
           return {
             month,
-            count: existingReferral?.referral_count || 0,
-            notes: existingReferral?.notes || ''
+            count: (chosen?.referral_count as number) || 0,
+            notes: (chosen?.notes as string) || ''
           };
         });
 
@@ -194,31 +202,37 @@ const ClientReferrals = () => {
 
     try {
       console.log(`Updating referral count for specialist ${specialistId}, month ${month}, count ${newCount}`);
-      
-      // Önce kayıt var mı kontrol et
-      const { data: existingRecord } = await supabase
+
+      // Aynı anahtarlarla birden fazla kayıt varsa hepsini güncelle
+      const { data: existingRecords, error: selectError } = await supabase
         .from('client_referrals')
         .select('id')
         .eq('specialist_id', specialistId)
         .eq('year', currentYear)
-        .eq('month', month)
-        .maybeSingle();
+        .eq('month', month);
 
-      if (existingRecord) {
-        // Güncelle
+      if (selectError) throw selectError;
+
+      if (existingRecords && existingRecords.length > 0) {
+        // Tüm eşleşen kayıtları topluca güncelle
+        const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
         const { error } = await supabase
           .from('client_referrals')
           .update({
             referral_count: newCount,
             is_referred: newCount > 0,
             referred_at: newCount > 0 ? new Date().toISOString() : null,
-            referred_by: newCount > 0 ? (await supabase.auth.getUser()).data.user?.id : null,
+            referred_by: newCount > 0 ? currentUserId : null,
+            updated_at: new Date().toISOString(),
           })
-          .eq('id', existingRecord.id);
+          .eq('specialist_id', specialistId)
+          .eq('year', currentYear)
+          .eq('month', month);
 
         if (error) throw error;
       } else {
         // Yeni kayıt oluştur
+        const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
         const { error } = await supabase
           .from('client_referrals')
           .insert({
@@ -228,7 +242,8 @@ const ClientReferrals = () => {
             referral_count: newCount,
             is_referred: newCount > 0,
             referred_at: newCount > 0 ? new Date().toISOString() : null,
-            referred_by: newCount > 0 ? (await supabase.auth.getUser()).data.user?.id : null,
+            referred_by: newCount > 0 ? currentUserId : null,
+            updated_at: new Date().toISOString(),
           });
 
         if (error) throw error;
@@ -269,21 +284,23 @@ const ClientReferrals = () => {
     try {
       console.log(`Updating notes for specialist ${specialistId}, month ${month}`);
       
-      // Önce kayıt var mı kontrol et
-      const { data: existingRecord } = await supabase
+      // Aynı anahtarlarla birden fazla kayıt varsa hepsini güncelle
+      const { data: existingRecords, error: selectError } = await supabase
         .from('client_referrals')
         .select('id')
         .eq('specialist_id', specialistId)
         .eq('year', currentYear)
-        .eq('month', month)
-        .maybeSingle();
+        .eq('month', month);
 
-      if (existingRecord) {
-        // Güncelle
+      if (selectError) throw selectError;
+
+      if (existingRecords && existingRecords.length > 0) {
         const { error } = await supabase
           .from('client_referrals')
-          .update({ notes })
-          .eq('id', existingRecord.id);
+          .update({ notes, updated_at: new Date().toISOString() })
+          .eq('specialist_id', specialistId)
+          .eq('year', currentYear)
+          .eq('month', month);
 
         if (error) throw error;
       } else {
@@ -295,7 +312,8 @@ const ClientReferrals = () => {
             year: currentYear,
             month: month,
             referral_count: 0,
-            notes: notes
+            notes: notes,
+            updated_at: new Date().toISOString(),
           });
 
         if (error) throw error;
