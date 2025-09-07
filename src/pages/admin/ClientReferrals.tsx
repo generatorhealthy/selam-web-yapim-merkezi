@@ -113,24 +113,24 @@ const ClientReferrals = () => {
       const specialistReferrals: SpecialistReferral[] = specialistsData.map(specialist => {
         const specialistReferrals = referralsBySpecialist.get(specialist.id) || [];
         
-        const monthlyReferrals: MonthlyReferral[] = Array.from({ length: 12 }, (_, index) => {
-          const month = index + 1;
-          // Aynı ay için birden fazla kayıt varsa en güncel olanı seç
-          const matches = (specialistReferrals as any[]).filter((r: any) => r.month === month);
-          let chosen: any = undefined;
-          if (matches.length > 1) {
-            matches.sort((a: any, b: any) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime());
-            chosen = matches[0];
-          } else {
-            chosen = matches[0];
-          }
-          
-          return {
-            month,
-            count: (chosen?.referral_count as number) || 0,
-            notes: (chosen?.notes as string) || ''
-          };
-        });
+          const monthlyReferrals: MonthlyReferral[] = Array.from({ length: 12 }, (_, index) => {
+            const month = index + 1;
+            // Aynı ay için birden fazla kayıt varsa en güncel olanı seç
+            const matches = (specialistReferrals as any[]).filter((r: any) => Number(r.month) === month);
+            let chosen: any = undefined;
+            if (matches.length > 1) {
+              matches.sort((a: any, b: any) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime());
+              chosen = matches[0];
+            } else {
+              chosen = matches[0];
+            }
+            
+            return {
+              month,
+              count: chosen?.referral_count !== undefined && chosen?.referral_count !== null ? Number(chosen.referral_count) : 0,
+              notes: typeof chosen?.notes === 'string' ? chosen.notes : ''
+            };
+          });
 
         return {
           id: specialist.id,
