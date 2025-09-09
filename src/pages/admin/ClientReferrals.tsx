@@ -205,55 +205,20 @@ const ClientReferrals = () => {
     if (newCount < 0) return;
 
     try {
-      console.log(`Updating referral count for specialist ${specialistId}, month ${month}, count ${newCount}`);
+      console.log(`Updating referral via RPC for specialist ${specialistId}, month ${month}, count ${newCount}`);
+      const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
 
-      // Aynı anahtarlarla birden fazla kayıt varsa hepsini güncelle
-      const { data: existingRecords, error: selectError } = await supabase
-        .from('client_referrals')
-        .select('id')
-        .eq('specialist_id', specialistId)
-        .eq('year', currentYear)
-        .eq('month', month);
+      const { data, error } = await supabase.rpc('admin_upsert_client_referral', {
+        p_specialist_id: specialistId,
+        p_year: currentYear,
+        p_month: month,
+        p_referral_count: newCount,
+        p_referred_by: currentUserId
+      });
 
-      if (selectError) throw selectError;
+      if (error) throw error;
 
-      if (existingRecords && existingRecords.length > 0) {
-        // Tüm eşleşen kayıtları topluca güncelle
-        const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
-        const { error } = await supabase
-          .from('client_referrals')
-          .update({
-            referral_count: newCount,
-            is_referred: newCount > 0,
-            referred_at: newCount > 0 ? new Date().toISOString() : null,
-            referred_by: newCount > 0 ? currentUserId : null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('specialist_id', specialistId)
-          .eq('year', currentYear)
-          .eq('month', month);
-
-        if (error) throw error;
-      } else {
-        // Yeni kayıt oluştur
-        const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
-        const { error } = await supabase
-          .from('client_referrals')
-          .insert({
-            specialist_id: specialistId,
-            year: currentYear,
-            month: month,
-            referral_count: newCount,
-            is_referred: newCount > 0,
-            referred_at: newCount > 0 ? new Date().toISOString() : null,
-            referred_by: newCount > 0 ? currentUserId : null,
-            updated_at: new Date().toISOString(),
-          });
-
-        if (error) throw error;
-      }
-
-      // Local state'i güncelle
+      // Local state'i güncelle (optimistik)
       setSpecialists(prev => 
         prev.map(spec => 
           spec.id === specialistId 
@@ -277,7 +242,7 @@ const ClientReferrals = () => {
       await fetchSpecialistsAndReferrals();
       
     } catch (error) {
-      console.error('Error updating referral count:', error);
+      console.error('Error updating referral count (RPC):', error);
       toast({
         title: "Hata",
         description: "Yönlendirme sayısı güncellenirken hata oluştu: " + (error as Error).message,
@@ -288,42 +253,16 @@ const ClientReferrals = () => {
 
   const updateNotes = async (specialistId: string, month: number, notes: string) => {
     try {
-      console.log(`Updating notes for specialist ${specialistId}, month ${month}`);
+      console.log(`Updating notes via RPC for specialist ${specialistId}, month ${month}`);
       
-      // Aynı anahtarlarla birden fazla kayıt varsa hepsini güncelle
-      const { data: existingRecords, error: selectError } = await supabase
-        .from('client_referrals')
-        .select('id')
-        .eq('specialist_id', specialistId)
-        .eq('year', currentYear)
-        .eq('month', month);
+      const { data, error } = await supabase.rpc('admin_update_client_referral_notes', {
+        p_specialist_id: specialistId,
+        p_year: currentYear,
+        p_month: month,
+        p_notes: notes
+      });
 
-      if (selectError) throw selectError;
-
-      if (existingRecords && existingRecords.length > 0) {
-        const { error } = await supabase
-          .from('client_referrals')
-          .update({ notes, updated_at: new Date().toISOString() })
-          .eq('specialist_id', specialistId)
-          .eq('year', currentYear)
-          .eq('month', month);
-
-        if (error) throw error;
-      } else {
-        // Yeni kayıt oluştur
-        const { error } = await supabase
-          .from('client_referrals')
-          .insert({
-            specialist_id: specialistId,
-            year: currentYear,
-            month: month,
-            referral_count: 0,
-            notes: notes,
-            updated_at: new Date().toISOString(),
-          });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       // Local state'i güncelle
       setSpecialists(prev => 
@@ -347,7 +286,7 @@ const ClientReferrals = () => {
       });
       
     } catch (error) {
-      console.error('Error updating notes:', error);
+      console.error('Error updating notes (RPC):', error);
       toast({
         title: "Hata",
         description: "Not güncellenirken hata oluştu: " + (error as Error).message,

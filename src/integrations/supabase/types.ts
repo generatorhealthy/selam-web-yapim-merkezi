@@ -1283,6 +1283,49 @@ export type Database = {
           year: number
         }[]
       }
+      admin_update_client_referral_notes: {
+        Args: {
+          p_month: number
+          p_notes: string
+          p_specialist_id: string
+          p_year: number
+        }
+        Returns: {
+          created_at: string
+          id: string
+          is_referred: boolean
+          month: number
+          notes: string | null
+          referral_count: number
+          referred_at: string | null
+          referred_by: string | null
+          specialist_id: string
+          updated_at: string
+          year: number
+        }
+      }
+      admin_upsert_client_referral: {
+        Args: {
+          p_month: number
+          p_referral_count: number
+          p_referred_by?: string
+          p_specialist_id: string
+          p_year: number
+        }
+        Returns: {
+          created_at: string
+          id: string
+          is_referred: boolean
+          month: number
+          notes: string | null
+          referral_count: number
+          referred_at: string | null
+          referred_by: string | null
+          specialist_id: string
+          updated_at: string
+          year: number
+        }
+      }
       can_manage_users: {
         Args: { target_user_id?: string }
         Returns: boolean
