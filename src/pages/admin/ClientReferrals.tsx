@@ -113,20 +113,23 @@ const ClientReferrals = () => {
         
           const monthlyReferrals: MonthlyReferral[] = Array.from({ length: 12 }, (_, index) => {
             const month = index + 1;
-            // Aynı ay için birden fazla kayıt varsa en güncel olanı seç
+            // Aynı ay için birden fazla kayıt varsa: notlar için en güncel kaydı al, sayı için en yüksek değeri kullan
             const matches = (specialistReferrals as any[]).filter((r: any) => Number(r.month) === month);
-            let chosen: any = undefined;
-            if (matches.length > 1) {
-              matches.sort((a: any, b: any) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime());
-              chosen = matches[0];
-            } else {
-              chosen = matches[0];
-            }
+
+            // En güncel kayıt (not için)
+            const latest = matches.length > 1
+              ? matches.slice().sort((a: any, b: any) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime())[0]
+              : matches[0];
+
+            // Sayı için güvenli yaklaşım: mevcut kayıtlar içindeki en yüksek referral_count
+            const maxCount = matches.length
+              ? Math.max(...matches.map((m: any) => (m?.referral_count !== undefined && m?.referral_count !== null) ? Number(m.referral_count) : 0))
+              : 0;
             
             return {
               month,
-              count: chosen?.referral_count !== undefined && chosen?.referral_count !== null ? Number(chosen.referral_count) : 0,
-              notes: typeof chosen?.notes === 'string' ? chosen.notes : ''
+              count: maxCount,
+              notes: typeof latest?.notes === 'string' ? latest.notes : ''
             };
           });
 
