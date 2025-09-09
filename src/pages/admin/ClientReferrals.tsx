@@ -66,11 +66,8 @@ const ClientReferrals = () => {
           .eq('is_active', true)
           .order('name'),
         
-        // Tüm referral verilerini bir seferde getir
-        supabase
-          .from('client_referrals')
-          .select('*')
-          .eq('year', currentYear)
+        // Yönlendirmeleri admin/staff için RLS'i güvenli şekilde aşan RPC ile getir
+        supabase.rpc('admin_get_client_referrals', { p_year: currentYear })
       ]);
 
       const { data: specialistsData, error: specialistsError } = specialistsResult;
@@ -276,6 +273,8 @@ const ClientReferrals = () => {
         title: "Başarılı",
         description: `${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
       });
+      // Sunucudan taze veriyi çekerek kalıcılığı doğrula
+      await fetchSpecialistsAndReferrals();
       
     } catch (error) {
       console.error('Error updating referral count:', error);

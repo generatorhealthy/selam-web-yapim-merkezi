@@ -1267,6 +1267,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_client_referrals: {
+        Args: { p_year: number }
+        Returns: {
+          created_at: string
+          id: string
+          is_referred: boolean
+          month: number
+          notes: string | null
+          referral_count: number
+          referred_at: string | null
+          referred_by: string | null
+          specialist_id: string
+          updated_at: string
+          year: number
+        }[]
+      }
       can_manage_users: {
         Args: { target_user_id?: string }
         Returns: boolean
