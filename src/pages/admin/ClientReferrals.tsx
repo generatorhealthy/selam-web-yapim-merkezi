@@ -175,29 +175,28 @@ const ClientReferrals = () => {
 
   // Filter specialists based on search term and sort by referral count
   useEffect(() => {
-    let filtered = specialists;
-    
-    if (searchTerm.trim() !== "") {
-      filtered = specialists.filter(specialistReferral =>
-        specialistReferral.specialist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        specialistReferral.specialist.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        specialistReferral.specialist.city.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    // Sort by referral count for selected month (0 count first)
-    const sorted = filtered.sort((a, b) => {
-      const aReferral = a.referrals.find(ref => ref.month === selectedMonth);
-      const bReferral = b.referrals.find(ref => ref.month === selectedMonth);
+    const filtered =
+      searchTerm.trim() !== ""
+        ? specialists.filter((specialistReferral) =>
+            specialistReferral.specialist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            specialistReferral.specialist.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            specialistReferral.specialist.city.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        : specialists;
+
+    // Sort by referral count for selected month (0 count first) - do NOT mutate original array
+    const sorted = [...filtered].sort((a, b) => {
+      const aReferral = a.referrals.find((ref) => ref.month === selectedMonth);
+      const bReferral = b.referrals.find((ref) => ref.month === selectedMonth);
       const aCount = aReferral?.count || 0;
       const bCount = bReferral?.count || 0;
-      
+
       // 0 count items first, then ascending order
       if (aCount === 0 && bCount !== 0) return -1;
       if (aCount !== 0 && bCount === 0) return 1;
       return aCount - bCount;
     });
-    
+
     setFilteredSpecialists(sorted);
   }, [specialists, searchTerm, selectedMonth]);
 
@@ -208,6 +207,19 @@ const ClientReferrals = () => {
     const prevState = JSON.parse(JSON.stringify(specialists)) as SpecialistReferral[];
 
     setSpecialists(prev =>
+      prev.map(spec =>
+        spec.id === specialistId
+          ? {
+              ...spec,
+              referrals: spec.referrals.map(ref =>
+                ref.month === month ? { ...ref, count: newCount } : ref
+              ),
+            }
+          : spec
+      )
+    );
+    // Keep visible list in sync immediately
+    setFilteredSpecialists(prev =>
       prev.map(spec =>
         spec.id === specialistId
           ? {
