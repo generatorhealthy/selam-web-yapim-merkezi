@@ -235,11 +235,12 @@ const ClientReferrals = () => {
       )
     );
 
+    const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
+
     try {
       console.log(`Updating referral via RPC for specialist ${specialistId}, month ${month}, count ${newCount}`);
-      const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
 
-      const { data, error } = await supabase.rpc('admin_upsert_client_referral', {
+      const { error } = await supabase.rpc('admin_upsert_client_referral', {
         p_specialist_id: specialistId,
         p_year: currentYear,
         p_month: month,
@@ -256,15 +257,40 @@ const ClientReferrals = () => {
 
       // Sunucudan taze veriyi çekerek kalıcılığı doğrula
       await fetchSpecialistsAndReferrals();
-    } catch (error) {
-      console.error('Error updating referral count (RPC):', error);
-      // Rollback to previous state on failure
-      setSpecialists(prevState);
-      toast({
-        title: "Hata",
-        description: "Yönlendirme sayısı güncellenirken hata oluştu: " + (error as Error).message,
-        variant: "destructive",
-      });
+    } catch (rpcError) {
+      console.error('RPC failed, attempting direct upsert fallback:', rpcError);
+      try {
+        const { error: upsertError } = await supabase
+          .from('client_referrals')
+          .upsert({
+            specialist_id: specialistId,
+            year: currentYear,
+            month,
+            referral_count: newCount,
+            is_referred: newCount > 0,
+            referred_at: newCount > 0 ? new Date().toISOString() : null,
+            referred_by: newCount > 0 ? currentUserId : null,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'specialist_id,year,month' })
+          .select();
+
+        if (upsertError) throw upsertError;
+
+        toast({
+          title: "Başarılı",
+          description: `${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
+        });
+        await fetchSpecialistsAndReferrals();
+      } catch (error) {
+        console.error('Error updating referral count (fallback upsert):', error);
+        // Rollback to previous state on failure
+        setSpecialists(prevState);
+        toast({
+          title: "Hata",
+          description: "Yönlendirme sayısı güncellenirken hata oluştu: " + (error as Error).message,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -856,7 +882,7 @@ const ClientReferrals = () => {
                                         variant="outline"
                                         onClick={() => updateReferralCount(
                                           specialistReferral.id, 
-                                          selectedMonth, 
+                                          monthIndex + 1, 
                                           Math.max(0, monthlyReferral.count - 1)
                                         )}
                                         disabled={monthlyReferral.count <= 0}
@@ -877,7 +903,7 @@ const ClientReferrals = () => {
                                         variant="outline"
                                         onClick={() => updateReferralCount(
                                           specialistReferral.id, 
-                                          selectedMonth, 
+                                          monthIndex + 1, 
                                           monthlyReferral.count + 1
                                         )}
                                         className="h-10 w-10 p-0 rounded-xl border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-600 transition-all duration-200"
