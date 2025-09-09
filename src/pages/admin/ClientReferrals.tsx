@@ -204,6 +204,22 @@ const ClientReferrals = () => {
   const updateReferralCount = async (specialistId: string, month: number, newCount: number) => {
     if (newCount < 0) return;
 
+    // Optimistic update first, then persist; rollback on error
+    const prevState = JSON.parse(JSON.stringify(specialists)) as SpecialistReferral[];
+
+    setSpecialists(prev =>
+      prev.map(spec =>
+        spec.id === specialistId
+          ? {
+              ...spec,
+              referrals: spec.referrals.map(ref =>
+                ref.month === month ? { ...ref, count: newCount } : ref
+              ),
+            }
+          : spec
+      )
+    );
+
     try {
       console.log(`Updating referral via RPC for specialist ${specialistId}, month ${month}, count ${newCount}`);
       const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
@@ -213,36 +229,22 @@ const ClientReferrals = () => {
         p_year: currentYear,
         p_month: month,
         p_referral_count: newCount,
-        p_referred_by: currentUserId
+        p_referred_by: currentUserId,
       });
 
       if (error) throw error;
-
-      // Local state'i güncelle (optimistik)
-      setSpecialists(prev => 
-        prev.map(spec => 
-          spec.id === specialistId 
-            ? {
-                ...spec,
-                referrals: spec.referrals.map(ref => 
-                  ref.month === month 
-                    ? { ...ref, count: newCount }
-                    : ref
-                )
-              }
-            : spec
-        )
-      );
 
       toast({
         title: "Başarılı",
         description: `${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
       });
+
       // Sunucudan taze veriyi çekerek kalıcılığı doğrula
       await fetchSpecialistsAndReferrals();
-      
     } catch (error) {
       console.error('Error updating referral count (RPC):', error);
+      // Rollback to previous state on failure
+      setSpecialists(prevState);
       toast({
         title: "Hata",
         description: "Yönlendirme sayısı güncellenirken hata oluştu: " + (error as Error).message,
