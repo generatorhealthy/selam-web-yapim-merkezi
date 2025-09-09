@@ -102,12 +102,12 @@ const LegalProceedings = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const proceedingAmount = parseCurrency(formData.proceeding_amount);
-      
+
       if (proceedingAmount <= 0) {
         toast({
           title: "Hata",
@@ -117,23 +117,32 @@ const LegalProceedings = () => {
         return;
       }
 
-      const dataToSubmit = {
+      // Kesinleşme veya tamamlanma durumlarında belgeler zorunlu olsun
+      const requiresDocs = formData.status === "KESİNLEŞTİ" || formData.status === "İCRA_TAMAMLANDI";
+      if (requiresDocs && (!formData.contract_pdf_url || !formData.invoice_pdf_url)) {
+        toast({
+          title: "Eksik belge",
+          description: "KESİNLEŞTİ/İCRA TAMAMLANDI için sözleşme ve fatura PDF'leri zorunludur.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const commonData = {
         customer_name: formData.customer_name.trim(),
         proceeding_amount: proceedingAmount,
         status: formData.status,
-        notes: formData.notes.trim(),
+        notes: formData.notes.trim() || null,
         contract_pdf_url: formData.contract_pdf_url || null,
         invoice_pdf_url: formData.invoice_pdf_url || null,
-        unpaid_months: 1, // Yeni icra talebi için varsayılan değer
-        total_months: 1   // Yeni icra talebi için varsayılan değer
-      };
+      } as const;
 
-      console.log('Submitting data:', dataToSubmit);
+      console.log("Submitting data (common):", commonData);
 
       if (editingProceeding) {
         const { error } = await supabase
           .from("legal_proceedings")
-          .update(dataToSubmit)
+          .update(commonData)
           .eq("id", editingProceeding.id);
 
         if (error) throw error;
@@ -142,33 +151,42 @@ const LegalProceedings = () => {
           description: "İcralık güncellendi.",
         });
       } else {
+        const insertData = {
+          ...commonData,
+          unpaid_months: 1, // Yeni icra talebi için varsayılan değer
+          total_months: 1, // Yeni icra talebi için varsayılan değer
+        };
+
         const { data, error } = await supabase
           .from("legal_proceedings")
-          .insert([dataToSubmit])
+          .insert([insertData])
           .select()
           .single();
 
         if (error) throw error;
 
-        // Send notification email for new legal proceeding
+        // Yeni icralık için e-posta bildirimi
         try {
-          const { error: emailError } = await supabase.functions.invoke('send-legal-proceeding-notification', {
-            body: {
-              customerName: dataToSubmit.customer_name,
-              proceedingAmount: dataToSubmit.proceeding_amount,
-              status: dataToSubmit.status,
-              notes: dataToSubmit.notes,
-              createdAt: new Date().toISOString()
+          const { error: emailError } = await supabase.functions.invoke(
+            "send-legal-proceeding-notification",
+            {
+              body: {
+                customerName: insertData.customer_name,
+                proceedingAmount: insertData.proceeding_amount,
+                status: insertData.status,
+                notes: insertData.notes,
+                createdAt: new Date().toISOString(),
+              },
             }
-          });
+          );
 
           if (emailError) {
-            console.error('Email notification error:', emailError);
-            // Don't fail the main operation if email fails
+            console.error("Email notification error:", emailError);
+            // Ana işlemi başarısız saymayalım
           }
         } catch (emailError) {
-          console.error('Failed to send notification email:', emailError);
-          // Don't fail the main operation if email fails
+          console.error("Failed to send notification email:", emailError);
+          // Ana işlemi başarısız saymayalım
         }
 
         toast({
@@ -185,14 +203,15 @@ const LegalProceedings = () => {
         status: "YENİ_İCRA_TALEBİ",
         notes: "",
         contract_pdf_url: "",
-        invoice_pdf_url: ""
+        invoice_pdf_url: "",
       });
       fetchProceedings();
     } catch (error) {
       console.error("İcralık kaydedilirken hata:", error);
+      const message = (error as any)?.message || (error as any)?.error_description || "İcralık kaydedilirken bir hata oluştu.";
       toast({
         title: "Hata",
-        description: "İcralık kaydedilirken bir hata oluştu.",
+        description: message,
         variant: "destructive",
       });
     }
