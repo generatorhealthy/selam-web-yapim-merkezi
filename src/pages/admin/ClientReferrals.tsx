@@ -45,6 +45,7 @@ const ClientReferrals = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
+  const canAccess = !roleLoading && !!userProfile && userProfile.is_approved && ['admin','staff'].includes(userProfile.role);
 
   const monthNames = [
     "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
@@ -155,19 +156,25 @@ const ClientReferrals = () => {
   };
 
   useEffect(() => {
-    console.log("Year changed to:", currentYear);
-    fetchSpecialistsAndReferrals();
-  }, [currentYear]);
+    if (canAccess) {
+      console.log("Auth ready. Fetching for year:", currentYear, "role:", userProfile?.role);
+      fetchSpecialistsAndReferrals();
+    } else {
+      console.log("Waiting for auth to fetch referrals...");
+    }
+  }, [currentYear, canAccess]);
 
-  // Sayfa odağa geldiğinde verileri yenile
+  // Sayfa odağa geldiğinde verileri yenile (yalnızca yetki varsa)
   useEffect(() => {
     const handleFocus = () => {
-      fetchSpecialistsAndReferrals();
+      if (canAccess) {
+        fetchSpecialistsAndReferrals();
+      }
     };
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [currentYear]);
+  }, [currentYear, canAccess]);
 
   // Filter specialists based on search term and sort by referral count
   useEffect(() => {
