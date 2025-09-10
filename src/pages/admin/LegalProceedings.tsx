@@ -117,16 +117,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         return;
       }
 
-      // Kesinleşme veya tamamlanma durumlarında belgeler zorunlu olsun
-      const requiresDocs = formData.status === "KESİNLEŞTİ" || formData.status === "İCRA_TAMAMLANDI";
-      if (requiresDocs && (!formData.contract_pdf_url || !formData.invoice_pdf_url)) {
-        toast({
-          title: "Eksik belge",
-          description: "KESİNLEŞTİ/İCRA TAMAMLANDI için sözleşme ve fatura PDF'leri zorunludur.",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Belgeler artık zorunlu değil - isteğe bağlı
 
       const commonData = {
         customer_name: formData.customer_name.trim(),
