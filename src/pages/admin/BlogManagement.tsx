@@ -427,6 +427,12 @@ const BlogManagement = () => {
       seo_description: blog.seo_description || "",
       keywords: blog.keywords || "",
     });
+    
+    // Force trigger form field updates
+    setTimeout(() => {
+      editForm.setValue('featured_image', blog.featured_image || '');
+    }, 0);
+    
     setIsEditDialogOpen(true);
   };
 
