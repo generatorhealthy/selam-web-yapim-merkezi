@@ -59,6 +59,7 @@ const ClientReferrals = () => {
 
   // Confirmation dialog state
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     specialistId: string;
     specialistName: string;
@@ -78,9 +79,14 @@ const ClientReferrals = () => {
 
   const handleConfirm = async () => {
     if (!pendingAction) return;
-    await updateReferralCount(pendingAction.specialistId, pendingAction.month, pendingAction.newCount);
-    setConfirmOpen(false);
-    setPendingAction(null);
+    try {
+      setIsSaving(true);
+      await updateReferralCount(pendingAction.specialistId, pendingAction.month, pendingAction.newCount);
+      setConfirmOpen(false);
+      setPendingAction(null);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const monthNames = [
@@ -1089,8 +1095,8 @@ const ClientReferrals = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Vazgeç</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>Onayla</AlertDialogAction>
+            <AlertDialogCancel type="button" disabled={isSaving}>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction type="button" onClick={handleConfirm} disabled={isSaving}>Onayla</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
