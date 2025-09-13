@@ -254,9 +254,7 @@ const ClientReferrals = () => {
     console.log(`👤 [UPDATE] Current user ID: ${currentUserId}`);
 
     try {
-      const nowIso = new Date().toISOString();
-
-      // Güvenilir sunucu tarafı işlem: RPC ile tek satır upsert
+      // 1) Try RPC (preferred)
       const { data: rpcData, error: rpcError } = await supabase.rpc(
         'admin_upsert_client_referral',
         {
@@ -268,8 +266,31 @@ const ClientReferrals = () => {
         }
       );
 
-      if (rpcError) throw rpcError;
-      console.log('✅ RPC upsert ok:', rpcData);
+      if (rpcError || !rpcData) {
+        console.warn('⚠️ RPC failed or returned empty. Falling back to direct upsert.', rpcError);
+        // 2) Fallback: direct upsert with onConflict
+        const upsertPayload: any = {
+          specialist_id: specialistId,
+          year: currentYear,
+          month,
+          referral_count: newCount,
+          is_referred: newCount > 0,
+          referred_at: newCount > 0 ? new Date().toISOString() : null,
+          referred_by: currentUserId,
+          updated_at: new Date().toISOString(),
+        };
+
+        const { data: upsertData, error: upsertError } = await supabase
+          .from('client_referrals')
+          .upsert(upsertPayload, { onConflict: 'specialist_id,year,month' })
+          .select('referral_count, notes, updated_at')
+          .single();
+
+        if (upsertError) throw upsertError;
+        console.log('✅ Direct upsert ok:', upsertData);
+      } else {
+        console.log('✅ RPC upsert ok:', rpcData);
+      }
 
       // DB doğrulama
       const { data: verifyRow, error: verifyError } = await supabase
@@ -280,7 +301,7 @@ const ClientReferrals = () => {
         .eq('month', month)
         .maybeSingle();
 
-      console.log('🔎 [VERIFY] Row after RPC:', verifyRow, verifyError);
+      console.log('🔎 [VERIFY] Row after save:', verifyRow, verifyError);
 
       toast({
         title: 'Başarılı',
@@ -313,9 +334,7 @@ const ClientReferrals = () => {
         ?.referrals.find((r) => r.month === month)?.count ?? 0;
 
     try {
-      const nowIso = new Date().toISOString();
-
-      // Güvenilir sunucu tarafı işlem: RPC ile not upsert
+      // 1) Try RPC first
       const { data: rpcData, error: rpcError } = await supabase.rpc(
         'admin_update_client_referral_notes',
         {
@@ -326,8 +345,31 @@ const ClientReferrals = () => {
         }
       );
 
-      if (rpcError) throw rpcError;
-      console.log('✅ [NOTES] RPC ok:', rpcData);
+      if (rpcError || !rpcData) {
+        console.warn('⚠️ [NOTES] RPC failed or empty. Falling back to direct upsert.', rpcError);
+
+        // Ensure row exists and upsert notes with onConflict
+        const { data: upsertData, error: upsertError } = await supabase
+          .from('client_referrals')
+          .upsert(
+            {
+              specialist_id: specialistId,
+              year: currentYear,
+              month,
+              notes,
+              referral_count: existingCount,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'specialist_id,year,month' }
+          )
+          .select('notes, referral_count, updated_at')
+          .single();
+
+        if (upsertError) throw upsertError;
+        console.log('✅ [NOTES] Direct upsert ok:', upsertData);
+      } else {
+        console.log('✅ [NOTES] RPC ok:', rpcData);
+      }
 
       // Verify DB value (optional)
       const { data: verifyRow, error: verifyError } = await supabase
@@ -338,7 +380,7 @@ const ClientReferrals = () => {
         .eq('month', month)
         .maybeSingle();
 
-      console.log('🔎 [VERIFY-NOTES] Row after RPC:', verifyRow, verifyError);
+      console.log('🔎 [VERIFY-NOTES] Row after save:', verifyRow, verifyError);
 
       // Local state'i güncelle
       setSpecialists((prev) =>
