@@ -49,10 +49,7 @@ const SupportTickets = () => {
         .from('support_tickets')
         .select(`
           *,
-          specialists(
-            email,
-            user_profiles(email)
-          )
+          specialists(email)
         `)
         .order('created_at', { ascending: false });
 
@@ -61,7 +58,7 @@ const SupportTickets = () => {
       // Map the data to include the correct email address
       const mappedTickets = (data || []).map((ticket: any) => ({
         ...ticket,
-        specialist_email: ticket.specialists?.email || ticket.specialists?.user_profiles?.email || ticket.specialist_email
+        specialist_email: ticket.specialists?.email || ticket.specialist_email
       }));
       
       setTickets(mappedTickets as SupportTicket[]);
