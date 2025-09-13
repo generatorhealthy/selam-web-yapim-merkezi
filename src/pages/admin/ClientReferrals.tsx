@@ -264,29 +264,46 @@ const ClientReferrals = () => {
       const specialistName = specialist?.specialist.name || 'Unknown';
       console.log(`🔄 [UPDATE] ${specialistName} (${specialistId}) month=${month} -> ${newCount}`);
 
-      // Use safe upsert with ON CONFLICT ensuring no duplicate rows for (specialist_id, year, month)
-      const upsertPayload = {
-        specialist_id: specialistId,
-        year: currentYear,
-        month,
-        referral_count: newCount,
-        is_referred: newCount > 0,
-        referred_at: newCount > 0 ? new Date().toISOString() : null,
-        referred_by: (await supabase.auth.getUser()).data.user?.id || null,
-        updated_at: new Date().toISOString(),
-      };
+      // Önce RPC ile güvenli upsert dene (RLS ve tek kod yolu için)
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc(
+        'admin_upsert_client_referral',
+        {
+          p_specialist_id: specialistId,
+          p_year: currentYear,
+          p_month: month,
+          p_referral_count: newCount,
+          p_referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+        }
+      );
 
-      const { data: upsertResult, error: upsertError } = await supabase
-        .from('client_referrals')
-        .upsert(upsertPayload, { 
-          onConflict: 'specialist_id,year,month',
-          ignoreDuplicates: false
-        })
-        .select('id, referral_count, updated_at')
-        .single();
+      if (rpcErr) {
+        console.warn('⚠️ [UPDATE] RPC failed, falling back to direct upsert.', rpcErr);
+        // RPC başarısız olursa, çakışma hedefi belirterek güvenli upsert yap
+        const upsertPayload = {
+          specialist_id: specialistId,
+          year: currentYear,
+          month,
+          referral_count: newCount,
+          is_referred: newCount > 0,
+          referred_at: newCount > 0 ? new Date().toISOString() : null,
+          referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+          updated_at: new Date().toISOString(),
+        };
 
-      if (upsertError) throw upsertError;
-      console.log('✅ [UPDATE] Upsert successful:', upsertResult);
+        const { data: upsertResult, error: upsertError } = await supabase
+          .from('client_referrals')
+          .upsert(upsertPayload, { 
+            onConflict: 'specialist_id,year,month',
+            ignoreDuplicates: false
+          })
+          .select('id, referral_count, updated_at')
+          .single();
+
+        if (upsertError) throw upsertError;
+        console.log('✅ [UPDATE] Direct upsert successful:', upsertResult);
+      } else {
+        console.log('✅ [UPDATE] RPC upsert successful:', rpcRes);
+      }
 
       await fetchSpecialistsAndReferrals();
 
