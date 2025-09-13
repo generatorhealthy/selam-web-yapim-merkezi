@@ -47,21 +47,12 @@ const SupportTickets = () => {
     try {
       const { data, error } = await supabase
         .from('support_tickets')
-        .select(`
-          *,
-          specialists(email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Map the data to include the correct email address
-      const mappedTickets = (data || []).map((ticket: any) => ({
-        ...ticket,
-        specialist_email: ticket.specialists?.email || ticket.specialist_email
-      }));
-      
-      setTickets(mappedTickets as SupportTicket[]);
+      setTickets((data || []) as SupportTicket[]);
     } catch (error) {
       console.error('Error fetching tickets:', error);
       toast({
