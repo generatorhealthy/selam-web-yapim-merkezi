@@ -251,26 +251,56 @@ const ClientReferrals = () => {
     console.log(`👤 [UPDATE] Current user ID: ${currentUserId}`);
 
     try {
-      console.log(`🔄 [RPC] Calling admin_upsert_client_referral for ${specialistName}`);
-      console.log(`📊 [RPC] Parameters: specialist=${specialistId}, year=${currentYear}, month=${month}, count=${newCount}`);
+      const nowIso = new Date().toISOString();
 
-      const { data: rpcData, error: rpcError } = await supabase.rpc('admin_upsert_client_referral', {
-        p_specialist_id: specialistId,
-        p_year: currentYear,
-        p_month: month,
-        p_referral_count: newCount,
-        p_referred_by: currentUserId,
-      });
+      // 1) Try UPDATE first
+      console.log(`[SQL] Attempting UPDATE for ${specialistName}`);
+      const { data: updData, error: updError } = await supabase
+        .from('client_referrals')
+        .update({
+          referral_count: newCount,
+          is_referred: newCount > 0,
+          referred_at: newCount > 0 ? nowIso : null,
+          referred_by: newCount > 0 ? currentUserId : null,
+          updated_at: nowIso,
+        })
+        .eq('specialist_id', specialistId)
+        .eq('year', currentYear)
+        .eq('month', month)
+        .select();
 
-      console.log(`📥 [RPC] Response data:`, rpcData);
-      console.log(`❌ [RPC] Response error:`, rpcError);
+      if (updError) {
+        console.warn('⚠️ UPDATE error (will try INSERT):', updError);
+      }
 
-      if (rpcError) throw rpcError;
+      if (updData && updData.length > 0 && !updError) {
+        console.log('✅ UPDATE affected rows:', updData.length);
+      } else {
+        // 2) If no row, INSERT
+        console.log(`[SQL] No rows updated. Attempting INSERT for ${specialistName}`);
+        const { data: insData, error: insError } = await supabase
+          .from('client_referrals')
+          .insert([
+            {
+              specialist_id: specialistId,
+              year: currentYear,
+              month,
+              referral_count: newCount,
+              is_referred: newCount > 0,
+              referred_at: newCount > 0 ? nowIso : null,
+              referred_by: newCount > 0 ? currentUserId : null,
+              created_at: nowIso,
+              updated_at: nowIso,
+            },
+          ])
+          .select();
 
-      console.log(`✅ [RPC] Successfully updated via RPC for ${specialistName}`);
+        if (insError) throw insError;
+        console.log('✅ INSERT created rows:', insData?.length || 0);
+      }
 
       toast({
-        title: "Başarılı",
+        title: 'Başarılı',
         description: `${specialistName} - ${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
       });
 
@@ -278,109 +308,103 @@ const ClientReferrals = () => {
       console.log(`🔄 [REFRESH] Fetching fresh data to verify persistence for ${specialistName}`);
       await fetchSpecialistsAndReferrals();
       console.log(`✅ [REFRESH] Data refresh completed for ${specialistName}`);
+    } catch (error) {
+      console.error(`❌ Error updating referral count for ${specialistName}:`, error);
+      // Rollback to previous state on failure
+      console.log(`🔄 [ROLLBACK] Rolling back UI state for ${specialistName}`);
+      setSpecialists(prevState);
+      setFilteredSpecialists(prev =>
+        prev.map(spec => (spec.id === specialistId ? prevState.find(p => p.id === specialistId) || spec : spec))
+      );
 
-    } catch (rpcError) {
-      console.error('❌ [RPC] RPC failed, attempting direct upsert fallback:', rpcError);
-      
-      try {
-        console.log(`🔄 [FALLBACK] Attempting direct upsert for ${specialistName}`);
-        
-        const { data: upsertData, error: upsertError } = await supabase
-          .from('client_referrals')
-          .upsert({
-            specialist_id: specialistId,
-            year: currentYear,
-            month,
-            referral_count: newCount,
-            is_referred: newCount > 0,
-            referred_at: newCount > 0 ? new Date().toISOString() : null,
-            referred_by: newCount > 0 ? currentUserId : null,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'specialist_id,year,month' })
-          .select();
-
-        console.log(`📥 [FALLBACK] Upsert data:`, upsertData);
-        console.log(`❌ [FALLBACK] Upsert error:`, upsertError);
-
-        if (upsertError) throw upsertError;
-
-        console.log(`✅ [FALLBACK] Successfully updated via direct upsert for ${specialistName}`);
-
-        toast({
-          title: "Başarılı",
-          description: `${specialistName} - ${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
-        });
-        
-        console.log(`🔄 [REFRESH-FALLBACK] Fetching fresh data after fallback for ${specialistName}`);
-        await fetchSpecialistsAndReferrals();
-        console.log(`✅ [REFRESH-FALLBACK] Data refresh completed after fallback for ${specialistName}`);
-
-      } catch (error) {
-        console.error(`❌ [FALLBACK] Error updating referral count (fallback upsert) for ${specialistName}:`, error);
-        // Rollback to previous state on failure
-        console.log(`🔄 [ROLLBACK] Rolling back UI state for ${specialistName}`);
-        setSpecialists(prevState);
-        setFilteredSpecialists(prev => 
-          prev.map(spec => 
-            spec.id === specialistId 
-              ? prevState.find(p => p.id === specialistId) || spec
-              : spec
-          )
-        );
-        
-        toast({
-          title: "Hata",
-          description: `${specialistName} - Yönlendirme sayısı güncellenirken hata oluştu: ${(error as Error).message}`,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: 'Hata',
+        description: `${specialistName} - Yönlendirme sayısı güncellenirken hata oluştu: ${(error as Error).message}`,
+        variant: 'destructive',
+      });
     }
   };
-
   const updateNotes = async (specialistId: string, month: number, notes: string) => {
-    try {
-      console.log(`Updating notes via RPC for specialist ${specialistId}, month ${month}`);
-      
-      const { data, error } = await supabase.rpc('admin_update_client_referral_notes', {
-        p_specialist_id: specialistId,
-        p_year: currentYear,
-        p_month: month,
-        p_notes: notes
-      });
+    console.log(`🔄 [NOTES] Start update for specialist ${specialistId}, month ${month}`);
 
-      if (error) throw error;
+    // Get existing count from local state to avoid overriding
+    const existingCount =
+      specialists
+        .find((s) => s.id === specialistId)
+        ?.referrals.find((r) => r.month === month)?.count ?? 0;
+
+    try {
+      const nowIso = new Date().toISOString();
+
+      // 1) Try UPDATE first
+      console.log(`[SQL] NOTES UPDATE`);
+      const { data: updData, error: updError } = await supabase
+        .from('client_referrals')
+        .update({
+          notes,
+          updated_at: nowIso,
+        })
+        .eq('specialist_id', specialistId)
+        .eq('year', currentYear)
+        .eq('month', month)
+        .select();
+
+      if (updError) {
+        console.warn('⚠️ NOTES UPDATE error (will try INSERT):', updError);
+      }
+
+      if (updData && updData.length > 0 && !updError) {
+        console.log('✅ NOTES UPDATE affected rows:', updData.length);
+      } else {
+        // 2) If no row, INSERT with existing count
+        console.log(`[SQL] NOTES INSERT`);
+        const { data: insData, error: insError } = await supabase
+          .from('client_referrals')
+          .insert([
+            {
+              specialist_id: specialistId,
+              year: currentYear,
+              month,
+              referral_count: existingCount,
+              is_referred: existingCount > 0,
+              referred_at: existingCount > 0 ? nowIso : null,
+              referred_by: null,
+              notes,
+              created_at: nowIso,
+              updated_at: nowIso,
+            },
+          ])
+          .select();
+
+        if (insError) throw insError;
+        console.log('✅ NOTES INSERT created rows:', insData?.length || 0);
+      }
 
       // Local state'i güncelle
-      setSpecialists(prev => 
-        prev.map(spec => 
-          spec.id === specialistId 
+      setSpecialists((prev) =>
+        prev.map((spec) =>
+          spec.id === specialistId
             ? {
                 ...spec,
-                referrals: spec.referrals.map(ref => 
-                  ref.month === month 
-                    ? { ...ref, notes }
-                    : ref
-                )
+                referrals: spec.referrals.map((ref) => (ref.month === month ? { ...ref, notes } : ref)),
               }
             : spec
         )
       );
 
       toast({
-        title: "Başarılı",
-        description: "Not güncellendi",
+        title: 'Başarılı',
+        description: 'Not güncellendi',
       });
-      
     } catch (error) {
-      console.error('Error updating notes (RPC):', error);
+      console.error('❌ Error updating notes:', error);
       toast({
-        title: "Hata",
-        description: "Not güncellenirken hata oluştu: " + (error as Error).message,
-        variant: "destructive",
+        title: 'Hata',
+        description: 'Not güncellenirken hata oluştu: ' + (error as Error).message,
+        variant: 'destructive',
       });
     }
   };
-
   const updateCity = async (specialistId: string, newCity: string) => {
     try {
       console.log(`Updating city for specialist ${specialistId}, new city: ${newCity}`);
