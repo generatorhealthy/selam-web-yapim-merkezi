@@ -12,6 +12,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import { UserCheck, Calendar, Users, Plus, Minus, Search, Hash, Edit3, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Specialist {
   id: string;
@@ -46,6 +56,32 @@ const ClientReferrals = () => {
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const canAccess = !roleLoading && !!userProfile && userProfile.is_approved && ['admin','staff'].includes(userProfile.role);
+
+  // Confirmation dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    specialistId: string;
+    specialistName: string;
+    month: number;
+    newCount: number;
+  } | null>(null);
+
+  const requestConfirm = (
+    specialistId: string,
+    specialistName: string,
+    month: number,
+    newCount: number
+  ) => {
+    setPendingAction({ specialistId, specialistName, month, newCount });
+    setConfirmOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    if (!pendingAction) return;
+    await updateReferralCount(pendingAction.specialistId, pendingAction.month, pendingAction.newCount);
+    setConfirmOpen(false);
+    setPendingAction(null);
+  };
 
   const monthNames = [
     "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
@@ -946,8 +982,9 @@ const ClientReferrals = () => {
                                         type="button"
                                         size="sm"
                                         variant="outline"
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateReferralCount(
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); requestConfirm(
                                           specialistReferral.id,
+                                          specialistReferral.specialist.name,
                                           monthIndex + 1,
                                           Math.max(0, monthlyReferral.count - 1)
                                         ); }}
@@ -968,10 +1005,11 @@ const ClientReferrals = () => {
                                         type="button"
                                         size="sm"
                                         variant="outline"
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateReferralCount(
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); requestConfirm(
                                           specialistReferral.id,
+                                          specialistReferral.specialist.name,
                                           monthIndex + 1,
-                                          monthlyReferral.count + 1
+                                          (monthlyReferral.count + 1)
                                         ); }}
                                         className="h-10 w-10 p-0 rounded-xl border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-600 transition-all duration-200"
                                       >
@@ -1041,6 +1079,21 @@ const ClientReferrals = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Yönlendirme sayısını onayla</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction ? `${pendingAction.specialistName} - ${monthNames[pendingAction.month - 1]} için yönlendirme sayısı ${pendingAction.newCount} olarak kaydedilecek.` : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>Onayla</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       
       <Footer />
     </div>
