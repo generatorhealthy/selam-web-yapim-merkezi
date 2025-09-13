@@ -259,152 +259,72 @@ const ClientReferrals = () => {
   const updateReferralCount = async (specialistId: string, month: number, newCount: number) => {
     if (newCount < 0) return;
 
-    console.log(`🔄 [UPDATE] Starting update for specialist ${specialistId}, month ${month}, count ${newCount}`);
-
-    // Get specialist name for better debugging
-    const specialist = specialists.find(s => s.id === specialistId);
-    const specialistName = specialist?.specialist.name || 'Unknown';
-    console.log(`👤 [UPDATE] Specialist: ${specialistName}`);
-
-    // Optimistic update first, then persist; rollback on error
-    const prevState = JSON.parse(JSON.stringify(specialists)) as SpecialistReferral[];
-
-    setSpecialists(prev =>
-      prev.map(spec =>
-        spec.id === specialistId
-          ? {
-              ...spec,
-              referrals: spec.referrals.map(ref =>
-                ref.month === month ? { ...ref, count: newCount } : ref
-              ),
-            }
-          : spec
-      )
-    );
-    // Keep visible list in sync immediately
-    setFilteredSpecialists(prev =>
-      prev.map(spec =>
-        spec.id === specialistId
-          ? {
-              ...spec,
-              referrals: spec.referrals.map(ref =>
-                ref.month === month ? { ...ref, count: newCount } : ref
-              ),
-            }
-          : spec
-      )
-    );
-
-    console.log(`✅ [UPDATE] Optimistic UI update completed for ${specialistName}`);
-
-    const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
-    console.log(`👤 [UPDATE] Current user ID: ${currentUserId}`);
-
     try {
-      // 1) Try RPC (preferred)
-      const { data: rpcData, error: rpcError } = await supabase.rpc(
-        'admin_upsert_client_referral',
-        {
-          p_specialist_id: specialistId,
-          p_year: currentYear,
-          p_month: month,
-          p_referral_count: newCount,
-          p_referred_by: currentUserId,
-        }
-      );
+      const specialist = specialists.find((s) => s.id === specialistId);
+      const specialistName = specialist?.specialist.name || 'Unknown';
+      console.log(`🔄 [UPDATE] ${specialistName} (${specialistId}) month=${month} -> ${newCount}`);
 
-      if (rpcError || !rpcData) {
-        console.warn('⚠️ RPC failed or returned empty. Falling back to direct upsert.', rpcError);
-        // 2) Fallback: direct upsert with onConflict
-        const upsertPayload: any = {
-          specialist_id: specialistId,
-          year: currentYear,
-          month,
-          referral_count: newCount,
-          is_referred: newCount > 0,
-          referred_at: newCount > 0 ? new Date().toISOString() : null,
-          referred_by: currentUserId,
-          updated_at: new Date().toISOString(),
-        };
-
-        const { data: upsertData, error: upsertError } = await supabase
-          .from('client_referrals')
-          .upsert(upsertPayload, { onConflict: 'specialist_id,year,month' })
-          .select('referral_count, notes, updated_at')
-          .single();
-
-        if (upsertError) throw upsertError;
-        console.log('✅ Direct upsert ok:', upsertData);
-      } else {
-        console.log('✅ RPC upsert ok:', rpcData);
-      }
-
-      // DB doğrulama
-      const { data: verifyRow, error: verifyError } = await supabase
+      // 1) Read current row (authoritative)
+      const { data: existing, error: readErr } = await supabase
         .from('client_referrals')
-        .select('id, referral_count, notes, updated_at')
+        .select('id, referral_count')
         .eq('specialist_id', specialistId)
         .eq('year', currentYear)
         .eq('month', month)
         .maybeSingle();
 
-      console.log('🔎 [VERIFY] Row after save:', verifyRow, verifyError);
-
-      // Ek güvence: Değer uyuşmazsa doğrudan update/insert dene
-      if (verifyError || !verifyRow || Number(verifyRow.referral_count) !== newCount) {
-        console.warn('⚠️ Verification mismatch. Applying explicit save path...');
-        const { data: existing, error: existingError } = await supabase
-          .from('client_referrals')
-          .select('id')
-          .eq('specialist_id', specialistId)
-          .eq('year', currentYear)
-          .eq('month', month)
-          .maybeSingle();
-
-        if (existing && existing.id) {
-          const { error: updError } = await supabase
-            .from('client_referrals')
-            .update({
-              referral_count: newCount,
-              is_referred: newCount > 0,
-              referred_at: newCount > 0 ? new Date().toISOString() : null,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', existing.id);
-          if (updError) throw updError;
-        } else {
-          const { error: insError } = await supabase
-            .from('client_referrals')
-            .insert({
-              specialist_id: specialistId,
-              year: currentYear,
-              month,
-              referral_count: newCount,
-              is_referred: newCount > 0,
-              referred_at: new Date().toISOString(),
-              referred_by: currentUserId,
-            });
-          if (insError) throw insError;
-        }
+      if (readErr) {
+        console.warn('⚠️ [UPDATE] Read error (ignored if no row):', readErr);
       }
+
+      // 2) Persist deterministically (no optimistic UI)
+      if (existing && existing.id) {
+        const { error: updErr } = await supabase
+          .from('client_referrals')
+          .update({
+            referral_count: newCount,
+            is_referred: newCount > 0,
+            referred_at: newCount > 0 ? new Date().toISOString() : null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id);
+        if (updErr) throw updErr;
+      } else {
+        const { error: insErr } = await supabase
+          .from('client_referrals')
+          .insert({
+            specialist_id: specialistId,
+            year: currentYear,
+            month,
+            referral_count: newCount,
+            is_referred: newCount > 0,
+            referred_at: new Date().toISOString(),
+            referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+          });
+        if (insErr) throw insErr;
+      }
+
+      // 3) Verify and refresh UI strictly from DB
+      const { data: verifyRow, error: verifyError } = await supabase
+        .from('client_referrals')
+        .select('id, referral_count, updated_at')
+        .eq('specialist_id', specialistId)
+        .eq('year', currentYear)
+        .eq('month', month)
+        .maybeSingle();
+      console.log('🔎 [VERIFY] After save:', verifyRow, verifyError);
+
+      await fetchSpecialistsAndReferrals();
 
       toast({
         title: 'Başarılı',
         description: `${specialistName} - ${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
       });
-
-      await fetchSpecialistsAndReferrals();
     } catch (error) {
-      console.error(`❌ Error updating referral count for ${specialistName}:`, error);
-      // Rollback to previous state on failure
-      setSpecialists(prevState);
-      setFilteredSpecialists(prev =>
-        prev.map(spec => (spec.id === specialistId ? prevState.find(p => p.id === specialistId) || spec : spec))
-      );
-
+      console.error('❌ [UPDATE] Error:', error);
       toast({
         title: 'Hata',
-        description: `${specialistName} - Yönlendirme sayısı güncellenirken hata oluştu: ${(error as Error).message}`,
+        description: 'Yönlendirme sayısı güncellenirken hata oluştu: ' + (error as Error).message,
         variant: 'destructive',
       });
     }
