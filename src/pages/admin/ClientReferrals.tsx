@@ -489,71 +489,7 @@ const ClientReferrals = () => {
   };
 
   // Copy August notes to other months (bulk upsert for reliability and speed)
-  const copyAugustNotesToAllMonths = async () => {
-    try {
-      console.log('🔄 Copying August notes to all months (bulk upsert)...');
-
-      const rows: any[] = [];
-      const nowIso = new Date().toISOString();
-
-      for (const spec of specialists) {
-        const aug = spec.referrals.find((ref) => ref.month === 8);
-        if (!aug || !aug.notes) continue;
-
-        for (let m = 1; m <= 12; m++) {
-          if (m === 8) continue; // Skip August itself
-          const existingCount = spec.referrals.find((r) => r.month === m)?.count ?? 0;
-          rows.push({
-            specialist_id: spec.id,
-            year: currentYear,
-            month: m,
-            notes: aug.notes,
-            referral_count: existingCount,
-            is_referred: existingCount > 0,
-            referred_at: existingCount > 0 ? nowIso : null,
-            updated_at: nowIso,
-          });
-        }
-      }
-
-      if (rows.length === 0) {
-        toast({ title: 'Bilgi', description: 'Kopyalanacak Ağustos notu bulunamadı.' });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('client_referrals')
-        .upsert(rows, { onConflict: 'specialist_id,year,month' });
-
-      if (error) throw error;
-
-      // Local state'i güncelle
-      setSpecialists((prev) =>
-        prev.map((spec) => {
-          const aug = spec.referrals.find((r) => r.month === 8);
-          if (!aug || !aug.notes) return spec;
-          return {
-            ...spec,
-            referrals: spec.referrals.map((ref) =>
-              ref.month !== 8 ? { ...ref, notes: aug.notes } : ref
-            ),
-          };
-        })
-      );
-
-      toast({
-        title: 'Başarılı',
-        description: 'Ağustos ayındaki notlar tüm aylara kopyalandı.',
-      });
-    } catch (error) {
-      console.error('❌ Error copying August notes:', error);
-      toast({
-        title: 'Hata',
-        description: 'Notlar kopyalanırken hata oluştu: ' + (error as Error).message,
-        variant: 'destructive',
-      });
-    }
-  };
+  // Ağustos notlarını kopyalama özelliği kaldırıldı (istek doğrultusunda). Mevcut notlar korunur.
 
   // Color generator for internal numbers
   const getInternalNumberColor = (internalNumber?: string) => {
@@ -779,15 +715,7 @@ const ClientReferrals = () => {
                        <p className="text-gray-600">
                          Bu ay toplam {getMonthlyTotal(monthIndex + 1)} yönlendirme yapıldı
                        </p>
-                       <div className="mt-4">
-                         <Button
-                           onClick={copyAugustNotesToAllMonths}
-                           variant="outline"
-                           className="bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-600"
-                         >
-                           Ağustos Notlarını Tüm Aylara Kopyala
-                         </Button>
-                       </div>
+                        {/* Ağustos kopyalama kaldırıldı */}
                      </div>
 
                     {/* Enhanced Search Section */}
