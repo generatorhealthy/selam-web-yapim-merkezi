@@ -299,6 +299,29 @@ const ClientReferrals = () => {
         console.log('✅ INSERT created rows:', insData?.length || 0);
       }
 
+      // Verify DB value before refreshing
+      const { data: verifyRow, error: verifyError } = await supabase
+        .from('client_referrals')
+        .select('referral_count, notes, updated_at')
+        .eq('specialist_id', specialistId)
+        .eq('year', currentYear)
+        .eq('month', month)
+        .maybeSingle();
+
+      console.log('🔎 [VERIFY] Row after write:', verifyRow, verifyError);
+      if (verifyError) {
+        console.warn('⚠️ [VERIFY] Could not verify row:', verifyError);
+      } else if (verifyRow && Number(verifyRow.referral_count) !== Number(newCount)) {
+        console.warn('⚠️ [VERIFY] Mismatch detected. Forcing RPC upsert.');
+        await supabase.rpc('admin_upsert_client_referral', {
+          p_specialist_id: specialistId,
+          p_year: currentYear,
+          p_month: month,
+          p_referral_count: newCount,
+          p_referred_by: currentUserId,
+        });
+      }
+
       toast({
         title: 'Başarılı',
         description: `${specialistName} - ${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
@@ -378,6 +401,28 @@ const ClientReferrals = () => {
 
         if (insError) throw insError;
         console.log('✅ NOTES INSERT created rows:', insData?.length || 0);
+      }
+
+      // Verify DB value
+      const { data: verifyRow, error: verifyError } = await supabase
+        .from('client_referrals')
+        .select('notes, referral_count, updated_at')
+        .eq('specialist_id', specialistId)
+        .eq('year', currentYear)
+        .eq('month', month)
+        .maybeSingle();
+
+      console.log('🔎 [VERIFY-NOTES] Row after write:', verifyRow, verifyError);
+      if (verifyError) {
+        console.warn('⚠️ [VERIFY-NOTES] Could not verify row:', verifyError);
+      } else if (verifyRow && (verifyRow.notes ?? '') !== (notes ?? '')) {
+        console.warn('⚠️ [VERIFY-NOTES] Mismatch detected. Forcing RPC upsert.');
+        await supabase.rpc('admin_update_client_referral_notes', {
+          p_specialist_id: specialistId,
+          p_year: currentYear,
+          p_month: month,
+          p_notes: notes,
+        });
       }
 
       // Local state'i güncelle
