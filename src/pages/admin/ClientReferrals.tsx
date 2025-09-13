@@ -89,6 +89,11 @@ const ClientReferrals = () => {
     }
   };
 
+  // Auto notes dialog state
+  const [autoNotesOpen, setAutoNotesOpen] = useState(false);
+  const [autoNoteText, setAutoNoteText] = useState("");
+  const [isApplyingAuto, setIsApplyingAuto] = useState(false);
+
   const monthNames = [
     "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
     "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
@@ -484,6 +489,66 @@ const ClientReferrals = () => {
       });
     }
   };
+
+  // Bulk apply note to specialists without notes for the selected month
+  const applyAutoNotesForMonth = async () => {
+    try {
+      setIsApplyingAuto(true);
+      const targets = specialists.filter((s) => {
+        const ref = s.referrals.find((r) => r.month === selectedMonth);
+        return !ref || !ref.notes || ref.notes.trim() === '';
+      });
+
+      if (targets.length === 0) {
+        toast({ title: 'Bilgi', description: 'Seçili ay için notu olmayan uzman yok.' });
+        setAutoNotesOpen(false);
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const payload = targets.map((s) => {
+        const ref = s.referrals.find((r) => r.month === selectedMonth);
+        const count = ref?.count ?? 0;
+        return {
+          specialist_id: s.id,
+          year: currentYear,
+          month: selectedMonth,
+          notes: autoNoteText,
+          referral_count: count,
+          updated_at: now,
+        } as any;
+      });
+
+      const { data, error } = await supabase
+        .from('client_referrals')
+        .upsert(payload, { onConflict: 'specialist_id,year,month' })
+        .select('specialist_id');
+
+      if (error) throw error;
+
+      // Update local state
+      setSpecialists((prev) =>
+        prev.map((spec) => {
+          const isTarget = targets.some((t) => t.id === spec.id);
+          if (!isTarget) return spec;
+          return {
+            ...spec,
+            referrals: spec.referrals.map((r) =>
+              r.month === selectedMonth ? { ...r, notes: autoNoteText } : r
+            ),
+          };
+        })
+      );
+
+      toast({ title: 'Başarılı', description: `${targets.length} uzman için not eklendi` });
+      setAutoNotesOpen(false);
+    } catch (e) {
+      console.error('Auto notes error', e);
+      toast({ title: 'Hata', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setIsApplyingAuto(false);
+    }
+  };
   const updateCity = async (specialistId: string, newCity: string) => {
     try {
       console.log(`Updating city for specialist ${specialistId}, new city: ${newCity}`);
@@ -834,10 +899,22 @@ const ClientReferrals = () => {
                        <h3 className="text-2xl font-bold text-gray-800 mb-2">
                          {monthNames[monthIndex]} {currentYear}
                        </h3>
-                       <p className="text-gray-600">
-                         Bu ay toplam {getMonthlyTotal(monthIndex + 1)} yönlendirme yapıldı
-                       </p>
-                        {/* Ağustos kopyalama kaldırıldı */}
+                        <p className="text-gray-600">
+                          Bu ay toplam {getMonthlyTotal(monthIndex + 1)} yönlendirme yapıldı
+                        </p>
+                        <div className="mt-3 flex justify-center">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setAutoNoteText(`${monthNames[selectedMonth - 1]} ${currentYear} - otomatik not`);
+                              setAutoNotesOpen(true);
+                            }}
+                          >
+                            Notu olmayanlara uygula
+                          </Button>
+                        </div>
                      </div>
 
                     {/* Enhanced Search Section */}
@@ -1097,6 +1174,31 @@ const ClientReferrals = () => {
           <AlertDialogFooter>
             <AlertDialogCancel type="button" disabled={isSaving}>Vazgeç</AlertDialogCancel>
             <AlertDialogAction type="button" onClick={handleConfirm} disabled={isSaving}>Onayla</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={autoNotesOpen} onOpenChange={setAutoNotesOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Notu olmayanlara otomatik not ekle</AlertDialogTitle>
+            <AlertDialogDescription>
+              Seçili ay için notu boş olan tüm uzmanlara aşağıdaki metin eklenecek.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-500">Not metni</Label>
+            <Input
+              value={autoNoteText}
+              onChange={(e) => setAutoNoteText(e.target.value)}
+              placeholder={`${monthNames[selectedMonth - 1]} ${currentYear} - otomatik not`}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button" disabled={isApplyingAuto}>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction type="button" onClick={applyAutoNotesForMonth} disabled={isApplyingAuto}>
+              Uygula
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
