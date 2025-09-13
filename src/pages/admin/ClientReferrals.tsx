@@ -863,6 +863,7 @@ const ClientReferrals = () => {
                                   <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl border border-blue-200/30 shadow-md p-4">
                                     <div className="flex items-center space-x-4">
                                       <Button
+                                        type="button"
                                         size="sm"
                                         variant="outline"
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateReferralCount(
@@ -884,6 +885,7 @@ const ClientReferrals = () => {
                                       </div>
                                       
                                       <Button
+                                        type="button"
                                         size="sm"
                                         variant="outline"
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateReferralCount(
