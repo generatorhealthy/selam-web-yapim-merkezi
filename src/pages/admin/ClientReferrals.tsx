@@ -206,6 +206,13 @@ const ClientReferrals = () => {
   const updateReferralCount = async (specialistId: string, month: number, newCount: number) => {
     if (newCount < 0) return;
 
+    console.log(`🔄 [UPDATE] Starting update for specialist ${specialistId}, month ${month}, count ${newCount}`);
+
+    // Get specialist name for better debugging
+    const specialist = specialists.find(s => s.id === specialistId);
+    const specialistName = specialist?.specialist.name || 'Unknown';
+    console.log(`👤 [UPDATE] Specialist: ${specialistName}`);
+
     // Optimistic update first, then persist; rollback on error
     const prevState = JSON.parse(JSON.stringify(specialists)) as SpecialistReferral[];
 
@@ -235,12 +242,16 @@ const ClientReferrals = () => {
       )
     );
 
+    console.log(`✅ [UPDATE] Optimistic UI update completed for ${specialistName}`);
+
     const currentUserId = (await supabase.auth.getUser()).data.user?.id || null;
+    console.log(`👤 [UPDATE] Current user ID: ${currentUserId}`);
 
     try {
-      console.log(`Updating referral via RPC for specialist ${specialistId}, month ${month}, count ${newCount}`);
+      console.log(`🔄 [RPC] Calling admin_upsert_client_referral for ${specialistName}`);
+      console.log(`📊 [RPC] Parameters: specialist=${specialistId}, year=${currentYear}, month=${month}, count=${newCount}`);
 
-      const { error } = await supabase.rpc('admin_upsert_client_referral', {
+      const { data: rpcData, error: rpcError } = await supabase.rpc('admin_upsert_client_referral', {
         p_specialist_id: specialistId,
         p_year: currentYear,
         p_month: month,
@@ -248,19 +259,30 @@ const ClientReferrals = () => {
         p_referred_by: currentUserId,
       });
 
-      if (error) throw error;
+      console.log(`📥 [RPC] Response data:`, rpcData);
+      console.log(`❌ [RPC] Response error:`, rpcError);
+
+      if (rpcError) throw rpcError;
+
+      console.log(`✅ [RPC] Successfully updated via RPC for ${specialistName}`);
 
       toast({
         title: "Başarılı",
-        description: `${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
+        description: `${specialistName} - ${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
       });
 
       // Sunucudan taze veriyi çekerek kalıcılığı doğrula
+      console.log(`🔄 [REFRESH] Fetching fresh data to verify persistence for ${specialistName}`);
       await fetchSpecialistsAndReferrals();
+      console.log(`✅ [REFRESH] Data refresh completed for ${specialistName}`);
+
     } catch (rpcError) {
-      console.error('RPC failed, attempting direct upsert fallback:', rpcError);
+      console.error('❌ [RPC] RPC failed, attempting direct upsert fallback:', rpcError);
+      
       try {
-        const { error: upsertError } = await supabase
+        console.log(`🔄 [FALLBACK] Attempting direct upsert for ${specialistName}`);
+        
+        const { data: upsertData, error: upsertError } = await supabase
           .from('client_referrals')
           .upsert({
             specialist_id: specialistId,
@@ -274,20 +296,38 @@ const ClientReferrals = () => {
           }, { onConflict: 'specialist_id,year,month' })
           .select();
 
+        console.log(`📥 [FALLBACK] Upsert data:`, upsertData);
+        console.log(`❌ [FALLBACK] Upsert error:`, upsertError);
+
         if (upsertError) throw upsertError;
+
+        console.log(`✅ [FALLBACK] Successfully updated via direct upsert for ${specialistName}`);
 
         toast({
           title: "Başarılı",
-          description: `${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
+          description: `${specialistName} - ${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
         });
+        
+        console.log(`🔄 [REFRESH-FALLBACK] Fetching fresh data after fallback for ${specialistName}`);
         await fetchSpecialistsAndReferrals();
+        console.log(`✅ [REFRESH-FALLBACK] Data refresh completed after fallback for ${specialistName}`);
+
       } catch (error) {
-        console.error('Error updating referral count (fallback upsert):', error);
+        console.error(`❌ [FALLBACK] Error updating referral count (fallback upsert) for ${specialistName}:`, error);
         // Rollback to previous state on failure
+        console.log(`🔄 [ROLLBACK] Rolling back UI state for ${specialistName}`);
         setSpecialists(prevState);
+        setFilteredSpecialists(prev => 
+          prev.map(spec => 
+            spec.id === specialistId 
+              ? prevState.find(p => p.id === specialistId) || spec
+              : spec
+          )
+        );
+        
         toast({
           title: "Hata",
-          description: "Yönlendirme sayısı güncellenirken hata oluştu: " + (error as Error).message,
+          description: `${specialistName} - Yönlendirme sayısı güncellenirken hata oluştu: ${(error as Error).message}`,
           variant: "destructive",
         });
       }
