@@ -66,8 +66,11 @@ const ClientReferrals = () => {
           .eq('is_active', true)
           .order('name'),
         
-        // Yönlendirmeleri admin/staff için RLS'i güvenli şekilde aşan RPC ile getir
-        supabase.rpc('admin_get_client_referrals', { p_year: currentYear })
+        // Yönlendirmeleri doğrudan tablodan getir (RLS admin/staff'a izin veriyor)
+        supabase
+          .from('client_referrals')
+          .select('specialist_id, year, month, referral_count, notes, updated_at, created_at')
+          .eq('year', currentYear)
       ]);
 
       const { data: specialistsData, error: specialistsError } = specialistsResult;
