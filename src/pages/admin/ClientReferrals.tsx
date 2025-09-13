@@ -526,6 +526,14 @@ const ClientReferrals = () => {
 
       if (error) throw error;
 
+      // Verify after save
+      const { data: verify, error: verifyErr } = await supabase
+        .from('client_referrals')
+        .select('specialist_id, notes, month, year')
+        .eq('year', currentYear)
+        .eq('month', selectedMonth);
+      console.log('🔎 [AUTO-NOTES VERIFY]', verify, verifyErr);
+
       // Update local state
       setSpecialists((prev) =>
         prev.map((spec) => {
@@ -539,6 +547,8 @@ const ClientReferrals = () => {
           };
         })
       );
+
+      await fetchSpecialistsAndReferrals();
 
       toast({ title: 'Başarılı', description: `${targets.length} uzman için not eklendi` });
       setAutoNotesOpen(false);
