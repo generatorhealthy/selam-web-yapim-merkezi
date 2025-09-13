@@ -295,13 +295,51 @@ const ClientReferrals = () => {
       // DB doğrulama
       const { data: verifyRow, error: verifyError } = await supabase
         .from('client_referrals')
-        .select('referral_count, notes, updated_at')
+        .select('id, referral_count, notes, updated_at')
         .eq('specialist_id', specialistId)
         .eq('year', currentYear)
         .eq('month', month)
         .maybeSingle();
 
       console.log('🔎 [VERIFY] Row after save:', verifyRow, verifyError);
+
+      // Ek güvence: Değer uyuşmazsa doğrudan update/insert dene
+      if (verifyError || !verifyRow || Number(verifyRow.referral_count) !== newCount) {
+        console.warn('⚠️ Verification mismatch. Applying explicit save path...');
+        const { data: existing, error: existingError } = await supabase
+          .from('client_referrals')
+          .select('id')
+          .eq('specialist_id', specialistId)
+          .eq('year', currentYear)
+          .eq('month', month)
+          .maybeSingle();
+
+        if (existing && existing.id) {
+          const { error: updError } = await supabase
+            .from('client_referrals')
+            .update({
+              referral_count: newCount,
+              is_referred: newCount > 0,
+              referred_at: newCount > 0 ? new Date().toISOString() : null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existing.id);
+          if (updError) throw updError;
+        } else {
+          const { error: insError } = await supabase
+            .from('client_referrals')
+            .insert({
+              specialist_id: specialistId,
+              year: currentYear,
+              month,
+              referral_count: newCount,
+              is_referred: newCount > 0,
+              referred_at: new Date().toISOString(),
+              referred_by: currentUserId,
+            });
+          if (insError) throw insError;
+        }
+      }
 
       toast({
         title: 'Başarılı',
