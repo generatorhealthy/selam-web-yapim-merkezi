@@ -116,23 +116,26 @@ const ClientReferrals = () => {
         
           const monthlyReferrals: MonthlyReferral[] = Array.from({ length: 12 }, (_, index) => {
             const month = index + 1;
-            // Aynı ay için birden fazla kayıt varsa: notlar için en güncel kaydı al, sayı için en yüksek değeri kullan
             const matches = (specialistReferrals as any[]).filter((r: any) => Number(r.month) === month);
 
-            // En güncel kayıt (not için)
+            // En güncel kaydı kullan (hem sayı hem not için) -> böylece azaltma yaptığınızda eski yüksek değer geri dönmez
             const latest = matches.length > 1
-              ? matches.slice().sort((a: any, b: any) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime())[0]
+              ? matches
+                  .slice()
+                  .sort(
+                    (a: any, b: any) =>
+                      new Date(b.updated_at || b.created_at || 0).getTime() -
+                      new Date(a.updated_at || a.created_at || 0).getTime()
+                  )[0]
               : matches[0];
 
-            // Sayı için güvenli yaklaşım: mevcut kayıtlar içindeki en yüksek referral_count
-            const maxCount = matches.length
-              ? Math.max(...matches.map((m: any) => (m?.referral_count !== undefined && m?.referral_count !== null) ? Number(m.referral_count) : 0))
-              : 0;
-            
             return {
               month,
-              count: maxCount,
-              notes: typeof latest?.notes === 'string' ? latest.notes : ''
+              count:
+                latest?.referral_count !== undefined && latest?.referral_count !== null
+                  ? Number(latest.referral_count)
+                  : 0,
+              notes: typeof latest?.notes === 'string' ? latest.notes : '',
             };
           });
 
@@ -533,36 +536,69 @@ const ClientReferrals = () => {
     };
   };
 
-  // Copy August notes to other months
+  // Copy August notes to other months (bulk upsert for reliability and speed)
   const copyAugustNotesToAllMonths = async () => {
     try {
-      console.log('🔄 Copying August notes to all months...');
-      
-      for (const specialist of specialists) {
-        const augustReferral = specialist.referrals.find(ref => ref.month === 8);
-        if (augustReferral && augustReferral.notes) {
-          console.log(`📝 Copying notes for ${specialist.specialist.name}: "${augustReferral.notes}"`);
-          
-          // Copy to all months (1-12)
-          for (let month = 1; month <= 12; month++) {
-            if (month !== 8) { // Skip August itself
-              await updateNotes(specialist.id, month, augustReferral.notes);
-            }
-          }
+      console.log('🔄 Copying August notes to all months (bulk upsert)...');
+
+      const rows: any[] = [];
+      const nowIso = new Date().toISOString();
+
+      for (const spec of specialists) {
+        const aug = spec.referrals.find((ref) => ref.month === 8);
+        if (!aug || !aug.notes) continue;
+
+        for (let m = 1; m <= 12; m++) {
+          if (m === 8) continue; // Skip August itself
+          const existingCount = spec.referrals.find((r) => r.month === m)?.count ?? 0;
+          rows.push({
+            specialist_id: spec.id,
+            year: currentYear,
+            month: m,
+            notes: aug.notes,
+            referral_count: existingCount,
+            is_referred: existingCount > 0,
+            referred_at: existingCount > 0 ? nowIso : null,
+            updated_at: nowIso,
+          });
         }
       }
-      
+
+      if (rows.length === 0) {
+        toast({ title: 'Bilgi', description: 'Kopyalanacak Ağustos notu bulunamadı.' });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('client_referrals')
+        .upsert(rows, { onConflict: 'specialist_id,year,month' });
+
+      if (error) throw error;
+
+      // Local state'i güncelle
+      setSpecialists((prev) =>
+        prev.map((spec) => {
+          const aug = spec.referrals.find((r) => r.month === 8);
+          if (!aug || !aug.notes) return spec;
+          return {
+            ...spec,
+            referrals: spec.referrals.map((ref) =>
+              ref.month !== 8 ? { ...ref, notes: aug.notes } : ref
+            ),
+          };
+        })
+      );
+
       toast({
-        title: "Başarılı",
-        description: "Ağustos ayındaki notlar tüm aylara kopyalandı.",
+        title: 'Başarılı',
+        description: 'Ağustos ayındaki notlar tüm aylara kopyalandı.',
       });
-      
     } catch (error) {
       console.error('❌ Error copying August notes:', error);
       toast({
-        title: "Hata",
-        description: "Notlar kopyalanırken hata oluştu: " + (error as Error).message,
-        variant: "destructive",
+        title: 'Hata',
+        description: 'Notlar kopyalanırken hata oluştu: ' + (error as Error).message,
+        variant: 'destructive',
       });
     }
   };
