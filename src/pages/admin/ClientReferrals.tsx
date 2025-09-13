@@ -253,53 +253,26 @@ const ClientReferrals = () => {
     try {
       const nowIso = new Date().toISOString();
 
-      // 1) Try UPDATE first
-      console.log(`[SQL] Attempting UPDATE for ${specialistName}`);
-      const { data: updData, error: updError } = await supabase
+      // Tek adımda UPSERT (DB'de (specialist_id,year,month) uniq indeks var)
+      const { data: upsertData, error: upsertError } = await supabase
         .from('client_referrals')
-        .update({
+        .upsert({
+          specialist_id: specialistId,
+          year: currentYear,
+          month,
           referral_count: newCount,
           is_referred: newCount > 0,
           referred_at: newCount > 0 ? nowIso : null,
           referred_by: newCount > 0 ? currentUserId : null,
           updated_at: nowIso,
-        })
-        .eq('specialist_id', specialistId)
-        .eq('year', currentYear)
-        .eq('month', month)
-        .select();
+        }, { onConflict: 'specialist_id,year,month' })
+        .select()
+        .maybeSingle();
 
-      if (updError) {
-        console.warn('⚠️ UPDATE error (will try INSERT):', updError);
-      }
+      if (upsertError) throw upsertError;
+      console.log('✅ UPSERT ok:', upsertData);
 
-      if (updData && updData.length > 0 && !updError) {
-        console.log('✅ UPDATE affected rows:', updData.length);
-      } else {
-        // 2) If no row, INSERT
-        console.log(`[SQL] No rows updated. Attempting INSERT for ${specialistName}`);
-        const { data: insData, error: insError } = await supabase
-          .from('client_referrals')
-          .insert([
-            {
-              specialist_id: specialistId,
-              year: currentYear,
-              month,
-              referral_count: newCount,
-              is_referred: newCount > 0,
-              referred_at: newCount > 0 ? nowIso : null,
-              referred_by: newCount > 0 ? currentUserId : null,
-              created_at: nowIso,
-              updated_at: nowIso,
-            },
-          ])
-          .select();
-
-        if (insError) throw insError;
-        console.log('✅ INSERT created rows:', insData?.length || 0);
-      }
-
-      // Verify DB value before refreshing
+      // DB doğrulama
       const { data: verifyRow, error: verifyError } = await supabase
         .from('client_referrals')
         .select('referral_count, notes, updated_at')
@@ -308,33 +281,17 @@ const ClientReferrals = () => {
         .eq('month', month)
         .maybeSingle();
 
-      console.log('🔎 [VERIFY] Row after write:', verifyRow, verifyError);
-      if (verifyError) {
-        console.warn('⚠️ [VERIFY] Could not verify row:', verifyError);
-      } else if (verifyRow && Number(verifyRow.referral_count) !== Number(newCount)) {
-        console.warn('⚠️ [VERIFY] Mismatch detected. Forcing RPC upsert.');
-        await supabase.rpc('admin_upsert_client_referral', {
-          p_specialist_id: specialistId,
-          p_year: currentYear,
-          p_month: month,
-          p_referral_count: newCount,
-          p_referred_by: currentUserId,
-        });
-      }
+      console.log('🔎 [VERIFY] Row after upsert:', verifyRow, verifyError);
 
       toast({
         title: 'Başarılı',
         description: `${specialistName} - ${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
       });
 
-      // Sunucudan taze veriyi çekerek kalıcılığı doğrula
-      console.log(`🔄 [REFRESH] Fetching fresh data to verify persistence for ${specialistName}`);
       await fetchSpecialistsAndReferrals();
-      console.log(`✅ [REFRESH] Data refresh completed for ${specialistName}`);
     } catch (error) {
       console.error(`❌ Error updating referral count for ${specialistName}:`, error);
       // Rollback to previous state on failure
-      console.log(`🔄 [ROLLBACK] Rolling back UI state for ${specialistName}`);
       setSpecialists(prevState);
       setFilteredSpecialists(prev =>
         prev.map(spec => (spec.id === specialistId ? prevState.find(p => p.id === specialistId) || spec : spec))
@@ -992,11 +949,11 @@ const ClientReferrals = () => {
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => updateReferralCount(
-                                          specialistReferral.id, 
-                                          monthIndex + 1, 
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateReferralCount(
+                                          specialistReferral.id,
+                                          monthIndex + 1,
                                           Math.max(0, monthlyReferral.count - 1)
-                                        )}
+                                        ); }}
                                         disabled={monthlyReferral.count <= 0}
                                         className="h-10 w-10 p-0 rounded-xl border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all duration-200 disabled:opacity-50"
                                       >
@@ -1013,11 +970,11 @@ const ClientReferrals = () => {
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => updateReferralCount(
-                                          specialistReferral.id, 
-                                          monthIndex + 1, 
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateReferralCount(
+                                          specialistReferral.id,
+                                          monthIndex + 1,
                                           monthlyReferral.count + 1
-                                        )}
+                                        ); }}
                                         className="h-10 w-10 p-0 rounded-xl border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-600 transition-all duration-200"
                                       >
                                         <Plus className="w-4 h-4" />
