@@ -304,6 +304,19 @@ const ClientReferrals = () => {
       } else {
         console.log('✅ [UPDATE] RPC upsert successful:', rpcRes);
       }
+      // Optimistic local update for immediate UI feedback
+      setSpecialists((prev) =>
+        prev.map((spec) =>
+          spec.id === specialistId
+            ? {
+                ...spec,
+                referrals: spec.referrals.map((ref) =>
+                  ref.month === month ? { ...ref, count: newCount } : ref
+                ),
+              }
+            : spec
+        )
+      );
 
       await fetchSpecialistsAndReferrals();
 
@@ -748,7 +761,7 @@ const ClientReferrals = () => {
                       console.log(`🔄 Year changed from ${currentYear} to ${newYear}`);
                       setCurrentYear(newYear);
                     }}
-                    className="px-6 py-3 bg-white/90 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-slate-700 shadow-sm hover:shadow-md transition-all duration-200"
+                    className="px-6 py-3 bg-white z-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-slate-700 shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
                       <option key={year} value={year}>{year}</option>
