@@ -262,7 +262,7 @@ const ClientReferrals = () => {
     try {
       const specialist = specialists.find((s) => s.id === specialistId);
       const specialistName = specialist?.specialist.name || 'Unknown';
-      console.log(`🔄 [UPDATE] ${specialistName} (${specialistId}) month=${month} -> ${newCount}`);
+      console.log(`🔄 [UPDATE] ${specialistName} (${specialistId}) year=${currentYear} month=${month} -> ${newCount}`);
 
       // Önce RPC ile güvenli upsert dene (RLS ve tek kod yolu için)
       const { data: rpcRes, error: rpcErr } = await supabase.rpc(
@@ -292,10 +292,10 @@ const ClientReferrals = () => {
 
         const { data: upsertResult, error: upsertError } = await supabase
           .from('client_referrals')
-          .upsert(upsertPayload, { 
-            onConflict: 'specialist_id,year,month',
-            ignoreDuplicates: false
-          })
+        .upsert(upsertPayload, { 
+          onConflict: 'specialist_id, year, month',
+          ignoreDuplicates: false
+        })
           .select('id, referral_count, updated_at')
           .single();
 
@@ -743,7 +743,11 @@ const ClientReferrals = () => {
                   <Calendar className="w-5 h-5 text-slate-500" />
                   <select 
                     value={currentYear} 
-                    onChange={(e) => setCurrentYear(Number(e.target.value))}
+                    onChange={(e) => {
+                      const newYear = Number(e.target.value);
+                      console.log(`🔄 Year changed from ${currentYear} to ${newYear}`);
+                      setCurrentYear(newYear);
+                    }}
                     className="px-6 py-3 bg-white/90 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-slate-700 shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
