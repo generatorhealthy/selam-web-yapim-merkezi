@@ -264,55 +264,29 @@ const ClientReferrals = () => {
       const specialistName = specialist?.specialist.name || 'Unknown';
       console.log(`🔄 [UPDATE] ${specialistName} (${specialistId}) month=${month} -> ${newCount}`);
 
-      // 1) Read current row (authoritative)
-      const { data: existing, error: readErr } = await supabase
+      // Use safe upsert with ON CONFLICT ensuring no duplicate rows for (specialist_id, year, month)
+      const upsertPayload = {
+        specialist_id: specialistId,
+        year: currentYear,
+        month,
+        referral_count: newCount,
+        is_referred: newCount > 0,
+        referred_at: newCount > 0 ? new Date().toISOString() : null,
+        referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: upsertResult, error: upsertError } = await supabase
         .from('client_referrals')
-        .select('id, referral_count')
-        .eq('specialist_id', specialistId)
-        .eq('year', currentYear)
-        .eq('month', month)
-        .maybeSingle();
-
-      if (readErr) {
-        console.warn('⚠️ [UPDATE] Read error (ignored if no row):', readErr);
-      }
-
-      // 2) Persist deterministically (no optimistic UI)
-      if (existing && existing.id) {
-        const { error: updErr } = await supabase
-          .from('client_referrals')
-          .update({
-            referral_count: newCount,
-            is_referred: newCount > 0,
-            referred_at: newCount > 0 ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existing.id);
-        if (updErr) throw updErr;
-      } else {
-        const { error: insErr } = await supabase
-          .from('client_referrals')
-          .insert({
-            specialist_id: specialistId,
-            year: currentYear,
-            month,
-            referral_count: newCount,
-            is_referred: newCount > 0,
-            referred_at: new Date().toISOString(),
-            referred_by: (await supabase.auth.getUser()).data.user?.id || null,
-          });
-        if (insErr) throw insErr;
-      }
-
-      // 3) Verify and refresh UI strictly from DB
-      const { data: verifyRow, error: verifyError } = await supabase
-        .from('client_referrals')
+        .upsert(upsertPayload, { 
+          onConflict: 'specialist_id,year,month',
+          ignoreDuplicates: false
+        })
         .select('id, referral_count, updated_at')
-        .eq('specialist_id', specialistId)
-        .eq('year', currentYear)
-        .eq('month', month)
-        .maybeSingle();
-      console.log('🔎 [VERIFY] After save:', verifyRow, verifyError);
+        .single();
+
+      if (upsertError) throw upsertError;
+      console.log('✅ [UPDATE] Upsert successful:', upsertResult);
 
       await fetchSpecialistsAndReferrals();
 
@@ -329,6 +303,7 @@ const ClientReferrals = () => {
       });
     }
   };
+  
   const updateNotes = async (specialistId: string, month: number, notes: string) => {
     console.log(`🔄 [NOTES] Start update for specialist ${specialistId}, month ${month}`);
 
