@@ -479,6 +479,8 @@ const ClientReferrals = () => {
         )
       );
 
+      await fetchSpecialistsAndReferrals();
+
       toast({ title: 'Başarılı', description: 'Not güncellendi' });
     } catch (error) {
       console.error('❌ Error updating notes:', error);
@@ -505,26 +507,51 @@ const ClientReferrals = () => {
         return;
       }
 
+      // Avoid overwriting referral_count. We will:
+      // 1) Update notes for rows that already exist
+      // 2) Insert rows only for specialists without any row for this month
       const now = new Date().toISOString();
-      const payload = targets.map((s) => {
-        const ref = s.referrals.find((r) => r.month === selectedMonth);
-        const count = ref?.count ?? 0;
-        return {
-          specialist_id: s.id,
+      const targetIds = targets.map((t) => t.id);
+
+      // Find which targets already have a row for the selected month
+      const { data: existingRows, error: existingErr } = await supabase
+        .from('client_referrals')
+        .select('specialist_id')
+        .in('specialist_id', targetIds)
+        .eq('year', currentYear)
+        .eq('month', selectedMonth);
+      if (existingErr) throw existingErr;
+
+      const existingIds = new Set((existingRows || []).map((r: any) => r.specialist_id));
+      const toUpdateIds = targetIds.filter((id) => existingIds.has(id));
+      const toInsertIds = targetIds.filter((id) => !existingIds.has(id));
+
+      // 1) Bulk update notes for existing rows (do NOT touch referral_count)
+      if (toUpdateIds.length > 0) {
+        const { error: updErr } = await supabase
+          .from('client_referrals')
+          .update({ notes: autoNoteText, updated_at: now })
+          .in('specialist_id', toUpdateIds)
+          .eq('year', currentYear)
+          .eq('month', selectedMonth);
+        if (updErr) throw updErr;
+      }
+
+      // 2) Insert rows for those without any row yet (set referral_count to 0 initially)
+      if (toInsertIds.length > 0) {
+        const insertPayload = toInsertIds.map((id) => ({
+          specialist_id: id,
           year: currentYear,
           month: selectedMonth,
           notes: autoNoteText,
-          referral_count: count,
+          referral_count: 0,
           updated_at: now,
-        } as any;
-      });
-
-      const { data, error } = await supabase
-        .from('client_referrals')
-        .upsert(payload, { onConflict: 'specialist_id,year,month' })
-        .select('specialist_id');
-
-      if (error) throw error;
+        }));
+        const { error: insErr } = await supabase
+          .from('client_referrals')
+          .insert(insertPayload);
+        if (insErr) throw insErr;
+      }
 
       // Verify after save
       const { data: verify, error: verifyErr } = await supabase
