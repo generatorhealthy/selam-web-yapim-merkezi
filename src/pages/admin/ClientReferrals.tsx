@@ -256,24 +256,20 @@ const ClientReferrals = () => {
     try {
       const nowIso = new Date().toISOString();
 
-      // Tek adımda UPSERT (DB'de (specialist_id,year,month) uniq indeks var)
-      const { data: upsertData, error: upsertError } = await supabase
-        .from('client_referrals')
-        .upsert({
-          specialist_id: specialistId,
-          year: currentYear,
-          month,
-          referral_count: newCount,
-          is_referred: newCount > 0,
-          referred_at: newCount > 0 ? nowIso : null,
-          referred_by: newCount > 0 ? currentUserId : null,
-          updated_at: nowIso,
-        }, { onConflict: 'specialist_id,year,month' })
-        .select()
-        .maybeSingle();
+      // Güvenilir sunucu tarafı işlem: RPC ile tek satır upsert
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'admin_upsert_client_referral',
+        {
+          p_specialist_id: specialistId,
+          p_year: currentYear,
+          p_month: month,
+          p_referral_count: newCount,
+          p_referred_by: currentUserId,
+        }
+      );
 
-      if (upsertError) throw upsertError;
-      console.log('✅ UPSERT ok:', upsertData);
+      if (rpcError) throw rpcError;
+      console.log('✅ RPC upsert ok:', rpcData);
 
       // DB doğrulama
       const { data: verifyRow, error: verifyError } = await supabase
@@ -284,7 +280,7 @@ const ClientReferrals = () => {
         .eq('month', month)
         .maybeSingle();
 
-      console.log('🔎 [VERIFY] Row after upsert:', verifyRow, verifyError);
+      console.log('🔎 [VERIFY] Row after RPC:', verifyRow, verifyError);
 
       toast({
         title: 'Başarılı',
@@ -319,51 +315,21 @@ const ClientReferrals = () => {
     try {
       const nowIso = new Date().toISOString();
 
-      // 1) Try UPDATE first
-      console.log(`[SQL] NOTES UPDATE`);
-      const { data: updData, error: updError } = await supabase
-        .from('client_referrals')
-        .update({
-          notes,
-          updated_at: nowIso,
-        })
-        .eq('specialist_id', specialistId)
-        .eq('year', currentYear)
-        .eq('month', month)
-        .select();
+      // Güvenilir sunucu tarafı işlem: RPC ile not upsert
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'admin_update_client_referral_notes',
+        {
+          p_specialist_id: specialistId,
+          p_year: currentYear,
+          p_month: month,
+          p_notes: notes,
+        }
+      );
 
-      if (updError) {
-        console.warn('⚠️ NOTES UPDATE error (will try INSERT):', updError);
-      }
+      if (rpcError) throw rpcError;
+      console.log('✅ [NOTES] RPC ok:', rpcData);
 
-      if (updData && updData.length > 0 && !updError) {
-        console.log('✅ NOTES UPDATE affected rows:', updData.length);
-      } else {
-        // 2) If no row, INSERT with existing count
-        console.log(`[SQL] NOTES INSERT`);
-        const { data: insData, error: insError } = await supabase
-          .from('client_referrals')
-          .insert([
-            {
-              specialist_id: specialistId,
-              year: currentYear,
-              month,
-              referral_count: existingCount,
-              is_referred: existingCount > 0,
-              referred_at: existingCount > 0 ? nowIso : null,
-              referred_by: null,
-              notes,
-              created_at: nowIso,
-              updated_at: nowIso,
-            },
-          ])
-          .select();
-
-        if (insError) throw insError;
-        console.log('✅ NOTES INSERT created rows:', insData?.length || 0);
-      }
-
-      // Verify DB value
+      // Verify DB value (optional)
       const { data: verifyRow, error: verifyError } = await supabase
         .from('client_referrals')
         .select('notes, referral_count, updated_at')
@@ -372,18 +338,7 @@ const ClientReferrals = () => {
         .eq('month', month)
         .maybeSingle();
 
-      console.log('🔎 [VERIFY-NOTES] Row after write:', verifyRow, verifyError);
-      if (verifyError) {
-        console.warn('⚠️ [VERIFY-NOTES] Could not verify row:', verifyError);
-      } else if (verifyRow && (verifyRow.notes ?? '') !== (notes ?? '')) {
-        console.warn('⚠️ [VERIFY-NOTES] Mismatch detected. Forcing RPC upsert.');
-        await supabase.rpc('admin_update_client_referral_notes', {
-          p_specialist_id: specialistId,
-          p_year: currentYear,
-          p_month: month,
-          p_notes: notes,
-        });
-      }
+      console.log('🔎 [VERIFY-NOTES] Row after RPC:', verifyRow, verifyError);
 
       // Local state'i güncelle
       setSpecialists((prev) =>
@@ -397,10 +352,7 @@ const ClientReferrals = () => {
         )
       );
 
-      toast({
-        title: 'Başarılı',
-        description: 'Not güncellendi',
-      });
+      toast({ title: 'Başarılı', description: 'Not güncellendi' });
     } catch (error) {
       console.error('❌ Error updating notes:', error);
       toast({
