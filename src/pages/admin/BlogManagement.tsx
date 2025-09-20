@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import FileUpload from "@/components/FileUpload";
 import AdminBackButton from "@/components/AdminBackButton";
-import { Eye, CheckCircle, XCircle, AlertCircle, MessageSquare, Plus, Edit } from "lucide-react";
+import { Eye, CheckCircle, XCircle, AlertCircle, MessageSquare, Plus, Edit, Check, ChevronsUpDown } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,6 +29,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useUserRole } from "@/hooks/useUserRole";
 
 const blogSchema = z.object({
@@ -55,6 +67,8 @@ const BlogManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState<any>(null);
   const [specialists, setSpecialists] = useState<any[]>([]);
+  const [isSpecialistOpen, setIsSpecialistOpen] = useState(false);
+  const [isEditSpecialistOpen, setIsEditSpecialistOpen] = useState(false);
   const { userProfile } = useUserRole();
 
   const form = useForm<BlogFormValues>({
@@ -607,25 +621,66 @@ const BlogManagement = () => {
                       control={form.control}
                       name="specialist_id"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Hangi Uzman</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Uzman seçin (opsiyonel)" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                               <SelectItem value="none">Uzman seçilmedi</SelectItem>
-                              {specialists.map((specialist) => (
-                                <SelectItem key={specialist.id} value={specialist.id}>
-                                  {specialist.name} - {specialist.specialty}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
+                         <FormItem>
+                           <FormLabel>Hangi Uzman</FormLabel>
+                           <Popover open={isSpecialistOpen} onOpenChange={setIsSpecialistOpen}>
+                             <PopoverTrigger asChild>
+                               <FormControl>
+                                 <Button
+                                   variant="outline"
+                                   role="combobox"
+                                   aria-expanded={isSpecialistOpen}
+                                   className="w-full justify-between"
+                                 >
+                                   {field.value && field.value !== "none"
+                                     ? specialists.find((specialist) => specialist.id === field.value)?.name + " - " + specialists.find((specialist) => specialist.id === field.value)?.specialty
+                                     : "Uzman seçin (opsiyonel)"}
+                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                 </Button>
+                               </FormControl>
+                             </PopoverTrigger>
+                             <PopoverContent className="w-full p-0">
+                               <Command>
+                                 <CommandInput placeholder="Uzman ara..." />
+                                 <CommandEmpty>Uzman bulunamadı.</CommandEmpty>
+                                 <CommandGroup>
+                                   <CommandItem
+                                     value="none"
+                                     onSelect={() => {
+                                       field.onChange("none");
+                                       setIsSpecialistOpen(false);
+                                     }}
+                                   >
+                                     <Check
+                                       className={`mr-2 h-4 w-4 ${
+                                         field.value === "none" ? "opacity-100" : "opacity-0"
+                                       }`}
+                                     />
+                                     Uzman seçilmedi
+                                   </CommandItem>
+                                   {specialists.map((specialist) => (
+                                     <CommandItem
+                                       key={specialist.id}
+                                       value={specialist.name + " " + specialist.specialty}
+                                       onSelect={() => {
+                                         field.onChange(specialist.id);
+                                         setIsSpecialistOpen(false);
+                                       }}
+                                     >
+                                       <Check
+                                         className={`mr-2 h-4 w-4 ${
+                                           field.value === specialist.id ? "opacity-100" : "opacity-0"
+                                         }`}
+                                       />
+                                       {specialist.name} - {specialist.specialty}
+                                     </CommandItem>
+                                   ))}
+                                 </CommandGroup>
+                               </Command>
+                             </PopoverContent>
+                           </Popover>
+                           <FormMessage />
+                         </FormItem>
                       )}
                     />
 
@@ -942,21 +997,62 @@ const BlogManagement = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Hangi Uzman</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Uzman seçin (opsiyonel)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">Uzman seçilmedi</SelectItem>
-                          {specialists.map((specialist) => (
-                            <SelectItem key={specialist.id} value={specialist.id}>
-                              {specialist.name} - {specialist.specialty}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={isEditSpecialistOpen} onOpenChange={setIsEditSpecialistOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={isEditSpecialistOpen}
+                              className="w-full justify-between"
+                            >
+                              {field.value && field.value !== "none"
+                                ? specialists.find((specialist) => specialist.id === field.value)?.name + " - " + specialists.find((specialist) => specialist.id === field.value)?.specialty
+                                : "Uzman seçin (opsiyonel)"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Uzman ara..." />
+                            <CommandEmpty>Uzman bulunamadı.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem
+                                value="none"
+                                onSelect={() => {
+                                  field.onChange("none");
+                                  setIsEditSpecialistOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    field.value === "none" ? "opacity-100" : "opacity-0"
+                                  }`}
+                                />
+                                Uzman seçilmedi
+                              </CommandItem>
+                              {specialists.map((specialist) => (
+                                <CommandItem
+                                  key={specialist.id}
+                                  value={specialist.name + " " + specialist.specialty}
+                                  onSelect={() => {
+                                    field.onChange(specialist.id);
+                                    setIsEditSpecialistOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      field.value === specialist.id ? "opacity-100" : "opacity-0"
+                                    }`}
+                                  />
+                                  {specialist.name} - {specialist.specialty}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
