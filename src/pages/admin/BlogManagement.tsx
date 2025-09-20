@@ -634,7 +634,7 @@ const BlogManagement = () => {
                       render={({ field }) => (
                          <FormItem>
                            <FormLabel>Hangi Uzman</FormLabel>
-                           <Popover open={isSpecialistOpen} onOpenChange={setIsSpecialistOpen}>
+                           <Popover modal={false} open={isSpecialistOpen} onOpenChange={setIsSpecialistOpen}>
                              <PopoverTrigger asChild>
                                <FormControl>
                                  <Button
@@ -653,47 +653,47 @@ const BlogManagement = () => {
                                  </Button>
                                </FormControl>
                              </PopoverTrigger>
-                              <PopoverContent className="w-full p-0 bg-white dark:bg-gray-800 border shadow-lg z-50 pointer-events-auto">
-                               <Command className="bg-white dark:bg-gray-800">
-                                 <CommandInput placeholder="Uzman ara..." className="border-none" />
-                                 <CommandEmpty>Uzman bulunamadı.</CommandEmpty>
-                                 <CommandGroup className="max-h-64 overflow-auto">
-                                   <CommandItem
-                                     value="none"
-                                     onSelect={() => {
-                                       field.onChange("none");
-                                       setIsSpecialistOpen(false);
-                                     }}
-                                     className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                                   >
-                                     <Check
-                                       className={`mr-2 h-4 w-4 ${
-                                         field.value === "none" ? "opacity-100" : "opacity-0"
-                                       }`}
-                                     />
-                                     Uzman seçilmedi
-                                   </CommandItem>
-                                   {specialists.map((specialist) => (
-                                     <CommandItem
-                                       key={specialist.id}
-                                       value={`${specialist.name} ${specialist.specialty}`}
-                                       onSelect={() => {
-                                         field.onChange(specialist.id);
-                                         setIsSpecialistOpen(false);
-                                       }}
-                                       className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                                     >
-                                       <Check
-                                         className={`mr-2 h-4 w-4 ${
-                                           field.value === specialist.id ? "opacity-100" : "opacity-0"
-                                         }`}
-                                       />
-                                       {specialist.name} - {specialist.specialty}
-                                     </CommandItem>
-                                   ))}
-                                 </CommandGroup>
-                               </Command>
-                             </PopoverContent>
+                              <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto">
+                                <Command>
+                                  <CommandInput placeholder="Uzman ara..." className="border-none" />
+                                  <CommandEmpty>Uzman bulunamadı.</CommandEmpty>
+                                  <CommandGroup className="max-h-64 overflow-auto">
+                                    <CommandItem
+                                      value="none"
+                                      onSelect={() => {
+                                        field.onChange("none");
+                                        setIsSpecialistOpen(false);
+                                      }}
+                                      className="cursor-pointer"
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${
+                                          field.value === "none" ? "opacity-100" : "opacity-0"
+                                        }`}
+                                      />
+                                      Uzman seçilmedi
+                                    </CommandItem>
+                                    {specialists.map((specialist) => (
+                                      <CommandItem
+                                        key={specialist.id}
+                                        value={`${specialist.name} ${specialist.specialty}`}
+                                        onSelect={() => {
+                                          field.onChange(specialist.id);
+                                          setIsSpecialistOpen(false);
+                                        }}
+                                        className="cursor-pointer"
+                                      >
+                                        <Check
+                                          className={`mr-2 h-4 w-4 ${
+                                            field.value === specialist.id ? "opacity-100" : "opacity-0"
+                                          }`}
+                                        />
+                                        {specialist.name} - {specialist.specialty}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </Command>
+                              </PopoverContent>
                            </Popover>
                            <FormMessage />
                          </FormItem>
@@ -1013,7 +1013,7 @@ const BlogManagement = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Hangi Uzman</FormLabel>
-                      <Popover open={isEditSpecialistOpen} onOpenChange={setIsEditSpecialistOpen}>
+                      <Popover modal={false} open={isEditSpecialistOpen} onOpenChange={setIsEditSpecialistOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -1032,8 +1032,8 @@ const BlogManagement = () => {
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-full p-0 bg-white dark:bg-gray-800 border shadow-lg z-50 pointer-events-auto">
-                          <Command className="bg-white dark:bg-gray-800">
+                        <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto">
+                          <Command>
                             <CommandInput placeholder="Uzman ara..." className="border-none" />
                             <CommandEmpty>Uzman bulunamadı.</CommandEmpty>
                             <CommandGroup className="max-h-64 overflow-auto">
@@ -1043,7 +1043,7 @@ const BlogManagement = () => {
                                   field.onChange("none");
                                   setIsEditSpecialistOpen(false);
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                className="cursor-pointer"
                               >
                                 <Check
                                   className={`mr-2 h-4 w-4 ${
@@ -1060,7 +1060,7 @@ const BlogManagement = () => {
                                     field.onChange(specialist.id);
                                     setIsEditSpecialistOpen(false);
                                   }}
-                                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                  className="cursor-pointer"
                                 >
                                   <Check
                                     className={`mr-2 h-4 w-4 ${
