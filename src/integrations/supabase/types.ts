@@ -219,6 +219,7 @@ export type Database = {
           seo_description: string | null
           seo_title: string | null
           slug: string
+          specialist_id: string | null
           status: string
           title: string
           updated_at: string
@@ -240,6 +241,7 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           slug: string
+          specialist_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -261,12 +263,21 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           slug?: string
+          specialist_id?: string | null
           status?: string
           title?: string
           updated_at?: string
           word_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blogs: {
         Row: {

@@ -22,6 +22,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useUserRole } from "@/hooks/useUserRole";
 
 const blogSchema = z.object({
@@ -32,6 +39,7 @@ const blogSchema = z.object({
   seo_title: z.string().optional(),
   seo_description: z.string().optional(),
   keywords: z.string().optional(),
+  specialist_id: z.string().optional(),
 });
 
 type BlogFormValues = z.infer<typeof blogSchema>;
@@ -46,6 +54,7 @@ const BlogManagement = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState<any>(null);
+  const [specialists, setSpecialists] = useState<any[]>([]);
   const { userProfile } = useUserRole();
 
   const form = useForm<BlogFormValues>({
@@ -58,6 +67,7 @@ const BlogManagement = () => {
       seo_title: "",
       seo_description: "",
       keywords: "",
+      specialist_id: "",
     },
   });
 
@@ -71,19 +81,47 @@ const BlogManagement = () => {
       seo_title: "",
       seo_description: "",
       keywords: "",
+      specialist_id: "",
     },
   });
 
   useEffect(() => {
     fetchBlogs();
+    fetchSpecialists();
   }, []);
+
+  const fetchSpecialists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('specialists')
+        .select('id, name, specialty')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) {
+        console.error('Uzmanlar çekilirken hata:', error);
+        return;
+      }
+
+      setSpecialists(data || []);
+    } catch (error) {
+      console.error('Beklenmeyen hata:', error);
+    }
+  };
 
   const fetchBlogs = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('*')
+        .select(`
+          *,
+          specialists (
+            id,
+            name,
+            specialty
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -164,6 +202,7 @@ const BlogManagement = () => {
           seo_title: values.seo_title || null,
           seo_description: values.seo_description || null,
           keywords: values.keywords || null,
+          specialist_id: values.specialist_id || null,
         })
         .select()
         .single();
@@ -426,6 +465,7 @@ const BlogManagement = () => {
       seo_title: blog.seo_title || "",
       seo_description: blog.seo_description || "",
       keywords: blog.keywords || "",
+      specialist_id: blog.specialist_id || "",
     });
     
     // Force trigger form field updates
@@ -456,6 +496,7 @@ const BlogManagement = () => {
           seo_title: values.seo_title || null,
           seo_description: values.seo_description || null,
           keywords: values.keywords || null,
+          specialist_id: values.specialist_id || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', editingBlog.id);
@@ -557,6 +598,32 @@ const BlogManagement = () => {
                           <FormControl>
                             <Textarea placeholder="Blog yazısının kısa özeti" rows={3} {...field} />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="specialist_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Hangi Uzman</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Uzman seçin (opsiyonel)" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="">Uzman seçilmedi</SelectItem>
+                              {specialists.map((specialist) => (
+                                <SelectItem key={specialist.id} value={specialist.id}>
+                                  {specialist.name} - {specialist.specialty}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -679,6 +746,11 @@ const BlogManagement = () => {
                         <h3 className="font-semibold text-lg mb-1">{blog.title}</h3>
                         <p className="text-sm text-gray-600 mb-2">
                           {blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' ? 'Editör' : blog.author_name} - {blog.author_type}
+                          {blog.specialists && (
+                            <span className="ml-2 text-blue-600">
+                              | Uzman: {blog.specialists.name} ({blog.specialists.specialty})
+                            </span>
+                          )}
                         </p>
                         {blog.excerpt && <p className="text-sm text-gray-700 mb-3">{blog.excerpt}</p>}
                       </div>
@@ -859,6 +931,32 @@ const BlogManagement = () => {
                       <FormControl>
                         <Textarea placeholder="Blog yazısının kısa özeti" rows={3} {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="specialist_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hangi Uzman</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Uzman seçin (opsiyonel)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">Uzman seçilmedi</SelectItem>
+                          {specialists.map((specialist) => (
+                            <SelectItem key={specialist.id} value={specialist.id}>
+                              {specialist.name} - {specialist.specialty}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

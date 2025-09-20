@@ -79,10 +79,13 @@ const DoctorBlogManagement = ({ doctorId, doctorName }: DoctorBlogManagementProp
   const fetchMyBlogs = async () => {
     try {
       setLoading(true);
+      const user = await supabase.auth.getUser();
+      
+      // Get both blogs created by the specialist and blogs assigned to them
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
-        .eq('author_id', (await supabase.auth.getUser()).data.user?.id)
+        .or(`author_id.eq.${user.data.user?.id},specialist_id.eq.${doctorId}`)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -670,6 +673,13 @@ const DoctorBlogManagement = ({ doctorId, doctorName }: DoctorBlogManagementProp
                     {blog.word_count && (
                       <p className="text-xs text-gray-500">Kelime sayısı: {blog.word_count}</p>
                     )}
+                    {blog.specialist_id === doctorId && blog.author_type !== 'specialist' && (
+                      <div className="mt-2">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          Admin Tarafından Atandı
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                   <Badge className={getStatusColor(blog.status)}>
                     {getStatusText(blog.status)}
@@ -744,8 +754,8 @@ const DoctorBlogManagement = ({ doctorId, doctorName }: DoctorBlogManagementProp
                     </DialogContent>
                   </Dialog>
                   
-                  {/* Düzeltme gerekli durumundaki bloglar için düzenleme butonu */}
-                  {blog.status === 'revision_needed' && (
+                  {/* Admin atanmış bloglar için düzenleme butonu (sadece yayınlanmış olanlar) */}
+                  {blog.specialist_id === doctorId && blog.author_type !== 'specialist' && blog.status === 'published' && (
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -756,15 +766,30 @@ const DoctorBlogManagement = ({ doctorId, doctorName }: DoctorBlogManagementProp
                     </Button>
                   )}
                   
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => handleDelete(blog.id)}
-                    disabled={isProcessing}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Sil
-                  </Button>
+                  {/* Düzeltme gerekli durumundaki kendi bloglar için düzenleme butonu */}
+                  {blog.author_type === 'specialist' && blog.status === 'revision_needed' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEdit(blog)}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Düzenle
+                    </Button>
+                  )}
+                  
+                  {/* Sadece kendi yazdığı blogları silebilir */}
+                  {blog.author_type === 'specialist' && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => handleDelete(blog.id)}
+                      disabled={isProcessing}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Sil
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
