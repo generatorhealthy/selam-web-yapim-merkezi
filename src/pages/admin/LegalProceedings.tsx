@@ -52,6 +52,7 @@ const LegalProceedings = () => {
     { value: "İTİRAZ_ETTİ", label: "İTİRAZ ETTİ", color: "bg-yellow-100 text-yellow-800" },
     { value: "İTİRAZ_DAVASI_AÇILDI", label: "İTİRAZ DAVASI AÇILDI", color: "bg-orange-100 text-orange-800" },
     { value: "DAVA_AÇILDI", label: "DAVA AÇILDI", color: "bg-blue-100 text-blue-800" },
+    { value: "ARABULUCULUK_SÜRECİNDE", label: "ARABULUCULUK SÜRECİNDE", color: "bg-amber-100 text-amber-800" },
     { value: "HACİZ_YAPILDI", label: "HACİZ YAPILDI", color: "bg-purple-100 text-purple-800" },
     { value: "ÖDEME_BEKLENİYOR", label: "ÖDEME BEKLENİYOR", color: "bg-indigo-100 text-indigo-800" },
     { value: "TAHSİLAT", label: "TAHSİLAT", color: "bg-cyan-100 text-cyan-800" },
