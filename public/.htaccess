@@ -126,8 +126,10 @@ RewriteRule ^premium-paket-33-3/?$ /paketler [R=301,L]
 
 # Redirect old doctor URLs to new format
 # /uzmanlik-alanlari/doktor/doctor-name -> /specialty/doctor-name
-# Common specialties mapping
 RewriteRule ^uzmanlik-alanlari/doktor/([^/]+)/?$ /$1 [R=301,L]
+
+# Redirect doctor names to specialty-based URLs
+RewriteRule ^ayse-dolek-kerbel/?$ /aile-danismani/ayse-dolek-kerbel [R=301,L]
 
 # Redirect /blog/* URLs to /* (remove /blog from URL)
 RewriteCond %{THE_REQUEST} \s/blog/([^\s?]+)
