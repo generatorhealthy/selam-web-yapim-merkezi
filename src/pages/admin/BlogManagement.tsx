@@ -633,23 +633,27 @@ const BlogManagement = () => {
                                    className="w-full justify-between"
                                  >
                                    {field.value && field.value !== "none"
-                                     ? specialists.find((specialist) => specialist.id === field.value)?.name + " - " + specialists.find((specialist) => specialist.id === field.value)?.specialty
+                                     ? (() => {
+                                         const specialist = specialists.find((s) => s.id === field.value);
+                                         return specialist ? `${specialist.name} - ${specialist.specialty}` : "Uzman seçin (opsiyonel)";
+                                       })()
                                      : "Uzman seçin (opsiyonel)"}
                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                  </Button>
                                </FormControl>
                              </PopoverTrigger>
-                             <PopoverContent className="w-full p-0">
-                               <Command>
-                                 <CommandInput placeholder="Uzman ara..." />
+                             <PopoverContent className="w-full p-0 bg-white dark:bg-gray-800 border shadow-lg z-50">
+                               <Command className="bg-white dark:bg-gray-800">
+                                 <CommandInput placeholder="Uzman ara..." className="border-none" />
                                  <CommandEmpty>Uzman bulunamadı.</CommandEmpty>
-                                 <CommandGroup>
+                                 <CommandGroup className="max-h-64 overflow-auto">
                                    <CommandItem
                                      value="none"
                                      onSelect={() => {
                                        field.onChange("none");
                                        setIsSpecialistOpen(false);
                                      }}
+                                     className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                                    >
                                      <Check
                                        className={`mr-2 h-4 w-4 ${
@@ -661,11 +665,12 @@ const BlogManagement = () => {
                                    {specialists.map((specialist) => (
                                      <CommandItem
                                        key={specialist.id}
-                                       value={specialist.name + " " + specialist.specialty}
+                                       value={`${specialist.name} ${specialist.specialty}`}
                                        onSelect={() => {
                                          field.onChange(specialist.id);
                                          setIsSpecialistOpen(false);
                                        }}
+                                       className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                                      >
                                        <Check
                                          className={`mr-2 h-4 w-4 ${
@@ -1007,23 +1012,27 @@ const BlogManagement = () => {
                               className="w-full justify-between"
                             >
                               {field.value && field.value !== "none"
-                                ? specialists.find((specialist) => specialist.id === field.value)?.name + " - " + specialists.find((specialist) => specialist.id === field.value)?.specialty
+                                ? (() => {
+                                    const specialist = specialists.find((s) => s.id === field.value);
+                                    return specialist ? `${specialist.name} - ${specialist.specialty}` : "Uzman seçin (opsiyonel)";
+                                  })()
                                 : "Uzman seçin (opsiyonel)"}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <Command>
-                            <CommandInput placeholder="Uzman ara..." />
+                        <PopoverContent className="w-full p-0 bg-white dark:bg-gray-800 border shadow-lg z-50">
+                          <Command className="bg-white dark:bg-gray-800">
+                            <CommandInput placeholder="Uzman ara..." className="border-none" />
                             <CommandEmpty>Uzman bulunamadı.</CommandEmpty>
-                            <CommandGroup>
+                            <CommandGroup className="max-h-64 overflow-auto">
                               <CommandItem
                                 value="none"
                                 onSelect={() => {
                                   field.onChange("none");
                                   setIsEditSpecialistOpen(false);
                                 }}
+                                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                               >
                                 <Check
                                   className={`mr-2 h-4 w-4 ${
@@ -1035,11 +1044,12 @@ const BlogManagement = () => {
                               {specialists.map((specialist) => (
                                 <CommandItem
                                   key={specialist.id}
-                                  value={specialist.name + " " + specialist.specialty}
+                                  value={`${specialist.name} ${specialist.specialty}`}
                                   onSelect={() => {
                                     field.onChange(specialist.id);
                                     setIsEditSpecialistOpen(false);
                                   }}
+                                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                                 >
                                   <Check
                                     className={`mr-2 h-4 w-4 ${
