@@ -202,7 +202,7 @@ const BlogManagement = () => {
           seo_title: values.seo_title || null,
           seo_description: values.seo_description || null,
           keywords: values.keywords || null,
-          specialist_id: values.specialist_id || null,
+          specialist_id: values.specialist_id === "none" ? null : values.specialist_id || null,
         })
         .select()
         .single();
@@ -496,7 +496,7 @@ const BlogManagement = () => {
           seo_title: values.seo_title || null,
           seo_description: values.seo_description || null,
           keywords: values.keywords || null,
-          specialist_id: values.specialist_id || null,
+          specialist_id: values.specialist_id === "none" ? null : values.specialist_id || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', editingBlog.id);
@@ -616,7 +616,7 @@ const BlogManagement = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">Uzman seçilmedi</SelectItem>
+                               <SelectItem value="none">Uzman seçilmedi</SelectItem>
                               {specialists.map((specialist) => (
                                 <SelectItem key={specialist.id} value={specialist.id}>
                                   {specialist.name} - {specialist.specialty}
@@ -949,7 +949,7 @@ const BlogManagement = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Uzman seçilmedi</SelectItem>
+                          <SelectItem value="none">Uzman seçilmedi</SelectItem>
                           {specialists.map((specialist) => (
                             <SelectItem key={specialist.id} value={specialist.id}>
                               {specialist.name} - {specialist.specialty}
