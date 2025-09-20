@@ -102,6 +102,17 @@ const BlogManagement = () => {
   useEffect(() => {
     fetchBlogs();
     fetchSpecialists();
+
+    const channel = supabase
+      .channel('specialists-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'specialists' }, () => {
+        fetchSpecialists();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchSpecialists = async () => {
@@ -642,7 +653,7 @@ const BlogManagement = () => {
                                  </Button>
                                </FormControl>
                              </PopoverTrigger>
-                             <PopoverContent className="w-full p-0 bg-white dark:bg-gray-800 border shadow-lg z-50">
+                              <PopoverContent className="w-full p-0 bg-white dark:bg-gray-800 border shadow-lg z-50 pointer-events-auto">
                                <Command className="bg-white dark:bg-gray-800">
                                  <CommandInput placeholder="Uzman ara..." className="border-none" />
                                  <CommandEmpty>Uzman bulunamadı.</CommandEmpty>
@@ -1021,7 +1032,7 @@ const BlogManagement = () => {
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-full p-0 bg-white dark:bg-gray-800 border shadow-lg z-50">
+                        <PopoverContent className="w-full p-0 bg-white dark:bg-gray-800 border shadow-lg z-50 pointer-events-auto">
                           <Command className="bg-white dark:bg-gray-800">
                             <CommandInput placeholder="Uzman ara..." className="border-none" />
                             <CommandEmpty>Uzman bulunamadı.</CommandEmpty>
