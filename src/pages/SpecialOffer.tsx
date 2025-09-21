@@ -44,7 +44,7 @@ const SpecialOffer = () => {
       <HorizontalNavigation />
       
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 overflow-hidden">
+      <section className="relative min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/75 overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
