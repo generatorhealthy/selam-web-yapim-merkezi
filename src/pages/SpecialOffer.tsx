@@ -23,16 +23,13 @@ const SpecialOffer = () => {
     "Mobil Uyumlu Tasarım",
     "Google Arama Optimizasyonu",
     "Hasta Yorumları ve Puanlama",
-    "Çoklu Dil Desteği",
-    "Güvenli Veri Saklama",
-    "Teknik Destek (1 Yıl)",
-    "Özelleştirilebilir Tema"
+    "Güvenli Veri Saklama"
   ];
 
   const statistics = [
-    { number: "10.000+", label: "Aktif Hekim", icon: Users },
-    { number: "500.000+", label: "Mutlu Hasta", icon: Heart },
-    { number: "1.000.000+", label: "Başarılı Randevu", icon: Calendar },
+    { number: "Her Ay", label: "Danışan Yönlendirme Garantisi", icon: Target },
+    { number: "500.000+", label: "Mutlu Danışan", icon: Heart },
+    { number: "500.000+", label: "Başarılı Randevu", icon: Calendar },
     { number: "99.9%", label: "Sistem Güvenilirliği", icon: Shield }
   ];
 
@@ -47,7 +44,7 @@ const SpecialOffer = () => {
       <HorizontalNavigation />
       
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 overflow-hidden">
+      <section className="relative min-h-screen bg-gradient-to-br from-primary via-primary/95 to-primary/85 overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
@@ -123,36 +120,36 @@ const SpecialOffer = () => {
                 </div>
                 
                 <p className="text-lg text-muted-foreground">
-                  Muayenehanenizi modern teknoloji ile donatın
+                  12 Aylık Abonelik
                 </p>
               </CardHeader>
               
               <CardContent className="p-8">
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-6 text-center md:text-left">📋 Temel Özellikler</h3>
-                    <ul className="space-y-3">
-                      {packageFeatures.slice(0, 6).map((feature, index) => (
-                        <li key={index} className="flex items-center">
-                          <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
-                          <span className="text-gray-700">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-xl font-semibold mb-6 text-center md:text-left">⚡ Premium Özellikler</h3>
-                    <ul className="space-y-3">
-                      {packageFeatures.slice(6).map((feature, index) => (
-                        <li key={index} className="flex items-center">
-                          <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
-                          <span className="text-gray-700">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                 <div className="grid md:grid-cols-2 gap-8">
+                   <div>
+                     <h3 className="text-xl font-semibold mb-6 text-center md:text-left">📋 Temel Özellikler</h3>
+                     <ul className="space-y-3">
+                       {packageFeatures.slice(0, 5).map((feature, index) => (
+                         <li key={index} className="flex items-center">
+                           <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
+                           <span className="text-gray-700">{feature}</span>
+                         </li>
+                       ))}
+                     </ul>
+                   </div>
+                   
+                   <div>
+                     <h3 className="text-xl font-semibold mb-6 text-center md:text-left">⚡ Premium Özellikler</h3>
+                     <ul className="space-y-3">
+                       {packageFeatures.slice(5).map((feature, index) => (
+                         <li key={index} className="flex items-center">
+                           <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
+                           <span className="text-gray-700">{feature}</span>
+                         </li>
+                       ))}
+                     </ul>
+                   </div>
+                 </div>
                 
                 <div className="mt-8 p-6 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl">
                   <div className="flex items-center justify-center gap-2 mb-3">
@@ -239,9 +236,9 @@ const SpecialOffer = () => {
             
             <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
               <Star className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Profesyonel İmaj</h3>
+              <h3 className="text-xl font-semibold mb-3">Her Ay Danışan Yönlendirme Garantisi</h3>
               <p className="text-muted-foreground">
-                Modern web siteniz ile profesyonel imajınızı güçlendirin ve güven yaratın.
+                Platformumuz üzerinden her ay garantili danışan yönlendirmesi alın.
               </p>
             </Card>
           </div>
