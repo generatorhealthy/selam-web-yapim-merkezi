@@ -34,8 +34,7 @@ const SpecialOffer = () => {
   const statistics = [
     { number: "Her Ay", label: "Danışan Yönlendirme Garantisi", icon: Target },
     { number: "500.000+", label: "Mutlu Danışan", icon: Heart },
-    { number: "500.000+", label: "Başarılı Randevu", icon: Calendar },
-    { number: "99.9%", label: "Mail ve Sms Hatırlatıcısı", icon: Shield }
+    { number: "500.000+", label: "Başarılı Randevu", icon: Calendar }
   ];
 
   return (
