@@ -10,7 +10,7 @@ import { FeatureBox } from "@/components/FeatureBox";
 const SpecialOffer = () => {
   const handleWhatsAppContact = () => {
     const phoneNumber = "905308232275";
-    const message = "Merhaba! Bu Aya Özel 2998₺'lik paket hakkında bilgi almak istiyorum.";
+    const message = "Merhaba, Kampanyalı Paket üzerinden Kayıt Olmak İstiyorum.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
