@@ -107,7 +107,7 @@ const SpecialOffer = () => {
                 <div className="flex justify-center items-center gap-2 mb-4">
                   <Crown className="w-8 h-8 text-primary" />
                   <Badge className="bg-primary/20 text-primary border-primary/30 text-lg px-4 py-1">
-                    PROFESYONEL PAKET
+                    PREMIUM PAKET
                   </Badge>
                 </div>
                 
@@ -164,7 +164,7 @@ const SpecialOffer = () => {
                   <Link 
                     to="/odeme/premium" 
                    state={{
-                     packageName: "Profesyonel Paket - Bu Aya Özel",
+                     packageName: "Premium Paket - Bu Aya Özel",
                      price: 2998,
                      originalPrice: 4999,
                      features: packageFeatures
@@ -293,7 +293,7 @@ const SpecialOffer = () => {
             <Link 
               to="/odeme/premium" 
                 state={{
-                  packageName: "Profesyonel Paket - Bu Aya Özel",
+                  packageName: "Premium Paket - Bu Aya Özel",
                   price: 2998,
                   originalPrice: 4999,
                   features: packageFeatures
