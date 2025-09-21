@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Star, Users, Calendar, Headphones, Globe, Clock, Shield, Award, Zap, Heart, Target, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
+import { FeatureBox } from "@/components/FeatureBox";
 
 const SpecialOffer = () => {
   const handleWhatsAppContact = () => {
@@ -15,15 +16,18 @@ const SpecialOffer = () => {
   };
 
   const packageFeatures = [
-    "7/24 Online Randevu Sistemi",
-    "Hasta Takip ve Yönetim Paneli", 
-    "SMS ve E-posta Hatırlatmaları",
-    "Online Ödeme Entegrasyonu",
-    "Detaylı Raporlama Sistemi",
-    "Mobil Uyumlu Tasarım",
-    "Google Arama Optimizasyonu",
-    "Hasta Yorumları ve Puanlama",
-    "Güvenli Veri Saklama"
+    "Santral Sistemden Danışan Yönlendirme Garantisi",
+    "Detaylı Profil",
+    "Branş (Doktorum Ol Üyeliği 1)",
+    "İletişim",
+    "Adres ve Konum",
+    "Video Yayınlama",
+    "Danışan Görüşleri",
+    "Uzman Sayfasına Özgün Seo Çalışması",
+    "Online Randevu Takimi",
+    "Google Reklamları",
+    "Sosyal Medya Paylaşımlarım",
+    "Danışan Takibi"
   ];
 
   const statistics = [
@@ -123,31 +127,18 @@ const SpecialOffer = () => {
               </CardHeader>
               
               <CardContent className="p-8">
-                 <div className="grid md:grid-cols-2 gap-8">
-                   <div>
-                     <h3 className="text-xl font-semibold mb-6 text-center md:text-left">📋 Temel Özellikler</h3>
-                     <ul className="space-y-3">
-                       {packageFeatures.slice(0, 5).map((feature, index) => (
-                         <li key={index} className="flex items-center">
-                           <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
-                           <span className="text-gray-700">{feature}</span>
-                         </li>
-                       ))}
-                     </ul>
-                   </div>
-                   
-                   <div>
-                     <h3 className="text-xl font-semibold mb-6 text-center md:text-left">⚡ Premium Özellikler</h3>
-                     <ul className="space-y-3">
-                       {packageFeatures.slice(5).map((feature, index) => (
-                         <li key={index} className="flex items-center">
-                           <Check className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
-                           <span className="text-gray-700">{feature}</span>
-                         </li>
-                       ))}
-                     </ul>
-                   </div>
-                 </div>
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold mb-6 text-center">📦 Paket İçeriği</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {packageFeatures.map((feature, index) => (
+                      <FeatureBox 
+                        key={index} 
+                        title={feature}
+                        variant={index === 0 ? "highlight" : "default"}
+                      />
+                    ))}
+                  </div>
+                </div>
                 
                 <div className="mt-8 p-6 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl">
                   <div className="flex items-center justify-center gap-2 mb-3">
