@@ -239,86 +239,80 @@ const SpecialOffer = () => {
         </div>
       </section>
       
-      {/* Benefits Section */}
+      {/* Standard Features Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Neden <span className="text-primary">Doktorum Ol</span> Platformu?
+              Tüm Paketlerde <span className="text-primary">Standart Özellikler</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Her Ay Danışan Yönlendirme Garantisi ile görünürlüğünüzü artırıyor, profesyonel dijital profiliniz sayesinde danışanların size kolayca ulaşmasını sağlıyoruz
+              Her pakette yer alan premium özellikler ile işinizi dijital dünyada güçlendirin
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-4 gap-8">
             <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
-              <Calendar className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-3">7/24 Online Randevu</h3>
-              <p className="text-muted-foreground">
-                Hastalarınız dilediği zaman randevu alabilir, siz de iş yükünüzü azaltabilirsiniz.
+              <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Target className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Aylık Garantili Danışan Yönlendirme</h3>
+              <p className="text-muted-foreground text-sm">
+                Aylık Danışan Yönlendirme Garantisi ile sürekli danışan akışı
               </p>
             </Card>
             
             <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
-              <Users className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Hasta Takip Sistemi</h3>
-              <p className="text-muted-foreground">
-                Hasta geçmişini, randevularını ve tedavi süreçlerini tek yerden yönetin.
+              <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Zengin Reklamlar</h3>
+              <p className="text-muted-foreground text-sm">
+                Google ve sosyal medya platformlarında zengin içerikli reklam yönetimi
               </p>
             </Card>
             
             <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
-              <Star className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Her Ay Danışan Yönlendirme Garantisi</h3>
-              <p className="text-muted-foreground">
-                Platformumuz üzerinden her ay garantili danışan yönlendirmesi alın.
+              <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Randevu Sistemi</h3>
+              <p className="text-muted-foreground text-sm">
+                Online randevu yönetimi ve takip sistemi
+              </p>
+            </Card>
+            
+            <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
+              <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Headphones className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Müşteri Desteği</h3>
+              <p className="text-muted-foreground text-sm">
+                7/24 profesyonel teknik destek hizmeti
               </p>
             </Card>
           </div>
         </div>
       </section>
       
-      {/* CTA Section */}
-      <section className="py-16 bg-primary">
+      {/* Questions Section */}
+      <section className="py-16 bg-gradient-to-br from-gray-900 via-purple-900 to-purple-800">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Kampanya Sınırlı Sayıda!
+            Sorularınız mı var?
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Bu aya özel %40 indirimli fiyatla profesyonel doktor randevu sisteminizi hemen kurun.
+            Size yardımcı olmaktan mutluluk duyarız. Uzman ekibimiz her zaman yanınızda ve en iyi çözümü birlikte bulalım.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link 
-              to="/odeme/premium" 
-                state={{
-                  packageName: "Premium Paket - Bu Aya Özel",
-                  price: 2998,
-                  originalPrice: 4999,
-                  features: packageFeatures
-                }}
-            >
-              <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 font-semibold py-4 px-8">
-                <Crown className="w-5 h-5 mr-2" />
-                Satın Al - 2998₺
-              </Button>
-            </Link>
-            
-            <Button 
-              size="lg" 
-              variant="outline" 
-              onClick={handleWhatsAppContact}
-              className="border-white text-white hover:bg-white hover:text-primary py-4 px-8"
-            >
-              <Headphones className="w-5 h-5 mr-2" />
-              Bilgi Al
-            </Button>
-          </div>
-          
-          <div className="mt-8 text-white/80">
-            <p>⏰ Kampanya sadece bu ay geçerli! | 📞 7/24 Destek</p>
-          </div>
+          <Button 
+            size="lg" 
+            onClick={handleWhatsAppContact}
+            className="bg-white text-gray-900 hover:bg-white/90 font-semibold py-4 px-8 rounded-full"
+          >
+            <Headphones className="w-5 h-5 mr-2" />
+            WhatsApp ile Anında İletişim
+          </Button>
         </div>
       </section>
     </>
