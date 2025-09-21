@@ -44,7 +44,7 @@ const SpecialOffer = () => {
       <HorizontalNavigation />
       
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br from-primary via-primary/95 to-primary/85 overflow-hidden">
+      <section className="relative min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
@@ -60,15 +60,13 @@ const SpecialOffer = () => {
             </Badge>
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-              Muayenehanenizi
               <span className="block bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                Dijitale Taşıyın
+                Profesyonel Destek
               </span>
             </h1>
             
             <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed">
-              Profesyonel doktor randevu sistemi ile hasta takibini kolaylaştırın, 
-              zamandan tasarruf edin ve muayenehanenizi modern çağa uygun hale getirin.
+              Dijital dünyadaki profesyonel varlığınızı güçlendirin ve daha fazla danışan ulaşın
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
