@@ -10,7 +10,7 @@ import { FeatureBox } from "@/components/FeatureBox";
 const SpecialOffer = () => {
   const handleWhatsAppContact = () => {
     const phoneNumber = "905418138828";
-    const message = "Merhaba! Bu Aya Özel 2999₺'lik paket hakkında bilgi almak istiyorum.";
+    const message = "Merhaba! Bu Aya Özel 2998₺'lik paket hakkında bilgi almak istiyorum.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -25,7 +25,7 @@ const SpecialOffer = () => {
     "Danışan Görüşleri",
     "Uzman Sayfasına Özgün Seo Çalışması",
     "Online Randevu Takimi",
-    "Google Reklamları",
+    "Profesyonel Makale Yazıları",
     "Sosyal Medya Paylaşımlarım",
     "Danışan Takibi"
   ];
@@ -113,7 +113,7 @@ const SpecialOffer = () => {
                 
                 <div className="text-center mb-6">
                   <div className="flex items-center justify-center gap-3 mb-2">
-                    <span className="text-3xl md:text-4xl font-bold text-primary">2999₺</span>
+                    <span className="text-3xl md:text-4xl font-bold text-primary">2998₺</span>
                     <span className="text-xl text-muted-foreground line-through">4999₺</span>
                   </div>
                   <Badge className="bg-red-100 text-red-700 border-red-200 text-sm px-3 py-1">
@@ -128,7 +128,6 @@ const SpecialOffer = () => {
               
               <CardContent className="p-8">
                 <div className="space-y-4">
-                  <h3 className="text-xl font-semibold mb-6 text-center">📦 Paket İçeriği</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {packageFeatures.map((feature, index) => (
                       <FeatureBox 
@@ -164,17 +163,17 @@ const SpecialOffer = () => {
                 <div className="flex flex-col sm:flex-row gap-4 mt-8">
                   <Link 
                     to="/odeme/premium" 
-                    state={{
-                      packageName: "Profesyonel Paket - Bu Aya Özel",
-                      price: 2999,
-                      originalPrice: 4999,
-                      features: packageFeatures
-                    }}
+                   state={{
+                     packageName: "Profesyonel Paket - Bu Aya Özel",
+                     price: 2998,
+                     originalPrice: 4999,
+                     features: packageFeatures
+                   }}
                     className="flex-1"
                   >
                     <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-lg">
                       <Crown className="w-5 h-5 mr-2" />
-                      Hemen Satın Al - 2999₺
+                      Satın Al - 2998₺
                     </Button>
                   </Link>
                   
@@ -202,7 +201,7 @@ const SpecialOffer = () => {
               Neden <span className="text-primary">DoktorumOl</span> Platformu?
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Modern teknoloji ile donatılmış sistemimiz, muayenehanenizi dijital çağa hazırlar
+              Her Ay Danışan Yönlendirme Garantisi ile görünürlüğünüzü artırıyor, profesyonel dijital profiliniz sayesinde danışanların size kolayca ulaşmasını sağlıyoruz
             </p>
           </div>
           
@@ -247,16 +246,16 @@ const SpecialOffer = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link 
               to="/odeme/premium" 
-              state={{
-                packageName: "Profesyonel Paket - Bu Aya Özel",
-                price: 2999,
-                originalPrice: 4999,
-                features: packageFeatures
-              }}
+                state={{
+                  packageName: "Profesyonel Paket - Bu Aya Özel",
+                  price: 2998,
+                  originalPrice: 4999,
+                  features: packageFeatures
+                }}
             >
               <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 font-semibold py-4 px-8">
                 <Crown className="w-5 h-5 mr-2" />
-                Hemen Başla - 2999₺
+                Satın Al - 2998₺
               </Button>
             </Link>
             
