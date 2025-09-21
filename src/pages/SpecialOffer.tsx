@@ -65,7 +65,7 @@ const SpecialOffer = () => {
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
               <span className="block bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                Profesyonel Destek
+                Özel Fırsatlar
               </span>
             </h1>
             
