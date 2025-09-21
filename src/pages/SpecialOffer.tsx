@@ -9,16 +9,16 @@ import { FeatureBox } from "@/components/FeatureBox";
 
 const SpecialOffer = () => {
   const handleWhatsAppContact = () => {
-    const phoneNumber = "905418138828";
+    const phoneNumber = "905308232275";
     const message = "Merhaba! Bu Aya Özel 2998₺'lik paket hakkında bilgi almak istiyorum.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const packageFeatures = [
-    "Santral Sistemden Danışan Yönlendirme Garantisi",
+    "Her Ay Danışan Yönlendirme Garantisi",
     "Detaylı Profil",
-    "Branş (Doktorum Ol Üyeliği 1)",
+    "Uzman Profili",
     "İletişim",
     "Adres ve Konum",
     "Video Yayınlama",
@@ -26,15 +26,16 @@ const SpecialOffer = () => {
     "Uzman Sayfasına Özgün Seo Çalışması",
     "Online Randevu Takimi",
     "Profesyonel Makale Yazıları",
-    "Sosyal Medya Paylaşımlarım",
-    "Danışan Takibi"
+    "Sosyal Medya Paylaşımları",
+    "Danışan Takibi",
+    "Yapay Zeka Destekli Testler"
   ];
 
   const statistics = [
     { number: "Her Ay", label: "Danışan Yönlendirme Garantisi", icon: Target },
     { number: "500.000+", label: "Mutlu Danışan", icon: Heart },
     { number: "500.000+", label: "Başarılı Randevu", icon: Calendar },
-    { number: "99.9%", label: "Sistem Güvenilirliği", icon: Shield }
+    { number: "99.9%", label: "Mail ve Sms Hatırlatıcısı", icon: Shield }
   ];
 
   return (
@@ -84,7 +85,7 @@ const SpecialOffer = () => {
               </div>
               <div className="flex items-center text-white/90">
                 <Check className="w-5 h-5 mr-2 text-white" />
-                SMS Hatırlatmaları
+                Yapay Zeka Destekli Testler
               </div>
             </div>
           </div>
@@ -151,7 +152,7 @@ const SpecialOffer = () => {
                     </div>
                     <div className="flex flex-col items-center">
                       <Target className="w-8 h-8 text-primary mb-2" />
-                      <span className="text-sm text-gray-600">Hasta Memnuniyeti Artırın</span>
+                      <span className="text-sm text-gray-600">Danışan Portföy Artışı</span>
                     </div>
                     <div className="flex flex-col items-center">
                       <Globe className="w-8 h-8 text-primary mb-2" />
@@ -192,13 +193,59 @@ const SpecialOffer = () => {
           </div>
         </div>
       </section>
-      
-      {/* Benefits Section */}
+
+      {/* Features Showcase Section */}
       <section className="py-20 bg-gradient-to-b from-background to-primary/5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Neden <span className="text-primary">DoktorumOl</span> Platformu?
+              Öne Çıkan <span className="text-primary">Özelliklerimiz</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Profesyonel platformumuz ile dijital varlığınızı güçlendirin
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-12 mb-20">
+            {/* Her Ay Danışan Yönlendirme Garantisi */}
+            <div className="flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                <Target className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4">Her Ay Danışan Yönlendirme Garantisi</h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                Platformumuz üzerinden her ay garantili danışan yönlendirmesi alın. Dijital varlığınızı güçlendirerek daha fazla hastaya ulaşın.
+              </p>
+              <div className="bg-primary/5 p-6 rounded-xl w-full max-w-md">
+                <div className="text-3xl font-bold text-primary mb-2">Her Ay</div>
+                <div className="text-sm text-muted-foreground">Garantili Danışan Yönlendirme</div>
+              </div>
+            </div>
+
+            {/* Yapay Zeka Destekli Testler */}
+            <div className="flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                <Zap className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4">Yapay Zeka Destekli Testler</h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                Modern AI teknolojisi ile hazırlanmış özel testler sayesinde danışanlarınızı daha iyi anlayın ve profesyonel hizmet sunun.
+              </p>
+              <div className="bg-primary/5 p-6 rounded-xl w-full max-w-md">
+                <div className="text-3xl font-bold text-primary mb-2">AI</div>
+                <div className="text-sm text-muted-foreground">Destekli Test Sistemi</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Benefits Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              Neden <span className="text-primary">Doktorum Ol</span> Platformu?
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Her Ay Danışan Yönlendirme Garantisi ile görünürlüğünüzü artırıyor, profesyonel dijital profiliniz sayesinde danışanların size kolayca ulaşmasını sağlıyoruz
