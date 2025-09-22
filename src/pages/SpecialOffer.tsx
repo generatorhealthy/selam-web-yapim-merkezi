@@ -73,14 +73,14 @@ const SpecialOffer = () => {
               Dijital dünyadaki profesyonel varlığınızı güçlendirin ve daha fazla danışan ulaşın
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 max-w-4xl mx-auto">
               <div className="flex items-center text-white/90">
                 <Check className="w-5 h-5 mr-2 text-white" />
                 7/24 Online Randevu
               </div>
               <div className="flex items-center text-white/90">
                 <Check className="w-5 h-5 mr-2 text-white" />
-                Hasta Takip Sistemi
+                Danışan Yönlendirme
               </div>
               <div className="flex items-center text-white/90">
                 <Check className="w-5 h-5 mr-2 text-white" />
