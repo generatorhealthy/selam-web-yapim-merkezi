@@ -9,8 +9,8 @@ const FloatingWhatsAppButton = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  // Sadece mobilde göster, özel sayfada gizle
-  if (!isMobile || location.pathname === '/bu-aya-ozel') {
+  // Sadece mobilde göster, özel ve ödeme sayfalarında gizle
+  if (!isMobile || location.pathname === '/bu-aya-ozel' || location.pathname.startsWith('/odeme')) {
     return null;
   }
 
