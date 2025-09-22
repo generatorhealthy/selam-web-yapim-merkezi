@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Download, RefreshCw, Globe, Info } from "lucide-react";
+import { Download, RefreshCw, Globe, Info, Zap } from "lucide-react";
 import { AdminTopBar } from "@/components/AdminTopBar";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,34 @@ const SitemapManagement = () => {
   const [sitemapContent, setSitemapContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<Date | null>(null);
+
+  const handleTestAutoGeneration = async () => {
+    setLoading(true);
+    try {
+      // Call the edge function directly to test auto generation
+      const { data, error } = await supabase.functions.invoke('generate-sitemap', {
+        body: { trigger: 'manual_test' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Test Başarılı",
+        description: `Otomatik sitemap üretimi test edildi. ${data?.stats?.totalUrls || 0} URL eklendi.`,
+      });
+
+      setLastGenerated(new Date());
+    } catch (error) {
+      console.error('Test error:', error);
+      toast({
+        title: "Test Hatası",
+        description: "Otomatik sitemap üretimi test edilirken hata oluştu.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGenerateSitemap = async () => {
     setLoading(true);
@@ -113,7 +141,39 @@ const SitemapManagement = () => {
             </AlertDescription>
           </Alert>
 
-          {/* Ana Kontroller */}
+          {/* Otomatik Sistem Bilgileri */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                Otomatik Sistem
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Zamanlama</h4>
+                  <ul className="text-sm space-y-1">
+                    <li>• <strong>Günlük:</strong> Her gün saat 03:00'te</li>
+                    <li>• <strong>Yeni İçerik:</strong> Blog yayınlandığında</li>
+                    <li>• <strong>Uzman Ekleme:</strong> Yeni uzman aktif olduğunda</li>
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Test Etme</h4>
+                  <Button 
+                    onClick={handleTestAutoGeneration}
+                    disabled={loading}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Zap className="w-4 h-4 mr-2" />
+                    Otomatik Sistemi Test Et
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
