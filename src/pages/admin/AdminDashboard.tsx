@@ -30,7 +30,8 @@ import {
   Clock,
   MessageCircle,
   Phone,
-  Database
+  Database,
+  Map
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -341,6 +342,17 @@ const AdminDashboard = () => {
       shadowColor: "shadow-slate-500/20",
       route: "/divan_paneli/log-management",
       buttonText: "Logları Görüntüle",
+      adminOnly: true
+    },
+    {
+      title: "Sitemap Yönetimi",
+      description: "SEO sitemap haritasını oluştur ve güncelle",
+      icon: Map,
+      gradient: "from-emerald-500 via-green-500 to-teal-600",
+      bgGradient: "from-emerald-50 to-teal-50",
+      shadowColor: "shadow-emerald-500/20",
+      route: "/divan_paneli/sitemap-management",
+      buttonText: "Sitemap'i Yönet",
       adminOnly: true
     },
   ];
