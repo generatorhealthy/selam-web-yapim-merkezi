@@ -90,7 +90,7 @@ const SpecialOffer = () => {
           </div>
           
           {/* Statistics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-4xl mx-auto">
             {statistics.map((stat, index) => (
               <div key={index} className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl">
                 <stat.icon className="w-10 h-10 text-white mx-auto mb-3" />
