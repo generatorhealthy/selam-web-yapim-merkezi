@@ -351,7 +351,7 @@ const AdminDashboard = () => {
       gradient: "from-emerald-500 via-green-500 to-teal-600",
       bgGradient: "from-emerald-50 to-teal-50",
       shadowColor: "shadow-emerald-500/20",
-      route: "/divan_paneli/sitemap-management",
+      route: "/divan_paneli/sitemap",
       buttonText: "Sitemap'i Yönet",
       adminOnly: true
     },
