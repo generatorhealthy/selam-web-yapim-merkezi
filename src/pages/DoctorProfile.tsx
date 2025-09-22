@@ -147,8 +147,24 @@ const DoctorProfile = () => {
       
       let blogData = null;
       
-      // First approach: Try to match by author_id (user_id)
-      if (userId) {
+      // First approach: Try to match by specialist_id
+      console.log('Trying to fetch blogs by specialist_id:', specialistId);
+      const { data: blogsBySpecialistId, error: errorBySpecialistId } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('specialist_id', specialistId)
+        .in('status', ['published', 'approved'])
+        .order('published_at', { ascending: false });
+
+      if (!errorBySpecialistId && blogsBySpecialistId && blogsBySpecialistId.length > 0) {
+        console.log('Found blogs by specialist_id:', blogsBySpecialistId.length);
+        blogData = blogsBySpecialistId;
+      } else {
+        console.log('No blogs found by specialist_id, error:', errorBySpecialistId);
+      }
+
+      // Second approach: Try to match by author_id (user_id) if no specialist_id match
+      if ((!blogData || blogData.length === 0) && userId) {
         console.log('Trying to fetch blogs by author_id:', userId);
         const { data: blogsByAuthorId, error: errorById } = await supabase
           .from('blog_posts')
@@ -165,7 +181,7 @@ const DoctorProfile = () => {
         }
       }
 
-      // Second approach: If no results with user_id, try matching by exact author_name
+      // Third approach: If no results with specialist_id or user_id, try matching by exact author_name
       if ((!blogData || blogData.length === 0) && specialistName) {
         console.log('Trying to fetch blogs by exact author_name:', specialistName);
         const { data: blogsByAuthorName, error: errorByName } = await supabase
@@ -183,7 +199,7 @@ const DoctorProfile = () => {
         }
       }
 
-      // Third approach: Try case-insensitive matching by author_name
+      // Fourth approach: Try case-insensitive matching by author_name
       if ((!blogData || blogData.length === 0) && specialistName) {
         console.log('Trying case-insensitive author_name search for:', specialistName);
         const { data: blogsByNameInsensitive, error: errorByNameInsensitive } = await supabase

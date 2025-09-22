@@ -180,9 +180,18 @@ const BlogManagement = () => {
         return;
       }
 
-      // Determine author type based on user role
-      const authorType = userProfile?.role === 'staff' ? 'staff' : 'admin';
-      const authorName = userProfile?.role === 'staff' ? 'Staff Editörü' : 'Editör';
+      // Determine author type and name based on specialist selection
+      let authorType = userProfile?.role === 'staff' ? 'staff' : 'admin';
+      let authorName = userProfile?.role === 'staff' ? 'Staff Editörü' : 'Editör';
+      
+      // If a specialist is selected, use their name as author
+      if (values.specialist_id && values.specialist_id !== "none") {
+        const selectedSpecialist = specialists.find(s => s.id === values.specialist_id);
+        if (selectedSpecialist) {
+          authorName = selectedSpecialist.name;
+          authorType = 'specialist';
+        }
+      }
 
       // İlk olarak blog_posts tablosuna ekle
       const { data: insertedBlogPost, error: blogPostError } = await supabase
@@ -744,14 +753,15 @@ const BlogManagement = () => {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="font-semibold text-lg mb-1">{blog.title}</h3>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' ? 'Editör' : blog.author_name} - {blog.author_type}
-                          {blog.specialists && (
-                            <span className="ml-2 text-blue-600">
-                              | Uzman: {blog.specialists.name} ({blog.specialists.specialty})
-                            </span>
-                          )}
-                        </p>
+                         <p className="text-sm text-gray-600 mb-2">
+                           {blog.author_type === 'specialist' ? blog.author_name : 
+                            (blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' ? 'Editör' : blog.author_name)} - {blog.author_type}
+                           {blog.specialists && (
+                             <span className="ml-2 text-blue-600">
+                               | Uzman: {blog.specialists.name} ({blog.specialists.specialty})
+                             </span>
+                           )}
+                         </p>
                         {blog.excerpt && <p className="text-sm text-gray-700 mb-3">{blog.excerpt}</p>}
                       </div>
                       <Badge className={getStatusColor(blog.status)}>
