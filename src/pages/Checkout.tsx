@@ -546,7 +546,7 @@ const handleCreditCardPayment = async () => {
                       type="button"
                       variant={customerType === "individual" ? "default" : "outline"}
                       onClick={() => setCustomerType("individual")}
-                      className="flex-1"
+                      className={`flex-1 ${customerType === "individual" ? "bg-gray-900 hover:bg-gray-800 text-white" : "border-gray-300 hover:bg-gray-50"}`}
                     >
                       <User className="h-4 w-4 mr-2" />
                       Bireysel
@@ -555,7 +555,7 @@ const handleCreditCardPayment = async () => {
                       type="button"
                       variant={customerType === "company" ? "default" : "outline"}
                       onClick={() => setCustomerType("company")}
-                      className="flex-1"
+                      className={`flex-1 ${customerType === "company" ? "bg-gray-900 hover:bg-gray-800 text-white" : "border-gray-300 hover:bg-gray-50"}`}
                     >
                       <Building className="h-4 w-4 mr-2" />
                       Kurumsal
@@ -727,7 +727,7 @@ const handleCreditCardPayment = async () => {
                       type="button"
                       variant={paymentMethod === "credit_card" ? "default" : "outline"}
                       onClick={() => setPaymentMethod("credit_card")}
-                      className="h-auto p-4 justify-start"
+                      className={`h-auto p-4 justify-start ${paymentMethod === "credit_card" ? "bg-gray-900 hover:bg-gray-800 text-white" : "border-gray-300 hover:bg-gray-50"}`}
                     >
                       <CreditCard className="h-6 w-6 mr-3" />
                       <div className="text-left">
@@ -739,7 +739,7 @@ const handleCreditCardPayment = async () => {
                       type="button"
                       variant={paymentMethod === "bank_transfer" ? "default" : "outline"}
                       onClick={() => setPaymentMethod("bank_transfer")}
-                      className="h-auto p-4 justify-start"
+                      className={`h-auto p-4 justify-start ${paymentMethod === "bank_transfer" ? "bg-gray-900 hover:bg-gray-800 text-white" : "border-gray-300 hover:bg-gray-50"}`}
                     >
                       <Banknote className="h-6 w-6 mr-3" />
                       <div className="text-left">
