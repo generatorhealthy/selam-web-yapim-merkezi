@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
+import BlogSpecialistCard from "@/components/BlogSpecialistCard";
 
 interface BlogPost {
   id: string;
@@ -22,15 +23,29 @@ interface BlogPost {
   author_type: string;
   published_at: string;
   word_count: number | null;
+  specialist_id: string | null;
   specialists?: {
     specialty: string;
   } | null;
+}
+
+interface Specialist {
+  id: string;
+  name: string;
+  specialty: string;
+  city: string;
+  experience: number;
+  bio: string;
+  profile_picture: string | null;
+  online_consultation: boolean;
+  face_to_face_consultation: boolean;
 }
 
 const BlogDetail = () => {
   const { slug } = useParams();
   const { toast } = useToast();
   const [blog, setBlog] = useState<BlogPost | null>(null);
+  const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -80,6 +95,19 @@ const BlogDetail = () => {
       }
 
       setBlog(blogWithSpecialist);
+
+      // Eğer blog yazısı bir uzmana aitsa, uzman bilgilerini getir
+      if (blogWithSpecialist.specialist_id) {
+        const { data: specialistData } = await supabase
+          .from('specialists')
+          .select('id, name, specialty, city, experience, bio, profile_picture, online_consultation, face_to_face_consultation')
+          .eq('id', blogWithSpecialist.specialist_id)
+          .single();
+        
+        if (specialistData) {
+          setSpecialist(specialistData);
+        }
+      }
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
       toast({
@@ -227,6 +255,11 @@ const BlogDetail = () => {
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900"
               dangerouslySetInnerHTML={{ __html: blog.content.replace(/\n/g, '<br>') }}
             />
+            
+            {/* Specialist Card - Show when blog has associated specialist */}
+            {specialist && (
+              <BlogSpecialistCard specialist={specialist} />
+            )}
           </CardContent>
         </Card>
 
