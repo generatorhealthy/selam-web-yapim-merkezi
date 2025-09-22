@@ -71,6 +71,7 @@ import SmsManagement from "./pages/admin/SmsManagement";
 import PbxManagement from "./pages/admin/PbxManagement";
 import ProspectiveRegistrations from "./pages/admin/ProspectiveRegistrations";
 import LogManagement from "./pages/admin/LogManagement";
+import SitemapManagement from "./pages/admin/SitemapManagement";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Doctor pages
@@ -172,6 +173,7 @@ function App() {
               <Route path="/divan_paneli/pbx-management" element={<PbxManagement />} />
               <Route path="/divan_paneli/prospective-registrations" element={<ProspectiveRegistrations />} />
                 <Route path="/divan_paneli/log-management" element={<LogManagement />} />
+                <Route path="/divan_paneli/sitemap" element={<SitemapManagement />} />
                 
               
               {/* Doctor Routes */}
