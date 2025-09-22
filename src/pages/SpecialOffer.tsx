@@ -228,10 +228,10 @@ const SpecialOffer = () => {
               </div>
               <h3 className="text-2xl font-bold mb-4">Yapay Zeka Destekli Testler</h3>
               <p className="text-muted-foreground mb-6 max-w-md">
-                Modern AI teknolojisi ile hazırlanmış özel testler sayesinde danışanlarınızı daha iyi anlayın ve profesyonel hizmet sunun.
+                Modern Yapay Zeka teknolojisi ile hazırlanmış özel testler sayesinde danışanlarınızı daha iyi anlayın ve profesyonel hizmet sunun.
               </p>
               <div className="bg-primary/5 p-6 rounded-xl w-full max-w-md">
-                <div className="text-3xl font-bold text-primary mb-2">AI</div>
+                <div className="text-3xl font-bold text-primary mb-2">Yapay Zeka</div>
                 <div className="text-sm text-muted-foreground">Destekli Test Sistemi</div>
               </div>
             </div>
