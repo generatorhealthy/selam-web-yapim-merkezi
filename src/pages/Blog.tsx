@@ -185,8 +185,13 @@ const Blog = () => {
   };
 
   const getAuthorTypeText = (blog: BlogPost) => {
+    // Check if it's admin content
+    if (blog.author_name === 'Admin' || blog.author_name === 'admin') {
+      return "İçerik";
+    }
+    
     // If the author_name is not a standard editor name, it's likely a specialist
-    if (blog.author_name && !['Editör', 'Staff Editörü', 'Doktorum Ol'].includes(blog.author_name)) {
+    if (blog.author_name && !['Editör', 'Staff Editörü', 'Doktorum Ol', 'Admin', 'admin'].includes(blog.author_name)) {
       return blog.author_name;
     }
     return "Editör";

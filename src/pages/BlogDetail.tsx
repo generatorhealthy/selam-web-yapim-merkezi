@@ -185,11 +185,13 @@ const BlogDetail = () => {
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">
-                    {blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                      ? 'Editör' 
-                      : blog.author_type === 'specialist' && blog.specialists?.specialty
-                        ? blog.specialists.specialty
-                        : blog.author_name}
+                    {blog.author_name === 'Admin' || blog.author_name === 'admin' 
+                      ? 'İçerik'
+                      : blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
+                        ? 'Editör' 
+                        : blog.author_type === 'specialist' && blog.specialists?.specialty
+                          ? blog.specialists.specialty
+                          : blog.author_name}
                   </span>
                 </div>
               </div>
@@ -235,11 +237,13 @@ const BlogDetail = () => {
               {/* Author Info */}
               <div>
                 <h3 className="font-semibold text-lg mb-2">
-                  {blog.author_type === 'specialist' 
-                    ? blog.author_name
-                    : (blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                      ? 'Editör' 
-                      : blog.author_name)}
+                  {blog.author_name === 'Admin' || blog.author_name === 'admin' 
+                    ? 'İçerik'
+                    : blog.author_type === 'specialist' 
+                      ? blog.author_name
+                      : (blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
+                        ? 'Editör' 
+                        : blog.author_name)}
                 </h3>
               </div>
               
