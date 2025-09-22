@@ -190,6 +190,12 @@ const SpecialOffer = () => {
                     WhatsApp Destek
                   </Button>
                 </div>
+                
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-semibold">Bilgilendirme:</span> Paket satın alımınız sonrası ekibimiz, profilinizin yayına alınması için sizinle iletişime geçecektir.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
