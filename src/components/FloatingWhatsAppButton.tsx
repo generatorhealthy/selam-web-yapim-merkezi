@@ -2,13 +2,15 @@ import { MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import RegistrationForm from "./RegistrationForm";
+import { useLocation } from "react-router-dom";
 
 const FloatingWhatsAppButton = () => {
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
   const isMobile = useIsMobile();
+  const location = useLocation();
 
-  // Sadece mobilde göster
-  if (!isMobile) {
+  // Sadece mobilde göster, özel sayfada gizle
+  if (!isMobile || location.pathname === '/bu-aya-ozel') {
     return null;
   }
 
