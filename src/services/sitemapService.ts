@@ -171,12 +171,6 @@ ${blogs.map(blog => `  <url>
     <lastmod>${new Date(blog.updated_at).toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/yazilar/${blog.slug}</loc>
-    <lastmod>${new Date(blog.updated_at).toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>`).join('\n')}
 
   <!-- Uzman Profilleri -->
