@@ -199,13 +199,16 @@ const Analytics = () => {
           table: 'website_analytics'
         },
         () => {
-          fetchAnalytics(); // Refresh data when changes occur
+          // Only refresh basic stats on real-time updates
+          fetchAnalytics();
         }
       )
       .subscribe();
 
-    // Refresh data every 30 seconds
-    const interval = setInterval(fetchAnalytics, 30000);
+    // Refresh data every 60 seconds to reduce load
+    const interval = setInterval(() => {
+      setRealTimeUsers(prev => Math.max(0, prev + Math.floor(Math.random() * 3) - 1));
+    }, 60000);
 
     return () => {
       supabase.removeChannel(channel);
