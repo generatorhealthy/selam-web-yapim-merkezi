@@ -85,34 +85,45 @@ const Analytics = () => {
 
   // Fetch comprehensive analytics data
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    let isMounted = true;
+
+    const fetchBasicStats = async () => {
       try {
-        setLoading(true);
-        const now = new Date();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Get current active sessions (last 5 minutes)
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
         const { count: activeCount } = await supabase
           .from('website_analytics')
           .select('session_id', { count: 'exact', head: true })
           .gte('last_active', fiveMinutesAgo);
+        if (!isMounted) return;
         setRealTimeUsers(activeCount || 0);
 
-        // Get today's unique visitors
         const { count: todayCount } = await supabase
           .from('website_analytics')
           .select('session_id', { count: 'exact', head: true })
           .gte('created_at', today.toISOString());
+        if (!isMounted) return;
         setTodayVisitors(todayCount || 0);
 
-        // Get today's page views
         const { count: pageViewsCount } = await supabase
           .from('website_analytics')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', today.toISOString());
+        if (!isMounted) return;
         setPageViews(pageViewsCount || 0);
+      } catch (error) {
+        console.error('Failed to fetch basic analytics:', error);
+      }
+    };
+
+    const fetchFullAnalytics = async () => {
+      try {
+        setLoading(true);
+
+        // Basic stats first
+        await fetchBasicStats();
 
         // Calculate bounce rate (simplified)
         const bounceRateCalc = Math.floor(Math.random() * 30) + 20;
@@ -124,8 +135,10 @@ const Analytics = () => {
         const seconds = avgDuration % 60;
         setAvgSessionDuration(`${minutes}m ${seconds}s`);
 
-        // Get daily stats for last 30 days
-        const dailyData = [];
+        // Build trend datasets once on initial load
+        const now = new Date();
+
+        const dailyData: Array<{ date: string; visitors: number; pageViews: number; }> = [];
         for (let i = 29; i >= 0; i--) {
           const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
           const dayStart = new Date(date);
@@ -133,84 +146,77 @@ const Analytics = () => {
           const dayEnd = new Date(date);
           dayEnd.setHours(23, 59, 59, 999);
 
-          const { count: visitors } = await supabase
-            .from('website_analytics')
-            .select('session_id', { count: 'exact', head: true })
-            .gte('created_at', dayStart.toISOString())
-            .lte('created_at', dayEnd.toISOString());
-
-          const { count: pageViews } = await supabase
-            .from('website_analytics')
-            .select('*', { count: 'exact', head: true })
-            .gte('created_at', dayStart.toISOString())
-            .lte('created_at', dayEnd.toISOString());
+          const [{ count: visitors }, { count: pvs }] = await Promise.all([
+            supabase
+              .from('website_analytics')
+              .select('session_id', { count: 'exact', head: true })
+              .gte('created_at', dayStart.toISOString())
+              .lte('created_at', dayEnd.toISOString()),
+            supabase
+              .from('website_analytics')
+              .select('*', { count: 'exact', head: true })
+              .gte('created_at', dayStart.toISOString())
+              .lte('created_at', dayEnd.toISOString())
+          ]);
 
           dailyData.push({
             date: date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }),
             visitors: visitors || 0,
-            pageViews: pageViews || 0
+            pageViews: pvs || 0,
           });
         }
-        setDailyStats(dailyData);
+        if (isMounted) setDailyStats(dailyData);
 
-        // Get monthly stats for last 12 months
-        const monthlyData = [];
+        const monthlyData: Array<{ month: string; visitors: number; pageViews: number; }> = [];
         for (let i = 11; i >= 0; i--) {
           const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
 
-          const { count: visitors } = await supabase
-            .from('website_analytics')
-            .select('session_id', { count: 'exact', head: true })
-            .gte('created_at', monthStart.toISOString())
-            .lte('created_at', monthEnd.toISOString());
-
-          const { count: pageViews } = await supabase
-            .from('website_analytics')
-            .select('*', { count: 'exact', head: true })
-            .gte('created_at', monthStart.toISOString())
-            .lte('created_at', monthEnd.toISOString());
+          const [{ count: visitors }, { count: pvs }] = await Promise.all([
+            supabase
+              .from('website_analytics')
+              .select('session_id', { count: 'exact', head: true })
+              .gte('created_at', monthStart.toISOString())
+              .lte('created_at', monthEnd.toISOString()),
+            supabase
+              .from('website_analytics')
+              .select('*', { count: 'exact', head: true })
+              .gte('created_at', monthStart.toISOString())
+              .lte('created_at', monthEnd.toISOString())
+          ]);
 
           monthlyData.push({
             month: monthStart.toLocaleDateString('tr-TR', { month: 'short' }),
             visitors: visitors || 0,
-            pageViews: pageViews || 0
+            pageViews: pvs || 0,
           });
         }
-        setMonthlyStats(monthlyData);
-
+        if (isMounted) setMonthlyStats(monthlyData);
       } catch (error) {
         console.error('Failed to fetch analytics:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
-    fetchAnalytics();
+    // Initial load
+    fetchFullAnalytics();
 
-    // Set up real-time subscription for live updates
+    // Real-time subscription: update ONLY basic stats, no loading spinner
     const channel = supabase
       .channel('analytics-updates')
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'website_analytics'
-        },
-        () => {
-          // Only refresh basic stats on real-time updates
-          fetchAnalytics();
-        }
+        { event: 'UPDATE', schema: 'public', table: 'website_analytics' },
+        () => { fetchBasicStats(); }
       )
       .subscribe();
 
-    // Refresh data every 60 seconds to reduce load
-    const interval = setInterval(() => {
-      setRealTimeUsers(prev => Math.max(0, prev + Math.floor(Math.random() * 3) - 1));
-    }, 60000);
+    // Poll basic stats every 60s as a fallback
+    const interval = setInterval(fetchBasicStats, 60000);
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
       clearInterval(interval);
     };
