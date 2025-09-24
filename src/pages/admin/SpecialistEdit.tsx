@@ -217,7 +217,7 @@ const SpecialistEdit = () => {
       // Test update permission first with a simple field
       const { data: permissionTest, error: permissionError } = await supabase
         .from('specialists')
-        .update({ updated_at: new Date().toISOString() })
+        .update({ name: specialist.name })
         .eq('id', specialist.id)
         .select();
 
@@ -252,8 +252,7 @@ const SpecialistEdit = () => {
           online_consultation: specialist.online_consultation,
           face_to_face_consultation: specialist.face_to_face_consultation,
           is_active: specialist.is_active,
-          profile_picture: specialist.profile_picture,
-          updated_at: new Date().toISOString()
+          profile_picture: specialist.profile_picture
         })
         .eq('id', specialist.id)
         .select();

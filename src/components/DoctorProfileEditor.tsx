@@ -191,8 +191,7 @@ const DoctorProfileEditor = () => {
           bio: specialist.bio,
           faq: faqString,
           online_consultation: specialist.online_consultation,
-          face_to_face_consultation: specialist.face_to_face_consultation,
-          updated_at: new Date().toISOString()
+          face_to_face_consultation: specialist.face_to_face_consultation
         })
         .eq('id', specialist.id);
 

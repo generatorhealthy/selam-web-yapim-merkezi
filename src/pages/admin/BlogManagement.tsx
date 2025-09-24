@@ -505,8 +505,7 @@ const BlogManagement = () => {
           seo_title: values.seo_title || null,
           seo_description: values.seo_description || null,
           keywords: values.keywords || null,
-          specialist_id: values.specialist_id === "none" ? null : values.specialist_id || null,
-          updated_at: new Date().toISOString(),
+          specialist_id: values.specialist_id === "none" ? null : values.specialist_id || null
         })
         .eq('id', editingBlog.id);
 
