@@ -910,15 +910,17 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-            <TabsList className="grid w-full lg:w-auto grid-cols-2 bg-white/60 backdrop-blur-sm border border-white/20 shadow-lg rounded-xl p-1">
+            <TabsList className={`grid w-full lg:w-auto ${isStaff ? 'grid-cols-1' : 'grid-cols-2'} bg-white/60 backdrop-blur-sm border border-white/20 shadow-lg rounded-xl p-1`}>
               <TabsTrigger value="orders" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg">
                 <Calendar className="w-4 h-4" />
                 Siparişler
               </TabsTrigger>
-              <TabsTrigger value="trash" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg">
-                <Trash2 className="w-4 h-4" />
-                Çöp Kutusu
-              </TabsTrigger>
+              {!isStaff && (
+                <TabsTrigger value="trash" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg">
+                  <Trash2 className="w-4 h-4" />
+                  Çöp Kutusu
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
@@ -1143,11 +1145,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                 </>
                               )}
                               
-                              {isStaff && (
-                                <div className="text-xs text-gray-500 py-2 text-center flex-1">
-                                  Sadece görüntüleme yetkisi
-                                </div>
-                              )}
+                              {/* Empty space for staff - no message */}
                             </div>
                           </CardContent>
                         </Card>
