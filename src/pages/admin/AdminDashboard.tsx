@@ -205,7 +205,8 @@ const AdminDashboard = () => {
       shadowColor: "shadow-teal-500/20",
       route: "/divan_paneli/customers",
       buttonText: "Müşterileri Görüntüle",
-      adminOnly: true
+      adminOnly: false,
+      staffOnly: true
     },
     {
       title: "Yorum Yönetimi",
@@ -240,7 +241,8 @@ const AdminDashboard = () => {
       shadowColor: "shadow-pink-500/20",
       route: "/divan_paneli/orders",
       buttonText: "Siparişleri Görüntüle",
-      adminOnly: true
+      adminOnly: false,
+      staffOnly: true
     },
     {
       title: "Yeni Sipariş",

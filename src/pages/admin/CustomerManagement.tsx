@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useUserRole } from "@/hooks/useUserRole";
 import { 
   Table, 
   TableBody, 
@@ -66,6 +67,8 @@ interface Specialist {
 }
 
 const CustomerManagement = () => {
+  const { userProfile } = useUserRole();
+  const isStaff = userProfile?.role === 'staff';
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [loading, setLoading] = useState(true);
@@ -626,7 +629,8 @@ const CustomerManagement = () => {
           <p className="text-slate-600">Müşteri bilgilerini yönetin ve ödeme durumlarını takip edin</p>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Hidden for Staff */}
+        {!isStaff && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardContent className="p-6">
@@ -676,6 +680,7 @@ const CustomerManagement = () => {
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* Daily Payment Due Section */}
         {todayPaymentDue.length > 0 && (
@@ -914,6 +919,7 @@ const CustomerManagement = () => {
                                   <span className="text-sm font-medium text-emerald-600">
                                     ₺{Number(customer.amount).toLocaleString('tr-TR')} / ay
                                   </span>
+                                  {!isStaff && (
                                   <Button
                                     size="sm"
                                     variant="ghost"
@@ -925,6 +931,7 @@ const CustomerManagement = () => {
                                   >
                                     <Edit className="w-3 h-3" />
                                   </Button>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -967,6 +974,7 @@ const CustomerManagement = () => {
                             ) : (
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-slate-800">{customer.total_months} ay</span>
+                                {!isStaff && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -978,6 +986,7 @@ const CustomerManagement = () => {
                                 >
                                   <Edit className="w-3 h-3" />
                                 </Button>
+                                )}
                               </div>
                             )}
                           </TableCell>
@@ -985,14 +994,14 @@ const CustomerManagement = () => {
                             <div className="flex items-center gap-2">
                               <Dialog>
                                 <DialogTrigger asChild>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => setSelectedCustomer(customer)}
-                                    className="h-8 px-4 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors"
-                                  >
-                                    <Eye className="w-4 h-4 mr-1" />
-                                    Detay
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setSelectedCustomer(customer)}
+                                className="h-8 px-4 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                Detay
                                   </Button>
                                 </DialogTrigger>
                               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -1085,8 +1094,9 @@ const CustomerManagement = () => {
                               </DialogContent>
                               </Dialog>
                               
-                              <Button 
-                                variant="outline" 
+                              {!isStaff && (
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   if (window.confirm(`${customer.customer_name} müşterisini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`)) {
@@ -1098,6 +1108,7 @@ const CustomerManagement = () => {
                                 <Trash2 className="w-4 h-4 mr-1" />
                                 Sil
                               </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
