@@ -148,9 +148,13 @@ serve(async (req) => {
         if (specialist) {
           console.log('User is a specialist, deleting all related records for specialist:', specialist.id)
           
-          // Delete from client_referrals
+          // Delete from client_referrals where this specialist is the specialist
           await supabaseAdmin.from('client_referrals').delete().eq('specialist_id', specialist.id)
-          console.log('Client referrals deleted')
+          console.log('Client referrals (as specialist) deleted')
+          
+          // Delete from client_referrals where this user is the referrer
+          await supabaseAdmin.from('client_referrals').delete().eq('referred_by', userId)
+          console.log('Client referrals (as referrer) deleted')
           
           // Delete from test_results
           await supabaseAdmin.from('test_results').delete().eq('specialist_id', specialist.id)
@@ -187,6 +191,10 @@ serve(async (req) => {
           }
           console.log('Specialist record deleted successfully')
         }
+
+        // Delete any client_referrals where this user is referenced as referred_by (even if not a specialist)
+        await supabaseAdmin.from('client_referrals').delete().eq('referred_by', userId)
+        console.log('All client referrals (as referrer) deleted')
 
         // Now delete user from auth.users table
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
