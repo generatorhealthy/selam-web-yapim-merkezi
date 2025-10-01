@@ -358,11 +358,11 @@ const SmsManagement = () => {
                     onChange={(e) => setMessage(e.target.value)}
                     rows={4}
                     className="w-full resize-none"
-                    maxLength={160}
+                    maxLength={500}
                   />
                   <div className="flex justify-between text-xs text-slate-500">
-                    <span>Maksimum 160 karakter</span>
-                    <span>{message.length}/160</span>
+                    <span>Maksimum 500 karakter</span>
+                    <span>{message.length}/500</span>
                   </div>
                 </div>
 
