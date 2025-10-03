@@ -5,6 +5,7 @@ import { Upload, X, CheckCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { convertToWebP, supportsWebP } from '@/utils/imageConversion';
 
 interface FileUploadProps {
   onUpload: (url: string) => void;
@@ -24,17 +25,33 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const { toast } = useToast();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
+    let file = acceptedFiles[0];
     if (!file) return;
 
     setUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
+      
       // Determine bucket based on file type
       const isPdf = file.type === 'application/pdf' || fileExt?.toLowerCase() === 'pdf';
+      const isImage = file.type.startsWith('image/');
+      
+      // Auto-convert images to WebP (except PDFs)
+      if (isImage && !isPdf && supportsWebP()) {
+        try {
+          const originalSize = file.size;
+          file = await convertToWebP(file, 0.85);
+          console.log(`Image converted to WebP: ${originalSize} -> ${file.size} bytes (${Math.round((1 - file.size/originalSize) * 100)}% reduction)`);
+        } catch (conversionError) {
+          console.warn('WebP conversion failed, using original file:', conversionError);
+          // Continue with original file if conversion fails
+        }
+      }
+      
+      const finalFileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${finalFileExt}`;
+      const filePath = `${fileName}`;
+      
       const bucketName = isPdf ? 'legal-documents' : 'profile-pictures';
 
       const { error: uploadError } = await supabase.storage
@@ -154,9 +171,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
               <p className="text-sm text-gray-500">
                 {isPdf 
                   ? `PDF formatı desteklenir (Maks. ${maxSizeMB}MB)`
-                  : `PNG, JPG, JPEG formatları desteklenir (Maks. ${maxSizeMB}MB)`
+                  : `PNG, JPG, JPEG, WebP formatları desteklenir (Maks. ${maxSizeMB}MB)`
                 }
               </p>
+              {!isPdf && supportsWebP() && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✓ Görseller otomatik olarak WebP formatına dönüştürülecek
+                </p>
+              )}
             </div>
           )}
         </div>
