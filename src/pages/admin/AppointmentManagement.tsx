@@ -200,17 +200,18 @@ const AppointmentManagement = () => {
   const monthKeys = Object.keys(appointmentsByMonth).sort().reverse();
 
   const isStaff = userProfile?.role === 'staff';
+  const canManage = userProfile?.role === 'admin';
 
   const AppointmentCard = ({ 
     appointment, 
-    isStaff, 
+    canManage, 
     updateAppointmentStatus, 
     deleteAppointment, 
     getStatusColor, 
     getStatusText 
   }: {
     appointment: Appointment;
-    isStaff: boolean;
+    canManage: boolean;
     updateAppointmentStatus: (id: string, status: string) => void;
     deleteAppointment: (id: string) => void;
     getStatusColor: (status: string) => string;
@@ -284,7 +285,7 @@ const AppointmentManagement = () => {
           </div>
         )}
         
-        {!isStaff && (
+        {canManage && (
           <div className="flex flex-wrap gap-3">
             <Button
               size="sm"
@@ -438,7 +439,7 @@ const AppointmentManagement = () => {
                 <AppointmentCard 
                   key={appointment.id} 
                   appointment={appointment} 
-                  isStaff={isStaff}
+                  canManage={canManage}
                   updateAppointmentStatus={updateAppointmentStatus}
                   deleteAppointment={deleteAppointment}
                   getStatusColor={getStatusColor}
@@ -474,7 +475,7 @@ const AppointmentManagement = () => {
                     <AppointmentCard 
                       key={appointment.id} 
                       appointment={appointment} 
-                      isStaff={isStaff}
+                      canManage={canManage}
                       updateAppointmentStatus={updateAppointmentStatus}
                       deleteAppointment={deleteAppointment}
                       getStatusColor={getStatusColor}
