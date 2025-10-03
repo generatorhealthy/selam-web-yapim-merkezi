@@ -17,12 +17,14 @@ const AnalyticsTracker = () => {
 
   const trackPageVisit = useCallback(async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return; // Skip analytics if not authenticated
+      
       const sessionId = getOrCreateSessionId();
       const pageUrl = window.location.pathname + window.location.search;
       const referrer = document.referrer || null;
       const userAgent = navigator.userAgent;
 
-      // Upsert session data (insert if new, update last_active if exists)
       await supabase
         .from('website_analytics')
         .upsert({
@@ -35,19 +37,22 @@ const AnalyticsTracker = () => {
           onConflict: 'session_id'
         });
     } catch (error) {
-      console.warn('Analytics tracking failed:', error);
+      // Silently fail - don't log to console for better performance
     }
   }, []);
 
   const updateLastActive = useCallback(async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
       const sessionId = getOrCreateSessionId();
       await supabase
         .from('website_analytics')
         .update({ last_active: new Date().toISOString() })
         .eq('session_id', sessionId);
     } catch (error) {
-      console.warn('Failed to update last active:', error);
+      // Silently fail
     }
   }, []);
 

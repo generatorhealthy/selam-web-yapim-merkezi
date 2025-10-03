@@ -8,7 +8,8 @@
     <!-- Performance optimizations for PageSpeed -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://irnfwewabogveofwemvg.supabase.co">
+    <link rel="preconnect" href="https://irnfwewabogveofwemvg.supabase.co" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     
     <!-- Critical CSS inline for faster rendering -->
     <style>
@@ -57,21 +58,28 @@
     <!-- Preload critical resources -->
     <link rel="modulepreload" href="/src/main.tsx">
     
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17512133573"></script>
+    <!-- Google tag (gtag.js) - Deferred for performance -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-17512133573');
-    </script>
-    
-    <!-- Event snippet for Sayfa görüntüleme conversion page -->
-    <script>
-      gtag('event', 'conversion', {
-          'send_to': 'AW-17512133573/QD6ZCNvz4o4bEMXnt55B',
-          'value': 1.0,
-          'currency': 'TRY'
+      // Load gtag.js asynchronously after page load
+      window.addEventListener('load', function() {
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17512133573';
+        document.head.appendChild(script);
+        
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'AW-17512133573');
+        
+        // Event snippet for Sayfa görüntüleme conversion page
+        setTimeout(function() {
+          gtag('event', 'conversion', {
+              'send_to': 'AW-17512133573/QD6ZCNvz4o4bEMXnt55B',
+              'value': 1.0,
+              'currency': 'TRY'
+          });
+        }, 1000);
       });
     </script>
   </head>
