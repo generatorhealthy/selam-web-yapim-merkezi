@@ -31,7 +31,8 @@ import {
   MessageCircle,
   Phone,
   Database,
-  Map
+  Map,
+  Image
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -355,6 +356,17 @@ const AdminDashboard = () => {
       shadowColor: "shadow-emerald-500/20",
       route: "/divan_paneli/sitemap",
       buttonText: "Sitemap'i Yönet",
+      adminOnly: true
+    },
+    {
+      title: "WebP Dönüştürücü",
+      description: "Mevcut görselleri WebP formatına dönüştür",
+      icon: Image,
+      gradient: "from-violet-500 via-purple-500 to-fuchsia-600",
+      bgGradient: "from-violet-50 to-fuchsia-50",
+      shadowColor: "shadow-violet-500/20",
+      route: "/divan_paneli/image-converter",
+      buttonText: "Görselleri Dönüştür",
       adminOnly: true
     },
     {
