@@ -465,11 +465,11 @@ const Index = () => {
                       </div>
 
                       <h3 className="text-3xl font-bold text-gray-900 mb-6 group-hover:text-blue-600 transition-colors duration-300">
-                        Sana yakın uzman bul
+                        İhtiyacına uygun uzman keşfet
                       </h3>
                       
                       <p className="text-gray-600 leading-relaxed text-lg">
-                        <span className="font-semibold text-blue-600">Yaşadığın yere en yakın</span> ve en çok yorum yapılan doktoru bul.
+                        <span className="font-semibold text-blue-600">Bulunduğun bölgedeki</span> deneyimli ve değerlendirme puanı yüksek uzmanı kolayca keşfet.
                       </p>
                     </div>
                   </div>
@@ -495,11 +495,11 @@ const Index = () => {
                       </div>
 
                       <h3 className="text-3xl font-bold text-gray-900 mb-6 group-hover:text-purple-600 transition-colors duration-300">
-                        Randevu tarihini belirle ve randevunu oluştur
+                        Uygun zamanı seç ve randevunu al
                       </h3>
                       
                       <p className="text-gray-600 leading-relaxed text-lg">
-                        <span className="font-semibold text-purple-600">Sana uygun olan</span> en yakın randevu tarih ve saatini belirle ve randevunu oluştur.
+                        <span className="font-semibold text-purple-600">Takviminden sana en uygun</span> tarih ve saati belirleyerek randevunu hemen oluştur.
                       </p>
                     </div>
                   </div>
@@ -525,11 +525,11 @@ const Index = () => {
                       </div>
 
                       <h3 className="text-3xl font-bold text-gray-900 mb-6 group-hover:text-green-600 transition-colors duration-300">
-                        Randevunu hatırlatalım
+                        Randevu hatırlatıcısı al
                       </h3>
                       
                       <p className="text-gray-600 leading-relaxed text-lg">
-                        Randevu zamanın yaklaştığında <span className="font-semibold text-green-600">SMS veya WhatsApp</span> ile hatırlatalım.
+                        Randevu saatin yaklaşırken <span className="font-semibold text-green-600">SMS ya da WhatsApp</span> üzerinden sana hatırlatma gönderelim.
                       </p>
                     </div>
                   </div>
