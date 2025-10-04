@@ -632,7 +632,7 @@ const Index = () => {
                   const specialist = specialists.find(s => s.id === review.specialist_id);
                   
                   return (
-                    <CarouselItem key={review.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/5">
+                    <CarouselItem key={review.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                       <Card className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-100 relative overflow-hidden group h-full">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-300"></div>
                         
