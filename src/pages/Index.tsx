@@ -679,16 +679,6 @@ const Index = () => {
                               {review.comment}
                             </p>
                           </div>
-                          
-                          <div className="pt-4 border-t border-gray-100 mt-auto">
-                            <p className="text-sm text-blue-600 font-medium">
-                              {new Date(review.created_at).toLocaleDateString('tr-TR', { 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                              })}
-                            </p>
-                          </div>
                         </CardContent>
                       </Card>
                     </CarouselItem>
