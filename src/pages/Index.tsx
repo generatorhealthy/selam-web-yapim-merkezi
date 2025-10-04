@@ -659,6 +659,181 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Featured Features Section */}
+      <div className="bg-gradient-to-br from-gray-50 to-blue-50 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+              Öne Çıkan <span className="text-blue-600">Özelliklerimiz</span>
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Profesyonel platformumuz ile dijital varlığınızı güçlendirin
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Feature 1 */}
+            <Card className="bg-white hover:shadow-xl transition-all duration-300 border-2 border-gray-100 overflow-hidden">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <UserCheck className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+                  Her Ay Danışan Yönlendirme Garantisi
+                </h3>
+                <p className="text-gray-600 text-center leading-relaxed">
+                  Platformumuz üzerinden her ay garantili danışan yönlendirmesi alın. 
+                  Dijital varlığınızı güçlendirerek daha fazla hastaya ulaşın.
+                </p>
+                <div className="mt-6 bg-blue-50 rounded-lg p-4 text-center">
+                  <span className="text-blue-600 font-semibold text-lg">Her Ay</span>
+                  <p className="text-sm text-gray-600 mt-1">Garantili Danışan Yönlendirme</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Feature 2 */}
+            <Card className="bg-white hover:shadow-xl transition-all duration-300 border-2 border-gray-100 overflow-hidden">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Brain className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+                  Yapay Zeka Destekli Testler
+                </h3>
+                <p className="text-gray-600 text-center leading-relaxed">
+                  Modern Yapay Zeka teknolojisi ile hazırlanmış özel testler sayesinde 
+                  danışanlarınızı daha iyi anlayın ve profesyonel hizmet sunun.
+                </p>
+                <div className="mt-6 bg-purple-50 rounded-lg p-4 text-center">
+                  <span className="text-purple-600 font-semibold text-lg">Yapay Zeka</span>
+                  <p className="text-sm text-gray-600 mt-1">Destekli Test Sistemi</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Premium Package Section */}
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <Card className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 overflow-hidden">
+              <CardContent className="p-8 md:p-12">
+                <div className="text-center mb-8">
+                  <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 text-sm font-semibold mb-4">
+                    PREMIUM PAKET
+                  </Badge>
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <span className="text-5xl md:text-6xl font-bold text-gray-900">2998₺</span>
+                    <span className="text-3xl text-gray-400 line-through">4998₺</span>
+                  </div>
+                  <p className="text-red-600 font-semibold text-lg mb-2">%40 İndirim - Bu Aya Özel!</p>
+                  <p className="text-gray-600 font-medium">12 Aylık Abonelik</p>
+                </div>
+
+                {/* Features Grid */}
+                <div className="grid md:grid-cols-2 gap-4 mb-8">
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Her Ay Danışan Yönlendirme Garantisi</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Detaylı Profil</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Uzman Profili</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">İletişim</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Adres ve Konum</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Video Yayınlama</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Danışan Görüşleri</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Uzman Sayfasına Özgün Seo Çalışması</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Online Randevu Takibi</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Profesyonel Makale Yazıları</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Sosyal Medya Paylaşımları</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Danışan Takibi</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-4">
+                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700">Yapay Zeka Destekli Testler</span>
+                  </div>
+                </div>
+
+                {/* Why Choose Section */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-8">
+                  <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                    Bu Paketi Neden Seçmelisiniz?
+                  </h4>
+                  <div className="grid md:grid-cols-3 gap-4 text-center">
+                    <div>
+                      <Clock className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-gray-800">Zamanınızı Tasarruf Edin</p>
+                    </div>
+                    <div>
+                      <UserCheck className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-gray-800">Danışan Portföy Artışı</p>
+                    </div>
+                    <div>
+                      <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-gray-800">Online Görünürlüğünüzü Artırın</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button asChild className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-lg py-6 rounded-lg shadow-lg">
+                    <Link to="/bu-aya-ozel">
+                      Satın Al - 2998₺
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold text-lg py-6 rounded-lg">
+                    <a href="https://wa.me/905525253413" target="_blank" rel="noopener noreferrer">
+                      WhatsApp Destek
+                    </a>
+                  </Button>
+                </div>
+
+                <p className="text-sm text-gray-500 text-center mt-6">
+                  <strong>Bilgilendirme:</strong> Paket satın alımınız sonrası ekibimiz, profilinizin yayına alınması için sizinle iletişime geçecektir.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
 
       <Footer />
     </div>
