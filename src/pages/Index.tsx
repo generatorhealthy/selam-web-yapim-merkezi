@@ -728,7 +728,7 @@ const Index = () => {
           </div>
 
           {/* Benefits Section */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 mb-8 border border-white/20">
+          <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/30 shadow-lg">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <h3 className="text-2xl font-bold text-white mb-6">Platform Avantajları</h3>
@@ -765,19 +765,19 @@ const Index = () => {
 
               {/* New Features Section */}
               <div className="space-y-6">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                  <h4 className="text-xl font-semibold text-white mb-3">Özelleştirilmiş Çözümler</h4>
-                  <p className="text-blue-100">Her branşa özel tasarlanmış danışan yönlendirme sistemleri</p>
+                <div className="bg-white/20 backdrop-blur-md rounded-xl p-6 border border-white/30 shadow-lg">
+                  <h4 className="text-xl font-bold text-white mb-3 drop-shadow-sm">Özelleştirilmiş Çözümler</h4>
+                  <p className="text-white/90 drop-shadow-sm">Her branşa özel tasarlanmış danışan yönlendirme sistemleri</p>
                 </div>
                 
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                  <h4 className="text-xl font-semibold text-white mb-3">Dijital Pazarlama Desteği</h4>
-                  <p className="text-blue-100">Google ve sosyal medya reklamları ile görünürlüğünüzü artırın</p>
+                <div className="bg-white/20 backdrop-blur-md rounded-xl p-6 border border-white/30 shadow-lg">
+                  <h4 className="text-xl font-bold text-white mb-3 drop-shadow-sm">Dijital Pazarlama Desteği</h4>
+                  <p className="text-white/90 drop-shadow-sm">Google ve sosyal medya reklamları ile görünürlüğünüzü artırın</p>
                 </div>
                 
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                  <h4 className="text-xl font-semibold text-white mb-3">Teknik Destek</h4>
-                  <p className="text-blue-100">Profesyonel ekibimiz her zaman yanınızda</p>
+                <div className="bg-white/20 backdrop-blur-md rounded-xl p-6 border border-white/30 shadow-lg">
+                  <h4 className="text-xl font-bold text-white mb-3 drop-shadow-sm">Teknik Destek</h4>
+                  <p className="text-white/90 drop-shadow-sm">Profesyonel ekibimiz her zaman yanınızda</p>
                 </div>
               </div>
             </div>
