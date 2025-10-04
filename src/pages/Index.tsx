@@ -659,66 +659,62 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Featured Features Section */}
-      <div className="bg-gradient-to-br from-gray-50 to-blue-50 py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl lg:text-5xl font-bold mb-4">
-              Öne Çıkan <span className="text-blue-600">Özelliklerimiz</span>
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Profesyonel platformumuz ile dijital varlığınızı güçlendirin
-            </p>
+      {/* Featured Features - Öne Çıkan Özelliklerimiz - Inside same blue section */}
+          <div className="mb-12">
+            <div className="text-center mb-8">
+              <h3 className="text-3xl lg:text-4xl font-bold text-white mb-3">
+                Öne Çıkan <span className="text-blue-200">Özelliklerimiz</span>
+              </h3>
+              <p className="text-lg text-blue-100">
+                Profesyonel platformumuz ile dijital varlığınızı güçlendirin
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {/* Feature 1 - Her Ay Danışan Yönlendirme */}
+              <Card className="bg-white/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 border-0 overflow-hidden">
+                <CardContent className="p-8">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <UserCheck className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+                    Her Ay Danışan Yönlendirme Garantisi
+                  </h4>
+                  <p className="text-gray-600 text-center leading-relaxed">
+                    Platformumuz üzerinden her ay garantili danışan yönlendirmesi alın. 
+                    Dijital varlığınızı güçlendirerek daha fazla hastaya ulaşın.
+                  </p>
+                  <div className="mt-6 bg-blue-50 rounded-lg p-4 text-center">
+                    <span className="text-blue-600 font-semibold text-lg">Her Ay</span>
+                    <p className="text-sm text-gray-600 mt-1">Garantili Danışan Yönlendirme</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Feature 2 - Yapay Zeka Testleri */}
+              <Card className="bg-white/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 border-0 overflow-hidden">
+                <CardContent className="p-8">
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Brain className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+                    Yapay Zeka Destekli Testler
+                  </h4>
+                  <p className="text-gray-600 text-center leading-relaxed">
+                    Modern Yapay Zeka teknolojisi ile hazırlanmış özel testler sayesinde 
+                    danışanlarınızı daha iyi anlayın ve profesyonel hizmet sunun.
+                  </p>
+                  <div className="mt-6 bg-purple-50 rounded-lg p-4 text-center">
+                    <span className="text-purple-600 font-semibold text-lg">Yapay Zeka</span>
+                    <p className="text-sm text-gray-600 mt-1">Destekli Test Sistemi</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Feature 1 */}
-            <Card className="bg-white hover:shadow-xl transition-all duration-300 border-2 border-gray-100 overflow-hidden">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <UserCheck className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">
-                  Her Ay Danışan Yönlendirme Garantisi
-                </h3>
-                <p className="text-gray-600 text-center leading-relaxed">
-                  Platformumuz üzerinden her ay garantili danışan yönlendirmesi alın. 
-                  Dijital varlığınızı güçlendirerek daha fazla hastaya ulaşın.
-                </p>
-                <div className="mt-6 bg-blue-50 rounded-lg p-4 text-center">
-                  <span className="text-blue-600 font-semibold text-lg">Her Ay</span>
-                  <p className="text-sm text-gray-600 mt-1">Garantili Danışan Yönlendirme</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Feature 2 */}
-            <Card className="bg-white hover:shadow-xl transition-all duration-300 border-2 border-gray-100 overflow-hidden">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Brain className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">
-                  Yapay Zeka Destekli Testler
-                </h3>
-                <p className="text-gray-600 text-center leading-relaxed">
-                  Modern Yapay Zeka teknolojisi ile hazırlanmış özel testler sayesinde 
-                  danışanlarınızı daha iyi anlayın ve profesyonel hizmet sunun.
-                </p>
-                <div className="mt-6 bg-purple-50 rounded-lg p-4 text-center">
-                  <span className="text-purple-600 font-semibold text-lg">Yapay Zeka</span>
-                  <p className="text-sm text-gray-600 mt-1">Destekli Test Sistemi</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      {/* Premium Package Section */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
+          {/* Premium Package Section - Inside same blue section */}
+          <div className="max-w-4xl mx-auto mb-12">
             <Card className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 overflow-hidden">
               <CardContent className="p-8 md:p-12">
                 <div className="text-center mb-8">
@@ -830,6 +826,15 @@ const Index = () => {
                 </p>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="text-center">
+            <Button asChild className="bg-white text-blue-600 hover:bg-blue-50 font-semibold text-lg px-8 py-6 rounded-lg shadow-lg">
+              <Link to="/paketler">
+                Detayları İncele
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
