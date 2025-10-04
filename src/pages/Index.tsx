@@ -648,17 +648,6 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="text-center">
-            <Button asChild className="bg-white text-blue-600 hover:bg-blue-50 font-semibold text-lg px-8 py-6 rounded-lg shadow-lg">
-              <Link to="/paketler">
-                Detayları İncele
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Featured Features - Öne Çıkan Özelliklerimiz - Inside same blue section */}
           <div className="mb-12">
             <div className="text-center mb-8">
