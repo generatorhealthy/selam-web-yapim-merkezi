@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Search, MapPin, Calendar, Star, Users, Circle, UserCheck, Clock, MessageSquare, User, Check, ArrowRight, Brain, Heart, Stethoscope, Users2 } from "lucide-react";
+import { Search, MapPin, Calendar, Star, Users, Circle, UserCheck, Clock, MessageSquare, User, Check, ArrowRight, Brain, Heart, Stethoscope, Users2, Quote } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
@@ -60,8 +60,31 @@ const Index = () => {
   const [searchResults, setSearchResults] = useState<Specialist[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
   const navigate = useNavigate();
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Fetch random reviews
+  useEffect(() => {
+    const fetchRandomReviews = async () => {
+      try {
+        const { data, error } = await supabase
+          .rpc('get_public_reviews');
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // Shuffle and take 4 random reviews
+          const shuffled = [...data].sort(() => 0.5 - Math.random());
+          setReviews(shuffled.slice(0, 4));
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      }
+    };
+
+    fetchRandomReviews();
+  }, []);
 
   // Search specialists as user types
   useEffect(() => {
@@ -559,6 +582,85 @@ const Index = () => {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Reviews Section - Hasta Değerlendirmeleri */}
+      <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 py-20">
+        <div className="container mx-auto px-4">
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
+                <MessageSquare className="w-7 h-7 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
+                  Hasta Değerlendirmeleri
+                </h2>
+                <p className="text-gray-600 mt-1">Gerçek hastalardan gerçek deneyimler</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            {reviews.map((review, index) => (
+              <Card key={review.id} className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-100 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-300"></div>
+                
+                <CardContent className="p-6 relative">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="flex-shrink-0">
+                      <Avatar className="w-16 h-16 border-2 border-blue-100">
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-semibold">
+                          {review.reviewer_display_name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-lg text-gray-900 truncate">
+                          {review.reviewer_display_name}
+                        </h3>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {[...Array(5)].map((_, i) => (
+                            <Star 
+                              key={i} 
+                              className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="relative">
+                        <Quote className="absolute -top-1 -left-1 w-6 h-6 text-blue-200" />
+                        <p className="text-gray-600 italic pl-6 line-clamp-3">
+                          {review.comment}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <p className="text-sm text-blue-600 font-medium">
+                      {new Date(review.created_at).toLocaleDateString('tr-TR', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {reviews.length === 0 && (
+            <div className="text-center py-12">
+              <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">Henüz değerlendirme bulunmamaktadır.</p>
+            </div>
+          )}
         </div>
       </div>
 
