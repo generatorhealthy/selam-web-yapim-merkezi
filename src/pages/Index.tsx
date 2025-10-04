@@ -61,22 +61,38 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [specialists, setSpecialists] = useState<any[]>([]);
   const navigate = useNavigate();
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch random reviews
+  // Fetch random reviews with specialist data
   useEffect(() => {
     const fetchRandomReviews = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch reviews
+        const { data: reviewsData, error: reviewsError } = await supabase
           .rpc('get_public_reviews');
         
-        if (error) throw error;
+        if (reviewsError) throw reviewsError;
         
-        if (data && data.length > 0) {
+        if (reviewsData && reviewsData.length > 0) {
           // Shuffle and take 4 random reviews
-          const shuffled = [...data].sort(() => 0.5 - Math.random());
-          setReviews(shuffled.slice(0, 4));
+          const shuffled = [...reviewsData].sort(() => 0.5 - Math.random());
+          const selectedReviews = shuffled.slice(0, 4);
+          
+          // Get unique specialist IDs
+          const specialistIds = [...new Set(selectedReviews.map(r => r.specialist_id))];
+          
+          // Fetch specialist data for these reviews
+          const { data: specialistsData, error: specialistsError } = await supabase
+            .from('specialists')
+            .select('id, name, profile_picture')
+            .in('id', specialistIds);
+          
+          if (specialistsError) throw specialistsError;
+          
+          setReviews(selectedReviews);
+          setSpecialists(specialistsData || []);
         }
       } catch (error) {
         console.error('Error fetching reviews:', error);
@@ -585,7 +601,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Reviews Section - Hasta Değerlendirmeleri */}
+      {/* Reviews Section - Danışan Değerlendirmeleri */}
       <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 py-20">
         <div className="container mx-auto px-4">
           <div className="mb-12">
@@ -595,64 +611,78 @@ const Index = () => {
               </div>
               <div>
                 <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
-                  Hasta Değerlendirmeleri
+                  Danışan Değerlendirmeleri
                 </h2>
-                <p className="text-gray-600 mt-1">Gerçek hastalardan gerçek deneyimler</p>
+                <p className="text-gray-600 mt-1">Gerçek danışanlardan gerçek deneyimler</p>
               </div>
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-            {reviews.map((review, index) => (
-              <Card key={review.id} className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-100 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-300"></div>
-                
-                <CardContent className="p-6 relative">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="flex-shrink-0">
-                      <Avatar className="w-16 h-16 border-2 border-blue-100">
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-semibold">
-                          {review.reviewer_display_name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-lg text-gray-900 truncate">
-                          {review.reviewer_display_name}
-                        </h3>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                            />
-                          ))}
-                        </div>
+            {reviews.map((review) => {
+              const specialist = specialists.find(s => s.id === review.specialist_id);
+              
+              return (
+                <Card key={review.id} className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-100 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-300"></div>
+                  
+                  <CardContent className="p-6 relative">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="flex-shrink-0">
+                        <Avatar className="w-16 h-16 border-2 border-blue-100">
+                          <AvatarImage 
+                            src={specialist?.profile_picture} 
+                            alt={specialist?.name}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-semibold">
+                            {specialist?.name?.charAt(0) || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
                       </div>
                       
-                      <div className="relative">
-                        <Quote className="absolute -top-1 -left-1 w-6 h-6 text-blue-200" />
-                        <p className="text-gray-600 italic pl-6 line-clamp-3">
-                          {review.comment}
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <h3 className="font-semibold text-lg text-gray-900 truncate">
+                              {review.reviewer_display_name}
+                            </h3>
+                            <p className="text-sm text-blue-600">
+                              {specialist?.name || 'Uzman'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {[...Array(5)].map((_, i) => (
+                              <Star 
+                                key={i} 
+                                className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="relative mt-3">
+                          <Quote className="absolute -top-1 -left-1 w-6 h-6 text-blue-200" />
+                          <p className="text-gray-600 italic pl-6 line-clamp-3">
+                            {review.comment}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm text-blue-600 font-medium">
-                      {new Date(review.created_at).toLocaleDateString('tr-TR', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <p className="text-sm text-blue-600 font-medium">
+                        {new Date(review.created_at).toLocaleDateString('tr-TR', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {reviews.length === 0 && (
