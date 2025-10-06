@@ -191,7 +191,8 @@ const DoctorProfileEditor = () => {
           bio: specialist.bio,
           faq: faqString,
           online_consultation: specialist.online_consultation,
-          face_to_face_consultation: specialist.face_to_face_consultation
+          face_to_face_consultation: specialist.face_to_face_consultation,
+          available_time_slots: specialist.available_time_slots || []
         })
         .eq('id', specialist.id);
 
@@ -471,9 +472,9 @@ const DoctorProfileEditor = () => {
         <TabsContent value="contact">
           <Card>
             <CardHeader>
-              <CardTitle>İletişim</CardTitle>
+              <CardTitle>İletişim ve Randevu Ayarları</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="email">E-posta</Label>
@@ -516,6 +517,51 @@ const DoctorProfileEditor = () => {
                     <Label htmlFor="face-to-face-consultation">Yüz Yüze Danışmanlık</Label>
                   </div>
                 </div>
+              </div>
+
+              <div className="border-t pt-6 space-y-3">
+                <Label className="text-base font-semibold">Randevu Saatleri</Label>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Randevu almak için müsait olduğunuz saatleri seçin (09:30 - 21:00 arası 30 dakikalık aralıklar)
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto p-2 border rounded-lg">
+                  {(() => {
+                    const allTimeSlots = [
+                      "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", 
+                      "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", 
+                      "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", 
+                      "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"
+                    ];
+                    const selectedSlots = specialist?.available_time_slots || [];
+                    
+                    return allTimeSlots.map((time) => (
+                      <Label key={time} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-muted/50 rounded">
+                        <Checkbox
+                          checked={selectedSlots.includes(time)}
+                          onCheckedChange={(checked) => {
+                            const newSlots = checked 
+                              ? [...selectedSlots, time].sort()
+                              : selectedSlots.filter((t: string) => t !== time);
+                            handleInputChange('available_time_slots', newSlots);
+                          }}
+                        />
+                        <span className="text-sm">{time}</span>
+                      </Label>
+                    ));
+                  })()}
+                </div>
+                {specialist?.available_time_slots && specialist.available_time_slots.length > 0 && (
+                  <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                    <p className="text-sm font-medium mb-2">Seçilen saatler: {specialist.available_time_slots.length} adet</p>
+                    <div className="flex flex-wrap gap-1">
+                      {specialist.available_time_slots.map((time: string) => (
+                        <Badge key={time} variant="secondary" className="text-xs">
+                          {time}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

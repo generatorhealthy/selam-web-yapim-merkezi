@@ -27,6 +27,7 @@ interface Specialist {
   working_hours_start: string;
   working_hours_end: string;
   available_days: string[];
+  available_time_slots?: string[];
   profile_picture?: string;
   bio?: string;
 }
@@ -248,20 +249,22 @@ const RandevuSayfasi = () => {
     ...(selectedSpecialistData.online_consultation ? ['Online'] : [])
   ] : [];
 
-  // Generate time slots based on working hours
+  // Generate time slots based on specialist's availability
   const generateTimeSlots = () => {
     if (!selectedSpecialistData) return [];
     
-    const slots = [];
-    const startHour = parseInt(selectedSpecialistData.working_hours_start?.split(':')[0] || '9');
-    const endHour = parseInt(selectedSpecialistData.working_hours_end?.split(':')[0] || '17');
-    
-    for (let hour = startHour; hour < endHour; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
-      slots.push(`${hour.toString().padStart(2, '0')}:30`);
+    // Use specialist's custom time slots if available, otherwise use default
+    if (selectedSpecialistData.available_time_slots && selectedSpecialistData.available_time_slots.length > 0) {
+      return selectedSpecialistData.available_time_slots;
     }
     
-    return slots;
+    // Default time slots from 09:30 to 21:00 in 30-minute intervals
+    return [
+      "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
+      "12:30", "13:00", "13:30", "14:00", "14:30", "15:00",
+      "15:30", "16:00", "16:30", "17:00", "17:30", "18:00",
+      "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"
+    ];
   };
 
   const handleInputChange = (field: string, value: string) => {

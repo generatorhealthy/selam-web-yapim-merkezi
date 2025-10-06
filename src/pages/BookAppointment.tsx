@@ -442,14 +442,30 @@ const BookAppointment = () => {
                       <Label htmlFor="appointmentTime" className="text-sm font-medium text-gray-700">
                         Randevu Saati *
                       </Label>
-                      <Input
-                        id="appointmentTime"
-                        type="time"
+                      <Select
                         value={formData.appointmentTime}
-                        onChange={(e) => handleInputChange('appointmentTime', e.target.value)}
-                        required
-                        className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                      />
+                        onValueChange={(value) => handleInputChange('appointmentTime', value)}
+                      >
+                        <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-blue-500">
+                          <SelectValue placeholder="Saat seçin" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                          {(() => {
+                            const availableSlots = specialist?.available_time_slots || [
+                              "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
+                              "12:30", "13:00", "13:30", "14:00", "14:30", "15:00",
+                              "15:30", "16:00", "16:30", "17:00", "17:30", "18:00",
+                              "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"
+                            ];
+                            
+                            return availableSlots.map((time) => (
+                              <SelectItem key={time} value={time}>
+                                {time}
+                              </SelectItem>
+                            ));
+                          })()}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
