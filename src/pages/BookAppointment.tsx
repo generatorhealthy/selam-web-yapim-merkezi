@@ -462,6 +462,7 @@ const BookAppointment = () => {
                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                             initialFocus
                             className="pointer-events-auto"
+                            locale={tr}
                           />
                         </PopoverContent>
                       </Popover>
