@@ -8,8 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar, Clock, User, Phone, Mail, MessageSquare, ArrowLeft, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { sendAppointmentNotification, sendDoctorNotification } from "@/services/notificationService";
 import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
@@ -423,49 +428,75 @@ const BookAppointment = () => {
                     Randevu Detayları
                   </h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div className="space-y-2">
-                      <Label htmlFor="appointmentDate" className="text-sm font-medium text-gray-700">
+                      <Label className="text-sm font-medium text-gray-700">
                         Randevu Tarihi *
                       </Label>
-                      <Input
-                        id="appointmentDate"
-                        type="date"
-                        value={formData.appointmentDate}
-                        onChange={(e) => handleInputChange('appointmentDate', e.target.value)}
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                        className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full h-12 rounded-xl justify-start text-left font-normal",
+                              !formData.appointmentDate && "text-muted-foreground"
+                            )}
+                          >
+                            <Calendar className="mr-2 h-4 w-4" />
+                            {formData.appointmentDate ? (
+                              format(new Date(formData.appointmentDate), "dd MMMM yyyy", { locale: tr })
+                            ) : (
+                              <span>Tarih seçin</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={formData.appointmentDate ? new Date(formData.appointmentDate) : undefined}
+                            onSelect={(date) => {
+                              if (date) {
+                                handleInputChange('appointmentDate', format(date, 'yyyy-MM-dd'));
+                              }
+                            }}
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
+                    
                     <div className="space-y-2">
-                      <Label htmlFor="appointmentTime" className="text-sm font-medium text-gray-700">
+                      <Label className="text-sm font-medium text-gray-700">
                         Randevu Saati *
                       </Label>
-                      <Select
-                        value={formData.appointmentTime}
-                        onValueChange={(value) => handleInputChange('appointmentTime', value)}
-                      >
-                        <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-blue-500">
-                          <SelectValue placeholder="Saat seçin" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          {(() => {
-                            const availableSlots = specialist?.available_time_slots || [
+                      <div className="grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto p-2 border rounded-xl">
+                        {(specialist?.available_time_slots && specialist.available_time_slots.length > 0 
+                          ? specialist.available_time_slots 
+                          : [
                               "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
                               "12:30", "13:00", "13:30", "14:00", "14:30", "15:00",
                               "15:30", "16:00", "16:30", "17:00", "17:30", "18:00",
                               "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"
-                            ];
-                            
-                            return availableSlots.map((time) => (
-                              <SelectItem key={time} value={time}>
-                                {time}
-                              </SelectItem>
-                            ));
-                          })()}
-                        </SelectContent>
-                      </Select>
+                            ]
+                        ).map((time) => (
+                          <button
+                            key={time}
+                            type="button"
+                            onClick={() => handleInputChange('appointmentTime', time)}
+                            className={cn(
+                              "px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all duration-200",
+                              formData.appointmentTime === time
+                                ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                : "bg-background border-border hover:border-primary/50 hover:bg-primary/5"
+                            )}
+                          >
+                            <Clock className="w-3 h-3 inline mr-1" />
+                            {time}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
