@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DoctorAuth from "@/components/DoctorAuth";
 import DoctorProfileEditor from "@/components/DoctorProfileEditor";
 import DoctorBlogManagement from "@/components/DoctorBlogManagement";
+import { TimeSlotManager } from "@/components/TimeSlotManager";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -817,6 +818,34 @@ const DoctorDashboard = () => {
                   </Dialog>
                 </div>
               </div>
+
+              {/* Time Slot Management Section */}
+              <div className="p-6 border-b bg-gradient-to-br from-primary/5 to-primary/10">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-primary" />
+                    Müsait Randevu Saatleri
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Hastalarınızın randevu alabileceği saatleri seçin. Seçili saatler yeşil, kapalı saatler gri görünür.
+                  </p>
+                </div>
+                <TimeSlotManager 
+                  doctorId={doctor.id} 
+                  onUpdate={async () => {
+                    // Refresh doctor data
+                    const { data: updatedDoctor } = await supabase
+                      .from('specialists')
+                      .select('*')
+                      .eq('id', doctor.id)
+                      .single();
+                    if (updatedDoctor) {
+                      setDoctor(updatedDoctor);
+                    }
+                  }}
+                />
+              </div>
+
               <div className="p-6">
                 {appointments.length === 0 ? (
                   <div className="text-center py-8">
