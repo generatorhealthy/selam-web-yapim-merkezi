@@ -829,6 +829,7 @@ export type Database = {
         Row: {
           address: string | null
           available_days: string[] | null
+          available_time_slots: Json | null
           bio: string | null
           certifications: string | null
           city: string
@@ -865,6 +866,7 @@ export type Database = {
         Insert: {
           address?: string | null
           available_days?: string[] | null
+          available_time_slots?: Json | null
           bio?: string | null
           certifications?: string | null
           city?: string
@@ -901,6 +903,7 @@ export type Database = {
         Update: {
           address?: string | null
           available_days?: string[] | null
+          available_time_slots?: Json | null
           bio?: string | null
           certifications?: string | null
           city?: string
@@ -1356,6 +1359,10 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_default_time_slots: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       get_public_reviews: {
         Args: { p_specialist_id?: string }
