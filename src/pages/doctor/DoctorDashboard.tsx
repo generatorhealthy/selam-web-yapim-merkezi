@@ -27,7 +27,7 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
     patient_phone: '',
     appointment_date: '',
     appointment_time: '',
-    appointment_type: 'Online Danışmanlık',
+    appointment_type: 'online',
     notes: ''
   });
   const [loading, setLoading] = useState(false);
@@ -61,7 +61,7 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
         patient_phone: '',
         appointment_date: '',
         appointment_time: '',
-        appointment_type: 'Online Danışmanlık',
+        appointment_type: 'online',
         notes: ''
       });
 
@@ -122,9 +122,8 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Online Danışmanlık">Online Danışmanlık</SelectItem>
-              <SelectItem value="Yüz Yüze Danışmanlık">Yüz Yüze Danışmanlık</SelectItem>
-              <SelectItem value="Telefon Danışmanlık">Telefon Danışmanlık</SelectItem>
+              <SelectItem value="online">Online Danışmanlık</SelectItem>
+              <SelectItem value="face-to-face">Yüz Yüze Danışmanlık</SelectItem>
             </SelectContent>
           </Select>
         </div>
