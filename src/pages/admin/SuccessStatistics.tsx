@@ -44,7 +44,7 @@ const SuccessStatistics = () => {
     day: new Date().getDate()
   });
 
-  const employees = ["Fatih", "İrem", "Fatıma", "Yağmur"];
+  const employees = ["Fatih", "İrem", "Beyza", "Yağmur"];
   const months = [
     { value: 1, label: "Ocak" },
     { value: 2, label: "Şubat" },
@@ -65,7 +65,7 @@ const SuccessStatistics = () => {
   const employeeColors = {
     "Fatih": "#3B82F6",
     "İrem": "#EF4444", 
-    "Fatıma": "#10B981",
+    "Beyza": "#10B981",
     "Yağmur": "#F59E0B"
   };
 
