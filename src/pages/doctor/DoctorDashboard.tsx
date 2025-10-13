@@ -354,6 +354,17 @@ const DoctorDashboard = () => {
 
   const fetchContracts = async (specialistEmail?: string, specialistName?: string) => {
     try {
+      console.log('fetchContracts start', { specialistEmail, specialistName });
+
+      // Eksikse oturumdan e-posta al
+      if (!specialistEmail) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) {
+          specialistEmail = session.user.email;
+          console.log('Session email used for contracts:', specialistEmail);
+        }
+      }
+
       // Önce RLS ile erişilebilen sözleşmeleri getir
       const [ordersResponse, packagesResponse] = await Promise.all([
         supabase
@@ -376,10 +387,12 @@ const DoctorDashboard = () => {
       }
 
       let orders = ordersResponse.data || [];
+      console.log('RLS orders count:', orders?.length || 0);
 
       // RLS nedeniyle sonuç yoksa, servis rolüyle çalışan edge function üzerinden getir (e-posta/isim eşleşmesi)
       if ((!orders || orders.length === 0) && (specialistEmail || specialistName)) {
         try {
+          console.log('Invoking edge function get-specialist-contracts with', { email: specialistEmail, name: specialistName });
           const { data: edgeData, error: edgeError } = await supabase.functions.invoke('get-specialist-contracts', {
             body: {
               email: specialistEmail || null,
@@ -390,6 +403,7 @@ const DoctorDashboard = () => {
           if (edgeError) {
             console.warn('Edge function sözleşme sorgusu hatası:', edgeError);
           } else if (Array.isArray(edgeData)) {
+            console.log('Edge function result count:', edgeData.length);
             orders = edgeData as any[];
           }
         } catch (edgeEx) {
