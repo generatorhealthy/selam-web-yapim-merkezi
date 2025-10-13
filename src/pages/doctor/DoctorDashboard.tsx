@@ -934,79 +934,10 @@ const DoctorDashboard = () => {
                 </div>
               </div>
               <div className="p-6">
-                {contracts.length === 0 ? (
+                 {contracts.length === 0 ? (
                   <div className="text-center py-8">
                     <FileSignature className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500">Henüz sözleşmeniz bulunmamaktadır.</p>
-                    {doctor && (
-                      <>
-                        <div className="mt-4 flex justify-center gap-3">
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              openContractDialog(
-                                {
-                                  id: 'preview',
-                                  customer_name: doctor.name,
-                                  customer_email: doctor.email || '',
-                                  customer_phone: doctor.phone || '',
-                                  package_name: `${doctor.specialty || 'Uzman'} Paketi`,
-                                  amount: doctor.package_price || 3000,
-                                  payment_method: 'banka_havalesi',
-                                  customer_type: 'individual',
-                                  customer_address: doctor.address || '',
-                                  customer_city: doctor.city || '',
-                                  customer_tc_no: '',
-                                  company_name: '',
-                                  company_tax_no: '',
-                                  company_tax_office: '',
-                                  contract_ip_address: '',
-                                  created_at: new Date().toISOString(),
-                                },
-                                'preInfo'
-                              )
-                            }
-                            className="bg-blue-600 hover:bg-blue-700"
-                          >
-                            <FileText className="w-4 h-4 mr-2" />
-                            Ön Bilgi Önizleme
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              openContractDialog(
-                                {
-                                  id: 'preview',
-                                  customer_name: doctor.name,
-                                  customer_email: doctor.email || '',
-                                  customer_phone: doctor.phone || '',
-                                  package_name: `${doctor.specialty || 'Uzman'} Paketi`,
-                                  amount: doctor.package_price || 3000,
-                                  payment_method: 'banka_havalesi',
-                                  customer_type: 'individual',
-                                  customer_address: doctor.address || '',
-                                  customer_city: doctor.city || '',
-                                  customer_tc_no: '',
-                                  company_name: '',
-                                  company_tax_no: '',
-                                  company_tax_office: '',
-                                  contract_ip_address: '',
-                                  created_at: new Date().toISOString(),
-                                },
-                                'distanceSales'
-                              )
-                            }
-                            className="bg-purple-600 hover:bg-purple-700"
-                          >
-                            <FileSignature className="w-4 h-4 mr-2" />
-                            Mesafeli Satış Önizleme
-                          </Button>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">
-                          Bu, uzman profilinizden oluşturulan önizlemedir. Onaylanmış siparişiniz olduğunda sözleşmeler burada listelenecektir.
-                        </p>
-                      </>
-                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
