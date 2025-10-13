@@ -240,12 +240,12 @@ const DoctorDashboard = () => {
 
         if (specialist && !specialistError) {
           console.log('Specialist found by user_id:', specialist);
-          if (mounted) {
-            setDoctor(specialist);
-            await fetchAppointments(specialist.id);
-            await fetchSupportTickets(specialist.id);
-            await fetchContracts(specialist.email);
-          }
+            if (mounted) {
+              setDoctor(specialist);
+              await fetchAppointments(specialist.id);
+              await fetchSupportTickets(specialist.id);
+              await fetchContracts(specialist.email, specialist.name);
+            }
         } else {
           // Try by email if user_id doesn't match
           console.log('No specialist found by user_id, trying by email...');
@@ -261,7 +261,7 @@ const DoctorDashboard = () => {
               setDoctor(specialistByEmail);
               await fetchAppointments(specialistByEmail.id);
               await fetchSupportTickets(specialistByEmail.id);
-              await fetchContracts(specialistByEmail.email);
+              await fetchContracts(specialistByEmail.email, specialistByEmail.name);
             }
           } else {
             console.log('No specialist profile found');
@@ -352,9 +352,9 @@ const DoctorDashboard = () => {
     }
   };
 
-  const fetchContracts = async (_specialistEmail?: string) => {
+  const fetchContracts = async (specialistEmail?: string, specialistName?: string) => {
     try {
-      // RLS already limits rows to the signed-in specialist
+      // Önce RLS ile erişilebilen sözleşmeleri getir
       const [ordersResponse, packagesResponse] = await Promise.all([
         supabase
           .from('orders')
@@ -375,7 +375,29 @@ const DoctorDashboard = () => {
         console.warn('Paket verileri alınamadı:', packagesResponse.error);
       }
 
-      const withFeatures = (ordersResponse.data || []).map((order: any) => {
+      let orders = ordersResponse.data || [];
+
+      // RLS nedeniyle sonuç yoksa, servis rolüyle çalışan edge function üzerinden getir (e-posta/isim eşleşmesi)
+      if ((!orders || orders.length === 0) && (specialistEmail || specialistName)) {
+        try {
+          const { data: edgeData, error: edgeError } = await supabase.functions.invoke('get-specialist-contracts', {
+            body: {
+              email: specialistEmail || null,
+              name: specialistName || null,
+            },
+          });
+
+          if (edgeError) {
+            console.warn('Edge function sözleşme sorgusu hatası:', edgeError);
+          } else if (Array.isArray(edgeData)) {
+            orders = edgeData as any[];
+          }
+        } catch (edgeEx) {
+          console.warn('Edge function çağrısı başarısız:', edgeEx);
+        }
+      }
+
+      const withFeatures = (orders || []).map((order: any) => {
         const pkg = (packagesResponse.data || []).find((p: any) => p.name === order.package_name);
         return { ...order, package_features: pkg?.features || [] };
       });
