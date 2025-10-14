@@ -12,6 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import { UserCheck, Calendar, Users, Plus, Minus, Search, Hash, Edit3, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { getMonthName } from "@/utils/monthUtils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -858,13 +864,29 @@ const ClientReferrals = () => {
                 ))}
               </TabsList>
 
-              {monthNames.map((_, monthIndex) => (
-                <TabsContent key={monthIndex + 1} value={(monthIndex + 1).toString()}>
-                  <div className="space-y-6">
-                     <div className="text-center mb-6">
-                       <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                         {monthNames[monthIndex]} {currentYear}
-                       </h3>
+              {monthNames.map((_, monthIndex) => {
+                const currentMonth = monthIndex + 1;
+                
+                // Takvim için günleri hesapla (1-31)
+                const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+                const calendarDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+                
+                // Her gün için ödeme günü olan ve 0 yönlendirme sayısı olan uzmanları bul
+                const getSpecialistsForDay = (day: number) => {
+                  return specialists.filter(spec => {
+                    const monthReferral = spec.referrals.find(ref => ref.month === currentMonth);
+                    const referralCount = monthReferral?.count || 0;
+                    return spec.specialist.payment_day === day && referralCount === 0;
+                  });
+                };
+                
+                return (
+                  <TabsContent key={monthIndex + 1} value={(monthIndex + 1).toString()}>
+                    <div className="space-y-6">
+                      <div className="text-center mb-6">
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                          {monthNames[monthIndex]} {currentYear}
+                        </h3>
                         <p className="text-gray-600">
                           Bu ay toplam {getMonthlyTotal(monthIndex + 1)} yönlendirme yapıldı
                         </p>
@@ -881,7 +903,87 @@ const ClientReferrals = () => {
                             Notu olmayanlara uygula
                           </Button>
                         </div>
-                     </div>
+                      </div>
+                      
+                      {/* Takvim Görünümü */}
+                      <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50/50 to-indigo-50/30 mb-8">
+                        <CardHeader>
+                          <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <Calendar className="w-5 h-5 text-blue-600" />
+                            {currentYear} Yılı - {monthNames[monthIndex]} Danışan Yönlendirme Takibi
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-7 gap-2">
+                            {/* Gün başlıkları */}
+                            {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((dayName) => (
+                              <div key={dayName} className="text-center text-xs font-bold text-slate-600 py-2">
+                                {dayName}
+                              </div>
+                            ))}
+                            
+                            {/* Boş hücreler (ayın ilk günü için) */}
+                            {Array.from({ length: new Date(currentYear, monthIndex, 1).getDay() === 0 ? 6 : new Date(currentYear, monthIndex, 1).getDay() - 1 }).map((_, i) => (
+                              <div key={`empty-${i}`} className="aspect-square" />
+                            ))}
+                            
+                            {/* Günler */}
+                            {calendarDays.map((day) => {
+                              const specialistsForDay = getSpecialistsForDay(day);
+                              const hasSpecialists = specialistsForDay.length > 0;
+                              
+                              return (
+                                <Popover key={day}>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      className={`aspect-square rounded-lg p-2 text-sm font-medium transition-all duration-200 ${
+                                        hasSpecialists
+                                          ? 'bg-red-100 text-red-700 hover:bg-red-200 ring-2 ring-red-300 shadow-md cursor-pointer'
+                                          : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                                      }`}
+                                    >
+                                      <div className="flex flex-col items-center justify-center h-full">
+                                        <span className="text-base font-bold">{day}</span>
+                                        {hasSpecialists && (
+                                          <span className="text-[10px] font-semibold mt-1 bg-red-200 px-1.5 py-0.5 rounded-full">
+                                            {specialistsForDay.length}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </button>
+                                  </PopoverTrigger>
+                                  {hasSpecialists && (
+                                    <PopoverContent className="w-80 max-h-96 overflow-y-auto">
+                                      <div className="space-y-3">
+                                        <div className="border-b pb-2 mb-2">
+                                          <h4 className="font-bold text-sm text-slate-800">
+                                            {day} {monthNames[monthIndex]} - Ödeme Günü
+                                          </h4>
+                                          <p className="text-xs text-slate-600 mt-1">
+                                            Danışan yönlendirmesi olmayan uzmanlar ({specialistsForDay.length})
+                                          </p>
+                                        </div>
+                                        {specialistsForDay.map(spec => (
+                                          <div key={spec.id} className="p-3 bg-red-50 rounded-lg border border-red-200">
+                                            <div className="font-semibold text-sm text-slate-800">{spec.specialist.name}</div>
+                                            <div className="text-xs text-slate-600 mt-1">{spec.specialist.specialty}</div>
+                                            <div className="text-xs text-slate-500 mt-1">{spec.specialist.city}</div>
+                                            {spec.specialist.internal_number && (
+                                              <Badge className="mt-2 text-xs bg-red-200 text-red-700 border-0">
+                                                #{spec.specialist.internal_number}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </PopoverContent>
+                                  )}
+                                </Popover>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
 
                     {/* Enhanced Search Section */}
                     <div className="relative mb-8">
@@ -1123,7 +1225,8 @@ const ClientReferrals = () => {
                     )}
                   </div>
                 </TabsContent>
-              ))}
+              );
+              })}
             </Tabs>
           </CardContent>
         </Card>
