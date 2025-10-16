@@ -96,16 +96,6 @@ const TestManagement = ({ specialistId }: TestManagementProps) => {
   };
 
   const handleDeleteTest = async (testId: string) => {
-    const test = tests.find(t => t.id === testId);
-    if (test?.status === 'approved') {
-      toast({
-        title: "Uyarı",
-        description: "Onaylanmış testler silinemez.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (!confirm("Bu testi silmek istediğinizden emin misiniz?")) {
       return;
     }
@@ -113,8 +103,9 @@ const TestManagement = ({ specialistId }: TestManagementProps) => {
     try {
       const { error } = await supabase
         .from('tests')
-        .update({ is_active: false })
-        .eq('id', testId);
+        .delete()
+        .eq('id', testId)
+        .eq('specialist_id', specialistId);
 
       if (error) throw error;
 
@@ -261,17 +252,15 @@ const TestManagement = ({ specialistId }: TestManagementProps) => {
                                 <Edit className="w-4 h-4" />
                               </Button>
                             )}
-                            {test.status !== 'approved' && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeleteTest(test.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                title="Testi Sil"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteTest(test.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Testi Sil"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
