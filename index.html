@@ -11,15 +11,33 @@
     <link rel="preconnect" href="https://irnfwewabogveofwemvg.supabase.co" crossorigin>
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     
+    <!-- Font optimization for CLS -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+    
     <!-- Critical CSS inline for faster rendering -->
     <style>
       /* Critical path CSS */
       body { 
         margin: 0; 
-        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; 
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-display: swap;
         background: linear-gradient(135deg, rgb(248 250 252) 0%, rgb(224 231 255) 50%, rgb(237 233 254) 100%);
         min-height: 100vh;
         line-height: 1.5;
+      }
+      
+      /* Prevent layout shift for images */
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+      
+      /* Reserve space for floating elements */
+      .floating-button-space {
+        height: 80px;
+        width: 100%;
       }
       
       /* Loading skeleton for perceived performance */

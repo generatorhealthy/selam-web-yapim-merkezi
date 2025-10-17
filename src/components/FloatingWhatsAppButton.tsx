@@ -22,8 +22,12 @@ const FloatingWhatsAppButton = () => {
     <>
       <button 
         onClick={handleClick}
-        className="fixed bottom-6 right-6 z-50 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 font-medium text-sm md:text-base"
+        className="fixed bottom-6 right-6 z-50 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 font-medium text-sm md:text-base will-change-transform"
         aria-label="Kayıt Ol"
+        style={{ 
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden' 
+        }}
       >
         <MessageCircle size={20} />
         <span>Kayıt Ol</span>

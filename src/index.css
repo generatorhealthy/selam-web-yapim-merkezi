@@ -122,5 +122,18 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  /* Prevent CLS from images */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Ensure smooth font rendering */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
