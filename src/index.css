@@ -203,4 +203,14 @@ All colors MUST be HSL.
   img[loading="eager"] {
     content-visibility: visible;
   }
+  
+  /* Cookie banner - keep small and non-LCP */
+  [data-cookie-consent] {
+    content-visibility: auto;
+    contain: layout paint;
+    max-width: 480px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-cookie-consent] { will-change: transform, opacity; }
+  }
 }
