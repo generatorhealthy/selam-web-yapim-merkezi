@@ -202,18 +202,12 @@ const Index = () => {
       <HorizontalNavigation />
       
       {/* Hero Section with Enhanced Dynamic Design */}
-      <div className="bg-gradient-to-br from-primary via-blue-600 to-purple-700 text-white relative overflow-hidden min-h-[70vh]">
-        {/* Enhanced Background Pattern with Animation */}
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-white/30 to-transparent rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-l from-white/20 to-transparent rounded-full blur-2xl animate-pulse delay-1000"></div>
-          <div className="absolute bottom-20 left-1/3 w-40 h-40 bg-gradient-to-t from-white/25 to-transparent rounded-full blur-3xl animate-pulse delay-500"></div>
-          <div className="absolute top-1/2 right-1/4 w-20 h-20 bg-gradient-to-br from-purple-300/20 to-transparent rounded-full blur-xl animate-pulse delay-2000"></div>
-          
-          {/* Floating Elements */}
-          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/40 rounded-full animate-bounce delay-300"></div>
-          <div className="absolute top-3/4 right-1/3 w-3 h-3 bg-white/30 rounded-full animate-bounce delay-700"></div>
-          <div className="absolute bottom-1/3 left-1/2 w-1 h-1 bg-white/50 rounded-full animate-bounce delay-1500"></div>
+      <div className="hero-section above-fold bg-gradient-to-br from-primary via-blue-600 to-purple-700 text-white relative overflow-hidden min-h-[70vh]">
+        {/* Enhanced Background Pattern - Optimized for LCP */}
+        <div className="absolute inset-0 will-change-auto">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-white/30 to-transparent rounded-full blur-3xl opacity-80"></div>
+          <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-l from-white/20 to-transparent rounded-full blur-2xl opacity-70"></div>
+          <div className="absolute bottom-20 left-1/3 w-40 h-40 bg-gradient-to-t from-white/25 to-transparent rounded-full blur-3xl opacity-75"></div>
         </div>
         
         <div className="container mx-auto px-4 py-12 md:py-20 relative z-10">
@@ -337,11 +331,12 @@ const Index = () => {
                           >
                             <div className="flex items-center space-x-4">
                               <div className="flex-shrink-0">
-                                <Avatar className="w-12 h-12">
+                                <Avatar className="w-12 h-12 avatar-container">
                                   <AvatarImage 
                                     src={specialist.profile_picture} 
                                     alt={specialist.name}
-                                    className="object-cover"
+                                    className="avatar-image object-cover"
+                                    loading="lazy"
                                   />
                                   <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white">
                                     <User className="w-6 h-6" />
@@ -639,11 +634,12 @@ const Index = () => {
                         <CardContent className="p-6 relative flex flex-col h-full">
                           <div className="flex items-start gap-4 mb-4">
                             <div className="flex-shrink-0">
-                              <Avatar className="w-16 h-16 border-2 border-blue-100">
+                              <Avatar className="w-16 h-16 border-2 border-blue-100 avatar-container">
                                 <AvatarImage 
                                   src={specialist?.profile_picture} 
                                   alt={specialist?.name}
-                                  className="object-cover"
+                                  className="avatar-image object-cover"
+                                  loading="lazy"
                                 />
                                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-semibold">
                                   {specialist?.name?.charAt(0) || 'U'}

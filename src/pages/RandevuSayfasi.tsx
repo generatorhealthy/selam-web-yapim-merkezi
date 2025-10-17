@@ -404,8 +404,13 @@ const RandevuSayfasi = () => {
                     onClick={() => handleSpecialistSelect(specialist.id)}
                   >
                     <div className="flex gap-6 items-start">
-                      <Avatar className="h-20 w-20 border-2 border-primary/20">
-                        <AvatarImage src={specialist.profile_picture} alt={specialist.name} />
+                      <Avatar className="h-20 w-20 border-2 border-primary/20 avatar-container">
+                        <AvatarImage 
+                          src={specialist.profile_picture} 
+                          alt={specialist.name}
+                          className="avatar-image"
+                          loading="lazy"
+                        />
                         <AvatarFallback className="text-lg font-semibold bg-primary/10">
                           {specialist.name.split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>

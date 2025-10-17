@@ -38,6 +38,10 @@ const Landing = () => {
                 src="/logo.png" 
                 alt="Doktorum Ol Logo" 
                 className="h-16 w-auto object-contain"
+                loading="eager"
+                fetchPriority="high"
+                width="200"
+                height="64"
                 onError={handleImageError}
               />
             </div>
