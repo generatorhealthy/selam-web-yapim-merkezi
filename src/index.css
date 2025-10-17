@@ -125,11 +125,16 @@ All colors MUST be HSL.
     font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
   
-  /* Prevent CLS from images */
+  /* LCP Optimization - Prevent CLS from images */
   img {
     max-width: 100%;
     height: auto;
     content-visibility: auto;
+  }
+  
+  /* LCP - Hero images get priority */
+  img[fetchpriority="high"] {
+    content-visibility: visible;
   }
   
   /* Avatar images - fixed dimensions */
@@ -149,6 +154,18 @@ All colors MUST be HSL.
     contain: layout style paint;
   }
   
+  /* LCP - Optimize initial viewport content */
+  .hero-content,
+  .above-fold {
+    content-visibility: visible;
+  }
+  
+  /* Below fold content can be lazy */
+  .below-fold {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 500px;
+  }
+  
   /* Ensure smooth font rendering */
   * {
     -webkit-font-smoothing: antialiased;
@@ -158,5 +175,21 @@ All colors MUST be HSL.
   /* Prevent layout shift from dynamic content */
   [data-loading="true"] {
     min-height: 200px;
+  }
+  
+  /* LCP - Optimize background images */
+  .bg-image {
+    background-size: cover;
+    background-position: center;
+    will-change: auto;
+  }
+  
+  /* Performance hints for images */
+  img[loading="lazy"] {
+    content-visibility: auto;
+  }
+  
+  img[loading="eager"] {
+    content-visibility: visible;
   }
 }

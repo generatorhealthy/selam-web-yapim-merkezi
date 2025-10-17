@@ -5,20 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/lovable-uploads/3db3e51c-c5db-4938-a759-095d2948086b.png" type="image/png">
     
-    <!-- Performance optimizations for PageSpeed -->
+    <!-- LCP Optimization: Critical Resource Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://irnfwewabogveofwemvg.supabase.co" crossorigin>
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
     
-    <!-- Font optimization for CLS -->
+    <!-- LCP: Preload logo and critical images -->
+    <link rel="preload" as="image" href="/logo.png" fetchpriority="high">
+    
+    <!-- LCP: Font optimization -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
     
-    <!-- Critical CSS inline for faster rendering -->
+    <!-- LCP: Critical CSS inline for fastest rendering -->
     <style>
-      /* Critical path CSS */
+      /* Critical path CSS for LCP */
       body { 
         margin: 0; 
         font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -28,11 +32,16 @@
         line-height: 1.5;
       }
       
-      /* Prevent layout shift for images */
+      /* LCP: Prevent layout shift for images */
       img {
         max-width: 100%;
         height: auto;
         content-visibility: auto;
+      }
+      
+      /* LCP: Hero images get priority */
+      img[fetchpriority="high"] {
+        content-visibility: visible;
       }
       
       /* Reserve space for floating elements */
@@ -41,7 +50,7 @@
         width: 100%;
       }
       
-      /* Optimize rendering performance */
+      /* LCP: Optimize rendering performance */
       .contain-layout {
         contain: layout style paint;
       }
@@ -53,12 +62,24 @@
         contain: layout;
       }
       
-      /* Loading skeleton for perceived performance */
+      /* LCP: Initial viewport gets priority */
+      .hero-section {
+        min-height: 400px;
+        contain: layout style;
+      }
+      
+      /* Optimize initial render */
+      #root {
+        isolation: isolate;
+      }
+      
+      /* Loading skeleton for better perceived performance */
       .loading-skeleton {
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
         background-size: 200% 100%;
         animation: loading 1.5s infinite;
         border-radius: 8px;
+        contain: layout paint;
       }
       
       @keyframes loading {
