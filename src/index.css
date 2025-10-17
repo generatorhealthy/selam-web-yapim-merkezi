@@ -158,12 +158,23 @@ All colors MUST be HSL.
   .hero-content,
   .above-fold {
     content-visibility: visible;
+    contain: none;
   }
   
   /* Below fold content can be lazy */
   .below-fold {
     content-visibility: auto;
     contain-intrinsic-size: 1px 500px;
+  }
+  
+  /* LCP Text Optimization - Remove render blocking for critical text */
+  .text-sm.text-gray-700.leading-relaxed,
+  .text-sm.leading-relaxed,
+  p.text-sm {
+    content-visibility: visible;
+    contain: none;
+    font-display: swap;
+    min-height: 1.25rem;
   }
   
   /* Ensure smooth font rendering */

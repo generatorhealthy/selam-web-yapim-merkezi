@@ -110,29 +110,37 @@
     <!-- Preload critical resources -->
     <link rel="modulepreload" href="/src/main.tsx">
     
-    <!-- Google tag (gtag.js) - Deferred for performance -->
-    <script>
-      // Load gtag.js asynchronously after page load
-      window.addEventListener('load', function() {
+    <!-- Google tag (gtag.js) - Optimized with requestIdleCallback -->
+    <script type="text/javascript">
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      
+      // Load GTM with requestIdleCallback to prevent blocking LCP
+      function loadGTM() {
         var script = document.createElement('script');
+        script.type = 'text/javascript';
         script.async = true;
         script.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17512133573';
         document.head.appendChild(script);
         
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'AW-17512133573');
-        
-        // Event snippet for Sayfa görüntüleme conversion page
-        setTimeout(function() {
+        script.onload = function() {
+          gtag('js', new Date());
+          gtag('config', 'AW-17512133573');
+          
           gtag('event', 'conversion', {
-              'send_to': 'AW-17512133573/QD6ZCNvz4o4bEMXnt55B',
-              'value': 1.0,
-              'currency': 'TRY'
+            'send_to': 'AW-17512133573/QD6ZCNvz4o4bEMXnt55B',
+            'value': 1.0,
+            'currency': 'TRY'
           });
-        }, 1000);
-      });
+        };
+      }
+      
+      // Use requestIdleCallback or fallback to timeout
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(loadGTM);
+      } else {
+        setTimeout(loadGTM, 2000);
+      }
     </script>
   </head>
 
@@ -151,7 +159,7 @@
       </div>
     </div>
     
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" defer></script>
     
     <!-- Hide loading skeleton when React app loads -->
     <script>
