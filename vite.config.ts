@@ -17,9 +17,12 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor': ['react', 'react-dom', 'react-router-dom'],
+          'react-vendor': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
           'supabase': ['@supabase/supabase-js'],
-          'ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select']
+          'radix-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-toast', '@radix-ui/react-slot'],
+          'form': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'utils': ['clsx', 'tailwind-merge', 'class-variance-authority']
         },
         entryFileNames: 'assets/[name].[hash].js',
         chunkFileNames: 'assets/[name].[hash].js',
@@ -28,12 +31,14 @@ export default defineConfig(({ mode }) => ({
         inlineDynamicImports: false
       },
     },
-    target: 'es2015',
+    target: 'es2020',
     minify: 'esbuild',
-    sourcemap: true,
+    sourcemap: false,
     emptyOutDir: true,
     cssCodeSplit: true,
-    chunkSizeWarningLimit: 1000,
+    cssMinify: true,
+    chunkSizeWarningLimit: 500,
+    reportCompressedSize: false,
   },
   plugins: [
     react(),

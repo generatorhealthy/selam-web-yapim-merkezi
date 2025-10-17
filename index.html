@@ -15,9 +15,8 @@
     <!-- LCP: Preload logo and critical images -->
     <link rel="preload" as="image" href="/logo.png" fetchpriority="high">
     
-    <!-- LCP: Font optimization -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <!-- LCP: Font optimization - async load -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
     
     <!-- LCP: Critical CSS inline for fastest rendering -->
@@ -159,18 +158,21 @@
       </div>
     </div>
     
-    <script type="module" src="/src/main.tsx" defer></script>
+    <script type="module" src="/src/main.tsx"></script>
     
     <!-- Hide loading skeleton when React app loads -->
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-          const skeleton = document.getElementById('loading-skeleton');
-          if (skeleton) {
-            skeleton.style.display = 'none';
-          }
-        }, 100);
-      });
+      (function() {
+        var hideLoader = function() {
+          var skeleton = document.getElementById('loading-skeleton');
+          if (skeleton) skeleton.style.display = 'none';
+        };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', hideLoader);
+        } else {
+          hideLoader();
+        }
+      })();
     </script>
   </body>
 </html>
