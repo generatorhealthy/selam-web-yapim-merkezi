@@ -51,7 +51,10 @@ export function AppSidebar() {
           <div className="flex items-center gap-2 mt-2">
             <img 
               src="/logo.png" 
-              alt="Doktorum Ol Logo" 
+              alt="Doktorum Ol Logo"
+              width="120"
+              height="40"
+              loading="eager"
               className="h-8 w-auto object-contain"
             />
           </div>

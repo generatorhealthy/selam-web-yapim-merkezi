@@ -32,12 +32,25 @@
       img {
         max-width: 100%;
         height: auto;
+        content-visibility: auto;
       }
       
       /* Reserve space for floating elements */
       .floating-button-space {
         height: 80px;
         width: 100%;
+      }
+      
+      /* Optimize rendering performance */
+      .contain-layout {
+        contain: layout style paint;
+      }
+      
+      /* Avatar optimization */
+      .avatar-container {
+        width: 100%;
+        aspect-ratio: 1;
+        contain: layout;
       }
       
       /* Loading skeleton for perceived performance */

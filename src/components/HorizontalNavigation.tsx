@@ -282,6 +282,9 @@ export function HorizontalNavigation() {
                   src="/logo.png" 
                   alt="Doktorum Ol Logo" 
                   className="h-full w-auto object-contain"
+                  width="120"
+                  height="56"
+                  loading="eager"
                   onError={handleLogoError}
                 />
               </div>

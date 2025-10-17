@@ -129,11 +129,34 @@ All colors MUST be HSL.
   img {
     max-width: 100%;
     height: auto;
+    content-visibility: auto;
+  }
+  
+  /* Avatar images - fixed dimensions */
+  .avatar-image {
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+  
+  /* Skeleton loader optimization */
+  .skeleton {
+    contain: layout paint;
+    content-visibility: auto;
+  }
+  
+  /* Card components - prevent layout shift */
+  .card {
+    contain: layout style paint;
   }
   
   /* Ensure smooth font rendering */
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Prevent layout shift from dynamic content */
+  [data-loading="true"] {
+    min-height: 200px;
   }
 }
