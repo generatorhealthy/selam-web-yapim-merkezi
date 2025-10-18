@@ -246,7 +246,7 @@ const DoctorDashboard = () => {
               await fetchAppointments(specialist.id);
               await fetchSupportTickets(specialist.id);
               await fetchContracts(specialist.email, specialist.name);
-              await fetchBlogNotifications(specialist.email);
+              await fetchBlogNotifications(specialist.id);
             }
         } else {
           // Try by email if user_id doesn't match
@@ -264,7 +264,7 @@ const DoctorDashboard = () => {
               await fetchAppointments(specialistByEmail.id);
               await fetchSupportTickets(specialistByEmail.id);
               await fetchContracts(specialistByEmail.email, specialistByEmail.name);
-              await fetchBlogNotifications(specialistByEmail.email);
+              await fetchBlogNotifications(specialistByEmail.id);
             }
           } else {
             console.log('No specialist profile found');
@@ -356,12 +356,12 @@ const DoctorDashboard = () => {
     }
   };
 
-  const fetchBlogNotifications = async (specialistEmail: string) => {
+  const fetchBlogNotifications = async (specialistId: string) => {
     try {
       const { data, error } = await supabase
         .from('blog_notifications')
         .select('*')
-        .eq('specialist_email', specialistEmail)
+        .eq('specialist_id', specialistId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -861,6 +861,83 @@ const DoctorDashboard = () => {
                       </CardContent>
                     </Card>
                   </div>
+
+                  {/* Blog Notifications Section */}
+                  {blogNotifications.length > 0 && (
+                    <Card className="mt-6 border border-blue-200 shadow-sm">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-semibold text-blue-600 flex items-center gap-2">
+                          <FileText className="w-5 h-5" />
+                          Yeni Blog İçerikleri
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {blogNotifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={`p-4 rounded-lg border transition-all ${
+                                notification.read
+                                  ? 'bg-gray-50 border-gray-200'
+                                  : 'bg-blue-50 border-blue-300 shadow-sm'
+                              }`}
+                            >
+                              <div className="flex justify-between items-start gap-4">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    {!notification.read && (
+                                      <Badge className="bg-blue-600">Yeni</Badge>
+                                    )}
+                                    <h4 className="font-semibold text-gray-900">
+                                      {notification.title}
+                                    </h4>
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    Size özel bir blog içeriği yayınlandı.
+                                  </p>
+                                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                                    <span>
+                                      {new Date(notification.created_at).toLocaleDateString('tr-TR', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      window.open(`/blog/${notification.slug}`, '_blank');
+                                      if (!notification.read) {
+                                        markBlogNotificationAsRead(notification.id);
+                                      }
+                                    }}
+                                    className="whitespace-nowrap"
+                                  >
+                                    İçeriği Görüntüle
+                                  </Button>
+                                  {!notification.read && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => markBlogNotificationAsRead(notification.id)}
+                                      className="whitespace-nowrap text-xs"
+                                    >
+                                      Okundu İşaretle
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </CardContent>
               </Card>
             </div>
