@@ -86,3 +86,6 @@ verify_jwt = false
 
 [functions.create-birfatura-invoice]
 verify_jwt = false
+
+[functions.daily-order-generator]
+verify_jwt = false
