@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.2754747181284c809069f0c3832f9ac9',
+  appId: 'app.lovable.yenii',
   appName: 'yenii',
   webDir: 'dist',
   server: {
