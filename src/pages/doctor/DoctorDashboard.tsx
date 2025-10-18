@@ -190,6 +190,7 @@ const DoctorDashboard = () => {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
+  const [blogNotifications, setBlogNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
@@ -245,6 +246,7 @@ const DoctorDashboard = () => {
               await fetchAppointments(specialist.id);
               await fetchSupportTickets(specialist.id);
               await fetchContracts(specialist.email, specialist.name);
+              await fetchBlogNotifications(specialist.email);
             }
         } else {
           // Try by email if user_id doesn't match
@@ -262,6 +264,7 @@ const DoctorDashboard = () => {
               await fetchAppointments(specialistByEmail.id);
               await fetchSupportTickets(specialistByEmail.id);
               await fetchContracts(specialistByEmail.email, specialistByEmail.name);
+              await fetchBlogNotifications(specialistByEmail.email);
             }
           } else {
             console.log('No specialist profile found');
@@ -294,6 +297,7 @@ const DoctorDashboard = () => {
           setAppointments([]);
           setSupportTickets([]);
           setContracts([]);
+          setBlogNotifications([]);
           setIsLoading(false);
         } else if (event === 'SIGNED_IN' && session) {
           // Re-initialize when signed in
@@ -349,6 +353,42 @@ const DoctorDashboard = () => {
       setSupportTickets(ticketsData || []);
     } catch (error) {
       console.error('Destek talepleri yüklenirken beklenmeyen hata:', error);
+    }
+  };
+
+  const fetchBlogNotifications = async (specialistEmail: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_notifications')
+        .select('*')
+        .eq('specialist_email', specialistEmail)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Blog bildirimleri yüklenirken hata:', error);
+        return;
+      }
+
+      setBlogNotifications(data || []);
+    } catch (error) {
+      console.error('Blog bildirimleri yüklenirken beklenmeyen hata:', error);
+    }
+  };
+
+  const markBlogNotificationAsRead = async (notificationId: string) => {
+    try {
+      await supabase
+        .from('blog_notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
+
+      setBlogNotifications(prev => 
+        prev.map(notif => 
+          notif.id === notificationId ? { ...notif, read: true } : notif
+        )
+      );
+    } catch (error) {
+      console.error('Bildirim okundu işaretlenirken hata:', error);
     }
   };
 

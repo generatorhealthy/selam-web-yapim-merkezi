@@ -320,7 +320,7 @@ const BlogManagement = () => {
       // Blog bilgilerini al
       const { data: blogData, error: fetchError } = await supabase
         .from('blog_posts')
-        .select('*')
+        .select('*, specialists(email, name)')
         .eq('id', blogId)
         .single();
 
@@ -357,9 +357,28 @@ const BlogManagement = () => {
         console.error('Blogs tablosuna ekleme hatası:', insertError);
       }
 
+      // Eğer blog bir uzmana aitse, bildirim gönder
+      if (blogData.specialist_id && blogData.specialists) {
+        try {
+          await supabase.functions.invoke('send-blog-notification', {
+            body: {
+              blogId: blogData.id,
+              specialistEmail: blogData.specialists.email,
+              specialistName: blogData.specialists.name,
+              blogTitle: blogData.title,
+              blogSlug: blogData.slug
+            }
+          });
+          console.log('Blog notification sent to specialist');
+        } catch (notifError) {
+          console.error('Blog notification error:', notifError);
+          // Bildirim hatası blog onaylamasını engellemez
+        }
+      }
+
       toast({
         title: "Blog Onaylandı",
-        description: "Blog yazısı yayınlandı.",
+        description: "Blog yazısı yayınlandı ve uzmana bildirim gönderildi.",
       });
 
       fetchBlogs();
