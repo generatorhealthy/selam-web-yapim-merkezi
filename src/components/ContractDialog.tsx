@@ -104,6 +104,8 @@ ${customerType === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:
 ${selectedPackage.features ? selectedPackage.features.map((feature: string) => `<li>${feature}</li>`).join('') : ''}
 </ul>
 
+<p style="margin-top: 15px;"><strong>Toplam Hizmet Süresi (Taahhütlü):</strong> Premium üyelik başlangıç imza tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.</p>
+
 <h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>
 <p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${contractDate}</p>
 <p><strong>Dijital Onaylama Tarihi:</strong> ${contractDateTime}</p>
