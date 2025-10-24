@@ -145,7 +145,7 @@ const Packages = () => {
                   <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></span>
                   <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" style={{animationDelay: '1s'}}></span>
                 </div>
-                <span className="text-lg">Aylık Ödeme Seçeneği</span>
+                <span className="text-lg">12 Ay Taahhütlü Paket</span>
               </div>
             </div>
 
