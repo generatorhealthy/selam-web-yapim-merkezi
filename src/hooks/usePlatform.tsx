@@ -4,12 +4,15 @@ import { Capacitor } from '@capacitor/core';
 export type Platform = 'web' | 'ios' | 'android';
 
 export const usePlatform = () => {
-  const [platform, setPlatform] = useState<Platform>('web');
-  const [isNative, setIsNative] = useState(false);
+  const initialPlatform = Capacitor.getPlatform() as Platform;
+  const initialIsNative = Capacitor.isNativePlatform();
+
+  const [platform, setPlatform] = useState<Platform>(initialPlatform);
+  const [isNative, setIsNative] = useState(initialIsNative);
 
   useEffect(() => {
-    const currentPlatform = Capacitor.getPlatform() as Platform;
-    setPlatform(currentPlatform);
+    // Re-validate on mount in case environment changes
+    setPlatform(Capacitor.getPlatform() as Platform);
     setIsNative(Capacitor.isNativePlatform());
   }, []);
 
