@@ -8,6 +8,8 @@ type UserRole = Database["public"]["Enums"]["user_role"];
 export interface UserProfile {
   role: UserRole;
   is_approved: boolean;
+  name?: string;
+  email?: string;
 }
 
 export const useUserRole = () => {
@@ -30,7 +32,7 @@ export const useUserRole = () => {
         // Direct query to avoid RLS issues
         const { data: profile, error } = await supabase
           .from('user_profiles')
-          .select('role, is_approved')
+          .select('role, is_approved, name, email')
           .eq('user_id', user.id)
           .maybeSingle();
 

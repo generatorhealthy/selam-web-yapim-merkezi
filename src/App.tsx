@@ -3,11 +3,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
+import { usePlatform } from "@/hooks/usePlatform";
+import { MobileLayout } from "@/components/MobileLayout";
 import CookieConsent from "@/components/CookieConsent";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import MobileHome from "./pages/mobile/MobileHome";
+import MobileSearch from "./pages/mobile/MobileSearch";
+import MobileProfile from "./pages/mobile/MobileProfile";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -88,19 +93,34 @@ const queryClient = new QueryClient({
   },
 });
 
-function App() {
+const AppContent = () => {
+  const { isNative } = usePlatform();
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AnalyticsTracker />
-            <CookieConsent />
-            <FloatingWhatsAppButton />
-            <Routes>
-              <Route path="/" element={<Index />} />
+    <>
+      <AnalyticsTracker />
+      <CookieConsent />
+      <FloatingWhatsAppButton />
+      <Routes>
+        {/* Mobile Routes */}
+        {isNative && (
+          <Route path="/mobile" element={<MobileLayout />}>
+            <Route index element={<Navigate to="/mobile/home" replace />} />
+            <Route path="home" element={<MobileHome />} />
+            <Route path="search" element={<MobileSearch />} />
+            <Route path="appointments" element={<MobileHome />} />
+            <Route path="profile" element={<MobileProfile />} />
+            <Route path="dashboard" element={<MobileHome />} />
+          </Route>
+        )}
+
+        {/* Redirect root to mobile if native */}
+        {isNative ? (
+          <Route path="/" element={<Navigate to="/mobile/home" replace />} />
+        ) : (
+          <>
+            {/* Web Routes */}
+            <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
               <Route path="/hakkimizda" element={<About />} />
               <Route path="/iletisim" element={<Contact />} />
@@ -182,7 +202,22 @@ function App() {
               <Route path="/doktor-paneli" element={<DoctorDashboard />} />
               
               <Route path="*" element={<NotFound />} />
-            </Routes>
+            </>
+          )}
+      </Routes>
+    </>
+  );
+};
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
           </BrowserRouter>
         </TooltipProvider>
       </HelmetProvider>
