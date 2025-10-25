@@ -34,6 +34,7 @@ interface Specialist {
   name: string;
   specialty: string;
   city: string;
+  phone?: string;
   internal_number?: string;
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
@@ -69,27 +70,56 @@ const ClientReferrals = () => {
   const [pendingAction, setPendingAction] = useState<{
     specialistId: string;
     specialistName: string;
+    specialistPhone: string;
     month: number;
     newCount: number;
   } | null>(null);
+  
+  // Client info for confirmation dialog
+  const [clientInfo, setClientInfo] = useState({
+    client_name: '',
+    client_surname: '',
+    client_contact: ''
+  });
 
   const requestConfirm = (
     specialistId: string,
     specialistName: string,
+    specialistPhone: string,
     month: number,
     newCount: number
   ) => {
-    setPendingAction({ specialistId, specialistName, month, newCount });
+    setPendingAction({ specialistId, specialistName, specialistPhone, month, newCount });
+    setClientInfo({ client_name: '', client_surname: '', client_contact: '' });
     setConfirmOpen(true);
   };
 
   const handleConfirm = async () => {
     if (!pendingAction) return;
+    
+    // Validate client info
+    if (!clientInfo.client_name.trim() || !clientInfo.client_surname.trim() || !clientInfo.client_contact.trim()) {
+      toast({
+        title: "Hata",
+        description: "Lütfen tüm danışan bilgilerini doldurun.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       setIsSaving(true);
-      await updateReferralCount(pendingAction.specialistId, pendingAction.month, pendingAction.newCount);
+      await updateReferralCount(
+        pendingAction.specialistId, 
+        pendingAction.month, 
+        pendingAction.newCount,
+        clientInfo,
+        pendingAction.specialistName,
+        pendingAction.specialistPhone
+      );
       setConfirmOpen(false);
       setPendingAction(null);
+      setClientInfo({ client_name: '', client_surname: '', client_contact: '' });
     } finally {
       setIsSaving(false);
     }
@@ -115,7 +145,7 @@ const ClientReferrals = () => {
         // Tüm aktif uzmanları getir
         supabase
           .from('specialists')
-          .select('id, name, specialty, city, internal_number, online_consultation, face_to_face_consultation, payment_day')
+          .select('id, name, specialty, city, phone, internal_number, online_consultation, face_to_face_consultation, payment_day')
           .eq('is_active', true)
           .order('name'),
         
@@ -262,13 +292,21 @@ const ClientReferrals = () => {
     setFilteredSpecialists(sorted);
   }, [specialists, searchTerm, selectedMonth]);
 
-  const updateReferralCount = async (specialistId: string, month: number, newCount: number) => {
+  const updateReferralCount = async (
+    specialistId: string, 
+    month: number, 
+    newCount: number,
+    clientData?: { client_name: string; client_surname: string; client_contact: string },
+    specialistName?: string,
+    specialistPhone?: string
+  ) => {
     if (newCount < 0) return;
 
     try {
       const specialist = specialists.find((s) => s.id === specialistId);
-      const specialistName = specialist?.specialist.name || 'Unknown';
-      console.log(`🔄 [UPDATE] ${specialistName} (${specialistId}) year=${currentYear} month=${month} -> ${newCount}`);
+      const specName = specialistName || specialist?.specialist.name || 'Unknown';
+      const specPhone = specialistPhone || specialist?.specialist.phone;
+      console.log(`🔄 [UPDATE] ${specName} (${specialistId}) year=${currentYear} month=${month} -> ${newCount}`);
 
       // Önce RPC ile güvenli upsert dene (RLS ve tek kod yolu için)
       const { data: rpcRes, error: rpcErr } = await supabase.rpc(
@@ -285,7 +323,7 @@ const ClientReferrals = () => {
       if (rpcErr) {
         console.warn('⚠️ [UPDATE] RPC failed, falling back to direct upsert.', rpcErr);
         // RPC başarısız olursa, çakışma hedefi belirterek güvenli upsert yap
-        const upsertPayload = {
+        const upsertPayload: any = {
           specialist_id: specialistId,
           year: currentYear,
           month,
@@ -295,6 +333,13 @@ const ClientReferrals = () => {
           referred_by: (await supabase.auth.getUser()).data.user?.id || null,
           updated_at: new Date().toISOString(),
         };
+        
+        // Add client info if provided
+        if (clientData) {
+          upsertPayload.client_name = clientData.client_name;
+          upsertPayload.client_surname = clientData.client_surname;
+          upsertPayload.client_contact = clientData.client_contact;
+        }
 
         const { data: upsertResult, error: upsertError } = await supabase
           .from('client_referrals')
@@ -309,6 +354,49 @@ const ClientReferrals = () => {
         console.log('✅ [UPDATE] Direct upsert successful:', upsertResult);
       } else {
         console.log('✅ [UPDATE] RPC upsert successful:', rpcRes);
+        
+        // Update client info separately if using RPC
+        if (clientData) {
+          const { error: updateErr } = await supabase
+            .from('client_referrals')
+            .update({
+              client_name: clientData.client_name,
+              client_surname: clientData.client_surname,
+              client_contact: clientData.client_contact,
+            })
+            .eq('specialist_id', specialistId)
+            .eq('year', currentYear)
+            .eq('month', month);
+          
+          if (updateErr) console.error('Client info update error:', updateErr);
+        }
+      }
+      
+      // Send SMS to specialist with client info if phone and client data provided
+      if (specPhone && clientData && newCount > 0) {
+        try {
+          const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
+          
+          const { error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
+            body: {
+              phone: specPhone,
+              message: message
+            }
+          });
+          
+          if (smsError) {
+            console.error('SMS gönderim hatası:', smsError);
+            toast({
+              title: "Uyarı",
+              description: "Yönlendirme kaydedildi ancak SMS gönderilemedi.",
+              variant: "default",
+            });
+          } else {
+            console.log('✅ SMS sent to specialist:', specPhone);
+          }
+        } catch (smsEx) {
+          console.error('SMS exception:', smsEx);
+        }
       }
       // Optimistic local update for immediate UI feedback
       setSpecialists((prev) =>
@@ -1136,6 +1224,7 @@ const ClientReferrals = () => {
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); requestConfirm(
                                           specialistReferral.id,
                                           specialistReferral.specialist.name,
+                                          specialistReferral.specialist.phone || '',
                                           monthIndex + 1,
                                           Math.max(0, monthlyReferral.count - 1)
                                         ); }}
@@ -1159,6 +1248,7 @@ const ClientReferrals = () => {
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); requestConfirm(
                                           specialistReferral.id,
                                           specialistReferral.specialist.name,
+                                          specialistReferral.specialist.phone || '',
                                           monthIndex + 1,
                                           (monthlyReferral.count + 1)
                                         ); }}
@@ -1233,16 +1323,54 @@ const ClientReferrals = () => {
       </div>
       
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Yönlendirme sayısını onayla</AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingAction ? `${pendingAction.specialistName} - ${monthNames[pendingAction.month - 1]} için yönlendirme sayısı ${pendingAction.newCount} olarak kaydedilecek.` : ''}
+              {pendingAction ? `Uzm. ${pendingAction.specialistName} - ${monthNames[pendingAction.month - 1]} için yönlendirme sayısı ${pendingAction.newCount} olarak kaydedilecek.` : ''}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="client_name" className="text-sm font-medium">Danışan Adı *</Label>
+              <Input
+                id="client_name"
+                value={clientInfo.client_name}
+                onChange={(e) => setClientInfo(prev => ({ ...prev, client_name: e.target.value }))}
+                placeholder="Danışanın adı"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="client_surname" className="text-sm font-medium">Danışan Soyadı *</Label>
+              <Input
+                id="client_surname"
+                value={clientInfo.client_surname}
+                onChange={(e) => setClientInfo(prev => ({ ...prev, client_surname: e.target.value }))}
+                placeholder="Danışanın soyadı"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="client_contact" className="text-sm font-medium">Danışan İletişim Bilgisi *</Label>
+              <Input
+                id="client_contact"
+                value={clientInfo.client_contact}
+                onChange={(e) => setClientInfo(prev => ({ ...prev, client_contact: e.target.value }))}
+                placeholder="05XX XXX XX XX"
+                required
+              />
+            </div>
+          </div>
+          
           <AlertDialogFooter>
             <AlertDialogCancel type="button" disabled={isSaving}>Vazgeç</AlertDialogCancel>
-            <AlertDialogAction type="button" onClick={handleConfirm} disabled={isSaving}>Onayla</AlertDialogAction>
+            <AlertDialogAction type="button" onClick={handleConfirm} disabled={isSaving}>
+              {isSaving ? 'Kaydediliyor...' : 'Onayla'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

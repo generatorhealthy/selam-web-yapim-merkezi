@@ -16,8 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature } from "lucide-react";
+import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users } from "lucide-react";
 import ContractDialog from "@/components/ContractDialog";
+import { ClientPortfolio } from "@/components/ClientPortfolio";
 
 // Appointment Form Component
 const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; onSuccess: () => void }) => {
@@ -778,6 +779,27 @@ const DoctorDashboard = () => {
             
             <div 
               className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
+                activeTab === 'portfolio' 
+                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
+                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
+              }`}
+              onClick={() => setActiveTab('portfolio')}
+            >
+              <div className="p-6 text-center">
+                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
+                  activeTab === 'portfolio' 
+                    ? 'bg-primary text-primary-foreground shadow-lg' 
+                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                }`}>
+                  <Users className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">Danışan Portföyü</h3>
+                <p className="text-sm text-muted-foreground">Yönlendirmeler</p>
+              </div>
+            </div>
+            
+            <div 
+              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
                 activeTab === 'profile' 
                   ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
                   : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
@@ -1283,6 +1305,12 @@ const DoctorDashboard = () => {
           <TabsContent value="blog">
             <div className="bg-white rounded-lg shadow">
               <DoctorBlogManagement doctorId={doctor.id} doctorName={doctor.name} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="portfolio">
+            <div className="bg-white rounded-lg shadow p-6">
+              <ClientPortfolio specialistId={doctor.id} />
             </div>
           </TabsContent>
 

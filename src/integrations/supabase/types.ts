@@ -377,6 +377,9 @@ export type Database = {
       }
       client_referrals: {
         Row: {
+          client_contact: string | null
+          client_name: string | null
+          client_surname: string | null
           created_at: string
           id: string
           is_referred: boolean
@@ -390,6 +393,9 @@ export type Database = {
           year: number
         }
         Insert: {
+          client_contact?: string | null
+          client_name?: string | null
+          client_surname?: string | null
           created_at?: string
           id?: string
           is_referred?: boolean
@@ -403,6 +409,9 @@ export type Database = {
           year: number
         }
         Update: {
+          client_contact?: string | null
+          client_name?: string | null
+          client_surname?: string | null
           created_at?: string
           id?: string
           is_referred?: boolean
@@ -1332,6 +1341,9 @@ export type Database = {
       admin_get_client_referrals: {
         Args: { p_year: number }
         Returns: {
+          client_contact: string | null
+          client_name: string | null
+          client_surname: string | null
           created_at: string
           id: string
           is_referred: boolean
@@ -1359,6 +1371,9 @@ export type Database = {
           p_year: number
         }
         Returns: {
+          client_contact: string | null
+          client_name: string | null
+          client_surname: string | null
           created_at: string
           id: string
           is_referred: boolean
@@ -1387,6 +1402,9 @@ export type Database = {
           p_year: number
         }
         Returns: {
+          client_contact: string | null
+          client_name: string | null
+          client_surname: string | null
           created_at: string
           id: string
           is_referred: boolean
