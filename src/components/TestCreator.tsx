@@ -227,12 +227,17 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
 
       if (questionsError) throw questionsError;
 
+      toast({
+        title: "Başarılı",
+        description: editingTest ? "Test başarıyla güncellendi." : "Test başarıyla oluşturuldu.",
+      });
+
       onTestCreated();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Test kaydedilirken hata:', error);
       toast({
         title: "Hata",
-        description: "Test kaydedilirken bir hata oluştu.",
+        description: error?.message || "Test kaydedilirken bir hata oluştu.",
         variant: "destructive"
       });
     } finally {
