@@ -1344,6 +1344,12 @@ export type Database = {
           updated_at: string
           year: number
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "client_referrals"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       admin_update_client_referral_notes: {
         Args: {
@@ -1364,6 +1370,12 @@ export type Database = {
           specialist_id: string
           updated_at: string
           year: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "client_referrals"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       admin_upsert_client_referral: {
@@ -1387,31 +1399,22 @@ export type Database = {
           updated_at: string
           year: number
         }
+        SetofOptions: {
+          from: "*"
+          to: "client_referrals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      can_manage_users: {
-        Args: { target_user_id?: string }
-        Returns: boolean
-      }
-      cleanup_old_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      can_manage_users: { Args: { target_user_id?: string }; Returns: boolean }
+      cleanup_old_sessions: { Args: never; Returns: undefined }
       create_specialist_profile: {
         Args: { p_specialist_id: string; p_user_id: string }
         Returns: undefined
       }
-      generate_monthly_orders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_default_time_slots: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      generate_monthly_orders: { Args: never; Returns: undefined }
+      get_current_user_role: { Args: never; Returns: string }
+      get_default_time_slots: { Args: never; Returns: Json }
       get_public_reviews: {
         Args: { p_specialist_id?: string }
         Returns: {
@@ -1424,7 +1427,7 @@ export type Database = {
         }[]
       }
       get_public_specialists: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           address_summary: string
           available_days: string[]
@@ -1455,18 +1458,9 @@ export type Database = {
           working_hours_start: string
         }[]
       }
-      is_admin_or_staff_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_user_approved: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_admin_or_staff_user: { Args: never; Returns: boolean }
+      is_admin_user: { Args: never; Returns: boolean }
+      is_user_approved: { Args: { user_id: string }; Returns: boolean }
     }
     Enums: {
       user_role: "admin" | "specialist" | "user" | "staff" | "legal"
