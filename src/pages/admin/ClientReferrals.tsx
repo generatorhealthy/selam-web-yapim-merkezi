@@ -322,36 +322,53 @@ const ClientReferrals = () => {
 
       if (rpcErr) {
         console.warn('⚠️ [UPDATE] RPC failed, falling back to direct upsert.', rpcErr);
-        // RPC başarısız olursa, çakışma hedefi belirterek güvenli upsert yap
-        const upsertPayload: any = {
-          specialist_id: specialistId,
-          year: currentYear,
-          month,
-          referral_count: newCount,
-          is_referred: newCount > 0,
-          referred_at: newCount > 0 ? new Date().toISOString() : null,
-          referred_by: (await supabase.auth.getUser()).data.user?.id || null,
-          updated_at: new Date().toISOString(),
-        };
-        
-        // Add client info if provided
+        // RPC başarısız olursa, danışan bilgisi varsa yeni kayıt ekle, yoksa upsert yap
         if (clientData) {
-          upsertPayload.client_name = clientData.client_name;
-          upsertPayload.client_surname = clientData.client_surname;
-          upsertPayload.client_contact = clientData.client_contact;
+          // Yeni danışan kaydı ekle
+          const { data: insertResult, error: insertError } = await supabase
+            .from('client_referrals')
+            .insert({
+              specialist_id: specialistId,
+              year: currentYear,
+              month,
+              referral_count: 1,
+              client_name: clientData.client_name,
+              client_surname: clientData.client_surname,
+              client_contact: clientData.client_contact,
+              is_referred: true,
+              referred_at: new Date().toISOString(),
+              referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+            })
+            .select('id, referral_count, updated_at')
+            .single();
+
+          if (insertError) throw insertError;
+          console.log('✅ [UPDATE] New client referral inserted:', insertResult);
+        } else {
+          // Sadece sayıyı güncelle (azaltma durumu)
+          const upsertPayload: any = {
+            specialist_id: specialistId,
+            year: currentYear,
+            month,
+            referral_count: newCount,
+            is_referred: newCount > 0,
+            referred_at: newCount > 0 ? new Date().toISOString() : null,
+            referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+            updated_at: new Date().toISOString(),
+          };
+
+          const { data: upsertResult, error: upsertError } = await supabase
+            .from('client_referrals')
+            .upsert(upsertPayload, { 
+              onConflict: 'specialist_id, year, month',
+              ignoreDuplicates: false
+            })
+            .select('id, referral_count, updated_at')
+            .single();
+
+          if (upsertError) throw upsertError;
+          console.log('✅ [UPDATE] Direct upsert successful:', upsertResult);
         }
-
-        const { data: upsertResult, error: upsertError } = await supabase
-          .from('client_referrals')
-        .upsert(upsertPayload, { 
-          onConflict: 'specialist_id, year, month',
-          ignoreDuplicates: false
-        })
-          .select('id, referral_count, updated_at')
-          .single();
-
-        if (upsertError) throw upsertError;
-        console.log('✅ [UPDATE] Direct upsert successful:', upsertResult);
       } else {
         console.log('✅ [UPDATE] RPC upsert successful:', rpcRes);
         
@@ -375,9 +392,10 @@ const ClientReferrals = () => {
       // Send SMS to specialist with client info if phone and client data provided
       if (specPhone && clientData && newCount > 0) {
         try {
+          console.log('📱 Preparing to send SMS to specialist phone:', specPhone);
           const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
           
-          const { error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
+          const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
             body: {
               phone: specPhone,
               message: message
@@ -385,17 +403,21 @@ const ClientReferrals = () => {
           });
           
           if (smsError) {
-            console.error('SMS gönderim hatası:', smsError);
+            console.error('❌ SMS gönderim hatası:', smsError);
             toast({
               title: "Uyarı",
               description: "Yönlendirme kaydedildi ancak SMS gönderilemedi.",
               variant: "default",
             });
           } else {
-            console.log('✅ SMS sent to specialist:', specPhone);
+            console.log('✅ SMS sent successfully to specialist:', specPhone, 'Response:', smsData);
+            toast({
+              title: "Başarılı",
+              description: "Yönlendirme kaydedildi ve uzmana SMS gönderildi.",
+            });
           }
         } catch (smsEx) {
-          console.error('SMS exception:', smsEx);
+          console.error('❌ SMS exception:', smsEx);
         }
       }
       // Optimistic local update for immediate UI feedback
