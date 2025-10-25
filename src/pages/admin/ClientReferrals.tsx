@@ -1221,13 +1221,15 @@ const ClientReferrals = () => {
                                         type="button"
                                         size="sm"
                                         variant="outline"
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); requestConfirm(
-                                          specialistReferral.id,
-                                          specialistReferral.specialist.name,
-                                          specialistReferral.specialist.phone || '',
-                                          monthIndex + 1,
-                                          Math.max(0, monthlyReferral.count - 1)
-                                        ); }}
+                                        onClick={(e) => { 
+                                          e.preventDefault(); 
+                                          e.stopPropagation(); 
+                                          updateReferralCount(
+                                            specialistReferral.id,
+                                            monthIndex + 1,
+                                            Math.max(0, monthlyReferral.count - 1)
+                                          );
+                                        }}
                                         disabled={monthlyReferral.count <= 0}
                                         className="h-10 w-10 p-0 rounded-xl border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all duration-200 disabled:opacity-50"
                                       >
