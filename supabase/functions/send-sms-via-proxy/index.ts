@@ -36,8 +36,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Proxy credentials not configured');
     }
 
-    // Clean phone number (remove spaces, dashes, etc.)
-    let cleanPhone = phone.replace(/[^\d+]/g, '');
+    // Clean phone number (remove all non-digit characters including +)
+    let cleanPhone = phone.replace(/\D/g, '');
     
     // Ensure phone starts with 90 for Turkey
     if (cleanPhone.startsWith('0')) {
