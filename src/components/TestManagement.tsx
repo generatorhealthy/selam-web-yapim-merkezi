@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit, Trash2, Eye, FileText, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, FileText, Clock, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TestCreator from "./TestCreator";
 import TestResults from "./TestResults";
@@ -23,14 +23,16 @@ interface Test {
 
 interface TestManagementProps {
   specialistId: string;
+  specialistSpecialty?: string;
 }
 
-const TestManagement = ({ specialistId }: TestManagementProps) => {
+const TestManagement = ({ specialistId, specialistSpecialty }: TestManagementProps) => {
   const { toast } = useToast();
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("my-tests");
   const [editingTest, setEditingTest] = useState<Test | null>(null);
+  const [addingAutoTests, setAddingAutoTests] = useState(false);
 
   useEffect(() => {
     fetchTests();
@@ -120,6 +122,124 @@ const TestManagement = ({ specialistId }: TestManagementProps) => {
     setActiveTab("my-tests");
   };
 
+  const handleAddAutoTests = async () => {
+    if (!specialistSpecialty) {
+      toast({
+        title: "Hata",
+        description: "Uzmanlık alanı bulunamadı.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setAddingAutoTests(true);
+    try {
+      // Get template tests for this specialty
+      const { data: templateTests, error: fetchError } = await supabase
+        .from('tests')
+        .select('*')
+        .eq('specialty_area', specialistSpecialty)
+        .is('specialist_id', null);
+
+      if (fetchError) throw fetchError;
+
+      if (!templateTests || templateTests.length === 0) {
+        toast({
+          title: "Bilgi",
+          description: "Bu uzmanlık alanı için otomatik test bulunamadı.",
+        });
+        return;
+      }
+
+      // Get existing tests to avoid duplicates
+      const existingTitles = tests.map(t => t.title.replace(/ - .*$/, ''));
+
+      // Filter out tests that already exist
+      const testsToAdd = templateTests.filter(template => 
+        !existingTitles.some(title => template.title.includes(title))
+      );
+
+      if (testsToAdd.length === 0) {
+        toast({
+          title: "Bilgi",
+          description: "Tüm otomatik testler zaten eklenmiş.",
+        });
+        return;
+      }
+
+      // Add tests with specialist name
+      const { data: specialistData } = await supabase
+        .from('specialists')
+        .select('name')
+        .eq('id', specialistId)
+        .single();
+
+      const specialistName = specialistData?.name || '';
+
+      for (const template of testsToAdd) {
+        // Insert test
+        const { data: newTest, error: insertError } = await supabase
+          .from('tests')
+          .insert({
+            title: `${template.title} - ${specialistName}`,
+            description: template.description,
+            content: template.content,
+            category: template.category,
+            specialty_area: template.specialty_area,
+            image_url: template.image_url,
+            specialist_id: specialistId,
+            status: 'approved',
+            is_active: true
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Test eklenirken hata:', insertError);
+          continue;
+        }
+
+        // Get template questions
+        const { data: templateQuestions, error: questionsError } = await supabase
+          .from('test_questions')
+          .select('*')
+          .eq('test_id', template.id);
+
+        if (!questionsError && templateQuestions) {
+          // Insert questions for the new test
+          const questionsToInsert = templateQuestions.map(q => ({
+            test_id: newTest.id,
+            question_text: q.question_text,
+            question_type: q.question_type,
+            options: q.options,
+            step_number: q.step_number,
+            is_required: q.is_required
+          }));
+
+          await supabase
+            .from('test_questions')
+            .insert(questionsToInsert);
+        }
+      }
+
+      toast({
+        title: "Başarılı",
+        description: `${testsToAdd.length} otomatik test başarıyla eklendi.`,
+      });
+
+      fetchTests();
+    } catch (error) {
+      console.error('Otomatik testler eklenirken hata:', error);
+      toast({
+        title: "Hata",
+        description: "Otomatik testler eklenirken bir hata oluştu.",
+        variant: "destructive"
+      });
+    } finally {
+      setAddingAutoTests(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -173,8 +293,19 @@ const TestManagement = ({ specialistId }: TestManagementProps) => {
 
         <TabsContent value="my-tests">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Testlerim</CardTitle>
+              {specialistSpecialty && (
+                <Button 
+                  onClick={handleAddAutoTests}
+                  disabled={addingAutoTests}
+                  variant="outline"
+                  size="sm"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${addingAutoTests ? 'animate-spin' : ''}`} />
+                  {addingAutoTests ? 'Ekleniyor...' : 'Otomatik Testleri Ekle'}
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {tests.length === 0 ? (

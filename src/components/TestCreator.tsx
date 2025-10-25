@@ -33,6 +33,7 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
   const [testContent, setTestContent] = useState(editingTest?.content || "");
   const [testCategory, setTestCategory] = useState(editingTest?.category || "");
   const [specialtyArea, setSpecialtyArea] = useState(editingTest?.specialty_area || "");
+  const [testImageUrl, setTestImageUrl] = useState(editingTest?.image_url || "");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -177,6 +178,7 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
             content: testContent,
             category: testCategory,
             specialty_area: specialtyArea,
+            image_url: testImageUrl || null,
             status: 'pending'
           })
           .eq('id', editingTest.id);
@@ -200,6 +202,7 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
             content: testContent,
             category: testCategory,
             specialty_area: specialtyArea,
+            image_url: testImageUrl || null,
             specialist_id: specialistId,
             status: 'pending',
             is_active: false
@@ -319,6 +322,28 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
               onChange={(e) => setTestCategory(e.target.value)}
               placeholder="Test kategorisi (opsiyonel)"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="testImageUrl">Test Görseli URL</Label>
+            <Input
+              id="testImageUrl"
+              value={testImageUrl}
+              onChange={(e) => setTestImageUrl(e.target.value)}
+              placeholder="Test görseli URL'si (opsiyonel)"
+            />
+            {testImageUrl && (
+              <div className="mt-2">
+                <img 
+                  src={testImageUrl} 
+                  alt="Test preview" 
+                  className="w-full max-w-md h-48 object-cover rounded-lg"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           <div>

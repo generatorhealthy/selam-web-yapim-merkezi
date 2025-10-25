@@ -466,7 +466,10 @@ const DoctorProfileEditor = () => {
         </TabsContent>
 
         <TabsContent value="tests">
-          <TestManagement specialistId={specialist.id} />
+          <TestManagement 
+            specialistId={specialist.id} 
+            specialistSpecialty={specialist.specialty}
+          />
         </TabsContent>
 
         <TabsContent value="contact">

@@ -16,6 +16,7 @@ interface Test {
   specialty_area: string;
   is_active: boolean;
   created_at: string;
+  image_url: string | null;
 }
 
 interface SpecialistTestsProps {
@@ -84,6 +85,18 @@ const SpecialistTests = ({ specialistId, specialistName, specialistSpecialty }: 
           <Card key={test.id} className="border hover:shadow-md transition-shadow">
             <CardContent className="p-4 md:p-6">
               <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-4 md:space-y-0">
+                {test.image_url && (
+                  <div className="w-full md:w-48 md:mr-4">
+                    <img 
+                      src={test.image_url} 
+                      alt={test.title}
+                      className="w-full h-32 md:h-40 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="flex-1 md:mr-4">
                   <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
                     {test.title}
