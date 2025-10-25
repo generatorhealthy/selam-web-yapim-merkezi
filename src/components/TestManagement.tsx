@@ -81,16 +81,6 @@ const TestManagement = ({ specialistId }: TestManagementProps) => {
   };
 
   const handleEditTest = (test: Test) => {
-    // Only allow editing if test is not approved yet
-    if (test.status === 'approved') {
-      toast({
-        title: "Uyarı",
-        description: "Onaylanmış testler düzenlenemez.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setEditingTest(test);
     setActiveTab("create-test");
   };
@@ -242,16 +232,14 @@ const TestManagement = ({ specialistId }: TestManagementProps) => {
                             )}
                           </div>
                           <div className="flex space-x-2">
-                            {test.status !== 'approved' && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditTest(test)}
-                                title="Testi Düzenle"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditTest(test)}
+                              title="Testi Düzenle"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"

@@ -30,6 +30,7 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
   const { toast } = useToast();
   const [testTitle, setTestTitle] = useState(editingTest?.title || "");
   const [testDescription, setTestDescription] = useState(editingTest?.description || "");
+  const [testContent, setTestContent] = useState(editingTest?.content || "");
   const [testCategory, setTestCategory] = useState(editingTest?.category || "");
   const [specialtyArea, setSpecialtyArea] = useState(editingTest?.specialty_area || "");
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -173,6 +174,7 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
           .update({
             title: testTitle,
             description: testDescription,
+            content: testContent,
             category: testCategory,
             specialty_area: specialtyArea,
             status: 'pending'
@@ -195,6 +197,7 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
           .insert({
             title: testTitle,
             description: testDescription,
+            content: testContent,
             category: testCategory,
             specialty_area: specialtyArea,
             specialist_id: specialistId,
@@ -289,6 +292,17 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
               onChange={(e) => setTestDescription(e.target.value)}
               placeholder="Test hakkında kısa bir açıklama yazın"
               rows={3}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="testContent">Test İçeriği</Label>
+            <Textarea
+              id="testContent"
+              value={testContent}
+              onChange={(e) => setTestContent(e.target.value)}
+              placeholder="Detaylı test içeriği, yönergeler ve açıklamalar..."
+              rows={4}
             />
           </div>
 
