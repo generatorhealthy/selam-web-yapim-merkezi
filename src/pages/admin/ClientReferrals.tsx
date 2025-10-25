@@ -201,24 +201,15 @@ const ClientReferrals = () => {
             const month = index + 1;
             const matches = (specialistReferrals as any[]).filter((r: any) => Number(r.month) === month);
 
-            // En güncel kaydı kullan (hem sayı hem not için) -> böylece azaltma yaptığınızda eski yüksek değer geri dönmez
-            const latest = matches.length > 1
-              ? matches
-                  .slice()
-                  .sort(
-                    (a: any, b: any) =>
-                      new Date(b.updated_at || b.created_at || 0).getTime() -
-                      new Date(a.updated_at || a.created_at || 0).getTime()
-                  )[0]
-              : matches[0];
+            // Tüm kayıtların toplam sayısını hesapla
+            const totalCount = matches.reduce((sum: number, record: any) => {
+              return sum + (record.referral_count || 0);
+            }, 0);
 
             return {
               month,
-              count:
-                latest?.referral_count !== undefined && latest?.referral_count !== null
-                  ? Number(latest.referral_count)
-                  : 0,
-              notes: typeof latest?.notes === 'string' ? latest.notes : '',
+              count: totalCount,
+              notes: '', // Notes artık bireysel kayıtlarda tutulacak
             };
           });
 
@@ -322,7 +313,7 @@ const ClientReferrals = () => {
 
       if (rpcErr) {
         console.warn('⚠️ [UPDATE] RPC failed, falling back to direct upsert.', rpcErr);
-        // RPC başarısız olursa, danışan bilgisi varsa yeni kayıt ekle, yoksa upsert yap
+        // Danışan bilgisi varsa yeni kayıt ekle
         if (clientData) {
           // Yeni danışan kaydı ekle
           const { data: insertResult, error: insertError } = await supabase
@@ -339,53 +330,58 @@ const ClientReferrals = () => {
               referred_at: new Date().toISOString(),
               referred_by: (await supabase.auth.getUser()).data.user?.id || null,
             })
-            .select('id, referral_count, updated_at')
-            .single();
+            .select('id, referral_count, updated_at');
 
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error('Insert error:', insertError);
+            throw insertError;
+          }
           console.log('✅ [UPDATE] New client referral inserted:', insertResult);
         } else {
-          // Sadece sayıyı güncelle (azaltma durumu)
-          const upsertPayload: any = {
-            specialist_id: specialistId,
-            year: currentYear,
-            month,
-            referral_count: newCount,
-            is_referred: newCount > 0,
-            referred_at: newCount > 0 ? new Date().toISOString() : null,
-            referred_by: (await supabase.auth.getUser()).data.user?.id || null,
-            updated_at: new Date().toISOString(),
-          };
-
-          const { data: upsertResult, error: upsertError } = await supabase
+          // Sayı azaltma - en son kaydı sil
+          const { data: existingRecords, error: fetchError } = await supabase
             .from('client_referrals')
-            .upsert(upsertPayload, { 
-              onConflict: 'specialist_id, year, month',
-              ignoreDuplicates: false
-            })
-            .select('id, referral_count, updated_at')
-            .single();
+            .select('id')
+            .eq('specialist_id', specialistId)
+            .eq('year', currentYear)
+            .eq('month', month)
+            .order('created_at', { ascending: false })
+            .limit(1);
 
-          if (upsertError) throw upsertError;
-          console.log('✅ [UPDATE] Direct upsert successful:', upsertResult);
+          if (fetchError) throw fetchError;
+
+          if (existingRecords && existingRecords.length > 0) {
+            const { error: deleteError } = await supabase
+              .from('client_referrals')
+              .delete()
+              .eq('id', existingRecords[0].id);
+
+            if (deleteError) throw deleteError;
+            console.log('✅ [UPDATE] Client referral deleted');
+          }
         }
       } else {
         console.log('✅ [UPDATE] RPC upsert successful:', rpcRes);
         
-        // Update client info separately if using RPC
+        // RPC başarılı olsa bile danışan bilgisi varsa yeni kayıt ekle
         if (clientData) {
-          const { error: updateErr } = await supabase
+          const { data: insertResult, error: insertError } = await supabase
             .from('client_referrals')
-            .update({
+            .insert({
+              specialist_id: specialistId,
+              year: currentYear,
+              month,
+              referral_count: 1,
               client_name: clientData.client_name,
               client_surname: clientData.client_surname,
               client_contact: clientData.client_contact,
+              is_referred: true,
+              referred_at: new Date().toISOString(),
+              referred_by: (await supabase.auth.getUser()).data.user?.id || null,
             })
-            .eq('specialist_id', specialistId)
-            .eq('year', currentYear)
-            .eq('month', month);
+            .select('id, referral_count, updated_at');
           
-          if (updateErr) console.error('Client info update error:', updateErr);
+          if (insertError) console.error('Client info insert error:', insertError);
         }
       }
       

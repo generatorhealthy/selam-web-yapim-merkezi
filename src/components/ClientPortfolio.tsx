@@ -15,6 +15,7 @@ interface ClientReferral {
   client_contact: string | null;
   created_at: string;
   updated_at: string;
+  referred_at?: string | null;
 }
 
 interface ClientPortfolioProps {
@@ -56,11 +57,21 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
   };
 
   const getTotalReferrals = () => {
-    return referrals.reduce((sum, ref) => sum + (ref.referral_count || 0), 0);
+    return referrals.length; // Her kayıt bir danışan
   };
 
   const getReferralsByMonth = (month: number) => {
     return referrals.filter(ref => ref.month === month && ref.referral_count > 0);
+  };
+
+  const getActiveMonths = () => {
+    const uniqueMonths = new Set(referrals.map(ref => ref.month));
+    return uniqueMonths.size;
+  };
+
+  const getAveragePerMonth = () => {
+    const activeMonths = getActiveMonths();
+    return activeMonths > 0 ? Math.round(getTotalReferrals() / activeMonths) : 0;
   };
 
   if (loading) {
@@ -99,7 +110,7 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {referrals.filter(r => r.referral_count > 0).length}
+              {getActiveMonths()}
             </div>
             <p className="text-xs text-muted-foreground">
               Yönlendirme yapılan ay sayısı
@@ -114,9 +125,7 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {referrals.filter(r => r.referral_count > 0).length > 0
-                ? Math.round(getTotalReferrals() / referrals.filter(r => r.referral_count > 0).length)
-                : 0}
+              {getAveragePerMonth()}
             </div>
             <p className="text-xs text-muted-foreground">
               Aylık ortalama danışan
@@ -153,7 +162,7 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
 
             {monthNames.map((month, index) => {
               const monthReferrals = getReferralsByMonth(index + 1);
-              const totalCount = monthReferrals.reduce((sum, ref) => sum + ref.referral_count, 0);
+              const totalCount = monthReferrals.length; // Her kayıt bir danışan
 
               return (
                 <TabsContent key={index + 1} value={(index + 1).toString()} className="space-y-4 mt-4">
@@ -194,12 +203,18 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
                                 )}
                                 
                                 <div className="text-xs text-muted-foreground">
-                                  Yönlendirme Tarihi: {new Date(referral.updated_at).toLocaleDateString('tr-TR')}
+                                  Yönlendirme Tarihi: {new Date(referral.referred_at || referral.created_at).toLocaleDateString('tr-TR', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
                                 </div>
                               </div>
                               
                               <Badge className="bg-primary/10 text-primary">
-                                {referral.referral_count} Danışan
+                                Danışan
                               </Badge>
                             </div>
                           </CardContent>
