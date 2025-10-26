@@ -369,17 +369,6 @@ const AdminDashboard = () => {
       buttonText: "Görselleri Dönüştür",
       adminOnly: true
     },
-    {
-      title: "Site Analitik",
-      description: "Detaylı web site trafiği ve kullanıcı analizi",
-      icon: BarChart3,
-      gradient: "from-blue-500 via-cyan-500 to-teal-600",
-      bgGradient: "from-blue-50 to-teal-50",
-      shadowColor: "shadow-blue-500/20",
-      route: "/divan_paneli/analytics",
-      buttonText: "Analitikleri Görüntüle",
-      adminOnly: true
-    },
   ];
 
   const visibleCards = adminCards.filter(card => {
