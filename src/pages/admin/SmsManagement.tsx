@@ -31,6 +31,7 @@ interface Specialist {
   id: string;
   name: string;
   phone: string;
+  email?: string;
   specialty: string;
   is_active: boolean;
 }
@@ -63,6 +64,64 @@ const SmsManagement = () => {
     }
   ];
 
+  // Helpers to resolve specialist phone primarily from latest approved/completed order
+  const CENTRAL_NUMBERS = new Set<string>([
+    '02167060611', '2167060611', '902167060611',
+    '0216 706 06 11', '0 216 706 06 11', '216 706 06 11', '0216-706-06-11'
+  ]);
+  const digitsOnly = (s: string) => s.replace(/\D/g, '');
+  const isCentralNumber = (phone?: string | null) => {
+    if (!phone) return false;
+    const d = digitsOnly(phone);
+    return CENTRAL_NUMBERS.has(d) || d.endsWith('2167060611');
+  };
+  const normalizePhoneForSms = (phone?: string | null) => {
+    if (!phone) return '';
+    let d = digitsOnly(phone);
+    if (!d) return '';
+    if (d.startsWith('90')) return d;
+    if (d.startsWith('0')) d = d.slice(1);
+    if (!d.startsWith('90')) d = '90' + d;
+    return d;
+  };
+  const normalizeName = (s: string) =>
+    (s || '')
+      .toLowerCase()
+      .replace(/\b(uzm\.?|psk\.?|dan\.?|dr\.?|psikolog|danışman)\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const resolvePhoneFromOrders = async (spec: Specialist): Promise<string> => {
+    try {
+      const name = normalizeName(spec.name);
+      let q = supabase
+        .from('orders')
+        .select('customer_phone, customer_email, customer_name, status, created_at')
+        .in('status', ['approved', 'completed'])
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (spec.email) {
+        q = q.ilike('customer_email', spec.email);
+      } else if (name) {
+        q = q.ilike('customer_name', `%${name}%`);
+      }
+
+      const { data, error } = await q;
+      if (!error && Array.isArray(data) && data.length) {
+        const phoneCandidate = (data.find((o: any) => o.customer_phone) as any)?.customer_phone as string | undefined;
+        if (phoneCandidate && !isCentralNumber(phoneCandidate)) {
+          return normalizePhoneForSms(phoneCandidate);
+        }
+      }
+    } catch (e) {
+      console.warn('[SmsManagement] resolvePhoneFromOrders failed', e);
+    }
+    // fallback to specialist table phone if present
+    if (spec.phone && !isCentralNumber(spec.phone)) return normalizePhoneForSms(spec.phone);
+    return '';
+  };
+
   useEffect(() => {
     fetchSpecialists();
     fetchRecentSms();
@@ -82,7 +141,7 @@ const SmsManagement = () => {
       console.info('[SmsManagement] fetchSpecialists: start');
       const { data, error } = await supabase
         .from('specialists')
-        .select('id, name, phone, specialty, is_active')
+        .select('id, name, phone, email, specialty, is_active')
         .eq('is_active', true)
         .order('name');
 
@@ -118,9 +177,17 @@ const SmsManagement = () => {
 
   const handleSpecialistChange = (specialistId: string) => {
     setSelectedSpecialist(specialistId);
+    if (!specialistId || specialistId === 'manual') {
+      setPhoneNumber('');
+      return;
+    }
     const specialist = specialists.find(s => s.id === specialistId);
     if (specialist) {
-      setPhoneNumber(specialist.phone || '');
+      // Resolve from orders first, fallback to specialist phone
+      (async () => {
+        const resolved = await resolvePhoneFromOrders(specialist as Specialist);
+        setPhoneNumber(resolved || '');
+      })();
     } else {
       setPhoneNumber('');
     }
@@ -177,7 +244,8 @@ const SmsManagement = () => {
       // Log to sms_logs table
       const currentUser = await supabase.auth.getUser();
       const smsLogStatus = lastError ? 'error' : 'success';
-      await supabase.from('sms_logs').insert({
+      const specialistObj = specialists.find(s => s.id === selectedSpecialist);
+      const { error: logErr } = await supabase.from('sms_logs').insert({
         phone: phoneNumber,
         message,
         status: smsLogStatus,
@@ -185,8 +253,11 @@ const SmsManagement = () => {
         error: lastError?.message || null,
         response: resultData || null,
         triggered_by: currentUser.data.user?.id || null,
-        source: 'sms_management'
+        source: 'sms_management',
+        specialist_id: specialistObj?.id || null,
+        specialist_name: specialistObj?.name || null,
       });
+      if (logErr) console.warn('[SmsManagement] sms_logs insert error:', logErr);
 
       if (lastError) {
         throw lastError;
