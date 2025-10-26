@@ -456,6 +456,23 @@ const handleCreditCardPayment = async () => {
         throw new Error(`Sipariş kaydedilemedi: ${error.message || 'Bilinmeyen hata'}`);
       }
 
+      // Yeni sipariş SMS bildirimi gönder
+      try {
+        await supabase.functions.invoke('send-new-order-sms', {
+          body: {
+            customerName: `${formData.name} ${formData.surname}`,
+            packageName: selectedPackage.name,
+            amount: selectedPackage.price,
+            paymentMethod: paymentMethod === 'bank_transfer' ? 'Banka Havalesi' : 'Kredi Kartı',
+            orderDate: new Date().toLocaleDateString('tr-TR')
+          }
+        });
+        console.log('Order notification SMS sent');
+      } catch (smsError) {
+        console.error('Failed to send order notification SMS:', smsError);
+        // SMS hatası sipariş oluşturmayı engellemez
+      }
+
       localStorage.setItem('lastOrder', JSON.stringify({
         id: null, // anonim kullanıcılar için SELECT izni yok; id dönmüyor
         orderNumber: `DRP-${Date.now()}`,

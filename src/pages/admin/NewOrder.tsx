@@ -75,6 +75,23 @@ const NewOrder = () => {
 
       console.log("Order saved successfully:", data);
 
+      // Yeni sipariş SMS bildirimi gönder
+      try {
+        await supabase.functions.invoke('send-new-order-sms', {
+          body: {
+            customerName: formData.customerName,
+            packageName: formData.packageName,
+            amount: parseFloat(formData.amount),
+            paymentMethod: formData.paymentMethod === 'bank_transfer' ? 'Banka Havalesi' : 'Kredi Kartı',
+            orderDate: new Date().toLocaleDateString('tr-TR')
+          }
+        });
+        console.log('Order notification SMS sent');
+      } catch (smsError) {
+        console.error('Failed to send order notification SMS:', smsError);
+        // SMS hatası sipariş oluşturmayı engellemez
+      }
+
       toast({
         title: "Başarılı",
         description: "Sipariş başarıyla oluşturuldu"
