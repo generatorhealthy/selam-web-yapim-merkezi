@@ -53,6 +53,66 @@ interface SpecialistReferral {
   referrals: MonthlyReferral[];
 }
 
+// --- SMS phone resolution helpers (prefer orders/contracts phone) ---
+const CENTRAL_NUMBERS = new Set<string>([
+  '02167060611',
+  '2167060611',
+  '902167060611',
+  '0216 706 06 11',
+  '0 216 706 06 11',
+  '216 706 06 11',
+  '0216-706-06-11'
+]);
+
+const digitsOnly = (s: string) => s.replace(/\D/g, '');
+const isCentralNumber = (phone?: string | null) => {
+  if (!phone) return false;
+  const d = digitsOnly(phone);
+  return CENTRAL_NUMBERS.has(d) || d.endsWith('2167060611');
+};
+
+const normalizePhoneForSms = (phone?: string | null) => {
+  if (!phone) return '';
+  let d = digitsOnly(phone);
+  if (!d) return '';
+  if (d.startsWith('90')) return d;
+  if (d.startsWith('0')) d = d.slice(1);
+  if (!d.startsWith('90')) d = '90' + d;
+  return d;
+};
+
+const resolveSpecialistSmsPhone = async (spec: { name?: string; phone?: string; email?: string }) => {
+  try {
+    const name = spec.name || '';
+    const email = (spec as any).email || undefined;
+    console.log('🔎 [SMS-DEBUG] Resolving phone via get-specialist-contracts', { name, email });
+
+    const { data, error } = await supabase.functions.invoke('get-specialist-contracts', {
+      body: { name, email },
+    });
+
+    if (!error && Array.isArray(data) && data.length) {
+      const sorted = [...data].sort(
+        (a: any, b: any) => new Date(b.approved_at || b.created_at || 0).getTime() - new Date(a.approved_at || a.created_at || 0).getTime()
+      );
+      const order = sorted.find((o: any) => ['approved', 'completed'].includes(o.status)) || sorted[0];
+      const phoneCandidate = order?.customer_phone || order?.phone;
+      console.log('🔎 [SMS-DEBUG] Contract phone candidate:', phoneCandidate);
+      if (phoneCandidate && !isCentralNumber(phoneCandidate)) {
+        return normalizePhoneForSms(phoneCandidate);
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [SMS-DEBUG] Contract phone lookup failed', e);
+  }
+
+  // Fallback to specialist table phone
+  if (spec.phone && !isCentralNumber(spec.phone)) {
+    return normalizePhoneForSms(spec.phone);
+  }
+  return '';
+};
+
 const ClientReferrals = () => {
   const [specialists, setSpecialists] = useState<SpecialistReferral[]>([]);
   const [filteredSpecialists, setFilteredSpecialists] = useState<SpecialistReferral[]>([]);
@@ -296,15 +356,14 @@ const ClientReferrals = () => {
     try {
       const specialist = specialists.find((s) => s.id === specialistId);
       const specName = specialistName || specialist?.specialist.name || 'Unknown';
-      // ALWAYS use the phone number from the specialists table, not from parameters
-      const specPhone = specialist?.specialist.phone || '';
-      
+      // Resolve phone preferring orders (contracts), fallback to specialists.phone
+      const resolvedPhone = await resolveSpecialistSmsPhone((specialist?.specialist as any) || {});
       console.log('🔍 [SMS-DEBUG] Specialist Info:', {
         specialistId,
         specialistName: specName,
         phoneFromTable: specialist?.specialist.phone,
         phoneFromParams: specialistPhone,
-        usingPhone: specPhone
+        resolvedPhone
       });
       console.log(`🔄 [UPDATE] ${specName} (${specialistId}) year=${currentYear} month=${month} -> ${newCount}`);
 
@@ -395,11 +454,11 @@ const ClientReferrals = () => {
       }
       
       // Send SMS to specialist with client info if phone and client data provided
-      if (specPhone && clientData && newCount > 0) {
+      if (resolvedPhone && clientData && newCount > 0) {
         try {
           console.log('📱 [SMS-DEBUG] Sending SMS with details:', {
             specialist: specName,
-            phone: specPhone,
+            phone: resolvedPhone,
             clientName: `${clientData.client_name} ${clientData.client_surname}`,
             clientContact: clientData.client_contact
           });
@@ -407,11 +466,11 @@ const ClientReferrals = () => {
           const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
           
           console.log('📱 [SMS-DEBUG] Message to be sent:', message);
-          console.log('📱 [SMS-DEBUG] Phone number being used:', specPhone);
+          console.log('📱 [SMS-DEBUG] Phone number being used:', resolvedPhone);
           
           const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
             body: {
-              phone: specPhone,
+              phone: resolvedPhone,
               message: message
             }
           });
@@ -424,10 +483,10 @@ const ClientReferrals = () => {
               variant: "default",
             });
           } else {
-            console.log('✅ SMS sent successfully to specialist:', specPhone, 'Response:', smsData);
+            console.log('✅ SMS sent successfully to specialist:', resolvedPhone, 'Response:', smsData);
             toast({
               title: "Başarılı",
-              description: `Yönlendirme kaydedildi ve ${specPhone} numarasına SMS gönderildi.`,
+              description: `Yönlendirme kaydedildi ve ${resolvedPhone} numarasına SMS gönderildi.`,
             });
           }
         } catch (smsEx) {
@@ -438,11 +497,11 @@ const ClientReferrals = () => {
             variant: "default",
           });
         }
-      } else if (clientData && !specPhone) {
+      } else if (clientData && !resolvedPhone) {
         console.warn('⚠️ [SMS-DEBUG] Cannot send SMS: Specialist phone number is missing');
         toast({
           title: "Uyarı",
-          description: "Uzmanın telefon numarası eksik olduğu için SMS gönderilemedi.",
+          description: "Uzmanın telefon numarası siparişlerden alınamadı ve profilde de bulunmuyor. SMS gönderilemedi.",
           variant: "default",
         });
       }
