@@ -487,9 +487,17 @@ const ClientReferrals = () => {
       }
       
       // Send SMS to specialist with client info if phone and client data provided
+      console.log('📱 [SMS] Checking SMS requirements:', {
+        hasResolvedPhone: !!resolvedPhone,
+        hasClientData: !!clientData,
+        newCount,
+        specialistName: specName,
+        phoneNumber: resolvedPhone
+      });
+
       if (resolvedPhone && clientData && newCount > 0) {
         try {
-          console.log('📱 [SMS-DEBUG] Sending SMS with details:', {
+          console.log('📱 [SMS] Preparing to send SMS with details:', {
             specialist: specName,
             phone: resolvedPhone,
             clientName: `${clientData.client_name} ${clientData.client_surname}`,
@@ -498,8 +506,8 @@ const ClientReferrals = () => {
           
           const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
           
-          console.log('📱 [SMS-DEBUG] Message to be sent:', message);
-          console.log('📱 [SMS-DEBUG] Phone number being used:', resolvedPhone);
+          console.log('📱 [SMS] Message content:', message);
+          console.log('📱 [SMS] Calling edge function send-sms-via-static-proxy...');
           
           const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
             body: {
@@ -508,35 +516,52 @@ const ClientReferrals = () => {
             }
           });
           
+          console.log('📱 [SMS] Edge function response:', { data: smsData, error: smsError });
+          
           if (smsError) {
-            console.error('❌ SMS gönderim hatası:', smsError);
+            console.error('❌ [SMS] Gönderim hatası:', smsError);
             toast({
               title: "Uyarı",
               description: `Yönlendirme kaydedildi ancak SMS gönderilemedi. Hata: ${smsError.message || 'Bilinmeyen hata'}`,
               variant: "default",
             });
           } else {
-            console.log('✅ SMS sent successfully to specialist:', resolvedPhone, 'Response:', smsData);
+            console.log('✅ [SMS] Başarıyla gönderildi. Telefon:', resolvedPhone, 'Yanıt:', smsData);
             toast({
               title: "Başarılı",
               description: `Yönlendirme kaydedildi ve ${resolvedPhone} numarasına SMS gönderildi.`,
             });
           }
         } catch (smsEx) {
-          console.error('❌ SMS exception:', smsEx);
+          console.error('❌ [SMS] Exception:', smsEx);
           toast({
             title: "Uyarı",
-            description: "SMS gönderilirken bir hata oluştu.",
+            description: `SMS gönderilirken hata oluştu: ${(smsEx as Error).message}`,
             variant: "default",
           });
         }
-      } else if (clientData && !resolvedPhone) {
-        console.warn('⚠️ [SMS-DEBUG] Cannot send SMS: Specialist phone number is missing');
-        toast({
-          title: "Uyarı",
-          description: "Uzmanın telefon numarası siparişlerden alınamadı ve profilde de bulunmuyor. SMS gönderilemedi.",
-          variant: "default",
+      } else {
+        const reason = !resolvedPhone 
+          ? `Uzmanın telefon numarası bulunamadı (Sipariş: ${specName})`
+          : !clientData 
+          ? 'Danışan bilgisi eksik'
+          : newCount <= 0
+          ? 'Yönlendirme sayısı 0 veya negatif'
+          : 'Bilinmeyen sebep';
+        
+        console.warn('⚠️ [SMS] SMS gönderilemedi. Sebep:', reason, {
+          resolvedPhone,
+          hasClientData: !!clientData,
+          newCount
         });
+        
+        if (clientData) {
+          toast({
+            title: "Uyarı",
+            description: `Yönlendirme kaydedildi ancak SMS gönderilemedi. ${reason}`,
+            variant: "default",
+          });
+        }
       }
       // Optimistic local update for immediate UI feedback
       setSpecialists((prev) =>
