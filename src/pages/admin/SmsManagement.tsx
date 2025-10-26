@@ -45,6 +45,7 @@ const SmsManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [smsStatus, setSmsStatus] = useState<{type: 'success' | 'error' | null, message: string}>({type: null, message: ''});
+  const [recentSms, setRecentSms] = useState<any[]>([]);
 
   // SMS template messages
   const templates = [
@@ -64,9 +65,13 @@ const SmsManagement = () => {
 
   useEffect(() => {
     fetchSpecialists();
+    fetchRecentSms();
     
     // Auto-refresh specialist list every 30 seconds
-    const interval = setInterval(fetchSpecialists, 30000);
+    const interval = setInterval(() => {
+      fetchSpecialists();
+      fetchRecentSms();
+    }, 30000);
     
     return () => clearInterval(interval);
   }, []);
@@ -93,6 +98,21 @@ const SmsManagement = () => {
       });
     } finally {
       setIsFetching(false);
+    }
+  };
+
+  const fetchRecentSms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sms_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      setRecentSms(data || []);
+    } catch (error: any) {
+      console.error('Error fetching recent SMS logs:', error);
     }
   };
 
@@ -124,34 +144,69 @@ const SmsManagement = () => {
       setIsLoading(true);
       setSmsStatus({type: null, message: ''});
 
-      const { data, error } = await supabase.functions.invoke('send-sms-via-static-proxy', {
-        body: {
-          phone: phoneNumber,
-          message: message
+      const tryInvoke = async (fnName: string) => {
+        const { data, error } = await supabase.functions.invoke(fnName, {
+          body: { phone: phoneNumber, message }
+        });
+        console.log(`[SmsManagement] ${fnName} response:`, { data, error });
+        return { data, error };
+      };
+
+      let usedFunction = 'send-sms-via-static-proxy';
+      let lastError: any | undefined = undefined;
+      let resultData: any | undefined = undefined;
+
+      const primary = await tryInvoke('send-sms-via-static-proxy');
+      resultData = primary.data; lastError = primary.error;
+
+      if (lastError || (resultData && resultData.success === false)) {
+        console.warn('[SmsManagement] Primary failed. Trying fallbacks...');
+        const fallbacks = ['send-sms-via-proxy', 'send-verimor-sms'];
+        for (const fn of fallbacks) {
+          const res = await tryInvoke(fn);
+          if (!res.error && (!res.data || res.data.success !== false)) {
+            usedFunction = fn;
+            resultData = res.data;
+            lastError = undefined;
+            break;
+          }
+          lastError = res.error || new Error(res.data?.error || 'Unknown fallback error');
         }
+      }
+
+      // Log to sms_logs table
+      const currentUser = await supabase.auth.getUser();
+      const smsLogStatus = lastError ? 'error' : 'success';
+      await supabase.from('sms_logs').insert({
+        phone: phoneNumber,
+        message,
+        status: smsLogStatus,
+        used_function: usedFunction,
+        error: lastError?.message || null,
+        response: resultData || null,
+        triggered_by: currentUser.data.user?.id || null,
+        source: 'sms_management'
       });
 
-      if (error) throw error;
-
-      if (data.success) {
-        setSmsStatus({
-          type: 'success',
-          message: 'SMS başarıyla gönderildi!'
-        });
-        toast({
-          title: "Başarılı",
-          description: "SMS başarıyla gönderildi.",
-        });
-        // Reset form and refresh specialist list
-        setMessage('');
-        setPhoneNumber('');
-        setSelectedSpecialist('');
-        
-        // Refresh specialist list to get any new specialists
-        fetchSpecialists();
-      } else {
-        throw new Error(data.error || 'SMS gönderim hatası');
+      if (lastError) {
+        throw lastError;
       }
+
+      setSmsStatus({
+        type: 'success',
+        message: `SMS başarıyla gönderildi! (${usedFunction})`
+      });
+      toast({
+        title: "Başarılı",
+        description: `SMS başarıyla gönderildi. (${usedFunction})`,
+      });
+      // Reset form and refresh
+      setMessage('');
+      setPhoneNumber('');
+      setSelectedSpecialist('');
+      
+      fetchSpecialists();
+      fetchRecentSms();
     } catch (error: any) {
       console.error('SMS sending error:', error);
       setSmsStatus({
@@ -457,6 +512,76 @@ const SmsManagement = () => {
               </CardContent>
             </Card>
           </div>
+          
+          {/* Son Gönderilen SMS'ler */}
+          <Card className="border-0 bg-white/80 backdrop-blur-xl shadow-xl mt-8">
+            <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-xl">
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Son Gönderilen SMS'ler
+              </CardTitle>
+              <CardDescription className="text-emerald-100">
+                En son gönderilen 10 SMS kaydı
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              {recentSms.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>Henüz SMS gönderimi kaydı bulunmamaktadır.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentSms.map((sms) => (
+                    <div key={sms.id} className={`p-4 border rounded-lg ${
+                      sms.status === 'success' 
+                        ? 'border-green-200 bg-green-50/50' 
+                        : 'border-red-200 bg-red-50/50'
+                    }`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {sms.status === 'success' ? (
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 text-red-600" />
+                          )}
+                          <span className="font-semibold text-slate-800">
+                            {sms.phone}
+                          </span>
+                          {sms.specialist_name && (
+                            <Badge variant="secondary" className="text-xs">
+                              {sms.specialist_name}
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          {new Date(sms.created_at).toLocaleString('tr-TR')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-700 mb-2 line-clamp-2">{sms.message}</p>
+                      <div className="flex items-center gap-4 text-xs text-slate-500">
+                        {sms.used_function && (
+                          <span className="flex items-center gap-1">
+                            <Zap className="w-3 h-3" />
+                            {sms.used_function}
+                          </span>
+                        )}
+                        {sms.source && (
+                          <span>Kaynak: {sms.source}</span>
+                        )}
+                        {sms.client_name && (
+                          <span>Danışan: {sms.client_name}</span>
+                        )}
+                        {sms.error && (
+                          <span className="text-red-600">Hata: {sms.error}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
         
         <Footer />

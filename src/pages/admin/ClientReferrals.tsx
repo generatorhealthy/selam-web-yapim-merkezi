@@ -309,11 +309,18 @@ const ClientReferrals = () => {
             const totalCount = matches.reduce((sum: number, record: any) => {
               return sum + (record.referral_count || 0);
             }, 0);
+            
+            // En son notları al (en yeni created_at veya updated_at'a göre)
+            const latestNote = matches.length > 0
+              ? matches.sort((a: any, b: any) => 
+                  new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
+                )[0]?.notes || ''
+              : '';
 
             return {
               month,
               count: totalCount,
-              notes: '', // Notes artık bireysel kayıtlarda tutulacak
+              notes: latestNote,
             };
           });
 
@@ -516,7 +523,7 @@ const ClientReferrals = () => {
         try {
           console.log('📱 [SMS] Preparing to send SMS with details:', {
             specialist: specName,
-            phone: resolvedPhone,
+            phone: phoneToUse,
             clientName: `${clientData.client_name} ${clientData.client_surname}`,
             clientContact: clientData.client_contact
           });
@@ -533,7 +540,7 @@ const ClientReferrals = () => {
           
           const tryInvoke = async (fnName: string) => {
             const { data, error } = await supabase.functions.invoke(fnName, {
-              body: { phone: resolvedPhone, message }
+              body: { phone: phoneToUse, message }
             });
             console.log(`📱 [SMS] ${fnName} response:`, { data, error });
             return { data, error };
@@ -558,6 +565,24 @@ const ClientReferrals = () => {
             }
           }
           
+          // Log SMS result to database
+          const currentUser = await supabase.auth.getUser();
+          const smsLogStatus = lastError ? 'error' : 'success';
+          await supabase.from('sms_logs').insert({
+            phone: phoneToUse,
+            message,
+            status: smsLogStatus,
+            used_function: usedFunction,
+            error: lastError?.message || null,
+            response: resultData || null,
+            triggered_by: currentUser.data.user?.id || null,
+            source: 'client_referrals',
+            specialist_id: specialistId,
+            specialist_name: specName,
+            client_name: `${clientData.client_name} ${clientData.client_surname}`,
+            client_contact: clientData.client_contact
+          });
+          
           if (lastError) {
             console.error('❌ [SMS] Gönderim hatası:', lastError);
             toast({
@@ -566,10 +591,10 @@ const ClientReferrals = () => {
               variant: "default",
             });
           } else {
-            console.log(`✅ [SMS] Başarıyla gönderildi (${usedFunction}). Telefon:`, resolvedPhone, 'Yanıt:', resultData);
+            console.log(`✅ [SMS] Başarıyla gönderildi (${usedFunction}). Telefon:`, phoneToUse, 'Yanıt:', resultData);
             toast({
               title: "Başarılı",
-              description: `Yönlendirme kaydedildi ve ${resolvedPhone} numarasına SMS gönderildi. (${usedFunction})`,
+              description: `Yönlendirme kaydedildi ve ${phoneToUse} numarasına SMS gönderildi. (${usedFunction})`,
             });
           }
         } catch (smsEx) {
@@ -577,28 +602,6 @@ const ClientReferrals = () => {
           toast({
             title: "Uyarı",
             description: `SMS gönderilirken hata oluştu: ${(smsEx as Error).message}`,
-            variant: "default",
-          });
-        }
-      } else {
-        const reason = !phoneToUse 
-          ? `Uzmanın telefon numarası bulunamadı (Sipariş: ${specName})`
-          : !clientData 
-          ? 'Danışan bilgisi eksik'
-          : newCount <= 0
-          ? 'Yönlendirme sayısı 0 veya negatif'
-          : 'Bilinmeyen sebep';
-        
-        console.warn('⚠️ [SMS] SMS gönderilemedi. Sebep:', reason, {
-          phoneToUse,
-          hasClientData: !!clientData,
-          newCount
-        });
-        
-        if (clientData) {
-          toast({
-            title: "Uyarı",
-            description: `Yönlendirme kaydedildi ancak SMS gönderilemedi. ${reason}`,
             variant: "default",
           });
         }

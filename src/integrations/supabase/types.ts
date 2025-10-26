@@ -837,6 +837,57 @@ export type Database = {
           },
         ]
       }
+      sms_logs: {
+        Row: {
+          client_contact: string | null
+          client_name: string | null
+          created_at: string
+          error: string | null
+          id: string
+          message: string
+          phone: string
+          response: Json | null
+          source: string | null
+          specialist_id: string | null
+          specialist_name: string | null
+          status: string
+          triggered_by: string | null
+          used_function: string | null
+        }
+        Insert: {
+          client_contact?: string | null
+          client_name?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          message: string
+          phone: string
+          response?: Json | null
+          source?: string | null
+          specialist_id?: string | null
+          specialist_name?: string | null
+          status: string
+          triggered_by?: string | null
+          used_function?: string | null
+        }
+        Update: {
+          client_contact?: string | null
+          client_name?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          message?: string
+          phone?: string
+          response?: Json | null
+          source?: string | null
+          specialist_id?: string | null
+          specialist_name?: string | null
+          status?: string
+          triggered_by?: string | null
+          used_function?: string | null
+        }
+        Relationships: []
+      }
       specialist_tests: {
         Row: {
           created_at: string | null
