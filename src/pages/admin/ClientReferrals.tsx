@@ -182,16 +182,25 @@ const ClientReferrals = () => {
     month: number,
     newCount: number
   ) => {
+    console.log('🔔 [DIALOG] requestConfirm çağrıldı:', { specialistName, specialistPhone, month, newCount });
     setPendingAction({ specialistId, specialistName, specialistPhone, month, newCount });
     setClientInfo({ client_name: '', client_surname: '', client_contact: '' });
     setConfirmOpen(true);
   };
 
   const handleConfirm = async () => {
-    if (!pendingAction) return;
+    console.log('🔔 [DIALOG] handleConfirm çağrıldı');
+    console.log('🔔 [DIALOG] pendingAction:', pendingAction);
+    console.log('🔔 [DIALOG] clientInfo:', clientInfo);
+    
+    if (!pendingAction) {
+      console.warn('⚠️ [DIALOG] pendingAction boş!');
+      return;
+    }
     
     // Validate client info
     if (!clientInfo.client_name.trim() || !clientInfo.client_surname.trim() || !clientInfo.client_contact.trim()) {
+      console.warn('⚠️ [DIALOG] Danışan bilgileri eksik!', clientInfo);
       toast({
         title: "Hata",
         description: "Lütfen tüm danışan bilgilerini doldurun.",
@@ -199,6 +208,8 @@ const ClientReferrals = () => {
       });
       return;
     }
+    
+    console.log('✅ [DIALOG] Validation geçti, updateReferralCount çağrılacak...');
     
     try {
       setIsSaving(true);
