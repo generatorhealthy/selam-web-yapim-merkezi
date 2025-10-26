@@ -1,7 +1,7 @@
 
 
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,23 +66,53 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
+  const PAGE_SIZE = 50;
+
+  // Infinite scroll query for orders
   const {
-    data: orders,
+    data: ordersData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading: isOrdersLoading,
     error: ordersError,
-  } = useQuery({
-    queryKey: ["orders"],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  } = useInfiniteQuery({
+    queryKey: ["orders", searchTerm, statusFilter],
+    queryFn: async ({ pageParam = 0 }) => {
+      let query = supabase
         .from("orders")
-        .select("*")
+        .select("*", { count: 'exact' })
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
+
+      // Arama varsa filtrele
+      if (searchTerm) {
+        query = query.or(`customer_name.ilike.%${searchTerm}%,customer_email.ilike.%${searchTerm}%,package_name.ilike.%${searchTerm}%`);
+      }
+
+      // Durum filtresi
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
+      }
+
+      const { data, error, count } = await query
+        .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
+
       if (error) throw error;
-      return data as Order[];
+      return { data: data as Order[], count: count || 0 };
     },
+    getNextPageParam: (lastPage, allPages) => {
+      const loadedCount = allPages.reduce((acc, page) => acc + page.data.length, 0);
+      return loadedCount < lastPage.count ? allPages.length : undefined;
+    },
+    initialPageParam: 0,
   });
+
+  // Flatten pages into single array
+  const orders = ordersData?.pages.flatMap(page => page.data) || [];
+  const totalOrders = ordersData?.pages[0]?.count || 0;
 
   const {
     data: deletedOrders,
@@ -802,13 +832,31 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
     }
   };
 
-  const filteredOrders = orders?.filter(order => {
-    const matchesSearch = order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.package_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // Filtreleme artık query'de yapılıyor
+  const filteredOrders = orders;
 
 
   return (
@@ -998,7 +1046,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                     Sipariş Listesi
                   </span>
                   <span className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-semibold rounded-full shadow-lg">
-                    {filteredOrders?.length || 0}
+                    {totalOrders}
                   </span>
                 </div>
               </CardTitle>
@@ -1157,6 +1205,28 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                         <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                         <div className="text-lg font-medium mb-2">Sipariş bulunamadı</div>
                         <div className="text-sm">Arama kriterlerinize uygun sipariş bulunmuyor.</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Infinite scroll observer */}
+                  {hasNextPage && (
+                    <div ref={observerTarget} className="flex justify-center py-8">
+                      {isFetchingNextPage && (
+                        <div className="flex items-center gap-3">
+                          <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-200 border-t-blue-600"></div>
+                          <span className="text-gray-600 font-medium">Daha fazla yükleniyor...</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Loaded all message */}
+                  {!hasNextPage && filteredOrders && filteredOrders.length > 0 && (
+                    <div className="text-center py-6">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-600 rounded-full border border-gray-200">
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="text-sm font-medium">Tüm siparişler yüklendi ({totalOrders})</span>
                       </div>
                     </div>
                   )}
