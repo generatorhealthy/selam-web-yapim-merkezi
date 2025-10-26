@@ -402,12 +402,18 @@ const ClientReferrals = () => {
       const specName = specialistName || specialist?.specialist.name || 'Unknown';
       // Resolve phone preferring orders (contracts), fallback to specialists.phone
       const resolvedPhone = await resolveSpecialistSmsPhone((specialist?.specialist as any) || {});
+      const paramPhone = specialistPhone && !isCentralNumber(specialistPhone)
+        ? normalizePhoneForSms(specialistPhone)
+        : '';
+      const phoneToUse = paramPhone || resolvedPhone;
       console.log('🔍 [SMS-DEBUG] Specialist Info:', {
         specialistId,
         specialistName: specName,
         phoneFromTable: specialist?.specialist.phone,
         phoneFromParams: specialistPhone,
-        resolvedPhone
+        paramPhone,
+        resolvedPhone,
+        phoneToUse
       });
       console.log(`🔄 [UPDATE] ${specName} (${specialistId}) year=${currentYear} month=${month} -> ${newCount}`);
 
@@ -499,14 +505,14 @@ const ClientReferrals = () => {
       
       // Send SMS to specialist with client info if phone and client data provided
       console.log('📱 [SMS] Checking SMS requirements:', {
-        hasResolvedPhone: !!resolvedPhone,
+        hasPhone: !!phoneToUse,
         hasClientData: !!clientData,
         newCount,
         specialistName: specName,
-        phoneNumber: resolvedPhone
+        phoneNumber: phoneToUse
       });
 
-      if (resolvedPhone && clientData && newCount > 0) {
+      if (phoneToUse && clientData && newCount > 0) {
         try {
           console.log('📱 [SMS] Preparing to send SMS with details:', {
             specialist: specName,
@@ -575,7 +581,7 @@ const ClientReferrals = () => {
           });
         }
       } else {
-        const reason = !resolvedPhone 
+        const reason = !phoneToUse 
           ? `Uzmanın telefon numarası bulunamadı (Sipariş: ${specName})`
           : !clientData 
           ? 'Danışan bilgisi eksik'
@@ -584,7 +590,7 @@ const ClientReferrals = () => {
           : 'Bilinmeyen sebep';
         
         console.warn('⚠️ [SMS] SMS gönderilemedi. Sebep:', reason, {
-          resolvedPhone,
+          phoneToUse,
           hasClientData: !!clientData,
           newCount
         });
