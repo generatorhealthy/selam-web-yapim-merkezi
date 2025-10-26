@@ -408,11 +408,15 @@ const ClientReferrals = () => {
       const specialist = specialists.find((s) => s.id === specialistId);
       const specName = specialistName || specialist?.specialist.name || 'Unknown';
       // Resolve phone preferring orders (contracts), fallback to specialists.phone
+      console.log('🔍 [RESOLVE] Starting phone resolution for:', specName);
       const resolvedPhone = await resolveSpecialistSmsPhone((specialist?.specialist as any) || {});
+      console.log('🔍 [RESOLVE] resolveSpecialistSmsPhone returned:', resolvedPhone);
       const paramPhone = specialistPhone && !isCentralNumber(specialistPhone)
         ? normalizePhoneForSms(specialistPhone)
         : '';
+      console.log('🔍 [RESOLVE] paramPhone:', paramPhone);
       const phoneToUse = paramPhone || resolvedPhone;
+      console.log('🔍 [RESOLVE] FINAL phoneToUse:', phoneToUse);
       console.log('🔍 [SMS-DEBUG] Specialist Info:', {
         specialistId,
         specialistName: specName,
@@ -420,7 +424,8 @@ const ClientReferrals = () => {
         phoneFromParams: specialistPhone,
         paramPhone,
         resolvedPhone,
-        phoneToUse
+        phoneToUse,
+        hasClientData: !!clientData
       });
       console.log(`🔄 [UPDATE] ${specName} (${specialistId}) year=${currentYear} month=${month} -> ${newCount}`);
 
@@ -520,6 +525,7 @@ const ClientReferrals = () => {
       });
 
       if (phoneToUse && clientData && newCount > 0) {
+        console.log('✅ [SMS] Koşullar sağlandı - SMS gönderiliyor...');
         try {
           console.log('📱 [SMS] Preparing to send SMS with details:', {
             specialist: specName,
@@ -602,6 +608,21 @@ const ClientReferrals = () => {
           toast({
             title: "Uyarı",
             description: `SMS gönderilirken hata oluştu: ${(smsEx as Error).message}`,
+            variant: "default",
+          });
+        }
+      } else {
+        console.warn('⚠️ [SMS] SMS gönderimi ATLANACAK. Nedenler:', {
+          phoneToUse_exists: !!phoneToUse,
+          phoneToUse_value: phoneToUse,
+          clientData_exists: !!clientData,
+          newCount_positive: newCount > 0,
+          newCount_value: newCount
+        });
+        if (!phoneToUse) {
+          toast({
+            title: "Uyarı",
+            description: "Yönlendirme kaydedildi ancak uzman için geçerli bir telefon numarası bulunamadı. Orders tablosunda onaylı siparişi var mı kontrol edin.",
             variant: "default",
           });
         }
