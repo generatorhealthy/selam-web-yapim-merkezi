@@ -296,7 +296,16 @@ const ClientReferrals = () => {
     try {
       const specialist = specialists.find((s) => s.id === specialistId);
       const specName = specialistName || specialist?.specialist.name || 'Unknown';
-      const specPhone = specialistPhone || specialist?.specialist.phone;
+      // ALWAYS use the phone number from the specialists table, not from parameters
+      const specPhone = specialist?.specialist.phone || '';
+      
+      console.log('🔍 [SMS-DEBUG] Specialist Info:', {
+        specialistId,
+        specialistName: specName,
+        phoneFromTable: specialist?.specialist.phone,
+        phoneFromParams: specialistPhone,
+        usingPhone: specPhone
+      });
       console.log(`🔄 [UPDATE] ${specName} (${specialistId}) year=${currentYear} month=${month} -> ${newCount}`);
 
       // Önce RPC ile güvenli upsert dene (RLS ve tek kod yolu için)
@@ -388,8 +397,17 @@ const ClientReferrals = () => {
       // Send SMS to specialist with client info if phone and client data provided
       if (specPhone && clientData && newCount > 0) {
         try {
-          console.log('📱 Preparing to send SMS to specialist phone:', specPhone);
+          console.log('📱 [SMS-DEBUG] Sending SMS with details:', {
+            specialist: specName,
+            phone: specPhone,
+            clientName: `${clientData.client_name} ${clientData.client_surname}`,
+            clientContact: clientData.client_contact
+          });
+          
           const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
+          
+          console.log('📱 [SMS-DEBUG] Message to be sent:', message);
+          console.log('📱 [SMS-DEBUG] Phone number being used:', specPhone);
           
           const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
             body: {
@@ -402,19 +420,31 @@ const ClientReferrals = () => {
             console.error('❌ SMS gönderim hatası:', smsError);
             toast({
               title: "Uyarı",
-              description: "Yönlendirme kaydedildi ancak SMS gönderilemedi.",
+              description: `Yönlendirme kaydedildi ancak SMS gönderilemedi. Hata: ${smsError.message || 'Bilinmeyen hata'}`,
               variant: "default",
             });
           } else {
             console.log('✅ SMS sent successfully to specialist:', specPhone, 'Response:', smsData);
             toast({
               title: "Başarılı",
-              description: "Yönlendirme kaydedildi ve uzmana SMS gönderildi.",
+              description: `Yönlendirme kaydedildi ve ${specPhone} numarasına SMS gönderildi.`,
             });
           }
         } catch (smsEx) {
           console.error('❌ SMS exception:', smsEx);
+          toast({
+            title: "Uyarı",
+            description: "SMS gönderilirken bir hata oluştu.",
+            variant: "default",
+          });
         }
+      } else if (clientData && !specPhone) {
+        console.warn('⚠️ [SMS-DEBUG] Cannot send SMS: Specialist phone number is missing');
+        toast({
+          title: "Uyarı",
+          description: "Uzmanın telefon numarası eksik olduğu için SMS gönderilemedi.",
+          variant: "default",
+        });
       }
       // Optimistic local update for immediate UI feedback
       setSpecialists((prev) =>

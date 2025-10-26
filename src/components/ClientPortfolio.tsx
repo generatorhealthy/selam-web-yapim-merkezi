@@ -61,7 +61,8 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
   };
 
   const getReferralsByMonth = (month: number) => {
-    return referrals.filter(ref => ref.month === month && ref.referral_count > 0);
+    // Her kayıt bir danışan, referral_count her zaman 1 olacak
+    return referrals.filter(ref => ref.month === month);
   };
 
   const getActiveMonths = () => {
