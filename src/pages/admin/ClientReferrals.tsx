@@ -509,27 +509,50 @@ const ClientReferrals = () => {
           console.log('📱 [SMS] Message content:', message);
           console.log('📱 [SMS] Calling edge function send-sms-via-static-proxy...');
           
-          const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
-            body: {
-              phone: resolvedPhone,
-              message: message
+          // Primary attempt via static proxy (preferred)
+          let usedFunction = 'send-sms-via-static-proxy';
+          let lastError: any | undefined = undefined;
+          let resultData: any | undefined = undefined;
+          
+          const tryInvoke = async (fnName: string) => {
+            const { data, error } = await supabase.functions.invoke(fnName, {
+              body: { phone: resolvedPhone, message }
+            });
+            console.log(`📱 [SMS] ${fnName} response:`, { data, error });
+            return { data, error };
+          };
+
+          const primary = await tryInvoke('send-sms-via-static-proxy');
+          resultData = primary.data; lastError = primary.error;
+          
+          // Fallback to alternative function(s) if primary failed or returned unsuccessful
+          if (lastError || (resultData && resultData.success === false)) {
+            console.warn('⚠️ [SMS] Primary failed. Trying fallbacks...');
+            const fallbacks = ['send-sms-via-proxy', 'send-verimor-sms'];
+            for (const fn of fallbacks) {
+              const res = await tryInvoke(fn);
+              if (!res.error && (!res.data || res.data.success !== false)) {
+                usedFunction = fn;
+                resultData = res.data;
+                lastError = undefined;
+                break;
+              }
+              lastError = res.error || new Error(res.data?.error || 'Unknown fallback error');
             }
-          });
+          }
           
-          console.log('📱 [SMS] Edge function response:', { data: smsData, error: smsError });
-          
-          if (smsError) {
-            console.error('❌ [SMS] Gönderim hatası:', smsError);
+          if (lastError) {
+            console.error('❌ [SMS] Gönderim hatası:', lastError);
             toast({
               title: "Uyarı",
-              description: `Yönlendirme kaydedildi ancak SMS gönderilemedi. Hata: ${smsError.message || 'Bilinmeyen hata'}`,
+              description: `Yönlendirme kaydedildi ancak SMS gönderilemedi. Hata: ${lastError.message || 'Bilinmeyen hata'}`,
               variant: "default",
             });
           } else {
-            console.log('✅ [SMS] Başarıyla gönderildi. Telefon:', resolvedPhone, 'Yanıt:', smsData);
+            console.log(`✅ [SMS] Başarıyla gönderildi (${usedFunction}). Telefon:`, resolvedPhone, 'Yanıt:', resultData);
             toast({
               title: "Başarılı",
-              description: `Yönlendirme kaydedildi ve ${resolvedPhone} numarasına SMS gönderildi.`,
+              description: `Yönlendirme kaydedildi ve ${resolvedPhone} numarasına SMS gönderildi. (${usedFunction})`,
             });
           }
         } catch (smsEx) {
