@@ -35,6 +35,7 @@ interface Specialist {
   specialty: string;
   city: string;
   phone?: string;
+  email?: string;
   internal_number?: string;
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
@@ -83,12 +84,45 @@ const normalizePhoneForSms = (phone?: string | null) => {
 
 const resolveSpecialistSmsPhone = async (spec: { name?: string; phone?: string; email?: string }) => {
   try {
-    const name = spec.name || '';
-    const email = (spec as any).email || undefined;
-    console.log('🔎 [SMS-DEBUG] Resolving phone via get-specialist-contracts', { name, email });
+    const nameRaw = spec.name || '';
+    const email = spec.email || '';
 
+    const normalizeName = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/\b(uzm\.?|psk\.?|dan\.?|dr\.?|psikolog|danışman)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const name = normalizeName(nameRaw);
+
+    // 1) Try direct orders lookup (admin/staff have RLS access)
+    if (email || name) {
+      let q = supabase
+        .from('orders')
+        .select('customer_phone, customer_email, customer_name, status, approved_at, created_at')
+        .in('status', ['approved', 'completed'])
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (email) {
+        q = q.ilike('customer_email', email);
+      } else if (name) {
+        q = q.ilike('customer_name', `%${name}%`);
+      }
+
+      const { data: ordersData, error: ordersError } = await q;
+      if (!ordersError && Array.isArray(ordersData) && ordersData.length) {
+        const phoneCandidate = ordersData.find((o) => o.customer_phone)?.customer_phone as string | undefined;
+        if (phoneCandidate && !isCentralNumber(phoneCandidate)) {
+          return normalizePhoneForSms(phoneCandidate);
+        }
+      }
+    }
+
+    // 2) Fallback to edge function using service role for broader matching
     const { data, error } = await supabase.functions.invoke('get-specialist-contracts', {
-      body: { name, email },
+      body: { name: nameRaw, email: email || null },
     });
 
     if (!error && Array.isArray(data) && data.length) {
@@ -97,16 +131,15 @@ const resolveSpecialistSmsPhone = async (spec: { name?: string; phone?: string; 
       );
       const order = sorted.find((o: any) => ['approved', 'completed'].includes(o.status)) || sorted[0];
       const phoneCandidate = order?.customer_phone || order?.phone;
-      console.log('🔎 [SMS-DEBUG] Contract phone candidate:', phoneCandidate);
       if (phoneCandidate && !isCentralNumber(phoneCandidate)) {
         return normalizePhoneForSms(phoneCandidate);
       }
     }
   } catch (e) {
-    console.warn('⚠️ [SMS-DEBUG] Contract phone lookup failed', e);
+    console.warn('⚠️ [SMS-DEBUG] Contract/Orders phone lookup failed', e);
   }
 
-  // Fallback to specialist table phone
+  // 3) Fallback to specialist table phone
   if (spec.phone && !isCentralNumber(spec.phone)) {
     return normalizePhoneForSms(spec.phone);
   }
@@ -205,7 +238,7 @@ const ClientReferrals = () => {
         // Tüm aktif uzmanları getir
         supabase
           .from('specialists')
-          .select('id, name, specialty, city, phone, internal_number, online_consultation, face_to_face_consultation, payment_day')
+          .select('id, name, specialty, city, phone, email, internal_number, online_consultation, face_to_face_consultation, payment_day')
           .eq('is_active', true)
           .order('name'),
         
