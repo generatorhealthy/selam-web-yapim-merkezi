@@ -32,7 +32,8 @@ import {
   Phone,
   Database,
   Map,
-  Image
+  Image,
+  Share2
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -368,6 +369,18 @@ const AdminDashboard = () => {
       route: "/divan_paneli/image-converter",
       buttonText: "Görselleri Dönüştür",
       adminOnly: true
+    },
+    {
+      title: "Sosyal Medya Paylaşımları",
+      description: "Blog yazılarını sosyal medya platformlarında otomatik paylaş",
+      icon: Share2,
+      gradient: "from-pink-500 via-rose-500 to-red-600",
+      bgGradient: "from-pink-50 to-red-50",
+      shadowColor: "shadow-pink-500/20",
+      route: "/divan_paneli/social-media",
+      buttonText: "Sosyal Medya Yönetimi",
+      adminOnly: false,
+      staffOnly: true
     },
   ];
 
