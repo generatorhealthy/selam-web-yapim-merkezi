@@ -42,6 +42,8 @@ interface SocialShare {
   status: 'pending' | 'success' | 'failed';
   shared_at: string | null;
   error_message: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const SocialMediaManagement = () => {
@@ -85,9 +87,20 @@ const SocialMediaManagement = () => {
 
   const fetchShares = async () => {
     try {
-      // Social shares tablosu henüz oluşturulmadığı için boş array döndür
-      // TODO: Supabase migration ile social_shares tablosu oluşturulacak
-      setShares([]);
+      const { data, error } = await supabase
+        .from('social_shares')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Cast data to proper type
+      const typedData = (data || []).map(share => ({
+        ...share,
+        status: share.status as 'pending' | 'success' | 'failed'
+      }));
+      
+      setShares(typedData);
     } catch (error) {
       console.error('Paylaşımlar yüklenirken hata:', error);
     }

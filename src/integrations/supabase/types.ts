@@ -888,6 +888,47 @@ export type Database = {
         }
         Relationships: []
       }
+      social_shares: {
+        Row: {
+          blog_post_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          platform: string
+          shared_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          blog_post_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          platform: string
+          shared_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          blog_post_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          platform?: string
+          shared_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_shares_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       specialist_tests: {
         Row: {
           created_at: string | null
