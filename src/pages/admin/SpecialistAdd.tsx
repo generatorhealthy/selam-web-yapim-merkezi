@@ -282,7 +282,7 @@ const SpecialistAdd = () => {
       // Uzmanı veritabanına ekle - YENİ KULLANICI OLUŞTURMA YOK, SADECE MEVCUT KULLANICIDAN UZMAN OLUŞTUR
       const { data, error } = await supabase
         .from('specialists')
-        .insert([{
+        .insert({
           name: formData.name,
           specialty: formData.specialty,
           city: formData.city,
@@ -307,7 +307,7 @@ const SpecialistAdd = () => {
           seo_title: formData.seo_title || null,
           seo_description: formData.seo_description || null,
           seo_keywords: formData.seo_keywords || null
-        }])
+        })
         .select()
         .single();
 
