@@ -660,60 +660,63 @@ const ClientReferrals = () => {
   const updateNotes = async (specialistId: string, month: number, notes: string) => {
     console.log(`🔄 [NOTES] Start update for specialist ${specialistId}, month ${month}`);
 
-    // Get existing count from local state to avoid overriding
-    const existingCount =
-      specialists
-        .find((s) => s.id === specialistId)
-        ?.referrals.find((r) => r.month === month)?.count ?? 0;
-
     try {
-      // 1) Try RPC first
-      const { data: rpcData, error: rpcError } = await supabase.rpc(
-        'admin_update_client_referral_notes',
-        {
-          p_specialist_id: specialistId,
-          p_year: currentYear,
-          p_month: month,
-          p_notes: notes,
-        }
-      );
-
-      if (rpcError || !rpcData) {
-        console.warn('⚠️ [NOTES] RPC failed or empty. Falling back to direct upsert.', rpcError);
-
-        // Ensure row exists and upsert notes with onConflict
-        const { data: upsertData, error: upsertError } = await supabase
-          .from('client_referrals')
-          .upsert(
-            {
-              specialist_id: specialistId,
-              year: currentYear,
-              month,
-              notes,
-              referral_count: existingCount,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: 'specialist_id,year,month' }
-          )
-          .select('notes, referral_count, updated_at')
-          .single();
-
-        if (upsertError) throw upsertError;
-        console.log('✅ [NOTES] Direct upsert ok:', upsertData);
-      } else {
-        console.log('✅ [NOTES] RPC ok:', rpcData);
-      }
-
-      // Verify DB value (optional)
-      const { data: verifyRow, error: verifyError } = await supabase
+      // Tüm ilgili kayıtları getir
+      const { data: existingRecords, error: fetchError } = await supabase
         .from('client_referrals')
-        .select('notes, referral_count, updated_at')
+        .select('*')
         .eq('specialist_id', specialistId)
         .eq('year', currentYear)
         .eq('month', month)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
-      console.log('🔎 [VERIFY-NOTES] Row after save:', verifyRow, verifyError);
+      if (fetchError) {
+        console.error('❌ [NOTES] Fetch error:', fetchError);
+        throw fetchError;
+      }
+
+      console.log(`📊 [NOTES] Found ${existingRecords?.length || 0} records`);
+
+      if (!existingRecords || existingRecords.length === 0) {
+        // Hiç kayıt yoksa yeni kayıt oluştur
+        const { error: insertError } = await supabase
+          .from('client_referrals')
+          .insert({
+            specialist_id: specialistId,
+            year: currentYear,
+            month,
+            notes,
+            referral_count: 0,
+            updated_at: new Date().toISOString(),
+          });
+
+        if (insertError) {
+          console.error('❌ [NOTES] Insert error:', insertError);
+          throw insertError;
+        }
+        console.log('✅ [NOTES] New record created with notes');
+      } else {
+        // Tüm kayıtların notlarını güncelle
+        const updates = existingRecords.map(record => 
+          supabase
+            .from('client_referrals')
+            .update({ 
+              notes,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('id', record.id)
+        );
+
+        const results = await Promise.all(updates);
+        const errors = results.filter(r => r.error);
+        
+        if (errors.length > 0) {
+          console.error('❌ [NOTES] Update errors:', errors);
+          throw errors[0].error;
+        }
+        
+        console.log(`✅ [NOTES] Updated ${existingRecords.length} records`);
+      }
 
       // Local state'i güncelle
       setSpecialists((prev) =>
@@ -1446,18 +1449,83 @@ const ClientReferrals = () => {
                                   <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 to-indigo-100/50 rounded-2xl"></div>
                                   <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl border border-blue-200/30 shadow-md p-4">
                                     <div className="flex items-center space-x-4">
-                                      <Button
+                                       <Button
                                         type="button"
                                         size="sm"
                                         variant="outline"
-                                        onClick={(e) => { 
+                                        onClick={async (e) => { 
                                           e.preventDefault(); 
-                                          e.stopPropagation(); 
-                                          updateReferralCount(
-                                            specialistReferral.id,
-                                            monthIndex + 1,
-                                            Math.max(0, monthlyReferral.count - 1)
-                                          );
+                                          e.stopPropagation();
+                                          
+                                          // Sayıyı azaltırken notları korumak için özel işlem
+                                          const newCount = Math.max(0, monthlyReferral.count - 1);
+                                          
+                                          try {
+                                            // Tüm kayıtları getir
+                                            const { data: existingRecords, error: fetchError } = await supabase
+                                              .from('client_referrals')
+                                              .select('id, notes')
+                                              .eq('specialist_id', specialistReferral.id)
+                                              .eq('year', currentYear)
+                                              .eq('month', monthIndex + 1)
+                                              .order('created_at', { ascending: false });
+
+                                            if (fetchError) throw fetchError;
+
+                                            if (existingRecords && existingRecords.length > 0) {
+                                              // Notları sakla
+                                              const savedNotes = existingRecords[0].notes || '';
+                                              
+                                              // Son kaydı sil (en yeni)
+                                              const { error: deleteError } = await supabase
+                                                .from('client_referrals')
+                                                .delete()
+                                                .eq('id', existingRecords[0].id);
+
+                                              if (deleteError) throw deleteError;
+                                              
+                                              // Eğer hala kayıt varsa ve not varsa, ilk kayda notu ekle
+                                              if (existingRecords.length > 1 && savedNotes) {
+                                                await supabase
+                                                  .from('client_referrals')
+                                                  .update({ 
+                                                    notes: savedNotes,
+                                                    updated_at: new Date().toISOString()
+                                                  })
+                                                  .eq('id', existingRecords[1].id);
+                                              }
+                                              
+                                              console.log('✅ [DECREASE] Kayıt silindi, notlar korundu');
+                                            }
+
+                                            // UI'ı güncelle
+                                            setSpecialists((prev) =>
+                                              prev.map((spec) =>
+                                                spec.id === specialistReferral.id
+                                                  ? {
+                                                      ...spec,
+                                                      referrals: spec.referrals.map((ref) =>
+                                                        ref.month === (monthIndex + 1) ? { ...ref, count: newCount } : ref
+                                                      ),
+                                                    }
+                                                  : spec
+                                              )
+                                            );
+
+                                            await fetchSpecialistsAndReferrals();
+
+                                            toast({
+                                              title: 'Başarılı',
+                                              description: 'Yönlendirme sayısı azaltıldı',
+                                            });
+                                          } catch (error) {
+                                            console.error('❌ [DECREASE] Error:', error);
+                                            toast({
+                                              title: 'Hata',
+                                              description: 'İşlem sırasında hata oluştu: ' + (error as Error).message,
+                                              variant: 'destructive',
+                                            });
+                                          }
                                         }}
                                         disabled={monthlyReferral.count <= 0}
                                         className="h-10 w-10 p-0 rounded-xl border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all duration-200 disabled:opacity-50"
