@@ -609,6 +609,8 @@ const ContractManagement = () => {
             customerType={selectedOrder.customer_type}
             clientIP={selectedOrder.contract_ip_address || '127.0.0.1'}
             orderCreatedAt={selectedOrder.created_at}
+            savedPreInfoHtml={selectedOrder.pre_info_pdf_content || undefined}
+            savedDistanceSalesHtml={selectedOrder.distance_sales_pdf_content || undefined}
           />
         )}
       </div>
