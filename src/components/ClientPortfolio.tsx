@@ -57,11 +57,10 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
   };
 
   const getTotalReferrals = () => {
-    return referrals.length; // Her kayıt bir danışan
+    return referrals.reduce((total, ref) => total + ref.referral_count, 0);
   };
 
   const getReferralsByMonth = (month: number) => {
-    // Her kayıt bir danışan, referral_count her zaman 1 olacak
     return referrals.filter(ref => ref.month === month);
   };
 
@@ -163,7 +162,7 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
 
             {monthNames.map((month, index) => {
               const monthReferrals = getReferralsByMonth(index + 1);
-              const totalCount = monthReferrals.length; // Her kayıt bir danışan
+              const totalCount = monthReferrals.reduce((sum, ref) => sum + ref.referral_count, 0);
 
               return (
                 <TabsContent key={index + 1} value={(index + 1).toString()} className="space-y-4 mt-4">
