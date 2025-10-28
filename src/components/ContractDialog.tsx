@@ -104,10 +104,6 @@ ${customerType === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:
 ${selectedPackage.features ? selectedPackage.features.map((feature: string) => `<li>${feature}</li>`).join('') : ''}
 </ul>
 
-<p style="margin-top: 15px;"><strong>Toplam Hizmet Süresi (Taahhütlü):</strong> Premium üyelik başlangıç imza tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.</p>
-
-<p style="margin-top: 10px;">Her ay danışan yönlendirmesi garantisi verilmektedir. İlgili ay içinde yönlendirme yapılmazsa, o aya ait ücret iade edilir ve üyelik ücretsiz olarak iptal edilebilir. Bu hak yalnızca yönlendirme yapılmayan aylar için geçerlidir.</p>
-
 ${selectedPackage.price === 2998 ? `
 <div style="background: #fef3c7; padding: 15px; margin: 20px 0; border-radius: 8px; border: 1px solid #f59e0b;">
 <p style="margin: 0; color: #92400e;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 4.999 TL yerine 2.998 TL olarak uygulanmaktadır.</p>
@@ -119,6 +115,10 @@ ${selectedPackage.price === 2398 ? `
 <p style="margin: 0; color: #92400e;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 4.999 TL yerine 2.398 TL olarak uygulanmaktadır.</p>
 </div>
 ` : ''}
+
+<p style="margin-top: 15px;"><strong>Toplam Hizmet Süresi (Taahhütlü):</strong> Premium üyelik başlangıç imza tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.</p>
+
+<p style="margin-top: 10px;">Her ay danışan yönlendirmesi garantisi verilmektedir. İlgili ay içinde yönlendirme yapılmazsa, o aya ait ücret iade edilir ve üyelik ücretsiz olarak iptal edilebilir. Bu hak yalnızca yönlendirme yapılmayan aylar için geçerlidir.</p>
 
 <h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>
 <p><strong>Sözleşme Oluşturulma Tarihi:</strong> ${contractDate}</p>
