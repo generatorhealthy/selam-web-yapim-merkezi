@@ -445,7 +445,18 @@ const ClientReferrals = () => {
         console.warn('⚠️ [UPDATE] RPC failed, falling back to direct upsert.', rpcErr);
         // Danışan bilgisi varsa yeni kayıt ekle
         if (clientData) {
-          // Yeni danışan kaydı ekle
+          // Mevcut notları al
+          const { data: existingNotes } = await supabase
+            .from('client_referrals')
+            .select('notes')
+            .eq('specialist_id', specialistId)
+            .eq('year', currentYear)
+            .eq('month', month)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          // Yeni danışan kaydı ekle (notları koru)
           const { data: insertResult, error: insertError } = await supabase
             .from('client_referrals')
             .insert({
@@ -459,6 +470,7 @@ const ClientReferrals = () => {
               is_referred: true,
               referred_at: new Date().toISOString(),
               referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+              notes: existingNotes?.notes || '', // Mevcut notları koru
             })
             .select('id, referral_count, updated_at');
 
@@ -495,6 +507,17 @@ const ClientReferrals = () => {
         
         // RPC başarılı olsa bile danışan bilgisi varsa yeni kayıt ekle
         if (clientData) {
+          // Mevcut notları al
+          const { data: existingNotes } = await supabase
+            .from('client_referrals')
+            .select('notes')
+            .eq('specialist_id', specialistId)
+            .eq('year', currentYear)
+            .eq('month', month)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
           const { data: insertResult, error: insertError } = await supabase
             .from('client_referrals')
             .insert({
@@ -508,6 +531,7 @@ const ClientReferrals = () => {
               is_referred: true,
               referred_at: new Date().toISOString(),
               referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+              notes: existingNotes?.notes || '', // Mevcut notları koru
             })
             .select('id, referral_count, updated_at');
           
@@ -740,6 +764,88 @@ const ClientReferrals = () => {
         description: 'Not güncellenirken hata oluştu: ' + (error as Error).message,
         variant: 'destructive',
       });
+    }
+  };
+
+  // Ekim 2024 notlarını Kasım ve Aralık 2025'e kopyala
+  const copyOctoberNotesToNovDec2025 = async () => {
+    try {
+      setIsApplyingAuto(true);
+      
+      // Ekim 2024 notlarını al
+      const { data: octoberNotes, error: fetchError } = await supabase
+        .from('client_referrals')
+        .select('specialist_id, notes')
+        .eq('year', 2024)
+        .eq('month', 10)
+        .not('notes', 'is', null)
+        .neq('notes', '');
+      
+      if (fetchError) throw fetchError;
+      
+      if (!octoberNotes || octoberNotes.length === 0) {
+        toast({
+          title: 'Bilgi',
+          description: 'Ekim 2024 için not bulunamadı.',
+        });
+        return;
+      }
+      
+      let successCount = 0;
+      
+      // Kasım ve Aralık 2025 için kopyala
+      for (const record of octoberNotes) {
+        for (const month of [11, 12]) { // Kasım ve Aralık
+          // Mevcut kaydı kontrol et
+          const { data: existing } = await supabase
+            .from('client_referrals')
+            .select('id, notes')
+            .eq('specialist_id', record.specialist_id)
+            .eq('year', 2025)
+            .eq('month', month)
+            .maybeSingle();
+          
+          if (existing && existing.id) {
+            // Mevcut kayıt varsa güncelle
+            await supabase
+              .from('client_referrals')
+              .update({
+                notes: record.notes,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existing.id);
+          } else {
+            // Yeni kayıt oluştur
+            await supabase
+              .from('client_referrals')
+              .insert({
+                specialist_id: record.specialist_id,
+                year: 2025,
+                month,
+                notes: record.notes,
+                referral_count: 0,
+                updated_at: new Date().toISOString(),
+              });
+          }
+          successCount++;
+        }
+      }
+      
+      await fetchSpecialistsAndReferrals();
+      
+      toast({
+        title: 'Başarılı',
+        description: `Ekim 2024 notları ${octoberNotes.length} uzman için Kasım ve Aralık 2025'e kopyalandı.`,
+      });
+    } catch (error) {
+      console.error('❌ Error copying notes:', error);
+      toast({
+        title: 'Hata',
+        description: 'Notlar kopyalanırken hata oluştu: ' + (error as Error).message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsApplyingAuto(false);
     }
   };
 
@@ -1210,7 +1316,7 @@ const ClientReferrals = () => {
                         <p className="text-gray-600">
                           Bu ay toplam {getMonthlyTotal(monthIndex + 1)} yönlendirme yapıldı
                         </p>
-                        <div className="mt-3 flex justify-center">
+                        <div className="mt-3 flex justify-center gap-3">
                           <Button
                             type="button"
                             variant="secondary"
@@ -1222,6 +1328,19 @@ const ClientReferrals = () => {
                           >
                             Notu olmayanlara uygula
                           </Button>
+                          
+                          {currentYear === 2025 && (monthIndex === 10 || monthIndex === 11) && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => copyOctoberNotesToNovDec2025()}
+                              disabled={isApplyingAuto}
+                              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
+                            >
+                              Ekim 2024 Notlarını Kopyala
+                            </Button>
+                          )}
                         </div>
                       </div>
                       
