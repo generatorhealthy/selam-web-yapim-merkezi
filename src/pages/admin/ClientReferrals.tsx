@@ -350,6 +350,11 @@ const ClientReferrals = () => {
     if (canAccess) {
       console.log("Auth ready. Fetching for year:", currentYear, "role:", userProfile?.role);
       fetchSpecialistsAndReferrals();
+      
+      // Ekim 2025 notlarını Kasım ve Aralık 2025'e otomatik kopyala
+      if (currentYear === 2025) {
+        copyOctoberNotesToNovDec2025();
+      }
     } else {
       console.log("Waiting for auth to fetch referrals...");
     }
@@ -767,31 +772,26 @@ const ClientReferrals = () => {
     }
   };
 
-  // Ekim 2024 notlarını Kasım ve Aralık 2025'e kopyala
+  // Ekim 2025 notlarını Kasım ve Aralık 2025'e otomatik kopyala
   const copyOctoberNotesToNovDec2025 = async () => {
     try {
-      setIsApplyingAuto(true);
-      
-      // Ekim 2024 notlarını al
+      // Ekim 2025 notlarını al
       const { data: octoberNotes, error: fetchError } = await supabase
         .from('client_referrals')
         .select('specialist_id, notes')
-        .eq('year', 2024)
+        .eq('year', 2025)
         .eq('month', 10)
         .not('notes', 'is', null)
         .neq('notes', '');
       
-      if (fetchError) throw fetchError;
-      
-      if (!octoberNotes || octoberNotes.length === 0) {
-        toast({
-          title: 'Bilgi',
-          description: 'Ekim 2024 için not bulunamadı.',
-        });
+      if (fetchError) {
+        console.error('❌ Error fetching October notes:', fetchError);
         return;
       }
       
-      let successCount = 0;
+      if (!octoberNotes || octoberNotes.length === 0) {
+        return; // Sessizce çık, Ekim notları henüz yok
+      }
       
       // Kasım ve Aralık 2025 için kopyala
       for (const record of octoberNotes) {
@@ -806,14 +806,16 @@ const ClientReferrals = () => {
             .maybeSingle();
           
           if (existing && existing.id) {
-            // Mevcut kayıt varsa güncelle
-            await supabase
-              .from('client_referrals')
-              .update({
-                notes: record.notes,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', existing.id);
+            // Mevcut kayıt varsa ve notu boşsa güncelle
+            if (!existing.notes || existing.notes.trim() === '') {
+              await supabase
+                .from('client_referrals')
+                .update({
+                  notes: record.notes,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', existing.id);
+            }
           } else {
             // Yeni kayıt oluştur
             await supabase
@@ -827,122 +829,13 @@ const ClientReferrals = () => {
                 updated_at: new Date().toISOString(),
               });
           }
-          successCount++;
         }
       }
-      
-      await fetchSpecialistsAndReferrals();
-      
-      toast({
-        title: 'Başarılı',
-        description: `Ekim 2024 notları ${octoberNotes.length} uzman için Kasım ve Aralık 2025'e kopyalandı.`,
-      });
     } catch (error) {
       console.error('❌ Error copying notes:', error);
-      toast({
-        title: 'Hata',
-        description: 'Notlar kopyalanırken hata oluştu: ' + (error as Error).message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsApplyingAuto(false);
     }
   };
 
-  // Bulk apply note to specialists without notes for the selected month
-  const applyAutoNotesForMonth = async () => {
-    try {
-      setIsApplyingAuto(true);
-      const targets = specialists.filter((s) => {
-        const ref = s.referrals.find((r) => r.month === selectedMonth);
-        return !ref || !ref.notes || ref.notes.trim() === '';
-      });
-
-      if (targets.length === 0) {
-        toast({ title: 'Bilgi', description: 'Seçili ay için notu olmayan uzman yok.' });
-        setAutoNotesOpen(false);
-        return;
-      }
-
-      // Avoid overwriting referral_count. We will:
-      // 1) Update notes for rows that already exist
-      // 2) Insert rows only for specialists without any row for this month
-      const now = new Date().toISOString();
-      const targetIds = targets.map((t) => t.id);
-
-      // Find which targets already have a row for the selected month
-      const { data: existingRows, error: existingErr } = await supabase
-        .from('client_referrals')
-        .select('specialist_id')
-        .in('specialist_id', targetIds)
-        .eq('year', currentYear)
-        .eq('month', selectedMonth);
-      if (existingErr) throw existingErr;
-
-      const existingIds = new Set((existingRows || []).map((r: any) => r.specialist_id));
-      const toUpdateIds = targetIds.filter((id) => existingIds.has(id));
-      const toInsertIds = targetIds.filter((id) => !existingIds.has(id));
-
-      // 1) Bulk update notes for existing rows (do NOT touch referral_count)
-      if (toUpdateIds.length > 0) {
-        const { error: updErr } = await supabase
-          .from('client_referrals')
-          .update({ notes: autoNoteText, updated_at: now })
-          .in('specialist_id', toUpdateIds)
-          .eq('year', currentYear)
-          .eq('month', selectedMonth);
-        if (updErr) throw updErr;
-      }
-
-      // 2) Insert rows for those without any row yet (set referral_count to 0 initially)
-      if (toInsertIds.length > 0) {
-        const insertPayload = toInsertIds.map((id) => ({
-          specialist_id: id,
-          year: currentYear,
-          month: selectedMonth,
-          notes: autoNoteText,
-          referral_count: 0,
-          updated_at: now,
-        }));
-        const { error: insErr } = await supabase
-          .from('client_referrals')
-          .insert(insertPayload);
-        if (insErr) throw insErr;
-      }
-
-      // Verify after save
-      const { data: verify, error: verifyErr } = await supabase
-        .from('client_referrals')
-        .select('specialist_id, notes, month, year')
-        .eq('year', currentYear)
-        .eq('month', selectedMonth);
-      console.log('🔎 [AUTO-NOTES VERIFY]', verify, verifyErr);
-
-      // Update local state
-      setSpecialists((prev) =>
-        prev.map((spec) => {
-          const isTarget = targets.some((t) => t.id === spec.id);
-          if (!isTarget) return spec;
-          return {
-            ...spec,
-            referrals: spec.referrals.map((r) =>
-              r.month === selectedMonth ? { ...r, notes: autoNoteText } : r
-            ),
-          };
-        })
-      );
-
-      await fetchSpecialistsAndReferrals();
-
-      toast({ title: 'Başarılı', description: `${targets.length} uzman için not eklendi` });
-      setAutoNotesOpen(false);
-    } catch (e) {
-      console.error('Auto notes error', e);
-      toast({ title: 'Hata', description: (e as Error).message, variant: 'destructive' });
-    } finally {
-      setIsApplyingAuto(false);
-    }
-  };
   const updateCity = async (specialistId: string, newCity: string) => {
     try {
       console.log(`Updating city for specialist ${specialistId}, new city: ${newCity}`);
@@ -1316,32 +1209,6 @@ const ClientReferrals = () => {
                         <p className="text-gray-600">
                           Bu ay toplam {getMonthlyTotal(monthIndex + 1)} yönlendirme yapıldı
                         </p>
-                        <div className="mt-3 flex justify-center gap-3">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              setAutoNoteText(`${monthNames[selectedMonth - 1]} ${currentYear} - otomatik not`);
-                              setAutoNotesOpen(true);
-                            }}
-                          >
-                            Notu olmayanlara uygula
-                          </Button>
-                          
-                          {currentYear === 2025 && (monthIndex === 10 || monthIndex === 11) && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => copyOctoberNotesToNovDec2025()}
-                              disabled={isApplyingAuto}
-                              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
-                            >
-                              Ekim 2024 Notlarını Kopyala
-                            </Button>
-                          )}
-                        </div>
                       </div>
                       
                       {/* Takvim Görünümü */}
@@ -1793,30 +1660,6 @@ const ClientReferrals = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={autoNotesOpen} onOpenChange={setAutoNotesOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Notu olmayanlara otomatik not ekle</AlertDialogTitle>
-            <AlertDialogDescription>
-              Seçili ay için notu boş olan tüm uzmanlara aşağıdaki metin eklenecek.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-500">Not metni</Label>
-            <Input
-              value={autoNoteText}
-              onChange={(e) => setAutoNoteText(e.target.value)}
-              placeholder={`${monthNames[selectedMonth - 1]} ${currentYear} - otomatik not`}
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel type="button" disabled={isApplyingAuto}>Vazgeç</AlertDialogCancel>
-            <AlertDialogAction type="button" onClick={applyAutoNotesForMonth} disabled={isApplyingAuto}>
-              Uygula
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       
       <Footer />
     </div>
