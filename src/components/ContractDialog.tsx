@@ -46,7 +46,21 @@ useEffect(() => {
   if (!open) return;
   if (contractType === "preInfo") {
     if (savedPreInfoHtml) {
-      setContractContent(savedPreInfoHtml);
+      // Eski sözleşmelere hizmet süresi maddesini ekle
+      let content = savedPreInfoHtml;
+      const serviceDurationClause = `<p style="margin-top: 15px;"><strong>Toplam Hizmet Süresi (Taahhütlü):</strong> Premium üyelik başlangıç imza tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.</p>
+
+<p style="margin-top: 10px;">Her ay danışan yönlendirmesi garantisi verilmektedir. İlgili ay içinde yönlendirme yapılmazsa, o aya ait ücret iade edilir ve üyelik ücretsiz olarak iptal edilebilir. Bu hak yalnızca yönlendirme yapılmayan aylar için geçerlidir.</p>`;
+      
+      // Eğer bu madde yoksa ve TARİHLER: başlığı varsa, ekle
+      if (!content.includes('Toplam Hizmet Süresi (Taahhütlü)') && content.includes('TARİHLER:')) {
+        content = content.replace(
+          /<h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:<\/h3>/,
+          `${serviceDurationClause}\n\n<h3 style="color: #0369a1; margin-top: 20px;">TARİHLER:</h3>`
+        );
+      }
+      
+      setContractContent(content);
       setIsLoading(false);
     } else {
       loadFormContent();
