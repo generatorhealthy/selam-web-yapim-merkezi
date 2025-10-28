@@ -16,6 +16,7 @@ interface ClientReferral {
   created_at: string;
   updated_at: string;
   referred_at?: string | null;
+  is_referred?: boolean;
 }
 
 interface ClientPortfolioProps {
@@ -56,16 +57,22 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
     }
   };
 
+  // Normalize count: if referral_count is 0 but is_referred flag exists, treat as 1
+  const getNormalizedCount = (ref: ClientReferral) => {
+    const count = ref.referral_count || 0;
+    return count > 0 ? count : (ref.is_referred ? 1 : 0);
+  };
+
   const getTotalReferrals = () => {
-    return referrals.reduce((total, ref) => total + ref.referral_count, 0);
+    return referrals.reduce((total, ref) => total + getNormalizedCount(ref), 0);
   };
 
   const getReferralsByMonth = (month: number) => {
-    return referrals.filter(ref => ref.month === month);
+    return referrals.filter(ref => ref.month === month && getNormalizedCount(ref) > 0);
   };
 
   const getActiveMonths = () => {
-    const uniqueMonths = new Set(referrals.map(ref => ref.month));
+    const uniqueMonths = new Set(referrals.filter(ref => getNormalizedCount(ref) > 0).map(ref => ref.month));
     return uniqueMonths.size;
   };
 
@@ -162,7 +169,7 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
 
             {monthNames.map((month, index) => {
               const monthReferrals = getReferralsByMonth(index + 1);
-              const totalCount = monthReferrals.reduce((sum, ref) => sum + ref.referral_count, 0);
+              const totalCount = monthReferrals.reduce((sum, ref) => sum + getNormalizedCount(ref), 0);
 
               return (
                 <TabsContent key={index + 1} value={(index + 1).toString()} className="space-y-4 mt-4">

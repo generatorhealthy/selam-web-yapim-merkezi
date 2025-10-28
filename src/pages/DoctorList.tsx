@@ -121,7 +121,7 @@ const DoctorList = () => {
 
       const { data: referralData, error: referralError } = await supabase
         .from('client_referrals')
-        .select('specialist_id, referral_count')
+        .select('specialist_id, referral_count, is_referred')
         .eq('year', currentYear)
         .eq('month', currentMonth);
 
@@ -132,9 +132,10 @@ const DoctorList = () => {
       // Uzman verilerini danışan yönlendirme sayıları ile birleştir
       const specialistsWithReferrals = (specialistsData || []).map(specialist => {
         const referral = referralData?.find(r => r.specialist_id === specialist.id);
+        const normalizedCount = referral ? (referral.referral_count || (referral.is_referred ? 1 : 0) || 0) : 0;
         return {
           ...specialist,
-          referral_count: referral?.referral_count || 0
+          referral_count: normalizedCount
         };
       });
 
