@@ -51,14 +51,23 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
     setLoading(true);
 
     try {
+      // Normalize date and time for Postgres
+      const timeValue = formData.appointment_time?.length === 5 ? `${formData.appointment_time}:00` : formData.appointment_time;
+      const payload = {
+        patient_name: formData.patient_name.trim(),
+        patient_email: formData.patient_email.trim(),
+        patient_phone: formData.patient_phone.trim(),
+        appointment_date: formData.appointment_date, // yyyy-mm-dd from <input type="date" />
+        appointment_time: timeValue,                 // HH:MM:SS
+        appointment_type: formData.appointment_type,
+        notes: formData.notes?.trim() || null,
+        specialist_id: doctorId,
+        created_by_specialist: true,
+      };
+
       const { error } = await supabase
         .from('appointments')
-        .insert({
-          ...formData,
-          specialist_id: doctorId,
-          status: 'pending',
-          created_by_specialist: true
-        });
+        .insert(payload);
 
       if (error) throw error;
 
@@ -79,11 +88,11 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
       });
 
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Randevu eklenirken hata:', error);
       toast({
         title: "Hata",
-        description: "Randevu eklenirken bir hata oluştu.",
+        description: error?.message ? `Randevu eklenemedi: ${error.message}` : "Randevu eklenirken bir hata oluştu.",
         variant: "destructive",
       });
     } finally {
