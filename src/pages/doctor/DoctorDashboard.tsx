@@ -36,6 +36,18 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.patient_name || !formData.patient_email || !formData.patient_phone || 
+        !formData.appointment_date || !formData.appointment_time || !formData.appointment_type) {
+      toast({
+        title: "Hata",
+        description: "Lütfen tüm zorunlu alanları doldurun.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -45,7 +57,7 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
           ...formData,
           specialist_id: doctorId,
           status: 'pending',
-          created_by_specialist: true // Mark as created by specialist
+          created_by_specialist: true
         });
 
       if (error) throw error;
@@ -146,6 +158,7 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
           <Select
             value={formData.appointment_time}
             onValueChange={(value) => setFormData(prev => ({ ...prev, appointment_time: value }))}
+            required
           >
             <SelectTrigger>
               <SelectValue placeholder="Saat seçin" />
