@@ -434,6 +434,51 @@ export type Database = {
           },
         ]
       }
+      client_referrals_backup: {
+        Row: {
+          backup_timestamp: string
+          created_at: string
+          id: string
+          is_referred: boolean | null
+          month: number
+          notes: string | null
+          referral_count: number
+          referred_at: string | null
+          referred_by: string | null
+          specialist_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          backup_timestamp?: string
+          created_at?: string
+          id?: string
+          is_referred?: boolean | null
+          month: number
+          notes?: string | null
+          referral_count?: number
+          referred_at?: string | null
+          referred_by?: string | null
+          specialist_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          backup_timestamp?: string
+          created_at?: string
+          id?: string
+          is_referred?: boolean | null
+          month?: number
+          notes?: string | null
+          referral_count?: number
+          referred_at?: string | null
+          referred_by?: string | null
+          specialist_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       employee_salaries: {
         Row: {
           base_salary: number
@@ -1516,12 +1561,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      backup_client_referrals: { Args: never; Returns: undefined }
       can_manage_users: { Args: { target_user_id?: string }; Returns: boolean }
       cleanup_old_sessions: { Args: never; Returns: undefined }
       create_specialist_profile: {
         Args: { p_specialist_id: string; p_user_id: string }
         Returns: undefined
       }
+      extract_first_int: { Args: { p_text: string }; Returns: number }
       generate_monthly_orders: { Args: never; Returns: undefined }
       get_current_user_role: { Args: never; Returns: string }
       get_default_time_slots: { Args: never; Returns: Json }
@@ -1571,7 +1618,18 @@ export type Database = {
       is_admin_or_staff_user: { Args: never; Returns: boolean }
       is_admin_user: { Args: never; Returns: boolean }
       is_user_approved: { Args: { user_id: string }; Returns: boolean }
+      list_client_referrals_backups: {
+        Args: never
+        Returns: {
+          backup_timestamp: string
+          record_count: number
+        }[]
+      }
       merge_duplicate_client_referrals: { Args: never; Returns: undefined }
+      restore_client_referrals_from_backup: {
+        Args: { p_backup_timestamp: string }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "admin" | "specialist" | "user" | "staff" | "legal"
