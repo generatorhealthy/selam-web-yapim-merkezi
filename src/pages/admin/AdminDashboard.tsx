@@ -35,6 +35,7 @@ import {
   Image,
   Share2
 } from "lucide-react";
+import { DatabaseBackupCard } from "@/components/DatabaseBackupCard";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -556,6 +557,13 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        
+        {/* Database Backup Card */}
+        <div className="px-6 pb-16">
+          <div className="mx-auto max-w-7xl">
+            <DatabaseBackupCard />
           </div>
         </div>
         
