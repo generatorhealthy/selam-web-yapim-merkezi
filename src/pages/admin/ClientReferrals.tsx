@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
+import { DatabaseBackupCard } from "@/components/DatabaseBackupCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -1660,6 +1661,10 @@ const ClientReferrals = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Database Backup Card */}
+      <div className="container mx-auto px-4 max-w-[1400px] mb-8">
+        <DatabaseBackupCard />
+      </div>
       
       <Footer />
     </div>
