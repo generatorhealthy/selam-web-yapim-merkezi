@@ -1571,6 +1571,7 @@ export type Database = {
       is_admin_or_staff_user: { Args: never; Returns: boolean }
       is_admin_user: { Args: never; Returns: boolean }
       is_user_approved: { Args: { user_id: string }; Returns: boolean }
+      merge_duplicate_client_referrals: { Args: never; Returns: undefined }
     }
     Enums: {
       user_role: "admin" | "specialist" | "user" | "staff" | "legal"
