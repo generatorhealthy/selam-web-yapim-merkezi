@@ -1522,6 +1522,7 @@ export type Database = {
         Args: { p_specialist_id: string; p_user_id: string }
         Returns: undefined
       }
+      extract_first_int: { Args: { p_text: string }; Returns: number }
       generate_monthly_orders: { Args: never; Returns: undefined }
       get_current_user_role: { Args: never; Returns: string }
       get_default_time_slots: { Args: never; Returns: Json }
