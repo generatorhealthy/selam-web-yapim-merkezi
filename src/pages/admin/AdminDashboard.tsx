@@ -33,9 +33,9 @@ import {
   Database,
   Map,
   Image,
-  Share2
+  Share2,
+  HardDrive
 } from "lucide-react";
-import { DatabaseBackupCard } from "@/components/DatabaseBackupCard";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -383,6 +383,17 @@ const AdminDashboard = () => {
       adminOnly: false,
       staffOnly: true
     },
+    {
+      title: "Veritabanı Yedekleme",
+      description: "Otomatik ve manuel yedekleme işlemleri",
+      icon: HardDrive,
+      gradient: "from-cyan-500 via-blue-500 to-indigo-600",
+      bgGradient: "from-cyan-50 to-indigo-50",
+      shadowColor: "shadow-cyan-500/20",
+      route: "/divan_paneli/database-backup",
+      buttonText: "Yedekleri Yönet",
+      adminOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
@@ -557,13 +568,6 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-        
-        {/* Database Backup Card */}
-        <div className="px-6 pb-16">
-          <div className="mx-auto max-w-7xl">
-            <DatabaseBackupCard />
           </div>
         </div>
         

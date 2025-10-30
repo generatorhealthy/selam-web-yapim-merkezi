@@ -79,6 +79,7 @@ import LogManagement from "./pages/admin/LogManagement";
 import SitemapManagement from "./pages/admin/SitemapManagement";
 import ImageConverter from "./pages/admin/ImageConverter";
 import SocialMediaManagement from "./pages/admin/SocialMediaManagement";
+import DatabaseBackup from "./pages/admin/DatabaseBackup";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Doctor pages
@@ -198,6 +199,7 @@ const AppContent = () => {
                 <Route path="/divan_paneli/sitemap" element={<SitemapManagement />} />
                 <Route path="/divan_paneli/image-converter" element={<ImageConverter />} />
                 <Route path="/divan_paneli/social-media" element={<SocialMediaManagement />} />
+                <Route path="/divan_paneli/database-backup" element={<DatabaseBackup />} />
                 
               
               {/* Doctor Routes */}
