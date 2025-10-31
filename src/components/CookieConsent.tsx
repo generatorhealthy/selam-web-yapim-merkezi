@@ -35,7 +35,7 @@ const CookieConsent = () => {
 
   return (
     <div
-      className="fixed bottom-2 right-2 left-2 md:bottom-4 md:right-4 md:left-auto z-50 w-auto md:w-[min(92vw,420px)] rounded-lg border border-border bg-card shadow-lg p-3 md:p-4 animate-fade-in"
+      className="fixed bottom-20 right-2 left-2 md:bottom-4 md:right-4 md:left-auto z-[60] w-auto md:w-[min(92vw,420px)] rounded-lg border border-border bg-card shadow-lg p-3 md:p-4 animate-fade-in"
       role="dialog"
       aria-live="polite"
       aria-label="Çerez bildirimi"
