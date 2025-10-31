@@ -237,72 +237,63 @@ const DoctorDashboard = () => {
       try {
         console.log('Doctor dashboard auth check...');
         setIsLoading(true);
-        
-        // Get current session
+
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error('Session error:', error);
-          if (mounted) setIsLoading(false);
+          setIsLoading(false);
           return;
         }
-        
+
         if (!session?.user) {
           console.log('No session found');
-          if (mounted) setIsLoading(false);
+          setIsLoading(false);
           return;
         }
 
         console.log('Session found, checking specialist profile...');
 
-        // Check if user is a specialist by user_id first
-        const { data: specialist, error: specialistError } = await supabase
+        // First try by user_id, then fallback to email
+        const { data: specialistByUser } = await supabase
           .from('specialists')
           .select('*')
           .eq('user_id', session.user.id)
           .maybeSingle();
 
-        if (specialist && !specialistError) {
-          console.log('Specialist found by user_id:', specialist);
-            if (mounted) {
-              setDoctor(specialist);
-              await fetchAppointments(specialist.id);
-              await fetchSupportTickets(specialist.id);
-              await fetchContracts(specialist.email, specialist.name);
-              await fetchBlogNotifications(specialist.id);
-            }
-        } else {
-          // Try by email if user_id doesn't match
-          console.log('No specialist found by user_id, trying by email...');
-          const { data: specialistByEmail, error: emailError } = await supabase
+        let foundSpecialist = specialistByUser || null;
+        if (!foundSpecialist) {
+          const { data: specialistByEmail } = await supabase
             .from('specialists')
             .select('*')
             .eq('email', session.user.email)
             .maybeSingle();
-
-          if (specialistByEmail && !emailError) {
-            console.log('Specialist found by email:', specialistByEmail);
-            if (mounted) {
-              setDoctor(specialistByEmail);
-              await fetchAppointments(specialistByEmail.id);
-              await fetchSupportTickets(specialistByEmail.id);
-              await fetchContracts(specialistByEmail.email, specialistByEmail.name);
-              await fetchBlogNotifications(specialistByEmail.id);
-            }
-          } else {
-            console.log('No specialist profile found');
-            if (mounted) {
-              setDoctor(null);
-            }
-          }
+          foundSpecialist = specialistByEmail || null;
         }
+
+        if (!mounted) return;
+
+        if (!foundSpecialist) {
+          console.log('No specialist profile found');
+          setDoctor(null);
+          setIsLoading(false);
+          return;
+        }
+
+        // Set basic state immediately so UI renders, then load extras concurrently
+        setDoctor(foundSpecialist);
+        setIsLoading(false);
+
+        Promise.allSettled([
+          fetchAppointments(foundSpecialist.id),
+          fetchSupportTickets(foundSpecialist.id),
+          fetchContracts(foundSpecialist.email, foundSpecialist.name),
+          fetchBlogNotifications(foundSpecialist.id)
+        ]);
       } catch (error) {
         console.error('Auth check error:', error);
         if (mounted) {
           setDoctor(null);
-        }
-      } finally {
-        if (mounted) {
           setIsLoading(false);
         }
       }
@@ -322,11 +313,10 @@ const DoctorDashboard = () => {
           setContracts([]);
           setBlogNotifications([]);
           setIsLoading(false);
-        } else if (event === 'SIGNED_IN' && session) {
-          // Re-initialize when signed in
-          await initializeAuth();
+        } else if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+          // Re-initialize when signed in or when initial session is loaded
+          void initializeAuth();
         } else if (event === 'TOKEN_REFRESHED' && session) {
-          // Maintain current state on token refresh
           console.log('Token refreshed, maintaining current state');
         }
       }
