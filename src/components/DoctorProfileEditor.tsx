@@ -38,6 +38,8 @@ const DoctorProfileEditor = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
+        console.log('No user found');
+        setLoading(false);
         toast({
           title: "Hata",
           description: "Lütfen önce giriş yapın.",
@@ -57,6 +59,7 @@ const DoctorProfileEditor = () => {
 
       if (error) {
         console.error('Uzman profili çekilirken hata:', error);
+        setLoading(false);
         toast({
           title: "Hata",
           description: "Profil bilgileri yüklenirken bir hata oluştu.",
@@ -66,6 +69,8 @@ const DoctorProfileEditor = () => {
       }
 
       if (!data) {
+        console.log('No specialist profile found');
+        setLoading(false);
         toast({
           title: "Profil Bulunamadı", 
           description: "Uzman profiliniz bulunamadı. Lütfen admin ile iletişime geçin.",
