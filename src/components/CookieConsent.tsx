@@ -44,12 +44,12 @@ const CookieConsent = () => {
       <div className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
           <p className="text-xs md:text-sm text-muted-foreground leading-relaxed flex-1">
-            Bu site çerez kullanır.{" "}
+            Bu site düzgün çalışma için çerez kullanır.{" "}
             <Link
               to="/gizlilik-politikasi"
               className="text-primary underline hover:opacity-90"
             >
-              Detaylı bilgi
+              Aydınlatma metni
             </Link>
           </p>
           <Button
