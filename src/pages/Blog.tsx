@@ -175,7 +175,9 @@ const Blog = () => {
   const filteredBlogs = blogs.filter(blog =>
     blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     blog.author_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (blog.excerpt && blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase()))
+    (blog.excerpt && blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (blog.content && blog.content.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (blog.tags && blog.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
   const getReadTime = (wordCount: number | null) => {
