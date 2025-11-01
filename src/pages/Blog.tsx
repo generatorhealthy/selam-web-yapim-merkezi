@@ -320,12 +320,8 @@ const Blog = () => {
         ) : (
           // Two Column Layout: Featured + Recent Posts
           <div className="grid lg:grid-cols-12 gap-12">
-            {/* FEATURED - Left Column */}
+            {/* Left Column - Featured Post */}
             <div className="lg:col-span-7">
-              <div className="mb-6">
-                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider">FEATURED</h2>
-              </div>
-              
               {filteredBlogs.length > 0 && (
                 <Link to={`/blog/${filteredBlogs[0].slug}`} className="group block">
                   <Card className="overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 bg-white rounded-2xl">
@@ -373,12 +369,8 @@ const Blog = () => {
               )}
             </div>
 
-            {/* RECENT POSTS - Right Column */}
+            {/* Right Column - Recent Posts */}
             <div className="lg:col-span-5">
-              <div className="mb-6">
-                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider">RECENT POSTS</h2>
-              </div>
-              
               <div className="space-y-6">
                 {filteredBlogs.slice(1, 4).map((blog) => (
                   <Link key={blog.id} to={`/blog/${blog.slug}`} className="group block">
