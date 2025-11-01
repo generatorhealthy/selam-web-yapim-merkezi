@@ -61,6 +61,10 @@ const SmsManagement = () => {
     {
       title: "Gecikmiş Ödeme",
       message: "XXX Hanım gecikmiş ödemeniz bulunmaktadır. En kısa sürede ödeme yapmanız gerekmektedir."
+    },
+    {
+      title: "Sosyal Medya İçeriği",
+      message: "Merhaba Değerli Uzmanımız,\nSosyal medya içeriğiniz paylaşılmıştır. Aşağıdaki bağlantı üzerinden inceleme sağlayabilirsiniz:\nLink"
     }
   ];
 
