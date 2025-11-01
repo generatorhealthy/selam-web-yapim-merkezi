@@ -213,38 +213,33 @@ const Blog = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20">
+    <div className="min-h-screen bg-gray-50">
       <HorizontalNavigation />
       
-      {/* Modern Header Section */}
-      <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/10"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/10"></div>
-        <div className="container mx-auto px-4 py-20 text-center max-w-4xl relative z-10">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
+      {/* Clean Simple Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-16 text-center max-w-4xl">
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
             Blog
           </h1>
-          <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto">
+          <p className="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto">
             Psikoloji ve danışmanlık dünyasından güncel içerikler, uzman görüşleri ve faydalı bilgiler
           </p>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-12 max-w-7xl">
-        {/* Enhanced Search Section */}
-        <div className="mb-12 -mt-8">
+        {/* Clean Search Section */}
+        <div className="mb-12">
           <div className="max-w-2xl mx-auto">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              <div className="relative bg-white rounded-2xl shadow-xl border border-gray-100">
-                <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  placeholder="Blog yazılarında ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-14 pr-6 py-6 border-0 rounded-2xl text-lg focus:ring-2 focus:ring-blue-500 bg-transparent"
-                />
-              </div>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                placeholder="Blog yazılarında ara..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 pr-6 py-6 border-gray-300 rounded-xl text-base shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
           </div>
         </div>
@@ -253,8 +248,8 @@ const Blog = () => {
         {filteredBlogs.length === 0 ? (
           <div className="text-center py-20">
             <div className="max-w-md mx-auto">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-                <Search className="w-10 h-10 text-blue-600" />
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                <Search className="w-10 h-10 text-gray-400" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
                 {searchTerm ? "Sonuç Bulunamadı" : "Blog Yazısı Bulunamadı"}
@@ -273,26 +268,25 @@ const Blog = () => {
             {!searchTerm && filteredBlogs.length > 0 && (
               <div className="mb-16">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="h-1 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <div className="h-1 w-12 bg-purple-600 rounded-full"></div>
+                  <h2 className="text-3xl font-bold text-gray-900">
                     Son Yazı
                   </h2>
                 </div>
-                <Card className="overflow-hidden border-0 shadow-2xl hover:shadow-3xl transition-all duration-500 group bg-white">
+                <Card className="overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 group bg-white rounded-2xl">
                   <div className="md:flex">
                     {filteredBlogs[0].featured_image && (
                       <div className="md:w-1/2 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
                         <img
                           src={filteredBlogs[0].featured_image}
                           alt={filteredBlogs[0].title}
-                          className="w-full h-80 md:h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                          className="w-full h-80 md:h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
                     )}
                     <div className={`${filteredBlogs[0].featured_image ? 'md:w-1/2' : 'w-full'} p-10`}>
                       <div className="flex items-center gap-3 mb-6">
-                        <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 px-4 py-1 text-sm font-semibold">
+                        <Badge className="bg-blue-600 text-white border-0 px-4 py-1 text-sm font-medium rounded-lg">
                           {getAuthorTypeText(filteredBlogs[0])}
                         </Badge>
                         <span className="text-sm text-gray-600 font-medium">
@@ -300,7 +294,7 @@ const Blog = () => {
                         </span>
                       </div>
                       
-                      <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight group-hover:text-blue-600 transition-colors">
+                      <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">
                         {filteredBlogs[0].title}
                       </h3>
                       
@@ -312,20 +306,16 @@ const Blog = () => {
                       
                       <div className="flex items-center gap-6 text-sm text-gray-500 mb-8">
                         <div className="flex items-center gap-2">
-                          <div className="p-2 bg-blue-50 rounded-lg">
-                            <Calendar className="w-4 h-4 text-blue-600" />
-                          </div>
+                          <Calendar className="w-4 h-4 text-gray-400" />
                           <span className="font-medium">{new Date(filteredBlogs[0].created_at).toLocaleDateString('tr-TR')}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="p-2 bg-purple-50 rounded-lg">
-                            <Clock className="w-4 h-4 text-purple-600" />
-                          </div>
+                          <Clock className="w-4 h-4 text-gray-400" />
                           <span className="font-medium">5 dakika</span>
                         </div>
                       </div>
                       
-                      <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all">
+                      <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-base rounded-xl shadow-md hover:shadow-lg transition-all">
                         <Link to={`/blog/${filteredBlogs[0].slug}`}>
                           Devamını Oku →
                         </Link>
@@ -336,42 +326,41 @@ const Blog = () => {
               </div>
             )}
 
-            {/* Other Posts - Enhanced Grid Layout */}
+            {/* Other Posts - Clean Grid Layout */}
             <div>
               <div className="flex items-center gap-3 mb-8">
-                <div className="h-1 w-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <div className="h-1 w-12 bg-purple-600 rounded-full"></div>
+                <h2 className="text-3xl font-bold text-gray-900">
                   {searchTerm ? 'Arama Sonuçları' : 'Diğer Yazılar'}
                 </h2>
               </div>
               
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {(searchTerm ? filteredBlogs : filteredBlogs.slice(1)).map((blog) => (
-                  <Card key={blog.id} className="overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 group bg-white transform hover:-translate-y-2">
+                  <Card key={blog.id} className="overflow-hidden border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 group bg-white rounded-2xl">
                     <CardContent className="p-0">
                       {blog.featured_image ? (
                         <div className="relative overflow-hidden h-56">
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
                           <img
                             src={blog.featured_image}
                             alt={blog.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         </div>
                       ) : (
-                        <div className="h-56 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center">
+                        <div className="h-56 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                           <div className="text-6xl opacity-20">📝</div>
                         </div>
                       )}
                       
                       <div className="p-6">
                         <div className="flex items-center gap-2 mb-4">
-                          <Badge variant="outline" className="border-blue-200 text-blue-700 font-semibold">
+                          <Badge variant="outline" className="border-blue-200 text-blue-700 font-medium rounded-md px-3 py-1">
                             {getAuthorTypeText(blog)}
                           </Badge>
                         </div>
 
-                        <h3 className="font-bold text-xl mb-4 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors leading-tight">
+                        <h3 className="font-bold text-xl mb-4 line-clamp-2 text-gray-900 leading-tight">
                           {blog.title}
                         </h3>
                         
@@ -392,10 +381,9 @@ const Blog = () => {
                           </div>
                         </div>
                         
-                        <Button asChild variant="ghost" className="w-full bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 text-blue-700 font-semibold rounded-xl h-12 group-hover:shadow-md transition-all">
+                        <Button asChild variant="ghost" className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-xl h-11 transition-all">
                           <Link to={`/blog/${blog.slug}`} className="flex items-center justify-center gap-2">
-                            Devamını Oku 
-                            <span className="group-hover:translate-x-1 transition-transform">→</span>
+                            Devamını Oku →
                           </Link>
                         </Button>
                       </div>
@@ -407,22 +395,21 @@ const Blog = () => {
           </div>
         )}
 
-        {/* Enhanced Loading More Posts Indicator */}
+        {/* Clean Loading Indicator */}
         {loadingMore && (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-600 text-base font-medium">Daha fazla blog yazısı yükleniyor...</p>
             </div>
           </div>
         )}
         
-        {/* No More Posts Indicator */}
+        {/* No More Posts */}
         {!hasMore && filteredBlogs.length > 0 && !searchTerm && (
           <div className="text-center py-12">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-full">
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
-              <p className="text-gray-700 font-medium">Tüm blog yazıları gösteriliyor</p>
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 rounded-full">
+              <p className="text-gray-600 font-medium">Tüm blog yazıları gösteriliyor</p>
             </div>
           </div>
         )}
