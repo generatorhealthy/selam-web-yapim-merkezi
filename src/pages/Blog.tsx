@@ -41,6 +41,16 @@ const Blog = () => {
     fetchBlogs(0, true);
   }, []);
 
+  // Arama yapıldığında tüm sonuçları getir
+  useEffect(() => {
+    if (searchTerm) {
+      fetchAllBlogsForSearch();
+    } else {
+      // Arama temizlendiğinde ilk sayfayı yükle
+      fetchBlogs(0, true);
+    }
+  }, [searchTerm]);
+
   useEffect(() => {
     const handleScroll = () => {
       if (loadingMore || !hasMore || searchTerm) return;
@@ -163,6 +173,88 @@ const Blog = () => {
     } finally {
       setLoading(false);
       setLoadingMore(false);
+    }
+  };
+
+  const fetchAllBlogsForSearch = async () => {
+    try {
+      setLoading(true);
+      
+      // Tüm yayınlanmış blogları çek (sınır olmadan)
+      const [blogsRes, blogPostsRes] = await Promise.all([
+        supabase
+          .from('blogs')
+          .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('blog_posts')
+          .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
+          .eq('status', 'published')
+          .order('published_at', { ascending: false })
+      ]);
+
+      if (blogsRes.error || blogPostsRes.error) {
+        console.error('Blog yazıları çekilirken hata:', blogsRes.error || blogPostsRes.error);
+        toast({
+          title: "Hata",
+          description: "Blog yazıları yüklenirken bir hata oluştu.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const blogsData = (blogsRes.data as BlogPost[]) || [];
+      const mappedFromBlogPosts: BlogPost[] = (blogPostsRes.data || []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        content: p.content,
+        excerpt: p.excerpt ?? null,
+        featured_image: p.featured_image ?? null,
+        slug: p.slug,
+        author_name: p.author_name,
+        created_at: p.published_at || p.created_at,
+        updated_at: p.published_at || p.created_at,
+        status: p.status,
+        meta_title: p.seo_title ?? null,
+        meta_description: p.seo_description ?? null,
+        tags: p.keywords ? String(p.keywords).split(',').map((t: string) => t.trim()) : null,
+      }));
+
+      const combinedRaw = [...blogsData, ...mappedFromBlogPosts];
+      const bySlug = new Map<string, BlogPost>();
+      combinedRaw.forEach((item) => {
+        const existing = bySlug.get(item.slug);
+        if (!existing) {
+          bySlug.set(item.slug, item);
+        } else {
+          bySlug.set(item.slug, {
+            ...existing,
+            featured_image: existing.featured_image || item.featured_image || null,
+            excerpt: existing.excerpt ?? item.excerpt ?? null,
+            meta_title: existing.meta_title ?? item.meta_title ?? null,
+            meta_description: existing.meta_description ?? item.meta_description ?? null,
+            tags: existing.tags ?? item.tags ?? null,
+            created_at: existing.created_at || item.created_at,
+          });
+        }
+      });
+
+      const mergedList = Array.from(bySlug.values()).sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setBlogs(mergedList);
+      setHasMore(false); // Arama modunda infinite scroll kapalı
+    } catch (error) {
+      console.error('Beklenmeyen hata:', error);
+      toast({
+        title: "Hata",
+        description: "Beklenmeyen bir hata oluştu.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
