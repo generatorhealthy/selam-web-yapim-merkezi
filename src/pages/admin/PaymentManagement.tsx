@@ -294,30 +294,6 @@ const PaymentManagement = () => {
     }
   };
 
-  const generateMonthlyOrders = async () => {
-    try {
-      const { error } = await supabase.rpc('generate_monthly_orders');
-      
-      if (error) {
-        throw error;
-      }
-
-      await fetchOrders();
-      
-      toast({
-        title: "Başarılı",
-        description: "Aylık siparişler oluşturuldu"
-      });
-    } catch (error) {
-      console.error('Aylık siparişler oluşturulurken hata:', error);
-      toast({
-        title: "Hata",
-        description: "Aylık siparişler oluşturulurken bir hata oluştu",
-        variant: "destructive"
-      });
-    }
-  };
-
   const getStatusBadge = (order: Order) => {
     const { status, payment_method } = order;
     
@@ -402,9 +378,6 @@ const PaymentManagement = () => {
                 onClick={() => setStatusFilter("all")}
               >
                 Tümü
-              </Button>
-              <Button variant="outline" size="sm" onClick={generateMonthlyOrders}>
-                Aylık Siparişler Oluştur
               </Button>
               <Button variant="outline" size="sm" onClick={fetchOrders}>
                 <Download className="w-4 h-4 mr-2" />
