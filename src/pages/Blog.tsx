@@ -262,85 +262,19 @@ const Blog = () => {
               </p>
             </div>
           </div>
-        ) : (
-          <div className="space-y-12">
-            {/* Latest Post - Large Featured */}
-            {!searchTerm && filteredBlogs.length > 0 && (
-              <div className="mb-16">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="h-1 w-12 bg-purple-600 rounded-full"></div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Son Yazı
-                  </h2>
-                </div>
-                <Card className="overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 group bg-white rounded-2xl">
-                  <div className="md:flex">
-                    {filteredBlogs[0].featured_image && (
-                      <div className="md:w-1/2 relative overflow-hidden">
-                        <img
-                          src={filteredBlogs[0].featured_image}
-                          alt={filteredBlogs[0].title}
-                          className="w-full h-80 md:h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                    )}
-                    <div className={`${filteredBlogs[0].featured_image ? 'md:w-1/2' : 'w-full'} p-10`}>
-                      <div className="flex items-center gap-3 mb-6">
-                        <Badge className="bg-blue-600 text-white border-0 px-4 py-1 text-sm font-medium rounded-lg">
-                          {getAuthorTypeText(filteredBlogs[0])}
-                        </Badge>
-                        <span className="text-sm text-gray-600 font-medium">
-                          {filteredBlogs[0].author_name}
-                        </span>
-                      </div>
-                      
-                      <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">
-                        {filteredBlogs[0].title}
-                      </h3>
-                      
-                      {filteredBlogs[0].excerpt && (
-                        <p className="text-gray-600 mb-8 leading-relaxed text-lg">
-                          {filteredBlogs[0].excerpt}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center gap-6 text-sm text-gray-500 mb-8">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">{new Date(filteredBlogs[0].created_at).toLocaleDateString('tr-TR')}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">5 dakika</span>
-                        </div>
-                      </div>
-                      
-                      <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-base rounded-xl shadow-md hover:shadow-lg transition-all">
-                        <Link to={`/blog/${filteredBlogs[0].slug}`}>
-                          Devamını Oku →
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            )}
-
-            {/* Other Posts - Clean Grid Layout */}
-            <div>
-              <div className="flex items-center gap-3 mb-8">
-                <div className="h-1 w-12 bg-purple-600 rounded-full"></div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  {searchTerm ? 'Arama Sonuçları' : 'Diğer Yazılar'}
-                </h2>
-              </div>
-              
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {(searchTerm ? filteredBlogs : filteredBlogs.slice(1)).map((blog) => (
-                  <Card key={blog.id} className="overflow-hidden border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 group bg-white rounded-2xl">
+        ) : searchTerm ? (
+          // Search Results Grid
+          <div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Arama Sonuçları</h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredBlogs.map((blog) => (
+                <Link key={blog.id} to={`/blog/${blog.slug}`} className="group">
+                  <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white rounded-xl h-full">
                     <CardContent className="p-0">
                       {blog.featured_image ? (
-                        <div className="relative overflow-hidden h-56">
+                        <div className="relative overflow-hidden h-48">
                           <img
                             src={blog.featured_image}
                             alt={blog.title}
@@ -348,54 +282,211 @@ const Blog = () => {
                           />
                         </div>
                       ) : (
-                        <div className="h-56 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <div className="text-6xl opacity-20">📝</div>
+                        <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <div className="text-5xl opacity-20">📝</div>
                         </div>
                       )}
                       
-                      <div className="p-6">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Badge variant="outline" className="border-blue-200 text-blue-700 font-medium rounded-md px-3 py-1">
-                            {getAuthorTypeText(blog)}
-                          </Badge>
+                      <div className="p-5">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                          <span className="font-medium">{blog.author_name}</span>
+                          <span>•</span>
+                          <span>5 dakika okuma</span>
                         </div>
 
-                        <h3 className="font-bold text-xl mb-4 line-clamp-2 text-gray-900 leading-tight">
+                        <h3 className="font-bold text-lg mb-3 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
                           {blog.title}
                         </h3>
                         
                         {blog.excerpt && (
-                          <p className="text-gray-600 text-sm mb-5 line-clamp-3 leading-relaxed">
+                          <p className="text-gray-600 text-sm line-clamp-2 mb-4">
                             {blog.excerpt}
                           </p>
                         )}
-                        
-                        <div className="flex items-center justify-between text-xs text-gray-500 mb-5 pb-5 border-b border-gray-100">
-                          <div className="flex items-center gap-1.5 font-medium">
-                            <User className="w-3.5 h-3.5" />
-                            <span>{blog.author_name}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 font-medium">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span>{new Date(blog.created_at).toLocaleDateString('tr-TR')}</span>
-                          </div>
+
+                        <div className="flex items-center text-xs text-gray-500">
+                          <Calendar className="w-3.5 h-3.5 mr-1" />
+                          <span>{new Date(blog.created_at).toLocaleDateString('tr-TR')}</span>
                         </div>
-                        
-                        <Button asChild variant="ghost" className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-xl h-11 transition-all">
-                          <Link to={`/blog/${blog.slug}`} className="flex items-center justify-center gap-2">
-                            Devamını Oku →
-                          </Link>
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : (
+          // Two Column Layout: Featured + Recent Posts
+          <div className="grid lg:grid-cols-12 gap-12">
+            {/* FEATURED - Left Column */}
+            <div className="lg:col-span-7">
+              <div className="mb-6">
+                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider">FEATURED</h2>
+              </div>
+              
+              {filteredBlogs.length > 0 && (
+                <Link to={`/blog/${filteredBlogs[0].slug}`} className="group block">
+                  <Card className="overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 bg-white rounded-2xl">
+                    <CardContent className="p-0">
+                      {filteredBlogs[0].featured_image && (
+                        <div className="relative overflow-hidden aspect-video">
+                          <img
+                            src={filteredBlogs[0].featured_image}
+                            alt={filteredBlogs[0].title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="p-8">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+                          <span className="font-medium">{filteredBlogs[0].author_name}</span>
+                          <span>•</span>
+                          <span>5 min read</span>
+                        </div>
+                        
+                        <h3 className="text-3xl font-bold text-gray-900 mb-4 leading-tight group-hover:text-blue-600 transition-colors">
+                          {filteredBlogs[0].title}
+                        </h3>
+                        
+                        {filteredBlogs[0].excerpt && (
+                          <p className="text-gray-600 text-base mb-6 leading-relaxed line-clamp-3">
+                            {filteredBlogs[0].excerpt}
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center gap-4">
+                          <Badge className="bg-blue-600 text-white border-0 px-3 py-1 rounded-md">
+                            {getAuthorTypeText(filteredBlogs[0])}
+                          </Badge>
+                          <div className="flex items-center text-sm text-gray-500">
+                            <Calendar className="w-4 h-4 mr-1.5" />
+                            <span>{new Date(filteredBlogs[0].created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )}
+            </div>
+
+            {/* RECENT POSTS - Right Column */}
+            <div className="lg:col-span-5">
+              <div className="mb-6">
+                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider">RECENT POSTS</h2>
+              </div>
+              
+              <div className="space-y-6">
+                {filteredBlogs.slice(1, 4).map((blog) => (
+                  <Link key={blog.id} to={`/blog/${blog.slug}`} className="group block">
+                    <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white rounded-xl">
+                      <CardContent className="p-0">
+                        <div className="flex gap-4 p-4">
+                          {blog.featured_image && (
+                            <div className="flex-shrink-0 w-32 h-32 relative overflow-hidden rounded-lg">
+                              <img
+                                src={blog.featured_image}
+                                alt={blog.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                              <span className="font-medium">{blog.author_name}</span>
+                              <span>•</span>
+                              <span>5 min read</span>
+                            </div>
+                            
+                            <h3 className="font-bold text-base mb-2 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
+                              {blog.title}
+                            </h3>
+                            
+                            {blog.excerpt && (
+                              <p className="text-gray-600 text-sm line-clamp-2 mb-3 leading-relaxed">
+                                {blog.excerpt}
+                              </p>
+                            )}
+                            
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center text-xs text-gray-500">
+                                <Calendar className="w-3.5 h-3.5 mr-1" />
+                                <span>{new Date(blog.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                              </div>
+                              <div className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                →
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* Clean Loading Indicator */}
+        {/* All Other Posts Grid */}
+        {!searchTerm && filteredBlogs.length > 4 && (
+          <div className="mt-16">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">Tüm Yazılar</h2>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredBlogs.slice(4).map((blog) => (
+                <Link key={blog.id} to={`/blog/${blog.slug}`} className="group">
+                  <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white rounded-xl h-full">
+                    <CardContent className="p-0">
+                      {blog.featured_image ? (
+                        <div className="relative overflow-hidden h-48">
+                          <img
+                            src={blog.featured_image}
+                            alt={blog.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <div className="text-5xl opacity-20">📝</div>
+                        </div>
+                      )}
+                      
+                      <div className="p-5">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                          <span className="font-medium">{blog.author_name}</span>
+                          <span>•</span>
+                          <span>5 min read</span>
+                        </div>
+
+                        <h3 className="font-bold text-lg mb-3 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
+                          {blog.title}
+                        </h3>
+                        
+                        {blog.excerpt && (
+                          <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                            {blog.excerpt}
+                          </p>
+                        )}
+
+                        <div className="flex items-center text-xs text-gray-500">
+                          <Calendar className="w-3.5 h-3.5 mr-1" />
+                          <span>{new Date(blog.created_at).toLocaleDateString('tr-TR')}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Loading Indicator */}
         {loadingMore && (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
