@@ -75,7 +75,7 @@ const CampaignPackage = () => {
             </h1>
             
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Profesyonel doktor üyeliği için özel fırsatlar
+              Dijital dünyadaki profesyonel varlığınızı güçlendirin ve daha fazla danışan ulaşın
             </p>
           </div>
 
