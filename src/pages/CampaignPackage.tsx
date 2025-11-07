@@ -11,16 +11,18 @@ const campaignPackage = {
   price: 2398,
   originalPrice: 4999,
   features: [
-    "Hasta Takibi",
+    "Santral Sistemden Danışan Yönlendirme Garantisi",
     "Detaylı Profil",
-    "Branş (Doktor Üyeliği 1)",
+    "Branş (Doktorum Ol Üyeliği 1)",
     "İletişim",
     "Adres ve Konum",
-    "Sosyal Medya Hesapları Ekleme",
     "Video Yayınlama",
-    "Soru Cevaplama",
     "Danışan Görüşleri",
-    "Doktor Sayfasına Özgün Seo Çalışması"
+    "Uzman Sayfasına Özgün Seo Çalışması",
+    "Online Randevu Takimi",
+    "Google Reklamları",
+    "Sosyal Medya Paylaşımlarım",
+    "Danışan Takibi"
   ]
 };
 
@@ -64,7 +66,7 @@ const CampaignPackage = () => {
             <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-blue-100">
               <Gift className="w-5 h-5 text-blue-600" />
               <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Özel Kampanya
+                12 Ay Taahhütlü Paket
               </span>
             </div>
             
@@ -80,18 +82,10 @@ const CampaignPackage = () => {
           {/* Package Card */}
           <div className="max-w-5xl mx-auto mb-20">
             <Card className="relative group overflow-hidden bg-white/90 backdrop-blur-sm border-2 border-blue-100 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:-translate-y-2">
-              {/* Popular Badge */}
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 text-base font-bold shadow-xl border-0">
-                  <Star className="w-5 h-5 mr-2 fill-current" />
-                  En Popüler Paket
-                </Badge>
-              </div>
-
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 pointer-events-none" />
 
-              <CardHeader className="relative text-center pt-12 pb-8 space-y-6">
+              <CardHeader className="relative text-center pt-8 pb-8 space-y-6">
                 {/* Icon */}
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
                   <Crown className="w-10 h-10 text-white" />
