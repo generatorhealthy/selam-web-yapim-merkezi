@@ -40,7 +40,8 @@ const SpecialtyPage = () => {
       "psikoloji": "Psikoloji",
       "aile-danismani": "Aile Danışmanı", 
       "psikiyatri": "Psikiyatri",
-      "psikolojik-danisman": "Psikolojik Danışman",
+      "psikolojik-danisman": "Psikolojik Danışmanlık",
+      "psikolojik-danismanlik": "Psikolojik Danışmanlık",
       "kadin-hastaliklari-ve-dogum": "Kadın Hastalıkları ve Doğum",
       "diyetisyen": "Diyetisyen",
       "klinik-psikolog": "Klinik Psikolog",
@@ -97,10 +98,20 @@ const SpecialtyPage = () => {
         throw exactError;
       }
 
-      // Filter specialists by specialty
-      const exactMatch = allSpecialists?.filter(s => 
-        s.specialty.toLowerCase() === specialty.toLowerCase()
-      ) || [];
+      // Filter specialists by specialty - support both old and new naming
+      const exactMatch = allSpecialists?.filter(s => {
+        const specialtyLower = s.specialty.toLowerCase();
+        const searchLower = specialty.toLowerCase();
+        
+        // Direct match
+        if (specialtyLower === searchLower) return true;
+        
+        // Special case: Match "Psikolojik Danışman" with "Psikolojik Danışmanlık"
+        if (searchLower === 'psikolojik danışmanlık' && specialtyLower === 'psikolojik danışman') return true;
+        if (searchLower === 'psikolojik danışman' && specialtyLower === 'psikolojik danışmanlık') return true;
+        
+        return false;
+      }) || [];
 
       // If no exact match, try partial match
       let finalSpecialists = exactMatch;
