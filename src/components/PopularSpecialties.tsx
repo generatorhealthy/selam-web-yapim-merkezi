@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const POPULAR_SPECIALTIES = [
   { name: "Psikolog", slug: "psikolog" },
-  { name: "Psikolojik Danışman", slug: "psikolojik-danisman" },
+  { name: "Psikolojik Danışmanlık", slug: "psikolojik-danismanlik" },
   { name: "Aile Danışmanı", slug: "aile-danismani" },
   { name: "Psikiyatri", slug: "psikiyatri" },
   { name: "Kadın Hastalıkları ve Doğum", slug: "kadin-hastaliklari-ve-dogum" },
