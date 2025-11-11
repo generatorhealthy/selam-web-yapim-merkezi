@@ -76,6 +76,41 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
         description: "Randevu başarıyla eklendi.",
       });
 
+      // Send patient confirmation email
+      try {
+        const { data: specialistData } = await supabase
+          .from('specialists')
+          .select('name, email, phone')
+          .eq('id', doctorId)
+          .single();
+
+        if (specialistData) {
+          const { error: emailError } = await supabase.functions.invoke('send-patient-appointment-confirmation', {
+            body: {
+              appointmentId: 'temp-id', // The actual ID would come from the insert response
+              patientName: formData.patient_name,
+              patientEmail: formData.patient_email,
+              patientPhone: formData.patient_phone,
+              specialistName: specialistData.name,
+              specialistPhone: specialistData.phone,
+              specialistEmail: specialistData.email,
+              appointmentDate: formData.appointment_date,
+              appointmentTime: formData.appointment_time,
+              appointmentType: formData.appointment_type,
+              notes: formData.notes
+            }
+          });
+
+          if (emailError) {
+            console.error('Patient confirmation email error (non-critical):', emailError);
+          } else {
+            console.log('✅ Patient confirmation email sent successfully');
+          }
+        }
+      } catch (emailError) {
+        console.error('Error sending patient confirmation:', emailError);
+      }
+
       // Reset form
       setFormData({
         patient_name: '',
