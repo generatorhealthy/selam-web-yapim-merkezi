@@ -47,8 +47,8 @@ Uzman: ${appointmentDetails.doctorName}
 Tarih: ${appointmentDetails.date}
 Saat: ${appointmentDetails.time}
 Randevu Türü: ${appointmentDetails.type}
-Doktor Telefon: ${appointmentDetails.doctorPhone || 'Belirtilmemiş'}
-Doktor E-posta: ${appointmentDetails.doctorEmail || 'Belirtilmemiş'}`;
+Uzman Telefon: ${appointmentDetails.doctorPhone || 'Belirtilmemiş'}
+Uzman E-posta: ${appointmentDetails.doctorEmail || 'Belirtilmemiş'}`;
   
   const results = [];
   
