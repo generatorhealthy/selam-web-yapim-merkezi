@@ -124,7 +124,10 @@ const SpecialtyPage = () => {
         finalSpecialists = partialMatch;
       }
       
-      setSpecialists(finalSpecialists);
+      // Shuffle the specialists array to randomize order on each page load
+      const shuffledSpecialists = [...finalSpecialists].sort(() => Math.random() - 0.5);
+      
+      setSpecialists(shuffledSpecialists);
       
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
