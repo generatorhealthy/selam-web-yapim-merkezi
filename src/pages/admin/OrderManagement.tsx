@@ -70,6 +70,52 @@ const OrderManagement = () => {
 
   const PAGE_SIZE = 50;
 
+  // Müşteri yönetimindeki ödeme durumunu güncelle
+  const updateAutomaticOrderPayment = async (order: Order) => {
+    try {
+      // Automatic orders tablosunda bu müşteriyi bul
+      const { data: automaticOrder, error: fetchError } = await supabase
+        .from('automatic_orders')
+        .select('*')
+        .eq('customer_email', order.customer_email)
+        .single();
+
+      if (fetchError || !automaticOrder) {
+        console.log('Automatic order bulunamadı veya hata:', fetchError);
+        return;
+      }
+
+      // Mevcut ödenen ayları al
+      const currentPaidMonths = automaticOrder.paid_months || [];
+      const subscriptionMonth = order.subscription_month || 1;
+
+      // Eğer bu ay henüz ödenmemişse ekle
+      if (!currentPaidMonths.includes(subscriptionMonth)) {
+        const updatedPaidMonths = [...currentPaidMonths, subscriptionMonth].sort((a, b) => a - b);
+
+        const { error: updateError } = await supabase
+          .from('automatic_orders')
+          .update({ 
+            paid_months: updatedPaidMonths,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', automaticOrder.id);
+
+        if (updateError) {
+          console.error('Automatic order güncellenirken hata:', updateError);
+        } else {
+          console.log(`${subscriptionMonth}. ay ödemesi otomatik olarak işaretlendi`);
+          toast({
+            title: "Ödeme İşaretlendi",
+            description: `${subscriptionMonth}. ay ödemesi müşteri yönetiminde otomatik olarak işaretlendi`
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Automatic order güncelleme hatası:', error);
+    }
+  };
+
   // Infinite scroll query for orders
   const {
     data: ordersData,
@@ -143,7 +189,7 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       const previousOrder = orders?.find(o => o.id === data.id);
       
       // Otomatik fatura oluştur eğer durum approved'a değişti
@@ -151,6 +197,9 @@ const OrderManagement = () => {
         setTimeout(() => {
           createInvoiceMutation.mutate(data.id);
         }, 1000);
+        
+        // Müşteri yönetimindeki ödeme durumunu güncelle
+        await updateAutomaticOrderPayment(data as Order);
       }
       
       toast({
