@@ -10,10 +10,19 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import FileUpload from "@/components/FileUpload";
 import AdminBackButton from "@/components/AdminBackButton";
-import { Eye, CheckCircle, XCircle, AlertCircle, MessageSquare, Plus, Edit } from "lucide-react";
+import { Eye, CheckCircle, XCircle, AlertCircle, MessageSquare, Plus, Edit, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Form,
   FormControl,
@@ -56,6 +65,7 @@ const BlogManagement = () => {
   const [editingBlog, setEditingBlog] = useState<any>(null);
   const [specialists, setSpecialists] = useState<any[]>([]);
   const { userProfile } = useUserRole();
+  const [selectedBlogs, setSelectedBlogs] = useState<string[]>([]);
 
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogSchema),
@@ -560,7 +570,84 @@ const BlogManagement = () => {
   };
 
   const pendingCount = blogs.filter(blog => blog.status === "pending").length;
+  const publishedCount = blogs.filter(blog => blog.status === "published").length;
   const isStaff = userProfile?.role === 'staff';
+
+  const toggleSelectAll = () => {
+    if (selectedBlogs.length === blogs.length) {
+      setSelectedBlogs([]);
+    } else {
+      setSelectedBlogs(blogs.map(b => b.id));
+    }
+  };
+
+  const toggleSelectBlog = (blogId: string) => {
+    setSelectedBlogs(prev => 
+      prev.includes(blogId) 
+        ? prev.filter(id => id !== blogId)
+        : [...prev, blogId]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedBlogs.length === 0) return;
+    if (!confirm(`${selectedBlogs.length} blog yazısını silmek istediğinizden emin misiniz?`)) return;
+
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .in('id', selectedBlogs);
+
+      if (error) throw error;
+
+      toast({
+        title: "Toplu Silme Başarılı",
+        description: `${selectedBlogs.length} blog yazısı silindi.`,
+      });
+
+      setSelectedBlogs([]);
+      fetchBlogs();
+    } catch (error) {
+      console.error('Toplu silme hatası:', error);
+      toast({
+        title: "Hata",
+        description: "Blog yazıları silinirken bir hata oluştu.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedBlogs.length === 0) return;
+    
+    setIsProcessing(true);
+    try {
+      for (const blogId of selectedBlogs) {
+        await handleApprove(blogId);
+      }
+
+      toast({
+        title: "Toplu Onaylama Başarılı",
+        description: `${selectedBlogs.length} blog yazısı onaylandı.`,
+      });
+
+      setSelectedBlogs([]);
+      fetchBlogs();
+    } catch (error) {
+      console.error('Toplu onaylama hatası:', error);
+      toast({
+        title: "Hata",
+        description: "Blog yazıları onaylanırken bir hata oluştu.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -584,11 +671,22 @@ const BlogManagement = () => {
             <p className="text-gray-600">Blog yazılarını yönetin ve yeni blog yazısı oluşturun</p>
           </div>
           <div className="flex items-center gap-4">
-            {pendingCount > 0 && (
-              <Badge className="bg-yellow-100 text-yellow-800">
-                {pendingCount} Blog Onay Bekliyor
-              </Badge>
-            )}
+            <div className="flex gap-2">
+              <Card className="px-4 py-2">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{publishedCount}</p>
+                  <p className="text-xs text-muted-foreground">Yayınlandı</p>
+                </div>
+              </Card>
+              {pendingCount > 0 && (
+                <Card className="px-4 py-2">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
+                    <p className="text-xs text-muted-foreground">Onay Bekliyor</p>
+                  </div>
+                </Card>
+              )}
+            </div>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
@@ -754,153 +852,208 @@ const BlogManagement = () => {
           </div>
         </div>
 
-        <div className="grid gap-6">
-          {blogs.map((blog) => (
-            <Card key={blog.id}>
-              <CardContent className="p-6">
-                <div className="flex gap-4">
-                  {blog.featured_image && (
-                    <img
-                      src={blog.featured_image}
-                      alt={blog.title}
-                      className="w-32 h-24 object-cover rounded-lg flex-shrink-0"
-                    />
-                  )}
-                  
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">{blog.title}</h3>
-                         <p className="text-sm text-gray-600 mb-2">
-                           {blog.author_type === 'specialist' ? blog.author_name : 
-                            (blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' ? 'Editör' : blog.author_name)} - {blog.author_type}
-                           {blog.specialists && (
-                             <span className="ml-2 text-blue-600">
-                               | Uzman: {blog.specialists.name} ({blog.specialists.specialty})
-                             </span>
-                           )}
-                         </p>
-                        {blog.excerpt && <p className="text-sm text-gray-700 mb-3">{blog.excerpt}</p>}
+        {selectedBlogs.length > 0 && (
+          <Card className="mb-4 p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">
+                {selectedBlogs.length} blog seçildi
+              </p>
+              <div className="flex gap-2">
+                {!isStaff && (
+                  <Button 
+                    size="sm" 
+                    onClick={handleBulkApprove}
+                    disabled={isProcessing}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    Toplu Onayla
+                  </Button>
+                )}
+                <Button 
+                  size="sm" 
+                  variant="destructive"
+                  onClick={handleBulkDelete}
+                  disabled={isProcessing}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Toplu Sil
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedBlogs.length === blogs.length && blogs.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+                <TableHead>Başlık</TableHead>
+                <TableHead>Yazar</TableHead>
+                <TableHead>Durum</TableHead>
+                <TableHead>Tarih</TableHead>
+                <TableHead className="text-right">İşlemler</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {blogs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Henüz blog yazısı bulunmuyor
+                  </TableCell>
+                </TableRow>
+              ) : (
+                blogs.map((blog) => (
+                  <TableRow key={blog.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedBlogs.includes(blog.id)}
+                        onCheckedChange={() => toggleSelectBlog(blog.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        {blog.featured_image && (
+                          <img
+                            src={blog.featured_image}
+                            alt={blog.title}
+                            className="w-16 h-12 object-cover rounded flex-shrink-0"
+                          />
+                        )}
+                        <div className="max-w-md">
+                          <p className="font-medium line-clamp-1">{blog.title}</p>
+                          {blog.excerpt && (
+                            <p className="text-sm text-muted-foreground line-clamp-1">{blog.excerpt}</p>
+                          )}
+                        </div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {blog.author_type === 'specialist' ? blog.author_name : 'Editör'}
+                        </p>
+                        {blog.specialists && (
+                          <p className="text-xs text-muted-foreground">
+                            {blog.specialists.name}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <Badge className={getStatusColor(blog.status)}>
                         {getStatusText(blog.status)}
                       </Badge>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-                      <span>Oluşturulma: {new Date(blog.created_at).toLocaleDateString('tr-TR')}</span>
-                      {blog.word_count && <span>Kelime: {blog.word_count}</span>}
-                      {blog.published_at && (
-                        <span>Yayın: {new Date(blog.published_at).toLocaleDateString('tr-TR')}</span>
-                      )}
-                    </div>
-                    
-                    {blog.admin_message && (
-                      <div className="bg-red-50 border border-red-200 rounded p-3 mb-4">
-                        <p className="text-sm font-medium text-red-800 mb-1">Gönderilen Mesaj:</p>
-                        <p className="text-sm text-red-700">{blog.admin_message}</p>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <p>{new Date(blog.created_at).toLocaleDateString('tr-TR')}</p>
+                        {blog.word_count && (
+                          <p className="text-xs text-muted-foreground">{blog.word_count} kelime</p>
+                        )}
                       </div>
-                    )}
-                    
-                    <div className="flex gap-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4 mr-1" />
-                            İncele
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>{blog.title}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            {blog.featured_image && (
-                              <img src={blog.featured_image} alt={blog.title} className="w-full max-h-64 object-cover rounded" />
-                            )}
-                            {blog.excerpt && <div className="prose max-w-none">{blog.excerpt}</div>}
-                            <div className="bg-gray-50 p-4 rounded">
-                              <p className="text-sm text-gray-600">İçerik Önizleme:</p>
-                              <div className="text-sm mt-2 whitespace-pre-wrap">{blog.content}</div>
-                            </div>
-                            {(blog.seo_title || blog.seo_description || blog.keywords) && (
-                              <div className="bg-blue-50 p-4 rounded">
-                                <p className="text-sm font-medium text-blue-800 mb-2">SEO Bilgileri:</p>
-                                {blog.seo_title && <p className="text-sm text-blue-700 mb-1"><strong>SEO Başlık:</strong> {blog.seo_title}</p>}
-                                {blog.seo_description && <p className="text-sm text-blue-700 mb-1"><strong>SEO Açıklama:</strong> {blog.seo_description}</p>}
-                                {blog.keywords && <p className="text-sm text-blue-700"><strong>Anahtar Kelimeler:</strong> {blog.keywords}</p>}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-1 justify-end">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>{blog.title}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              {blog.featured_image && (
+                                <img src={blog.featured_image} alt={blog.title} className="w-full max-h-64 object-cover rounded" />
+                              )}
+                              {blog.excerpt && <div className="prose max-w-none">{blog.excerpt}</div>}
+                              <div className="bg-gray-50 p-4 rounded">
+                                <p className="text-sm text-gray-600">İçerik Önizleme:</p>
+                                <div className="text-sm mt-2 whitespace-pre-wrap">{blog.content}</div>
                               </div>
-                            )}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      
-                      {/* Admin ve Staff düzenleme yetkisi */}
-                      {(userProfile?.role === 'admin' || userProfile?.role === 'staff') && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleEdit(blog)}
-                          disabled={isProcessing}
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Düzenle
-                        </Button>
-                      )}
-                      
-                      {blog.status === "pending" && !isStaff && (
-                        <>
+                              {(blog.seo_title || blog.seo_description || blog.keywords) && (
+                                <div className="bg-blue-50 p-4 rounded">
+                                  <p className="text-sm font-medium text-blue-800 mb-2">SEO Bilgileri:</p>
+                                  {blog.seo_title && <p className="text-sm text-blue-700 mb-1"><strong>SEO Başlık:</strong> {blog.seo_title}</p>}
+                                  {blog.seo_description && <p className="text-sm text-blue-700 mb-1"><strong>SEO Açıklama:</strong> {blog.seo_description}</p>}
+                                  {blog.keywords && <p className="text-sm text-blue-700"><strong>Anahtar Kelimeler:</strong> {blog.keywords}</p>}
+                                </div>
+                              )}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+
+                        {(userProfile?.role === 'admin' || userProfile?.role === 'staff') && (
                           <Button 
-                            size="sm" 
-                            onClick={() => handleApprove(blog.id)}
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEdit(blog)}
                             disabled={isProcessing}
-                            className="bg-green-600 hover:bg-green-700"
                           >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Onayla
+                            <Edit className="w-4 h-4" />
                           </Button>
-                          
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => setSelectedBlog(blog)}
-                              >
-                                <AlertCircle className="w-4 h-4 mr-1" />
-                                Düzeltme Gönder
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Düzeltme Mesajı Gönder</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <p className="text-sm text-gray-600">
-                                  <strong>{blog.title}</strong> için düzeltme mesajı yazın:
-                                </p>
-                                <Textarea
-                                  value={adminMessage}
-                                  onChange={(e) => setAdminMessage(e.target.value)}
-                                  placeholder="Örnek: Bu kısımda kaynak belirtmeniz gerekiyor, lütfen güncel tıbbi kaynakları ekleyip tekrar gönderin."
-                                  rows={4}
-                                />
-                                <div className="flex gap-2 justify-end">
-                                  <Button 
-                                    variant="outline" 
-                                    onClick={() => {
-                                      setAdminMessage("");
-                                      setSelectedBlog(null);
-                                    }}
-                                  >
-                                    İptal
-                                  </Button>
+                        )}
+
+                        {blog.status === "pending" && !isStaff && (
+                          <>
+                            <Button 
+                              variant="ghost"
+                              size="sm" 
+                              onClick={() => handleApprove(blog.id)}
+                              disabled={isProcessing}
+                              className="text-green-600 hover:text-green-700"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                            
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => setSelectedBlog(blog)}
+                                  className="text-yellow-600 hover:text-yellow-700"
+                                >
+                                  <AlertCircle className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Düzeltme Mesajı Gönder</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <p className="text-sm text-gray-600">
+                                    <strong>{blog.title}</strong> için düzeltme mesajı yazın:
+                                  </p>
+                                  <Textarea
+                                    value={adminMessage}
+                                    onChange={(e) => setAdminMessage(e.target.value)}
+                                    placeholder="Örnek: Bu kısımda kaynak belirtmeniz gerekiyor, lütfen güncel tıbbi kaynakları ekleyip tekrar gönderin."
+                                    rows={4}
+                                  />
+                                  <div className="flex gap-2 justify-end">
+                                    <Button 
+                                      variant="outline" 
+                                      onClick={() => {
+                                        setAdminMessage("");
+                                        setSelectedBlog(null);
+                                      }}
+                                    >
+                                      İptal
+                                    </Button>
                                   <Button 
                                     onClick={() => handleRequestRevision(blog.id)}
                                     disabled={isProcessing || !adminMessage.trim()}
                                   >
-                                    <MessageSquare className="w-4 h-4 mr-1" />
-                                    Gönder
+                                    {isProcessing ? "Gönderiliyor..." : "Gönder"}
                                   </Button>
                                 </div>
                               </div>
@@ -908,25 +1061,26 @@ const BlogManagement = () => {
                           </Dialog>
                         </>
                       )}
-                      
-                      {!isStaff && (
+
+                      {(userProfile?.role === 'admin' || userProfile?.role === 'staff') && (
                         <Button 
-                          variant="destructive" 
+                          variant="ghost" 
                           size="sm"
                           onClick={() => handleDelete(blog.id)}
                           disabled={isProcessing}
+                          className="text-red-600 hover:text-red-700"
                         >
-                          <XCircle className="w-4 h-4 mr-1" />
-                          Sil
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
 
         {/* Düzenleme Modalı */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
