@@ -28,7 +28,12 @@ serve(async (req) => {
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
 
-    const getPricingPlanByPackageType = (type) => {
+    const getPricingPlanByPackageType = (type, price) => {
+      // Fiyata göre özel paket kontrolü
+      if (price === 3600) {
+        return "92feac6d-1181-4b78-b0c2-3b5d5742adff"; // 3600 TL plan
+      }
+      
       const planMap = {
         "campaign": "e01a059d-9392-4690-b030-0002064f9421",
         "basic": "205eb35c-e122-401f-aef7-618daf3732f8",
@@ -65,7 +70,7 @@ serve(async (req) => {
 
     const requestData = {
       callbackUrl: "https://irnfwewabogveofwemvg.supabase.co/functions/v1/iyzico-payment-callback",
-      pricingPlanReferenceCode: getPricingPlanByPackageType(packageType),
+      pricingPlanReferenceCode: getPricingPlanByPackageType(packageType, body.amount || body.packageData?.price),
       subscriptionInitialStatus: "ACTIVE",
       customer: {
         name: name || "Kullanici",
