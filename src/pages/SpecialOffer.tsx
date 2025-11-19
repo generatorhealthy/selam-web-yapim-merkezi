@@ -40,9 +40,9 @@ const SpecialOffer = () => {
   return (
     <>
       <Helmet>
-        <title>Bu Aya Özel Kampanya - 2999₺ Doktor Randevu Sistemi | DoktorumOl</title>
-        <meta name="description" content="Bu aya özel 2999₺'ye profesyonel doktor randevu sistemi! 7/24 online randevu, hasta takibi, SMS hatırlatma ve daha fazlası. Hemen başlayın!" />
-        <meta name="keywords" content="doktor randevu sistemi, online randevu, hasta takibi, tıbbi yazılım, kampanya, 2999 tl" />
+        <title>Bu Aya Özel Kampanya - 3600₺ Doktor Randevu Sistemi | DoktorumOl</title>
+        <meta name="description" content="Bu aya özel 3600₺'ye profesyonel doktor randevu sistemi! 7/24 online randevu, hasta takibi, SMS hatırlatma ve daha fazlası. Hemen başlayın!" />
+        <meta name="keywords" content="doktor randevu sistemi, online randevu, hasta takibi, tıbbi yazılım, kampanya, 3600 tl" />
       </Helmet>
       
       <HorizontalNavigation />
@@ -113,7 +113,7 @@ const SpecialOffer = () => {
                 
                 <div className="text-center mb-6">
                   <div className="flex items-center justify-center gap-3 mb-2">
-                    <span className="text-3xl md:text-4xl font-bold text-primary">2998₺</span>
+                    <span className="text-3xl md:text-4xl font-bold text-primary">3600₺</span>
                     <span className="text-xl text-muted-foreground line-through">4999₺</span>
                   </div>
                   <Badge className="bg-red-100 text-red-700 border-red-200 text-sm px-3 py-1">
@@ -167,7 +167,7 @@ const SpecialOffer = () => {
                      packageData: {
                        id: 'basic',
                        name: "Premium Paket - Bu Aya Özel",
-                       price: 2998,
+                       price: 3600,
                        originalPrice: 4999,
                        features: packageFeatures
                      }
@@ -176,7 +176,7 @@ const SpecialOffer = () => {
                   >
                     <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-lg">
                       <Crown className="w-5 h-5 mr-2" />
-                      Satın Al - 2998₺
+                      Satın Al - 3600₺
                     </Button>
                   </Link>
                   
