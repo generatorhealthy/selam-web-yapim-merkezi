@@ -29,8 +29,8 @@ serve(async (req) => {
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
 
     const getPricingPlanByPackageType = (type, price) => {
-      // Fiyata göre özel paket kontrolü
-      if (price === 3600) {
+      // Özel teklifler için tip kontrolü
+      if (type === 'special-offer' || price === 3600) {
         return "92feac6d-1181-4b78-b0c2-3b5d5742adff"; // 3600 TL plan
       }
       

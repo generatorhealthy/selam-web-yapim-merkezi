@@ -162,15 +162,15 @@ const SpecialOffer = () => {
                 
                 <div className="flex flex-col sm:flex-row gap-4 mt-8">
                   <Link 
-                    to="/odeme/basic" 
+                    to="/odeme/special-offer" 
                    state={{
-                     packageData: {
-                       id: 'basic',
-                       name: "Premium Paket - Bu Aya Özel",
-                       price: 3600,
-                       originalPrice: 4999,
-                       features: packageFeatures
-                     }
+                      packageData: {
+                        id: 'special-offer',
+                        name: "Premium Paket - Bu Aya Özel",
+                        price: 3600,
+                        originalPrice: 4999,
+                        features: packageFeatures
+                      }
                    }}
                     className="flex-1"
                   >
