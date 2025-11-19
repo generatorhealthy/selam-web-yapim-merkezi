@@ -221,11 +221,11 @@ const TestTaking = () => {
         finalSpecialistId = firstSpecialist?.id || 'genel';
       }
       
-      const testResult: TestResult = {
+      const testResult = {
         test_id: testId!,
         specialist_id: finalSpecialistId!,
         patient_name: patientInfo.name,
-        patient_email: patientInfo.phone, // Telefon numarasını e-posta alanına kaydet
+        patient_email: `${patientInfo.phone}@test.com`, // Telefon numarasını geçici email formatına çevir
         answers,
         results
       };
