@@ -246,11 +246,12 @@ const TestTaking = () => {
         state: { results, patientInfo }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Test gönderilirken hata:', error);
+      const errorMessage = error?.message || error?.toString() || "Test gönderilirken bir hata oluştu.";
       toast({
         title: "Hata",
-        description: "Test gönderilirken bir hata oluştu. Lütfen tekrar deneyin.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
