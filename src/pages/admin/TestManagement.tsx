@@ -16,6 +16,7 @@ import {
   Calendar,
   Plus
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -60,6 +61,7 @@ const TestManagement = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createTestOpen, setCreateTestOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("all");
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
@@ -278,6 +280,13 @@ const TestManagement = () => {
     }
   };
 
+  const filteredTests = tests.filter((test) => {
+    if (activeTab === "all") return true;
+    if (activeTab === "pending") return test.status === "pending";
+    if (activeTab === "approved") return test.status === "approved";
+    return true;
+  });
+
   if (userLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -339,17 +348,37 @@ const TestManagement = () => {
             </Button>
           </div>
 
-          <div className="grid gap-6">
-            {tests.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <ClipboardCheck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Henüz test bulunmuyor</h3>
-                  <p className="text-gray-600">Uzmanlar test oluşturduğunda burada görünecektir.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              tests.map((test) => (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="all">
+                Tüm Testler ({tests.length})
+              </TabsTrigger>
+              <TabsTrigger value="pending">
+                Onay Bekliyor ({tests.filter(t => t.status === 'pending').length})
+              </TabsTrigger>
+              <TabsTrigger value="approved">
+                Onaylanmış ({tests.filter(t => t.status === 'approved').length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={activeTab}>
+              <div className="grid gap-6">
+                {filteredTests.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <ClipboardCheck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {activeTab === "pending" && "Onay bekleyen test bulunmuyor"}
+                        {activeTab === "approved" && "Onaylanmış test bulunmuyor"}
+                        {activeTab === "all" && "Henüz test bulunmuyor"}
+                      </h3>
+                      <p className="text-gray-600">
+                        {activeTab === "all" && "Uzmanlar test oluşturduğunda burada görünecektir."}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredTests.map((test) => (
                 <Card key={test.id} className="border border-gray-200 hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -433,7 +462,9 @@ const TestManagement = () => {
               ))
             )}
           </div>
-        </div>
+        </TabsContent>
+      </Tabs>
+    </div>
 
         {/* Create Test Dialog */}
         <Dialog open={createTestOpen} onOpenChange={setCreateTestOpen}>
