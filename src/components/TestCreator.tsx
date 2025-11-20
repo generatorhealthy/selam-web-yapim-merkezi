@@ -217,6 +217,7 @@ const TestCreator = ({ specialistId, onTestCreated, editingTest, onCancel }: Tes
       // Insert questions
       const questionsToInsert = questions.map(q => ({
         test_id: testId,
+        specialist_id: specialistId,
         question_text: q.question_text,
         question_type: q.question_type,
         options: q.options,
