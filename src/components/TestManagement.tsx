@@ -93,11 +93,22 @@ const TestManagement = ({ specialistId, specialistSpecialty }: TestManagementPro
     }
 
     try {
+      // First delete related test_questions
+      const { error: questionsError } = await supabase
+        .from('test_questions')
+        .delete()
+        .eq('test_id', testId);
+
+      if (questionsError) {
+        console.error('Test soruları silinirken hata:', questionsError);
+        throw questionsError;
+      }
+
+      // Then delete the test itself
       const { error } = await supabase
         .from('tests')
         .delete()
-        .eq('id', testId)
-        .eq('specialist_id', specialistId);
+        .eq('id', testId);
 
       if (error) throw error;
 

@@ -234,9 +234,21 @@ const TestManagement = () => {
     if (!selectedTest) return;
 
     try {
+      // First delete related test_questions
+      const { error: questionsError } = await supabase
+        .from('test_questions')
+        .delete()
+        .eq('test_id', selectedTest.id);
+
+      if (questionsError) {
+        console.error('Test soruları silinirken hata:', questionsError);
+        throw questionsError;
+      }
+
+      // Then delete the test itself
       const { error } = await supabase
         .from('tests')
-        .update({ is_active: false })
+        .delete()
         .eq('id', selectedTest.id);
 
       if (error) throw error;
