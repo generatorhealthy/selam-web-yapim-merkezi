@@ -215,13 +215,18 @@ const ClientReferrals = () => {
       console.warn('⚠️ [DIALOG] Danışan bilgileri eksik!', clientInfo);
       toast({
         title: "Hata",
-        description: "Lütfen tüm danışan bilgilerini doldurun.",
+        description: "Lütfen danışanın ad, soyad ve telefon bilgilerini eksiksiz doldurun.",
         variant: "destructive",
       });
       return;
     }
     
     console.log('✅ [DIALOG] Validation geçti, updateReferralCount çağrılacak...');
+    console.log('✅ [DIALOG] clientInfo details:', {
+      name: clientInfo.client_name,
+      surname: clientInfo.client_surname,
+      contact: clientInfo.client_contact
+    });
     
     try {
       setIsSaving(true);
@@ -233,9 +238,26 @@ const ClientReferrals = () => {
         pendingAction.specialistName,
         pendingAction.specialistPhone
       );
+      
+      // Başarılı ekleme sonrası client detaylarını yeniden çek
+      console.log('✅ [DIALOG] Danışan eklendi, detaylar yeniden çekiliyor...');
+      await fetchClientReferralDetails(pendingAction.specialistId, pendingAction.month);
+      
+      toast({
+        title: "Başarılı",
+        description: `${clientInfo.client_name} ${clientInfo.client_surname} başarıyla eklendi.`,
+      });
+      
       setConfirmOpen(false);
       setPendingAction(null);
       setClientInfo({ client_name: '', client_surname: '', client_contact: '' });
+    } catch (error) {
+      console.error('❌ [DIALOG] Danışan ekleme hatası:', error);
+      toast({
+        title: "Hata",
+        description: "Danışan eklenirken bir hata oluştu: " + (error as Error).message,
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -449,9 +471,13 @@ const ClientReferrals = () => {
 
     setFilteredSpecialists(sorted);
     
-    // Fetch client details for all filtered specialists for selected month
+    // Fetch client details for all filtered specialists for all months with count > 0
     sorted.forEach(spec => {
-      fetchClientReferralDetails(spec.id, selectedMonth);
+      spec.referrals.forEach(ref => {
+        if (ref.count > 0) {
+          fetchClientReferralDetails(spec.id, ref.month);
+        }
+      });
     });
   }, [specialists, searchTerm, selectedMonth, currentYear]);
 
@@ -564,10 +590,19 @@ const ClientReferrals = () => {
           }
         }
       } else {
-        console.log('✅ [UPDATE] RPC upsert successful:', rpcRes);
+      console.log('✅ [UPDATE] RPC upsert successful:', rpcRes);
         
         // RPC başarılı olsa bile danışan bilgisi varsa yeni kayıt ekle
         if (clientData) {
+          console.log('📝 [INSERT] Danışan bilgisi ile yeni kayıt ekleniyor...', {
+            specialist_id: specialistId,
+            year: currentYear,
+            month,
+            client_name: clientData.client_name,
+            client_surname: clientData.client_surname,
+            client_contact: clientData.client_contact
+          });
+          
           // Mevcut notları al
           const { data: existingNotes } = await supabase
             .from('client_referrals')
@@ -596,7 +631,12 @@ const ClientReferrals = () => {
             })
             .select('id, referral_count, updated_at');
           
-          if (insertError) console.error('Client info insert error:', insertError);
+          if (insertError) {
+            console.error('❌ [INSERT] Danışan bilgisi ekleme hatası:', insertError);
+            throw insertError;
+          }
+          
+          console.log('✅ [INSERT] Danışan bilgisi başarıyla eklendi:', insertResult);
         }
       }
       
@@ -1654,7 +1694,7 @@ const ClientReferrals = () => {
                             
                             {/* Client Referrals Details Section - Her Uzmanın Altında */}
                             {(() => {
-                              const key = `${specialistReferral.id}-${selectedMonth}`;
+                              const key = `${specialistReferral.id}-${monthlyReferral.month}`;
                               const clientDetails = clientReferralDetails[key] || [];
                               
                               if (monthlyReferral.count > 0) {
@@ -1665,7 +1705,7 @@ const ClientReferrals = () => {
                                       <h5 className="text-base font-semibold text-slate-800">
                                         Yönlendirilen Danışanlar 
                                         <span className="ml-2 text-sm font-normal text-slate-600">
-                                          ({clientDetails.length > 0 ? clientDetails.length : monthlyReferral.count} danışan)
+                                          ({monthlyReferral.count} danışan)
                                         </span>
                                       </h5>
                                     </div>
@@ -1707,8 +1747,18 @@ const ClientReferrals = () => {
                                         ))}
                                       </div>
                                     ) : (
-                                      <div className="bg-slate-50 rounded-lg p-4 text-center text-sm text-slate-600">
-                                        <p>Danışan bilgileri yükleniyor...</p>
+                                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+                                        <div className="flex items-center justify-center gap-2 text-amber-800">
+                                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                          </svg>
+                                          <span className="text-sm font-medium">
+                                            Danışan bilgileri eksik
+                                          </span>
+                                        </div>
+                                        <p className="text-xs text-amber-700 mt-2">
+                                          Bu danışanlar için detaylı bilgi girilmemiş. Lütfen yeni danışan eklerken ad, soyad ve telefon bilgilerini eksiksiz doldurun.
+                                        </p>
                                       </div>
                                     )}
                                   </div>
