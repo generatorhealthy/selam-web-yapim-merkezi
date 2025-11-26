@@ -494,6 +494,7 @@ const ClientReferrals = () => {
     try {
       const specialist = specialists.find((s) => s.id === specialistId);
       const specName = specialistName || specialist?.specialist.name || 'Unknown';
+      
       // Resolve phone preferring orders (contracts), fallback to specialists.phone
       console.log('🔍 [RESOLVE] Starting phone resolution for:', specName);
       const resolvedPhone = await resolveSpecialistSmsPhone((specialist?.specialist as any) || {});
@@ -516,127 +517,72 @@ const ClientReferrals = () => {
       });
       console.log(`🔄 [UPDATE] ${specName} (${specialistId}) year=${currentYear} month=${month} -> ${newCount}`);
 
-      // Önce RPC ile güvenli upsert dene (RLS ve tek kod yolu için)
-      const { data: rpcRes, error: rpcErr } = await supabase.rpc(
-        'admin_upsert_client_referral',
-        {
-          p_specialist_id: specialistId,
-          p_year: currentYear,
-          p_month: month,
-          p_referral_count: newCount,
-          p_referred_by: (await supabase.auth.getUser()).data.user?.id || null,
-        }
-      );
-
-      if (rpcErr) {
-        console.warn('⚠️ [UPDATE] RPC failed, falling back to direct upsert.', rpcErr);
-        // Danışan bilgisi varsa yeni kayıt ekle
-        if (clientData) {
-          // Mevcut notları al
-          const { data: existingNotes } = await supabase
-            .from('client_referrals')
-            .select('notes')
-            .eq('specialist_id', specialistId)
-            .eq('year', currentYear)
-            .eq('month', month)
-            .order('updated_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          
-          // Yeni danışan kaydı ekle (notları koru)
-          const { data: insertResult, error: insertError } = await supabase
-            .from('client_referrals')
-            .insert({
-              specialist_id: specialistId,
-              year: currentYear,
-              month,
-              referral_count: 1,
-              client_name: clientData.client_name,
-              client_surname: clientData.client_surname,
-              client_contact: clientData.client_contact,
-              is_referred: true,
-              referred_at: new Date().toISOString(),
-              referred_by: (await supabase.auth.getUser()).data.user?.id || null,
-              notes: existingNotes?.notes || '', // Mevcut notları koru
-            })
-            .select('id, referral_count, updated_at');
-
-          if (insertError) {
-            console.error('Insert error:', insertError);
-            throw insertError;
-          }
-          console.log('✅ [UPDATE] New client referral inserted:', insertResult);
-        } else {
-          // Sayı azaltma - en son kaydı sil
-          const { data: existingRecords, error: fetchError } = await supabase
-            .from('client_referrals')
-            .select('id')
-            .eq('specialist_id', specialistId)
-            .eq('year', currentYear)
-            .eq('month', month)
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-          if (fetchError) throw fetchError;
-
-          if (existingRecords && existingRecords.length > 0) {
-            const { error: deleteError } = await supabase
-              .from('client_referrals')
-              .delete()
-              .eq('id', existingRecords[0].id);
-
-            if (deleteError) throw deleteError;
-            console.log('✅ [UPDATE] Client referral deleted');
-          }
-        }
-      } else {
-      console.log('✅ [UPDATE] RPC upsert successful:', rpcRes);
+      // Danışan bilgisi varsa yeni kayıt ekle
+      if (clientData) {
+        // Mevcut notları al
+        const { data: existingNotes } = await supabase
+          .from('client_referrals')
+          .select('notes')
+          .eq('specialist_id', specialistId)
+          .eq('year', currentYear)
+          .eq('month', month)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
         
-        // RPC başarılı olsa bile danışan bilgisi varsa yeni kayıt ekle
-        if (clientData) {
-          console.log('📝 [INSERT] Danışan bilgisi ile yeni kayıt ekleniyor...', {
+        console.log('📝 [INSERT] Danışan bilgisi ile yeni kayıt ekleniyor...', {
+          specialist_id: specialistId,
+          year: currentYear,
+          month,
+          client_name: clientData.client_name,
+          client_surname: clientData.client_surname,
+          client_contact: clientData.client_contact
+        });
+        
+        // Yeni danışan kaydı ekle (notları koru)
+        const { data: insertResult, error: insertError } = await supabase
+          .from('client_referrals')
+          .insert({
             specialist_id: specialistId,
             year: currentYear,
             month,
+            referral_count: 1,
             client_name: clientData.client_name,
             client_surname: clientData.client_surname,
-            client_contact: clientData.client_contact
-          });
-          
-          // Mevcut notları al
-          const { data: existingNotes } = await supabase
+            client_contact: clientData.client_contact,
+            is_referred: true,
+            referred_at: new Date().toISOString(),
+            referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+            notes: existingNotes?.notes || '', // Mevcut notları koru
+          })
+          .select('id, referral_count, updated_at');
+
+        if (insertError) {
+          console.error('❌ [INSERT] Danışan bilgisi ekleme hatası:', insertError);
+          throw insertError;
+        }
+        console.log('✅ [INSERT] Danışan bilgisi başarıyla eklendi:', insertResult);
+      } else {
+        // Sayı azaltma - en son kaydı sil
+        const { data: existingRecords, error: fetchError } = await supabase
+          .from('client_referrals')
+          .select('id')
+          .eq('specialist_id', specialistId)
+          .eq('year', currentYear)
+          .eq('month', month)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (fetchError) throw fetchError;
+
+        if (existingRecords && existingRecords.length > 0) {
+          const { error: deleteError } = await supabase
             .from('client_referrals')
-            .select('notes')
-            .eq('specialist_id', specialistId)
-            .eq('year', currentYear)
-            .eq('month', month)
-            .order('updated_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          
-          const { data: insertResult, error: insertError } = await supabase
-            .from('client_referrals')
-            .insert({
-              specialist_id: specialistId,
-              year: currentYear,
-              month,
-              referral_count: 1,
-              client_name: clientData.client_name,
-              client_surname: clientData.client_surname,
-              client_contact: clientData.client_contact,
-              is_referred: true,
-              referred_at: new Date().toISOString(),
-              referred_by: (await supabase.auth.getUser()).data.user?.id || null,
-              notes: existingNotes?.notes || '', // Mevcut notları koru
-            })
-            .select('id, referral_count, updated_at');
-          
-          if (insertError) {
-            console.error('❌ [INSERT] Danışan bilgisi ekleme hatası:', insertError);
-            throw insertError;
-          }
-          
-          console.log('✅ [INSERT] Danışan bilgisi başarıyla eklendi:', insertResult);
+            .delete()
+            .eq('id', existingRecords[0].id);
+
+          if (deleteError) throw deleteError;
+          console.log('✅ [UPDATE] Client referral deleted');
         }
       }
       
