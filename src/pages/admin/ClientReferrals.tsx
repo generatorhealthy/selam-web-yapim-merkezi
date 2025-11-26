@@ -388,6 +388,8 @@ const ClientReferrals = () => {
   // Fetch client referral details for a specific specialist and month
   const fetchClientReferralDetails = async (specialistId: string, month: number) => {
     try {
+      console.log('🔍 [CLIENT-DETAILS] Fetching for specialist:', specialistId, 'month:', month, 'year:', currentYear);
+      
       const { data, error } = await supabase
         .from('client_referrals')
         .select('id, client_name, client_surname, client_contact, referred_at, referral_count, is_referred')
@@ -398,15 +400,27 @@ const ClientReferrals = () => {
         .not('client_name', 'is', null)
         .order('referred_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('✅ [CLIENT-DETAILS] Query result:', { 
+        specialist: specialistId, 
+        month, 
+        dataCount: data?.length || 0, 
+        error: error?.message 
+      });
+
+      if (error) {
+        console.error('❌ [CLIENT-DETAILS] Error:', error);
+        throw error;
+      }
 
       const key = `${specialistId}-${month}`;
+      console.log('📝 [CLIENT-DETAILS] Setting data for key:', key, 'count:', data?.length || 0);
+      
       setClientReferralDetails(prev => ({
         ...prev,
         [key]: data || []
       }));
     } catch (error) {
-      console.error('Error fetching client referral details:', error);
+      console.error('❌ [CLIENT-DETAILS] Exception:', error);
     }
   };
 
