@@ -21390,37 +21390,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      admin_upsert_client_referral: {
-        Args: {
-          p_month: number
-          p_referral_count: number
-          p_referred_by?: string
-          p_specialist_id: string
-          p_year: number
-        }
-        Returns: {
-          client_contact: string | null
-          client_name: string | null
-          client_surname: string | null
-          created_at: string
-          id: string
-          is_referred: boolean
-          month: number
-          notes: string | null
-          referral_count: number
-          referred_at: string | null
-          referred_by: string | null
-          specialist_id: string
-          updated_at: string
-          year: number
-        }
-        SetofOptions: {
-          from: "*"
-          to: "client_referrals"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       backup_client_referrals: { Args: never; Returns: undefined }
       can_manage_users: { Args: { target_user_id?: string }; Returns: boolean }
       cleanup_old_backups: { Args: never; Returns: undefined }
