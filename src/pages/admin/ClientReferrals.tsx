@@ -54,6 +54,17 @@ interface SpecialistReferral {
   referrals: MonthlyReferral[];
 }
 
+interface ClientReferralDetail {
+  id: string;
+  client_name: string;
+  client_surname: string;
+  client_contact: string;
+  referred_at: string;
+  referral_count: number;
+  is_referred: boolean;
+  sms_sent?: boolean;
+}
+
 // --- SMS phone resolution helpers (prefer orders/contracts phone) ---
 const CENTRAL_NUMBERS = new Set<string>([
   '02167060611',
@@ -153,6 +164,7 @@ const ClientReferrals = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [clientReferralDetails, setClientReferralDetails] = useState<Record<string, ClientReferralDetail[]>>({});
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const canAccess = !roleLoading && !!userProfile && userProfile.is_approved && ['admin','staff'].includes(userProfile.role);
@@ -373,6 +385,31 @@ const ClientReferrals = () => {
   }, [currentYear, canAccess]);
 
   // Filter specialists based on search term and sort by referral count
+  // Fetch client referral details for a specific specialist and month
+  const fetchClientReferralDetails = async (specialistId: string, month: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('client_referrals')
+        .select('id, client_name, client_surname, client_contact, referred_at, referral_count, is_referred')
+        .eq('specialist_id', specialistId)
+        .eq('year', currentYear)
+        .eq('month', month)
+        .eq('is_referred', true)
+        .not('client_name', 'is', null)
+        .order('referred_at', { ascending: false });
+
+      if (error) throw error;
+
+      const key = `${specialistId}-${month}`;
+      setClientReferralDetails(prev => ({
+        ...prev,
+        [key]: data || []
+      }));
+    } catch (error) {
+      console.error('Error fetching client referral details:', error);
+    }
+  };
+
   useEffect(() => {
     const filtered =
       searchTerm.trim() !== ""
@@ -397,7 +434,12 @@ const ClientReferrals = () => {
     });
 
     setFilteredSpecialists(sorted);
-  }, [specialists, searchTerm, selectedMonth]);
+    
+    // Fetch client details for all filtered specialists for selected month
+    sorted.forEach(spec => {
+      fetchClientReferralDetails(spec.id, selectedMonth);
+    });
+  }, [specialists, searchTerm, selectedMonth, currentYear]);
 
   const updateReferralCount = async (
     specialistId: string, 
@@ -670,6 +712,8 @@ const ClientReferrals = () => {
         )
       );
 
+      // Danışan detaylarını yenile
+      await fetchClientReferralDetails(specialistId, month);
       await fetchSpecialistsAndReferrals();
 
       toast({
@@ -1443,7 +1487,6 @@ const ClientReferrals = () => {
                                           e.preventDefault(); 
                                           e.stopPropagation();
                                           
-                                          // Sayıyı azaltırken notları korumak için özel işlem
                                           const newCount = Math.max(0, monthlyReferral.count - 1);
                                           
                                           try {
@@ -1470,15 +1513,27 @@ const ClientReferrals = () => {
 
                                               if (deleteError) throw deleteError;
                                               
-                                              // Eğer hala kayıt varsa ve not varsa, ilk kayda notu ekle
-                                              if (existingRecords.length > 1 && savedNotes) {
-                                                await supabase
+                                              // Eğer not varsa ve hala kayıt varsa, kalan kayıtlardan en yenisine notu kopyala
+                                              if (savedNotes && existingRecords.length > 1) {
+                                                // Silme işleminden sonra kalan kayıtları tekrar al
+                                                const { data: remainingRecords } = await supabase
                                                   .from('client_referrals')
-                                                  .update({ 
-                                                    notes: savedNotes,
-                                                    updated_at: new Date().toISOString()
-                                                  })
-                                                  .eq('id', existingRecords[1].id);
+                                                  .select('id')
+                                                  .eq('specialist_id', specialistReferral.id)
+                                                  .eq('year', currentYear)
+                                                  .eq('month', monthIndex + 1)
+                                                  .order('created_at', { ascending: false })
+                                                  .limit(1);
+
+                                                if (remainingRecords && remainingRecords.length > 0) {
+                                                  await supabase
+                                                    .from('client_referrals')
+                                                    .update({ 
+                                                      notes: savedNotes,
+                                                      updated_at: new Date().toISOString()
+                                                    })
+                                                    .eq('id', remainingRecords[0].id);
+                                                }
                                               }
                                               
                                               console.log('✅ [DECREASE] Kayıt silindi, notlar korundu');
@@ -1498,11 +1553,13 @@ const ClientReferrals = () => {
                                               )
                                             );
 
+                                            // Danışan detaylarını yenile
+                                            await fetchClientReferralDetails(specialistReferral.id, monthIndex + 1);
                                             await fetchSpecialistsAndReferrals();
 
                                             toast({
                                               title: 'Başarılı',
-                                              description: 'Yönlendirme sayısı azaltıldı',
+                                              description: 'Yönlendirme sayısı azaltıldı, notlar korundu',
                                             });
                                           } catch (error) {
                                             console.error('❌ [DECREASE] Error:', error);
@@ -1578,6 +1635,61 @@ const ClientReferrals = () => {
                                   </div>
                                 </div>
                               </div>
+                              
+                              {/* Client Referrals Details Section */}
+                              {(() => {
+                                const key = `${specialistReferral.id}-${selectedMonth}`;
+                                const clientDetails = clientReferralDetails[key] || [];
+                                
+                                if (clientDetails.length > 0) {
+                                  return (
+                                    <div className="mt-4 pt-4 border-t border-slate-200">
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <UserCheck className="w-4 h-4 text-blue-600" />
+                                        <h5 className="text-sm font-semibold text-slate-700">
+                                          Yönlendirilen Danışanlar ({clientDetails.length})
+                                        </h5>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {clientDetails.map((client) => (
+                                          <div 
+                                            key={client.id} 
+                                            className="bg-gradient-to-r from-blue-50/50 to-indigo-50/30 rounded-lg p-3 border border-blue-100"
+                                          >
+                                            <div className="flex items-start justify-between gap-3">
+                                              <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                  <span className="font-medium text-slate-800 text-sm">
+                                                    {client.client_name} {client.client_surname}
+                                                  </span>
+                                                  <Badge className="bg-blue-100 text-blue-700 border-0 text-xs px-2 py-0">
+                                                    {client.client_contact}
+                                                  </Badge>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-xs text-slate-600">
+                                                  <div className="flex items-center gap-1">
+                                                    <Calendar className="w-3 h-3" />
+                                                    <span>
+                                                      {new Date(client.referred_at).toLocaleDateString('tr-TR', {
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                      })}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
                           </div>
                         </div>
