@@ -644,6 +644,9 @@ const DoctorDashboard = () => {
 
   const updateAppointmentStatus = async (appointmentId: string, newStatus: string) => {
     try {
+      // Get appointment details before updating
+      const appointment = appointments.find(a => a.id === appointmentId);
+      
       const { error } = await supabase
         .from('appointments')
         .update({ status: newStatus })
@@ -658,8 +661,44 @@ const DoctorDashboard = () => {
             : appointment
         )
       );
+
+      // Send SMS to patient when appointment is confirmed
+      if (newStatus === 'confirmed' && appointment && doctor) {
+        try {
+          const profileLink = `https://doktorumol.com.tr/doktor/${doctor.id}`;
+          const message = `Merhaba ${appointment.patient_name}, ${doctor.name} ile randevunuz onaylandı. Uzmanı değerlendirmek için: ${profileLink}`;
+          
+          const { error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
+            body: {
+              phone: appointment.patient_phone,
+              message: message
+            }
+          });
+
+          if (smsError) {
+            console.error('SMS sending error:', smsError);
+          } else {
+            console.log('SMS sent successfully to:', appointment.patient_phone);
+          }
+        } catch (smsError) {
+          console.error('SMS error:', smsError);
+          // Don't throw error, just log it - appointment is already confirmed
+        }
+      }
+
+      toast({
+        title: "Başarılı",
+        description: newStatus === 'confirmed' 
+          ? "Randevu onaylandı ve danışana SMS gönderildi."
+          : "Randevu durumu güncellendi.",
+      });
     } catch (error) {
       console.error('Randevu güncellenirken hata:', error);
+      toast({
+        title: "Hata",
+        description: "Randevu durumu güncellenirken bir hata oluştu.",
+        variant: "destructive"
+      });
     }
   };
 
