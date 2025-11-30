@@ -10,6 +10,7 @@ import { Calendar, Clock, User, Phone, Mail, Search, UserCheck, Trash2, CheckCir
 import AdminBackButton from "@/components/AdminBackButton";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
 
 interface Appointment {
   id: string;
@@ -117,26 +118,9 @@ const AppointmentManagement = () => {
             .single();
           
           if (specialistData) {
-            // Create URL-friendly slugs
-            const specialtySlug = specialistData.specialty
-              .toLowerCase()
-              .replace(/ı/g, 'i')
-              .replace(/ğ/g, 'g')
-              .replace(/ü/g, 'u')
-              .replace(/ş/g, 's')
-              .replace(/ö/g, 'o')
-              .replace(/ç/g, 'c')
-              .replace(/\s+/g, '-');
-            
-            const doctorSlug = specialistData.name
-              .toLowerCase()
-              .replace(/ı/g, 'i')
-              .replace(/ğ/g, 'g')
-              .replace(/ü/g, 'u')
-              .replace(/ş/g, 's')
-              .replace(/ö/g, 'o')
-              .replace(/ç/g, 'c')
-              .replace(/\s+/g, '-');
+            // Create URL-friendly slugs using utility functions
+            const specialtySlug = createSpecialtySlug(specialistData.specialty);
+            const doctorSlug = createDoctorSlug(specialistData.name);
             
             const profileLink = `https://doktorumol.com.tr/${specialtySlug}/${doctorSlug}`;
             const message = `Merhaba ${appointment.patient_name}, ${specialistData.name} ile randevunuz tamamlandı. Uzmanı değerlendirmek için: ${profileLink}`;
