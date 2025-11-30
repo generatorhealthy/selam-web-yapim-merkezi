@@ -109,21 +109,50 @@ const AppointmentManagement = () => {
       // Send SMS to patient when appointment is confirmed
       if (newStatus === 'confirmed' && appointment?.specialist_id) {
         try {
-          const specialistName = appointment.specialists?.name || 'Uzmanınız';
-          const profileLink = `https://doktorumol.com.tr/doktor/${appointment.specialist_id}`;
-          const message = `Merhaba ${appointment.patient_name}, ${specialistName} ile randevunuz onaylandı. Uzmanı değerlendirmek için: ${profileLink}`;
+          // Get full specialist details to build proper profile link
+          const { data: specialistData } = await supabase
+            .from('specialists')
+            .select('name, specialty')
+            .eq('id', appointment.specialist_id)
+            .single();
           
-          const { error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
-            body: {
-              phone: appointment.patient_phone,
-              message: message
-            }
-          });
+          if (specialistData) {
+            // Create URL-friendly slugs
+            const specialtySlug = specialistData.specialty
+              .toLowerCase()
+              .replace(/ı/g, 'i')
+              .replace(/ğ/g, 'g')
+              .replace(/ü/g, 'u')
+              .replace(/ş/g, 's')
+              .replace(/ö/g, 'o')
+              .replace(/ç/g, 'c')
+              .replace(/\s+/g, '-');
+            
+            const doctorSlug = specialistData.name
+              .toLowerCase()
+              .replace(/ı/g, 'i')
+              .replace(/ğ/g, 'g')
+              .replace(/ü/g, 'u')
+              .replace(/ş/g, 's')
+              .replace(/ö/g, 'o')
+              .replace(/ç/g, 'c')
+              .replace(/\s+/g, '-');
+            
+            const profileLink = `https://doktorumol.com.tr/${specialtySlug}/${doctorSlug}`;
+            const message = `Merhaba ${appointment.patient_name}, ${specialistData.name} ile randevunuz tamamlandı. Uzmanı değerlendirmek için: ${profileLink}`;
+            
+            const { error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
+              body: {
+                phone: appointment.patient_phone,
+                message: message
+              }
+            });
 
-          if (smsError) {
-            console.error('SMS sending error:', smsError);
-          } else {
-            console.log('SMS sent successfully to:', appointment.patient_phone);
+            if (smsError) {
+              console.error('SMS sending error:', smsError);
+            } else {
+              console.log('SMS sent successfully to:', appointment.patient_phone);
+            }
           }
         } catch (smsError) {
           console.error('SMS error:', smsError);

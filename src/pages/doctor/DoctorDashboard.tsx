@@ -665,8 +665,29 @@ const DoctorDashboard = () => {
       // Send SMS to patient when appointment is confirmed
       if (newStatus === 'confirmed' && appointment && doctor) {
         try {
-          const profileLink = `https://doktorumol.com.tr/doktor/${doctor.id}`;
-          const message = `Merhaba ${appointment.patient_name}, ${doctor.name} ile randevunuz onaylandı. Uzmanı değerlendirmek için: ${profileLink}`;
+          // Create URL-friendly slugs
+          const specialtySlug = doctor.specialty
+            .toLowerCase()
+            .replace(/ı/g, 'i')
+            .replace(/ğ/g, 'g')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ö/g, 'o')
+            .replace(/ç/g, 'c')
+            .replace(/\s+/g, '-');
+          
+          const doctorSlug = doctor.name
+            .toLowerCase()
+            .replace(/ı/g, 'i')
+            .replace(/ğ/g, 'g')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ö/g, 'o')
+            .replace(/ç/g, 'c')
+            .replace(/\s+/g, '-');
+          
+          const profileLink = `https://doktorumol.com.tr/${specialtySlug}/${doctorSlug}`;
+          const message = `Merhaba ${appointment.patient_name}, ${doctor.name} ile randevunuz tamamlandı. Uzmanı değerlendirmek için: ${profileLink}`;
           
           const { error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
             body: {
