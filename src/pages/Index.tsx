@@ -737,16 +737,11 @@ const Index = () => {
                       <Users className="w-8 h-8 md:w-10 md:h-10 text-white" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide shadow-lg">
-                          Garantili
-                        </span>
-                      </div>
                       <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-amber-700 via-yellow-700 to-amber-800 bg-clip-text text-transparent">
                         Aylık Danışan Yönlendirme Garantisi
                       </h3>
                       <p className="text-amber-700/80 mt-2 text-sm md:text-base font-medium">
-                        Her ay belirli sayıda danışan yönlendirme garantisi ile risksiz büyüme
+                        Her ay danışan yönlendirme garantisi ile risksiz büyüme
                       </p>
                     </div>
                   </div>
