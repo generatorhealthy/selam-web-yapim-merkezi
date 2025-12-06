@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Copy, Check, Banknote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
+import { useToast } from "@/hooks/use-toast";
 
 interface OrderData {
   id: string;
@@ -18,8 +20,26 @@ interface OrderData {
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const bankInfo = {
+    accountName: "DOKTORUM OL BİLGİ VE TEKNOLOJİ HİZMETLERİ",
+    iban: "TR95 0004 6007 2188 8000 3848 15"
+  };
+
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedField(field);
+      toast({
+        title: "Kopyalandı",
+        description: `${field} panoya kopyalandı.`
+      });
+      setTimeout(() => setCopiedField(null), 2000);
+    });
+  };
 
   useEffect(() => {
     // First check URL parameters for order data (from Iyzico callback)
@@ -154,6 +174,93 @@ const PaymentSuccess = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Bank Transfer Info - Only show for bank_transfer payment method */}
+                {orderData?.paymentMethod === 'bank_transfer' && (
+                  <div className="bg-green-50 rounded-lg p-6 border border-green-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Banknote className="w-5 h-5 text-green-700" />
+                      <h3 className="font-semibold text-green-900">Havale/EFT Bilgileri</h3>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {/* Account Name */}
+                      <div className="bg-white rounded-lg p-3 border border-green-100">
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">Hesap Adı</span>
+                            <span className="font-medium text-gray-900 text-sm">{bankInfo.accountName}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(bankInfo.accountName, "Hesap adı")}
+                            className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-100"
+                          >
+                            {copiedField === "Hesap adı" ? (
+                              <Check className="w-4 h-4" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* IBAN */}
+                      <div className="bg-white rounded-lg p-3 border border-green-100">
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">IBAN</span>
+                            <span className="font-mono font-medium text-gray-900 text-sm">{bankInfo.iban}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(bankInfo.iban.replace(/\s/g, ''), "IBAN")}
+                            className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-100"
+                          >
+                            {copiedField === "IBAN" ? (
+                              <Check className="w-4 h-4" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Amount */}
+                      <div className="bg-white rounded-lg p-3 border border-green-100">
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">Gönderilecek Tutar</span>
+                            <span className="font-semibold text-green-700 text-lg">
+                              {orderData?.amount ? `${orderData.amount.toLocaleString('tr-TR')} ₺` : '3.600 ₺'}
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(orderData?.amount?.toString() || '3600', "Tutar")}
+                            className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-100"
+                          >
+                            {copiedField === "Tutar" ? (
+                              <Check className="w-4 h-4" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                      <p className="text-xs text-orange-800">
+                        <strong>Önemli:</strong> Ödeme yaparken açıklama kısmına <strong>Ad Soyadınızı</strong> yazınız. 
+                        Dekontunuzu WhatsApp hattımızdan iletebilirsiniz.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="text-center pt-4">
                   <p className="text-sm text-gray-600">
