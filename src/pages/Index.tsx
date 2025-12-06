@@ -723,6 +723,44 @@ const Index = () => {
             ))}
           </div>
 
+          {/* Highlighted Guarantee Banner */}
+          <div className="relative mb-8 overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 rounded-2xl p-1 shadow-2xl animate-pulse-slow">
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-6 md:p-8 relative overflow-hidden">
+                {/* Decorative elements */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-300/30 to-amber-300/30 rounded-full -mr-16 -mt-16"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-amber-300/30 to-yellow-300/30 rounded-full -ml-12 -mb-12"></div>
+                
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-4 md:gap-6">
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-full flex items-center justify-center shadow-xl flex-shrink-0 animate-bounce">
+                      <Users className="w-8 h-8 md:w-10 md:h-10 text-white" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide shadow-lg">
+                          Garantili
+                        </span>
+                      </div>
+                      <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-amber-700 via-yellow-700 to-amber-800 bg-clip-text text-transparent">
+                        Aylık Danışan Yönlendirme Garantisi
+                      </h3>
+                      <p className="text-amber-700/80 mt-2 text-sm md:text-base font-medium">
+                        Her ay belirli sayıda danışan yönlendirme garantisi ile risksiz büyüme
+                      </p>
+                    </div>
+                  </div>
+                  <Link to="/bu-aya-ozel">
+                    <Button className="bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white font-bold text-lg px-8 py-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
+                      <span>Detayları Gör</span>
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Benefits Section */}
           <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/30 shadow-lg">
             <div className="grid md:grid-cols-2 gap-8 items-center">
@@ -751,10 +789,10 @@ const Index = () => {
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-green-400 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Check className="w-4 h-4 text-white" />
+                    <div className="w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Star className="w-4 h-4 text-white fill-white" />
                     </div>
-                    <span className="text-lg text-white">Aylık Danışan Yönlendirme Garantisi</span>
+                    <span className="text-lg text-white font-semibold">Aylık Danışan Yönlendirme Garantisi</span>
                   </div>
                 </div>
               </div>
