@@ -343,8 +343,8 @@ const SpecialistManagement = () => {
     }
   };
 
-  // Get unique specialties for filter
-  const uniqueSpecialties = Array.from(new Set(specialists.map(s => s.specialty)));
+  // Get unique specialties for filter - filter out empty strings
+  const uniqueSpecialties = Array.from(new Set(specialists.map(s => s.specialty))).filter(s => s && s.trim() !== '');
 
   // Kullanıcı kontrolü henüz tamamlanmadıysa loading göster
   if (!currentUser) {
