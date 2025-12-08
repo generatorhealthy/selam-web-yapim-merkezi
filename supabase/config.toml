@@ -92,3 +92,6 @@ verify_jwt = false
 
 [functions.share-blog-to-social]
 verify_jwt = false
+
+[functions.scheduled-twitter-share]
+verify_jwt = false
