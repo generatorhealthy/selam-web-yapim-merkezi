@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import BlogSpecialistCard from "@/components/BlogSpecialistCard";
+import { Helmet } from "react-helmet-async";
 
 interface BlogPost {
   id: string;
@@ -183,8 +184,35 @@ const BlogDetail = () => {
     );
   }
 
+const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
+  const ogDescription = blog.excerpt || blog.title;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Helmet>
+        <title>{blog.title} | Doktorum Ol Blog</title>
+        <meta name="description" content={ogDescription} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={`https://doktorumol.com.tr/blog/${blog.slug}`} />
+        <meta property="og:title" content={blog.title} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:site_name" content="Doktorum Ol" />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@Doktorum_Ol" />
+        <meta name="twitter:title" content={blog.title} />
+        <meta name="twitter:description" content={ogDescription} />
+        <meta name="twitter:image" content={ogImage} />
+        
+        {/* Article specific */}
+        <meta property="article:published_time" content={blog.published_at} />
+        <meta property="article:author" content={blog.author_name} />
+      </Helmet>
+      
       <HorizontalNavigation />
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
