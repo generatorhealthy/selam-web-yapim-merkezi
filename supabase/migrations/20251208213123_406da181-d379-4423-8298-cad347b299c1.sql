@@ -1,0 +1,39 @@
+-- Create 3 LinkedIn cron jobs at different random-ish minutes within the hour
+-- Job 1: runs at minute 12 of every hour
+SELECT cron.schedule(
+  'linkedin-share-1',
+  '12 * * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://irnfwewabogveofwemvg.supabase.co/functions/v1/scheduled-linkedin-share',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs"}'::jsonb,
+    body := '{}'::jsonb
+  ) AS request_id;
+  $$
+);
+
+-- Job 2: runs at minute 32 of every hour
+SELECT cron.schedule(
+  'linkedin-share-2',
+  '32 * * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://irnfwewabogveofwemvg.supabase.co/functions/v1/scheduled-linkedin-share',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs"}'::jsonb,
+    body := '{}'::jsonb
+  ) AS request_id;
+  $$
+);
+
+-- Job 3: runs at minute 52 of every hour
+SELECT cron.schedule(
+  'linkedin-share-3',
+  '52 * * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://irnfwewabogveofwemvg.supabase.co/functions/v1/scheduled-linkedin-share',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs"}'::jsonb,
+    body := '{}'::jsonb
+  ) AS request_id;
+  $$
+);
