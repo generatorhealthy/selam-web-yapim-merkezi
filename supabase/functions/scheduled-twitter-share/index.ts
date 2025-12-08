@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get blogs that haven't been shared to Twitter yet (limit 3 per hour)
+    // Get 1 blog that hasn't been shared to Twitter yet (called 3 times per hour at different minutes)
     const { data: unsharedBlogs, error: fetchError } = await supabase
       .from('blog_posts')
       .select('id, title, slug, keywords, featured_image')
@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
           .eq('status', 'success')
       )
       .order('created_at', { ascending: true })
-      .limit(3);
+      .limit(1);
 
     if (fetchError) {
       console.error('Error fetching unshared blogs:', fetchError);
@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
       const sharedIds = new Set(sharedBlogIds?.map(s => s.blog_post_id) || []);
       const blogsToShare = (allBlogs || [])
         .filter(blog => !sharedIds.has(blog.id))
-        .slice(0, 3);
+        .slice(0, 1);
 
       if (blogsToShare.length === 0) {
         console.log('No unshared blogs found');
