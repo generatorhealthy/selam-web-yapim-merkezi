@@ -760,7 +760,7 @@ const ClientReferrals = () => {
           });
         }
       }
-      // Güncel sayıyı veritabanından al
+      // Güncel sayıyı veritabanından al (tüm kayıtların toplamı)
       const { data: updatedRecords, error: countError } = await supabase
         .from('client_referrals')
         .select('referral_count')
@@ -768,15 +768,24 @@ const ClientReferrals = () => {
         .eq('year', currentYear)
         .eq('month', month);
       
+      if (countError) {
+        console.error('❌ [COUNT] Error fetching updated count:', countError);
+      }
+      
       const actualCount = countError 
         ? newCount 
         : (updatedRecords || []).reduce((sum, r) => sum + (r.referral_count || 0), 0);
       
-      console.log('📊 [COUNT] Actual count after update:', { actualCount, newCount, updatedRecords });
+      console.log('📊 [COUNT] Actual count after update:', { 
+        actualCount, 
+        newCount, 
+        recordCount: updatedRecords?.length,
+        records: updatedRecords 
+      });
 
       // UI'yi gerçek sayı ile güncelle
-      setSpecialists((prev) =>
-        prev.map((spec) =>
+      setSpecialists((prev) => {
+        const updated = prev.map((spec) =>
           spec.id === specialistId
             ? {
                 ...spec,
@@ -785,12 +794,13 @@ const ClientReferrals = () => {
                 ),
               }
             : spec
-        )
-      );
+        );
+        console.log('📊 [STATE] Updated specialists state for:', specialistId, 'month:', month, 'count:', actualCount);
+        return updated;
+      });
 
-      // Danışan detaylarını yenile
+      // Danışan detaylarını yenile (fetchSpecialistsAndReferrals kaldırıldı - state'i eziyor)
       await fetchClientReferralDetails(specialistId, month);
-      await fetchSpecialistsAndReferrals();
 
       toast({
         title: 'Başarılı',
