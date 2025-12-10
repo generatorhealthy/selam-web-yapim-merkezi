@@ -288,10 +288,12 @@ const ClientReferrals = () => {
           .order('name'),
         
         // Yönlendirmeleri doğrudan tablodan getir (RLS admin/staff'a izin veriyor)
+        // LIMIT artırıldı - varsayılan 1000 yetersiz kalıyor
         supabase
           .from('client_referrals')
           .select('specialist_id, year, month, referral_count, notes, updated_at, created_at, is_referred')
           .eq('year', currentYear)
+          .limit(10000) // Tüm kayıtları al
       ]);
 
       const { data: specialistsData, error: specialistsError } = specialistsResult;
@@ -324,11 +326,25 @@ const ClientReferrals = () => {
 
       // Referral verilerini specialist_id'ye göre grupla (daha hızlı)
       const referralsBySpecialist = new Map();
+      console.log('📊 [DEBUG] Raw referrals count:', allReferrals?.length || 0);
+      
       allReferrals?.forEach(referral => {
         if (!referralsBySpecialist.has(referral.specialist_id)) {
           referralsBySpecialist.set(referral.specialist_id, []);
         }
         referralsBySpecialist.get(referral.specialist_id).push(referral);
+      });
+      
+      console.log('📊 [DEBUG] Unique specialists with referrals:', referralsBySpecialist.size);
+      
+      // Debug: Nermin İbiş için kontrol et
+      const testSpecialistId = 'e67a51fa-7db6-4932-9b55-6c695949d635';
+      const testData = referralsBySpecialist.get(testSpecialistId);
+      console.log('📊 [DEBUG] Test specialist referrals:', {
+        id: testSpecialistId,
+        found: !!testData,
+        count: testData?.length || 0,
+        data: testData?.slice(0, 3) // İlk 3 kaydı göster
       });
 
       // Her uzman için 12 aylık veriyi oluştur (batch processing)
