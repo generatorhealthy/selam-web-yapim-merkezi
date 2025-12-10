@@ -1493,13 +1493,11 @@ const ClientReferrals = () => {
                                           e.preventDefault(); 
                                           e.stopPropagation();
                                           
-                                          const newCount = Math.max(0, monthlyReferral.count - 1);
-                                          
                                           try {
                                             // Tüm kayıtları getir
                                             const { data: existingRecords, error: fetchError } = await supabase
                                               .from('client_referrals')
-                                              .select('id, notes')
+                                              .select('id, notes, referral_count')
                                               .eq('specialist_id', specialistReferral.id)
                                               .eq('year', currentYear)
                                               .eq('month', monthIndex + 1)
@@ -1545,23 +1543,36 @@ const ClientReferrals = () => {
                                               console.log('✅ [DECREASE] Kayıt silindi, notlar korundu');
                                             }
 
-                                            // UI'ı güncelle
+                                            // Güncel sayıyı veritabanından al
+                                            const { data: updatedRecords, error: countError } = await supabase
+                                              .from('client_referrals')
+                                              .select('referral_count')
+                                              .eq('specialist_id', specialistReferral.id)
+                                              .eq('year', currentYear)
+                                              .eq('month', monthIndex + 1);
+                                            
+                                            const actualCount = countError 
+                                              ? 0 
+                                              : (updatedRecords || []).reduce((sum, r) => sum + (r.referral_count || 0), 0);
+                                            
+                                            console.log('📊 [DECREASE] Actual count after delete:', { actualCount, recordCount: updatedRecords?.length });
+
+                                            // UI'ı gerçek sayı ile güncelle
                                             setSpecialists((prev) =>
                                               prev.map((spec) =>
                                                 spec.id === specialistReferral.id
                                                   ? {
                                                       ...spec,
                                                       referrals: spec.referrals.map((ref) =>
-                                                        ref.month === (monthIndex + 1) ? { ...ref, count: newCount } : ref
+                                                        ref.month === (monthIndex + 1) ? { ...ref, count: actualCount } : ref
                                                       ),
                                                     }
                                                   : spec
                                               )
                                             );
 
-                                            // Danışan detaylarını yenile
+                                            // Danışan detaylarını yenile (fetchSpecialistsAndReferrals kaldırıldı - state'i eziyor)
                                             await fetchClientReferralDetails(specialistReferral.id, monthIndex + 1);
-                                            await fetchSpecialistsAndReferrals();
 
                                             toast({
                                               title: 'Başarılı',
