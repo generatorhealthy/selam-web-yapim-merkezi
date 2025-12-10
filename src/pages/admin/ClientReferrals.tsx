@@ -290,7 +290,7 @@ const ClientReferrals = () => {
         // Yönlendirmeleri doğrudan tablodan getir (RLS admin/staff'a izin veriyor)
         supabase
           .from('client_referrals')
-          .select('specialist_id, year, month, referral_count, notes, updated_at, created_at')
+          .select('specialist_id, year, month, referral_count, notes, updated_at, created_at, is_referred')
           .eq('year', currentYear)
       ]);
 
@@ -339,10 +339,8 @@ const ClientReferrals = () => {
             const month = index + 1;
             const matches = (specialistReferrals as any[]).filter((r: any) => Number(r.month) === month);
 
-            // Tüm kayıtların toplam sayısını hesapla
-            const totalCount = matches.reduce((sum: number, record: any) => {
-              return sum + (record.referral_count || 0);
-            }, 0);
+            // is_referred = true olan kayıtların SAYISINI hesapla (her danışan için bir kayıt)
+            const totalCount = matches.filter((record: any) => record.is_referred === true).length;
             
             // En son notları al (en yeni created_at veya updated_at'a göre)
             const latestNote = matches.length > 0
