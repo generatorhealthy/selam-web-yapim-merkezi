@@ -354,10 +354,16 @@ const ClientReferrals = () => {
             const month = index + 1;
             const matches = (specialistReferrals as any[]).filter((r: any) => Number(r.month) === month);
 
-            // Tüm kayıtların toplam sayısını hesapla
+            // Tüm kayıtların toplam sayısını hesapla (referral_count'u number'a çevir)
             const totalCount = matches.reduce((sum: number, record: any) => {
-              return sum + (record.referral_count || 0);
+              const count = Number(record.referral_count) || 0;
+              return sum + count;
             }, 0);
+            
+            // Debug: Her ayın toplam sayısını logla
+            if (totalCount > 0) {
+              console.log(`📊 [FETCH] ${specialist.name} - Ay ${month}: ${totalCount} yönlendirme (${matches.length} kayıt)`);
+            }
             
             // En son notları al (en yeni created_at veya updated_at'a göre)
             const latestNote = matches.length > 0
