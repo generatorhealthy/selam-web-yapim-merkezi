@@ -331,29 +331,43 @@ const ClientReferrals = () => {
       console.log("✅ Specialists fetched:", specialistsData?.length || 0);
       console.log("✅ Referrals fetched:", allReferrals?.length || 0);
       
-      // RLS session problemi kontrolü: Uzmanlar var ama referral 0 ise retry
+      // is_referred: true olan kayıtları say (gerçek yönlendirmeler)
+      const referredRecords = allReferrals?.filter((r: any) => r.is_referred === true) || [];
+      const totalReferredCount = referredRecords.length;
+      console.log(`✅ Referred records (is_referred=true): ${totalReferredCount}`);
+      
+      // Debug: İlk 5 is_referred=true kaydını logla
+      if (referredRecords.length > 0) {
+        console.log("📋 Sample referred records (first 5):", referredRecords.slice(0, 5).map((r: any) => ({
+          specialist_id: r.specialist_id,
+          month: r.month,
+          client_name: r.client_name,
+          referral_count: r.referral_count,
+          is_referred: r.is_referred
+        })));
+      }
+      
+      // RLS session problemi kontrolü: Uzmanlar var ama hiç is_referred=true kayıt yoksa retry
       const referralCount = allReferrals?.length || 0;
       const specialistCount = specialistsData?.length || 0;
       
+      // Veritabanında yönlendirme var ama sorgu boş geliyorsa RLS sorunu olabilir
       if (specialistCount > 0 && referralCount === 0 && retryCount < MAX_RETRIES) {
-        console.warn(`⚠️ RLS session issue detected: ${specialistCount} specialists but 0 referrals. Retrying in ${RETRY_DELAY}ms...`);
+        console.warn(`⚠️ RLS session issue detected: ${specialistCount} specialists but 0 referrals. Retrying in ${RETRY_DELAY}ms... (attempt ${retryCount + 1})`);
         setLoading(false);
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
         return fetchSpecialistsAndReferrals(retryCount + 1);
       }
       
-      // Debug: İlk 5 referral kaydını logla
+      // Debug: Aralık ayı kayıtlarını say
       if (allReferrals && allReferrals.length > 0) {
-        console.log("📋 Sample referrals (first 5):", allReferrals.slice(0, 5));
+        const decemberReferrals = allReferrals.filter((r: any) => Number(r.month) === 12);
+        const decemberReferred = decemberReferrals.filter((r: any) => r.is_referred === true);
+        console.log(`📊 December stats: ${decemberReferrals.length} total records, ${decemberReferred.length} is_referred=true`);
         
-        // Aralık ayı kayıtlarını say
-        const decemberReferrals = allReferrals.filter(r => Number(r.month) === 12);
-        const decemberWithCount = decemberReferrals.filter(r => Number(r.referral_count) > 0);
-        console.log(`📊 December stats: ${decemberReferrals.length} total records, ${decemberWithCount.length} with count > 0`);
-        
-        // Toplam referral_count toplamı
-        const totalSum = allReferrals.reduce((sum, r) => sum + (Number(r.referral_count) || 0), 0);
-        console.log(`📊 Total referral_count sum: ${totalSum}`);
+        // Toplam referral_count toplamı (sadece is_referred=true için)
+        const totalSum = decemberReferred.reduce((sum: number, r: any) => sum + (Number(r.referral_count) || 0), 0);
+        console.log(`📊 December referral_count sum (is_referred=true only): ${totalSum}`);
       }
 
       if (!specialistsData || specialistsData.length === 0) {
