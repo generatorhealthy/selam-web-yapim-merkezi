@@ -307,9 +307,10 @@ const ClientReferrals = () => {
         
         // Yönlendirmeleri doğrudan tablodan getir (RLS admin/staff'a izin veriyor)
         // NOT: Supabase varsayılan olarak 1000 satır döndürür, tüm kayıtları almak için limit artırıldı
+        // IMPORTANT: is_referred alanı alınmalı çünkü sayı hesaplaması için gerekli
         supabase
           .from('client_referrals')
-          .select('specialist_id, year, month, referral_count, notes, updated_at, created_at')
+          .select('id, specialist_id, year, month, referral_count, notes, is_referred, client_name, client_surname, client_contact, referred_at, updated_at, created_at')
           .eq('year', currentYear)
           .limit(10000)
       ]);
@@ -379,15 +380,17 @@ const ClientReferrals = () => {
             const month = index + 1;
             const matches = (specialistReferrals as any[]).filter((r: any) => Number(r.month) === month);
 
-            // Tüm kayıtların toplam sayısını hesapla (referral_count'u number'a çevir)
-            const totalCount = matches.reduce((sum: number, record: any) => {
+            // SADECE is_referred: true olan kayıtların referral_count toplamını hesapla
+            // is_referred: false olan placeholder kayıtları (notlar için) hariç tut
+            const referredRecords = matches.filter((r: any) => r.is_referred === true);
+            const totalCount = referredRecords.reduce((sum: number, record: any) => {
               const count = Number(record.referral_count) || 0;
               return sum + count;
             }, 0);
             
             // Debug: Her ayın toplam sayısını logla
-            if (totalCount > 0) {
-              console.log(`📊 [FETCH] ${specialist.name} - Ay ${month}: ${totalCount} yönlendirme (${matches.length} kayıt)`);
+            if (totalCount > 0 || referredRecords.length > 0) {
+              console.log(`📊 [FETCH] ${specialist.name} - Ay ${month}: ${totalCount} yönlendirme (${referredRecords.length} is_referred kayıt, ${matches.length} toplam kayıt)`);
             }
             
             // En son notları al (en yeni created_at veya updated_at'a göre)
