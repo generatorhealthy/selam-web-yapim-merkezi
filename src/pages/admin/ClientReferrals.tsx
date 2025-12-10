@@ -288,10 +288,13 @@ const ClientReferrals = () => {
     "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
   ];
 
-  const fetchSpecialistsAndReferrals = async () => {
+  const fetchSpecialistsAndReferrals = async (retryCount = 0): Promise<void> => {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1 saniye
+    
     try {
       setLoading(true);
-      console.log("🔄 Fetching specialists and referrals for year:", currentYear);
+      console.log(`🔄 Fetching specialists and referrals for year: ${currentYear} (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
       
       // Paralel veri çekme ile performansı artır
       const [specialistsResult, referralsResult] = await Promise.all([
@@ -326,6 +329,17 @@ const ClientReferrals = () => {
 
       console.log("✅ Specialists fetched:", specialistsData?.length || 0);
       console.log("✅ Referrals fetched:", allReferrals?.length || 0);
+      
+      // RLS session problemi kontrolü: Uzmanlar var ama referral 0 ise retry
+      const referralCount = allReferrals?.length || 0;
+      const specialistCount = specialistsData?.length || 0;
+      
+      if (specialistCount > 0 && referralCount === 0 && retryCount < MAX_RETRIES) {
+        console.warn(`⚠️ RLS session issue detected: ${specialistCount} specialists but 0 referrals. Retrying in ${RETRY_DELAY}ms...`);
+        setLoading(false);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        return fetchSpecialistsAndReferrals(retryCount + 1);
+      }
       
       // Debug: İlk 5 referral kaydını logla
       if (allReferrals && allReferrals.length > 0) {
@@ -413,6 +427,8 @@ const ClientReferrals = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    
     const initFetch = async () => {
       if (!canAccess) {
         console.log("⏳ Waiting for auth to fetch referrals...");
@@ -426,16 +442,26 @@ const ClientReferrals = () => {
         return;
       }
       
+      // RLS'in session'ı tanıması için kısa bir gecikme ekle
+      console.log("⏳ Waiting 500ms for RLS to propagate session...");
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (!isMounted) return;
+      
       console.log("✅ Auth ready. Fetching for year:", currentYear, "role:", userProfile?.role, "session:", !!session);
       await fetchSpecialistsAndReferrals();
       
       // Ekim 2025 notlarını Kasım ve Aralık 2025'e otomatik kopyala
-      if (currentYear === 2025) {
+      if (currentYear === 2025 && isMounted) {
         copyOctoberNotesToNovDec2025();
       }
     };
     
     initFetch();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [currentYear, canAccess]);
 
   // Sayfa odağa geldiğinde verileri yenile (yalnızca yetki ve session varsa)
