@@ -230,38 +230,23 @@ const ClientReferrals = () => {
     
     try {
       setIsSaving(true);
-      
-      // Get current count from database to ensure accuracy
-      const { data: currentRecords, error: fetchError } = await supabase
-        .from('client_referrals')
-        .select('referral_count')
-        .eq('specialist_id', pendingAction.specialistId)
-        .eq('year', currentYear)
-        .eq('month', pendingAction.month);
-      
-      if (fetchError) {
-        console.error('❌ [DIALOG] Mevcut sayı alınamadı:', fetchError);
-        throw fetchError;
-      }
-      
-      // Calculate current total from database (explicit Number conversion)
-      const currentTotal = (currentRecords || []).reduce((sum, r) => sum + (Number(r.referral_count) || 0), 0);
-      const freshNewCount = currentTotal + 1;
-      
-      console.log('📊 [DIALOG] Fresh count calculation:', {
-        currentTotal,
-        freshNewCount,
-        staleNewCount: pendingAction.newCount
-      });
-      
       await updateReferralCount(
         pendingAction.specialistId, 
         pendingAction.month, 
-        freshNewCount, // Use fresh count instead of stale one
+        pendingAction.newCount,
         clientInfo,
         pendingAction.specialistName,
         pendingAction.specialistPhone
       );
+      
+      // Başarılı ekleme sonrası client detaylarını yeniden çek
+      console.log('✅ [DIALOG] Danışan eklendi, detaylar yeniden çekiliyor...');
+      await fetchClientReferralDetails(pendingAction.specialistId, pendingAction.month);
+      
+      toast({
+        title: "Başarılı",
+        description: `${clientInfo.client_name} ${clientInfo.client_surname} başarıyla eklendi.`,
+      });
       
       setConfirmOpen(false);
       setPendingAction(null);
@@ -288,13 +273,10 @@ const ClientReferrals = () => {
     "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
   ];
 
-  const fetchSpecialistsAndReferrals = async (retryCount = 0): Promise<void> => {
-    const MAX_RETRIES = 3;
-    const RETRY_DELAY = 1000; // 1 saniye
-    
+  const fetchSpecialistsAndReferrals = async () => {
     try {
       setLoading(true);
-      console.log(`🔄 Fetching specialists and referrals for year: ${currentYear} (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
+      console.log("🔄 Fetching specialists and referrals for year:", currentYear);
       
       // Paralel veri çekme ile performansı artır
       const [specialistsResult, referralsResult] = await Promise.all([
@@ -306,13 +288,10 @@ const ClientReferrals = () => {
           .order('name'),
         
         // Yönlendirmeleri doğrudan tablodan getir (RLS admin/staff'a izin veriyor)
-        // NOT: Supabase varsayılan olarak 1000 satır döndürür, tüm kayıtları almak için limit artırıldı
-        // IMPORTANT: is_referred alanı alınmalı çünkü sayı hesaplaması için gerekli
         supabase
           .from('client_referrals')
-          .select('id, specialist_id, year, month, referral_count, notes, is_referred, client_name, client_surname, client_contact, referred_at, updated_at, created_at')
+          .select('specialist_id, year, month, referral_count, notes, updated_at, created_at')
           .eq('year', currentYear)
-          .limit(10000)
       ]);
 
       const { data: specialistsData, error: specialistsError } = specialistsResult;
@@ -331,44 +310,10 @@ const ClientReferrals = () => {
       console.log("✅ Specialists fetched:", specialistsData?.length || 0);
       console.log("✅ Referrals fetched:", allReferrals?.length || 0);
       
-      // is_referred: true olan kayıtları say (gerçek yönlendirmeler)
-      const referredRecords = allReferrals?.filter((r: any) => r.is_referred === true) || [];
-      const totalReferredCount = referredRecords.length;
-      console.log(`✅ Referred records (is_referred=true): ${totalReferredCount}`);
-      
-      // Debug: İlk 5 is_referred=true kaydını logla
-      if (referredRecords.length > 0) {
-        console.log("📋 Sample referred records (first 5):", referredRecords.slice(0, 5).map((r: any) => ({
-          specialist_id: r.specialist_id,
-          month: r.month,
-          client_name: r.client_name,
-          referral_count: r.referral_count,
-          is_referred: r.is_referred
-        })));
-      }
-      
-      // RLS session problemi kontrolü: Uzmanlar var ama hiç is_referred=true kayıt yoksa retry
-      const referralCount = allReferrals?.length || 0;
-      const specialistCount = specialistsData?.length || 0;
-      
-      // Veritabanında yönlendirme var ama sorgu boş geliyorsa RLS sorunu olabilir
-      if (specialistCount > 0 && referralCount === 0 && retryCount < MAX_RETRIES) {
-        console.warn(`⚠️ RLS session issue detected: ${specialistCount} specialists but 0 referrals. Retrying in ${RETRY_DELAY}ms... (attempt ${retryCount + 1})`);
-        setLoading(false);
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-        return fetchSpecialistsAndReferrals(retryCount + 1);
-      }
-      
-      // Debug: Aralık ayı kayıtlarını say
-      if (allReferrals && allReferrals.length > 0) {
-        const decemberReferrals = allReferrals.filter((r: any) => Number(r.month) === 12);
-        const decemberReferred = decemberReferrals.filter((r: any) => r.is_referred === true);
-        console.log(`📊 December stats: ${decemberReferrals.length} total records, ${decemberReferred.length} is_referred=true`);
-        
-        // Toplam referral_count toplamı (sadece is_referred=true için)
-        const totalSum = decemberReferred.reduce((sum: number, r: any) => sum + (Number(r.referral_count) || 0), 0);
-        console.log(`📊 December referral_count sum (is_referred=true only): ${totalSum}`);
-      }
+      // Debug: internal_number değerlerini logla
+      specialistsData?.forEach(specialist => {
+        console.log(`🔍 Specialist ${specialist.name}: internal_number = "${specialist.internal_number}"`);
+      });
 
       if (!specialistsData || specialistsData.length === 0) {
         console.log("⚠️ No specialists found");
@@ -394,18 +339,10 @@ const ClientReferrals = () => {
             const month = index + 1;
             const matches = (specialistReferrals as any[]).filter((r: any) => Number(r.month) === month);
 
-            // SADECE is_referred: true olan kayıtların referral_count toplamını hesapla
-            // is_referred: false olan placeholder kayıtları (notlar için) hariç tut
-            const referredRecords = matches.filter((r: any) => r.is_referred === true);
-            const totalCount = referredRecords.reduce((sum: number, record: any) => {
-              const count = Number(record.referral_count) || 0;
-              return sum + count;
+            // Tüm kayıtların toplam sayısını hesapla
+            const totalCount = matches.reduce((sum: number, record: any) => {
+              return sum + (record.referral_count || 0);
             }, 0);
-            
-            // Debug: Her ayın toplam sayısını logla
-            if (totalCount > 0 || referredRecords.length > 0) {
-              console.log(`📊 [FETCH] ${specialist.name} - Ay ${month}: ${totalCount} yönlendirme (${referredRecords.length} is_referred kayıt, ${matches.length} toplam kayıt)`);
-            }
             
             // En son notları al (en yeni created_at veya updated_at'a göre)
             const latestNote = matches.length > 0
@@ -444,78 +381,29 @@ const ClientReferrals = () => {
   };
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const initFetch = async () => {
-      if (!canAccess) {
-        console.log("⏳ Waiting for auth to fetch referrals...");
-        return;
-      }
-      
-      // Auth session'ın hazır olduğundan emin ol
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        console.error("❌ Auth session not ready:", sessionError?.message || "No session");
-        return;
-      }
-      
-      // RLS'in session'ı tanıması için kısa bir gecikme ekle
-      console.log("⏳ Waiting 500ms for RLS to propagate session...");
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (!isMounted) return;
-      
-      console.log("✅ Auth ready. Fetching for year:", currentYear, "role:", userProfile?.role, "session:", !!session);
-      await fetchSpecialistsAndReferrals();
+    if (canAccess) {
+      console.log("Auth ready. Fetching for year:", currentYear, "role:", userProfile?.role);
+      fetchSpecialistsAndReferrals();
       
       // Ekim 2025 notlarını Kasım ve Aralık 2025'e otomatik kopyala
-      if (currentYear === 2025 && isMounted) {
+      if (currentYear === 2025) {
         copyOctoberNotesToNovDec2025();
       }
-    };
-    
-    initFetch();
-    
-    return () => {
-      isMounted = false;
-    };
+    } else {
+      console.log("Waiting for auth to fetch referrals...");
+    }
   }, [currentYear, canAccess]);
 
-  // Sayfa odağa geldiğinde verileri yenile (yalnızca yetki ve session varsa)
+  // Sayfa odağa geldiğinde verileri yenile (yalnızca yetki varsa)
   useEffect(() => {
-    const handleFocus = async () => {
-      if (!canAccess) return;
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log("⏳ [FOCUS] No session, skipping refresh");
-        return;
+    const handleFocus = () => {
+      if (canAccess) {
+        fetchSpecialistsAndReferrals();
       }
-      
-      console.log("🔄 [FOCUS] Page focused, refreshing data...");
-      await fetchSpecialistsAndReferrals();
     };
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [currentYear, canAccess]);
-
-  // Auth state change listener - session değiştiğinde verileri yeniden çek
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("🔐 [AUTH] State change:", event, "session:", !!session);
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && canAccess) {
-          console.log("🔐 [AUTH] Refreshing data after auth state change...");
-          // Kısa bir gecikme ekle - session tam hazır olsun
-          setTimeout(() => {
-            fetchSpecialistsAndReferrals();
-          }, 500);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
   }, [currentYear, canAccess]);
 
   // Filter specialists based on search term and sort by referral count
@@ -651,73 +539,26 @@ const ClientReferrals = () => {
           client_contact: clientData.client_contact
         });
         
-        // Önce aynı danışan kaydı var mı kontrol et
-        const { data: existingClient, error: existingClientError } = await supabase
+        // Yeni danışan kaydı ekle (notları koru)
+        const { data: insertResult, error: insertError } = await supabase
           .from('client_referrals')
-          .select('id, referral_count')
-          .eq('specialist_id', specialistId)
-          .eq('year', currentYear)
-          .eq('month', month)
-          .eq('client_name', clientData.client_name)
-          .eq('client_surname', clientData.client_surname)
-          .maybeSingle();
-
-        if (existingClientError) {
-          console.error('❌ [CHECK] Mevcut danışan kontrolü hatası:', existingClientError);
-        }
-
-        let insertResult;
-        let insertError;
-
-        if (existingClient) {
-          // Mevcut kaydın sayısını artır
-          console.log('📝 [UPDATE] Mevcut danışan kaydı bulundu, sayı artırılıyor...', existingClient);
-          const result = await supabase
-            .from('client_referrals')
-            .update({
-              referral_count: (existingClient.referral_count || 0) + 1,
-              referred_at: new Date().toISOString(),
-              notes: existingNotes?.notes || '',
-            })
-            .eq('id', existingClient.id)
-            .select('id, referral_count, updated_at');
-          
-          insertResult = result.data;
-          insertError = result.error;
-        } else {
-          // Yeni danışan kaydı ekle (notları koru)
-          console.log('📝 [INSERT] Yeni danışan kaydı ekleniyor...', {
+          .insert({
             specialist_id: specialistId,
             year: currentYear,
             month,
+            referral_count: 1,
             client_name: clientData.client_name,
             client_surname: clientData.client_surname,
-            client_contact: clientData.client_contact
-          });
-          
-          const result = await supabase
-            .from('client_referrals')
-            .insert({
-              specialist_id: specialistId,
-              year: currentYear,
-              month,
-              referral_count: 1,
-              client_name: clientData.client_name,
-              client_surname: clientData.client_surname,
-              client_contact: clientData.client_contact,
-              is_referred: true,
-              referred_at: new Date().toISOString(),
-              referred_by: (await supabase.auth.getUser()).data.user?.id || null,
-              notes: existingNotes?.notes || '',
-            })
-            .select('id, referral_count, updated_at');
-          
-          insertResult = result.data;
-          insertError = result.error;
-        }
+            client_contact: clientData.client_contact,
+            is_referred: true,
+            referred_at: new Date().toISOString(),
+            referred_by: (await supabase.auth.getUser()).data.user?.id || null,
+            notes: existingNotes?.notes || '', // Mevcut notları koru
+          })
+          .select('id, referral_count, updated_at');
 
         if (insertError) {
-          console.error('❌ [INSERT/UPDATE] Danışan bilgisi güncelleme hatası:', insertError);
+          console.error('❌ [INSERT] Danışan bilgisi ekleme hatası:', insertError);
           throw insertError;
         }
         console.log('✅ [INSERT] Danışan bilgisi başarıyla eklendi:', insertResult);
@@ -857,55 +698,23 @@ const ClientReferrals = () => {
           });
         }
       }
-      // Güncel sayıyı veritabanından al (tüm kayıtların toplamı)
-      const { data: updatedRecords, error: countError } = await supabase
-        .from('client_referrals')
-        .select('referral_count')
-        .eq('specialist_id', specialistId)
-        .eq('year', currentYear)
-        .eq('month', month);
-      
-      if (countError) {
-        console.error('❌ [COUNT] Error fetching updated count:', countError);
-      }
-      
-      // RLS boş sonuç döndürürse, beklenen sayıyı kullan
-      const dbSum = (updatedRecords || []).reduce((sum, r) => sum + (Number(r.referral_count) || 0), 0);
-      const actualCount = countError ? newCount : (dbSum === 0 && newCount > 0 ? newCount : dbSum);
-      
-      console.warn('⚠️ [COUNT] RLS check:', {
-        dbSum,
-        newCount,
-        actualCount,
-        recordsReturned: updatedRecords?.length || 0,
-        possibleRlsIssue: dbSum === 0 && newCount > 0
-      });
-      
-      console.log('📊 [COUNT] Actual count after update:', { 
-        actualCount, 
-        newCount, 
-        recordCount: updatedRecords?.length,
-        records: updatedRecords 
-      });
-
-      // UI'yi gerçek sayı ile güncelle
-      setSpecialists((prev) => {
-        const updated = prev.map((spec) =>
+      // Optimistic local update for immediate UI feedback
+      setSpecialists((prev) =>
+        prev.map((spec) =>
           spec.id === specialistId
             ? {
                 ...spec,
                 referrals: spec.referrals.map((ref) =>
-                  ref.month === month ? { ...ref, count: actualCount } : ref
+                  ref.month === month ? { ...ref, count: newCount } : ref
                 ),
               }
             : spec
-        );
-        console.log('📊 [STATE] Updated specialists state for:', specialistId, 'month:', month, 'count:', actualCount);
-        return updated;
-      });
+        )
+      );
 
-      // Danışan detaylarını yenile (fetchSpecialistsAndReferrals kaldırıldı - state'i eziyor)
+      // Danışan detaylarını yenile
       await fetchClientReferralDetails(specialistId, month);
+      await fetchSpecialistsAndReferrals();
 
       toast({
         title: 'Başarılı',
@@ -1598,11 +1407,13 @@ const ClientReferrals = () => {
                                           e.preventDefault(); 
                                           e.stopPropagation();
                                           
+                                          const newCount = Math.max(0, monthlyReferral.count - 1);
+                                          
                                           try {
                                             // Tüm kayıtları getir
                                             const { data: existingRecords, error: fetchError } = await supabase
                                               .from('client_referrals')
-                                              .select('id, notes, referral_count')
+                                              .select('id, notes')
                                               .eq('specialist_id', specialistReferral.id)
                                               .eq('year', currentYear)
                                               .eq('month', monthIndex + 1)
@@ -1648,36 +1459,23 @@ const ClientReferrals = () => {
                                               console.log('✅ [DECREASE] Kayıt silindi, notlar korundu');
                                             }
 
-                                            // Güncel sayıyı veritabanından al
-                                            const { data: updatedRecords, error: countError } = await supabase
-                                              .from('client_referrals')
-                                              .select('referral_count')
-                                              .eq('specialist_id', specialistReferral.id)
-                                              .eq('year', currentYear)
-                                              .eq('month', monthIndex + 1);
-                                            
-                                            const actualCount = countError 
-                                              ? 0 
-                                              : (updatedRecords || []).reduce((sum, r) => sum + (Number(r.referral_count) || 0), 0);
-                                            
-                                            console.log('📊 [DECREASE] Actual count after delete:', { actualCount, recordCount: updatedRecords?.length });
-
-                                            // UI'ı gerçek sayı ile güncelle
+                                            // UI'ı güncelle
                                             setSpecialists((prev) =>
                                               prev.map((spec) =>
                                                 spec.id === specialistReferral.id
                                                   ? {
                                                       ...spec,
                                                       referrals: spec.referrals.map((ref) =>
-                                                        ref.month === (monthIndex + 1) ? { ...ref, count: actualCount } : ref
+                                                        ref.month === (monthIndex + 1) ? { ...ref, count: newCount } : ref
                                                       ),
                                                     }
                                                   : spec
                                               )
                                             );
 
-                                            // Danışan detaylarını yenile (fetchSpecialistsAndReferrals kaldırıldı - state'i eziyor)
+                                            // Danışan detaylarını yenile
                                             await fetchClientReferralDetails(specialistReferral.id, monthIndex + 1);
+                                            await fetchSpecialistsAndReferrals();
 
                                             toast({
                                               title: 'Başarılı',

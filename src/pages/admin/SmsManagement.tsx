@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +47,6 @@ const SmsManagement = () => {
   const [isFetching, setIsFetching] = useState(true);
   const [smsStatus, setSmsStatus] = useState<{type: 'success' | 'error' | null, message: string}>({type: null, message: ''});
   const [recentSms, setRecentSms] = useState<any[]>([]);
-  const [smsSearchQuery, setSmsSearchQuery] = useState<string>('');
 
   // SMS template messages
   const templates = [
@@ -171,7 +169,8 @@ const SmsManagement = () => {
       const { data, error } = await supabase
         .from('sms_logs')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10);
       
       if (error) throw error;
       setRecentSms(data || []);
@@ -179,18 +178,6 @@ const SmsManagement = () => {
       console.error('Error fetching recent SMS logs:', error);
     }
   };
-
-  // Filtered SMS based on search query
-  const filteredSms = useMemo(() => {
-    if (!smsSearchQuery.trim()) return recentSms;
-    const query = smsSearchQuery.toLowerCase().trim();
-    return recentSms.filter(sms => 
-      (sms.specialist_name && sms.specialist_name.toLowerCase().includes(query)) ||
-      (sms.phone && sms.phone.includes(query)) ||
-      (sms.message && sms.message.toLowerCase().includes(query)) ||
-      (sms.client_name && sms.client_name.toLowerCase().includes(query))
-    );
-  }, [recentSms, smsSearchQuery]);
 
   const handleSpecialistChange = (specialistId: string) => {
     setSelectedSpecialist(specialistId);
@@ -606,40 +593,21 @@ const SmsManagement = () => {
             <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-xl">
               <CardTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
-                Tüm Gönderilen SMS'ler
+                Son Gönderilen SMS'ler
               </CardTitle>
               <CardDescription className="text-emerald-100">
-                Toplam {recentSms.length} SMS kaydı {smsSearchQuery && `(${filteredSms.length} sonuç gösteriliyor)`}
+                En son gönderilen 10 SMS kaydı
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              {/* Search Input */}
-              <div className="mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    type="text"
-                    placeholder="Uzman adı, telefon veya mesaj içeriğine göre ara..."
-                    value={smsSearchQuery}
-                    onChange={(e) => setSmsSearchQuery(e.target.value)}
-                    className="pl-10 w-full"
-                  />
-                </div>
-              </div>
-
               {recentSms.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
                   <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>Henüz SMS gönderimi kaydı bulunmamaktadır.</p>
                 </div>
-              ) : filteredSms.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>"{smsSearchQuery}" ile eşleşen SMS bulunamadı.</p>
-                </div>
               ) : (
-                <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {filteredSms.map((sms) => (
+                <div className="space-y-3">
+                  {recentSms.map((sms) => (
                     <div key={sms.id} className={`p-4 border rounded-lg ${
                       sms.status === 'success' 
                         ? 'border-green-200 bg-green-50/50' 
