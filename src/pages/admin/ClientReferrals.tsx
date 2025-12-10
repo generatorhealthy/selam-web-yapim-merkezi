@@ -230,23 +230,38 @@ const ClientReferrals = () => {
     
     try {
       setIsSaving(true);
+      
+      // Get current count from database to ensure accuracy
+      const { data: currentRecords, error: fetchError } = await supabase
+        .from('client_referrals')
+        .select('referral_count')
+        .eq('specialist_id', pendingAction.specialistId)
+        .eq('year', currentYear)
+        .eq('month', pendingAction.month);
+      
+      if (fetchError) {
+        console.error('❌ [DIALOG] Mevcut sayı alınamadı:', fetchError);
+        throw fetchError;
+      }
+      
+      // Calculate current total from database
+      const currentTotal = (currentRecords || []).reduce((sum, r) => sum + (r.referral_count || 0), 0);
+      const freshNewCount = currentTotal + 1;
+      
+      console.log('📊 [DIALOG] Fresh count calculation:', {
+        currentTotal,
+        freshNewCount,
+        staleNewCount: pendingAction.newCount
+      });
+      
       await updateReferralCount(
         pendingAction.specialistId, 
         pendingAction.month, 
-        pendingAction.newCount,
+        freshNewCount, // Use fresh count instead of stale one
         clientInfo,
         pendingAction.specialistName,
         pendingAction.specialistPhone
       );
-      
-      // Başarılı ekleme sonrası client detaylarını yeniden çek
-      console.log('✅ [DIALOG] Danışan eklendi, detaylar yeniden çekiliyor...');
-      await fetchClientReferralDetails(pendingAction.specialistId, pendingAction.month);
-      
-      toast({
-        title: "Başarılı",
-        description: `${clientInfo.client_name} ${clientInfo.client_surname} başarıyla eklendi.`,
-      });
       
       setConfirmOpen(false);
       setPendingAction(null);
