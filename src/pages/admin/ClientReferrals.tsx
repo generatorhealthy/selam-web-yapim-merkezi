@@ -413,29 +413,66 @@ const ClientReferrals = () => {
   };
 
   useEffect(() => {
-    if (canAccess) {
-      console.log("Auth ready. Fetching for year:", currentYear, "role:", userProfile?.role);
-      fetchSpecialistsAndReferrals();
+    const initFetch = async () => {
+      if (!canAccess) {
+        console.log("⏳ Waiting for auth to fetch referrals...");
+        return;
+      }
+      
+      // Auth session'ın hazır olduğundan emin ol
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error("❌ Auth session not ready:", sessionError?.message || "No session");
+        return;
+      }
+      
+      console.log("✅ Auth ready. Fetching for year:", currentYear, "role:", userProfile?.role, "session:", !!session);
+      await fetchSpecialistsAndReferrals();
       
       // Ekim 2025 notlarını Kasım ve Aralık 2025'e otomatik kopyala
       if (currentYear === 2025) {
         copyOctoberNotesToNovDec2025();
       }
-    } else {
-      console.log("Waiting for auth to fetch referrals...");
-    }
+    };
+    
+    initFetch();
   }, [currentYear, canAccess]);
 
-  // Sayfa odağa geldiğinde verileri yenile (yalnızca yetki varsa)
+  // Sayfa odağa geldiğinde verileri yenile (yalnızca yetki ve session varsa)
   useEffect(() => {
-    const handleFocus = () => {
-      if (canAccess) {
-        fetchSpecialistsAndReferrals();
+    const handleFocus = async () => {
+      if (!canAccess) return;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log("⏳ [FOCUS] No session, skipping refresh");
+        return;
       }
+      
+      console.log("🔄 [FOCUS] Page focused, refreshing data...");
+      await fetchSpecialistsAndReferrals();
     };
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
+  }, [currentYear, canAccess]);
+
+  // Auth state change listener - session değiştiğinde verileri yeniden çek
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("🔐 [AUTH] State change:", event, "session:", !!session);
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && canAccess) {
+          console.log("🔐 [AUTH] Refreshing data after auth state change...");
+          // Kısa bir gecikme ekle - session tam hazır olsun
+          setTimeout(() => {
+            fetchSpecialistsAndReferrals();
+          }, 500);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, [currentYear, canAccess]);
 
   // Filter specialists based on search term and sort by referral count
