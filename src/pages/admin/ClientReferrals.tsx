@@ -287,17 +287,18 @@ const ClientReferrals = () => {
           .eq('is_active', true)
           .order('name'),
         
-        // Yönlendirmeleri doğrudan tablodan getir (RLS admin/staff'a izin veriyor)
-        // LIMIT artırıldı - varsayılan 1000 yetersiz kalıyor
-        supabase
-          .from('client_referrals')
-          .select('specialist_id, year, month, referral_count, notes, updated_at, created_at, is_referred')
-          .eq('year', currentYear)
-          .limit(10000) // Tüm kayıtları al
+        // Yönlendirmeleri RPC fonksiyonu ile getir (RLS bypass)
+        supabase.rpc('admin_get_client_referrals', { p_year: currentYear })
       ]);
 
       const { data: specialistsData, error: specialistsError } = specialistsResult;
       const { data: allReferrals, error: referralsError } = referralsResult;
+      
+      console.log('📊 [FETCH] Referrals RPC result:', {
+        count: allReferrals?.length || 0,
+        error: referralsError?.message || null,
+        sample: allReferrals?.slice(0, 3)
+      });
 
       if (specialistsError) {
         console.error('❌ Specialists fetch error:', specialistsError);
