@@ -278,36 +278,55 @@ const ClientReferrals = () => {
       setLoading(true);
       console.log("🔄 Fetching specialists and referrals for year:", currentYear);
       
-      // Paralel veri çekme ile performansı artır
-      const [specialistsResult, referralsResult] = await Promise.all([
-        // Tüm aktif uzmanları getir
-        supabase
-          .from('specialists')
-          .select('id, name, specialty, city, phone, email, internal_number, online_consultation, face_to_face_consultation, payment_day')
-          .eq('is_active', true)
-          .order('name'),
+      // Tüm aktif uzmanları getir
+      const { data: specialistsData, error: specialistsError } = await supabase
+        .from('specialists')
+        .select('id, name, specialty, city, phone, email, internal_number, online_consultation, face_to_face_consultation, payment_day')
+        .eq('is_active', true)
+        .order('name');
+
+      // Yönlendirmeleri sayfalama ile getir (Supabase max 1000 satır döndürür)
+      let allReferrals: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
         
-        // Yönlendirmeleri doğrudan tablodan getir - tüm kayıtları al (varsayılan limit 1000'i aş)
-        supabase
+        const { data: pageData, error: pageError } = await supabase
           .from('client_referrals')
           .select('*')
           .eq('year', currentYear)
-          .range(0, 9999) // Tüm kayıtları almak için range kullan
-      ]);
-
-      const { data: specialistsData, error: specialistsError } = specialistsResult;
-      const { data: allReferrals, error: referralsError } = referralsResult;
+          .range(from, to);
+        
+        if (pageError) {
+          console.error(`❌ Referrals page ${page} fetch error:`, pageError);
+          break;
+        }
+        
+        if (pageData && pageData.length > 0) {
+          allReferrals = [...allReferrals, ...pageData];
+          hasMore = pageData.length === pageSize;
+          page++;
+          console.log(`📊 [FETCH] Page ${page}: ${pageData.length} records, total: ${allReferrals.length}`);
+        } else {
+          hasMore = false;
+        }
+      }
+      
+      const referralsError = null;
       
       // DEBUG: Spesifik uzman için kayıtları kontrol et
       const testSpecId = 'e67a51fa-7db6-4932-9b55-6c695949d635';
       const testSpecRecords = allReferrals?.filter((r: any) => r.specialist_id === testSpecId) || [];
       const testSpecDecRecords = testSpecRecords.filter((r: any) => Number(r.month) === 12);
-      console.log('📊 [FETCH] Direct query result:', {
+      console.log('📊 [FETCH] All referrals result:', {
         totalCount: allReferrals?.length || 0,
         testSpecAllRecords: testSpecRecords.length,
         testSpecDecemberRecords: testSpecDecRecords.length,
         testSpecDecemberReferred: testSpecDecRecords.filter((r: any) => r.is_referred === true).length,
-        error: referralsError?.message || null,
         sampleDecember: testSpecDecRecords.slice(0, 3)
       });
 
