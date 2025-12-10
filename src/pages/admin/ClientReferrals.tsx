@@ -303,10 +303,12 @@ const ClientReferrals = () => {
           .order('name'),
         
         // Yönlendirmeleri doğrudan tablodan getir (RLS admin/staff'a izin veriyor)
+        // NOT: Supabase varsayılan olarak 1000 satır döndürür, tüm kayıtları almak için limit artırıldı
         supabase
           .from('client_referrals')
           .select('specialist_id, year, month, referral_count, notes, updated_at, created_at')
           .eq('year', currentYear)
+          .limit(10000)
       ]);
 
       const { data: specialistsData, error: specialistsError } = specialistsResult;
