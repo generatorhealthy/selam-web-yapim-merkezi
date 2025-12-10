@@ -244,8 +244,8 @@ const ClientReferrals = () => {
         throw fetchError;
       }
       
-      // Calculate current total from database
-      const currentTotal = (currentRecords || []).reduce((sum, r) => sum + (r.referral_count || 0), 0);
+      // Calculate current total from database (explicit Number conversion)
+      const currentTotal = (currentRecords || []).reduce((sum, r) => sum + (Number(r.referral_count) || 0), 0);
       const freshNewCount = currentTotal + 1;
       
       console.log('📊 [DIALOG] Fresh count calculation:', {
@@ -327,10 +327,19 @@ const ClientReferrals = () => {
       console.log("✅ Specialists fetched:", specialistsData?.length || 0);
       console.log("✅ Referrals fetched:", allReferrals?.length || 0);
       
-      // Debug: internal_number değerlerini logla
-      specialistsData?.forEach(specialist => {
-        console.log(`🔍 Specialist ${specialist.name}: internal_number = "${specialist.internal_number}"`);
-      });
+      // Debug: İlk 5 referral kaydını logla
+      if (allReferrals && allReferrals.length > 0) {
+        console.log("📋 Sample referrals (first 5):", allReferrals.slice(0, 5));
+        
+        // Aralık ayı kayıtlarını say
+        const decemberReferrals = allReferrals.filter(r => Number(r.month) === 12);
+        const decemberWithCount = decemberReferrals.filter(r => Number(r.referral_count) > 0);
+        console.log(`📊 December stats: ${decemberReferrals.length} total records, ${decemberWithCount.length} with count > 0`);
+        
+        // Toplam referral_count toplamı
+        const totalSum = allReferrals.reduce((sum, r) => sum + (Number(r.referral_count) || 0), 0);
+        console.log(`📊 Total referral_count sum: ${totalSum}`);
+      }
 
       if (!specialistsData || specialistsData.length === 0) {
         console.log("⚠️ No specialists found");
@@ -780,9 +789,17 @@ const ClientReferrals = () => {
         console.error('❌ [COUNT] Error fetching updated count:', countError);
       }
       
-      const actualCount = countError 
-        ? newCount 
-        : (updatedRecords || []).reduce((sum, r) => sum + (r.referral_count || 0), 0);
+      // RLS boş sonuç döndürürse, beklenen sayıyı kullan
+      const dbSum = (updatedRecords || []).reduce((sum, r) => sum + (Number(r.referral_count) || 0), 0);
+      const actualCount = countError ? newCount : (dbSum === 0 && newCount > 0 ? newCount : dbSum);
+      
+      console.warn('⚠️ [COUNT] RLS check:', {
+        dbSum,
+        newCount,
+        actualCount,
+        recordsReturned: updatedRecords?.length || 0,
+        possibleRlsIssue: dbSum === 0 && newCount > 0
+      });
       
       console.log('📊 [COUNT] Actual count after update:', { 
         actualCount, 
@@ -1561,7 +1578,7 @@ const ClientReferrals = () => {
                                             
                                             const actualCount = countError 
                                               ? 0 
-                                              : (updatedRecords || []).reduce((sum, r) => sum + (r.referral_count || 0), 0);
+                                              : (updatedRecords || []).reduce((sum, r) => sum + (Number(r.referral_count) || 0), 0);
                                             
                                             console.log('📊 [DECREASE] Actual count after delete:', { actualCount, recordCount: updatedRecords?.length });
 
