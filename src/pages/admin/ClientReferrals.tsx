@@ -760,14 +760,28 @@ const ClientReferrals = () => {
           });
         }
       }
-      // Optimistic local update for immediate UI feedback
+      // Güncel sayıyı veritabanından al
+      const { data: updatedRecords, error: countError } = await supabase
+        .from('client_referrals')
+        .select('referral_count')
+        .eq('specialist_id', specialistId)
+        .eq('year', currentYear)
+        .eq('month', month);
+      
+      const actualCount = countError 
+        ? newCount 
+        : (updatedRecords || []).reduce((sum, r) => sum + (r.referral_count || 0), 0);
+      
+      console.log('📊 [COUNT] Actual count after update:', { actualCount, newCount, updatedRecords });
+
+      // UI'yi gerçek sayı ile güncelle
       setSpecialists((prev) =>
         prev.map((spec) =>
           spec.id === specialistId
             ? {
                 ...spec,
                 referrals: spec.referrals.map((ref) =>
-                  ref.month === month ? { ...ref, count: newCount } : ref
+                  ref.month === month ? { ...ref, count: actualCount } : ref
                 ),
               }
             : spec
