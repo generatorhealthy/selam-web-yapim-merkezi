@@ -340,14 +340,18 @@ const ClientReferrals = () => {
             const matches = (specialistReferrals as any[]).filter((r: any) => Number(r.month) === month);
 
             // is_referred = true olan kayıtların SAYISINI hesapla (her danışan için bir kayıt)
-            const totalCount = matches.filter((record: any) => record.is_referred === true).length;
+            // Boolean kontrolünü gevşet - string/boolean farklılıkları için
+            const totalCount = matches.filter((record: any) => 
+              record.is_referred === true || record.is_referred === 'true'
+            ).length;
             
-            // En son notları al (en yeni created_at veya updated_at'a göre)
-            const latestNote = matches.length > 0
-              ? matches.sort((a: any, b: any) => 
-                  new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
-                )[0]?.notes || ''
-              : '';
+            // En son dolu notu al (önce notu olan kayıtları tercih et, sonra en yeni)
+            const recordsWithNotes = matches.filter((r: any) => r.notes && r.notes.trim() !== '');
+            const sortedRecords = (recordsWithNotes.length > 0 ? recordsWithNotes : matches)
+              .sort((a: any, b: any) => 
+                new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()
+              );
+            const latestNote = sortedRecords[0]?.notes || '';
 
             return {
               month,
@@ -749,7 +753,7 @@ const ClientReferrals = () => {
       console.log(`📊 [NOTES] Found ${existingRecords?.length || 0} records`);
 
       if (!existingRecords || existingRecords.length === 0) {
-        // Hiç kayıt yoksa yeni kayıt oluştur
+        // Hiç kayıt yoksa yeni kayıt oluştur (NOT kaydı - is_referred: false)
         const { error: insertError } = await supabase
           .from('client_referrals')
           .insert({
@@ -758,6 +762,7 @@ const ClientReferrals = () => {
             month,
             notes,
             referral_count: 0,
+            is_referred: false, // Not kaydı, danışan değil
             updated_at: new Date().toISOString(),
           });
 
@@ -859,7 +864,7 @@ const ClientReferrals = () => {
                 .eq('id', existing.id);
             }
           } else {
-            // Yeni kayıt oluştur
+            // Yeni kayıt oluştur (NOT kaydı - is_referred: false)
             await supabase
               .from('client_referrals')
               .insert({
@@ -868,6 +873,7 @@ const ClientReferrals = () => {
                 month,
                 notes: record.notes,
                 referral_count: 0,
+                is_referred: false, // Not kopyası, danışan değil
                 updated_at: new Date().toISOString(),
               });
           }
