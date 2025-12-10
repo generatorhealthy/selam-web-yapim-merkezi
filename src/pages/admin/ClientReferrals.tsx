@@ -287,17 +287,28 @@ const ClientReferrals = () => {
           .eq('is_active', true)
           .order('name'),
         
-        // Yönlendirmeleri RPC fonksiyonu ile getir (RLS bypass)
-        supabase.rpc('admin_get_client_referrals', { p_year: currentYear })
+        // Yönlendirmeleri doğrudan tablodan getir - tüm kayıtları al (varsayılan limit 1000'i aş)
+        supabase
+          .from('client_referrals')
+          .select('*')
+          .eq('year', currentYear)
+          .range(0, 9999) // Tüm kayıtları almak için range kullan
       ]);
 
       const { data: specialistsData, error: specialistsError } = specialistsResult;
       const { data: allReferrals, error: referralsError } = referralsResult;
       
-      console.log('📊 [FETCH] Referrals RPC result:', {
-        count: allReferrals?.length || 0,
+      // DEBUG: Spesifik uzman için kayıtları kontrol et
+      const testSpecId = 'e67a51fa-7db6-4932-9b55-6c695949d635';
+      const testSpecRecords = allReferrals?.filter((r: any) => r.specialist_id === testSpecId) || [];
+      const testSpecDecRecords = testSpecRecords.filter((r: any) => Number(r.month) === 12);
+      console.log('📊 [FETCH] Direct query result:', {
+        totalCount: allReferrals?.length || 0,
+        testSpecAllRecords: testSpecRecords.length,
+        testSpecDecemberRecords: testSpecDecRecords.length,
+        testSpecDecemberReferred: testSpecDecRecords.filter((r: any) => r.is_referred === true).length,
         error: referralsError?.message || null,
-        sample: allReferrals?.slice(0, 3)
+        sampleDecember: testSpecDecRecords.slice(0, 3)
       });
 
       if (specialistsError) {
