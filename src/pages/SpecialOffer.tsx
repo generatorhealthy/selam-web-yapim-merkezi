@@ -101,6 +101,19 @@ const SpecialOffer = () => {
             ))}
           </div>
           
+          {/* Guarantee Banner */}
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-300 rounded-2xl p-6 flex items-center gap-6">
+              <div className="flex-shrink-0 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <Users className="w-8 h-8 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-green-700">Aylık Danışan Yönlendirme Garantisi</h3>
+                <p className="text-green-600">Her ay danışan yönlendirme garantisi ile risksiz büyüme</p>
+              </div>
+            </div>
+          </div>
+          
           {/* Main Package Card */}
           <div className="max-w-4xl mx-auto">
             <Card className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 overflow-hidden">
