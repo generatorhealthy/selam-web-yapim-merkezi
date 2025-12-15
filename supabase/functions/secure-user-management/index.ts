@@ -196,6 +196,25 @@ serve(async (req) => {
         await supabaseAdmin.from('client_referrals').delete().eq('referred_by', userId)
         console.log('All client referrals (as referrer) deleted')
 
+        // Delete blog posts where this user is the author
+        await supabaseAdmin.from('blog_posts').delete().eq('author_id', userId)
+        console.log('Blog posts deleted')
+
+        // Delete user profile (this is required before deleting auth user due to foreign key)
+        const { error: profileDeleteError } = await supabaseAdmin
+          .from('user_profiles')
+          .delete()
+          .eq('user_id', userId)
+        
+        if (profileDeleteError) {
+          console.error('User profile deletion error:', profileDeleteError)
+          return new Response(
+            JSON.stringify({ error: `User profile deletion failed: ${profileDeleteError.message}` }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        console.log('User profile deleted')
+
         // Now delete user from auth.users table
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
