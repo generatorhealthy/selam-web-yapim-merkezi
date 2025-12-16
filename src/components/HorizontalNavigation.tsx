@@ -4,7 +4,7 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuL
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Menu, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import { AdminTopBar } from "./AdminTopBar";
 import RegistrationForm from "./RegistrationForm";
@@ -317,14 +317,22 @@ export function HorizontalNavigation() {
 
           {/* Mobile Menu Button */}
           {isMobile && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-2 hover:bg-gray-100 rounded-full"
+            <button
+              className="flex flex-col items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+              {isMobileMenuOpen ? (
+                <X className="h-5 w-5 text-gray-800" />
+              ) : (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="w-6 h-[3px] bg-gray-800 rounded-full"></div>
+                    <div className="w-6 h-[3px] bg-gray-800 rounded-full"></div>
+                  </div>
+                  <span className="text-[10px] font-medium text-gray-800 mt-1">MENU</span>
+                </>
+              )}
+            </button>
           )}
 
           {/* Desktop Right Side */}
