@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.scheduled-linkedin-share]
 verify_jwt = false
+
+[functions.send-order-documents-email]
+verify_jwt = false
