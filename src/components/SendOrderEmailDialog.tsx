@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -27,12 +28,17 @@ interface UploadedFile {
 
 const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialogProps) => {
   const { toast } = useToast();
+  const [recipientEmail, setRecipientEmail] = useState<string>(order?.customer_email ?? "");
   const [message, setMessage] = useState<string>(
     `Merhaba,\n\nSipariş belgeleriniz ekte yer almaktadır.\n\nHerhangi bir sorunuz olursa bizimle iletişime geçmekten çekinmeyin.\n\nSaygılarımızla,\nDoktorumol Ekibi`
   );
   const [invoiceFile, setInvoiceFile] = useState<UploadedFile | null>(null);
   const [contractFile, setContractFile] = useState<UploadedFile | null>(null);
   const [isSending, setIsSending] = useState(false);
+
+  useEffect(() => {
+    setRecipientEmail(order?.customer_email ?? "");
+  }, [order?.customer_email, open]);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -103,6 +109,18 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
   const handleSendEmail = async () => {
     if (!order) return;
 
+    const normalizedEmail = recipientEmail.trim().toLowerCase();
+    const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+
+    if (!emailIsValid) {
+      toast({
+        title: "Hata",
+        description: `E-posta adresi hatalı görünüyor: ${recipientEmail}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!message.trim()) {
       toast({
         title: "Hata",
@@ -126,7 +144,7 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
     try {
       const { data, error } = await supabase.functions.invoke('send-order-documents-email', {
         body: {
-          customerEmail: order.customer_email,
+          customerEmail: normalizedEmail,
           customerName: order.customer_name,
           packageName: order.package_name,
           message: message,
@@ -141,7 +159,7 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
 
       toast({
         title: "Başarılı",
-        description: `E-posta ${order.customer_email} adresine gönderildi`,
+        description: `E-posta ${normalizedEmail} adresine gönderildi`,
       });
 
       // Reset form
@@ -175,11 +193,23 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
             Sipariş Belgelerini Gönder
           </DialogTitle>
           <DialogDescription>
-            {order?.customer_name} ({order?.customer_email}) adresine fatura ve sözleşme belgelerini gönderin.
+            {order?.customer_name} ({recipientEmail || order?.customer_email}) adresine fatura ve sözleşme belgelerini gönderin.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Recipient */}
+          <div className="space-y-2">
+            <Label htmlFor="recipientEmail">Alıcı E-posta</Label>
+            <Input
+              id="recipientEmail"
+              value={recipientEmail}
+              onChange={(e) => setRecipientEmail(e.target.value)}
+              placeholder="ornek@domain.com"
+              autoComplete="email"
+            />
+          </div>
+
           {/* Invoice Upload */}
           <div className="space-y-2">
             <Label htmlFor="invoice">Fatura (PDF)</Label>
