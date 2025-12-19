@@ -28,7 +28,9 @@ interface UploadedFile {
 
 const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialogProps) => {
   const { toast } = useToast();
-  const [recipientEmail, setRecipientEmail] = useState<string>(order?.customer_email ?? "");
+  // Not: Bu diyalog, belgeleri genelde *uzmana* göndermek için kullanılır.
+  // Bu yüzden varsayılan alıcıyı müşterinin e-postasıyla otomatik doldurmuyoruz.
+  const [recipientEmail, setRecipientEmail] = useState<string>("");
   const [message, setMessage] = useState<string>(
     `Merhaba,\n\nSipariş belgeleriniz ekte yer almaktadır.\n\nHerhangi bir sorunuz olursa bizimle iletişime geçmekten çekinmeyin.\n\nSaygılarımızla,\nDoktorumol Ekibi`
   );
@@ -37,8 +39,8 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    setRecipientEmail(order?.customer_email ?? "");
-  }, [order?.customer_email, open]);
+    if (open) setRecipientEmail("");
+  }, [open, order?.id]);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -193,19 +195,19 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
             Sipariş Belgelerini Gönder
           </DialogTitle>
           <DialogDescription>
-            {order?.customer_name} ({recipientEmail || order?.customer_email}) adresine fatura ve sözleşme belgelerini gönderin.
+            Müşteri: {order?.customer_name} ({order?.customer_email}) — belgeleri göndereceğiniz alıcı (uzman) e-postasını aşağıdan girin.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Recipient */}
           <div className="space-y-2">
-            <Label htmlFor="recipientEmail">Alıcı E-posta</Label>
+            <Label htmlFor="recipientEmail">Alıcı E-posta (Uzman)</Label>
             <Input
               id="recipientEmail"
               value={recipientEmail}
               onChange={(e) => setRecipientEmail(e.target.value)}
-              placeholder="ornek@domain.com"
+              placeholder="uzman@domain.com"
               autoComplete="email"
             />
           </div>
