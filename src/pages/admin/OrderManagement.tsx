@@ -15,7 +15,8 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt, Mail } from "lucide-react";
+import SendOrderEmailDialog from "@/components/SendOrderEmailDialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
@@ -66,6 +67,7 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [emailOrder, setEmailOrder] = useState<Order | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const PAGE_SIZE = 50;
@@ -1231,6 +1233,16 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                   <Button
                                     variant="outline"
                                     size="sm"
+                                    onClick={() => setEmailOrder(order)}
+                                    className="flex items-center gap-1 bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 text-xs flex-1"
+                                  >
+                                    <Mail className="w-3 h-3" />
+                                    Mail Gönder
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => {
                                       setSelectedOrder(order);
                                       setEditingOrder(order);
@@ -1525,6 +1537,13 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
         </TabsContent>
 
       </Tabs>
+
+      {/* Send Order Email Dialog */}
+      <SendOrderEmailDialog
+        order={emailOrder}
+        open={!!emailOrder}
+        onOpenChange={(open) => !open && setEmailOrder(null)}
+      />
       </div>
     </div>
   );
