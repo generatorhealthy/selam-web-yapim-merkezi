@@ -117,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           <div class="footer">
             <p>Bu e-posta <strong>Doktorumol</strong> tarafından gönderilmiştir.</p>
-            <p>Sorularınız için: <a href="mailto:info@doktorumol.com">info@doktorumol.com</a></p>
+            <p>Sorularınız için: <a href="mailto:info@doktorumol.com.tr">info@doktorumol.com.tr</a></p>
           </div>
         </div>
       </body>
@@ -128,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailPayload: any = {
       sender: {
         name: 'Doktorumol',
-        email: 'info@doktorumol.com'
+        email: 'info@doktorumol.com.tr'
       },
       to: [
         {
