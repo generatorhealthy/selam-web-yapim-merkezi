@@ -109,7 +109,7 @@
     <!-- Preload critical resources -->
     <link rel="modulepreload" href="/src/main.tsx">
     
-    <!-- Google tag (gtag.js) - Optimized with requestIdleCallback -->
+    <!-- Google tag (gtag.js) - Google Analytics & Ads -->
     <script type="text/javascript">
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -119,11 +119,16 @@
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.async = true;
-        script.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17512133573';
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-0CVEMJ5TGM';
         document.head.appendChild(script);
         
         script.onload = function() {
           gtag('js', new Date());
+          
+          // Google Analytics 4
+          gtag('config', 'G-0CVEMJ5TGM');
+          
+          // Google Ads
           gtag('config', 'AW-17512133573');
           
           gtag('event', 'conversion', {
