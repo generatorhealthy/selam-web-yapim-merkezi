@@ -28,8 +28,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Verimor credentials not configured');
     }
 
-    // SMS alıcı numaraları
-    const recipients = ['905316852275', '905073850433'];
+    // SMS alıcı numarası - sadece admin
+    const recipients = ['905316852275'];
     
     // SMS mesajı - sipariş detayları
     const message = `🆕 YENİ SİPARİŞ!
