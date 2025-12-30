@@ -81,8 +81,8 @@ const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
 
       toast.success("Başvurunuz başarıyla gönderildi! En kısa sürede size dönüş yapacağız.");
       
-      // Paketler sayfasına yönlendir
-      navigate('/paketler');
+      // Bu aya özel sayfasına yönlendir
+      navigate('/bu-aya-ozel');
       
       // Formu temizle ve kapat
       setFormData({
