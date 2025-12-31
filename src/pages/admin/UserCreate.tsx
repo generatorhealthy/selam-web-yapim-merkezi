@@ -22,7 +22,7 @@ const UserCreate = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    role: "specialist" as "admin" | "specialist" | "staff" | "legal",
+    role: "specialist" as "admin" | "specialist" | "staff" | "legal" | "muhasebe",
     name: ""
   });
 
@@ -255,6 +255,8 @@ const UserCreate = () => {
         successMessage += " Staff hesabı oluşturuldu.";
       } else if (formData.role === "legal") {
         successMessage += " Hukuk Birimi hesabı oluşturuldu.";
+      } else if (formData.role === "muhasebe") {
+        successMessage += " Muhasebe Birimi hesabı oluşturuldu.";
       }
 
       toast({
@@ -384,7 +386,7 @@ const UserCreate = () => {
                   <Label htmlFor="role">Kullanıcı Rolü *</Label>
                   <Select 
                     value={formData.role} 
-                    onValueChange={(value: "admin" | "specialist" | "staff" | "legal") => handleInputChange('role', value)}
+                    onValueChange={(value: "admin" | "specialist" | "staff" | "legal" | "muhasebe") => handleInputChange('role', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Rol seçin" />
@@ -397,6 +399,7 @@ const UserCreate = () => {
                           <SelectItem value="specialist">Uzman</SelectItem>
                           <SelectItem value="staff">Staff (Sınırlı Yetkili)</SelectItem>
                           <SelectItem value="legal">Hukuk Birimi</SelectItem>
+                          <SelectItem value="muhasebe">Muhasebe Birimi</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
                         </>
                       )}

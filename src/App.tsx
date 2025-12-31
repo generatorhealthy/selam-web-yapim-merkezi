@@ -80,6 +80,7 @@ import SitemapManagement from "./pages/admin/SitemapManagement";
 import ImageConverter from "./pages/admin/ImageConverter";
 import SocialMediaManagement from "./pages/admin/SocialMediaManagement";
 import DatabaseBackup from "./pages/admin/DatabaseBackup";
+import AccountingDocuments from "./pages/admin/AccountingDocuments";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Doctor pages
@@ -196,8 +197,9 @@ const AppContent = () => {
               <Route path="/divan_paneli/pbx-management" element={<PbxManagement />} />
               <Route path="/divan_paneli/prospective-registrations" element={<ProspectiveRegistrations />} />
               <Route path="/divan_paneli/log-management" element={<LogManagement />} />
-                <Route path="/divan_paneli/sitemap" element={<SitemapManagement />} />
-                <Route path="/divan_paneli/image-converter" element={<ImageConverter />} />
+              <Route path="/divan_paneli/sitemap" element={<SitemapManagement />} />
+              <Route path="/divan_paneli/image-converter" element={<ImageConverter />} />
+              <Route path="/divan_paneli/accounting" element={<AccountingDocuments />} />
                 <Route path="/divan_paneli/social-media" element={<SocialMediaManagement />} />
                 <Route path="/divan_paneli/database-backup" element={<DatabaseBackup />} />
                 

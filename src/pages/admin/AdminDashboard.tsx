@@ -81,6 +81,7 @@ const AdminDashboard = () => {
   const isAdmin = userProfile?.role === 'admin';
   const isStaff = userProfile?.role === 'staff';
   const isLegal = userProfile?.role === 'legal';
+  const isMuhasebe = userProfile?.role === 'muhasebe';
 
   const adminCards = [
     {
@@ -384,6 +385,18 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "Muhasebe Birimi",
+      description: "Gider faturalarını yönet ve arşivle",
+      icon: DollarSign,
+      gradient: "from-emerald-500 via-teal-500 to-cyan-600",
+      bgGradient: "from-emerald-50 to-cyan-50",
+      shadowColor: "shadow-emerald-500/20",
+      route: "/divan_paneli/accounting",
+      buttonText: "Muhasebe Birimini Aç",
+      adminOnly: false,
+      muhasebeOnly: true
+    },
+    {
       title: "Veritabanı Yedekleme",
       description: "Otomatik ve manuel yedekleme işlemleri",
       icon: HardDrive,
@@ -397,6 +410,10 @@ const AdminDashboard = () => {
   ];
 
   const visibleCards = adminCards.filter(card => {
+    if (isMuhasebe) {
+      return (card as any).muhasebeOnly;
+    }
+    
     if (isLegal) {
       return card.legalAccess;
     }
@@ -416,6 +433,7 @@ const AdminDashboard = () => {
     if (isAdmin) return 'Admin';
     if (isStaff) return 'Staff';
     if (isLegal) return 'Hukuk Birimi';
+    if (isMuhasebe) return 'Muhasebe Birimi';
     return 'Kullanıcı';
   };
 
@@ -434,7 +452,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!userProfile || !['admin', 'staff', 'legal'].includes(userProfile.role)) {
+  if (!userProfile || !['admin', 'staff', 'legal', 'muhasebe'].includes(userProfile.role)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-rose-50 flex items-center justify-center">
         <div className="bg-white/95 backdrop-blur-lg p-10 rounded-3xl shadow-2xl text-center border border-red-100/50">
