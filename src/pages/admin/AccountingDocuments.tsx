@@ -115,6 +115,27 @@ const AccountingDocuments = () => {
     }
   };
 
+  const sendNotificationEmail = async (fileName: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-accounting-notification', {
+        body: {
+          fileName,
+          year: selectedYear,
+          month: selectedMonth,
+          uploadedBy: userProfile?.name || userProfile?.email
+        }
+      });
+
+      if (error) {
+        console.error('Bildirim e-postası gönderilirken hata:', error);
+      } else {
+        console.log('Bildirim e-postası gönderildi');
+      }
+    } catch (error) {
+      console.error('Bildirim e-postası hatası:', error);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !selectedYear || !selectedMonth) return;
@@ -150,6 +171,9 @@ const AccountingDocuments = () => {
         });
 
       if (dbError) throw dbError;
+
+      // Send notification email
+      await sendNotificationEmail(file.name);
 
       toast.success("Belge başarıyla yüklendi!");
       setNotes("");
