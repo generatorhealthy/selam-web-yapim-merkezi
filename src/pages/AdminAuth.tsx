@@ -147,12 +147,12 @@ const AdminAuth = () => {
 
       // Security: Remove role and approval status logs in production
 
-      // Admin, staff veya legal kontrolü
-      if (!['admin', 'staff', 'legal'].includes(profile.role)) {
+      // Admin, staff, legal veya muhasebe kontrolü
+      if (!['admin', 'staff', 'legal', 'muhasebe'].includes(profile.role)) {
         await supabase.auth.signOut();
         toast({
           title: "Yetkisiz Erişim",
-          description: "Bu sayfaya sadece admin, staff ve hukuk birimi kullanıcıları erişebilir.",
+          description: "Bu sayfaya sadece admin, staff, hukuk birimi ve muhasebe birimi kullanıcıları erişebilir.",
           variant: "destructive"
         });
         return;
@@ -182,7 +182,8 @@ const AdminAuth = () => {
 
       // Başarılı giriş
       const roleText = profile.role === 'admin' ? 'Admin' : 
-                       profile.role === 'staff' ? 'Staff' : 'Hukuk Birimi';
+                       profile.role === 'staff' ? 'Staff' : 
+                       profile.role === 'legal' ? 'Hukuk Birimi' : 'Muhasebe Birimi';
       toast({
         title: "Giriş Başarılı",
         description: `${roleText} olarak divan paneline yönlendiriliyorsunuz...`,
