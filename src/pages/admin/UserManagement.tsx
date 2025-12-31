@@ -300,6 +300,8 @@ const UserManagement = () => {
         return 'bg-purple-100 text-purple-800';
       case 'legal':
         return 'bg-green-100 text-green-800';
+      case 'muhasebe':
+        return 'bg-emerald-100 text-emerald-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -315,6 +317,8 @@ const UserManagement = () => {
         return 'Staff';
       case 'legal':
         return 'Hukuk Birimi';
+      case 'muhasebe':
+        return 'Muhasebe Birimi';
       default:
         return 'Kullanıcı';
     }
@@ -519,6 +523,7 @@ const UserManagement = () => {
                       <SelectItem value="specialist">Uzman</SelectItem>
                       <SelectItem value="staff">Staff (Sınırlı Yetkili)</SelectItem>
                       <SelectItem value="legal">Hukuk Birimi</SelectItem>
+                      <SelectItem value="muhasebe">Muhasebe Birimi</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
