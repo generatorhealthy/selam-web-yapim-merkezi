@@ -15,7 +15,9 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt, Mail } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt, Mail, MessageSquare, Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { sendSms } from "@/services/smsService";
 import SendOrderEmailDialog from "@/components/SendOrderEmailDialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -68,6 +70,9 @@ const OrderManagement = () => {
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const [emailOrder, setEmailOrder] = useState<Order | null>(null);
+  const [smsOrder, setSmsOrder] = useState<Order | null>(null);
+  const [smsMessage, setSmsMessage] = useState("");
+  const [isSendingSms, setIsSendingSms] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const PAGE_SIZE = 50;
@@ -509,6 +514,55 @@ const OrderManagement = () => {
   const handleBulkRestore = () => {
     if (selectedOrderIds.length > 0) {
       bulkRestoreMutation.mutate(selectedOrderIds);
+    }
+  };
+
+  // SMS gönderme fonksiyonu
+  const handleSendSms = async () => {
+    if (!smsOrder || !smsMessage.trim()) {
+      toast({
+        title: "Hata",
+        description: "Lütfen bir mesaj yazın",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!smsOrder.customer_phone) {
+      toast({
+        title: "Hata",
+        description: "Müşterinin telefon numarası bulunamadı",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSendingSms(true);
+    try {
+      const result = await sendSms(smsOrder.customer_phone, smsMessage);
+      if (result.success) {
+        toast({
+          title: "SMS Gönderildi",
+          description: `SMS ${smsOrder.customer_name} kişisine gönderildi`,
+        });
+        setSmsOrder(null);
+        setSmsMessage("");
+      } else {
+        toast({
+          title: "SMS Gönderilemedi",
+          description: result.error?.message || "SMS gönderilirken bir hata oluştu",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('SMS gönderme hatası:', error);
+      toast({
+        title: "Hata",
+        description: "SMS gönderilirken bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingSms(false);
     }
   };
 
@@ -1244,6 +1298,20 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
+                                      setSmsOrder(order);
+                                      setSmsMessage(`Sayın ${order.customer_name}, ${order.package_name} paketiniz ile ilgili bilgilendirme mesajıdır.`);
+                                    }}
+                                    disabled={!order.customer_phone}
+                                    className="flex items-center gap-1 bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200 text-xs flex-1"
+                                  >
+                                    <MessageSquare className="w-3 h-3" />
+                                    SMS Gönder
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
                                       setSelectedOrder(order);
                                       setEditingOrder(order);
                                     }}
@@ -1544,6 +1612,69 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
         open={!!emailOrder}
         onOpenChange={(open) => !open && setEmailOrder(null)}
       />
+
+      {/* SMS Gönder Dialog */}
+      <Dialog open={!!smsOrder} onOpenChange={(open) => !open && setSmsOrder(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-teal-600" />
+              SMS Gönder
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {smsOrder && (
+              <>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-sm font-medium text-gray-900">{smsOrder.customer_name}</div>
+                  <div className="text-sm text-gray-600">{smsOrder.customer_phone}</div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sms-message">Mesaj</Label>
+                  <Textarea
+                    id="sms-message"
+                    value={smsMessage}
+                    onChange={(e) => setSmsMessage(e.target.value)}
+                    rows={4}
+                    placeholder="SMS mesajınızı yazın..."
+                    className="resize-none"
+                    maxLength={160}
+                  />
+                  <div className="text-xs text-muted-foreground text-right">
+                    {smsMessage.length}/160 karakter
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSmsOrder(null)}
+                    disabled={isSendingSms}
+                  >
+                    İptal
+                  </Button>
+                  <Button
+                    onClick={handleSendSms}
+                    disabled={isSendingSms || !smsMessage.trim()}
+                    className="bg-teal-600 hover:bg-teal-700"
+                  >
+                    {isSendingSms ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        Gönderiliyor...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Gönder
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   );
