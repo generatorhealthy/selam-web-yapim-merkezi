@@ -1299,7 +1299,13 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                     size="sm"
                                     onClick={() => {
                                       setSmsOrder(order);
-                                      setSmsMessage(`Sayın ${order.customer_name}, ${order.package_name} paketiniz ile ilgili bilgilendirme mesajıdır.`);
+                                      setSmsMessage(`Sayın ${order.customer_name},
+
+Gecikmiş ödemeniz bulunmaktadır. En kısa sürede ödemenizi tamamlamanızı rica ederiz.
+
+DOKTORUM OL BİLGİ VE TEKNOLOJİ HİZMETLERİ
+
+IBAN: TR95 0004 6007 2188 8000 3848 15`);
                                     }}
                                     disabled={!order.customer_phone}
                                     className="flex items-center gap-1 bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200 text-xs flex-1"
@@ -1635,13 +1641,13 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                     id="sms-message"
                     value={smsMessage}
                     onChange={(e) => setSmsMessage(e.target.value)}
-                    rows={4}
+                    rows={6}
                     placeholder="SMS mesajınızı yazın..."
                     className="resize-none"
-                    maxLength={160}
+                    maxLength={400}
                   />
                   <div className="text-xs text-muted-foreground text-right">
-                    {smsMessage.length}/160 karakter
+                    {smsMessage.length}/400 karakter
                   </div>
                 </div>
                 <div className="flex gap-2 justify-end">
