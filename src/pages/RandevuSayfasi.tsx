@@ -298,6 +298,9 @@ const RandevuSayfasi = () => {
     setSubmitting(true);
     
     try {
+      // Convert Turkish appointment type labels to database constraint values
+      const dbAppointmentType = appointmentType === 'Online' ? 'online' : 'face-to-face';
+      
       const { error } = await supabase
         .from('appointments')
         .insert({
@@ -307,7 +310,7 @@ const RandevuSayfasi = () => {
           patient_name: formData.patientName,
           patient_email: formData.patientEmail,
           patient_phone: formData.patientPhone,
-          appointment_type: appointmentType,
+          appointment_type: dbAppointmentType,
           notes: formData.notes,
           status: 'pending'
         });
