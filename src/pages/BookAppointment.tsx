@@ -132,7 +132,10 @@ const BookAppointment = () => {
     setSubmitting(true);
 
     try {
+      const appointmentId = crypto.randomUUID();
+
       const appointmentData = {
+        id: appointmentId,
         specialist_id: specialist.id,
         patient_name: formData.patientName.trim(),
         patient_email: formData.patientEmail.trim(),
@@ -146,14 +149,13 @@ const BookAppointment = () => {
 
       console.log('Submitting appointment with data:', appointmentData);
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('appointments')
-        .insert([appointmentData])
-        .select();
+        .insert([appointmentData]);
 
       if (error) {
         console.error('Database error:', error);
-        
+
         if (error.message.includes('row-level security policy')) {
           toast.error('Randevu oluşturulurken yetkilendirme hatası oluştu. Lütfen sayfayı yenileyip tekrar deneyin.');
         } else if (error.message.includes('appointments_appointment_type_check')) {
@@ -166,16 +168,16 @@ const BookAppointment = () => {
         return;
       }
 
-      console.log('Appointment created successfully:', data);
+      console.log('Appointment created successfully:', appointmentId);
 
       // Uzmana otomatik e-posta bildirimi gönder
       if (specialist.email) {
         try {
           console.log('Uzmana e-posta bildirimi gönderiliyor...');
-          
+
           const { error: emailError } = await supabase.functions.invoke('send-appointment-notification', {
             body: {
-              appointmentId: data[0].id,
+              appointmentId,
               patientName: formData.patientName,
               patientEmail: formData.patientEmail,
               patientPhone: formData.patientPhone,
