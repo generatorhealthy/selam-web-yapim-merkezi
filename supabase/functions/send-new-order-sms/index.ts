@@ -7,10 +7,12 @@ const corsHeaders = {
 
 interface OrderNotification {
   customerName: string;
+  customerPhone: string;
   packageName: string;
   amount: number;
   paymentMethod: string;
   orderDate: string;
+  customerCity?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -19,7 +21,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { customerName, packageName, amount, paymentMethod, orderDate }: OrderNotification = await req.json();
+    const { customerName, customerPhone, packageName, amount, paymentMethod, orderDate, customerCity }: OrderNotification = await req.json();
     
     const username = Deno.env.get('VERIMOR_USERNAME');
     const password = Deno.env.get('VERIMOR_PASSWORD');
@@ -31,16 +33,18 @@ const handler = async (req: Request): Promise<Response> => {
     // SMS alıcı numarası - sadece admin
     const recipients = ['905316852275'];
     
-    // SMS mesajı - sipariş detayları
-    const message = `🆕 YENİ SİPARİŞ!
-
-👤 Müşteri: ${customerName}
-📦 Paket: ${packageName}
-💰 Tutar: ${amount} TL
-💳 Ödeme: ${paymentMethod === 'bank_transfer' ? 'Banka Havalesi' : 'Kredi Kartı'}
-📅 Tarih: ${orderDate}
-
-Doktorum Ol`;
+    // Telefon numarasını formatlama
+    let formattedPhone = customerPhone || '';
+    if (formattedPhone.startsWith('0')) {
+      formattedPhone = '+9' + formattedPhone;
+    } else if (formattedPhone.startsWith('5')) {
+      formattedPhone = '+90' + formattedPhone;
+    } else if (!formattedPhone.startsWith('+')) {
+      formattedPhone = '+' + formattedPhone;
+    }
+    
+    // SMS mesajı - görüntüdeki formata göre
+    const message = `YENI KAYIT! ${customerName} - ${formattedPhone} - ${packageName} - ${customerCity || 'Belirtilmedi'} - ${amount} TL - ${orderDate} B038`;
 
     console.log('Sending new order SMS to:', recipients);
     console.log('Message:', message);
