@@ -458,13 +458,18 @@ const handleCreditCardPayment = async () => {
 
       // Yeni sipariş SMS bildirimi gönder
       try {
+        const now = new Date();
+        const orderDateTime = `${now.toLocaleDateString('tr-TR')} ${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+        
         await supabase.functions.invoke('send-new-order-sms', {
           body: {
             customerName: `${formData.name} ${formData.surname}`,
+            customerPhone: formData.gsmNumber,
             packageName: selectedPackage.name,
             amount: selectedPackage.price,
-            paymentMethod: paymentMethod === 'bank_transfer' ? 'Banka Havalesi' : 'Kredi Kartı',
-            orderDate: new Date().toLocaleDateString('tr-TR')
+            paymentMethod: paymentMethod,
+            orderDate: orderDateTime,
+            customerCity: formData.city
           }
         });
         console.log('Order notification SMS sent');
