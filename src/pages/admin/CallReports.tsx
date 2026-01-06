@@ -48,6 +48,17 @@ const CallReports = () => {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState("danisan");
   const [employeeName, setEmployeeName] = useState("");
+
+  // Set employee name from current user profile
+  useEffect(() => {
+    if (userProfile) {
+      if (userProfile.role === 'admin') {
+        setEmployeeName('Yönetici');
+      } else if (userProfile.name) {
+        setEmployeeName(userProfile.name);
+      }
+    }
+  }, [userProfile]);
   const [submitting, setSubmitting] = useState(false);
 
   // Danışan form state
@@ -383,9 +394,9 @@ const CallReports = () => {
                     <Label className="text-white">Çalışan Adı</Label>
                     <Input
                       value={employeeName}
-                      onChange={(e) => setEmployeeName(e.target.value)}
-                      placeholder="Adınızı giriniz"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                      readOnly
+                      disabled
+                      className="bg-white/10 border-white/20 text-white cursor-not-allowed opacity-80"
                     />
                   </div>
                 </div>
