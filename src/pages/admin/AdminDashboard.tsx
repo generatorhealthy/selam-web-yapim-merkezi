@@ -209,8 +209,7 @@ const AdminDashboard = () => {
       shadowColor: "shadow-teal-500/20",
       route: "/divan_paneli/customers",
       buttonText: "Müşterileri Görüntüle",
-      adminOnly: false,
-      staffOnly: true
+      adminOnly: true
     },
     {
       title: "Yorum Yönetimi",
@@ -328,18 +327,6 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
-      title: "Muhtemel Kayıt",
-      description: "Potansiyel danışman kayıtlarını takip edin ve yönetin",
-      icon: UserPlus,
-      gradient: "from-purple-500 via-violet-500 to-indigo-600",
-      bgGradient: "from-purple-50 to-indigo-50",
-      shadowColor: "shadow-purple-500/20",
-      route: "/divan_paneli/prospective-registrations",
-      buttonText: "Muhtemel Kayıtları Yönet",
-      adminOnly: false,
-      staffOnly: true
-    },
-    {
       title: "Log Kayıtları",
       description: "Site hataları, müşteri hareketleri ve IP takibi",
       icon: Database,
@@ -381,8 +368,7 @@ const AdminDashboard = () => {
       shadowColor: "shadow-pink-500/20",
       route: "/divan_paneli/social-media",
       buttonText: "Sosyal Medya Yönetimi",
-      adminOnly: false,
-      staffOnly: true
+      adminOnly: true
     },
     {
       title: "Muhasebe Birimi",
@@ -393,7 +379,7 @@ const AdminDashboard = () => {
       shadowColor: "shadow-emerald-500/20",
       route: "/divan_paneli/accounting",
       buttonText: "Muhasebe Birimini Aç",
-      adminOnly: false,
+      adminOnly: true,
       muhasebeOnly: true
     },
     {
