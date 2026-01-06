@@ -81,6 +81,7 @@ import ImageConverter from "./pages/admin/ImageConverter";
 import SocialMediaManagement from "./pages/admin/SocialMediaManagement";
 import DatabaseBackup from "./pages/admin/DatabaseBackup";
 import AccountingDocuments from "./pages/admin/AccountingDocuments";
+import CallReports from "./pages/admin/CallReports";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Doctor pages
@@ -202,6 +203,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/accounting" element={<AccountingDocuments />} />
                 <Route path="/divan_paneli/social-media" element={<SocialMediaManagement />} />
                 <Route path="/divan_paneli/database-backup" element={<DatabaseBackup />} />
+                <Route path="/divan_paneli/call-reports" element={<CallReports />} />
                 
               
               {/* Doctor Routes */}

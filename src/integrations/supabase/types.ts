@@ -22458,6 +22458,57 @@ export type Database = {
         }
         Relationships: []
       }
+      call_reports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          danisan_acmadi: number | null
+          danisan_vazgecti: number | null
+          danisan_yanlis: number | null
+          danisan_yonlendirme: number | null
+          danisma_acmadi: number | null
+          danisma_bilgi_verildi: number | null
+          danisma_kayit: number | null
+          employee_name: string
+          id: string
+          report_date: string
+          report_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          danisan_acmadi?: number | null
+          danisan_vazgecti?: number | null
+          danisan_yanlis?: number | null
+          danisan_yonlendirme?: number | null
+          danisma_acmadi?: number | null
+          danisma_bilgi_verildi?: number | null
+          danisma_kayit?: number | null
+          employee_name: string
+          id?: string
+          report_date: string
+          report_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          danisan_acmadi?: number | null
+          danisan_vazgecti?: number | null
+          danisan_yanlis?: number | null
+          danisan_yonlendirme?: number | null
+          danisma_acmadi?: number | null
+          danisma_bilgi_verildi?: number | null
+          danisma_kayit?: number | null
+          employee_name?: string
+          id?: string
+          report_date?: string
+          report_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_referrals: {
         Row: {
           client_contact: string | null

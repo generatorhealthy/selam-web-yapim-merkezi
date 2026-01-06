@@ -407,6 +407,18 @@ const AdminDashboard = () => {
       buttonText: "Yedekleri Yönet",
       adminOnly: true
     },
+    {
+      title: "Görüşme Raporları",
+      description: "Günlük arama raporlarını girin ve analiz edin",
+      icon: Phone,
+      gradient: "from-rose-500 via-pink-500 to-purple-600",
+      bgGradient: "from-rose-50 to-purple-50",
+      shadowColor: "shadow-rose-500/20",
+      route: "/divan_paneli/call-reports",
+      buttonText: "Raporları Görüntüle",
+      adminOnly: false,
+      staffOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
