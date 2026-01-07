@@ -25,10 +25,19 @@ interface SubscriptionItem {
   orders: SubscriptionOrder[];
 }
 
-async function generateIyzicoAuth(apiKey: string, secretKey: string, uriPath: string, requestBody: string = ""): Promise<string> {
-  const randomString = "123456789";
-  const dataToEncrypt = randomString + uriPath + requestBody;
-  
+async function generateIyzicoAuth(
+  apiKey: string,
+  secretKey: string,
+  uriPath: string,
+  requestBody: string = ""
+): Promise<{ authorization: string; randomKey: string }> {
+  // iyzico HMACSHA256 auth requires a per-request random key (x-iyzi-rnd)
+  const randomKey = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  const dataToEncrypt = randomKey + uriPath + requestBody;
+
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secretKey);
   const messageData = encoder.encode(dataToEncrypt);
@@ -43,63 +52,81 @@ async function generateIyzicoAuth(apiKey: string, secretKey: string, uriPath: st
 
   const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
   const signatureHex = Array.from(new Uint8Array(signature))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 
-  const authorizationString = `apiKey:${apiKey}&randomKey:${randomString}&signature:${signatureHex}`;
+  const authorizationString = `apiKey:${apiKey}&randomKey:${randomKey}&signature:${signatureHex}`;
   const base64EncodedAuthorization = btoa(authorizationString);
-  return `IYZWSv2 ${base64EncodedAuthorization}`;
+
+  return {
+    authorization: `IYZWSv2 ${base64EncodedAuthorization}`,
+    randomKey,
+  };
 }
 
-async function getUnpaidSubscriptions(apiKey: string, secretKey: string, baseUrl: string): Promise<SubscriptionItem[]> {
+async function getUnpaidSubscriptions(
+  apiKey: string,
+  secretKey: string,
+  baseUrl: string
+): Promise<SubscriptionItem[]> {
   const uriPath = "/v2/subscription/subscriptions?subscriptionStatus=UNPAID&count=100";
-  
-  const authorization = await generateIyzicoAuth(apiKey, secretKey, uriPath);
-  
+
+  const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath);
+
   const response = await fetch(`${baseUrl}${uriPath}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "Accept": "application/json",
-      "Authorization": authorization
-    }
+      Accept: "application/json",
+      Authorization: authorization,
+      "x-iyzi-rnd": randomKey,
+    },
   });
 
   const result = await response.json();
-  
+
   if (result.status === "success" && result.data?.items) {
     return result.data.items;
   }
-  
+
   console.log("UNPAID abonelik sorgu yanıtı:", JSON.stringify(result));
-  return [];
+
+  // Don't silently return [] on auth or API errors; surface it to UI.
+  const msg = result?.errorMessage || result?.message || "UNPAID abonelikleri alınamadı";
+  throw new Error(msg);
 }
 
-async function retryPayment(apiKey: string, secretKey: string, baseUrl: string, orderReferenceCode: string): Promise<{ success: boolean; message: string }> {
+async function retryPayment(
+  apiKey: string,
+  secretKey: string,
+  baseUrl: string,
+  orderReferenceCode: string
+): Promise<{ success: boolean; message: string }> {
   const uriPath = "/v2/subscription/operation/retry";
   const requestBody = JSON.stringify({ referenceCode: orderReferenceCode });
-  
-  const authorization = await generateIyzicoAuth(apiKey, secretKey, uriPath, requestBody);
-  
+
+  const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath, requestBody);
+
   const response = await fetch(`${baseUrl}${uriPath}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Accept": "application/json",
-      "Authorization": authorization
+      Accept: "application/json",
+      Authorization: authorization,
+      "x-iyzi-rnd": randomKey,
     },
-    body: requestBody
+    body: requestBody,
   });
 
   const result = await response.json();
-  
+
   if (result.status === "success") {
     return { success: true, message: "Ödeme başarıyla tekrar denendi" };
   }
-  
-  return { 
-    success: false, 
-    message: result.errorMessage || result.message || "Ödeme tekrar denenemedi" 
+
+  return {
+    success: false,
+    message: result.errorMessage || result.message || "Ödeme tekrar denenemedi",
   };
 }
 
