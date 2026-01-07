@@ -179,9 +179,13 @@ serve(async (req) => {
       console.log(`Manuel sipariş tekrarı: ${specificOrderRef}`);
       
       // Sipariş hangi abonelikte bulunuyor bul
+      let found = false;
       for (const subscription of unpaidSubscriptions) {
         const order = subscription.orders?.find(o => o.referenceCode === specificOrderRef);
         if (order) {
+          found = true;
+          console.log(`Sipariş bulundu - Abonelik: ${subscription.customerEmail}, Order status: ${order.orderStatus}`);
+          
           const retryResult = await retryPayment(
             IYZICO_API_KEY,
             IYZICO_SECRET_KEY,
@@ -200,6 +204,17 @@ serve(async (req) => {
           console.log(`Manuel deneme sonucu: ${retryResult.success ? 'BAŞARILI' : 'BAŞARISIZ'} - ${retryResult.message}`);
           break;
         }
+      }
+
+      if (!found) {
+        console.log(`Sipariş bulunamadı: ${specificOrderRef}`);
+        retryResults.push({
+          subscriptionRef: "",
+          customerEmail: "",
+          orderRef: specificOrderRef,
+          success: false,
+          message: "Sipariş bulunamadı"
+        });
       }
 
       return new Response(JSON.stringify({
