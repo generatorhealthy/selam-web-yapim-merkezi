@@ -206,7 +206,8 @@ serve(async (req) => {
         successful: successCount,
         failed: failCount
       },
-      results: retryResults
+      results: retryResults,
+      subscriptions: unpaidSubscriptions
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200
