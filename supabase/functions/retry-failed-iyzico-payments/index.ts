@@ -146,6 +146,15 @@ serve(async (req) => {
       throw new Error("iyzico API anahtarları bulunamadı");
     }
 
+    // Manuel tekil sipariş tekrarı için body'yi kontrol et
+    let specificOrderRef: string | null = null;
+    try {
+      const body = await req.json();
+      specificOrderRef = body?.orderReferenceCode || null;
+    } catch {
+      // Body yok veya parse edilemedi, normal kontrol devam eder
+    }
+
     console.log("Başarısız ödemeler kontrol ediliyor...");
 
     // 1. UNPAID durumundaki abonelikleri getir
@@ -164,6 +173,50 @@ serve(async (req) => {
       success: boolean;
       message: string;
     }> = [];
+
+    // Manuel tekil sipariş tekrarı
+    if (specificOrderRef) {
+      console.log(`Manuel sipariş tekrarı: ${specificOrderRef}`);
+      
+      // Sipariş hangi abonelikte bulunuyor bul
+      for (const subscription of unpaidSubscriptions) {
+        const order = subscription.orders?.find(o => o.referenceCode === specificOrderRef);
+        if (order) {
+          const retryResult = await retryPayment(
+            IYZICO_API_KEY,
+            IYZICO_SECRET_KEY,
+            IYZICO_BASE_URL,
+            specificOrderRef
+          );
+          
+          retryResults.push({
+            subscriptionRef: subscription.referenceCode,
+            customerEmail: subscription.customerEmail,
+            orderRef: specificOrderRef,
+            success: retryResult.success,
+            message: retryResult.message
+          });
+          
+          console.log(`Manuel deneme sonucu: ${retryResult.success ? 'BAŞARILI' : 'BAŞARISIZ'} - ${retryResult.message}`);
+          break;
+        }
+      }
+
+      return new Response(JSON.stringify({
+        status: "success",
+        summary: {
+          unpaidSubscriptions: unpaidSubscriptions.length,
+          totalRetries: retryResults.length,
+          successful: retryResults.filter(r => r.success).length,
+          failed: retryResults.filter(r => !r.success).length
+        },
+        results: retryResults,
+        subscriptions: unpaidSubscriptions
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200
+      });
+    }
 
     // 2. Her abonelik için başarısız ödeme siparişlerini bul ve tekrar dene
     for (const subscription of unpaidSubscriptions) {
