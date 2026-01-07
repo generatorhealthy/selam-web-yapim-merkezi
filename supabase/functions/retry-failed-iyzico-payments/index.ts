@@ -1,9 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
+
+const ADMIN_PHONE = "05316852275";
 
 interface SubscriptionOrder {
   referenceCode: string;
@@ -23,6 +26,50 @@ interface SubscriptionItem {
   subscriptionStatus: string;
   pricingPlanName: string;
   orders: SubscriptionOrder[];
+}
+
+async function sendSuccessNotificationSms(
+  supabaseUrl: string,
+  supabaseKey: string,
+  customerEmail: string,
+  pricingPlanName: string,
+  orderPrice: number,
+  orderRef: string
+): Promise<void> {
+  try {
+    // Supabase'den uzman bilgisini al
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { data: specialist } = await supabase
+      .from('specialists')
+      .select('name')
+      .eq('email', customerEmail)
+      .single();
+    
+    const specialistName = specialist?.name || customerEmail;
+    
+    const message = `ODEME BASARILI! ${specialistName} - ${pricingPlanName} - ${orderPrice} TL - Siparis: ${orderRef} - Daha once cekilemeyen odeme basariyla tahsil edildi.`;
+    
+    console.log(`SMS gönderiliyor: ${ADMIN_PHONE} - ${message}`);
+    
+    // send-verimor-sms edge function'ı çağır
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-verimor-sms`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseKey}`
+      },
+      body: JSON.stringify({
+        phone: ADMIN_PHONE,
+        message: message
+      })
+    });
+    
+    const result = await response.json();
+    console.log(`SMS sonucu:`, result);
+  } catch (error) {
+    console.error(`SMS gönderme hatası:`, error);
+  }
 }
 
 async function generateIyzicoAuth(
@@ -141,6 +188,8 @@ serve(async (req) => {
     const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY");
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
     if (!IYZICO_API_KEY || !IYZICO_SECRET_KEY) {
       throw new Error("iyzico API anahtarları bulunamadı");
@@ -200,6 +249,18 @@ serve(async (req) => {
             success: retryResult.success,
             message: retryResult.message
           });
+          
+          // Başarılı ödeme sonrası SMS gönder
+          if (retryResult.success && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+            await sendSuccessNotificationSms(
+              SUPABASE_URL,
+              SUPABASE_SERVICE_ROLE_KEY,
+              subscription.customerEmail,
+              subscription.pricingPlanName,
+              order.price,
+              specificOrderRef
+            );
+          }
           
           console.log(`Manuel deneme sonucu: ${retryResult.success ? 'BAŞARILI' : 'BAŞARISIZ'} - ${retryResult.message}`);
           break;
@@ -277,6 +338,18 @@ serve(async (req) => {
                 message: retryResult.message
               });
               
+              // Başarılı ödeme sonrası SMS gönder (otomatik deneme)
+              if (retryResult.success && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+                await sendSuccessNotificationSms(
+                  SUPABASE_URL,
+                  SUPABASE_SERVICE_ROLE_KEY,
+                  subscription.customerEmail,
+                  subscription.pricingPlanName,
+                  order.price,
+                  order.referenceCode
+                );
+              }
+
               console.log(`Sonuç: ${retryResult.success ? 'BAŞARILI' : 'BAŞARISIZ'} - ${retryResult.message}`);
             } else {
               console.log(`Son denemeden 6 saat geçmemiş, atlanıyor`);
