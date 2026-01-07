@@ -57,8 +57,9 @@ const EmployeeSalaryManagement = () => {
   ];
 
   const employees = [
-    { name: "Yağmur", surname: "Hanım" },
-    { name: "Fatıma", surname: "Hanım" }
+    { name: "Yağmur", surname: "Çiçek" },
+    { name: "Fatma", surname: "Erol" },
+    { name: "Merve", surname: "Önen" }
   ];
 
   useEffect(() => {
@@ -258,7 +259,7 @@ const EmployeeSalaryManagement = () => {
           
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Personel Maaşları</h1>
-            <p className="text-gray-600">Yağmur Hanım ve Fatıma Hanım'ın maaş takibi</p>
+            <p className="text-gray-600">Yağmur Çiçek, Fatma Erol ve Merve Önen maaş takibi</p>
           </div>
 
           {/* Özet Kartları */}
