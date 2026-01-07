@@ -70,19 +70,33 @@ const IyzicoPayments = () => {
 
   const checkFailedPayments = async () => {
     setLoading(true);
+    const checkedAt = new Date();
+
     try {
-      const { data, error } = await supabase.functions.invoke('retry-failed-iyzico-payments');
-      
-      if (error) throw error;
-      
+      const { data, error } = await supabase.functions.invoke("retry-failed-iyzico-payments");
+
+      setLastChecked(checkedAt);
+
+      if (error) {
+        const msg = error.message || "Ödeme kontrolü sırasında bir hata oluştu";
+        setLastResult({
+          status: "error",
+          message: msg,
+          summary: { unpaidSubscriptions: 0, totalRetries: 0, successful: 0, failed: 0 },
+          results: [],
+          subscriptions: [],
+        });
+        toast.error(msg);
+        return;
+      }
+
       setLastResult(data);
-      setLastChecked(new Date());
-      
+
       if (data.status === "error") {
         toast.error(data.message || data.errorMessage || "API hatası oluştu");
         return;
       }
-      
+
       if (data.summary.totalRetries > 0) {
         if (data.summary.successful > 0) {
           toast.success(`${data.summary.successful} ödeme başarıyla tekrar denendi`);
@@ -97,7 +111,16 @@ const IyzicoPayments = () => {
       }
     } catch (error: any) {
       console.error("Ödeme kontrolü hatası:", error);
-      toast.error(error.message || "Ödeme kontrolü sırasında bir hata oluştu");
+      const msg = error?.message || "Ödeme kontrolü sırasında bir hata oluştu";
+      setLastChecked(checkedAt);
+      setLastResult({
+        status: "error",
+        message: msg,
+        summary: { unpaidSubscriptions: 0, totalRetries: 0, successful: 0, failed: 0 },
+        results: [],
+        subscriptions: [],
+      });
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
