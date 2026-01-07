@@ -180,21 +180,35 @@ const IyzicoPayments = () => {
 
   const retryAllForSubscription = async (sub: UnpaidSubscription, e: React.MouseEvent) => {
     e.stopPropagation();
-    setRetryingSubscription(sub.referenceCode);
-    
-    const failedOrders = sub.orders?.filter(o => 
-      o.orderStatus === "WAITING" && 
-      o.paymentAttempts?.some(a => a.paymentStatus === "FAILED")
+
+    const failedOrders = sub.orders?.filter(
+      (o) =>
+        o.orderStatus === "WAITING" &&
+        o.paymentAttempts?.some((a) => a.paymentStatus === "FAILED")
     ) || [];
+
+    // Bu abonelik UNPAID olsa bile, iyzico tarafında yeniden denenebilecek (FAILED) deneme yoksa
+    // kullanıcıya net bilgi verelim.
+    if (failedOrders.length === 0) {
+      toast.info("Bu abonelikte yeniden denenecek başarısız ödeme bulunamadı.");
+      // Detayları açıp kullanıcıya siparişleri göstermek daha anlaşılır
+      setExpandedSubs((prev) => new Set(prev).add(sub.referenceCode));
+      return;
+    }
+
+    setRetryingSubscription(sub.referenceCode);
 
     let successCount = 0;
     let failCount = 0;
 
     for (const order of failedOrders) {
       try {
-        const { data, error } = await supabase.functions.invoke("retry-failed-iyzico-payments", {
-          body: { orderReferenceCode: order.referenceCode }
-        });
+        const { data, error } = await supabase.functions.invoke(
+          "retry-failed-iyzico-payments",
+          {
+            body: { orderReferenceCode: order.referenceCode },
+          }
+        );
 
         if (!error && data.results?.[0]?.success) {
           successCount++;
