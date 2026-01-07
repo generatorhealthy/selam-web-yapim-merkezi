@@ -415,17 +415,22 @@ const IyzicoPayments = () => {
 
                               {/* Alt: Durum + Buton */}
                               <div className="flex items-center justify-between">
-                                {failedCount > 0 ? (
+                                {sub.subscriptionStatus === "UNPAID" ? (
+                                  <Badge variant="destructive" className="text-xs">
+                                    Ödeme Yok
+                                  </Badge>
+                                ) : failedCount > 0 ? (
                                   <Badge variant="destructive" className="text-xs">
                                     {failedCount} Başarısız Ödeme
                                   </Badge>
                                 ) : (
                                   <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
-                                    Ödeme Yok
+                                    Aktif
                                   </Badge>
                                 )}
                                 
-                                {failedCount > 0 && (
+                                {/* Her ödenmemiş abonelik için tekrar dene butonu */}
+                                {(sub.subscriptionStatus === "UNPAID" || failedCount > 0) && (
                                   <Button 
                                     size="sm"
                                     variant="destructive"
