@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.send-accounting-notification]
 verify_jwt = false
+
+[functions.retry-failed-iyzico-payments]
+verify_jwt = false
