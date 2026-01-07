@@ -71,7 +71,7 @@ async function getUnpaidSubscriptions(
 ): Promise<SubscriptionItem[]> {
   // IMPORTANT: iyzico signature must be calculated with the URI path **without** query params.
   const uriPathForSign = "/v2/subscription/subscriptions";
-  const requestUrl = `${baseUrl}${uriPathForSign}?subscriptionStatus=UNPAID&count=100`;
+  const requestUrl = `${baseUrl}${uriPathForSign}?subscriptionStatus=UNPAID&page=1&count=100`;
 
   const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPathForSign);
 
