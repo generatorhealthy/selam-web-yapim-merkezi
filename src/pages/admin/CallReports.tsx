@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, startOfMonth, endOfMonth, parseISO } from "date-fns";
+import { format, startOfMonth, endOfMonth, parseISO, getDaysInMonth, eachDayOfInterval, isSameDay } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ArrowLeft, Phone, Users, UserCheck, Calendar as CalendarIcon, Plus, Save, BarChart3, TrendingUp, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,6 +46,7 @@ const CallReports = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedDayFilter, setSelectedDayFilter] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("danisan");
   const [employeeName, setEmployeeName] = useState("");
 
@@ -228,6 +229,40 @@ const CallReports = () => {
     { name: 'Bilgi Verildi', value: danismaTotals.bilgiVerildi },
     { name: 'Kayıt', value: danismaTotals.kayit },
   ].filter(d => d.value > 0);
+
+  // Günlük rapor filtreleme
+  const filteredReports = selectedDayFilter 
+    ? reports.filter(r => isSameDay(parseISO(r.report_date), selectedDayFilter))
+    : reports;
+
+  // Ayın günlerini ve her gün için rapor sayısını hesapla
+  const getDailyStats = () => {
+    const startDate = startOfMonth(new Date(selectedYear, selectedMonth - 1));
+    const endDate = endOfMonth(new Date(selectedYear, selectedMonth - 1));
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
+    
+    return days.map(day => {
+      const dayReports = reports.filter(r => isSameDay(parseISO(r.report_date), day));
+      const danisanTotal = dayReports
+        .filter(r => r.report_type === 'danisan')
+        .reduce((sum, r) => sum + r.danisan_acmadi + r.danisan_vazgecti + r.danisan_yanlis + r.danisan_yonlendirme, 0);
+      const danismaTotal = dayReports
+        .filter(r => r.report_type === 'danisma')
+        .reduce((sum, r) => sum + r.danisma_acmadi + r.danisma_bilgi_verildi + r.danisma_kayit, 0);
+      
+      return {
+        date: day,
+        dayNumber: format(day, 'd'),
+        dayName: format(day, 'EEE', { locale: tr }),
+        reportCount: dayReports.length,
+        danisanTotal,
+        danismaTotal,
+        total: danisanTotal + danismaTotal
+      };
+    });
+  };
+
+  const dailyStats = getDailyStats();
 
   const months = [
     { value: 1, label: 'Ocak' },
@@ -606,22 +641,115 @@ const CallReports = () => {
           </Card>
         </div>
 
+        {/* Daily View - Günlük Raporlar */}
+        <Card className="bg-white/10 backdrop-blur-lg border-white/20 mb-6">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5" />
+              Günlük Görünüm
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Bir güne tıklayarak o günün detaylı raporlarını görün
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-2 mb-4">
+              {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(day => (
+                <div key={day} className="text-center text-gray-400 text-sm font-medium py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-2">
+              {/* Ayın ilk gününe kadar boş hücreler */}
+              {Array.from({ length: (new Date(selectedYear, selectedMonth - 1, 1).getDay() + 6) % 7 }).map((_, i) => (
+                <div key={`empty-${i}`} className="h-16" />
+              ))}
+              {dailyStats.map((day) => {
+                const isSelected = selectedDayFilter && isSameDay(day.date, selectedDayFilter);
+                const hasReports = day.reportCount > 0;
+                const isToday = isSameDay(day.date, new Date());
+                
+                return (
+                  <button
+                    key={day.dayNumber}
+                    onClick={() => setSelectedDayFilter(isSelected ? null : day.date)}
+                    className={cn(
+                      "h-16 rounded-lg border transition-all flex flex-col items-center justify-center gap-1 hover:scale-105",
+                      isSelected 
+                        ? "bg-purple-500 border-purple-400 text-white" 
+                        : hasReports 
+                          ? "bg-white/10 border-white/30 text-white hover:bg-white/20" 
+                          : "bg-white/5 border-white/10 text-gray-500 hover:bg-white/10",
+                      isToday && !isSelected && "ring-2 ring-blue-400"
+                    )}
+                  >
+                    <span className={cn("text-lg font-bold", isToday && "text-blue-400")}>
+                      {day.dayNumber}
+                    </span>
+                    {hasReports && (
+                      <div className="flex gap-1">
+                        {day.danisanTotal > 0 && (
+                          <span className="text-[10px] bg-blue-500/50 px-1 rounded">{day.danisanTotal}</span>
+                        )}
+                        {day.danismaTotal > 0 && (
+                          <span className="text-[10px] bg-purple-500/50 px-1 rounded">{day.danismaTotal}</span>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex justify-center gap-4 mt-4 text-sm text-gray-400">
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 bg-blue-500/50 rounded"></span> Danışan
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 bg-purple-500/50 rounded"></span> Danışman
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Reports Table */}
         <Card className="bg-white/10 backdrop-blur-lg border-white/20">
           <CardHeader>
-            <CardTitle className="text-white">Aylık Raporlar</CardTitle>
-            <CardDescription className="text-gray-400">
-              {months.find(m => m.value === selectedMonth)?.label} {selectedYear} dönemi
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-white">
+                  {selectedDayFilter 
+                    ? `${format(selectedDayFilter, 'd MMMM yyyy', { locale: tr })} Raporları`
+                    : 'Aylık Raporlar'
+                  }
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  {selectedDayFilter 
+                    ? `${filteredReports.length} rapor bulundu`
+                    : `${months.find(m => m.value === selectedMonth)?.label} ${selectedYear} dönemi`
+                  }
+                </CardDescription>
+              </div>
+              {selectedDayFilter && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setSelectedDayFilter(null)}
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  Tümünü Göster
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
               </div>
-            ) : reports.length === 0 ? (
+            ) : filteredReports.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
-                Bu dönem için rapor bulunmuyor
+                {selectedDayFilter ? 'Bu gün için rapor bulunmuyor' : 'Bu dönem için rapor bulunmuyor'}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -636,7 +764,7 @@ const CallReports = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reports.map((report) => (
+                    {filteredReports.map((report) => (
                       <TableRow key={report.id} className="border-white/10 hover:bg-white/5">
                         <TableCell className="text-white">
                           {format(parseISO(report.report_date), 'dd MMM yyyy', { locale: tr })}
