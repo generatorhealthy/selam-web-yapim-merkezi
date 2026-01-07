@@ -34,7 +34,8 @@ import {
   Map,
   Image,
   Share2,
-  HardDrive
+  HardDrive,
+  CreditCard
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -404,6 +405,17 @@ const AdminDashboard = () => {
       buttonText: "Raporları Görüntüle",
       adminOnly: false,
       staffOnly: true
+    },
+    {
+      title: "İyzico Ödemeleri",
+      description: "Başarısız abonelik ödemelerini takip et ve yeniden dene",
+      icon: CreditCard,
+      gradient: "from-violet-500 via-purple-500 to-indigo-600",
+      bgGradient: "from-violet-50 to-indigo-50",
+      shadowColor: "shadow-violet-500/20",
+      route: "/divan_paneli/iyzico-payments",
+      buttonText: "Ödemeleri Görüntüle",
+      adminOnly: true
     },
   ];
 
