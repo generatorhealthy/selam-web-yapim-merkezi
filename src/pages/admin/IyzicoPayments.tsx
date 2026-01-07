@@ -19,6 +19,28 @@ import {
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
+interface PaymentAttempt {
+  paymentStatus: string;
+  errorMessage?: string;
+  createdDate: number;
+}
+
+interface SubscriptionOrder {
+  referenceCode: string;
+  price: number;
+  orderStatus: string;
+  paymentAttempts: PaymentAttempt[];
+}
+
+interface UnpaidSubscription {
+  referenceCode: string;
+  customerEmail: string;
+  customerGsmNumber: string;
+  subscriptionStatus: string;
+  pricingPlanName: string;
+  orders: SubscriptionOrder[];
+}
+
 interface RetryResult {
   subscriptionRef: string;
   customerEmail: string;
@@ -29,6 +51,8 @@ interface RetryResult {
 
 interface RetryResponse {
   status: string;
+  message?: string;
+  errorMessage?: string;
   summary: {
     unpaidSubscriptions: number;
     totalRetries: number;
@@ -36,6 +60,7 @@ interface RetryResponse {
     failed: number;
   };
   results: RetryResult[];
+  subscriptions?: UnpaidSubscription[];
 }
 
 const IyzicoPayments = () => {
@@ -53,6 +78,11 @@ const IyzicoPayments = () => {
       setLastResult(data);
       setLastChecked(new Date());
       
+      if (data.status === "error") {
+        toast.error(data.message || data.errorMessage || "API hatası oluştu");
+        return;
+      }
+      
       if (data.summary.totalRetries > 0) {
         if (data.summary.successful > 0) {
           toast.success(`${data.summary.successful} ödeme başarıyla tekrar denendi`);
@@ -60,15 +90,21 @@ const IyzicoPayments = () => {
         if (data.summary.failed > 0) {
           toast.error(`${data.summary.failed} ödeme tekrar denenemedi`);
         }
+      } else if (data.summary.unpaidSubscriptions === 0) {
+        toast.info("Ödenmemiş abonelik bulunamadı");
       } else {
-        toast.info("Tekrar denenmesi gereken ödeme bulunamadı");
+        toast.info(`${data.summary.unpaidSubscriptions} ödenmemiş abonelik var, henüz tekrar deneme zamanı gelmedi`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Ödeme kontrolü hatası:", error);
-      toast.error("Ödeme kontrolü sırasında bir hata oluştu");
+      toast.error(error.message || "Ödeme kontrolü sırasında bir hata oluştu");
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDate = (timestamp: number) => {
+    return format(new Date(timestamp), "dd MMM yyyy HH:mm", { locale: tr });
   };
 
   return (
@@ -146,8 +182,28 @@ const IyzicoPayments = () => {
             </CardContent>
           </Card>
 
+          {/* API Hata Durumu */}
+          {lastResult && lastResult.status === "error" && (
+            <Card className="mb-6 border-red-300 bg-red-50">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-red-800">API Hatası</h3>
+                    <p className="text-red-700 text-sm mt-1">
+                      {lastResult.message || lastResult.errorMessage || "iyzico API'ye bağlanırken bir hata oluştu"}
+                    </p>
+                    <p className="text-red-600 text-xs mt-2">
+                      Lütfen Supabase Edge Function ayarlarından IYZICO_API_KEY ve IYZICO_SECRET_KEY değerlerinin doğru olduğundan emin olun.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Sonuçlar */}
-          {lastResult && (
+          {lastResult && lastResult.status === "success" && (
             <>
               {/* Özet Kartlar */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -200,17 +256,20 @@ const IyzicoPayments = () => {
                 </Card>
               </div>
 
-              {/* Detaylı Sonuçlar */}
+              {/* Deneme Sonuçları */}
               {lastResult.results.length > 0 && (
-                <Card>
+                <Card className="mb-6">
                   <CardHeader>
-                    <CardTitle>Deneme Detayları</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <RefreshCw className="h-5 w-5" />
+                      Bu Sefer Denenen Ödemeler
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
-                          <tr className="border-b">
+                          <tr className="border-b bg-gray-50">
                             <th className="text-left py-3 px-4 font-medium text-gray-600">Müşteri E-posta</th>
                             <th className="text-left py-3 px-4 font-medium text-gray-600">Abonelik Ref</th>
                             <th className="text-left py-3 px-4 font-medium text-gray-600">Sipariş Ref</th>
@@ -239,7 +298,113 @@ const IyzicoPayments = () => {
                 </Card>
               )}
 
-              {lastResult.results.length === 0 && lastResult.summary.unpaidSubscriptions > 0 && (
+              {/* Tüm Ödenmemiş Abonelikler */}
+              {lastResult.subscriptions && lastResult.subscriptions.length > 0 && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      Tüm Ödenmemiş Abonelikler ({lastResult.subscriptions.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {lastResult.subscriptions.map((sub, index) => (
+                        <Card key={index} className="border-amber-200 bg-amber-50/50">
+                          <CardContent className="pt-4">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                              <div>
+                                <p className="font-medium text-gray-900">{sub.customerEmail}</p>
+                                <p className="text-sm text-gray-500">{sub.customerGsmNumber}</p>
+                              </div>
+                              <div className="text-right">
+                                <Badge variant="outline" className="bg-white">
+                                  {sub.pricingPlanName}
+                                </Badge>
+                                <p className="text-xs text-gray-500 mt-1">Ref: {sub.referenceCode}</p>
+                              </div>
+                            </div>
+                            
+                            {/* Siparişler */}
+                            {sub.orders && sub.orders.length > 0 && (
+                              <div className="mt-4 border-t pt-4">
+                                <p className="text-sm font-medium text-gray-700 mb-2">Bekleyen Siparişler:</p>
+                                <div className="space-y-3">
+                                  {sub.orders.map((order, orderIndex) => (
+                                    <div key={orderIndex} className="bg-white rounded-lg p-3 border">
+                                      <div className="flex justify-between items-start mb-2">
+                                        <span className="font-mono text-xs text-gray-600">{order.referenceCode}</span>
+                                        <div className="text-right">
+                                          <span className="font-bold text-lg">{order.price} TL</span>
+                                          <Badge 
+                                            variant={order.orderStatus === "WAITING" ? "secondary" : "default"}
+                                            className="ml-2"
+                                          >
+                                            {order.orderStatus}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Ödeme Denemeleri */}
+                                      {order.paymentAttempts && order.paymentAttempts.length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                          <p className="text-xs font-medium text-gray-600">Son Ödeme Denemeleri:</p>
+                                          {order.paymentAttempts
+                                            .sort((a, b) => b.createdDate - a.createdDate)
+                                            .slice(0, 3)
+                                            .map((attempt, attemptIndex) => (
+                                              <div 
+                                                key={attemptIndex} 
+                                                className={`text-xs p-2 rounded ${
+                                                  attempt.paymentStatus === "FAILED" 
+                                                    ? "bg-red-50 text-red-700 border border-red-200" 
+                                                    : "bg-gray-50 text-gray-600"
+                                                }`}
+                                              >
+                                                <div className="flex justify-between">
+                                                  <span className="font-medium">{attempt.paymentStatus}</span>
+                                                  <span>{formatDate(attempt.createdDate)}</span>
+                                                </div>
+                                                {attempt.errorMessage && (
+                                                  <p className="mt-1 text-red-600">{attempt.errorMessage}</p>
+                                                )}
+                                              </div>
+                                            ))
+                                          }
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Hiç ödenmemiş abonelik yoksa */}
+              {lastResult.summary.unpaidSubscriptions === 0 && (
+                <Card className="border-green-200 bg-green-50">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold text-green-800">Tüm Ödemeler Güncel</h3>
+                        <p className="text-green-700 text-sm mt-1">
+                          Şu anda ödenmemiş abonelik bulunmuyor. Tüm ödemeler başarıyla alınmış.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Bekleme Süresinde */}
+              {lastResult.results.length === 0 && lastResult.summary.unpaidSubscriptions > 0 && !lastResult.subscriptions?.length && (
                 <Card className="border-amber-200 bg-amber-50">
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-3">
