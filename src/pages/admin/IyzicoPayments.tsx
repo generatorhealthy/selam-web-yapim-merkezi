@@ -181,17 +181,15 @@ const IyzicoPayments = () => {
   const retryAllForSubscription = async (sub: UnpaidSubscription, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    const failedOrders = sub.orders?.filter(
-      (o) =>
-        o.orderStatus === "WAITING" &&
-        o.paymentAttempts?.some((a) => a.paymentStatus === "FAILED")
-    ) || [];
+    // Son ödeme denemesi FAILED olan siparişleri bul
+    const retryableOrders = sub.orders?.filter(o => {
+      if (!o.paymentAttempts || o.paymentAttempts.length === 0) return false;
+      const lastAttempt = [...o.paymentAttempts].sort((a, b) => b.createdDate - a.createdDate)[0];
+      return lastAttempt?.paymentStatus === "FAILED";
+    }) || [];
 
-    // Bu abonelik UNPAID olsa bile, iyzico tarafında yeniden denenebilecek (FAILED) deneme yoksa
-    // kullanıcıya net bilgi verelim.
-    if (failedOrders.length === 0) {
+    if (retryableOrders.length === 0) {
       toast.info("Bu abonelikte yeniden denenecek başarısız ödeme bulunamadı.");
-      // Detayları açıp kullanıcıya siparişleri göstermek daha anlaşılır
       setExpandedSubs((prev) => new Set(prev).add(sub.referenceCode));
       return;
     }
@@ -201,7 +199,7 @@ const IyzicoPayments = () => {
     let successCount = 0;
     let failCount = 0;
 
-    for (const order of failedOrders) {
+    for (const order of retryableOrders) {
       try {
         const { data, error } = await supabase.functions.invoke(
           "retry-failed-iyzico-payments",
@@ -235,18 +233,29 @@ const IyzicoPayments = () => {
     return format(new Date(timestamp), "dd MMM yyyy HH:mm", { locale: tr });
   };
 
+  // Son ödeme denemesinin FAILED olduğu siparişleri bul
+  const getRetryableOrders = (sub: UnpaidSubscription) => {
+    return sub.orders?.filter(o => {
+      if (!o.paymentAttempts || o.paymentAttempts.length === 0) return false;
+      // Son denemeyi bul (en yeni tarihli)
+      const lastAttempt = [...o.paymentAttempts].sort((a, b) => b.createdDate - a.createdDate)[0];
+      return lastAttempt?.paymentStatus === "FAILED";
+    }) || [];
+  };
+
   const getFailedOrdersCount = (sub: UnpaidSubscription) => {
-    return sub.orders?.filter(o => 
-      o.orderStatus === "WAITING" && 
-      o.paymentAttempts?.some(a => a.paymentStatus === "FAILED")
-    ).length || 0;
+    return getRetryableOrders(sub).length;
   };
 
   const getTotalFailedAmount = (sub: UnpaidSubscription) => {
-    return sub.orders?.filter(o => 
-      o.orderStatus === "WAITING" && 
-      o.paymentAttempts?.some(a => a.paymentStatus === "FAILED")
-    ).reduce((sum, o) => sum + o.price, 0) || 0;
+    return getRetryableOrders(sub).reduce((sum, o) => sum + o.price, 0);
+  };
+
+  // Tek bir sipariş için son deneme FAILED mi kontrol et
+  const isOrderRetryable = (order: SubscriptionOrder) => {
+    if (!order.paymentAttempts || order.paymentAttempts.length === 0) return false;
+    const lastAttempt = [...order.paymentAttempts].sort((a, b) => b.createdDate - a.createdDate)[0];
+    return lastAttempt?.paymentStatus === "FAILED";
   };
 
   return (
@@ -471,10 +480,8 @@ const IyzicoPayments = () => {
                               <p className="text-xs font-medium text-gray-600 mb-2">Siparişler ({sub.orders?.length || 0})</p>
                               <div className="space-y-2">
                                 {sub.orders?.map((order, orderIndex) => {
-                                  const hasFailedAttempt = order.paymentAttempts?.some(a => a.paymentStatus === "FAILED");
-                                  const isWaiting = order.orderStatus === "WAITING";
-                                  const canRetry = isWaiting && hasFailedAttempt;
-                                  const isOrderRetrying = retryingOrder === order.referenceCode;
+                                  const canRetry = isOrderRetryable(order);
+                                  const isOrderRetryingNow = retryingOrder === order.referenceCode;
 
                                   return (
                                     <div 
@@ -482,9 +489,7 @@ const IyzicoPayments = () => {
                                       className={`rounded-lg p-3 text-xs ${
                                         canRetry 
                                           ? "bg-red-50 border border-red-200" 
-                                          : order.orderStatus === "SUCCESS" 
-                                            ? "bg-emerald-50 border border-emerald-200"
-                                            : "bg-white border border-gray-200"
+                                          : "bg-emerald-50 border border-emerald-200"
                                       }`}
                                     >
                                       <div className="flex items-center justify-between mb-2">
@@ -505,10 +510,10 @@ const IyzicoPayments = () => {
                                               size="sm"
                                               variant="outline"
                                               onClick={(e) => retrySpecificOrder(order.referenceCode, e)}
-                                              disabled={isOrderRetrying}
+                                              disabled={isOrderRetryingNow}
                                               className="h-6 text-[10px] px-2 border-red-300 text-red-600 hover:bg-red-50"
                                             >
-                                              {isOrderRetrying ? (
+                                              {isOrderRetryingNow ? (
                                                 <Loader2 className="h-3 w-3 animate-spin" />
                                               ) : (
                                                 "Dene"
