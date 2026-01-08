@@ -379,7 +379,7 @@ const SuccessStatistics = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {[2023, 2024, 2025].map(year => (
+                      {[2023, 2024, 2025, 2026].map(year => (
                         <SelectItem key={year} value={year.toString()}>
                           {year}
                         </SelectItem>
