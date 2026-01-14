@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, startOfMonth, endOfMonth, parseISO, getDaysInMonth, eachDayOfInterval, isSameDay } from "date-fns";
+import { format, startOfMonth, endOfMonth, parseISO, getDaysInMonth, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek, addWeeks, subWeeks, getWeek, getYear } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ArrowLeft, Phone, Users, UserCheck, Calendar as CalendarIcon, Plus, Save, BarChart3, TrendingUp, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,8 @@ const CallReports = () => {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedDayFilter, setSelectedDayFilter] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("danisan");
+  const [mainTab, setMainTab] = useState("monthly");
+  const [selectedWeekStart, setSelectedWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [employeeName, setEmployeeName] = useState("");
 
   // Set employee name from current user profile
@@ -264,6 +266,75 @@ const CallReports = () => {
 
   const dailyStats = getDailyStats();
 
+  // Haftalık istatistikler
+  const getWeeklyEmployeeStats = () => {
+    const weekEnd = endOfWeek(selectedWeekStart, { weekStartsOn: 1 });
+    const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
+    const weekEndStr = format(weekEnd, 'yyyy-MM-dd');
+    
+    const weekReports = reports.filter(r => {
+      const reportDate = r.report_date;
+      return reportDate >= weekStartStr && reportDate <= weekEndStr;
+    });
+
+    const stats: { 
+      [key: string]: { 
+        danisan_acmadi: number;
+        danisan_vazgecti: number;
+        danisan_yanlis: number;
+        danisan_yonlendirme: number;
+        danisma_acmadi: number;
+        danisma_bilgi_verildi: number;
+        danisma_kayit: number;
+        danisan_total: number;
+        danisma_total: number;
+        total: number;
+      } 
+    } = {};
+    
+    weekReports.forEach(report => {
+      if (!stats[report.employee_name]) {
+        stats[report.employee_name] = { 
+          danisan_acmadi: 0,
+          danisan_vazgecti: 0,
+          danisan_yanlis: 0,
+          danisan_yonlendirme: 0,
+          danisma_acmadi: 0,
+          danisma_bilgi_verildi: 0,
+          danisma_kayit: 0,
+          danisan_total: 0,
+          danisma_total: 0,
+          total: 0 
+        };
+      }
+      
+      if (report.report_type === 'danisan') {
+        stats[report.employee_name].danisan_acmadi += report.danisan_acmadi;
+        stats[report.employee_name].danisan_vazgecti += report.danisan_vazgecti;
+        stats[report.employee_name].danisan_yanlis += report.danisan_yanlis;
+        stats[report.employee_name].danisan_yonlendirme += report.danisan_yonlendirme;
+        const total = report.danisan_acmadi + report.danisan_vazgecti + report.danisan_yanlis + report.danisan_yonlendirme;
+        stats[report.employee_name].danisan_total += total;
+        stats[report.employee_name].total += total;
+      } else {
+        stats[report.employee_name].danisma_acmadi += report.danisma_acmadi;
+        stats[report.employee_name].danisma_bilgi_verildi += report.danisma_bilgi_verildi;
+        stats[report.employee_name].danisma_kayit += report.danisma_kayit;
+        const total = report.danisma_acmadi + report.danisma_bilgi_verildi + report.danisma_kayit;
+        stats[report.employee_name].danisma_total += total;
+        stats[report.employee_name].total += total;
+      }
+    });
+
+    return Object.entries(stats)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.total - a.total);
+  };
+
+  const weeklyEmployeeStats = getWeeklyEmployeeStats();
+  const weekNumber = getWeek(selectedWeekStart, { weekStartsOn: 1 });
+  const weekEndDate = endOfWeek(selectedWeekStart, { weekStartsOn: 1 });
+
   const months = [
     { value: 1, label: 'Ocak' },
     { value: 2, label: 'Şubat' },
@@ -300,39 +371,53 @@ const CallReports = () => {
           <p className="text-gray-400">Günlük arama raporlarını girin ve analiz edin</p>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-6 bg-white/10 backdrop-blur-lg border-white/20">
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <Label className="text-white">Ay:</Label>
-                <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
-                  <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map(m => (
-                      <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-white">Yıl:</Label>
-                <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-                  <SelectTrigger className="w-24 bg-white/10 border-white/20 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map(y => (
-                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Tabs */}
+        <Tabs value={mainTab} onValueChange={setMainTab} className="w-full mb-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2 bg-white/10">
+            <TabsTrigger value="monthly" className="text-white data-[state=active]:bg-purple-500">
+              <CalendarIcon className="w-4 h-4 mr-2" />
+              Aylık Görünüm
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="text-white data-[state=active]:bg-blue-500">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Haftalık İstatistik
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="monthly" className="mt-6">
+            {/* Filters */}
+            <Card className="mb-6 bg-white/10 backdrop-blur-lg border-white/20">
+              <CardContent className="pt-6">
+                <div className="flex flex-wrap gap-4 items-center">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-white">Ay:</Label>
+                    <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
+                      <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {months.map(m => (
+                          <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-white">Yıl:</Label>
+                    <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
+                      <SelectTrigger className="w-24 bg-white/10 border-white/20 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {years.map(y => (
+                          <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -810,6 +895,229 @@ const CallReports = () => {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="weekly" className="mt-6">
+            {/* Week Navigation */}
+            <Card className="mb-6 bg-white/10 backdrop-blur-lg border-white/20">
+              <CardContent className="pt-6">
+                <div className="flex flex-wrap gap-4 items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedWeekStart(subWeeks(selectedWeekStart, 1))}
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                    <div className="text-white text-center">
+                      <p className="text-lg font-semibold">
+                        {weekNumber}. Hafta - {getYear(selectedWeekStart)}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {format(selectedWeekStart, 'd MMMM', { locale: tr })} - {format(weekEndDate, 'd MMMM yyyy', { locale: tr })}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedWeekStart(addWeeks(selectedWeekStart, 1))}
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    >
+                      <ArrowLeft className="w-4 h-4 rotate-180" />
+                    </Button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  >
+                    Bu Hafta
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Weekly Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm">Haftalık Danışan</p>
+                      <p className="text-3xl font-bold">
+                        {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisan_total, 0)}
+                      </p>
+                    </div>
+                    <Users className="w-10 h-10 text-blue-200" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-100 text-sm">Haftalık Danışman</p>
+                      <p className="text-3xl font-bold">
+                        {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisma_total, 0)}
+                      </p>
+                    </div>
+                    <UserCheck className="w-10 h-10 text-purple-200" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm">Toplam Görüşme</p>
+                      <p className="text-3xl font-bold">
+                        {weeklyEmployeeStats.reduce((sum, s) => sum + s.total, 0)}
+                      </p>
+                    </div>
+                    <TrendingUp className="w-10 h-10 text-green-200" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Weekly Employee Table */}
+            <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Haftalık Personel İstatistikleri
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Her personelin haftalık performans detayları
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {weeklyEmployeeStats.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    Bu hafta için rapor bulunmuyor
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-white/20">
+                          <TableHead className="text-gray-300">Çalışan</TableHead>
+                          <TableHead className="text-gray-300 text-center" colSpan={4}>
+                            <Badge className="bg-blue-500">Danışan</Badge>
+                          </TableHead>
+                          <TableHead className="text-gray-300 text-center" colSpan={3}>
+                            <Badge className="bg-purple-500">Danışman</Badge>
+                          </TableHead>
+                          <TableHead className="text-gray-300 text-right">Toplam</TableHead>
+                        </TableRow>
+                        <TableRow className="border-white/20">
+                          <TableHead className="text-gray-400 text-sm"></TableHead>
+                          <TableHead className="text-gray-400 text-sm text-center">Açmadı</TableHead>
+                          <TableHead className="text-gray-400 text-sm text-center">Vazgeçti</TableHead>
+                          <TableHead className="text-gray-400 text-sm text-center">Yanlış</TableHead>
+                          <TableHead className="text-gray-400 text-sm text-center">Yönlendirme</TableHead>
+                          <TableHead className="text-gray-400 text-sm text-center">Açmadı</TableHead>
+                          <TableHead className="text-gray-400 text-sm text-center">Bilgi</TableHead>
+                          <TableHead className="text-gray-400 text-sm text-center">Kayıt</TableHead>
+                          <TableHead className="text-gray-400 text-sm text-right"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {weeklyEmployeeStats.map((stat, index) => (
+                          <TableRow key={stat.name} className="border-white/10 hover:bg-white/5">
+                            <TableCell className="text-white font-medium">
+                              <div className="flex items-center gap-2">
+                                {index === 0 && <span className="text-yellow-400">🥇</span>}
+                                {index === 1 && <span className="text-gray-300">🥈</span>}
+                                {index === 2 && <span className="text-amber-600">🥉</span>}
+                                {stat.name}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center text-blue-300">{stat.danisan_acmadi || '-'}</TableCell>
+                            <TableCell className="text-center text-blue-300">{stat.danisan_vazgecti || '-'}</TableCell>
+                            <TableCell className="text-center text-blue-300">{stat.danisan_yanlis || '-'}</TableCell>
+                            <TableCell className="text-center text-blue-300 font-semibold">{stat.danisan_yonlendirme || '-'}</TableCell>
+                            <TableCell className="text-center text-purple-300">{stat.danisma_acmadi || '-'}</TableCell>
+                            <TableCell className="text-center text-purple-300">{stat.danisma_bilgi_verildi || '-'}</TableCell>
+                            <TableCell className="text-center text-purple-300 font-semibold">{stat.danisma_kayit || '-'}</TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-white font-bold text-lg">{stat.total}</span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {/* Totals Row */}
+                        <TableRow className="border-white/20 bg-white/5">
+                          <TableCell className="text-white font-bold">TOPLAM</TableCell>
+                          <TableCell className="text-center text-blue-300 font-bold">
+                            {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisan_acmadi, 0)}
+                          </TableCell>
+                          <TableCell className="text-center text-blue-300 font-bold">
+                            {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisan_vazgecti, 0)}
+                          </TableCell>
+                          <TableCell className="text-center text-blue-300 font-bold">
+                            {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisan_yanlis, 0)}
+                          </TableCell>
+                          <TableCell className="text-center text-blue-300 font-bold">
+                            {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisan_yonlendirme, 0)}
+                          </TableCell>
+                          <TableCell className="text-center text-purple-300 font-bold">
+                            {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisma_acmadi, 0)}
+                          </TableCell>
+                          <TableCell className="text-center text-purple-300 font-bold">
+                            {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisma_bilgi_verildi, 0)}
+                          </TableCell>
+                          <TableCell className="text-center text-purple-300 font-bold">
+                            {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisma_kayit, 0)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="text-green-400 font-bold text-xl">
+                              {weeklyEmployeeStats.reduce((sum, s) => sum + s.total, 0)}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Weekly Bar Chart */}
+            {weeklyEmployeeStats.length > 0 && (
+              <Card className="mt-6 bg-white/10 backdrop-blur-lg border-white/20">
+                <CardHeader>
+                  <CardTitle className="text-white">Haftalık Performans Grafiği</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={weeklyEmployeeStats}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <XAxis dataKey="name" stroke="#fff" fontSize={12} />
+                      <YAxis stroke="#fff" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(0,0,0,0.8)', 
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="danisan_yonlendirme" name="Yönlendirme" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="danisma_kayit" name="Kayıt" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="danisan_total" name="Danışan Toplam" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="danisma_total" name="Danışman Toplam" fill="#a855f7" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
