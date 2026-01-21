@@ -1,6 +1,6 @@
 
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -77,15 +77,21 @@ const OrderManagement = () => {
   const observerTarget = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Debounced search - 500ms bekleyerek arama yap
+  // Debounced search - 300ms bekleyerek arama yap (daha hızlı)
   useEffect(() => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
     
+    // Eğer arama terimi boşsa hemen temizle
+    if (!searchInput) {
+      setSearchTerm("");
+      return;
+    }
+    
     debounceTimeoutRef.current = setTimeout(() => {
       setSearchTerm(searchInput);
-    }, 500);
+    }, 300);
 
     return () => {
       if (debounceTimeoutRef.current) {
@@ -190,7 +196,22 @@ const OrderManagement = () => {
   });
 
   // Flatten pages into single array
-  const orders = ordersData?.pages.flatMap(page => page.data) || [];
+  const rawOrders = ordersData?.pages.flatMap(page => page.data) || [];
+  
+  // Client-side instant filtering while server query runs
+  const orders = useMemo(() => {
+    if (!searchInput || searchInput === searchTerm) {
+      return rawOrders;
+    }
+    // Anlık filtreleme - sunucu yanıtı gelene kadar mevcut verileri filtrele
+    const lowerSearch = searchInput.toLowerCase();
+    return rawOrders.filter(order => 
+      order.customer_name?.toLowerCase().includes(lowerSearch) ||
+      order.customer_email?.toLowerCase().includes(lowerSearch) ||
+      order.package_name?.toLowerCase().includes(lowerSearch)
+    );
+  }, [rawOrders, searchInput, searchTerm]);
+
   const totalOrders = orders.length;
 
   const {
@@ -986,7 +1007,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  // Filtreleme artık query'de yapılıyor
+  // Filtreleme useMemo'da yapılıyor, burada direkt orders kullanılıyor
   const filteredOrders = orders;
 
 
