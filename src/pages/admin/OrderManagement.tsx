@@ -142,20 +142,21 @@ const OrderManagement = () => {
     }
   };
 
-  // Infinite scroll query for orders
+  // Infinite scroll query for orders - optimized without count for faster search
   const {
     data: ordersData,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading: isOrdersLoading,
+    isFetching: isOrdersFetching,
     error: ordersError,
   } = useInfiniteQuery({
     queryKey: ["orders", searchTerm, statusFilter],
     queryFn: async ({ pageParam = 0 }) => {
       let query = supabase
         .from("orders")
-        .select("*", { count: 'exact' })
+        .select("*")
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
@@ -169,22 +170,28 @@ const OrderManagement = () => {
         query = query.eq("status", statusFilter);
       }
 
-      const { data, error, count } = await query
-        .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
+      // PAGE_SIZE + 1 çekerek daha fazla sayfa olup olmadığını kontrol et
+      const { data, error } = await query
+        .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE);
 
       if (error) throw error;
-      return { data: data as Order[], count: count || 0 };
+      
+      const hasMore = data && data.length > PAGE_SIZE;
+      const pageData = hasMore ? data.slice(0, PAGE_SIZE) : (data || []);
+      
+      return { data: pageData as Order[], hasMore };
     },
     getNextPageParam: (lastPage, allPages) => {
-      const loadedCount = allPages.reduce((acc, page) => acc + page.data.length, 0);
-      return loadedCount < lastPage.count ? allPages.length : undefined;
+      return lastPage.hasMore ? allPages.length : undefined;
     },
     initialPageParam: 0,
+    staleTime: 30000, // 30 saniye cache
+    gcTime: 60000, // 1 dakika garbage collection
   });
 
   // Flatten pages into single array
   const orders = ordersData?.pages.flatMap(page => page.data) || [];
-  const totalOrders = ordersData?.pages[0]?.count || 0;
+  const totalOrders = orders.length;
 
   const {
     data: deletedOrders,
