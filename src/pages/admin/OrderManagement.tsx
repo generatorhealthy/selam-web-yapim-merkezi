@@ -437,7 +437,7 @@ const OrderManagement = () => {
         customer_type: originalOrder.customer_type,
         status: 'pending' as const,
         is_first_order: false,
-        subscription_month: 1,
+        subscription_month: (originalOrder.subscription_month || 0) + 1,
       };
       
       const { data, error } = await supabase
