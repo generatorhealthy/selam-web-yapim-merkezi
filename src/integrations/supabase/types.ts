@@ -22468,6 +22468,7 @@ export type Database = {
           danisan_yonlendirme: number | null
           danisma_acmadi: number | null
           danisma_bilgi_verildi: number | null
+          danisma_eski_bilgilendirme: number
           danisma_kayit: number | null
           employee_name: string
           id: string
@@ -22484,6 +22485,7 @@ export type Database = {
           danisan_yonlendirme?: number | null
           danisma_acmadi?: number | null
           danisma_bilgi_verildi?: number | null
+          danisma_eski_bilgilendirme?: number
           danisma_kayit?: number | null
           employee_name: string
           id?: string
@@ -22500,6 +22502,7 @@ export type Database = {
           danisan_yonlendirme?: number | null
           danisma_acmadi?: number | null
           danisma_bilgi_verildi?: number | null
+          danisma_eski_bilgilendirme?: number
           danisma_kayit?: number | null
           employee_name?: string
           id?: string

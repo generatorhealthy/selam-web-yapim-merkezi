@@ -33,6 +33,7 @@ interface CallReport {
   danisma_acmadi: number;
   danisma_bilgi_verildi: number;
   danisma_kayit: number;
+  danisma_eski_bilgilendirme: number;
   created_at: string;
 }
 
@@ -74,6 +75,7 @@ const CallReports = () => {
   const [danismaAcmadi, setDanismaAcmadi] = useState<number>(0);
   const [danismaBilgiVerildi, setDanismaBilgiVerildi] = useState<number>(0);
   const [danismaKayit, setDanismaKayit] = useState<number>(0);
+  const [danismaEskiBilgilendirme, setDanismaEskiBilgilendirme] = useState<number>(0);
 
   useEffect(() => {
     fetchReports();
@@ -121,6 +123,7 @@ const CallReports = () => {
         danisma_acmadi: activeTab === 'danisma' ? danismaAcmadi : 0,
         danisma_bilgi_verildi: activeTab === 'danisma' ? danismaBilgiVerildi : 0,
         danisma_kayit: activeTab === 'danisma' ? danismaKayit : 0,
+        danisma_eski_bilgilendirme: activeTab === 'danisma' ? danismaEskiBilgilendirme : 0,
       };
 
       const { error } = await supabase
@@ -166,6 +169,7 @@ const CallReports = () => {
     setDanismaAcmadi(0);
     setDanismaBilgiVerildi(0);
     setDanismaKayit(0);
+    setDanismaEskiBilgilendirme(0);
   };
 
   // Analytics calculations
@@ -182,7 +186,7 @@ const CallReports = () => {
         stats[report.employee_name].danisan += total;
         stats[report.employee_name].total += total;
       } else {
-        const total = report.danisma_acmadi + report.danisma_bilgi_verildi + report.danisma_kayit;
+        const total = report.danisma_acmadi + report.danisma_bilgi_verildi + report.danisma_kayit + (report.danisma_eski_bilgilendirme || 0);
         stats[report.employee_name].danisma += total;
         stats[report.employee_name].total += total;
       }
@@ -212,7 +216,8 @@ const CallReports = () => {
         acmadi: acc.acmadi + r.danisma_acmadi,
         bilgiVerildi: acc.bilgiVerildi + r.danisma_bilgi_verildi,
         kayit: acc.kayit + r.danisma_kayit,
-      }), { acmadi: 0, bilgiVerildi: 0, kayit: 0 });
+        eskiBilgilendirme: acc.eskiBilgilendirme + (r.danisma_eski_bilgilendirme || 0),
+      }), { acmadi: 0, bilgiVerildi: 0, kayit: 0, eskiBilgilendirme: 0 });
   };
 
   const danisanTotals = getDanisanTotals();
@@ -230,6 +235,7 @@ const CallReports = () => {
     { name: 'Açmadı', value: danismaTotals.acmadi },
     { name: 'Bilgi Verildi', value: danismaTotals.bilgiVerildi },
     { name: 'Kayıt', value: danismaTotals.kayit },
+    { name: 'Eski Bilgilendirme', value: danismaTotals.eskiBilgilendirme },
   ].filter(d => d.value > 0);
 
   // Günlük rapor filtreleme
@@ -250,7 +256,7 @@ const CallReports = () => {
         .reduce((sum, r) => sum + r.danisan_acmadi + r.danisan_vazgecti + r.danisan_yanlis + r.danisan_yonlendirme, 0);
       const danismaTotal = dayReports
         .filter(r => r.report_type === 'danisma')
-        .reduce((sum, r) => sum + r.danisma_acmadi + r.danisma_bilgi_verildi + r.danisma_kayit, 0);
+        .reduce((sum, r) => sum + r.danisma_acmadi + r.danisma_bilgi_verildi + r.danisma_kayit + (r.danisma_eski_bilgilendirme || 0), 0);
       
       return {
         date: day,
@@ -286,6 +292,7 @@ const CallReports = () => {
         danisma_acmadi: number;
         danisma_bilgi_verildi: number;
         danisma_kayit: number;
+        danisma_eski_bilgilendirme: number;
         danisan_total: number;
         danisma_total: number;
         total: number;
@@ -302,6 +309,7 @@ const CallReports = () => {
           danisma_acmadi: 0,
           danisma_bilgi_verildi: 0,
           danisma_kayit: 0,
+          danisma_eski_bilgilendirme: 0,
           danisan_total: 0,
           danisma_total: 0,
           total: 0 
@@ -320,7 +328,8 @@ const CallReports = () => {
         stats[report.employee_name].danisma_acmadi += report.danisma_acmadi;
         stats[report.employee_name].danisma_bilgi_verildi += report.danisma_bilgi_verildi;
         stats[report.employee_name].danisma_kayit += report.danisma_kayit;
-        const total = report.danisma_acmadi + report.danisma_bilgi_verildi + report.danisma_kayit;
+        stats[report.employee_name].danisma_eski_bilgilendirme += (report.danisma_eski_bilgilendirme || 0);
+        const total = report.danisma_acmadi + report.danisma_bilgi_verildi + report.danisma_kayit + (report.danisma_eski_bilgilendirme || 0);
         stats[report.employee_name].danisma_total += total;
         stats[report.employee_name].total += total;
       }
@@ -441,7 +450,7 @@ const CallReports = () => {
                 <div>
                   <p className="text-purple-100 text-sm">Toplam Uzman Arama</p>
                   <p className="text-3xl font-bold">
-                    {danismaTotals.acmadi + danismaTotals.bilgiVerildi + danismaTotals.kayit}
+                    {danismaTotals.acmadi + danismaTotals.bilgiVerildi + danismaTotals.kayit + danismaTotals.eskiBilgilendirme}
                   </p>
                 </div>
                 <UserCheck className="w-10 h-10 text-purple-200" />
@@ -577,7 +586,7 @@ const CallReports = () => {
                   </TabsContent>
 
                   <TabsContent value="danisma" className="mt-4 space-y-3">
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-4 gap-3">
                       <div>
                         <Label className="text-white text-sm">Açmadı</Label>
                         <Input
@@ -605,6 +614,16 @@ const CallReports = () => {
                           min="0"
                           value={danismaKayit}
                           onChange={(e) => setDanismaKayit(parseInt(e.target.value) || 0)}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-white text-sm">Eski Bilgi</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={danismaEskiBilgilendirme}
+                          onChange={(e) => setDanismaEskiBilgilendirme(parseInt(e.target.value) || 0)}
                           className="bg-white/10 border-white/20 text-white"
                         />
                       </div>
@@ -871,7 +890,7 @@ const CallReports = () => {
                           ) : (
                             <>
                               Açmadı: {report.danisma_acmadi}, Bilgi: {report.danisma_bilgi_verildi}, 
-                              Kayıt: {report.danisma_kayit}
+                              Kayıt: {report.danisma_kayit}, Eski Bilgi: {report.danisma_eski_bilgilendirme || 0}
                             </>
                           )}
                         </TableCell>
@@ -1010,7 +1029,7 @@ const CallReports = () => {
                           <TableHead className="text-gray-300 text-center" colSpan={4}>
                             <Badge className="bg-blue-500">Danışan</Badge>
                           </TableHead>
-                          <TableHead className="text-gray-300 text-center" colSpan={3}>
+                          <TableHead className="text-gray-300 text-center" colSpan={4}>
                             <Badge className="bg-purple-500">Danışman</Badge>
                           </TableHead>
                           <TableHead className="text-gray-300 text-right">Toplam</TableHead>
@@ -1024,6 +1043,7 @@ const CallReports = () => {
                           <TableHead className="text-gray-400 text-sm text-center">Açmadı</TableHead>
                           <TableHead className="text-gray-400 text-sm text-center">Bilgi</TableHead>
                           <TableHead className="text-gray-400 text-sm text-center">Kayıt</TableHead>
+                          <TableHead className="text-gray-400 text-sm text-center">Eski Bilgi</TableHead>
                           <TableHead className="text-gray-400 text-sm text-right"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -1045,6 +1065,7 @@ const CallReports = () => {
                             <TableCell className="text-center text-purple-300">{stat.danisma_acmadi || '-'}</TableCell>
                             <TableCell className="text-center text-purple-300">{stat.danisma_bilgi_verildi || '-'}</TableCell>
                             <TableCell className="text-center text-purple-300 font-semibold">{stat.danisma_kayit || '-'}</TableCell>
+                            <TableCell className="text-center text-purple-300">{stat.danisma_eski_bilgilendirme || '-'}</TableCell>
                             <TableCell className="text-right">
                               <span className="text-white font-bold text-lg">{stat.total}</span>
                             </TableCell>
@@ -1073,6 +1094,9 @@ const CallReports = () => {
                           </TableCell>
                           <TableCell className="text-center text-purple-300 font-bold">
                             {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisma_kayit, 0)}
+                          </TableCell>
+                          <TableCell className="text-center text-purple-300 font-bold">
+                            {weeklyEmployeeStats.reduce((sum, s) => sum + s.danisma_eski_bilgilendirme, 0)}
                           </TableCell>
                           <TableCell className="text-right">
                             <span className="text-green-400 font-bold text-xl">
