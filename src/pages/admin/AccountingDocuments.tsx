@@ -407,12 +407,12 @@ const AccountingDocuments = () => {
                   <Label>Dosya Seç</Label>
                   <Input
                     type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp,.zip"
                     onChange={handleFileUpload}
                     disabled={isUploading}
                     className="mt-1"
                   />
-                  <p className="text-xs text-gray-500 mt-1">PDF, JPG, PNG veya WebP formatları desteklenir</p>
+                  <p className="text-xs text-gray-500 mt-1">PDF, JPG, PNG, WebP veya ZIP formatları desteklenir</p>
                 </div>
                 {isUploading && (
                   <div className="flex items-center gap-2 text-indigo-600">
