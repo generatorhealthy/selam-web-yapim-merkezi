@@ -87,13 +87,20 @@ const DoctorList = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || loadingMore || !hasMore) {
-        return;
+      if (loadingMore || !hasMore) return;
+      
+      // Use a threshold for better browser compatibility (Chrome/Edge pixel rounding issues)
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
+      const threshold = 200; // pixels before bottom to trigger load
+      
+      if (scrollTop + clientHeight >= scrollHeight - threshold) {
+        loadMoreSpecialists();
       }
-      loadMoreSpecialists();
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loadingMore, hasMore]);
 
