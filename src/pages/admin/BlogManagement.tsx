@@ -66,6 +66,9 @@ const BlogManagement = () => {
   const [specialists, setSpecialists] = useState<any[]>([]);
   const { userProfile } = useUserRole();
   const [selectedBlogs, setSelectedBlogs] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 20;
 
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogSchema),
@@ -119,20 +122,50 @@ const BlogManagement = () => {
     }
   };
 
-  const fetchBlogs = async () => {
+  const fetchBlogs = async (page: number = 1) => {
     try {
       setLoading(true);
+      const from = (page - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      // Get total count first (only basic columns for speed)
+      const { count, error: countError } = await supabase
+        .from('blog_posts')
+        .select('id', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('Blog sayısı alınırken hata:', countError);
+      } else {
+        setTotalCount(count || 0);
+      }
+
+      // Get paginated data
       const { data, error } = await supabase
         .from('blog_posts')
         .select(`
-          *,
+          id,
+          title,
+          excerpt,
+          featured_image,
+          status,
+          created_at,
+          word_count,
+          author_name,
+          author_type,
+          slug,
+          content,
+          seo_title,
+          seo_description,
+          keywords,
+          specialist_id,
           specialists (
             id,
             name,
             specialty
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) {
         console.error('Blog yazıları çekilirken hata:', error);
@@ -145,6 +178,7 @@ const BlogManagement = () => {
       }
 
       setBlogs(data || []);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
       toast({
@@ -271,7 +305,7 @@ const BlogManagement = () => {
 
       form.reset();
       setIsCreateDialogOpen(false);
-      fetchBlogs();
+      fetchBlogs(1); // Reset to first page after creating new blog
     } catch (error) {
       console.error('Blog oluşturma hatası:', error);
       toast({
@@ -391,7 +425,7 @@ const BlogManagement = () => {
         description: "Blog yazısı yayınlandı ve uzmana bildirim gönderildi.",
       });
 
-      fetchBlogs();
+      fetchBlogs(currentPage);
     } catch (error) {
       console.error('Blog onaylama hatası:', error);
       toast({
@@ -442,7 +476,7 @@ const BlogManagement = () => {
 
       setAdminMessage("");
       setSelectedBlog(null);
-      fetchBlogs();
+      fetchBlogs(currentPage);
     } catch (error) {
       console.error('Düzeltme talebi gönderme hatası:', error);
       toast({
@@ -480,7 +514,7 @@ const BlogManagement = () => {
         description: "Blog yazısı silindi.",
       });
 
-      fetchBlogs();
+      fetchBlogs(currentPage);
     } catch (error) {
       console.error('Blog silme hatası:', error);
       toast({
@@ -556,7 +590,7 @@ const BlogManagement = () => {
       editForm.reset();
       setIsEditDialogOpen(false);
       setEditingBlog(null);
-      fetchBlogs();
+      fetchBlogs(currentPage);
     } catch (error) {
       console.error('Blog güncelleme hatası:', error);
       toast({
@@ -569,9 +603,11 @@ const BlogManagement = () => {
     }
   };
 
+  // Get counts from current page only for now (total counts would need separate queries)
   const pendingCount = blogs.filter(blog => blog.status === "pending").length;
   const publishedCount = blogs.filter(blog => blog.status === "published").length;
   const isStaff = userProfile?.role === 'staff';
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   const toggleSelectAll = () => {
     if (selectedBlogs.length === blogs.length) {
@@ -608,7 +644,7 @@ const BlogManagement = () => {
       });
 
       setSelectedBlogs([]);
-      fetchBlogs();
+      fetchBlogs(currentPage);
     } catch (error) {
       console.error('Toplu silme hatası:', error);
       toast({
@@ -636,7 +672,7 @@ const BlogManagement = () => {
       });
 
       setSelectedBlogs([]);
-      fetchBlogs();
+      fetchBlogs(currentPage);
     } catch (error) {
       console.error('Toplu onaylama hatası:', error);
       toast({
@@ -1080,6 +1116,33 @@ const BlogManagement = () => {
             )}
           </TableBody>
         </Table>
+        
+        {/* Pagination */}
+        {totalCount > ITEMS_PER_PAGE && (
+          <div className="flex items-center justify-between p-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              Toplam {totalCount} blog yazısı, sayfa {currentPage} / {Math.ceil(totalCount / ITEMS_PER_PAGE)}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1 || loading}
+                onClick={() => fetchBlogs(currentPage - 1)}
+              >
+                Önceki
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= Math.ceil(totalCount / ITEMS_PER_PAGE) || loading}
+                onClick={() => fetchBlogs(currentPage + 1)}
+              >
+                Sonraki
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
         {/* Düzenleme Modalı */}
