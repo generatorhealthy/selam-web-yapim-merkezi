@@ -66,6 +66,7 @@ import SuccessStatistics from "./pages/admin/SuccessStatistics";
 import LegalProceedings from "./pages/admin/LegalProceedings";
 import EmployeeSalaryManagement from "./pages/admin/EmployeeSalaryManagement";
 import ClientReferrals from "./pages/admin/ClientReferrals";
+import ClientCalendar from "./pages/admin/ClientCalendar";
 
 import PreInfoFormManagement from "./pages/admin/PreInfoFormManagement";
 import PackageManagement from "./pages/admin/PackageManagement";
@@ -180,6 +181,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/specialists" element={<SpecialistManagement />} />
               <Route path="/divan_paneli/specialists/edit/:id" element={<SpecialistEdit />} />
               <Route path="/divan_paneli/client-referrals" element={<ClientReferrals />} />
+              <Route path="/divan_paneli/client-calendar" element={<ClientCalendar />} />
               <Route path="/divan_paneli/appointments" element={<AppointmentManagement />} />
               <Route path="/divan_paneli/blog" element={<BlogManagement />} />
               <Route path="/divan_paneli/customers" element={<CustomerManagement />} />

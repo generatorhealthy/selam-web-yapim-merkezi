@@ -178,6 +178,18 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "Danışan Takvimi",
+      description: "Ödeme günlerine göre uzman takibi",
+      icon: Calendar,
+      gradient: "from-purple-500 via-indigo-500 to-blue-600",
+      bgGradient: "from-purple-50 to-blue-50",
+      shadowColor: "shadow-purple-500/20",
+      route: "/divan_paneli/client-calendar",
+      buttonText: "Takvimi Görüntüle",
+      adminOnly: false,
+      staffOnly: true
+    },
+    {
       title: "Randevu Yönetimi",
       description: "Randevuları görüntüle ve yönet",
       icon: Calendar,
