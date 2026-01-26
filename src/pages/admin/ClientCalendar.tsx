@@ -80,12 +80,13 @@ const ClientCalendar = () => {
       if (referralsError) throw referralsError;
 
       // Son 30 gün içinde onaylanan siparişleri getir (yeni kayıtlar için)
+      // subscription_month = 1 olan siparişler ilk ödeme yani yeni kayıt
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       const { data: approvedOrdersData, error: ordersError } = await supabase
         .from('orders')
-        .select('customer_name, customer_email, created_at')
+        .select('customer_name, customer_email, created_at, subscription_month, is_first_order')
         .in('status', ['approved', 'completed'])
         .is('deleted_at', null)
         .gte('created_at', thirtyDaysAgo.toISOString());
@@ -96,22 +97,23 @@ const ClientCalendar = () => {
         referralsData?.map(r => r.specialist_id) || []
       );
 
-      // Onaylanmış siparişlerdeki müşteri adlarını set olarak tut
-      const approvedOrderNames = new Set(
-        approvedOrdersData?.map(o => o.customer_name?.toLowerCase().trim()) || []
+      // İlk ay siparişleri (yeni kayıtlar) - subscription_month = 1 veya is_first_order = true
+      const newRegistrationOrderNames = new Set(
+        approvedOrdersData
+          ?.filter(o => o.subscription_month === 1 || o.is_first_order === true)
+          ?.map(o => o.customer_name?.toLowerCase().trim()) || []
       );
 
       const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => {
-        const specialistCreatedAt = specialist.created_at ? new Date(specialist.created_at) : null;
-        const isNewRegistration = specialistCreatedAt ? specialistCreatedAt >= thirtyDaysAgo : false;
-        const hasApprovedOrder = approvedOrderNames.has(specialist.name?.toLowerCase().trim());
+        // Yeni kayıt = son 30 günde ilk ay siparişi onaylanmış
+        const hasFirstMonthOrder = newRegistrationOrderNames.has(specialist.name?.toLowerCase().trim());
         
         return {
           ...specialist,
           hasReferralThisMonth: referredSpecialistIds.has(specialist.id),
           daysUntilPayment: calculateDaysUntilPayment(specialist.payment_day || 0),
-          isNewRegistration,
-          hasApprovedOrder
+          isNewRegistration: hasFirstMonthOrder, // İlk ay siparişi varsa yeni kayıt
+          hasApprovedOrder: hasFirstMonthOrder
         };
       });
 
@@ -150,9 +152,9 @@ const ClientCalendar = () => {
     .filter(s => s.daysUntilPayment <= 10 && !s.hasReferralThisMonth)
     .sort((a, b) => a.daysUntilPayment - b.daysUntilPayment);
 
-  // Yeni kayıtlar: Son 30 günde kayıt olmuş, siparişi onaylanmış ve yönlendirme yapılmamış
+  // Yeni kayıtlar: İlk ay siparişi onaylanmış ve yönlendirme yapılmamış (10 gün kuralı yok!)
   const newRegistrations = specialists
-    .filter(s => s.isNewRegistration && s.hasApprovedOrder && !s.hasReferralThisMonth)
+    .filter(s => s.isNewRegistration && !s.hasReferralThisMonth)
     .sort((a, b) => {
       // Önce ödeme gününe kalan süreye göre sırala
       return a.daysUntilPayment - b.daysUntilPayment;
