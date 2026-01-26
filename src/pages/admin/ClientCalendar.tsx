@@ -7,7 +7,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, UserPlus } from "lucide-react";
+import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
 
@@ -18,14 +18,11 @@ interface Specialist {
   city: string;
   payment_day: number | null;
   internal_number: string | null;
-  created_at: string | null;
 }
 
 interface SpecialistWithReferral extends Specialist {
   hasReferralThisMonth: boolean;
   daysUntilPayment: number;
-  isNewRegistration: boolean;
-  hasApprovedOrder: boolean;
 }
 
 const ClientCalendar = () => {
@@ -79,43 +76,15 @@ const ClientCalendar = () => {
 
       if (referralsError) throw referralsError;
 
-      // Son 30 gün içinde onaylanan siparişleri getir (yeni kayıtlar için)
-      // subscription_month = 1 olan siparişler ilk ödeme yani yeni kayıt
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const { data: approvedOrdersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('customer_name, customer_email, created_at, subscription_month, is_first_order')
-        .in('status', ['approved', 'completed'])
-        .is('deleted_at', null)
-        .gte('created_at', thirtyDaysAgo.toISOString());
-
-      if (ordersError) throw ordersError;
-
       const referredSpecialistIds = new Set(
         referralsData?.map(r => r.specialist_id) || []
       );
 
-      // İlk ay siparişleri (yeni kayıtlar) - subscription_month = 1 veya is_first_order = true
-      const newRegistrationOrderNames = new Set(
-        approvedOrdersData
-          ?.filter(o => o.subscription_month === 1 || o.is_first_order === true)
-          ?.map(o => o.customer_name?.toLowerCase().trim()) || []
-      );
-
-      const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => {
-        // Yeni kayıt = son 30 günde ilk ay siparişi onaylanmış
-        const hasFirstMonthOrder = newRegistrationOrderNames.has(specialist.name?.toLowerCase().trim());
-        
-        return {
-          ...specialist,
-          hasReferralThisMonth: referredSpecialistIds.has(specialist.id),
-          daysUntilPayment: calculateDaysUntilPayment(specialist.payment_day || 0),
-          isNewRegistration: hasFirstMonthOrder, // İlk ay siparişi varsa yeni kayıt
-          hasApprovedOrder: hasFirstMonthOrder
-        };
-      });
+      const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => ({
+        ...specialist,
+        hasReferralThisMonth: referredSpecialistIds.has(specialist.id),
+        daysUntilPayment: calculateDaysUntilPayment(specialist.payment_day || 0)
+      }));
 
       setSpecialists(specialistsWithReferrals);
     } catch (error) {
@@ -152,14 +121,6 @@ const ClientCalendar = () => {
     .filter(s => s.daysUntilPayment <= 10 && !s.hasReferralThisMonth)
     .sort((a, b) => a.daysUntilPayment - b.daysUntilPayment);
 
-  // Yeni kayıtlar: İlk ay siparişi onaylanmış ve yönlendirme yapılmamış (10 gün kuralı yok!)
-  const newRegistrations = specialists
-    .filter(s => s.isNewRegistration && !s.hasReferralThisMonth)
-    .sort((a, b) => {
-      // Önce ödeme gününe kalan süreye göre sırala
-      return a.daysUntilPayment - b.daysUntilPayment;
-    });
-
   const groupedByPaymentDay = specialists.reduce((acc, specialist) => {
     const day = specialist.payment_day || 0;
     if (!acc[day]) {
@@ -177,7 +138,6 @@ const ClientCalendar = () => {
   const referredCount = specialists.filter(s => s.hasReferralThisMonth).length;
   const pendingCount = totalSpecialists - referredCount;
   const urgentCount = urgentSpecialists.length;
-  const newRegistrationCount = newRegistrations.length;
 
   if (roleLoading || loading) {
     return (
@@ -300,20 +260,6 @@ const ClientCalendar = () => {
                 </div>
               </CardContent>
             </Card>
-
-            <Card className="bg-cyan-900 border-cyan-800">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-cyan-300 font-medium">Yeni Kayıt</p>
-                    <p className="text-3xl font-bold text-cyan-200">{newRegistrationCount}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-cyan-700 rounded-xl flex items-center justify-center">
-                    <UserPlus className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* URGENT SECTION */}
@@ -375,69 +321,6 @@ const ClientCalendar = () => {
             </Card>
           )}
 
-          {/* NEW REGISTRATIONS SECTION */}
-          {newRegistrations.length > 0 && (
-            <Card className="mb-8 bg-cyan-950 border-cyan-800 overflow-hidden">
-              <CardHeader className="bg-cyan-900 py-4 px-6 border-b border-cyan-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-cyan-700 rounded-xl flex items-center justify-center">
-                    <UserPlus className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                      ✨ YENİ KAYITLAR
-                    </CardTitle>
-                    <p className="text-cyan-300 text-sm mt-1">
-                      Son 30 günde kayıt olmuş, siparişi onaylanmış ve yönlendirme bekleyen uzmanlar
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-cyan-800">
-                  {newRegistrations.map(specialist => (
-                    <div 
-                      key={specialist.id} 
-                      className="flex items-center justify-between p-5 hover:bg-cyan-900 transition-all"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
-                          <UserPlus className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white text-lg">{specialist.name}</p>
-                          <p className="text-cyan-300 text-sm">
-                            {specialist.specialty} • {specialist.city}
-                            {specialist.internal_number && ` • #${specialist.internal_number}`}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-cyan-700 text-white border-cyan-600 px-3 py-1">
-                          Yeni Kayıt
-                        </Badge>
-                        <Badge className="bg-slate-700 text-white border-slate-600 px-3 py-1">
-                          Ödeme: Her ayın {specialist.payment_day}'i
-                        </Badge>
-                        <Badge 
-                          className={`px-3 py-1 ${
-                            specialist.daysUntilPayment <= 10 
-                              ? 'bg-red-600 text-white border-red-500' 
-                              : 'bg-slate-600 text-white border-slate-500'
-                          }`}
-                        >
-                          {specialist.daysUntilPayment === 0 
-                            ? "BUGÜN!" 
-                            : `${specialist.daysUntilPayment} gün`}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* All Specialists by Payment Day */}
           <div className="space-y-4">
@@ -503,7 +386,6 @@ const ClientCalendar = () => {
                         })
                         .map(specialist => {
                           const isUrgent = specialist.daysUntilPayment <= 10 && !specialist.hasReferralThisMonth;
-                          const isNewReg = specialist.isNewRegistration && specialist.hasApprovedOrder && !specialist.hasReferralThisMonth;
                           
                           return (
                             <div 
@@ -511,21 +393,15 @@ const ClientCalendar = () => {
                               className={`flex items-center justify-between p-4 transition-all ${
                                 specialist.hasReferralThisMonth 
                                   ? 'bg-emerald-950' 
-                                  : isNewReg
-                                    ? 'bg-cyan-950'
-                                    : isUrgent 
-                                      ? 'bg-red-950' 
-                                      : 'hover:bg-slate-700'
+                                  : isUrgent 
+                                    ? 'bg-red-950' 
+                                    : 'hover:bg-slate-700'
                               }`}
                             >
                               <div className="flex items-center gap-4">
                                 {specialist.hasReferralThisMonth ? (
                                   <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
                                     <Check className="w-5 h-5 text-white" />
-                                  </div>
-                                ) : isNewReg ? (
-                                  <div className="w-10 h-10 bg-cyan-600 rounded-xl flex items-center justify-center">
-                                    <UserPlus className="w-5 h-5 text-white" />
                                   </div>
                                 ) : isUrgent ? (
                                   <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center animate-pulse">
@@ -544,11 +420,9 @@ const ClientCalendar = () => {
                                   <p className={`font-medium ${
                                     specialist.hasReferralThisMonth 
                                       ? 'text-emerald-300' 
-                                      : isNewReg
-                                        ? 'text-cyan-300'
-                                        : isUrgent 
-                                          ? 'text-red-300' 
-                                          : 'text-white'
+                                      : isUrgent 
+                                        ? 'text-red-300' 
+                                        : 'text-white'
                                   }`}>
                                     {specialist.name}
                                   </p>
@@ -560,11 +434,6 @@ const ClientCalendar = () => {
                               </div>
                               
                               <div className="flex items-center gap-2">
-                                {isNewReg && (
-                                  <Badge className="bg-cyan-700 text-white border-cyan-600">
-                                    Yeni Kayıt
-                                  </Badge>
-                                )}
                                 {!specialist.hasReferralThisMonth && (
                                   <Badge 
                                     className={`${
