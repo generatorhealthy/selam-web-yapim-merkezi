@@ -35,7 +35,8 @@ import {
   Image,
   Share2,
   HardDrive,
-  CreditCard
+  CreditCard,
+  Gauge
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -511,8 +512,53 @@ const AdminDashboard = () => {
         <HorizontalNavigation />
         
         <div className="relative z-10">
+          {/* Quick Menu - Admin Only */}
+          {isAdmin && (
+            <div className="px-6 pt-8 pb-4">
+              <div className="mx-auto max-w-7xl">
+                <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
+                      <Gauge className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-800">Hızlı Menü</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {[
+                      { title: "Siparişler", route: "/divan_paneli/orders", icon: ShoppingCart, gradient: "from-pink-500 to-rose-600" },
+                      { title: "Müşteri Yönetimi", route: "/divan_paneli/customers", icon: Users, gradient: "from-teal-500 to-cyan-600" },
+                      { title: "Hukuki İşlemler", route: "/divan_paneli/legal-proceedings", icon: Scale, gradient: "from-rose-500 to-red-600" },
+                      { title: "İyzico Ödemeleri", route: "/divan_paneli/iyzico-payments", icon: CreditCard, gradient: "from-violet-500 to-indigo-600" },
+                      { title: "Görüşme Raporları", route: "/divan_paneli/call-reports", icon: Phone, gradient: "from-rose-500 to-purple-600" },
+                      { title: "Sözleşmeler", route: "/divan_paneli/contracts", icon: FileText, gradient: "from-emerald-500 to-teal-600" },
+                      { title: "Danışan Takvimi", route: "/divan_paneli/client-calendar", icon: Calendar, gradient: "from-purple-500 to-blue-600" },
+                    ].map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.route}
+                          onClick={(e) => {
+                            if (e.ctrlKey || e.metaKey) {
+                              window.open(item.route, '_blank');
+                            } else {
+                              navigate(item.route);
+                            }
+                          }}
+                          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r ${item.gradient} text-white font-medium text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {item.title}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Enhanced Cards Grid */}
-          <div className="px-6 pb-16 pt-8">
+          <div className="px-6 pb-16 pt-4">
             <div className="mx-auto max-w-7xl">
               <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {visibleCards.map((card, index) => {
