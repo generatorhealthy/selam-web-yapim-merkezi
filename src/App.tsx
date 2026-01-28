@@ -29,6 +29,7 @@ import CampaignPackage from "./pages/CampaignPackage";
 import CampaignPremiumPackage from "./pages/CampaignPremiumPackage";
 import DiscountedPackage from "./pages/DiscountedPackage";
 import SpecialOffer from "./pages/SpecialOffer";
+import SpecialOfferNew from "./pages/SpecialOfferNew";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Privacy from "./pages/Privacy";
@@ -145,6 +146,7 @@ const AppContent = () => {
               <Route path="/kampanyali-premium-paket" element={<CampaignPremiumPackage />} />
               <Route path="/indirimli-paket" element={<DiscountedPackage />} />
               <Route path="/bu-aya-ozel" element={<SpecialOffer />} />
+              <Route path="/ozel-firsat" element={<SpecialOfferNew />} />
               <Route path="/odeme/:packageType" element={<Checkout />} />
               <Route path="/odeme-sayfasi" element={<Checkout />} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
