@@ -118,22 +118,20 @@ ${customerType === 'company' ? `<h3 style="color: #0369a1;">KURUMSAL BİLGİLER:
 ${selectedPackage.features ? selectedPackage.features.map((feature: string) => `<li>${feature}</li>`).join('') : ''}
 </ul>
 
+${selectedPackage.price === 4000 ? `
+<p style="margin-top: 10px;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 6.500 TL yerine 4.000 TL olarak uygulanmaktadır.</p>
+` : ''}
+
 ${selectedPackage.price === 3600 ? `
-<div style="background: #fef3c7; padding: 15px; margin: 20px 0; border-radius: 8px; border: 1px solid #f59e0b;">
-<p style="margin: 0; color: #92400e;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 4.999 TL yerine 3.600 TL olarak uygulanmaktadır.</p>
-</div>
+<p style="margin-top: 10px;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 4.999 TL yerine 3.600 TL olarak uygulanmaktadır.</p>
 ` : ''}
 
 ${selectedPackage.price === 2998 ? `
-<div style="background: #fef3c7; padding: 15px; margin: 20px 0; border-radius: 8px; border: 1px solid #f59e0b;">
-<p style="margin: 0; color: #92400e;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 4.999 TL yerine 2.998 TL olarak uygulanmaktadır.</p>
-</div>
+<p style="margin-top: 10px;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 4.999 TL yerine 2.998 TL olarak uygulanmaktadır.</p>
 ` : ''}
 
 ${selectedPackage.price === 2398 ? `
-<div style="background: #fef3c7; padding: 15px; margin: 20px 0; border-radius: 8px; border: 1px solid #f59e0b;">
-<p style="margin: 0; color: #92400e;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 4.999 TL yerine 2.398 TL olarak uygulanmaktadır.</p>
-</div>
+<p style="margin-top: 10px;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 4.999 TL yerine 2.398 TL olarak uygulanmaktadır.</p>
 ` : ''}
 
 <p style="margin-top: 15px;"><strong>Toplam Hizmet Süresi (Taahhütlü):</strong> Premium üyelik başlangıç imza tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.</p>
