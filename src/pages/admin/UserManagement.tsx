@@ -9,9 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Edit, Eye, EyeOff, Trash2, Users, RefreshCw } from "lucide-react";
+import { ArrowLeft, Edit, Eye, EyeOff, Trash2, Users, RefreshCw, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Database } from "@/integrations/supabase/types";
+import CaptureEvidenceDialog from "./CaptureEvidenceDialog";
 
 type UserRole = Database["public"]["Enums"]["user_role"];
 
@@ -34,6 +35,14 @@ const UserManagement = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [deletingUsers, setDeletingUsers] = useState<{[key: string]: number}>({});
+  const [captureDialogOpen, setCaptureDialogOpen] = useState(false);
+  const [captureTarget, setCaptureTarget] = useState<{
+    userId: string;
+    userName: string;
+    userEmail: string;
+    specialistId?: string;
+    profileUrl?: string;
+  } | null>(null);
   const [editForm, setEditForm] = useState({
     email: "",
     password: "",
@@ -290,6 +299,44 @@ const UserManagement = () => {
     }
   };
 
+  const handleCaptureEvidence = async (user: UserProfile) => {
+    try {
+      // Check if user is a specialist
+      const { data: specialist, error } = await supabase
+        .from('specialists')
+        .select('id, name, specialty')
+        .eq('user_id', user.user_id)
+        .single();
+
+      let profileUrl = undefined;
+      let specialistId = undefined;
+
+      if (specialist && !error) {
+        // Create the profile URL - format: /:specialtySlug/:doctorName
+        const specialtySlug = specialist.specialty?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'uzman';
+        const doctorSlug = specialist.name?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-ığüşöç]/g, '') || 'doktor';
+        profileUrl = `${window.location.origin}/${specialtySlug}/${doctorSlug}`;
+        specialistId = specialist.id;
+      }
+
+      setCaptureTarget({
+        userId: user.user_id,
+        userName: user.name || 'İsimsiz Kullanıcı',
+        userEmail: user.email || '',
+        specialistId,
+        profileUrl
+      });
+      setCaptureDialogOpen(true);
+    } catch (error) {
+      console.error('Error checking specialist:', error);
+      toast({
+        title: "Hata",
+        description: "Uzman bilgileri alınamadı.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin':
@@ -396,7 +443,7 @@ const UserManagement = () => {
                       {new Date(user.created_at).toLocaleDateString('tr-TR')}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <Button
                           variant="outline"
                           size="sm"
@@ -405,6 +452,17 @@ const UserManagement = () => {
                           <Edit className="w-4 h-4 mr-1" />
                           Düzenle
                         </Button>
+                        {user.role === 'specialist' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCaptureEvidence(user)}
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                          >
+                            <Camera className="w-4 h-4 mr-1" />
+                            Kanıt Topla
+                          </Button>
+                        )}
                         <Button
                           variant="destructive"
                           size="sm"
@@ -552,6 +610,22 @@ const UserManagement = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Capture Evidence Dialog */}
+        {captureTarget && (
+          <CaptureEvidenceDialog
+            isOpen={captureDialogOpen}
+            onClose={() => {
+              setCaptureDialogOpen(false);
+              setCaptureTarget(null);
+            }}
+            userId={captureTarget.userId}
+            userName={captureTarget.userName}
+            userEmail={captureTarget.userEmail}
+            specialistId={captureTarget.specialistId}
+            profileUrl={captureTarget.profileUrl}
+          />
+        )}
       </div>
     </div>
   );
