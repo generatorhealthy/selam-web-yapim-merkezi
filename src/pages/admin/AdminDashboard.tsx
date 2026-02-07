@@ -420,6 +420,17 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "Hukuki Kanıtlar",
+      description: "Silinen uzmanların hukuki delilleri",
+      icon: Scale,
+      gradient: "from-rose-500 via-red-500 to-orange-600",
+      bgGradient: "from-rose-50 to-orange-50",
+      shadowColor: "shadow-rose-500/20",
+      route: "/divan_paneli/legal-evidence",
+      buttonText: "Kanıtları Görüntüle",
+      adminOnly: true
+    },
+    {
       title: "İyzico Ödemeleri",
       description: "Başarısız abonelik ödemelerini takip et ve yeniden dene",
       icon: CreditCard,

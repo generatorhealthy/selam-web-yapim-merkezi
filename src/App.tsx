@@ -85,6 +85,7 @@ import DatabaseBackup from "./pages/admin/DatabaseBackup";
 import AccountingDocuments from "./pages/admin/AccountingDocuments";
 import CallReports from "./pages/admin/CallReports";
 import IyzicoPayments from "./pages/admin/IyzicoPayments";
+import LegalEvidenceManagement from "./pages/admin/LegalEvidenceManagement";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Doctor pages
@@ -210,6 +211,7 @@ const AppContent = () => {
                 <Route path="/divan_paneli/database-backup" element={<DatabaseBackup />} />
                 <Route path="/divan_paneli/call-reports" element={<CallReports />} />
                 <Route path="/divan_paneli/iyzico-payments" element={<IyzicoPayments />} />
+                <Route path="/divan_paneli/legal-evidence" element={<LegalEvidenceManagement />} />
                 
               
               {/* Doctor Routes */}

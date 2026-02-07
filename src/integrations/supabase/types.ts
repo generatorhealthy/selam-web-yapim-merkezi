@@ -22766,6 +22766,63 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_evidence: {
+        Row: {
+          created_at: string
+          deleted_at: string
+          deleted_by: string | null
+          email_logs: Json
+          id: string
+          notes: string | null
+          orders_data: Json
+          profile_data: Json
+          referrals_data: Json
+          screenshot_urls: string[] | null
+          specialist_email: string | null
+          specialist_id: string | null
+          specialist_name: string
+          specialist_phone: string | null
+          specialist_tc_no: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          email_logs?: Json
+          id?: string
+          notes?: string | null
+          orders_data?: Json
+          profile_data?: Json
+          referrals_data?: Json
+          screenshot_urls?: string[] | null
+          specialist_email?: string | null
+          specialist_id?: string | null
+          specialist_name: string
+          specialist_phone?: string | null
+          specialist_tc_no?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          email_logs?: Json
+          id?: string
+          notes?: string | null
+          orders_data?: Json
+          profile_data?: Json
+          referrals_data?: Json
+          screenshot_urls?: string[] | null
+          specialist_email?: string | null
+          specialist_id?: string | null
+          specialist_name?: string
+          specialist_phone?: string | null
+          specialist_tc_no?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       legal_proceedings: {
         Row: {
           contract_pdf_url: string | null
