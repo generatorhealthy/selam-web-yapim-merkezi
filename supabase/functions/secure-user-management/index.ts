@@ -129,10 +129,10 @@ serve(async (req) => {
       console.log('Delete user action started for userId:', userId)
       
       try {
-        // First, check if user exists in specialists table and delete all related records
+        // First, check if user exists in specialists table and collect evidence before deletion
         const { data: specialist, error: specialistCheckError } = await supabaseAdmin
           .from('specialists')
-          .select('id')
+          .select('*')
           .eq('user_id', userId)
           .single()
 
@@ -144,10 +144,99 @@ serve(async (req) => {
           )
         }
 
-        // If user is a specialist, delete all related records first
+        // If user is a specialist, collect all evidence before deletion
         if (specialist) {
-          console.log('User is a specialist, deleting all related records for specialist:', specialist.id)
+          console.log('User is a specialist, collecting legal evidence before deletion:', specialist.id)
           
+          // Collect client referrals data
+          const { data: referralsData } = await supabaseAdmin
+            .from('client_referrals')
+            .select('*')
+            .eq('specialist_id', specialist.id)
+          console.log('Collected referrals:', referralsData?.length || 0)
+          
+          // Collect orders data by matching email or name
+          let ordersData: any[] = []
+          if (specialist.email) {
+            const { data: ordersByEmail } = await supabaseAdmin
+              .from('orders')
+              .select('*')
+              .ilike('customer_email', specialist.email)
+            if (ordersByEmail) ordersData = [...ordersData, ...ordersByEmail]
+          }
+          if (specialist.name) {
+            const { data: ordersByName } = await supabaseAdmin
+              .from('orders')
+              .select('*')
+              .ilike('customer_name', `%${specialist.name}%`)
+            if (ordersByName) {
+              // Deduplicate
+              const existingIds = new Set(ordersData.map(o => o.id))
+              ordersData = [...ordersData, ...ordersByName.filter(o => !existingIds.has(o.id))]
+            }
+          }
+          console.log('Collected orders:', ordersData.length)
+
+          // Get TC number from orders if exists
+          let tcNo = null
+          if (ordersData.length > 0) {
+            const orderWithTc = ordersData.find(o => o.customer_tc_no)
+            if (orderWithTc) tcNo = orderWithTc.customer_tc_no
+          }
+
+          // Collect email logs from orders (contract_emails_sent, invoice_sent)
+          const emailLogs = ordersData
+            .filter(o => o.contract_emails_sent || o.invoice_sent)
+            .map(o => ({
+              order_id: o.id,
+              package_name: o.package_name,
+              sent_at: o.contract_generated_at || o.created_at,
+              contract_sent: o.contract_emails_sent,
+              invoice_sent: o.invoice_sent,
+              invoice_number: o.invoice_number,
+              ip_address: o.contract_ip_address
+            }))
+          console.log('Collected email logs:', emailLogs.length)
+
+          // Create legal evidence record before deleting
+          const { error: evidenceError } = await supabaseAdmin
+            .from('legal_evidence')
+            .insert({
+              specialist_id: specialist.id,
+              specialist_name: specialist.name || 'Bilinmiyor',
+              specialist_email: specialist.email,
+              specialist_phone: specialist.phone,
+              specialist_tc_no: tcNo,
+              profile_data: {
+                specialty: specialist.specialty,
+                city: specialist.city,
+                hospital: specialist.hospital,
+                university: specialist.university,
+                education: specialist.education,
+                bio: specialist.bio,
+                certifications: specialist.certifications,
+                experience: specialist.experience,
+                package_price: specialist.package_price,
+                payment_day: specialist.payment_day,
+                consultation_fee: specialist.consultation_fee,
+                profile_picture: specialist.profile_picture,
+                internal_number: specialist.internal_number,
+                created_at: specialist.created_at
+              },
+              referrals_data: referralsData || [],
+              orders_data: ordersData,
+              email_logs: emailLogs,
+              deleted_by: user.id
+            })
+
+          if (evidenceError) {
+            console.error('Error creating legal evidence:', evidenceError)
+            // Don't block deletion, just log the error
+          } else {
+            console.log('Legal evidence record created successfully')
+          }
+          
+          // Now proceed with deletion of related records
           // Delete from client_referrals where this specialist is the specialist
           await supabaseAdmin.from('client_referrals').delete().eq('specialist_id', specialist.id)
           console.log('Client referrals (as specialist) deleted')
