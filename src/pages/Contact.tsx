@@ -39,6 +39,17 @@ const Contact = () => {
     console.log('Form data being sent:', formData);
 
     try {
+      // Veritabanına başvuruyu kaydet
+      const { error: dbError } = await supabase.from('specialist_applications').insert([{
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject || null,
+        message: formData.message,
+        source: 'contact_form',
+      }]);
+      if (dbError) console.error('DB kayıt hatası:', dbError);
+
       // Supabase Edge Function ile e-posta gönder
       const { data, error } = await supabase.functions.invoke('send-contact-email', {
         body: {

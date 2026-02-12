@@ -23204,6 +23204,69 @@ export type Database = {
           },
         ]
       }
+      specialist_applications: {
+        Row: {
+          about: string | null
+          city: string | null
+          created_at: string
+          education: string | null
+          email: string
+          experience: string | null
+          handled_by: string | null
+          handled_by_user_id: string | null
+          id: string
+          message: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          source: string
+          specialty: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          about?: string | null
+          city?: string | null
+          created_at?: string
+          education?: string | null
+          email: string
+          experience?: string | null
+          handled_by?: string | null
+          handled_by_user_id?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          source?: string
+          specialty?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          about?: string | null
+          city?: string | null
+          created_at?: string
+          education?: string | null
+          email?: string
+          experience?: string | null
+          handled_by?: string | null
+          handled_by_user_id?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string
+          specialty?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       specialist_tests: {
         Row: {
           created_at: string | null

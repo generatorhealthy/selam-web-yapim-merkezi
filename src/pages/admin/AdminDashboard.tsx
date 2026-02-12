@@ -441,6 +441,18 @@ const AdminDashboard = () => {
       buttonText: "Ödemeleri Görüntüle",
       adminOnly: true
     },
+    {
+      title: "Uzman Başvuruları",
+      description: "Kayıt ve iletişim formundan gelen uzman başvurularını yönet",
+      icon: UserPlus,
+      gradient: "from-lime-500 via-green-500 to-emerald-600",
+      bgGradient: "from-lime-50 to-emerald-50",
+      shadowColor: "shadow-lime-500/20",
+      route: "/divan_paneli/specialist-applications",
+      buttonText: "Başvuruları Görüntüle",
+      adminOnly: false,
+      staffOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
