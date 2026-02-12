@@ -11,7 +11,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import { ArrowLeft, User, Phone, Mail, MapPin, Briefcase, Clock, MessageSquare, RefreshCw, Filter, Users, CalendarDays, CheckCircle2, XCircle, AlertTriangle, PhoneOff, Info } from "lucide-react";
-import { format, subDays, isAfter } from "date-fns";
+import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
 interface Application {
@@ -77,11 +77,9 @@ const SpecialistApplications = () => {
 
   const fetchApplications = async () => {
     setLoading(true);
-    const tenDaysAgo = subDays(new Date(), 10).toISOString();
     const { data, error } = await supabase
       .from('specialist_applications')
       .select('*')
-      .gte('created_at', tenDaysAgo)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -180,7 +178,7 @@ const SpecialistApplications = () => {
               </h1>
               <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
                 <CalendarDays className="w-3.5 h-3.5" />
-                Son 10 gün · {applications.length} başvuru
+                Toplam {applications.length} başvuru
               </p>
             </div>
           </div>
@@ -229,7 +227,7 @@ const SpecialistApplications = () => {
               <Users className="w-10 h-10 text-slate-300" />
             </div>
             <p className="text-lg font-medium text-slate-400">Başvuru bulunamadı</p>
-            <p className="text-sm text-slate-300 mt-1">Son 10 gün içinde bu filtreye uygun başvuru yok.</p>
+            <p className="text-sm text-slate-300 mt-1">Bu filtreye uygun başvuru bulunamadı.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
