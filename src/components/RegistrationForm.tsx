@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,20 @@ const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
         setIsLoading(false);
         return;
       }
+
+      // Veritabanına başvuruyu kaydet
+      const { error: dbError } = await supabase.from('specialist_applications').insert([{
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        specialty: formData.specialty,
+        city: formData.city,
+        experience: formData.experience || null,
+        education: formData.education || null,
+        about: formData.about || null,
+        source: 'registration_form',
+      }]);
+      if (dbError) console.error('DB kayıt hatası:', dbError);
 
       // Edge function'a e-posta gönderimi
       const response = await fetch('https://irnfwewabogveofwemvg.supabase.co/functions/v1/send-registration-email', {
