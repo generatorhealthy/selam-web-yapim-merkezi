@@ -43,6 +43,33 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
   const [newOrderCount, setNewOrderCount] = useState(0);
+  const [newApplicationCount, setNewApplicationCount] = useState(0);
+
+  // Fetch new specialist application count
+  useEffect(() => {
+    if (!userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'staff')) return;
+
+    const fetchNewApplications = async () => {
+      const { count, error } = await supabase
+        .from('specialist_applications')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'yeni');
+      if (!error && count !== null) setNewApplicationCount(count);
+    };
+    fetchNewApplications();
+
+    const channel = supabase
+      .channel('admin-application-notifications')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'specialist_applications' }, () => {
+        setNewApplicationCount(prev => prev + 1);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'specialist_applications' }, () => {
+        fetchNewApplications();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userProfile]);
 
   // Listen for new orders
   useEffect(() => {
@@ -555,6 +582,7 @@ const AdminDashboard = () => {
                       { title: "Görüşme Raporları", route: "/divan_paneli/call-reports", icon: Phone, gradient: "from-rose-500 to-purple-600" },
                       { title: "Sözleşmeler", route: "/divan_paneli/contracts", icon: FileText, gradient: "from-emerald-500 to-teal-600" },
                       { title: "Danışan Takvimi", route: "/divan_paneli/client-calendar", icon: Calendar, gradient: "from-purple-500 to-blue-600" },
+                      { title: "Uzman Başvuruları", route: "/divan_paneli/specialist-applications", icon: UserPlus, gradient: "from-lime-500 to-emerald-600", badge: newApplicationCount },
                     ].map((item) => {
                       const Icon = item.icon;
                       return (
@@ -567,10 +595,15 @@ const AdminDashboard = () => {
                               navigate(item.route);
                             }
                           }}
-                          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r ${item.gradient} text-white font-medium text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300`}
+                          className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r ${item.gradient} text-white font-medium text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300`}
                         >
                           <Icon className="w-4 h-4" />
                           {item.title}
+                          {(item as any).badge > 0 && (
+                            <span className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center rounded-full bg-red-500 text-white text-[11px] font-bold px-1.5 shadow-lg animate-pulse">
+                              {(item as any).badge}
+                            </span>
+                          )}
                         </button>
                       );
                     })}
