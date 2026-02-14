@@ -745,7 +745,7 @@ const Index = () => {
                       </p>
                     </div>
                   </div>
-                  <Link to="/bu-aya-ozel">
+                  <Link to="/ozel-firsat">
                     <Button className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white font-bold text-lg px-8 py-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
                       <span>Detayları Gör</span>
                       <ArrowRight className="w-5 h-5 ml-2" />
@@ -814,7 +814,7 @@ const Index = () => {
 
           <div className="text-center">
             <Button asChild className="bg-white text-blue-600 hover:bg-blue-50 font-semibold text-lg px-8 py-6 rounded-lg shadow-lg">
-              <Link to="/bu-aya-ozel">
+              <Link to="/ozel-firsat">
                 Detayları İncele
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
