@@ -1,5 +1,15 @@
 @tailwind base;
 
+/* Shake animation for notification buttons */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-3px) rotate(-2deg); }
+  30% { transform: translateX(3px) rotate(2deg); }
+  45% { transform: translateX(-2px) rotate(-1deg); }
+  60% { transform: translateX(2px) rotate(1deg); }
+  75% { transform: translateX(-1px); }
+}
+
 /* Flame animation styles */
 @keyframes flame-flicker {
   0%, 100% { transform: rotate(-1deg) scale(1); }
