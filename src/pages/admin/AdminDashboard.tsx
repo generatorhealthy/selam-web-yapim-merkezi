@@ -595,13 +595,13 @@ const AdminDashboard = () => {
                               navigate(item.route);
                             }
                           }}
-                          className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r ${item.gradient} text-white font-medium text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300`}
+                          className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r ${item.gradient} text-white font-medium text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 ${(item as any).badge > 0 ? 'animate-[shake_0.8s_ease-in-out_infinite]' : ''}`}
                         >
                           <Icon className="w-4 h-4" />
                           {item.title}
                           {(item as any).badge > 0 && (
-                            <span className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center rounded-full bg-red-500 text-white text-[11px] font-bold px-1.5 shadow-lg animate-pulse">
-                              {(item as any).badge}
+                            <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] flex items-center justify-center rounded-full bg-red-600 text-white text-[11px] font-bold px-1.5 shadow-lg ring-2 ring-white">
+                              +{(item as any).badge}
                             </span>
                           )}
                         </button>
