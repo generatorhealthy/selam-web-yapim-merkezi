@@ -10,7 +10,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useNavigate, Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
-import { ArrowLeft, User, Phone, Mail, MapPin, Briefcase, Clock, MessageSquare, RefreshCw, Filter, Users, CalendarDays, CheckCircle2, XCircle, AlertTriangle, PhoneOff, Info } from "lucide-react";
+import { ArrowLeft, User, Phone, Mail, MapPin, Briefcase, Clock, MessageSquare, RefreshCw, Filter, Users, CalendarDays, CheckCircle2, XCircle, AlertTriangle, PhoneOff, Info, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -124,6 +125,20 @@ const SpecialistApplications = () => {
       toast({ title: "Başarılı", description: "Not kaydedildi." });
       setApplications(prev => prev.map(a => a.id === appId ? { ...a, notes: notesText } : a));
       setEditingNotes(null);
+    }
+  };
+
+  const handleDelete = async (appId: string) => {
+    const { error } = await supabase
+      .from('specialist_applications')
+      .delete()
+      .eq('id', appId);
+
+    if (error) {
+      toast({ title: "Hata", description: "Başvuru silinirken hata oluştu.", variant: "destructive" });
+    } else {
+      toast({ title: "Başarılı", description: "Başvuru silindi." });
+      setApplications(prev => prev.filter(a => a.id !== appId));
     }
   };
 
@@ -367,6 +382,34 @@ const SpecialistApplications = () => {
                         </button>
                       )}
                     </div>
+
+                    {/* Delete Button - Admin only */}
+                    {isAdmin && (
+                      <div className="pt-2 border-t border-slate-100">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="w-full h-8 text-xs rounded-lg text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700 gap-1.5">
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Başvuruyu Sil
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Başvuruyu silmek istediğinize emin misiniz?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                <strong>{app.name}</strong> adlı kişinin başvurusu kalıcı olarak silinecektir. Bu işlem geri alınamaz.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>İptal</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(app.id)} className="bg-red-600 hover:bg-red-700">
+                                Sil
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
