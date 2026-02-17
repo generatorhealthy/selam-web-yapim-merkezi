@@ -298,10 +298,13 @@ const StaffAttendance = () => {
                                 const dateStr = format(day, 'yyyy-MM-dd');
                                 const record = recordsByDate.get(dateStr);
                                 const dayOfWeek = getDay(day);
-                                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                                const isWeekend = dayOfWeek === 0; // Only Sunday is weekend
                                 const isFuture = day > new Date();
                                 const isTodayDate = isToday(day);
 
+                                // Hide dates before Feb 17, 2026 and future dates
+                                const cutoffDate = new Date(2026, 1, 17); // Feb 17, 2026
+                                if (day < cutoffDate) return null;
                                 if (isFuture && !isTodayDate) return null;
 
                                 return (
