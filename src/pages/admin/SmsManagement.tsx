@@ -59,8 +59,8 @@ const SmsManagement = () => {
       message: "Merhaba XXX hanım,danışan yönlendirilimesi sağlanmıştır, danışana ulaşarak bilgi verebilirsiniz. 😊 🚩Danışan bilgileri: XXX 📲555 🌟Online Danismanlik"
     },
     {
-      title: "Gecikmiş Ödeme",
-      message: "XXX Hanım gecikmiş ödemeniz bulunmaktadır. En kısa sürede ödeme yapmanız gerekmektedir."
+      title: "Aylık Ödeme",
+      message: "XXX Hanım aylık ödemeniz bulunmaktadır. En kısa sürede ödeme yapmanız gerekmektedir."
     },
     {
       title: "Sosyal Medya İçeriği",

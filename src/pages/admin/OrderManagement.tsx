@@ -1353,7 +1353,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                       setSmsOrder(order);
                                       setSmsMessage(`Sayın ${order.customer_name},
 
-Gecikmiş ödemeniz bulunmaktadır. En kısa sürede ödemenizi tamamlamanızı rica ederiz.
+Aylık ödemeniz bulunmaktadır. En kısa sürede ödemenizi tamamlamanızı rica ederiz.
 
 DOKTORUM OL BİLGİ VE TEKNOLOJİ HİZMETLERİ
 
