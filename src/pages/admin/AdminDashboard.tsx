@@ -480,6 +480,18 @@ const AdminDashboard = () => {
       adminOnly: false,
       staffOnly: true
     },
+    {
+      title: "Çalışma Saatleri",
+      description: "Personel giriş-çıkış saatlerini takip et",
+      icon: Clock,
+      gradient: "from-sky-500 via-blue-500 to-indigo-600",
+      bgGradient: "from-sky-50 to-indigo-50",
+      shadowColor: "shadow-sky-500/20",
+      route: "/divan_paneli/staff-attendance",
+      buttonText: "Çalışma Saatlerini Görüntüle",
+      adminOnly: false,
+      staffOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
