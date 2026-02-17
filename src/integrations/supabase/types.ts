@@ -22715,6 +22715,39 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_attendance: {
+        Row: {
+          check_in: string
+          check_out: string | null
+          created_at: string
+          id: string
+          staff_name: string
+          updated_at: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          id?: string
+          staff_name: string
+          updated_at?: string
+          user_id: string
+          work_date?: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          id?: string
+          staff_name?: string
+          updated_at?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
       success_statistics: {
         Row: {
           created_at: string
