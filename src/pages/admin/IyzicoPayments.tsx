@@ -71,6 +71,7 @@ interface RetryResponse {
 
 const IyzicoPayments = () => {
   const [loading, setLoading] = useState(false);
+  const [bulkRetrying, setBulkRetrying] = useState(false);
   const [retryingOrder, setRetryingOrder] = useState<string | null>(null);
   const [retryingSubscription, setRetryingSubscription] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<RetryResponse | null>(null);
@@ -229,6 +230,53 @@ const IyzicoPayments = () => {
     setRetryingSubscription(null);
   };
 
+  const retryAllSubscriptions = async () => {
+    if (!lastResult?.subscriptions || lastResult.subscriptions.length === 0) {
+      toast.info("Önce listeyi yükleyin");
+      return;
+    }
+
+    const allFailedOrders: { orderRef: string }[] = [];
+    for (const sub of lastResult.subscriptions) {
+      const retryable = getRetryableOrders(sub);
+      for (const order of retryable) {
+        allFailedOrders.push({ orderRef: order.referenceCode });
+      }
+    }
+
+    if (allFailedOrders.length === 0) {
+      toast.info("Yeniden denenecek başarısız ödeme bulunamadı");
+      return;
+    }
+
+    setBulkRetrying(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    toast.info(`${allFailedOrders.length} siparişten ödeme çekiliyor...`);
+
+    for (const item of allFailedOrders) {
+      try {
+        const { data, error } = await supabase.functions.invoke("retry-failed-iyzico-payments", {
+          body: { orderReferenceCode: item.orderRef }
+        });
+        if (!error && data.results?.[0]?.success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) toast.success(`${successCount} ödeme başarıyla tahsil edildi!`);
+    if (failCount > 0) toast.error(`${failCount} ödeme tahsil edilemedi`);
+
+    await checkFailedPayments();
+    setBulkRetrying(false);
+  };
+
   const formatDate = (timestamp: number) => {
     return format(new Date(timestamp), "dd MMM yyyy HH:mm", { locale: tr });
   };
@@ -378,6 +426,29 @@ const IyzicoPayments = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Toplu Ödeme Butonu */}
+              {lastResult.subscriptions && lastResult.subscriptions.length > 0 && (
+                <div className="flex justify-end mb-4">
+                  <Button
+                    onClick={retryAllSubscriptions}
+                    disabled={bulkRetrying}
+                    className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-md gap-2"
+                  >
+                    {bulkRetrying ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Ödeme Çekiliyor...
+                      </>
+                    ) : (
+                      <>
+                        <TrendingUp className="h-4 w-4" />
+                        Tümünden Ödeme Çek
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
 
               {/* Abonelikler Grid */}
               {lastResult.subscriptions && lastResult.subscriptions.length > 0 && (
