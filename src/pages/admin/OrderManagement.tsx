@@ -102,6 +102,18 @@ const OrderManagement = () => {
 
   const PAGE_SIZE = 50;
 
+  // Order stats via RPC (fast aggregation, avoids paginated client-side counts)
+  const { data: orderStats } = useQuery({
+    queryKey: ["order_stats"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_order_stats');
+      if (error) throw error;
+      return (data as any[])?.[0] ?? { total_count: 0, approved_count: 0, pending_count: 0, total_amount: 0 };
+    },
+    staleTime: 30000,
+    gcTime: 60000,
+  });
+
   // Müşteri yönetimindeki ödeme durumunu güncelle
   const updateAutomaticOrderPayment = async (order: Order) => {
     try {
@@ -261,6 +273,7 @@ const OrderManagement = () => {
         description: "Sipariş başarıyla güncellendi",
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order_stats"] });
       setEditingOrder(null);
       setSelectedOrder(null);
     },
@@ -290,6 +303,7 @@ const OrderManagement = () => {
         description: "Sipariş çöp kutusuna taşındı",
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order_stats"] });
       queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
       setSelectedOrder(null);
     },
@@ -319,6 +333,7 @@ const OrderManagement = () => {
         description: `${ids.length} sipariş çöp kutusuna taşındı`,
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order_stats"] });
       queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
       setSelectedOrderIds([]);
       setSelectAll(false);
@@ -349,6 +364,7 @@ const OrderManagement = () => {
         description: "Sipariş başarıyla geri getirildi",
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order_stats"] });
       queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
     },
     onError: (error) => {
@@ -377,6 +393,7 @@ const OrderManagement = () => {
         description: `${ids.length} sipariş başarıyla geri getirildi`,
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order_stats"] });
       queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
       setSelectedOrderIds([]);
       setSelectAll(false);
@@ -1037,7 +1054,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <p className="text-blue-100 text-sm font-medium">Toplam Sipariş</p>
-                    <p className="text-3xl font-bold">{orders?.length || 0}</p>
+                    <p className="text-3xl font-bold">{orderStats?.total_count ?? 0}</p>
                   </div>
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                     <Users className="w-6 h-6" />
@@ -1055,7 +1072,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                   <div className="space-y-2">
                     <p className="text-green-100 text-sm font-medium">Onaylanan</p>
                     <p className="text-3xl font-bold">
-                      {orders?.filter(o => o.status === 'approved' || o.status === 'completed').length || 0}
+                      {orderStats?.approved_count ?? 0}
                     </p>
                   </div>
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -1074,7 +1091,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                   <div className="space-y-2">
                     <p className="text-yellow-100 text-sm font-medium">Bekleyen</p>
                     <p className="text-3xl font-bold">
-                      {orders?.filter(o => o.status === 'pending').length || 0}
+                      {orderStats?.pending_count ?? 0}
                     </p>
                   </div>
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -1093,7 +1110,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                   <div className="space-y-2">
                     <p className="text-purple-100 text-sm font-medium">Toplam Tutar</p>
                     <p className="text-2xl font-bold">
-                      {orders?.reduce((sum, order) => sum + order.amount, 0).toLocaleString('tr-TR')} ₺
+                      {Number(orderStats?.total_amount ?? 0).toLocaleString('tr-TR')} ₺
                     </p>
                   </div>
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
