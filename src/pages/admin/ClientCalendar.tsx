@@ -251,7 +251,7 @@ const ClientCalendar = () => {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-red-300 font-medium">Acil (20 Gün)</p>
+                    <p className="text-sm text-red-300 font-medium">Acil (20 Gün İçinde)</p>
                     <p className="text-3xl font-bold text-red-200">{urgentCount}</p>
                   </div>
                   <div className="w-12 h-12 bg-red-700 rounded-xl flex items-center justify-center animate-pulse">
