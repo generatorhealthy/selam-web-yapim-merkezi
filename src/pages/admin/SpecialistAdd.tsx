@@ -37,7 +37,7 @@ const SPECIALTIES = [
   "Çocuk Gelişim", "Çocuk Gelişimi", "Çocuk Genetik Hastalıkları", "Çocuk Göğüs Hastalıkları",
   "Çocuk İmmünolojisi ve Alerjisi", "Çocuk Kalp ve Damar Cerrahisi", "Çocuk Romatolojisi",
   "Çocuk Sağlığı ve Hastalıkları", "Çocuk Ürolojisi", "Çocuk ve Ergen Psikiyatristi", "Dil ve Konuşma Terapisti", "Diyetisyen",
-  "Eğitim Danışmanlığı", "Göz Hastalıkları", "İlişki Danışmanı", "Kadın Doğum", "Psikolog", "Psikolojik Danışmanlık"
+  "Eğitim Danışmanlığı", "Göz Hastalıkları", "İlişki Danışmanı", "Kadın Doğum", "Klinik Psikolog", "Psikolog", "Psikolojik Danışmanlık"
 ];
 
 const DAYS = [
