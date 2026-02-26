@@ -118,7 +118,7 @@ const ClientCalendar = () => {
   };
 
   const urgentSpecialists = specialists
-    .filter(s => s.daysUntilPayment <= 10 && !s.hasReferralThisMonth)
+    .filter(s => s.daysUntilPayment <= 20 && !s.hasReferralThisMonth)
     .sort((a, b) => a.daysUntilPayment - b.daysUntilPayment);
 
   const groupedByPaymentDay = specialists.reduce((acc, specialist) => {
@@ -251,7 +251,7 @@ const ClientCalendar = () => {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-red-300 font-medium">Acil (10 Gün)</p>
+                    <p className="text-sm text-red-300 font-medium">Acil (20 Gün)</p>
                     <p className="text-3xl font-bold text-red-200">{urgentCount}</p>
                   </div>
                   <div className="w-12 h-12 bg-red-700 rounded-xl flex items-center justify-center animate-pulse">
@@ -275,7 +275,7 @@ const ClientCalendar = () => {
                       🚨 ACİL YÖNLENDİRME GEREKLİ
                     </CardTitle>
                     <p className="text-red-300 text-sm mt-1">
-                      Bu uzmanların ödemesine 10 gün veya daha az kaldı ve henüz yönlendirme yapılmadı!
+                      Bu uzmanların ödemesine 20 gün veya daha az kaldı ve henüz yönlendirme yapılmadı!
                     </p>
                   </div>
                 </div>
@@ -333,7 +333,7 @@ const ClientCalendar = () => {
               const daySpecialists = groupedByPaymentDay[day];
               const referred = daySpecialists.filter(s => s.hasReferralThisMonth).length;
               const pending = daySpecialists.length - referred;
-              const hasUrgent = daySpecialists.some(s => s.daysUntilPayment <= 10 && !s.hasReferralThisMonth);
+              const hasUrgent = daySpecialists.some(s => s.daysUntilPayment <= 20 && !s.hasReferralThisMonth);
               
               return (
                 <Card 
@@ -385,7 +385,7 @@ const ClientCalendar = () => {
                           return 0;
                         })
                         .map(specialist => {
-                          const isUrgent = specialist.daysUntilPayment <= 10 && !specialist.hasReferralThisMonth;
+                          const isUrgent = specialist.daysUntilPayment <= 20 && !specialist.hasReferralThisMonth;
                           
                           return (
                             <div 
