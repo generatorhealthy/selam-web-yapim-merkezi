@@ -118,6 +118,5 @@ RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml)$
 RewriteRule ^(.*)$ /index.html [L,QSA]
 
-# Hata sayfaları - anasayfaya yönlendir
-ErrorDocument 404 /
-ErrorDocument 500 /
+# ErrorDocument overrides removed to preserve real 404/500 responses
+# (prevents missing JS/CSS files from being rewritten to / and breaking the app)
