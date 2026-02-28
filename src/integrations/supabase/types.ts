@@ -22401,6 +22401,45 @@ export type Database = {
           },
         ]
       }
+      scheduled_sms: {
+        Row: {
+          created_at: string
+          customer_name: string | null
+          error_message: string | null
+          id: string
+          message: string
+          order_id: string | null
+          phone: string
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string | null
+          error_message?: string | null
+          id?: string
+          message: string
+          order_id?: string | null
+          phone: string
+          scheduled_at: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string | null
+          error_message?: string | null
+          id?: string
+          message?: string
+          order_id?: string | null
+          phone?: string
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       sms_logs: {
         Row: {
           client_contact: string | null
