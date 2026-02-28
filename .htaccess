@@ -1,6 +1,10 @@
 RewriteEngine On
 RewriteBase /
 
+# Canonical domain redirect (www -> non-www)
+RewriteCond %{HTTP_HOST} ^www\.doktorumol\.com\.tr$ [NC]
+RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
+
 # ===== GZIP / Brotli Compression =====
 <IfModule mod_deflate.c>
     # Force compression for mangled headers
