@@ -633,7 +633,7 @@ DOKTORUM OL BİLGİ VE TEKNOLOJİ HİZMETLERİ`;
 
       setIsSendingSms(true);
       try {
-        const { error } = await supabase.from('scheduled_sms').insert({
+        const { error } = await (supabase as any).from('scheduled_sms').insert({
           phone: smsOrder.customer_phone,
           message: smsMessage,
           scheduled_at: scheduledAt.toISOString(),
@@ -1770,6 +1770,38 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                   <div className="text-sm font-medium text-gray-900">{smsOrder.customer_name}</div>
                   <div className="text-sm text-gray-600">{smsOrder.customer_phone}</div>
                 </div>
+
+                {/* Template Seçimi */}
+                <div className="space-y-2">
+                  <Label>Mesaj Şablonu</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={smsTemplate === 'havale' ? 'default' : 'outline'}
+                      size="sm"
+                      className={smsTemplate === 'havale' ? 'bg-teal-600 hover:bg-teal-700 flex-1' : 'flex-1'}
+                      onClick={() => {
+                        setSmsTemplate('havale');
+                        setSmsMessage(getHavaleTemplate(smsOrder.customer_name));
+                      }}
+                    >
+                      Havale / EFT
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={smsTemplate === 'kart' ? 'default' : 'outline'}
+                      size="sm"
+                      className={smsTemplate === 'kart' ? 'bg-teal-600 hover:bg-teal-700 flex-1' : 'flex-1'}
+                      onClick={() => {
+                        setSmsTemplate('kart');
+                        setSmsMessage(getKartTemplate(smsOrder.customer_name));
+                      }}
+                    >
+                      Kredi Kartı
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="sms-message">Mesaj</Label>
                   <Textarea
@@ -1785,6 +1817,35 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                     {smsMessage.length}/400 karakter
                   </div>
                 </div>
+
+                {/* Planlama */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    SMS Planla (opsiyonel)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="date"
+                      value={smsScheduleDate}
+                      onChange={(e) => setSmsScheduleDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="time"
+                      value={smsScheduleTime}
+                      onChange={(e) => setSmsScheduleTime(e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                  {smsScheduleDate && smsScheduleTime && (
+                    <p className="text-xs text-blue-600">
+                      📅 SMS {smsScheduleDate} tarihinde saat {smsScheduleTime}'da gönderilecek
+                    </p>
+                  )}
+                </div>
+
                 <div className="flex gap-2 justify-end">
                   <Button
                     variant="outline"
@@ -1801,12 +1862,12 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                     {isSendingSms ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Gönderiliyor...
+                        {smsScheduleDate && smsScheduleTime ? 'Planlanıyor...' : 'Gönderiliyor...'}
                       </>
                     ) : (
                       <>
                         <Send className="w-4 h-4 mr-2" />
-                        Gönder
+                        {smsScheduleDate && smsScheduleTime ? 'Planla' : 'Gönder'}
                       </>
                     )}
                   </Button>
