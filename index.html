@@ -5,18 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/lovable-uploads/3db3e51c-c5db-4938-a759-095d2948086b.png" type="image/png">
     
-    <!-- LCP Optimization: Critical Resource Hints -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Critical Resource Hints - reduce chain depth -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://irnfwewabogveofwemvg.supabase.co" crossorigin>
+    
+    <!-- Non-critical DNS prefetch -->
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-    <link rel="dns-prefetch" href="https://images.unsplash.com">
     
-    <!-- LCP: Preload logo and critical images -->
-    <link rel="preload" as="image" href="/logo.png" fetchpriority="high">
-    
-    <!-- LCP: Font optimization - async load -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <!-- Font: swap display to prevent render blocking -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
     
     <!-- LCP: Critical CSS inline for fastest rendering -->
@@ -106,8 +104,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="/og-image.png" />
     
-    <!-- Preload critical resources -->
-    <link rel="modulepreload" href="/src/main.tsx">
+    <!-- Main app script loaded as module -->
     
     <!-- Google tag (gtag.js) - Google Analytics & Ads -->
     <script type="text/javascript">
