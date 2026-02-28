@@ -74,6 +74,9 @@ const OrderManagement = () => {
   const [smsOrder, setSmsOrder] = useState<Order | null>(null);
   const [smsMessage, setSmsMessage] = useState("");
   const [isSendingSms, setIsSendingSms] = useState(false);
+  const [smsTemplate, setSmsTemplate] = useState<'havale' | 'kart'>('havale');
+  const [smsScheduleDate, setSmsScheduleDate] = useState("");
+  const [smsScheduleTime, setSmsScheduleTime] = useState("");
   const observerTarget = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -581,6 +584,21 @@ const OrderManagement = () => {
     }
   };
 
+  // SMS template helper
+  const getHavaleTemplate = (name: string) => `Sayın ${name},
+
+Aylık ödemeniz bulunmaktadır. En kısa sürede ödemenizi tamamlamanızı rica ederiz.
+
+DOKTORUM OL BİLGİ VE TEKNOLOJİ HİZMETLERİ
+
+IBAN: TR95 0004 6007 2188 8000 3848 15`;
+
+  const getKartTemplate = (name: string) => `Sayın ${name},
+
+Aylık ödemeniz bulunmaktadır. Kartınızdan ödeme çekimi sağlanamamıştır düzenleme sağlayıp en kısa sürede dönüş sağlayınız.
+
+DOKTORUM OL BİLGİ VE TEKNOLOJİ HİZMETLERİ`;
+
   // SMS gönderme fonksiyonu
   const handleSendSms = async () => {
     if (!smsOrder || !smsMessage.trim()) {
@@ -598,6 +616,51 @@ const OrderManagement = () => {
         description: "Müşterinin telefon numarası bulunamadı",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Planlı SMS kontrolü
+    if (smsScheduleDate && smsScheduleTime) {
+      const scheduledAt = new Date(`${smsScheduleDate}T${smsScheduleTime}:00`);
+      if (scheduledAt <= new Date()) {
+        toast({
+          title: "Hata",
+          description: "Planlanan tarih ve saat gelecekte olmalıdır",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsSendingSms(true);
+      try {
+        const { error } = await supabase.from('scheduled_sms').insert({
+          phone: smsOrder.customer_phone,
+          message: smsMessage,
+          scheduled_at: scheduledAt.toISOString(),
+          customer_name: smsOrder.customer_name,
+          order_id: smsOrder.id,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "SMS Planlandı",
+          description: `SMS ${format(scheduledAt, 'dd.MM.yyyy HH:mm', { locale: tr })} tarihinde gönderilecek`,
+        });
+        setSmsOrder(null);
+        setSmsMessage("");
+        setSmsScheduleDate("");
+        setSmsScheduleTime("");
+      } catch (error: any) {
+        console.error('SMS planlama hatası:', error);
+        toast({
+          title: "Hata",
+          description: error.message || "SMS planlanırken bir hata oluştu",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSendingSms(false);
+      }
       return;
     }
 
@@ -1368,6 +1431,9 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                     size="sm"
                                     onClick={() => {
                                       setSmsOrder(order);
+                                      setSmsTemplate('havale');
+                                      setSmsScheduleDate("");
+                                      setSmsScheduleTime("");
                                       setSmsMessage(`Sayın ${order.customer_name},
 
 Aylık ödemeniz bulunmaktadır. En kısa sürede ödemenizi tamamlamanızı rica ederiz.
