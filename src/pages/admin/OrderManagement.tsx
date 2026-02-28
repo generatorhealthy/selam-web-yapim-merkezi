@@ -15,7 +15,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt, Mail, MessageSquare, Send } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt, Mail, MessageSquare, Send, StickyNote, Timer, CheckCheck } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { sendSms } from "@/services/smsService";
 import SendOrderEmailDialog from "@/components/SendOrderEmailDialog";
@@ -77,6 +77,8 @@ const OrderManagement = () => {
   const [smsTemplate, setSmsTemplate] = useState<'havale' | 'kart'>('havale');
   const [smsScheduleDate, setSmsScheduleDate] = useState("");
   const [smsScheduleTime, setSmsScheduleTime] = useState("");
+  const [noteInput, setNoteInput] = useState<Record<string, string>>({});
+  const [addingNote, setAddingNote] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -243,6 +245,63 @@ const OrderManagement = () => {
         .order("deleted_at", { ascending: false });
       if (error) throw error;
       return data as Order[];
+    },
+  });
+
+  // Order notes query
+  const { data: orderNotes, refetch: refetchNotes } = useQuery({
+    queryKey: ["order_notes"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('order_notes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as { id: string; order_id: string; note: string; created_by: string; created_at: string }[];
+    },
+    staleTime: 30000,
+  });
+
+  // Scheduled SMS query
+  const { data: scheduledSmsData } = useQuery({
+    queryKey: ["scheduled_sms_status"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('scheduled_sms')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as { id: string; order_id: string; status: string; scheduled_at: string; sent_at: string | null }[];
+    },
+    staleTime: 15000,
+    refetchInterval: 30000, // Auto-refresh every 30s to catch sent status
+  });
+
+  // Helper: get notes for an order
+  const getOrderNotes = (orderId: string) => orderNotes?.filter(n => n.order_id === orderId) || [];
+  
+  // Helper: get SMS status for an order
+  const getOrderSmsStatus = (orderId: string) => scheduledSmsData?.filter(s => s.order_id === orderId) || [];
+
+  // Add note mutation
+  const addNoteMutation = useMutation({
+    mutationFn: async ({ orderId, note }: { orderId: string; note: string }) => {
+      const userName = userProfile?.name || userProfile?.email || 'Admin';
+      const { error } = await (supabase as any).from('order_notes').insert({
+        order_id: orderId,
+        note,
+        created_by: userName,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Not eklendi" });
+      refetchNotes();
+      setAddingNote(null);
+      setNoteInput({});
+    },
+    onError: () => {
+      toast({ title: "Hata", description: "Not eklenirken hata oluştu", variant: "destructive" });
     },
   });
 
@@ -1380,8 +1439,86 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                               </div>
                             </div>
 
-                            {/* Action Buttons - Disabled for staff */}
-                            <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
+                            {/* SMS Status Indicators */}
+                            {(() => {
+                              const smsStatuses = getOrderSmsStatus(order.id);
+                              const pendingSms = smsStatuses.filter((s: any) => s.status === 'pending');
+                              const sentSms = smsStatuses.filter((s: any) => s.status === 'sent');
+                              return (
+                                <>
+                                  {pendingSms.length > 0 && (
+                                    <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-md text-xs font-medium border border-amber-200">
+                                      <Timer className="w-3.5 h-3.5" />
+                                      SMS Planlandı ({format(new Date(pendingSms[0].scheduled_at), "dd.MM HH:mm", { locale: tr })})
+                                    </div>
+                                  )}
+                                  {sentSms.length > 0 && (
+                                    <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-2.5 py-1 rounded-md text-xs font-medium border border-green-200">
+                                      <CheckCheck className="w-3.5 h-3.5" />
+                                      SMS Gönderildi
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
+
+                            {/* Order Notes */}
+                            {(() => {
+                              const notes = getOrderNotes(order.id);
+                              return notes.length > 0 ? (
+                                <div className="w-full space-y-1">
+                                  {notes.slice(0, 2).map((n: any) => (
+                                    <div key={n.id} className="flex items-start gap-1.5 bg-yellow-50 text-yellow-800 px-2.5 py-1.5 rounded-md text-xs border border-yellow-200">
+                                      <StickyNote className="w-3 h-3 mt-0.5 shrink-0" />
+                                      <div>
+                                        <span className="font-medium">{n.created_by}:</span> {n.note}
+                                        <span className="text-yellow-600 ml-1">({format(new Date(n.created_at), "dd.MM", { locale: tr })})</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {notes.length > 2 && (
+                                    <span className="text-xs text-yellow-600">+{notes.length - 2} not daha</span>
+                                  )}
+                                </div>
+                              ) : null;
+                            })()}
+
+                            {/* Add Note */}
+                            {addingNote === order.id ? (
+                              <div className="w-full flex gap-1.5">
+                                <Input
+                                  placeholder="Kısa not..."
+                                  value={noteInput[order.id] || ''}
+                                  onChange={(e) => setNoteInput(prev => ({ ...prev, [order.id]: e.target.value }))}
+                                  className="h-8 text-xs flex-1"
+                                  maxLength={200}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && noteInput[order.id]?.trim()) {
+                                      addNoteMutation.mutate({ orderId: order.id, note: noteInput[order.id].trim() });
+                                    }
+                                  }}
+                                />
+                                <Button size="sm" className="h-8 px-2 text-xs" onClick={() => {
+                                  if (noteInput[order.id]?.trim()) addNoteMutation.mutate({ orderId: order.id, note: noteInput[order.id].trim() });
+                                }} disabled={addNoteMutation.isPending}>
+                                  ✓
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => setAddingNote(null)}>✕</Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setAddingNote(order.id)}
+                                className="text-xs text-muted-foreground h-7 px-2"
+                              >
+                                <StickyNote className="w-3 h-3 mr-1" />
+                                Not Ekle
+                              </Button>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200 w-full">
                               {/* Invoice sent indicator */}
                               {order.invoice_sent && (
                                 <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs">
