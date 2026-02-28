@@ -212,6 +212,11 @@ const Index = () => {
         
         <div className="container mx-auto px-4 py-12 md:py-20 relative z-10">
           <div className="max-w-6xl mx-auto">
+            <header className="text-center mb-8 md:mb-12">
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white">
+                Doktorum Ol Randevu Sitesi
+              </h1>
+            </header>
             {/* Enhanced Search Form */}
             <div ref={searchContainerRef} className="bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0 border border-white/20 animate-scale-in">
               <div className="space-y-6 md:space-y-8">
