@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,88 +10,98 @@ import { MobileLayout } from "@/components/MobileLayout";
 import CookieConsent from "@/components/CookieConsent";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
-import MobileHome from "./pages/mobile/MobileHome";
-import MobileSearch from "./pages/mobile/MobileSearch";
-import MobileProfile from "./pages/mobile/MobileProfile";
+
+// Critical pages - eagerly loaded
 import Index from "./pages/Index";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Blog from "./pages/Blog";
-import BlogDetail from "./pages/BlogDetail";
-import BlogPost from "./pages/BlogPost";
-import DoctorList from "./pages/DoctorList";
-import DoctorProfile from "./pages/DoctorProfile";
-import BookAppointment from "./pages/BookAppointment";
-import RandevuSayfasi from "./pages/RandevuSayfasi";
-import SpecialtyPage from "./pages/SpecialtyPage";
-import Packages from "./pages/Packages";
-import CampaignPackage from "./pages/CampaignPackage";
-import CampaignPremiumPackage from "./pages/CampaignPremiumPackage";
-import DiscountedPackage from "./pages/DiscountedPackage";
-import SpecialOffer from "./pages/SpecialOffer";
-import SpecialOfferNew from "./pages/SpecialOfferNew";
-import Checkout from "./pages/Checkout";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import Privacy from "./pages/Privacy";
-import DisclosureText from "./pages/DisclosureText";
-import DistanceSalesContract from "./pages/DistanceSalesContract";
-import VisitorConsultantAgreement from "./pages/VisitorConsultantAgreement";
-import CommentRules from "./pages/CommentRules";
 
-import NotFound from "./pages/NotFound";
-import Landing from "./pages/Landing";
-import LoginPage from "./pages/LoginPage";
-import TestInterface from "./components/TestInterface";
-import TestTaking from "./components/TestTaking";
-import TestResult from "./pages/TestResult";
+// Lazy loaded pages - reduces initial bundle significantly
+const MobileHome = lazy(() => import("./pages/mobile/MobileHome"));
+const MobileSearch = lazy(() => import("./pages/mobile/MobileSearch"));
+const MobileProfile = lazy(() => import("./pages/mobile/MobileProfile"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogDetail = lazy(() => import("./pages/BlogDetail"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const DoctorList = lazy(() => import("./pages/DoctorList"));
+const DoctorProfile = lazy(() => import("./pages/DoctorProfile"));
+const BookAppointment = lazy(() => import("./pages/BookAppointment"));
+const RandevuSayfasi = lazy(() => import("./pages/RandevuSayfasi"));
+const SpecialtyPage = lazy(() => import("./pages/SpecialtyPage"));
+const Packages = lazy(() => import("./pages/Packages"));
+const CampaignPackage = lazy(() => import("./pages/CampaignPackage"));
+const CampaignPremiumPackage = lazy(() => import("./pages/CampaignPremiumPackage"));
+const DiscountedPackage = lazy(() => import("./pages/DiscountedPackage"));
+const SpecialOffer = lazy(() => import("./pages/SpecialOffer"));
+const SpecialOfferNew = lazy(() => import("./pages/SpecialOfferNew"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const DisclosureText = lazy(() => import("./pages/DisclosureText"));
+const DistanceSalesContract = lazy(() => import("./pages/DistanceSalesContract"));
+const VisitorConsultantAgreement = lazy(() => import("./pages/VisitorConsultantAgreement"));
+const CommentRules = lazy(() => import("./pages/CommentRules"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Landing = lazy(() => import("./pages/Landing"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const TestInterface = lazy(() => import("./components/TestInterface"));
+const TestTaking = lazy(() => import("./components/TestTaking"));
+const TestResult = lazy(() => import("./pages/TestResult"));
 
-// Admin pages
-import AdminAuth from "./pages/AdminAuth";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import UserCreate from "./pages/admin/UserCreate";
-import UserManagement from "./pages/admin/UserManagement";
-import SpecialistAdd from "./pages/admin/SpecialistAdd";
-import SpecialistManagement from "./pages/admin/SpecialistManagement";
-import SpecialistEdit from "./pages/admin/SpecialistEdit";
-import AppointmentManagement from "./pages/admin/AppointmentManagement";
-import BlogManagement from "./pages/admin/BlogManagement";
-import CustomerManagement from "./pages/admin/CustomerManagement";
-import ReviewManagement from "./pages/admin/ReviewManagement";
-import PaymentManagement from "./pages/admin/PaymentManagement";
-import NewOrder from "./pages/admin/NewOrder";
-import OrderManagement from "./pages/admin/OrderManagement";
-import Reports from "./pages/admin/Reports";
-import Analytics from "./pages/admin/Analytics";
-import MapboxSettings from "./pages/admin/MapboxSettings";
-import SuccessStatistics from "./pages/admin/SuccessStatistics";
-import LegalProceedings from "./pages/admin/LegalProceedings";
-import EmployeeSalaryManagement from "./pages/admin/EmployeeSalaryManagement";
-import ClientReferrals from "./pages/admin/ClientReferrals";
-import ClientCalendar from "./pages/admin/ClientCalendar";
-
-import PreInfoFormManagement from "./pages/admin/PreInfoFormManagement";
-import PackageManagement from "./pages/admin/PackageManagement";
-import TestManagement from "./pages/admin/TestManagement";
-import SupportTickets from "./pages/admin/SupportTickets";
-import ContractManagement from "./pages/admin/ContractManagement";
-import SmsManagement from "./pages/admin/SmsManagement";
-import PbxManagement from "./pages/admin/PbxManagement";
-import ProspectiveRegistrations from "./pages/admin/ProspectiveRegistrations";
-import LogManagement from "./pages/admin/LogManagement";
-import SitemapManagement from "./pages/admin/SitemapManagement";
-import ImageConverter from "./pages/admin/ImageConverter";
-import SocialMediaManagement from "./pages/admin/SocialMediaManagement";
-import DatabaseBackup from "./pages/admin/DatabaseBackup";
-import AccountingDocuments from "./pages/admin/AccountingDocuments";
-import CallReports from "./pages/admin/CallReports";
-import IyzicoPayments from "./pages/admin/IyzicoPayments";
-import LegalEvidenceManagement from "./pages/admin/LegalEvidenceManagement";
-import SpecialistApplications from "./pages/admin/SpecialistApplications";
-import StaffAttendance from "./pages/admin/StaffAttendance";
-import ErrorBoundary from "./components/ErrorBoundary";
+// Admin pages - lazy loaded (never needed on initial visit)
+const AdminAuth = lazy(() => import("./pages/AdminAuth"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const UserCreate = lazy(() => import("./pages/admin/UserCreate"));
+const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+const SpecialistAdd = lazy(() => import("./pages/admin/SpecialistAdd"));
+const SpecialistManagement = lazy(() => import("./pages/admin/SpecialistManagement"));
+const SpecialistEdit = lazy(() => import("./pages/admin/SpecialistEdit"));
+const AppointmentManagement = lazy(() => import("./pages/admin/AppointmentManagement"));
+const BlogManagement = lazy(() => import("./pages/admin/BlogManagement"));
+const CustomerManagement = lazy(() => import("./pages/admin/CustomerManagement"));
+const ReviewManagement = lazy(() => import("./pages/admin/ReviewManagement"));
+const PaymentManagement = lazy(() => import("./pages/admin/PaymentManagement"));
+const NewOrder = lazy(() => import("./pages/admin/NewOrder"));
+const OrderManagement = lazy(() => import("./pages/admin/OrderManagement"));
+const Reports = lazy(() => import("./pages/admin/Reports"));
+const Analytics = lazy(() => import("./pages/admin/Analytics"));
+const MapboxSettings = lazy(() => import("./pages/admin/MapboxSettings"));
+const SuccessStatistics = lazy(() => import("./pages/admin/SuccessStatistics"));
+const LegalProceedings = lazy(() => import("./pages/admin/LegalProceedings"));
+const EmployeeSalaryManagement = lazy(() => import("./pages/admin/EmployeeSalaryManagement"));
+const ClientReferrals = lazy(() => import("./pages/admin/ClientReferrals"));
+const ClientCalendar = lazy(() => import("./pages/admin/ClientCalendar"));
+const PreInfoFormManagement = lazy(() => import("./pages/admin/PreInfoFormManagement"));
+const PackageManagement = lazy(() => import("./pages/admin/PackageManagement"));
+const TestManagement = lazy(() => import("./pages/admin/TestManagement"));
+const SupportTickets = lazy(() => import("./pages/admin/SupportTickets"));
+const ContractManagement = lazy(() => import("./pages/admin/ContractManagement"));
+const SmsManagement = lazy(() => import("./pages/admin/SmsManagement"));
+const PbxManagement = lazy(() => import("./pages/admin/PbxManagement"));
+const ProspectiveRegistrations = lazy(() => import("./pages/admin/ProspectiveRegistrations"));
+const LogManagement = lazy(() => import("./pages/admin/LogManagement"));
+const SitemapManagement = lazy(() => import("./pages/admin/SitemapManagement"));
+const ImageConverter = lazy(() => import("./pages/admin/ImageConverter"));
+const SocialMediaManagement = lazy(() => import("./pages/admin/SocialMediaManagement"));
+const DatabaseBackup = lazy(() => import("./pages/admin/DatabaseBackup"));
+const AccountingDocuments = lazy(() => import("./pages/admin/AccountingDocuments"));
+const CallReports = lazy(() => import("./pages/admin/CallReports"));
+const IyzicoPayments = lazy(() => import("./pages/admin/IyzicoPayments"));
+const LegalEvidenceManagement = lazy(() => import("./pages/admin/LegalEvidenceManagement"));
+const SpecialistApplications = lazy(() => import("./pages/admin/SpecialistApplications"));
+const StaffAttendance = lazy(() => import("./pages/admin/StaffAttendance"));
+const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 
 // Doctor pages
-import DoctorDashboard from "./pages/doctor/DoctorDashboard";
+const DoctorDashboard = lazy(() => import("./pages/doctor/DoctorDashboard"));
+
+// Minimal loading fallback
+const PageLoader = () => (
+  <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="loading-skeleton" style={{ height: '60px', borderRadius: '12px' }}></div>
+    <div className="loading-skeleton" style={{ height: '180px', borderRadius: '12px', margin: '2rem 0' }}></div>
+  </div>
+);
 
 // Create QueryClient outside of component to prevent re-creation on renders
 const queryClient = new QueryClient({
@@ -111,26 +121,27 @@ const AppContent = () => {
       <AnalyticsTracker />
       <CookieConsent />
       <FloatingWhatsAppButton />
-      <Routes>
-        {/* Mobile Routes */}
-        {isNative && (
-          <Route path="/mobile" element={<MobileLayout />}>
-            <Route index element={<Navigate to="/mobile/home" replace />} />
-            <Route path="home" element={<MobileHome />} />
-            <Route path="search" element={<MobileSearch />} />
-            <Route path="appointments" element={<MobileHome />} />
-            <Route path="profile" element={<MobileProfile />} />
-            <Route path="dashboard" element={<MobileHome />} />
-          </Route>
-        )}
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Mobile Routes */}
+          {isNative && (
+            <Route path="/mobile" element={<MobileLayout />}>
+              <Route index element={<Navigate to="/mobile/home" replace />} />
+              <Route path="home" element={<MobileHome />} />
+              <Route path="search" element={<MobileSearch />} />
+              <Route path="appointments" element={<MobileHome />} />
+              <Route path="profile" element={<MobileProfile />} />
+              <Route path="dashboard" element={<MobileHome />} />
+            </Route>
+          )}
 
-        {/* Redirect root to mobile if native */}
-        {isNative ? (
-          <Route path="/" element={<Navigate to="/mobile/home" replace />} />
-        ) : (
-          <>
-            {/* Web Routes */}
-            <Route path="/" element={<Index />} />
+          {/* Redirect root to mobile if native */}
+          {isNative ? (
+            <Route path="/" element={<Navigate to="/mobile/home" replace />} />
+          ) : (
+            <>
+              {/* Web Routes */}
+              <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
               <Route path="/hakkimizda" element={<About />} />
               <Route path="/iletisim" element={<Contact />} />
@@ -194,28 +205,28 @@ const AppContent = () => {
               <Route path="/divan_paneli/payments" element={<PaymentManagement />} />
               <Route path="/divan_paneli/orders/new" element={<NewOrder />} />
               <Route path="/divan_paneli/orders" element={<OrderManagement />} />
-               <Route path="/divan_paneli/analytics" element={<Analytics />} />
-               <Route path="/divan_paneli/reports" element={<Reports />} />
+              <Route path="/divan_paneli/analytics" element={<Analytics />} />
+              <Route path="/divan_paneli/reports" element={<Reports />} />
               <Route path="/divan_paneli/mapbox" element={<MapboxSettings />} />
               <Route path="/divan_paneli/success-statistics" element={<SuccessStatistics />} />
               <Route path="/divan_paneli/legal-proceedings" element={<LegalProceedings />} />
               <Route path="/divan_paneli/employee-salaries" element={<EmployeeSalaryManagement />} />
               <Route path="/divan_paneli/support-tickets" element={<SupportTickets />} />
               <Route path="/divan_paneli/contracts" element={<ContractManagement />} />
-              <Route path="/divan_paneli/sms-management" element={<ErrorBoundary><SmsManagement /></ErrorBoundary>} />
+              <Route path="/divan_paneli/sms-management" element={<Suspense fallback={<PageLoader />}><ErrorBoundary><SmsManagement /></ErrorBoundary></Suspense>} />
               <Route path="/divan_paneli/pbx-management" element={<PbxManagement />} />
               <Route path="/divan_paneli/prospective-registrations" element={<ProspectiveRegistrations />} />
               <Route path="/divan_paneli/log-management" element={<LogManagement />} />
               <Route path="/divan_paneli/sitemap" element={<SitemapManagement />} />
               <Route path="/divan_paneli/image-converter" element={<ImageConverter />} />
               <Route path="/divan_paneli/accounting" element={<AccountingDocuments />} />
-                <Route path="/divan_paneli/social-media" element={<SocialMediaManagement />} />
-                <Route path="/divan_paneli/database-backup" element={<DatabaseBackup />} />
-                <Route path="/divan_paneli/call-reports" element={<CallReports />} />
-                <Route path="/divan_paneli/iyzico-payments" element={<IyzicoPayments />} />
-                <Route path="/divan_paneli/legal-evidence" element={<LegalEvidenceManagement />} />
-                <Route path="/divan_paneli/specialist-applications" element={<SpecialistApplications />} />
-                <Route path="/divan_paneli/staff-attendance" element={<StaffAttendance />} />
+              <Route path="/divan_paneli/social-media" element={<SocialMediaManagement />} />
+              <Route path="/divan_paneli/database-backup" element={<DatabaseBackup />} />
+              <Route path="/divan_paneli/call-reports" element={<CallReports />} />
+              <Route path="/divan_paneli/iyzico-payments" element={<IyzicoPayments />} />
+              <Route path="/divan_paneli/legal-evidence" element={<LegalEvidenceManagement />} />
+              <Route path="/divan_paneli/specialist-applications" element={<SpecialistApplications />} />
+              <Route path="/divan_paneli/staff-attendance" element={<StaffAttendance />} />
                 
               
               {/* Doctor Routes */}
@@ -224,7 +235,8 @@ const AppContent = () => {
               <Route path="*" element={<NotFound />} />
             </>
           )}
-      </Routes>
+        </Routes>
+      </Suspense>
     </>
   );
 };
