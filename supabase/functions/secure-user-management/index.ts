@@ -279,6 +279,23 @@ serve(async (req) => {
             )
           }
           console.log('Specialist record deleted successfully')
+
+          // Auto-add to cancellation_fees table
+          try {
+            await supabaseAdmin.from('cancellation_fees').insert({
+              customer_name: specialist.name || 'Bilinmiyor',
+              customer_email: specialist.email,
+              customer_phone: specialist.phone,
+              deleted_from_user_id: userId,
+              specialist_id: specialist.id,
+              amount: 0,
+              charge_status: 'pending',
+              notes: 'Kullanıcı yönetiminden otomatik eklendi',
+            })
+            console.log('Cancellation fee record created')
+          } catch (cfErr) {
+            console.error('Cancellation fee insert error:', cfErr)
+          }
         }
 
         // Delete any client_referrals where this user is referenced as referred_by (even if not a specialist)
