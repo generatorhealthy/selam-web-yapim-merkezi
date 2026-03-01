@@ -88,6 +88,7 @@ const AccountingDocuments = lazy(() => import("./pages/admin/AccountingDocuments
 const CallReports = lazy(() => import("./pages/admin/CallReports"));
 const IyzicoPayments = lazy(() => import("./pages/admin/IyzicoPayments"));
 const LegalEvidenceManagement = lazy(() => import("./pages/admin/LegalEvidenceManagement"));
+const CancellationFees = lazy(() => import("./pages/admin/CancellationFees"));
 const SpecialistApplications = lazy(() => import("./pages/admin/SpecialistApplications"));
 const StaffAttendance = lazy(() => import("./pages/admin/StaffAttendance"));
 const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
@@ -227,6 +228,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/legal-evidence" element={<LegalEvidenceManagement />} />
               <Route path="/divan_paneli/specialist-applications" element={<SpecialistApplications />} />
               <Route path="/divan_paneli/staff-attendance" element={<StaffAttendance />} />
+              <Route path="/divan_paneli/cancellation-fees" element={<CancellationFees />} />
                 
               
               {/* Doctor Routes */}

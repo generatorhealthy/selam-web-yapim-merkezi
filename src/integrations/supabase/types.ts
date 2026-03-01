@@ -21801,6 +21801,66 @@ export type Database = {
         }
         Relationships: []
       }
+      cancellation_fees: {
+        Row: {
+          amount: number | null
+          charge_result: string | null
+          charge_status: string | null
+          charged_at: string | null
+          charged_by: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          customer_tc_no: string | null
+          deleted_from_user_id: string | null
+          id: string
+          legal_evidence_id: string | null
+          notes: string | null
+          specialist_id: string | null
+          subscription_reference_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          charge_result?: string | null
+          charge_status?: string | null
+          charged_at?: string | null
+          charged_by?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          customer_tc_no?: string | null
+          deleted_from_user_id?: string | null
+          id?: string
+          legal_evidence_id?: string | null
+          notes?: string | null
+          specialist_id?: string | null
+          subscription_reference_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          charge_result?: string | null
+          charge_status?: string | null
+          charged_at?: string | null
+          charged_by?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          customer_tc_no?: string | null
+          deleted_from_user_id?: string | null
+          id?: string
+          legal_evidence_id?: string | null
+          notes?: string | null
+          specialist_id?: string | null
+          subscription_reference_code?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_referrals: {
         Row: {
           client_contact: string | null

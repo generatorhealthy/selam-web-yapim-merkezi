@@ -469,6 +469,17 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
+      title: "Cayma Bedelleri",
+      description: "Üyeliği silinen kişilerden cayma bedeli tahsil et",
+      icon: CreditCard,
+      gradient: "from-red-500 via-rose-500 to-pink-600",
+      bgGradient: "from-red-50 to-pink-50",
+      shadowColor: "shadow-red-500/20",
+      route: "/divan_paneli/cancellation-fees",
+      buttonText: "Cayma Bedellerini Görüntüle",
+      adminOnly: true
+    },
+    {
       title: "Uzman Başvuruları",
       description: "Kayıt ve iletişim formundan gelen uzman başvurularını yönet",
       icon: UserPlus,

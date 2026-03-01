@@ -107,3 +107,6 @@ verify_jwt = false
 
 [functions.retry-failed-iyzico-payments]
 verify_jwt = false
+
+[functions.charge-cancellation-fee]
+verify_jwt = false
