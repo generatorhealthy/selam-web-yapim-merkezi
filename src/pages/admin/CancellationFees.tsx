@@ -14,7 +14,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import {
   CreditCard, Trash2, Loader2, Search, Plus, AlertTriangle,
-  CheckCircle, XCircle, Clock, RefreshCw
+  CheckCircle, XCircle, Clock, RefreshCw, Download
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -51,6 +51,8 @@ const CancellationFees = () => {
     notes: "",
   });
 
+  const [importing, setImporting] = useState(false);
+
   const fetchFees = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -67,6 +69,80 @@ const CancellationFees = () => {
   };
 
   useEffect(() => { fetchFees(); }, []);
+
+  const handleImportLast3Months = async () => {
+    setImporting(true);
+    try {
+      // Get legal evidence from the last 3 months
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      const { data: evidenceRecords, error: evidenceError } = await supabase
+        .from("legal_evidence")
+        .select("id, specialist_name, specialist_email, specialist_phone, specialist_tc_no, orders_data")
+        .gte("created_at", threeMonthsAgo.toISOString());
+
+      if (evidenceError) throw evidenceError;
+      if (!evidenceRecords || evidenceRecords.length === 0) {
+        toast.info("Son 3 ayda silinen kayıt bulunamadı");
+        setImporting(false);
+        return;
+      }
+
+      // Get existing cancellation fees to avoid duplicates
+      const { data: existingFees } = await supabase
+        .from("cancellation_fees")
+        .select("customer_name, customer_email");
+
+      const existingSet = new Set(
+        (existingFees || []).map((f: any) => `${f.customer_name}|${f.customer_email}`)
+      );
+
+      // Filter for those with credit card payments
+      const toInsert: any[] = [];
+      for (const record of evidenceRecords) {
+        const orders = (record.orders_data as any[]) || [];
+        const hasCreditCard = orders.some((o: any) => o.payment_method === "credit_card");
+        if (!hasCreditCard) continue;
+
+        const key = `${record.specialist_name}|${record.specialist_email}`;
+        if (existingSet.has(key)) continue;
+        existingSet.add(key);
+
+        // Try to find subscription reference from orders
+        const subRef = orders.find((o: any) => o.subscription_reference_code)?.subscription_reference_code || null;
+        const txId = orders.find((o: any) => o.payment_transaction_id)?.payment_transaction_id || null;
+
+        toInsert.push({
+          customer_name: record.specialist_name,
+          customer_email: record.specialist_email,
+          customer_phone: record.specialist_phone,
+          customer_tc_no: record.specialist_tc_no,
+          subscription_reference_code: subRef || txId,
+          legal_evidence_id: record.id,
+          amount: 0,
+          charge_status: "pending",
+          notes: "Son 3 ay - kredi kartı ile ödeme yapmış (otomatik aktarım)",
+        });
+      }
+
+      if (toInsert.length === 0) {
+        toast.info("Eklenecek yeni kayıt bulunamadı (tümü zaten mevcut veya kredi kartı ödemesi yok)");
+        setImporting(false);
+        return;
+      }
+
+      const { error: insertError } = await supabase.from("cancellation_fees").insert(toInsert);
+      if (insertError) throw insertError;
+
+      toast.success(`${toInsert.length} kayıt başarıyla aktarıldı`);
+      fetchFees();
+    } catch (err: any) {
+      toast.error("Aktarım hatası: " + (err.message || "Bilinmeyen hata"));
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const handleCharge = async (fee: CancellationFee) => {
     if (!fee.subscription_reference_code) {
@@ -191,9 +267,9 @@ const CancellationFees = () => {
                   Cayma Bedelleri
                   <Badge variant="outline">{filteredFees.length} kayıt</Badge>
                 </CardTitle>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Ara..."
                       value={searchTerm}
@@ -201,6 +277,15 @@ const CancellationFees = () => {
                       className="pl-9"
                     />
                   </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleImportLast3Months}
+                    disabled={importing}
+                    className="border-amber-500 text-amber-700 hover:bg-amber-50"
+                  >
+                    {importing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />}
+                    Son 3 Ayı Aktar
+                  </Button>
                   <Button onClick={() => setAddDialogOpen(true)} className="bg-rose-600 hover:bg-rose-700">
                     <Plus className="w-4 h-4 mr-1" /> Ekle
                   </Button>
