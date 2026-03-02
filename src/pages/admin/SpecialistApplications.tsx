@@ -3,17 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useNavigate, Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
-import { ArrowLeft, User, Phone, Mail, MapPin, Briefcase, Clock, MessageSquare, RefreshCw, Filter, Users, CalendarDays, CheckCircle2, XCircle, AlertTriangle, PhoneOff, Info, Trash2 } from "lucide-react";
+import { ArrowLeft, User, Phone, Mail, MapPin, Briefcase, Clock, MessageSquare, RefreshCw, Filter, Users, CalendarDays, CheckCircle2, XCircle, AlertTriangle, PhoneOff, Info, Trash2, Send, CalendarClock } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { sendSms } from "@/services/smsService";
 
 interface Application {
   id: string;
@@ -58,6 +61,11 @@ const SpecialistApplications = () => {
   const [editingNotes, setEditingNotes] = useState<string | null>(null);
   const [notesText, setNotesText] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [smsDialogApp, setSmsDialogApp] = useState<Application | null>(null);
+  const [smsMessage, setSmsMessage] = useState("");
+  const [smsScheduleDate, setSmsScheduleDate] = useState("");
+  const [smsScheduleTime, setSmsScheduleTime] = useState("");
+  const [smsSending, setSmsSending] = useState(false);
 
   const isAdmin = userProfile?.role === 'admin';
   const isStaff = userProfile?.role === 'staff';
@@ -142,7 +150,59 @@ const SpecialistApplications = () => {
     }
   };
 
-  const filteredApplications = filter === "all" 
+  const getSmsTemplate = (name: string) => {
+    const firstName = name.split(" ")[0];
+    return `${firstName} Hanım,
+
+Doktorumol.com.tr üzerinden tarafınıza gerekli bilgilendirme daha önce iletilmiştir.
+Şu anda kampanyalı paket kapsamında son kayıt alımları gerçekleştirilmektedir.
+
+Başvurunuzu aktif üyeliğe dönüştürmek ve kontenjan dahilinde yerinizi ayırtmak için
+0530 823 2275 numaralı hattımızdan WhatsApp veya arama yoluyla tarafımıza dönüş sağlamanızı rica ederiz.
+
+Bilginize sunarız.
+
+Doktorumol.com.tr
+Uzman Kayıt Birimi`;
+  };
+
+  const openSmsDialog = (app: Application) => {
+    setSmsDialogApp(app);
+    setSmsMessage(getSmsTemplate(app.name));
+    setSmsScheduleDate("");
+    setSmsScheduleTime("");
+  };
+
+  const handleSendSms = async () => {
+    if (!smsDialogApp?.phone) return;
+    setSmsSending(true);
+    try {
+      const isScheduled = smsScheduleDate && smsScheduleTime;
+      
+      if (isScheduled) {
+        const scheduledAt = new Date(`${smsScheduleDate}T${smsScheduleTime}:00`);
+        const { error } = await supabase.from("scheduled_sms").insert({
+          phone: smsDialogApp.phone,
+          message: smsMessage,
+          scheduled_at: scheduledAt.toISOString(),
+          status: "pending",
+        });
+        if (error) throw error;
+        toast({ title: "Planlandı", description: `SMS ${format(scheduledAt, "dd MMM yyyy HH:mm", { locale: tr })} tarihinde gönderilecek.` });
+      } else {
+        const result = await sendSms(smsDialogApp.phone, smsMessage);
+        if (!result.success) throw new Error(result.error?.message || "SMS gönderilemedi");
+        toast({ title: "Gönderildi", description: `SMS ${smsDialogApp.name} kişisine gönderildi.` });
+      }
+      setSmsDialogApp(null);
+    } catch (err: any) {
+      toast({ title: "Hata", description: err.message || "SMS gönderilemedi.", variant: "destructive" });
+    } finally {
+      setSmsSending(false);
+    }
+  };
+
+  const filteredApplications = filter === "all"
     ? applications 
     : applications.filter(a => a.status === filter);
 
@@ -383,6 +443,21 @@ const SpecialistApplications = () => {
                       )}
                     </div>
 
+                    {/* SMS Button */}
+                    {app.phone && (
+                      <div className="pt-2 border-t border-slate-100">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-8 text-xs rounded-lg text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 gap-1.5"
+                          onClick={() => openSmsDialog(app)}
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          SMS Gönder
+                        </Button>
+                      </div>
+                    )}
+
                     {/* Delete Button - Admin only */}
                     {isAdmin && (
                       <div className="pt-2 border-t border-slate-100">
@@ -417,6 +492,69 @@ const SpecialistApplications = () => {
           </div>
         )}
       </div>
+
+      {/* SMS Dialog */}
+      <Dialog open={!!smsDialogApp} onOpenChange={(open) => !open && setSmsDialogApp(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="w-4 h-4" />
+              SMS Gönder - {smsDialogApp?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Telefon</label>
+              <Input value={smsDialogApp?.phone || ""} disabled className="bg-slate-50" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Mesaj</label>
+              <Textarea
+                value={smsMessage}
+                onChange={(e) => setSmsMessage(e.target.value)}
+                rows={10}
+                className="text-sm"
+              />
+            </div>
+            <div className="bg-slate-50 rounded-xl p-3 space-y-3">
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                <CalendarClock className="w-4 h-4" />
+                Zamanla (opsiyonel)
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={smsScheduleDate}
+                  onChange={(e) => setSmsScheduleDate(e.target.value)}
+                  className="flex-1"
+                />
+                <Input
+                  type="time"
+                  value={smsScheduleTime}
+                  onChange={(e) => setSmsScheduleTime(e.target.value)}
+                  className="w-32"
+                />
+              </div>
+              {smsScheduleDate && smsScheduleTime && (
+                <p className="text-xs text-indigo-600">
+                  📅 {format(new Date(`${smsScheduleDate}T${smsScheduleTime}`), "dd MMM yyyy HH:mm", { locale: tr })} tarihinde gönderilecek
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setSmsDialogApp(null)}>İptal</Button>
+            <Button
+              onClick={handleSendSms}
+              disabled={smsSending || !smsMessage.trim()}
+              className="gap-2"
+            >
+              {smsSending ? "Gönderiliyor..." : smsScheduleDate && smsScheduleTime ? "Planla" : "Gönder"}
+              <Send className="w-3.5 h-3.5" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
