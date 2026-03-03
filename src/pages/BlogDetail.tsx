@@ -315,9 +315,9 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
         {/* Blog Content */}
         <Card className="mb-8">
           <CardContent className="p-8">
-            <div 
+            <SafeHtmlContent 
+              content={blog.content.replace(/\n/g, '<br>')}
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900"
-              dangerouslySetInnerHTML={{ __html: blog.content.replace(/\n/g, '<br>') }}
             />
             
             {/* Specialist Card - Show when blog has associated specialist */}
