@@ -12,6 +12,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import BlogSpecialistCard from "@/components/BlogSpecialistCard";
 import { Helmet } from "react-helmet-async";
+import { SafeHtmlContent } from "@/components/SafeHtmlContent";
 
 interface BlogPost {
   id: string;
@@ -211,6 +212,42 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
         {/* Article specific */}
         <meta property="article:published_time" content={blog.published_at} />
         <meta property="article:author" content={blog.author_name} />
+        
+        {/* Canonical URL */}
+        <link rel="canonical" href={`https://doktorumol.com.tr/blog/${blog.slug}`} />
+        
+        {/* Preload LCP image */}
+        {blog.featured_image && (
+          <link rel="preload" as="image" href={blog.featured_image} />
+        )}
+        
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": blog.title,
+            "description": ogDescription,
+            "image": ogImage,
+            "datePublished": blog.published_at,
+            "author": {
+              "@type": "Person",
+              "name": blog.author_name
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Doktorum Ol",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://doktorumol.com.tr/logo.png"
+              }
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://doktorumol.com.tr/blog/${blog.slug}`
+            }
+          })}
+        </script>
       </Helmet>
       
       <HorizontalNavigation />
@@ -234,6 +271,11 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
                 src={blog.featured_image}
                 alt={blog.title}
                 className="w-full h-64 md:h-80 object-cover rounded-t-lg"
+                fetchPriority="high"
+                loading="eager"
+                decoding="async"
+                width={800}
+                height={320}
               />
             )}
             <div className="p-8">
@@ -279,9 +321,9 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
         {/* Blog Content */}
         <Card className="mb-8">
           <CardContent className="p-8">
-            <div 
+            <SafeHtmlContent 
+              content={blog.content.replace(/\n/g, '<br>')}
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900"
-              dangerouslySetInnerHTML={{ __html: blog.content.replace(/\n/g, '<br>') }}
             />
             
             {/* Specialist Card - Show when blog has associated specialist */}

@@ -57,6 +57,7 @@ const CookieConsent = () => {
             size="icon"
             onClick={handleReject}
             className="h-6 w-6 md:h-8 md:w-8 shrink-0"
+            aria-label="Çerez bildirimini kapat"
           >
             <X className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
