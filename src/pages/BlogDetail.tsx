@@ -216,6 +216,11 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
         {/* Canonical URL */}
         <link rel="canonical" href={`https://doktorumol.com.tr/blog/${blog.slug}`} />
         
+        {/* Preload LCP image */}
+        {blog.featured_image && (
+          <link rel="preload" as="image" href={blog.featured_image} />
+        )}
+        
         {/* JSON-LD Structured Data */}
         <script type="application/ld+json">
           {JSON.stringify({
