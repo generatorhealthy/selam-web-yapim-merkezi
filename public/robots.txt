@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /divan_paneli/
+Disallow: /admin/
+Disallow: /doctor/
+
+Sitemap: https://doktorumol.com.tr/sitemap.xml
