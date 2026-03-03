@@ -211,6 +211,37 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
         {/* Article specific */}
         <meta property="article:published_time" content={blog.published_at} />
         <meta property="article:author" content={blog.author_name} />
+        
+        {/* Canonical URL */}
+        <link rel="canonical" href={`https://doktorumol.com.tr/blog/${blog.slug}`} />
+        
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": blog.title,
+            "description": ogDescription,
+            "image": ogImage,
+            "datePublished": blog.published_at,
+            "author": {
+              "@type": "Person",
+              "name": blog.author_name
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Doktorum Ol",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://doktorumol.com.tr/logo.png"
+              }
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://doktorumol.com.tr/blog/${blog.slug}`
+            }
+          })}
+        </script>
       </Helmet>
       
       <HorizontalNavigation />
