@@ -12,6 +12,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import BlogSpecialistCard from "@/components/BlogSpecialistCard";
 import { Helmet } from "react-helmet-async";
+import { SafeHtmlContent } from "@/components/SafeHtmlContent";
 
 interface BlogPost {
   id: string;
