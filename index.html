@@ -111,8 +111,7 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       
-      // Load GTM with requestIdleCallback to prevent blocking LCP
-      function loadGTM() {
+      function loadGtag() {
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.async = true;
@@ -125,9 +124,6 @@
           // Google Analytics 4
           gtag('config', 'G-0CVEMJ5TGM');
           
-          // Google Tag Container
-          gtag('config', 'GT-5TCCL5X');
-          
           // Google Ads
           gtag('config', 'AW-17512133573');
           
@@ -139,11 +135,10 @@
         };
       }
       
-      // Defer GTM until after page is fully interactive (5s minimum)
       if ('requestIdleCallback' in window) {
-        requestIdleCallback(function() { setTimeout(loadGTM, 3000); }, { timeout: 8000 });
+        requestIdleCallback(function() { setTimeout(loadGtag, 3000); }, { timeout: 8000 });
       } else {
-        setTimeout(loadGTM, 5000);
+        setTimeout(loadGtag, 5000);
       }
     </script>
   </head>
