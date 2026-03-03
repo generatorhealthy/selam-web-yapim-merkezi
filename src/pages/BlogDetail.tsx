@@ -88,7 +88,7 @@ const BlogDetail = () => {
           .from('specialists')
           .select('specialty')
           .eq('user_id', data.author_id)
-          .single();
+          .maybeSingle();
         
         blogWithSpecialist = {
           ...data,
