@@ -50,11 +50,11 @@ const SpecialOfferNew = () => {
       
       {/* Hero Section */}
       <section className="relative min-h-screen bg-gradient-to-br from-blue-600 via-blue-500 to-purple-600 overflow-hidden">
-        {/* Background decorations */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-white/10 rounded-full blur-2xl animate-pulse delay-500"></div>
+        {/* Background decorations - GPU accelerated, no reflow */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl will-change-transform" style={{ contain: 'strict' }}></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl will-change-transform" style={{ contain: 'strict' }}></div>
+          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-white/10 rounded-full blur-2xl will-change-transform" style={{ contain: 'strict' }}></div>
         </div>
         
         <div className="relative z-10 container mx-auto px-4 py-20">
