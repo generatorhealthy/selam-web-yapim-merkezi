@@ -88,7 +88,7 @@ const BlogDetail = () => {
           .from('specialists')
           .select('specialty')
           .eq('user_id', data.author_id)
-          .single();
+          .maybeSingle();
         
         blogWithSpecialist = {
           ...data,
@@ -104,7 +104,7 @@ const BlogDetail = () => {
           .from('specialists')
           .select('id, name, specialty, city, experience, bio, profile_picture, online_consultation, face_to_face_consultation')
           .eq('id', blogWithSpecialist.specialist_id)
-          .single();
+          .maybeSingle();
         
         if (specialistData) {
           setSpecialist(specialistData);
