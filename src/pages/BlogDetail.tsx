@@ -234,6 +234,11 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
                 src={blog.featured_image}
                 alt={blog.title}
                 className="w-full h-64 md:h-80 object-cover rounded-t-lg"
+                fetchPriority="high"
+                loading="eager"
+                decoding="async"
+                width={800}
+                height={320}
               />
             )}
             <div className="p-8">
