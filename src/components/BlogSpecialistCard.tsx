@@ -33,8 +33,12 @@ const BlogSpecialistCard = ({ specialist }: BlogSpecialistCardProps) => {
           <div className="flex-shrink-0">
             <img
               src={specialist.profile_picture || '/placeholder-doctor.jpg'}
-              alt={specialist.name}
-              className="w-32 h-32 rounded-lg object-cover border-2 border-primary/20"
+              alt={`${specialist.name} ile ${specialist.specialty}`}
+              className="w-full h-64 md:h-80 object-cover rounded-t-lg"
+              fetchPriority="high"
+              loading="eager"
+              width={320}
+              height={320}
               onError={(e) => {
                 e.currentTarget.src = '/placeholder-doctor.jpg';
               }}
