@@ -353,6 +353,12 @@ const Index = () => {
       }>
         <IndexBelowFold onSearch={handleSearch} />
       </Suspense>
+
+      <AppointmentWizard 
+        open={wizardOpen} 
+        onOpenChange={setWizardOpen} 
+        initialCity={selectedCity}
+      />
     </div>
   );
 };
