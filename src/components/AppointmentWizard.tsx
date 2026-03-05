@@ -192,7 +192,7 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
                 {whoOptions.map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => setWho(option.value)}
+                    onClick={() => handleSelectWho(option.value)}
                     className={cn(
                       "w-full flex items-center justify-between px-5 py-4 rounded-xl border-2 transition-all duration-200 text-left",
                       who === option.value
