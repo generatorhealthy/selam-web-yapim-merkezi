@@ -26,60 +26,60 @@ interface TopicOption {
 }
 
 const whoOptions = [
-  { value: "self" as WhoOption, label: "Kendim için", icon: <User className="w-5 h-5" /> },
-  { value: "couple" as WhoOption, label: "Kendim ve partnerim için", icon: <Users className="w-5 h-5" /> },
-  { value: "child" as WhoOption, label: "Bir çocuk veya genç/ergen için.", icon: <Baby className="w-5 h-5" /> },
+  { value: "self" as WhoOption, label: "Bireysel destek almak istiyorum", icon: <User className="w-5 h-5" /> },
+  { value: "couple" as WhoOption, label: "Partnerimle birlikte destek almak istiyorum", icon: <Users className="w-5 h-5" /> },
+  { value: "child" as WhoOption, label: "Çocuğum veya gencim için destek arıyorum", icon: <Baby className="w-5 h-5" /> },
 ];
 
 const topicOptions: TopicOption[] = [
   { 
     id: "behavior", 
-    label: "Belirli davranışlarım ya da alışkanlıklarım konusunda zorlanıyorum", 
-    description: "Bağımlılıklar, zorlayıcı davranışlar ya da beslenme problemleri",
+    label: "Alışkanlıklarımı değiştirmekte güçlük çekiyorum", 
+    description: "Bağımlılık eğilimleri, dürtüsel davranışlar veya yeme problemleri",
     icon: <Shield className="w-5 h-5" />
   },
   { 
     id: "anxiety", 
-    label: "Endişeli, bunalmış ya da mutsuz hissediyorum", 
-    description: "Depresyon, tükenmişlik veya uykusuzluk",
+    label: "Kaygı, stres veya mutsuzlukla mücadele ediyorum", 
+    description: "Depresif belirtiler, yorgunluk hissi veya uyku sorunları",
     icon: <Frown className="w-5 h-5" />
   },
   { 
     id: "mood", 
-    label: "Yoğun duygular ve ruh hali değişimleriyle zorlanıyorum", 
-    description: "Aşırı iniş çıkışlar, kendini boşlukta veya kopuk hissetme",
+    label: "Duygusal dalgalanmalar yaşıyorum", 
+    description: "Ani ruh hali değişimleri, içsel boşluk veya kendinden uzaklaşma hissi",
     icon: <Brain className="w-5 h-5" />
   },
   { 
     id: "trauma", 
-    label: "Zor bir deneyim yaşadım", 
-    description: "Travma, yas, yaşamda büyük bir değişiklik",
+    label: "Ağır bir süreçten geçtim", 
+    description: "Kayıp, travmatik olay veya hayatımda büyük bir dönüm noktası",
     icon: <Heart className="w-5 h-5" />
   },
   { 
     id: "relationship", 
-    label: "İlişkilerimde zorluklar yaşıyorum", 
-    description: "Örneğin partner, çocuklar, aile ile",
+    label: "İlişkilerimde sorunlar yaşıyorum", 
+    description: "Eş, çocuk veya aile bireyleriyle yaşanan zorluklar",
     icon: <HandHeart className="w-5 h-5" />
   },
   { 
     id: "selfgrowth", 
-    label: "Kendimi daha iyi anlamak/tanımak istiyorum", 
-    description: "Özsaygı veya kişisel gelişim",
+    label: "Kişisel gelişimime yatırım yapmak istiyorum", 
+    description: "Kendini keşfetme, özgüven geliştirme veya potansiyelini açığa çıkarma",
     icon: <Sparkles className="w-5 h-5" />
   },
   { 
     id: "other", 
-    label: "Başka bir şey", 
+    label: "Farklı bir konu hakkında destek almak istiyorum", 
     description: "",
     icon: <HelpCircle className="w-5 h-5" />
   },
 ];
 
 const formatOptions = [
-  { value: "no-preference" as FormatOption, label: "Tercihim yok", icon: null },
-  { value: "face-to-face" as FormatOption, label: "Klinikte yüz yüze", icon: <Building2 className="w-5 h-5" /> },
-  { value: "online" as FormatOption, label: "Online", icon: <Monitor className="w-5 h-5" /> },
+  { value: "no-preference" as FormatOption, label: "Fark etmez", icon: null },
+  { value: "face-to-face" as FormatOption, label: "Klinikte yüz yüze görüşme", icon: <Building2 className="w-5 h-5" /> },
+  { value: "online" as FormatOption, label: "Online görüşme", icon: <Monitor className="w-5 h-5" /> },
 ];
 
 export default function AppointmentWizard({ open, onOpenChange, initialCity }: AppointmentWizardProps) {
@@ -95,19 +95,12 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      // Navigate to results with filters
       const params = new URLSearchParams();
       if (format === "online") params.set("appointmentType", "online");
       else if (format === "face-to-face") params.set("appointmentType", "yüzyüze");
       if (initialCity) params.set("city", initialCity);
       if (who === "couple") params.set("specialty", "aile-danismani");
       if (who === "child") params.set("specialty", "cocuk-psikoloji");
-      
-      // Map topics to specialties for search
-      const specialtyKeywords: string[] = [];
-      if (who === "couple") {
-        specialtyKeywords.push("Aile Danışmanı");
-      }
       if (selectedTopics.length > 0) {
         params.set("topics", selectedTopics.join(","));
       }
@@ -153,7 +146,7 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
                 key={i} 
                 className={cn(
                   "h-1.5 flex-1 rounded-full transition-all duration-300",
-                  i < step ? "bg-teal-600" : "bg-gray-200"
+                  i < step ? "bg-primary" : "bg-muted"
                 )} 
               />
             ))}
@@ -165,8 +158,8 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
           {/* Step 1: Who */}
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-center">
-                Psikolojik desteği kimin için arıyorsunuz?
+              <h2 className="text-xl font-bold text-center text-foreground">
+                Bu desteğe kim ihtiyaç duyuyor?
               </h2>
               <div className="space-y-3 mt-6">
                 {whoOptions.map((option) => (
@@ -176,20 +169,20 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
                     className={cn(
                       "w-full flex items-center justify-between px-5 py-4 rounded-xl border-2 transition-all duration-200 text-left",
                       who === option.value
-                        ? "border-teal-600 bg-teal-50 shadow-sm"
-                        : "border-transparent bg-teal-50/50 hover:bg-teal-50 hover:border-teal-200"
+                        ? "border-primary bg-primary/10 shadow-sm"
+                        : "border-transparent bg-primary/5 hover:bg-primary/10 hover:border-primary/30"
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
-                        who === option.value ? "border-teal-600" : "border-gray-300"
+                        who === option.value ? "border-primary" : "border-muted-foreground/40"
                       )}>
-                        {who === option.value && <div className="w-2.5 h-2.5 rounded-full bg-teal-600" />}
+                        {who === option.value && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                       </div>
-                      <span className="font-medium text-gray-800">{option.label}</span>
+                      <span className="font-medium text-foreground">{option.label}</span>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-teal-700 text-white flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0">
                       {option.icon}
                     </div>
                   </button>
@@ -202,10 +195,10 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
           {step === 2 && (
             <div className="space-y-4">
               <div className="text-center">
-                <h2 className="text-xl font-bold">
-                  Hangi konuda terapi desteği arıyorsunuz?
+                <h2 className="text-xl font-bold text-foreground">
+                  Hangi alanda profesyonel destek arıyorsunuz?
                 </h2>
-                <p className="text-sm text-muted-foreground mt-1">Uygun olanları seçin</p>
+                <p className="text-sm text-muted-foreground mt-1">Sizin için geçerli olanları işaretleyin</p>
               </div>
               <div className="space-y-3 mt-6">
                 {topicOptions.map((topic) => (
@@ -215,18 +208,18 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
                     className={cn(
                       "w-full flex items-start gap-3 px-5 py-4 rounded-xl border-2 transition-all duration-200 text-left",
                       selectedTopics.includes(topic.id)
-                        ? "border-teal-600 bg-teal-50 shadow-sm"
-                        : "border-transparent bg-teal-50/50 hover:bg-teal-50 hover:border-teal-200"
+                        ? "border-primary bg-primary/10 shadow-sm"
+                        : "border-transparent bg-primary/5 hover:bg-primary/10 hover:border-primary/30"
                     )}
                   >
                     <div className="mt-0.5">
                       <Checkbox 
                         checked={selectedTopics.includes(topic.id)} 
-                        className="border-gray-300 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
+                        className="border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                     </div>
                     <div className="flex-1">
-                      <span className="font-semibold text-gray-800 block">{topic.label}</span>
+                      <span className="font-semibold text-foreground block">{topic.label}</span>
                       {topic.description && (
                         <span className="text-sm text-muted-foreground">{topic.description}</span>
                       )}
@@ -240,8 +233,8 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
           {/* Step 3: Format */}
           {step === 3 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-center">
-                Görüşmelerin yüz yüze mi yoksa online mı olmasını tercih edersiniz?
+              <h2 className="text-xl font-bold text-center text-foreground">
+                Görüşme şeklinizi nasıl tercih edersiniz?
               </h2>
               <div className="space-y-3 mt-6">
                 {formatOptions.map((option) => (
@@ -251,21 +244,21 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
                     className={cn(
                       "w-full flex items-center justify-between px-5 py-4 rounded-xl border-2 transition-all duration-200 text-left",
                       format === option.value
-                        ? "border-teal-600 bg-teal-50 shadow-sm"
-                        : "border-transparent bg-teal-50/50 hover:bg-teal-50 hover:border-teal-200"
+                        ? "border-primary bg-primary/10 shadow-sm"
+                        : "border-transparent bg-primary/5 hover:bg-primary/10 hover:border-primary/30"
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
-                        format === option.value ? "border-teal-600" : "border-gray-300"
+                        format === option.value ? "border-primary" : "border-muted-foreground/40"
                       )}>
-                        {format === option.value && <div className="w-2.5 h-2.5 rounded-full bg-teal-600" />}
+                        {format === option.value && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                       </div>
-                      <span className="font-medium text-gray-800">{option.label}</span>
+                      <span className="font-medium text-foreground">{option.label}</span>
                     </div>
                     {option.icon && (
-                      <div className="w-10 h-10 rounded-full bg-teal-700 text-white flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0">
                         {option.icon}
                       </div>
                     )}
@@ -281,7 +274,7 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
               variant="ghost"
               onClick={handleBack}
               disabled={step === 1}
-              className="text-gray-500"
+              className="text-muted-foreground"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Geri
@@ -289,7 +282,7 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="bg-teal-600 hover:bg-teal-700 text-white px-8 rounded-xl"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 rounded-xl"
             >
               {step === totalSteps ? "Uzmanları Göster" : "Devam Et"}
               {step === totalSteps ? <ChevronRight className="w-4 h-4 ml-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
