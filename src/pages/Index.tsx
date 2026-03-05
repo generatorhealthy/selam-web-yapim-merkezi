@@ -114,11 +114,7 @@ const Index = () => {
   }, []);
 
   const handleSearch = () => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.set('search', searchTerm);
-    if (selectedCity) params.set('city', selectedCity);
-    if (appointmentType) params.set('appointmentType', appointmentType);
-    navigate(`/uzmanlar?${params.toString()}`);
+    setWizardOpen(true);
   };
 
   const handleSpecialtyClick = (specialty: { name: string; slug: string }) => {
