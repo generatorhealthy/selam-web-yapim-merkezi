@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { supabase } from "@/integrations/supabase/client";
 import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import AppointmentWizard from "@/components/AppointmentWizard";
 
 // Lazy load below-fold content (reviews, how it works, specialists, footer)
 const IndexBelowFold = lazy(() => import("@/components/IndexBelowFold"));
@@ -60,6 +61,7 @@ const Index = () => {
   const [searchResults, setSearchResults] = useState<Specialist[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const navigate = useNavigate();
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -112,11 +114,7 @@ const Index = () => {
   }, []);
 
   const handleSearch = () => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.set('search', searchTerm);
-    if (selectedCity) params.set('city', selectedCity);
-    if (appointmentType) params.set('appointmentType', appointmentType);
-    navigate(`/uzmanlar?${params.toString()}`);
+    setWizardOpen(true);
   };
 
   const handleSpecialtyClick = (specialty: { name: string; slug: string }) => {
@@ -355,6 +353,12 @@ const Index = () => {
       }>
         <IndexBelowFold onSearch={handleSearch} />
       </Suspense>
+
+      <AppointmentWizard 
+        open={wizardOpen} 
+        onOpenChange={setWizardOpen} 
+        initialCity={selectedCity}
+      />
     </div>
   );
 };
