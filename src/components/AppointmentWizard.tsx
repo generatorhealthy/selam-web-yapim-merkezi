@@ -267,7 +267,7 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
                 {formatOptions.map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => setFormat(option.value)}
+                    onClick={() => handleSelectFormat(option.value)}
                     className={cn(
                       "w-full flex items-center justify-between px-5 py-4 rounded-xl border-2 transition-all duration-200 text-left",
                       format === option.value
