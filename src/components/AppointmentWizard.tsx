@@ -91,24 +91,51 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
 
   const totalSteps = 3;
 
+  const finishWizard = () => {
+    const params = new URLSearchParams();
+    if (format === "online") params.set("appointmentType", "online");
+    else if (format === "face-to-face") params.set("appointmentType", "yüzyüze");
+    if (initialCity) params.set("city", initialCity);
+    if (who === "couple") params.set("specialty", "aile-danismani");
+    if (who === "child") params.set("specialty", "cocuk-psikoloji");
+    if (selectedTopics.length > 0) {
+      params.set("topics", selectedTopics.join(","));
+    }
+    
+    onOpenChange(false);
+    resetWizard();
+    navigate(`/uzmanlar?${params.toString()}`);
+  };
+
   const handleNext = () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
+      finishWizard();
+    }
+  };
+
+  const handleSelectWho = (value: WhoOption) => {
+    setWho(value);
+    setTimeout(() => setStep(2), 300);
+  };
+
+  const handleSelectFormat = (value: FormatOption) => {
+    setFormat(value);
+    setTimeout(() => {
       const params = new URLSearchParams();
-      if (format === "online") params.set("appointmentType", "online");
-      else if (format === "face-to-face") params.set("appointmentType", "yüzyüze");
+      if (value === "online") params.set("appointmentType", "online");
+      else if (value === "face-to-face") params.set("appointmentType", "yüzyüze");
       if (initialCity) params.set("city", initialCity);
       if (who === "couple") params.set("specialty", "aile-danismani");
       if (who === "child") params.set("specialty", "cocuk-psikoloji");
       if (selectedTopics.length > 0) {
         params.set("topics", selectedTopics.join(","));
       }
-      
       onOpenChange(false);
       resetWizard();
       navigate(`/uzmanlar?${params.toString()}`);
-    }
+    }, 300);
   };
 
   const handleBack = () => {
@@ -165,7 +192,7 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
                 {whoOptions.map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => setWho(option.value)}
+                    onClick={() => handleSelectWho(option.value)}
                     className={cn(
                       "w-full flex items-center justify-between px-5 py-4 rounded-xl border-2 transition-all duration-200 text-left",
                       who === option.value
@@ -240,7 +267,7 @@ export default function AppointmentWizard({ open, onOpenChange, initialCity }: A
                 {formatOptions.map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => setFormat(option.value)}
+                    onClick={() => handleSelectFormat(option.value)}
                     className={cn(
                       "w-full flex items-center justify-between px-5 py-4 rounded-xl border-2 transition-all duration-200 text-left",
                       format === option.value
