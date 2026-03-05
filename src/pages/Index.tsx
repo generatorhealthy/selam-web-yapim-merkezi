@@ -61,6 +61,7 @@ const Index = () => {
   const [searchResults, setSearchResults] = useState<Specialist[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const navigate = useNavigate();
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
