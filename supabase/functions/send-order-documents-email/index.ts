@@ -10,14 +10,15 @@ interface OrderDocumentsEmailRequest {
   customerName: string;
   packageName: string;
   message: string;
-  invoicePdf?: string; // base64 encoded
-  contractPdf?: string; // base64 encoded
+  invoicePdf?: string;
+  contractPdf?: string;
   invoiceFileName?: string;
   contractFileName?: string;
+  preInfoContent?: string;
+  distanceSalesContent?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -40,7 +41,9 @@ const handler = async (req: Request): Promise<Response> => {
       invoicePdf,
       contractPdf,
       invoiceFileName,
-      contractFileName
+      contractFileName,
+      preInfoContent,
+      distanceSalesContent
     }: OrderDocumentsEmailRequest = await req.json();
 
     console.log('Sending order documents email to:', customerEmail);
@@ -49,22 +52,40 @@ const handler = async (req: Request): Promise<Response> => {
     const attachments: Array<{ content: string; name: string }> = [];
     
     if (invoicePdf && invoiceFileName) {
-      attachments.push({
-        content: invoicePdf,
-        name: invoiceFileName
-      });
+      attachments.push({ content: invoicePdf, name: invoiceFileName });
       console.log('Added invoice attachment:', invoiceFileName);
     }
     
     if (contractPdf && contractFileName) {
-      attachments.push({
-        content: contractPdf,
-        name: contractFileName
-      });
+      attachments.push({ content: contractPdf, name: contractFileName });
       console.log('Added contract attachment:', contractFileName);
     }
 
-    // Create email content
+    // Build contract sections for inline HTML
+    let contractSections = '';
+    
+    if (preInfoContent) {
+      contractSections += `
+        <div style="margin-top: 30px; padding: 25px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <h2 style="color: #1e40af; margin-top: 0; font-size: 18px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">📋 Ön Bilgilendirme Formu</h2>
+          <div style="font-size: 14px; line-height: 1.7; color: #374151;">
+            ${preInfoContent}
+          </div>
+        </div>
+      `;
+    }
+    
+    if (distanceSalesContent) {
+      contractSections += `
+        <div style="margin-top: 30px; padding: 25px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <h2 style="color: #1e40af; margin-top: 0; font-size: 18px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">📄 Mesafeli Satış Sözleşmesi</h2>
+          <div style="font-size: 14px; line-height: 1.7; color: #374151; white-space: pre-wrap;">
+            ${distanceSalesContent}
+          </div>
+        </div>
+      `;
+    }
+
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -72,11 +93,11 @@ const handler = async (req: Request): Promise<Response> => {
         <meta charset="utf-8">
         <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
-          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          .container { max-width: 700px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
           .header { background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); color: #ffffff; padding: 30px; text-align: center; }
           .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
           .content { padding: 30px; }
-          .message-box { background-color: #f8fafc; border-left: 4px solid #3b82f6; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+          .message-box { background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }
           .package-info { background: linear-gradient(135deg, #e0f2fe 0%, #e0e7ff 100%); padding: 15px 20px; border-radius: 8px; margin: 20px 0; }
           .package-info strong { color: #1e40af; }
           .attachments { margin-top: 25px; padding: 20px; background-color: #fafafa; border-radius: 8px; }
@@ -90,7 +111,7 @@ const handler = async (req: Request): Promise<Response> => {
       <body>
         <div class="container">
           <div class="header">
-            <h1>📄 Sipariş Belgeleri</h1>
+            <h1>📄 Sipariş Onayı & Sözleşmeleriniz</h1>
           </div>
           <div class="content">
             <p>Sayın <strong>${customerName}</strong>,</p>
@@ -114,9 +135,11 @@ const handler = async (req: Request): Promise<Response> => {
                 `).join('')}
               </div>
             ` : ''}
+
+            ${contractSections}
           </div>
           <div class="footer">
-            <p>Bu e-posta <strong>Doktorumol</strong> tarafından gönderilmiştir.</p>
+            <p>Bu e-posta <strong>Doktorumol</strong> tarafından otomatik olarak gönderilmiştir.</p>
             <p>Sorularınız için: <a href="mailto:info@doktorumol.com.tr">info@doktorumol.com.tr</a></p>
           </div>
         </div>
@@ -124,23 +147,16 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Build email payload
     const emailPayload: any = {
       sender: {
         name: 'Doktorumol',
         email: 'info@doktorumol.com.tr'
       },
-      to: [
-        {
-          email: customerEmail,
-          name: customerName
-        }
-      ],
-      subject: `Sipariş Belgeleriniz - ${packageName}`,
+      to: [{ email: customerEmail, name: customerName }],
+      subject: `Sipariş Onayı & Sözleşmeleriniz - ${packageName}`,
       htmlContent: htmlContent
     };
 
-    // Add attachments if present
     if (attachments.length > 0) {
       emailPayload.attachment = attachments;
     }
@@ -175,10 +191,7 @@ const handler = async (req: Request): Promise<Response> => {
         messageId: responseData.messageId,
         message: 'E-posta başarıyla gönderildi'
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
