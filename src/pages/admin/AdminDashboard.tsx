@@ -6,6 +6,7 @@ import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAdminActivityTracker } from "@/hooks/useAdminActivityTracker";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
