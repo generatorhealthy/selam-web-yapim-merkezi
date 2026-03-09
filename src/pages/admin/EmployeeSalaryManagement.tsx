@@ -287,7 +287,11 @@ const EmployeeSalaryManagement = () => {
           
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Personel Maaşları</h1>
-            <p className="text-gray-600">Yağmur Çiçek, Fatma Erol ve Merve Önen maaş takibi</p>
+            <p className="text-gray-600">
+              {employees.length > 0 
+                ? employees.map((e, i) => `${e.name} ${e.surname}`).join(', ') + ' maaş takibi'
+                : 'Staff üyeleri yükleniyor...'}
+            </p>
           </div>
 
           {/* Özet Kartları */}
