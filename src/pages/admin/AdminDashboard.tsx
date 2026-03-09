@@ -6,6 +6,7 @@ import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAdminActivityTracker } from "@/hooks/useAdminActivityTracker";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ import {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
+  useAdminActivityTracker(); // Track admin panel activity
   const [newOrderCount, setNewOrderCount] = useState(0);
   const [newApplicationCount, setNewApplicationCount] = useState(0);
 
@@ -502,6 +504,17 @@ const AdminDashboard = () => {
       buttonText: "Çalışma Saatlerini Görüntüle",
       adminOnly: false,
       staffOnly: true
+    },
+    {
+      title: "Panel Aktivite Logları",
+      description: "Admin ve Staff üyelerinin panel giriş-çıkış ve işlem kayıtları",
+      icon: Activity,
+      gradient: "from-amber-500 via-orange-500 to-red-600",
+      bgGradient: "from-amber-50 to-red-50",
+      shadowColor: "shadow-amber-500/20",
+      route: "/divan_paneli/admin-activity-logs",
+      buttonText: "Aktivite Loglarını Görüntüle",
+      adminOnly: true
     },
   ];
 

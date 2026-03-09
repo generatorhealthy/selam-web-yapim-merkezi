@@ -53,6 +53,57 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_activity_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: string | null
+          id: string
+          ip_address: string | null
+          page_title: string | null
+          page_url: string | null
+          session_end: string | null
+          session_start: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string
+          user_name: string | null
+          user_role: string | null
+        }
+        Insert: {
+          action_type?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          ip_address?: string | null
+          page_title?: string | null
+          page_url?: string | null
+          session_end?: string | null
+          session_start?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id: string
+          user_name?: string | null
+          user_role?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          ip_address?: string | null
+          page_title?: string | null
+          page_url?: string | null
+          session_end?: string | null
+          session_start?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string
+          user_name?: string | null
+          user_role?: string | null
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
