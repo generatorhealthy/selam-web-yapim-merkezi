@@ -1,0 +1,1 @@
+UPDATE public.system_settings SET setting_value = true WHERE setting_key = 'send_completion_emails';
