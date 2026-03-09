@@ -291,7 +291,7 @@ const ClientCalendar = () => {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-red-300 font-medium">Acil (20 Gün İçinde)</p>
+                    <p className="text-sm text-red-300 font-medium">Yönlendirme Bekliyor</p>
                     <p className="text-3xl font-bold text-red-200">{urgentCount}</p>
                   </div>
                   <div className="w-12 h-12 bg-red-700 rounded-xl flex items-center justify-center animate-pulse">
@@ -315,7 +315,7 @@ const ClientCalendar = () => {
                       🚨 ACİL YÖNLENDİRME GEREKLİ
                     </CardTitle>
                     <p className="text-red-300 text-sm mt-1">
-                      Bu uzmanların ödemesine 20 gün veya daha az kaldı ve henüz yönlendirme yapılmadı!
+                      Bu uzmanların mevcut ödeme döngüsünde henüz yönlendirme yapılmadı!
                     </p>
                   </div>
                 </div>
