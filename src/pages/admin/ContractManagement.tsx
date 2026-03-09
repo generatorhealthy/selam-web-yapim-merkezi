@@ -143,83 +143,60 @@ const ContractManagement = () => {
     setContractDialogOpen(true);
   };
 
-  const downloadPreInfoPDF = async (order: ContractOrder) => {
-    try {
-      // PDF service'ını import edelim
-      const { generatePreInfoPDF } = await import('@/services/pdfService');
-      
-      const pdf = await generatePreInfoPDF(order.id);
-      
-      // Download PDF
-      const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
-      const firstName = order.customer_name.split(' ')[0] || 'Müşteri';
-      const lastName = order.customer_name.split(' ')[1] || '';
-      const fileName = `${firstName}_${lastName}_OnBilgilendirme_${currentDate}.pdf`;
-      pdf.save(fileName);
-
-      toast({
-        title: "Başarılı",
-        description: "Ön bilgilendirme formu PDF olarak indirildi.",
-      });
-    } catch (error) {
-      console.error('PDF indirme hatası:', error);
+  const downloadContractAsPDF = (order: ContractOrder, type: "preInfo" | "distanceSales") => {
+    const htmlContent = type === "preInfo" ? order.pre_info_pdf_content : order.distance_sales_pdf_content;
+    
+    if (!htmlContent) {
       toast({
         title: "Hata",
-        description: "PDF dosyası indirilirken hata oluştu",
+        description: "Bu sipariş için kayıtlı sözleşme içeriği bulunamadı.",
         variant: "destructive",
       });
+      return;
     }
-  };
 
-  const downloadDistanceSalesPDF = async (order: ContractOrder) => {
-    try {
-      // PDF service'ını import edelim
-      const { generateDistanceSalesPDF } = await import('@/services/pdfService');
-      
-      const customerData = {
-        name: order.customer_name.split(' ')[0] || '',
-        surname: order.customer_name.split(' ').slice(1).join(' ') || '',
-        email: order.customer_email,
-        phone: order.customer_phone,
-        tcNo: '',
-        address: '',
-        city: '',
-        postalCode: ''
-      };
+    const typeLabel = type === "preInfo" ? "Ön Bilgilendirme Formu" : "Mesafeli Satış Sözleşmesi";
+    const filePrefix = type === "preInfo" ? "OnBilgilendirme" : "MesafeliSatis";
+    const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
+    const firstName = order.customer_name.split(' ')[0] || 'Müşteri';
+    const lastName = order.customer_name.split(' ').slice(1).join(' ') || '';
+    const fileName = `${firstName}_${lastName}_${filePrefix}_${currentDate}`;
 
-      const packageData = {
-        name: order.package_name,
-        price: order.amount,
-        originalPrice: order.amount
-      };
-      
-      const pdf = generateDistanceSalesPDF(
-        customerData,
-        packageData,
-        order.payment_method,
-        order.customer_type,
-        ''
-      );
-      
-      // Download PDF
-      const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
-      const firstName = order.customer_name.split(' ')[0] || 'Müşteri';
-      const lastName = order.customer_name.split(' ')[1] || '';
-      const fileName = `${firstName}_${lastName}_MesafeliSatis_${currentDate}.pdf`;
-      pdf.save(fileName);
-
-      toast({
-        title: "Başarılı",
-        description: "Mesafeli satış sözleşmesi PDF olarak indirildi.",
-      });
-    } catch (error) {
-      console.error('PDF indirme hatası:', error);
-      toast({
-        title: "Hata",
-        description: "PDF dosyası indirilirken hata oluştu",
-        variant: "destructive",
-      });
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({ title: "Hata", description: "Popup engelleyici aktif olabilir. Lütfen izin verin.", variant: "destructive" });
+      return;
     }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="tr">
+      <head>
+        <meta charset="UTF-8">
+        <title>${fileName}</title>
+        <style>
+          @page { margin: 20mm; size: A4; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; padding: 20px; max-width: 800px; margin: 0 auto; }
+          h1, h2, h3 { color: #0369a1; }
+          strong { color: #111; }
+          div[style*="background"] { background: #f0f9ff !important; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #0ea5e9; }
+          p { margin: 6px 0; }
+          ul { margin-left: 20px; }
+          hr { border: 1px solid #e5e7eb; margin: 20px 0; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <h1 style="text-align:center; color:#0369a1;">${typeLabel}</h1>
+        ${htmlContent}
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   const deleteContract = async (order: ContractOrder) => {
@@ -575,7 +552,7 @@ const ContractManagement = () => {
                             </Button>
 
                             <Button
-                              onClick={() => downloadPreInfoPDF(order)}
+                              onClick={() => downloadContractAsPDF(order, "preInfo")}
                               size="sm"
                               className="bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-4"
                             >
@@ -584,7 +561,7 @@ const ContractManagement = () => {
                             </Button>
 
                             <Button
-                              onClick={() => downloadDistanceSalesPDF(order)}
+                              onClick={() => downloadContractAsPDF(order, "distanceSales")}
                               size="sm"
                               className="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-4"
                             >
