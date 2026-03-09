@@ -1467,6 +1467,19 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                     <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-md text-xs font-medium border border-amber-200">
                                       <Timer className="w-3.5 h-3.5" />
                                       SMS Planlandı ({format(new Date(pendingSms[0].scheduled_at), "dd.MM HH:mm", { locale: tr })})
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (confirm('Bu planlanmış SMS\'i iptal etmek istediğinize emin misiniz?')) {
+                                            cancelScheduledSmsMutation.mutate(pendingSms[0].id);
+                                          }
+                                        }}
+                                        className="ml-1 p-0.5 hover:bg-amber-200 rounded transition-colors"
+                                        title="SMS'i İptal Et"
+                                        disabled={cancelScheduledSmsMutation.isPending}
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
                                     </div>
                                   )}
                                   {sentSms.length > 0 && (
