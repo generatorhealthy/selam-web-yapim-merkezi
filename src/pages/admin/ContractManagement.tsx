@@ -177,35 +177,56 @@ const ContractManagement = () => {
       const { default: html2canvas } = await import('html2canvas');
       const { default: jsPDF } = await import('jspdf');
 
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        width: 794,
-        windowWidth: 794,
-      });
-
-      document.body.removeChild(container);
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const margin = 10;
       const contentWidth = pdfWidth - margin * 2;
-      const imgHeight = (canvas.height * contentWidth) / canvas.width;
+      const contentHeight = pdfHeight - margin * 2;
 
-      let heightLeft = imgHeight;
-      let position = margin;
+      // Calculate the pixel height per page based on the container width
+      const containerWidth = 794;
+      const scale = 2;
+      const pixelsPerMm = (containerWidth * scale) / contentWidth;
+      const pageHeightPx = Math.floor(contentHeight * pixelsPerMm);
 
-      pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-      heightLeft -= (pdfHeight - margin * 2);
+      const fullCanvas = await html2canvas(container, {
+        scale: scale,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: containerWidth,
+        windowWidth: containerWidth,
+      });
 
-      while (heightLeft > 0) {
-        position = -(pdfHeight - margin * 2) * (Math.ceil((imgHeight - heightLeft) / (pdfHeight - margin * 2))) + margin;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-        heightLeft -= (pdfHeight - margin * 2);
+      document.body.removeChild(container);
+
+      const totalHeight = fullCanvas.height;
+      const totalPages = Math.ceil(totalHeight / pageHeightPx);
+
+      for (let i = 0; i < totalPages; i++) {
+        if (i > 0) pdf.addPage();
+
+        // Slice a portion of the full canvas for this page
+        const sliceHeight = Math.min(pageHeightPx, totalHeight - i * pageHeightPx);
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = fullCanvas.width;
+        pageCanvas.height = sliceHeight;
+        const ctx = pageCanvas.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          ctx.drawImage(
+            fullCanvas,
+            0, i * pageHeightPx,           // source x, y
+            fullCanvas.width, sliceHeight,   // source width, height
+            0, 0,                            // dest x, y
+            fullCanvas.width, sliceHeight    // dest width, height
+          );
+        }
+
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+        const imgH = (sliceHeight * contentWidth) / fullCanvas.width;
+        pdf.addImage(pageImgData, 'JPEG', margin, margin, contentWidth, imgH);
       }
 
       pdf.save(fileName);
