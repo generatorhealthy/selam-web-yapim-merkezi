@@ -20,8 +20,14 @@ interface Specialist {
   internal_number: string | null;
 }
 
+interface ClientReferral {
+  specialist_id: string;
+  referred_at: string | null;
+  is_referred: boolean;
+}
+
 interface SpecialistWithReferral extends Specialist {
-  hasReferralThisMonth: boolean;
+  hasReferralInCycle: boolean;
   daysUntilPayment: number;
 }
 
@@ -42,6 +48,7 @@ const ClientCalendar = () => {
     "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
   ];
 
+  // Ödeme gününe kaç gün kaldığını hesapla
   const calculateDaysUntilPayment = (paymentDay: number): number => {
     const now = new Date();
     const currentDay = now.getDate();
@@ -51,6 +58,22 @@ const ClientCalendar = () => {
       return paymentDay - currentDay;
     } else {
       return (daysInMonth - currentDay) + paymentDay;
+    }
+  };
+
+  // Mevcut ödeme döngüsünün başlangıç tarihini hesapla
+  // Örn: Bugün 9 Mart, ödeme günü 9 → Döngü başlangıcı: 9 Şubat
+  // Örn: Bugün 10 Mart, ödeme günü 9 → Döngü başlangıcı: 9 Mart
+  const getCycleStartDate = (paymentDay: number): Date => {
+    const today = new Date();
+    const currentDay = today.getDate();
+    
+    // Eğer bugün ödeme gününü geçtiyse, döngü bu ayın ödeme gününde başladı
+    // Eğer bugün ödeme gününden önce veya aynıysa, döngü geçen ayın ödeme gününde başladı
+    if (currentDay > paymentDay) {
+      return new Date(today.getFullYear(), today.getMonth(), paymentDay, 0, 0, 0, 0);
+    } else {
+      return new Date(today.getFullYear(), today.getMonth() - 1, paymentDay, 0, 0, 0, 0);
     }
   };
 
@@ -67,24 +90,40 @@ const ClientCalendar = () => {
 
       if (specialistsError) throw specialistsError;
 
+      // Son 3 ayın yönlendirmelerini çek (referred_at ile birlikte)
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
       const { data: referralsData, error: referralsError } = await supabase
         .from('client_referrals')
-        .select('specialist_id')
-        .eq('year', currentYear)
-        .eq('month', currentMonth)
-        .eq('is_referred', true);
+        .select('specialist_id, referred_at, is_referred')
+        .eq('is_referred', true)
+        .gte('referred_at', threeMonthsAgo.toISOString());
 
       if (referralsError) throw referralsError;
 
-      const referredSpecialistIds = new Set(
-        referralsData?.map(r => r.specialist_id) || []
-      );
+      // Her uzman için döngü içinde yönlendirme var mı kontrol et
+      const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => {
+        const paymentDay = specialist.payment_day || 1;
+        const cycleStartDate = getCycleStartDate(paymentDay);
+        const today = new Date();
+        
+        // Bu uzmanın döngü içindeki yönlendirmelerini bul
+        const hasReferralInCycle = (referralsData || []).some((referral: ClientReferral) => {
+          if (referral.specialist_id !== specialist.id || !referral.referred_at) {
+            return false;
+          }
+          const referralDate = new Date(referral.referred_at);
+          // Döngü başlangıcından bugüne kadar yönlendirme var mı?
+          return referralDate >= cycleStartDate && referralDate <= today;
+        });
 
-      const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => ({
-        ...specialist,
-        hasReferralThisMonth: referredSpecialistIds.has(specialist.id),
-        daysUntilPayment: calculateDaysUntilPayment(specialist.payment_day || 0)
-      }));
+        return {
+          ...specialist,
+          hasReferralInCycle,
+          daysUntilPayment: calculateDaysUntilPayment(paymentDay)
+        };
+      });
 
       setSpecialists(specialistsWithReferrals);
     } catch (error) {
@@ -117,8 +156,9 @@ const ClientCalendar = () => {
     setCurrentDate(new Date());
   };
 
+  // Acil yönlendirme: Döngü içinde yönlendirme yapılmamış uzmanlar
   const urgentSpecialists = specialists
-    .filter(s => s.daysUntilPayment <= 20 && !s.hasReferralThisMonth)
+    .filter(s => !s.hasReferralInCycle)
     .sort((a, b) => a.daysUntilPayment - b.daysUntilPayment);
 
   const groupedByPaymentDay = specialists.reduce((acc, specialist) => {
@@ -135,7 +175,7 @@ const ClientCalendar = () => {
     .sort((a, b) => a - b);
 
   const totalSpecialists = specialists.length;
-  const referredCount = specialists.filter(s => s.hasReferralThisMonth).length;
+  const referredCount = specialists.filter(s => s.hasReferralInCycle).length;
   const pendingCount = totalSpecialists - referredCount;
   const urgentCount = urgentSpecialists.length;
 
@@ -251,7 +291,7 @@ const ClientCalendar = () => {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-red-300 font-medium">Acil (20 Gün İçinde)</p>
+                    <p className="text-sm text-red-300 font-medium">Yönlendirme Bekliyor</p>
                     <p className="text-3xl font-bold text-red-200">{urgentCount}</p>
                   </div>
                   <div className="w-12 h-12 bg-red-700 rounded-xl flex items-center justify-center animate-pulse">
@@ -275,7 +315,7 @@ const ClientCalendar = () => {
                       🚨 ACİL YÖNLENDİRME GEREKLİ
                     </CardTitle>
                     <p className="text-red-300 text-sm mt-1">
-                      Bu uzmanların ödemesine 20 gün veya daha az kaldı ve henüz yönlendirme yapılmadı!
+                      Bu uzmanların mevcut ödeme döngüsünde henüz yönlendirme yapılmadı!
                     </p>
                   </div>
                 </div>
@@ -331,9 +371,9 @@ const ClientCalendar = () => {
             
             {sortedDays.map(day => {
               const daySpecialists = groupedByPaymentDay[day];
-              const referred = daySpecialists.filter(s => s.hasReferralThisMonth).length;
+              const referred = daySpecialists.filter(s => s.hasReferralInCycle).length;
               const pending = daySpecialists.length - referred;
-              const hasUrgent = daySpecialists.some(s => s.daysUntilPayment <= 20 && !s.hasReferralThisMonth);
+              const hasUrgent = daySpecialists.some(s => !s.hasReferralInCycle);
               
               return (
                 <Card 
@@ -359,7 +399,7 @@ const ClientCalendar = () => {
                         Her Ayın {day}'i
                         {hasUrgent && (
                           <span className="text-orange-300 text-sm font-normal ml-2">
-                            ⚠️ Yaklaşan ödeme
+                            ⚠️ Yönlendirme bekliyor
                           </span>
                         )}
                       </CardTitle>
@@ -377,33 +417,34 @@ const ClientCalendar = () => {
                     <div className={`divide-y ${hasUrgent ? 'divide-orange-800' : 'divide-slate-700'}`}>
                       {daySpecialists
                         .sort((a, b) => {
-                          if (!a.hasReferralThisMonth && !b.hasReferralThisMonth) {
+                          // Önce yönlendirme yapılmayanlar
+                          if (!a.hasReferralInCycle && !b.hasReferralInCycle) {
                             return a.daysUntilPayment - b.daysUntilPayment;
                           }
-                          if (!a.hasReferralThisMonth) return -1;
-                          if (!b.hasReferralThisMonth) return 1;
+                          if (!a.hasReferralInCycle) return -1;
+                          if (!b.hasReferralInCycle) return 1;
                           return 0;
                         })
                         .map(specialist => {
-                          const isUrgent = specialist.daysUntilPayment <= 20 && !specialist.hasReferralThisMonth;
+                          const needsReferral = !specialist.hasReferralInCycle;
                           
                           return (
                             <div 
                               key={specialist.id} 
                               className={`flex items-center justify-between p-4 transition-all ${
-                                specialist.hasReferralThisMonth 
+                                specialist.hasReferralInCycle 
                                   ? 'bg-emerald-950' 
-                                  : isUrgent 
+                                  : needsReferral 
                                     ? 'bg-red-950' 
                                     : 'hover:bg-slate-700'
                               }`}
                             >
                               <div className="flex items-center gap-4">
-                                {specialist.hasReferralThisMonth ? (
+                                {specialist.hasReferralInCycle ? (
                                   <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
                                     <Check className="w-5 h-5 text-white" />
                                   </div>
-                                ) : isUrgent ? (
+                                ) : needsReferral ? (
                                   <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center animate-pulse">
                                     <span className="text-white font-bold text-sm">
                                       {specialist.daysUntilPayment}
@@ -418,9 +459,9 @@ const ClientCalendar = () => {
                                 )}
                                 <div>
                                   <p className={`font-medium ${
-                                    specialist.hasReferralThisMonth 
+                                    specialist.hasReferralInCycle 
                                       ? 'text-emerald-300' 
-                                      : isUrgent 
+                                      : needsReferral 
                                         ? 'text-red-300' 
                                         : 'text-white'
                                   }`}>
@@ -434,10 +475,10 @@ const ClientCalendar = () => {
                               </div>
                               
                               <div className="flex items-center gap-2">
-                                {!specialist.hasReferralThisMonth && (
+                                {!specialist.hasReferralInCycle && (
                                   <Badge 
                                     className={`${
-                                      isUrgent 
+                                      needsReferral 
                                         ? 'bg-red-700 text-white border-red-600' 
                                         : 'bg-slate-600 text-white border-slate-500'
                                     }`}
@@ -448,12 +489,12 @@ const ClientCalendar = () => {
                                   </Badge>
                                 )}
                                 <Badge 
-                                  className={specialist.hasReferralThisMonth 
+                                  className={specialist.hasReferralInCycle 
                                     ? "bg-emerald-700 text-white border-emerald-600" 
                                     : "bg-slate-600 text-slate-300 border-slate-500"
                                   }
                                 >
-                                  {specialist.hasReferralThisMonth ? "Yönlendirildi ✓" : "Bekliyor"}
+                                  {specialist.hasReferralInCycle ? "Yönlendirildi ✓" : "Bekliyor"}
                                 </Badge>
                               </div>
                             </div>
