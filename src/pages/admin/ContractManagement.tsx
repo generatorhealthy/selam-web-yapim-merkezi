@@ -185,7 +185,7 @@ const ContractManagement = () => {
       const contentHeight = pdfHeight - margin * 2;
 
       const containerWidth = 794;
-      const scale = 2;
+      const scale = 1.5;
       const pixelsPerMm = (containerWidth * scale) / contentWidth;
       const pageHeightPx = Math.floor(contentHeight * pixelsPerMm);
 
@@ -270,9 +270,9 @@ const ContractManagement = () => {
           );
         }
 
-        const pageImgData = pageCanvas.toDataURL('image/png');
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.75);
         const imgH = (sliceHeight * contentWidth) / fullCanvas.width;
-        pdf.addImage(pageImgData, 'PNG', margin, margin, contentWidth, imgH);
+        pdf.addImage(pageImgData, 'JPEG', margin, margin, contentWidth, imgH);
       }
 
       pdf.save(fileName);
