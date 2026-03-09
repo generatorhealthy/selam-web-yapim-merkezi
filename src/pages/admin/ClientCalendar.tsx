@@ -371,9 +371,9 @@ const ClientCalendar = () => {
             
             {sortedDays.map(day => {
               const daySpecialists = groupedByPaymentDay[day];
-              const referred = daySpecialists.filter(s => s.hasReferralThisMonth).length;
+              const referred = daySpecialists.filter(s => s.hasReferralInCycle).length;
               const pending = daySpecialists.length - referred;
-              const hasUrgent = daySpecialists.some(s => s.daysUntilPayment <= 20 && !s.hasReferralThisMonth);
+              const hasUrgent = daySpecialists.some(s => !s.hasReferralInCycle);
               
               return (
                 <Card 
@@ -399,7 +399,7 @@ const ClientCalendar = () => {
                         Her Ayın {day}'i
                         {hasUrgent && (
                           <span className="text-orange-300 text-sm font-normal ml-2">
-                            ⚠️ Yaklaşan ödeme
+                            ⚠️ Yönlendirme bekliyor
                           </span>
                         )}
                       </CardTitle>
@@ -417,33 +417,34 @@ const ClientCalendar = () => {
                     <div className={`divide-y ${hasUrgent ? 'divide-orange-800' : 'divide-slate-700'}`}>
                       {daySpecialists
                         .sort((a, b) => {
-                          if (!a.hasReferralThisMonth && !b.hasReferralThisMonth) {
+                          // Önce yönlendirme yapılmayanlar
+                          if (!a.hasReferralInCycle && !b.hasReferralInCycle) {
                             return a.daysUntilPayment - b.daysUntilPayment;
                           }
-                          if (!a.hasReferralThisMonth) return -1;
-                          if (!b.hasReferralThisMonth) return 1;
+                          if (!a.hasReferralInCycle) return -1;
+                          if (!b.hasReferralInCycle) return 1;
                           return 0;
                         })
                         .map(specialist => {
-                          const isUrgent = specialist.daysUntilPayment <= 20 && !specialist.hasReferralThisMonth;
+                          const needsReferral = !specialist.hasReferralInCycle;
                           
                           return (
                             <div 
                               key={specialist.id} 
                               className={`flex items-center justify-between p-4 transition-all ${
-                                specialist.hasReferralThisMonth 
+                                specialist.hasReferralInCycle 
                                   ? 'bg-emerald-950' 
-                                  : isUrgent 
+                                  : needsReferral 
                                     ? 'bg-red-950' 
                                     : 'hover:bg-slate-700'
                               }`}
                             >
                               <div className="flex items-center gap-4">
-                                {specialist.hasReferralThisMonth ? (
+                                {specialist.hasReferralInCycle ? (
                                   <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
                                     <Check className="w-5 h-5 text-white" />
                                   </div>
-                                ) : isUrgent ? (
+                                ) : needsReferral ? (
                                   <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center animate-pulse">
                                     <span className="text-white font-bold text-sm">
                                       {specialist.daysUntilPayment}
@@ -458,9 +459,9 @@ const ClientCalendar = () => {
                                 )}
                                 <div>
                                   <p className={`font-medium ${
-                                    specialist.hasReferralThisMonth 
+                                    specialist.hasReferralInCycle 
                                       ? 'text-emerald-300' 
-                                      : isUrgent 
+                                      : needsReferral 
                                         ? 'text-red-300' 
                                         : 'text-white'
                                   }`}>
@@ -474,10 +475,10 @@ const ClientCalendar = () => {
                               </div>
                               
                               <div className="flex items-center gap-2">
-                                {!specialist.hasReferralThisMonth && (
+                                {!specialist.hasReferralInCycle && (
                                   <Badge 
                                     className={`${
-                                      isUrgent 
+                                      needsReferral 
                                         ? 'bg-red-700 text-white border-red-600' 
                                         : 'bg-slate-600 text-white border-slate-500'
                                     }`}
@@ -488,12 +489,12 @@ const ClientCalendar = () => {
                                   </Badge>
                                 )}
                                 <Badge 
-                                  className={specialist.hasReferralThisMonth 
+                                  className={specialist.hasReferralInCycle 
                                     ? "bg-emerald-700 text-white border-emerald-600" 
                                     : "bg-slate-600 text-slate-300 border-slate-500"
                                   }
                                 >
-                                  {specialist.hasReferralThisMonth ? "Yönlendirildi ✓" : "Bekliyor"}
+                                  {specialist.hasReferralInCycle ? "Yönlendirildi ✓" : "Bekliyor"}
                                 </Badge>
                               </div>
                             </div>
