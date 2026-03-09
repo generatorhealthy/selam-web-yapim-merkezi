@@ -175,7 +175,7 @@ const ContractManagement = () => {
         <meta charset="UTF-8">
         <title>${fileName}</title>
         <style>
-          @page { margin: 20mm; size: A4; }
+          @page { margin: 20mm; size: A4; margin-top: 15mm; margin-bottom: 15mm; }
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; padding: 20px; max-width: 800px; margin: 0 auto; }
           h1, h2, h3 { color: #0369a1; }
           strong { color: #111; }
