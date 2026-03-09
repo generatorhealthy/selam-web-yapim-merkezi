@@ -503,6 +503,17 @@ const AdminDashboard = () => {
       adminOnly: false,
       staffOnly: true
     },
+    {
+      title: "Panel Aktivite Logları",
+      description: "Admin ve Staff üyelerinin panel giriş-çıkış ve işlem kayıtları",
+      icon: Activity,
+      gradient: "from-amber-500 via-orange-500 to-red-600",
+      bgGradient: "from-amber-50 to-red-50",
+      shadowColor: "shadow-amber-500/20",
+      route: "/divan_paneli/admin-activity-logs",
+      buttonText: "Aktivite Loglarını Görüntüle",
+      adminOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
