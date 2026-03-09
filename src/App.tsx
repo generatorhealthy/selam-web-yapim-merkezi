@@ -230,6 +230,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/specialist-applications" element={<SpecialistApplications />} />
               <Route path="/divan_paneli/staff-attendance" element={<StaffAttendance />} />
               <Route path="/divan_paneli/cancellation-fees" element={<CancellationFees />} />
+              <Route path="/divan_paneli/admin-activity-logs" element={<AdminActivityLogs />} />
                 
               
               {/* Doctor Routes */}
