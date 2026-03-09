@@ -172,7 +172,7 @@ const ContractManagement = () => {
       document.body.appendChild(container);
 
       // Wait for rendering
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const { default: html2canvas } = await import('html2canvas');
       const { default: jsPDF } = await import('jspdf');
@@ -184,11 +184,13 @@ const ContractManagement = () => {
       const contentWidth = pdfWidth - margin * 2;
       const contentHeight = pdfHeight - margin * 2;
 
-      // Calculate the pixel height per page based on the container width
       const containerWidth = 794;
       const scale = 2;
       const pixelsPerMm = (containerWidth * scale) / contentWidth;
       const pageHeightPx = Math.floor(contentHeight * pixelsPerMm);
+
+      // Approximate line height in pixels (at scale 2, 13px font * 1.6 line-height * 2 scale = ~42px)
+      const lineHeightPx = Math.round(13 * 1.6 * scale);
 
       const fullCanvas = await html2canvas(container, {
         scale: scale,
@@ -201,13 +203,57 @@ const ContractManagement = () => {
       document.body.removeChild(container);
 
       const totalHeight = fullCanvas.height;
-      const totalPages = Math.ceil(totalHeight / pageHeightPx);
+      
+      // Find safe cut points that don't slice through text lines
+      // by scanning for rows of mostly-white pixels near the target cut point
+      const findSafeCutPoint = (targetY: number): number => {
+        const ctx = fullCanvas.getContext('2d');
+        if (!ctx) return targetY;
+        
+        // Search within ±lineHeightPx*2 range around target
+        const searchRange = lineHeightPx * 2;
+        const startY = Math.max(0, targetY - searchRange);
+        const endY = Math.min(totalHeight - 1, targetY + searchRange);
+        
+        let bestY = targetY;
+        let bestWhiteCount = 0;
+        
+        for (let y = startY; y <= endY; y++) {
+          const rowData = ctx.getImageData(0, y, fullCanvas.width, 1).data;
+          let whitePixels = 0;
+          for (let x = 0; x < fullCanvas.width * 4; x += 4) {
+            // Check if pixel is close to white
+            if (rowData[x] > 240 && rowData[x + 1] > 240 && rowData[x + 2] > 240) {
+              whitePixels++;
+            }
+          }
+          if (whitePixels > bestWhiteCount) {
+            bestWhiteCount = whitePixels;
+            bestY = y;
+          }
+        }
+        
+        return bestY;
+      };
 
-      for (let i = 0; i < totalPages; i++) {
+      // Calculate page cut points
+      const cutPoints: number[] = [0];
+      let currentY = 0;
+      while (currentY + pageHeightPx < totalHeight) {
+        const targetCut = currentY + pageHeightPx;
+        const safeCut = findSafeCutPoint(targetCut);
+        cutPoints.push(safeCut);
+        currentY = safeCut;
+      }
+      cutPoints.push(totalHeight);
+
+      for (let i = 0; i < cutPoints.length - 1; i++) {
         if (i > 0) pdf.addPage();
 
-        // Slice a portion of the full canvas for this page
-        const sliceHeight = Math.min(pageHeightPx, totalHeight - i * pageHeightPx);
+        const startY = cutPoints[i];
+        const endY = cutPoints[i + 1];
+        const sliceHeight = endY - startY;
+
         const pageCanvas = document.createElement('canvas');
         pageCanvas.width = fullCanvas.width;
         pageCanvas.height = sliceHeight;
@@ -217,16 +263,16 @@ const ContractManagement = () => {
           ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
           ctx.drawImage(
             fullCanvas,
-            0, i * pageHeightPx,           // source x, y
-            fullCanvas.width, sliceHeight,   // source width, height
-            0, 0,                            // dest x, y
-            fullCanvas.width, sliceHeight    // dest width, height
+            0, startY,
+            fullCanvas.width, sliceHeight,
+            0, 0,
+            fullCanvas.width, sliceHeight
           );
         }
 
-        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+        const pageImgData = pageCanvas.toDataURL('image/png');
         const imgH = (sliceHeight * contentWidth) / fullCanvas.width;
-        pdf.addImage(pageImgData, 'JPEG', margin, margin, contentWidth, imgH);
+        pdf.addImage(pageImgData, 'PNG', margin, margin, contentWidth, imgH);
       }
 
       pdf.save(fileName);
