@@ -20,8 +20,14 @@ interface Specialist {
   internal_number: string | null;
 }
 
+interface ClientReferral {
+  specialist_id: string;
+  referred_at: string | null;
+  is_referred: boolean;
+}
+
 interface SpecialistWithReferral extends Specialist {
-  hasReferralThisMonth: boolean;
+  hasReferralInCycle: boolean;
   daysUntilPayment: number;
 }
 
@@ -42,6 +48,7 @@ const ClientCalendar = () => {
     "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
   ];
 
+  // Ödeme gününe kaç gün kaldığını hesapla
   const calculateDaysUntilPayment = (paymentDay: number): number => {
     const now = new Date();
     const currentDay = now.getDate();
@@ -51,6 +58,22 @@ const ClientCalendar = () => {
       return paymentDay - currentDay;
     } else {
       return (daysInMonth - currentDay) + paymentDay;
+    }
+  };
+
+  // Mevcut ödeme döngüsünün başlangıç tarihini hesapla
+  // Örn: Bugün 9 Mart, ödeme günü 9 → Döngü başlangıcı: 9 Şubat
+  // Örn: Bugün 10 Mart, ödeme günü 9 → Döngü başlangıcı: 9 Mart
+  const getCycleStartDate = (paymentDay: number): Date => {
+    const today = new Date();
+    const currentDay = today.getDate();
+    
+    // Eğer bugün ödeme gününü geçtiyse, döngü bu ayın ödeme gününde başladı
+    // Eğer bugün ödeme gününden önce veya aynıysa, döngü geçen ayın ödeme gününde başladı
+    if (currentDay > paymentDay) {
+      return new Date(today.getFullYear(), today.getMonth(), paymentDay, 0, 0, 0, 0);
+    } else {
+      return new Date(today.getFullYear(), today.getMonth() - 1, paymentDay, 0, 0, 0, 0);
     }
   };
 
@@ -67,24 +90,40 @@ const ClientCalendar = () => {
 
       if (specialistsError) throw specialistsError;
 
+      // Son 3 ayın yönlendirmelerini çek (referred_at ile birlikte)
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
       const { data: referralsData, error: referralsError } = await supabase
         .from('client_referrals')
-        .select('specialist_id')
-        .eq('year', currentYear)
-        .eq('month', currentMonth)
-        .eq('is_referred', true);
+        .select('specialist_id, referred_at, is_referred')
+        .eq('is_referred', true)
+        .gte('referred_at', threeMonthsAgo.toISOString());
 
       if (referralsError) throw referralsError;
 
-      const referredSpecialistIds = new Set(
-        referralsData?.map(r => r.specialist_id) || []
-      );
+      // Her uzman için döngü içinde yönlendirme var mı kontrol et
+      const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => {
+        const paymentDay = specialist.payment_day || 1;
+        const cycleStartDate = getCycleStartDate(paymentDay);
+        const today = new Date();
+        
+        // Bu uzmanın döngü içindeki yönlendirmelerini bul
+        const hasReferralInCycle = (referralsData || []).some((referral: ClientReferral) => {
+          if (referral.specialist_id !== specialist.id || !referral.referred_at) {
+            return false;
+          }
+          const referralDate = new Date(referral.referred_at);
+          // Döngü başlangıcından bugüne kadar yönlendirme var mı?
+          return referralDate >= cycleStartDate && referralDate <= today;
+        });
 
-      const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => ({
-        ...specialist,
-        hasReferralThisMonth: referredSpecialistIds.has(specialist.id),
-        daysUntilPayment: calculateDaysUntilPayment(specialist.payment_day || 0)
-      }));
+        return {
+          ...specialist,
+          hasReferralInCycle,
+          daysUntilPayment: calculateDaysUntilPayment(paymentDay)
+        };
+      });
 
       setSpecialists(specialistsWithReferrals);
     } catch (error) {
