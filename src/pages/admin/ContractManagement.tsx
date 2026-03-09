@@ -185,7 +185,7 @@ const ContractManagement = () => {
       const contentHeight = pdfHeight - margin * 2;
 
       const containerWidth = 794;
-      const scale = 2;
+      const scale = 1.5;
       const pixelsPerMm = (containerWidth * scale) / contentWidth;
       const pageHeightPx = Math.floor(contentHeight * pixelsPerMm);
 
