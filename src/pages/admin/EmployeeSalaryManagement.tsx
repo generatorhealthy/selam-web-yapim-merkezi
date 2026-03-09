@@ -31,8 +31,14 @@ interface EmployeeSalary {
   created_at: string;
 }
 
+interface StaffMember {
+  name: string;
+  surname: string;
+}
+
 const EmployeeSalaryManagement = () => {
   const [salaries, setSalaries] = useState<EmployeeSalary[]>([]);
+  const [employees, setEmployees] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSalary, setEditingSalary] = useState<EmployeeSalary | null>(null);
@@ -56,15 +62,37 @@ const EmployeeSalaryManagement = () => {
     "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
   ];
 
-  const employees = [
-    { name: "Yağmur", surname: "Çiçek" },
-    { name: "Fatma", surname: "Erol" },
-    { name: "Merve", surname: "Önen" }
-  ];
-
   useEffect(() => {
+    fetchStaffMembers();
     fetchSalaries();
   }, []);
+
+  const fetchStaffMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('name')
+        .eq('role', 'staff')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      
+      // Format the data to match employees structure
+      const staffList = (data || []).map(member => {
+        const nameParts = (member.name || '').split(' ');
+        return {
+          name: nameParts[0] || '',
+          surname: nameParts.slice(1).join(' ') || 'Hanım'
+        };
+      });
+      
+      setEmployees(staffList);
+    } catch (error) {
+      console.error('Error fetching staff members:', error);
+      // Fallback to empty list if fetch fails
+      setEmployees([]);
+    }
+  };
 
   const fetchSalaries = async () => {
     try {
