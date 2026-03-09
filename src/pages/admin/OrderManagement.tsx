@@ -305,6 +305,23 @@ const OrderManagement = () => {
     },
   });
 
+  // Cancel scheduled SMS mutation
+  const cancelScheduledSmsMutation = useMutation({
+    mutationFn: async (smsId: string) => {
+      const { error } = await (supabase as any)
+        .from('scheduled_sms')
+        .delete()
+        .eq('id', smsId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "SMS İptal Edildi", description: "Planlanan SMS başarıyla iptal edildi" });
+      queryClient.invalidateQueries({ queryKey: ["scheduled_sms_status"] });
+    },
+    onError: () => {
+      toast({ title: "Hata", description: "SMS iptal edilirken hata oluştu", variant: "destructive" });
+    },
+  });
 
   const updateOrderMutation = useMutation({
     mutationFn: async (order: Order) => {
