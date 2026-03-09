@@ -43,6 +43,7 @@ import {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
+  useAdminActivityTracker(); // Track admin panel activity
   const [newOrderCount, setNewOrderCount] = useState(0);
   const [newApplicationCount, setNewApplicationCount] = useState(0);
 
