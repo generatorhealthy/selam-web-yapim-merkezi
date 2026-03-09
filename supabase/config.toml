@@ -110,3 +110,6 @@ verify_jwt = false
 
 [functions.charge-cancellation-fee]
 verify_jwt = false
+
+[functions.birfatura-order-update]
+verify_jwt = false
