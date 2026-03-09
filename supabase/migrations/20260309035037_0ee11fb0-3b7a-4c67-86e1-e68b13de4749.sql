@@ -1,0 +1,1 @@
+UPDATE public.orders SET contract_emails_sent = false, status = 'pending' WHERE id = 'db4f08ae-ccb7-46fe-95ce-634c1b6c215d';
