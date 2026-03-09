@@ -143,7 +143,7 @@ const ContractManagement = () => {
     setContractDialogOpen(true);
   };
 
-  const downloadContractAsPDF = (order: ContractOrder, type: "preInfo" | "distanceSales") => {
+  const downloadContractAsPDF = async (order: ContractOrder, type: "preInfo" | "distanceSales") => {
     const htmlContent = type === "preInfo" ? order.pre_info_pdf_content : order.distance_sales_pdf_content;
     
     if (!htmlContent) {
@@ -160,47 +160,60 @@ const ContractManagement = () => {
     const currentDate = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
     const firstName = order.customer_name.split(' ')[0] || 'Müşteri';
     const lastName = order.customer_name.split(' ').slice(1).join(' ') || '';
-    const fileName = `${firstName}_${lastName}_${filePrefix}_${currentDate}`;
+    const fileName = `${firstName}_${lastName}_${filePrefix}_${currentDate}.pdf`;
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast({ title: "Hata", description: "Popup engelleyici aktif olabilir. Lütfen izin verin.", variant: "destructive" });
-      return;
+    toast({ title: "PDF Hazırlanıyor", description: "Lütfen bekleyin..." });
+
+    try {
+      // Create a hidden container for rendering
+      const container = document.createElement('div');
+      container.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:40px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:13px;line-height:1.6;color:#1a1a1a;';
+      container.innerHTML = `<h1 style="text-align:center;color:#0369a1;font-size:18px;margin-bottom:20px;">${typeLabel}</h1>${htmlContent}`;
+      document.body.appendChild(container);
+
+      // Wait for rendering
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const { default: html2canvas } = await import('html2canvas');
+      const { default: jsPDF } = await import('jspdf');
+
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 794,
+        windowWidth: 794,
+      });
+
+      document.body.removeChild(container);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pdfWidth - margin * 2;
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = margin;
+
+      pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
+      heightLeft -= (pdfHeight - margin * 2);
+
+      while (heightLeft > 0) {
+        position = -(pdfHeight - margin * 2) * (Math.ceil((imgHeight - heightLeft) / (pdfHeight - margin * 2))) + margin;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
+        heightLeft -= (pdfHeight - margin * 2);
+      }
+
+      pdf.save(fileName);
+      toast({ title: "Başarılı", description: "PDF başarıyla indirildi." });
+    } catch (error) {
+      console.error('PDF oluşturma hatası:', error);
+      toast({ title: "Hata", description: "PDF oluşturulurken bir hata oluştu.", variant: "destructive" });
     }
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="tr">
-      <head>
-        <meta charset="UTF-8">
-        <title>${fileName}</title>
-        <style>
-          @page { margin: 15mm; size: A4; }
-          @media print {
-            body { padding: 0; margin: 0; }
-            /* Hide browser default header/footer as much as possible */
-            @page { margin-top: 10mm; margin-bottom: 10mm; }
-          }
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; padding: 20px; max-width: 800px; margin: 0 auto; }
-          h1, h2, h3 { color: #0369a1; }
-          strong { color: #111; }
-          div[style*="background"] { background: #f0f9ff !important; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #0ea5e9; }
-          p { margin: 6px 0; }
-          ul { margin-left: 20px; }
-          hr { border: 1px solid #e5e7eb; margin: 20px 0; }
-        </style>
-      </head>
-      <body>
-        <h1 style="text-align:center; color:#0369a1;">${typeLabel}</h1>
-        ${htmlContent}
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
   };
 
   const deleteContract = async (order: ContractOrder) => {
