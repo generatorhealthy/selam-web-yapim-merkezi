@@ -175,7 +175,12 @@ const ContractManagement = () => {
         <meta charset="UTF-8">
         <title>${fileName}</title>
         <style>
-          @page { margin: 20mm; size: A4; margin-top: 15mm; margin-bottom: 15mm; }
+          @page { margin: 15mm; size: A4; }
+          @media print {
+            body { padding: 0; margin: 0; }
+            /* Hide browser default header/footer as much as possible */
+            @page { margin-top: 10mm; margin-bottom: 10mm; }
+          }
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; padding: 20px; max-width: 800px; margin: 0 auto; }
           h1, h2, h3 { color: #0369a1; }
           strong { color: #111; }
@@ -183,7 +188,6 @@ const ContractManagement = () => {
           p { margin: 6px 0; }
           ul { margin-left: 20px; }
           hr { border: 1px solid #e5e7eb; margin: 20px 0; }
-          @media print { body { padding: 0; } }
         </style>
       </head>
       <body>
