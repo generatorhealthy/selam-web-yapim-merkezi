@@ -104,6 +104,39 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_login_attempts: {
+        Row: {
+          attempt_count: number
+          blocked_until: string | null
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          is_blocked: boolean
+          last_attempt_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          is_blocked?: boolean
+          last_attempt_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          is_blocked?: boolean
+          last_attempt_at?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -24040,6 +24073,14 @@ export type Database = {
       }
       backup_client_referrals: { Args: never; Returns: undefined }
       can_manage_users: { Args: { target_user_id?: string }; Returns: boolean }
+      check_admin_login_block: {
+        Args: { p_email: string }
+        Returns: {
+          attempts_remaining: number
+          blocked_until: string
+          is_blocked: boolean
+        }[]
+      }
       cleanup_old_backups: { Args: never; Returns: undefined }
       cleanup_old_sessions: { Args: never; Returns: undefined }
       create_full_database_backup: {
@@ -24133,6 +24174,18 @@ export type Database = {
         }[]
       }
       merge_duplicate_client_referrals: { Args: never; Returns: undefined }
+      record_failed_admin_login: {
+        Args: { p_email: string; p_ip_address?: string }
+        Returns: {
+          attempts_remaining: number
+          blocked_until: string
+          is_now_blocked: boolean
+        }[]
+      }
+      reset_admin_login_attempts: {
+        Args: { p_email: string }
+        Returns: undefined
+      }
       restore_client_referrals_from_backup: {
         Args: { p_backup_timestamp: string }
         Returns: undefined
