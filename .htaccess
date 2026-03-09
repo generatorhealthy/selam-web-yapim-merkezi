@@ -117,6 +117,10 @@ AddType text/html .html
 # Dizin görüntülemeyi engelle
 Options -Indexes
 
+# Sitemap ve robots.txt doğrudan sunulsun - blog redirect'ten önce
+RewriteRule ^sitemap\.xml$ - [L]
+RewriteRule ^robots\.txt$ - [L]
+
 # Specific blog post redirects
 RewriteRule ^uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/?$ /blog/uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur [R=301,L]
 
@@ -129,7 +133,7 @@ RewriteCond %{REQUEST_URI} !^/randevu-al/
 RewriteCond %{REQUEST_URI} !^/yazilar/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml)$
+RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|txt|php)$
 RewriteRule ^([^/]+)/?$ /blog/$1 [R=301,L]
 
 # BirFatura API proxy routes
