@@ -552,7 +552,7 @@ const ContractManagement = () => {
                             </Button>
 
                             <Button
-                              onClick={() => downloadPreInfoPDF(order)}
+                              onClick={() => downloadContractAsPDF(order, "preInfo")}
                               size="sm"
                               className="bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-4"
                             >
@@ -561,7 +561,7 @@ const ContractManagement = () => {
                             </Button>
 
                             <Button
-                              onClick={() => downloadDistanceSalesPDF(order)}
+                              onClick={() => downloadContractAsPDF(order, "distanceSales")}
                               size="sm"
                               className="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-4"
                             >
