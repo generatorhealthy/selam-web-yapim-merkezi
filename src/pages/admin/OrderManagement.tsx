@@ -15,7 +15,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt, Mail, MessageSquare, Send, StickyNote, Timer, CheckCheck } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt, Mail, MessageSquare, Send, StickyNote, Timer, CheckCheck, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { sendSms } from "@/services/smsService";
 import SendOrderEmailDialog from "@/components/SendOrderEmailDialog";
@@ -305,6 +305,23 @@ const OrderManagement = () => {
     },
   });
 
+  // Cancel scheduled SMS mutation
+  const cancelScheduledSmsMutation = useMutation({
+    mutationFn: async (smsId: string) => {
+      const { error } = await (supabase as any)
+        .from('scheduled_sms')
+        .delete()
+        .eq('id', smsId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "SMS İptal Edildi", description: "Planlanan SMS başarıyla iptal edildi" });
+      queryClient.invalidateQueries({ queryKey: ["scheduled_sms_status"] });
+    },
+    onError: () => {
+      toast({ title: "Hata", description: "SMS iptal edilirken hata oluştu", variant: "destructive" });
+    },
+  });
 
   const updateOrderMutation = useMutation({
     mutationFn: async (order: Order) => {
@@ -1450,6 +1467,19 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                     <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-md text-xs font-medium border border-amber-200">
                                       <Timer className="w-3.5 h-3.5" />
                                       SMS Planlandı ({format(new Date(pendingSms[0].scheduled_at), "dd.MM HH:mm", { locale: tr })})
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (confirm('Bu planlanmış SMS\'i iptal etmek istediğinize emin misiniz?')) {
+                                            cancelScheduledSmsMutation.mutate(pendingSms[0].id);
+                                          }
+                                        }}
+                                        className="ml-1 p-0.5 hover:bg-amber-200 rounded transition-colors"
+                                        title="SMS'i İptal Et"
+                                        disabled={cancelScheduledSmsMutation.isPending}
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
                                     </div>
                                   )}
                                   {sentSms.length > 0 && (
