@@ -156,8 +156,9 @@ const ClientCalendar = () => {
     setCurrentDate(new Date());
   };
 
+  // Acil yönlendirme: Döngü içinde yönlendirme yapılmamış uzmanlar
   const urgentSpecialists = specialists
-    .filter(s => s.daysUntilPayment <= 20 && !s.hasReferralThisMonth)
+    .filter(s => !s.hasReferralInCycle)
     .sort((a, b) => a.daysUntilPayment - b.daysUntilPayment);
 
   const groupedByPaymentDay = specialists.reduce((acc, specialist) => {
@@ -174,7 +175,7 @@ const ClientCalendar = () => {
     .sort((a, b) => a - b);
 
   const totalSpecialists = specialists.length;
-  const referredCount = specialists.filter(s => s.hasReferralThisMonth).length;
+  const referredCount = specialists.filter(s => s.hasReferralInCycle).length;
   const pendingCount = totalSpecialists - referredCount;
   const urgentCount = urgentSpecialists.length;
 
