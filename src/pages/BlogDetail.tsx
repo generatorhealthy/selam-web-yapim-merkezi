@@ -59,53 +59,94 @@ const BlogDetail = () => {
   const fetchBlog = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .eq('slug', slug)
-        .eq('status', 'published')
-        .single();
 
-      if (error) {
-        console.error('Blog yazısı çekilirken hata:', error);
-        if (error.code === 'PGRST116') {
-          // Blog not found
-          setBlog(null);
-        } else {
-          toast({
-            title: "Hata",
-            description: "Blog yazısı yüklenirken bir hata oluştu.",
-            variant: "destructive"
-          });
-        }
+      const [blogPostRes, legacyBlogRes] = await Promise.all([
+        supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('slug', slug)
+          .eq('status', 'published')
+          .maybeSingle(),
+        supabase
+          .from('blogs')
+          .select('*')
+          .eq('slug', slug)
+          .eq('status', 'published')
+          .maybeSingle()
+      ]);
+
+      const blogPostError = blogPostRes.error && blogPostRes.error.code !== 'PGRST116' ? blogPostRes.error : null;
+      const legacyBlogError = legacyBlogRes.error && legacyBlogRes.error.code !== 'PGRST116' ? legacyBlogRes.error : null;
+
+      if (blogPostError && legacyBlogError) {
+        console.error('Blog yazısı çekilirken hata:', { blogPostError, legacyBlogError });
+        toast({
+          title: "Hata",
+          description: "Blog yazısı yüklenirken bir hata oluştu.",
+          variant: "destructive"
+        });
         return;
       }
 
-      // Eğer specialist yazarsa, uzmanlık bilgisini al
-      let blogWithSpecialist = data as any;
-      if (data.author_type === 'specialist' && data.author_id) {
+      const blogPostData = blogPostRes.data as any;
+      const legacyBlogData = legacyBlogRes.data as any;
+
+      if (!blogPostData && !legacyBlogData) {
+        setBlog(null);
+        return;
+      }
+
+      const normalizedBlog: BlogPost = blogPostData
+        ? {
+            id: blogPostData.id,
+            title: blogPostData.title,
+            content: blogPostData.content,
+            excerpt: blogPostData.excerpt,
+            featured_image: blogPostData.featured_image,
+            slug: blogPostData.slug,
+            author_name: blogPostData.author_name,
+            author_type: blogPostData.author_type || 'editor',
+            published_at: blogPostData.published_at || blogPostData.created_at,
+            word_count: blogPostData.word_count,
+            specialist_id: blogPostData.specialist_id,
+            specialists: null,
+          }
+        : {
+            id: legacyBlogData.id,
+            title: legacyBlogData.title,
+            content: legacyBlogData.content,
+            excerpt: legacyBlogData.excerpt,
+            featured_image: legacyBlogData.featured_image,
+            slug: legacyBlogData.slug,
+            author_name: legacyBlogData.author_name || 'Editör',
+            author_type: (legacyBlogData.author_name === 'Admin' || legacyBlogData.author_name === 'admin') ? 'admin' : 'editor',
+            published_at: legacyBlogData.updated_at || legacyBlogData.created_at,
+            word_count: legacyBlogData.content ? String(legacyBlogData.content).split(/\s+/).filter(Boolean).length : null,
+            specialist_id: null,
+            specialists: null,
+          };
+
+      // Uzman tarafından yazılmış bloglarda uzmanlık bilgisini tamamla
+      if (blogPostData?.author_type === 'specialist' && blogPostData.author_id) {
         const { data: specialistData } = await supabase
           .from('specialists')
           .select('specialty')
-          .eq('user_id', data.author_id)
+          .eq('user_id', blogPostData.author_id)
           .maybeSingle();
-        
-        blogWithSpecialist = {
-          ...data,
-          specialists: specialistData ? { specialty: specialistData.specialty } : null
-        };
+
+        normalizedBlog.specialists = specialistData ? { specialty: specialistData.specialty } : null;
       }
 
-      setBlog(blogWithSpecialist);
+      setBlog(normalizedBlog);
 
-      // Eğer blog yazısı bir uzmana aitsa, uzman bilgilerini getir
-      if (blogWithSpecialist.specialist_id) {
+      // specialist_id varsa uzman kartını göster
+      if (normalizedBlog.specialist_id) {
         const { data: specialistData } = await supabase
           .from('specialists')
           .select('id, name, specialty, city, experience, bio, profile_picture, online_consultation, face_to_face_consultation')
-          .eq('id', blogWithSpecialist.specialist_id)
+          .eq('id', normalizedBlog.specialist_id)
           .maybeSingle();
-        
+
         if (specialistData) {
           setSpecialist(specialistData);
         }

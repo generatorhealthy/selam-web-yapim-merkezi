@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { usePlatform } from "@/hooks/usePlatform";
 import { MobileLayout } from "@/components/MobileLayout";
@@ -22,7 +22,7 @@ const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogDetail = lazy(() => import("./pages/BlogDetail"));
-const BlogPost = lazy(() => import("./pages/BlogPost"));
+
 const DoctorList = lazy(() => import("./pages/DoctorList"));
 const DoctorProfile = lazy(() => import("./pages/DoctorProfile"));
 const BookAppointment = lazy(() => import("./pages/BookAppointment"));
@@ -115,6 +115,11 @@ const queryClient = new QueryClient({
   },
 });
 
+const LegacyBlogRedirect = () => {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={slug ? `/blog/${slug}` : "/blog"} replace />;
+};
+
 const AppContent = () => {
   const { isNative } = usePlatform();
 
@@ -149,7 +154,7 @@ const AppContent = () => {
               <Route path="/iletisim" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogDetail />} />
-              <Route path="/yazilar/:slug" element={<BlogPost />} />
+              <Route path="/yazilar/:slug" element={<LegacyBlogRedirect />} />
               <Route path="/uzmanlar" element={<DoctorList />} />
               <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />
               <Route path="/randevu-al/:specialtySlug/:doctorName" element={<BookAppointment />} />
@@ -176,6 +181,7 @@ const AppContent = () => {
               <Route path="/yorum-kurallari" element={<CommentRules />} />
               <Route path="/anasayfa" element={<Landing />} />
               <Route path="/giris-yap" element={<LoginPage />} />
+              <Route path="/:slug" element={<LegacyBlogRedirect />} />
               
               {/* Test Routes */}
               <Route path="/test/:testId" element={<TestInterface />} />
