@@ -22,7 +22,7 @@ const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogDetail = lazy(() => import("./pages/BlogDetail"));
-// const BlogPost = lazy(() => import("./pages/BlogPost"));
+
 const DoctorList = lazy(() => import("./pages/DoctorList"));
 const DoctorProfile = lazy(() => import("./pages/DoctorProfile"));
 const BookAppointment = lazy(() => import("./pages/BookAppointment"));
