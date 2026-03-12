@@ -115,6 +115,11 @@ const queryClient = new QueryClient({
   },
 });
 
+const LegacyBlogRedirect = () => {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={slug ? `/blog/${slug}` : "/blog"} replace />;
+};
+
 const AppContent = () => {
   const { isNative } = usePlatform();
 
