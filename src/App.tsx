@@ -181,6 +181,7 @@ const AppContent = () => {
               <Route path="/yorum-kurallari" element={<CommentRules />} />
               <Route path="/anasayfa" element={<Landing />} />
               <Route path="/giris-yap" element={<LoginPage />} />
+              <Route path="/:slug" element={<LegacyBlogRedirect />} />
               
               {/* Test Routes */}
               <Route path="/test/:testId" element={<TestInterface />} />
