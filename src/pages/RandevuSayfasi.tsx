@@ -254,21 +254,19 @@ const RandevuSayfasi = () => {
   const generateTimeSlots = () => {
     if (!selectedSpecialistData) return [];
     
-    const { getAvailableSlotsForDate } = require("@/utils/availabilityUtils");
     const dateStr = selectedDate 
-      ? (typeof selectedDate === 'string' ? selectedDate : selectedDate.toISOString().split('T')[0])
+      ? (typeof selectedDate === 'string' ? selectedDate : format(selectedDate, 'yyyy-MM-dd'))
       : '';
     
     if (dateStr && selectedSpecialistData.available_time_slots) {
       return getAvailableSlotsForDate(selectedSpecialistData.available_time_slots, dateStr);
     }
     
-    // Fallback: old format or no date selected
+    // Fallback
     if (Array.isArray(selectedSpecialistData.available_time_slots) && selectedSpecialistData.available_time_slots.length > 0) {
       return selectedSpecialistData.available_time_slots;
     }
     
-    // Default time slots
     return [
       "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
       "12:30", "13:00", "13:30", "14:00", "14:30", "15:00",
