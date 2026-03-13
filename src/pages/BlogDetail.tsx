@@ -59,6 +59,7 @@ const BlogDetail = () => {
   const { toast } = useToast();
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
