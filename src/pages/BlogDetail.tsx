@@ -487,6 +487,45 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
         </Card>
       </div>
 
+      {/* İlgili Yazılar / Related Posts */}
+      {relatedPosts.length > 0 && (
+        <div className="container mx-auto px-4 py-12 max-w-4xl">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">İlgili Yazılar</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {relatedPosts.map((post) => (
+              <Link key={post.id} to={`/blog/${post.slug}`} className="group">
+                <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white rounded-xl h-full">
+                  <CardContent className="p-0">
+                    {post.featured_image ? (
+                      <div className="relative overflow-hidden h-40">
+                        <img
+                          src={post.featured_image}
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <div className="text-4xl opacity-20">📝</div>
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <h3 className="font-bold text-sm mb-2 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {post.title}
+                      </h3>
+                      {post.excerpt && (
+                        <p className="text-gray-600 text-xs line-clamp-2">{post.excerpt}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );
