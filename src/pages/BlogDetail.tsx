@@ -24,11 +24,22 @@ interface BlogPost {
   author_name: string;
   author_type: string;
   published_at: string;
+  updated_at: string;
   word_count: number | null;
   specialist_id: string | null;
+  keywords: string | null;
   specialists?: {
     specialty: string;
   } | null;
+}
+
+interface RelatedPost {
+  id: string;
+  title: string;
+  slug: string;
+  featured_image: string | null;
+  excerpt: string | null;
+  published_at: string;
 }
 
 interface Specialist {
