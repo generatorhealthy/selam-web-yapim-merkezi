@@ -155,6 +155,7 @@ RewriteRule ^blog/(ozel-firsat|bu-aya-ozel)/?$ /$1 [R=301,L]
 # Blog posts use /blog/slug format - no redirect needed
 
 # Internal rewrite for blog posts - rewrite clean URLs to /blog/* internally
+RewriteCond %{REQUEST_URI} !^/blog/?$
 RewriteCond %{REQUEST_URI} !^/blog/
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/assets/
