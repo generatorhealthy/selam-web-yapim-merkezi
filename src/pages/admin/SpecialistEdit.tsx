@@ -28,6 +28,9 @@ interface Specialist {
   address?: string;
   certifications?: string;
   faq?: string;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string;
   online_consultation: boolean;
   face_to_face_consultation: boolean;
   is_active: boolean;
