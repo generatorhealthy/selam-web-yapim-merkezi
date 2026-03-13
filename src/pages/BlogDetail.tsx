@@ -24,11 +24,22 @@ interface BlogPost {
   author_name: string;
   author_type: string;
   published_at: string;
+  updated_at: string;
   word_count: number | null;
   specialist_id: string | null;
+  keywords: string | null;
   specialists?: {
     specialty: string;
   } | null;
+}
+
+interface RelatedPost {
+  id: string;
+  title: string;
+  slug: string;
+  featured_image: string | null;
+  excerpt: string | null;
+  published_at: string;
 }
 
 interface Specialist {
@@ -48,6 +59,7 @@ const BlogDetail = () => {
   const { toast } = useToast();
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -107,8 +119,10 @@ const BlogDetail = () => {
             author_name: blogPostData.author_name,
             author_type: blogPostData.author_type || 'editor',
             published_at: blogPostData.published_at || blogPostData.created_at,
+            updated_at: blogPostData.updated_at || blogPostData.published_at || blogPostData.created_at,
             word_count: blogPostData.word_count,
             specialist_id: blogPostData.specialist_id,
+            keywords: blogPostData.keywords || null,
             specialists: null,
           }
         : {
@@ -121,8 +135,10 @@ const BlogDetail = () => {
             author_name: legacyBlogData.author_name || 'Editör',
             author_type: (legacyBlogData.author_name === 'Admin' || legacyBlogData.author_name === 'admin') ? 'admin' : 'editor',
             published_at: legacyBlogData.updated_at || legacyBlogData.created_at,
+            updated_at: legacyBlogData.updated_at || legacyBlogData.created_at,
             word_count: legacyBlogData.content ? String(legacyBlogData.content).split(/\s+/).filter(Boolean).length : null,
             specialist_id: null,
+            keywords: legacyBlogData.tags ? (Array.isArray(legacyBlogData.tags) ? legacyBlogData.tags.join(', ') : legacyBlogData.tags) : null,
             specialists: null,
           };
 
@@ -138,6 +154,28 @@ const BlogDetail = () => {
       }
 
       setBlog(normalizedBlog);
+
+      // Fetch related posts (same table, random 3 posts excluding current)
+      const { data: relatedData } = await supabase
+        .from('blog_posts')
+        .select('id, title, slug, featured_image, excerpt, published_at')
+        .eq('status', 'published')
+        .neq('slug', slug)
+        .order('published_at', { ascending: false })
+        .limit(6);
+
+      if (relatedData && relatedData.length > 0) {
+        // Shuffle and pick 3
+        const shuffled = relatedData.sort(() => 0.5 - Math.random());
+        setRelatedPosts(shuffled.slice(0, 3).map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          featured_image: p.featured_image,
+          excerpt: p.excerpt,
+          published_at: p.published_at,
+        })));
+      }
 
       // specialist_id varsa uzman kartını göster
       if (normalizedBlog.specialist_id) {
@@ -252,7 +290,9 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
         
         {/* Article specific */}
         <meta property="article:published_time" content={blog.published_at} />
+        <meta property="article:modified_time" content={blog.updated_at} />
         <meta property="article:author" content={blog.author_name} />
+        {blog.keywords && <meta name="keywords" content={blog.keywords} />}
         
         {/* Canonical URL */}
         <link rel="canonical" href={`https://doktorumol.com.tr/blog/${blog.slug}`} />
@@ -262,7 +302,7 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
           <link rel="preload" as="image" href={blog.featured_image} />
         )}
         
-        {/* JSON-LD Structured Data */}
+        {/* JSON-LD Article Structured Data */}
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -271,6 +311,8 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
             "description": ogDescription,
             "image": ogImage,
             "datePublished": blog.published_at,
+            "dateModified": blog.updated_at,
+            "wordCount": blog.word_count || undefined,
             "author": {
               "@type": "Person",
               "name": blog.author_name
@@ -287,6 +329,19 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
               "@type": "WebPage",
               "@id": `https://doktorumol.com.tr/blog/${blog.slug}`
             }
+          })}
+        </script>
+        
+        {/* JSON-LD BreadcrumbList */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Ana Sayfa", "item": "https://doktorumol.com.tr/" },
+              { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://doktorumol.com.tr/blog" },
+              { "@type": "ListItem", "position": 3, "name": blog.title, "item": `https://doktorumol.com.tr/blog/${blog.slug}` }
+            ]
           })}
         </script>
       </Helmet>
@@ -431,6 +486,45 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
           </CardContent>
         </Card>
       </div>
+
+      {/* İlgili Yazılar / Related Posts */}
+      {relatedPosts.length > 0 && (
+        <div className="container mx-auto px-4 py-12 max-w-4xl">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">İlgili Yazılar</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {relatedPosts.map((post) => (
+              <Link key={post.id} to={`/blog/${post.slug}`} className="group">
+                <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white rounded-xl h-full">
+                  <CardContent className="p-0">
+                    {post.featured_image ? (
+                      <div className="relative overflow-hidden h-40">
+                        <img
+                          src={post.featured_image}
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <div className="text-4xl opacity-20">📝</div>
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <h3 className="font-bold text-sm mb-2 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {post.title}
+                      </h3>
+                      {post.excerpt && (
+                        <p className="text-gray-600 text-xs line-clamp-2">{post.excerpt}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
