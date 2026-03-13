@@ -561,6 +561,51 @@ const SpecialistEdit = () => {
             </CardContent>
           </Card>
 
+          {/* SEO Bilgileri */}
+          <Card>
+            <CardHeader>
+              <CardTitle>SEO Bilgileri</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="seo_title">SEO Title (max 65 karakter)</Label>
+                <Input
+                  id="seo_title"
+                  value={specialist?.seo_title || ''}
+                  onChange={(e) => handleInputChange('seo_title', e.target.value)}
+                  placeholder="SEO başlık..."
+                  maxLength={65}
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  {(specialist?.seo_title || '').length}/65 karakter
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="seo_description">SEO Description (max 145 karakter)</Label>
+                <Textarea
+                  id="seo_description"
+                  value={specialist?.seo_description || ''}
+                  onChange={(e) => handleInputChange('seo_description', e.target.value)}
+                  placeholder="SEO açıklama..."
+                  rows={2}
+                  maxLength={145}
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  {(specialist?.seo_description || '').length}/145 karakter
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="seo_keywords">SEO Keywords (virgül ile ayırın, min 3)</Label>
+                <Input
+                  id="seo_keywords"
+                  value={specialist?.seo_keywords || ''}
+                  onChange={(e) => handleInputChange('seo_keywords', e.target.value)}
+                  placeholder="psikolog, istanbul, online danışmanlık..."
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* SSS Bölümü */}
           <FAQSection 
             faqItems={faqItems}
