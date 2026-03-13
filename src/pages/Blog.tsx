@@ -36,7 +36,7 @@ const Blog = () => {
   const [page, setPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const POSTS_PER_PAGE = 4;
+  const POSTS_PER_PAGE = 12;
 
   useEffect(() => {
     fetchBlogs(0, true);
