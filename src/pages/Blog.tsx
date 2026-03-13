@@ -545,10 +545,12 @@ const Blog = () => {
                     <CardContent className="p-0">
                       {blog.featured_image ? (
                         <div className="relative overflow-hidden h-48">
-                          <img
+                         <img
                             src={blog.featured_image}
                             alt={blog.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </div>
                       ) : (

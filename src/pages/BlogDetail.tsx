@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Clock, User, Share2, Facebook, Twitter, Linkedin } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, Share2, Facebook, Twitter, Linkedin, MessageCircle, List } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +54,59 @@ interface Specialist {
   face_to_face_consultation: boolean;
 }
 
+interface TocItem {
+  id: string;
+  text: string;
+  level: number;
+}
+
+// Extract headings from HTML content for TOC
+const extractHeadings = (html: string): TocItem[] => {
+  const headingRegex = /<h([2-3])[^>]*>(.*?)<\/h[2-3]>/gi;
+  const headings: TocItem[] = [];
+  let match;
+  while ((match = headingRegex.exec(html)) !== null) {
+    const text = match[2].replace(/<[^>]*>/g, '').trim();
+    if (text) {
+      const id = text
+        .toLowerCase()
+        .replace(/[^a-z0-9\u00e7\u011f\u0131\u00f6\u015f\u00fc\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .slice(0, 60);
+      headings.push({ id, text, level: parseInt(match[1]) });
+    }
+  }
+  return headings;
+};
+
+// Extract FAQ pairs from content (H2/H3 followed by paragraph)
+const extractFaqFromContent = (html: string): { question: string; answer: string }[] => {
+  const faqRegex = /<h[2-3][^>]*>(.*?)<\/h[2-3]>\s*(?:<[^h][^>]*>)*([\s\S]*?)(?=<h[2-3]|$)/gi;
+  const faqs: { question: string; answer: string }[] = [];
+  let match;
+  while ((match = faqRegex.exec(html)) !== null) {
+    const question = match[1].replace(/<[^>]*>/g, '').trim();
+    const answer = match[2].replace(/<[^>]*>/g, '').trim();
+    if (question && answer && answer.length > 20 && question.length < 200) {
+      faqs.push({ question, answer: answer.slice(0, 500) });
+    }
+  }
+  return faqs.slice(0, 10); // Max 10 FAQ items
+};
+
+// Add IDs to headings in HTML for anchor links
+const addHeadingIds = (html: string): string => {
+  return html.replace(/<h([2-3])([^>]*)>(.*?)<\/h[2-3]>/gi, (match, level, attrs, content) => {
+    const text = content.replace(/<[^>]*>/g, '').trim();
+    const id = text
+      .toLowerCase()
+      .replace(/[^a-z0-9\u00e7\u011f\u0131\u00f6\u015f\u00fc\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .slice(0, 60);
+    return `<h${level}${attrs} id="${id}">${content}</h${level}>`;
+  });
+};
+
 const BlogDetail = () => {
   const { slug } = useParams();
   const { toast } = useToast();
@@ -61,6 +114,7 @@ const BlogDetail = () => {
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tocOpen, setTocOpen] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -207,7 +261,12 @@ const BlogDetail = () => {
     return `${minutes} dakika`;
   };
 
-  const shareUrl = window.location.href;
+  // Memoized TOC and FAQ extraction
+  const tocItems = useMemo(() => blog ? extractHeadings(blog.content) : [], [blog]);
+  const faqItems = useMemo(() => blog ? extractFaqFromContent(blog.content) : [], [blog]);
+  const processedContent = useMemo(() => blog ? addHeadingIds(blog.content.replace(/\n/g, '<br>')) : '', [blog]);
+
+  const shareUrl = typeof window !== 'undefined' ? `https://doktorumol.com.tr/blog/${blog?.slug || ''}` : '';
   const shareTitle = blog?.title || "";
   const shareDescription = blog?.excerpt || "";
 
@@ -223,6 +282,9 @@ const BlogDetail = () => {
         break;
       case "linkedin":
         url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case "whatsapp":
+        url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareTitle + ' ' + shareUrl)}`;
         break;
       default:
         return;
@@ -264,7 +326,7 @@ const BlogDetail = () => {
     );
   }
 
-const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
+  const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
   const ogDescription = blog.excerpt || blog.title;
 
   return (
@@ -344,6 +406,24 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
             ]
           })}
         </script>
+
+        {/* JSON-LD FAQPage - extracted from content headings */}
+        {faqItems.length >= 2 && (
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": faqItems.map(faq => ({
+                "@type": "Question",
+                "name": faq.question,
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": faq.answer
+                }
+              }))
+            })}
+          </script>
+        )}
       </Helmet>
       
       <HorizontalNavigation />
@@ -407,19 +487,60 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>{getReadTime(blog.word_count)}</span>
+                  <span>{getReadTime(blog.word_count)} okuma</span>
                 </div>
+                {blog.word_count && (
+                  <div className="text-gray-400">
+                    {blog.word_count.toLocaleString('tr-TR')} kelime
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Table of Contents */}
+        {tocItems.length >= 3 && (
+          <Card className="mb-8 border-blue-100 bg-blue-50/30">
+            <CardContent className="p-6">
+              <button 
+                onClick={() => setTocOpen(!tocOpen)}
+                className="flex items-center gap-2 w-full text-left font-semibold text-gray-900 text-lg"
+              >
+                <List className="w-5 h-5 text-blue-600" />
+                İçindekiler
+                <span className="ml-auto text-sm text-gray-500">{tocOpen ? '▲' : '▼'}</span>
+              </button>
+              {tocOpen && (
+                <nav className="mt-4 space-y-1" aria-label="İçindekiler">
+                  {tocItems.map((item, index) => (
+                    <a
+                      key={index}
+                      href={`#${item.id}`}
+                      className={`block text-blue-700 hover:text-blue-900 hover:underline transition-colors ${
+                        item.level === 3 ? 'pl-4 text-sm' : 'text-base font-medium'
+                      }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const el = document.getElementById(item.id);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                    >
+                      {item.text}
+                    </a>
+                  ))}
+                </nav>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Blog Content */}
         <Card className="mb-8">
           <CardContent className="p-8">
             <SafeHtmlContent 
-              content={blog.content.replace(/\n/g, '<br>')}
-              className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900"
+              content={processedContent}
+              className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-headings:scroll-mt-20"
             />
             
             {/* Specialist Card - Show when blog has associated specialist */}
@@ -450,9 +571,18 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
                   <Share2 className="w-4 h-4" />
-                  Sosyal Medyada Paylaş:
+                  Paylaş:
                 </span>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleShare('whatsapp')}
+                    className="text-green-600 hover:bg-green-50"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-1" />
+                    WhatsApp
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
