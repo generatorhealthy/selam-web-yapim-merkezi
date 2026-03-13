@@ -155,6 +155,28 @@ const BlogDetail = () => {
 
       setBlog(normalizedBlog);
 
+      // Fetch related posts (same table, random 3 posts excluding current)
+      const { data: relatedData } = await supabase
+        .from('blog_posts')
+        .select('id, title, slug, featured_image, excerpt, published_at')
+        .eq('status', 'published')
+        .neq('slug', slug)
+        .order('published_at', { ascending: false })
+        .limit(6);
+
+      if (relatedData && relatedData.length > 0) {
+        // Shuffle and pick 3
+        const shuffled = relatedData.sort(() => 0.5 - Math.random());
+        setRelatedPosts(shuffled.slice(0, 3).map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          featured_image: p.featured_image,
+          excerpt: p.excerpt,
+          published_at: p.published_at,
+        })));
+      }
+
       // specialist_id varsa uzman kartını göster
       if (normalizedBlog.specialist_id) {
         const { data: specialistData } = await supabase
