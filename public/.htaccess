@@ -148,6 +148,9 @@ RewriteRule ^uzmanlik-alanlari/doktor/([^/]+)/?$ /$1 [R=301,L]
 # Redirect doctor names to specialty-based URLs
 RewriteRule ^ayse-dolek-kerbel/?$ /aile-danismani/ayse-dolek-kerbel [R=301,L]
 
+# Redirect campaign pages that should never live under /blog/
+RewriteRule ^blog/(ozel-firsat|bu-aya-ozel)/?$ /$1 [R=301,L]
+
 # Redirect /blog/* URLs to /* (remove /blog from URL)
 RewriteCond %{THE_REQUEST} \s/blog/([^\s?]+)
 RewriteRule ^blog/(.+)$ /$1 [R=301,L]
