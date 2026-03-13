@@ -39,6 +39,9 @@ interface Specialist {
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
   faq?: string;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string;
 }
 
 interface BlogPost {
