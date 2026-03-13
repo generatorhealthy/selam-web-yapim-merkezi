@@ -151,9 +151,8 @@ RewriteRule ^ayse-dolek-kerbel/?$ /aile-danismani/ayse-dolek-kerbel [R=301,L]
 # Redirect campaign pages that should never live under /blog/
 RewriteRule ^blog/(ozel-firsat|bu-aya-ozel)/?$ /$1 [R=301,L]
 
-# Redirect /blog/* URLs to /* (remove /blog from URL)
-RewriteCond %{THE_REQUEST} \s/blog/([^\s?]+)
-RewriteRule ^blog/(.+)$ /$1 [R=301,L]
+# Blog listing page - /blog must stay as /blog (not redirect)
+# Blog posts use /blog/slug format - no redirect needed
 
 # Internal rewrite for blog posts - rewrite clean URLs to /blog/* internally
 RewriteCond %{REQUEST_URI} !^/blog/
