@@ -476,30 +476,30 @@ const BookAppointment = () => {
                         Randevu Saati *
                       </Label>
                       <div className="grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto p-2 border rounded-xl">
-                        {(specialist?.available_time_slots && specialist.available_time_slots.length > 0 
-                          ? specialist.available_time_slots 
-                          : [
-                              "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
-                              "12:30", "13:00", "13:30", "14:00", "14:30", "15:00",
-                              "15:30", "16:00", "16:30", "17:00", "17:30", "18:00",
-                              "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"
-                            ]
-                        ).map((time) => (
-                          <button
-                            key={time}
-                            type="button"
-                            onClick={() => handleInputChange('appointmentTime', time)}
-                            className={cn(
-                              "px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all duration-200",
-                              formData.appointmentTime === time
-                                ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                                : "bg-background border-border hover:border-primary/50 hover:bg-primary/5"
-                            )}
-                          >
-                            <Clock className="w-3 h-3 inline mr-1" />
-                            {time}
-                          </button>
-                        ))}
+                        {(() => {
+                          const dateStr = formData.appointmentDate 
+                            ? (typeof formData.appointmentDate === 'string' ? formData.appointmentDate : format(new Date(formData.appointmentDate), 'yyyy-MM-dd'))
+                            : '';
+                          const slots = dateStr && specialist?.available_time_slots
+                            ? getAvailableSlotsForDate(specialist.available_time_slots, dateStr)
+                            : DEFAULT_TIME_SLOTS;
+                          return slots.map((time: string) => (
+                            <button
+                              key={time}
+                              type="button"
+                              onClick={() => handleInputChange('appointmentTime', time)}
+                              className={cn(
+                                "px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all duration-200",
+                                formData.appointmentTime === time
+                                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                  : "bg-background border-border hover:border-primary/50 hover:bg-primary/5"
+                              )}
+                            >
+                              <Clock className="w-3 h-3 inline mr-1" />
+                              {time}
+                            </button>
+                          ));
+                        })()}
                       </div>
                     </div>
                   </div>
