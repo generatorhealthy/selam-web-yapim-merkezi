@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getAvailableSlotsForDate } from "@/utils/availabilityUtils";
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +28,7 @@ interface Specialist {
   working_hours_start: string;
   working_hours_end: string;
   available_days: string[];
-  available_time_slots?: string[];
+  available_time_slots?: any;
   profile_picture?: string;
   bio?: string;
 }
@@ -249,16 +250,23 @@ const RandevuSayfasi = () => {
     ...(selectedSpecialistData.online_consultation ? ['Online'] : [])
   ] : [];
 
-  // Generate time slots based on specialist's availability
+  // Generate time slots based on specialist's availability and selected date
   const generateTimeSlots = () => {
     if (!selectedSpecialistData) return [];
     
-    // Use specialist's custom time slots if available, otherwise use default
-    if (selectedSpecialistData.available_time_slots && selectedSpecialistData.available_time_slots.length > 0) {
+    const dateStr = selectedDate 
+      ? (typeof selectedDate === 'string' ? selectedDate : format(selectedDate, 'yyyy-MM-dd'))
+      : '';
+    
+    if (dateStr && selectedSpecialistData.available_time_slots) {
+      return getAvailableSlotsForDate(selectedSpecialistData.available_time_slots, dateStr);
+    }
+    
+    // Fallback
+    if (Array.isArray(selectedSpecialistData.available_time_slots) && selectedSpecialistData.available_time_slots.length > 0) {
       return selectedSpecialistData.available_time_slots;
     }
     
-    // Default time slots from 09:30 to 21:00 in 30-minute intervals
     return [
       "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
       "12:30", "13:00", "13:30", "14:00", "14:30", "15:00",

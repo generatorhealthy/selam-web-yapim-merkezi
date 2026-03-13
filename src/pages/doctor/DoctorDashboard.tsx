@@ -1116,21 +1116,20 @@ const DoctorDashboard = () => {
                 </div>
               </div>
 
-              {/* Time Slot Management Section */}
-              <div className="p-6 border-b bg-gradient-to-br from-primary/5 to-primary/10">
+              {/* Calendar Availability Management */}
+              <div className="p-6 border-b">
                 <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
                     <Clock className="w-5 h-5 text-primary" />
-                    Müsait Randevu Saatleri
+                    Müsaitlik Takvimi
                   </h3>
-                  <p className="text-sm text-gray-600">
-                    Hastalarınızın randevu alabileceği saatleri seçin. Seçili saatler yeşil, kapalı saatler gri görünür.
+                  <p className="text-sm text-muted-foreground">
+                    Aylık takvim üzerinden müsaitlik durumunuzu yönetin. Güne tıklayarak saat dilimlerini özelleştirin, çift tıklayarak günü kapatın.
                   </p>
                 </div>
                 <TimeSlotManager 
                   doctorId={doctor.id} 
                   onUpdate={async () => {
-                    // Refresh doctor data
                     const { data: updatedDoctor } = await supabase
                       .from('specialists')
                       .select('*')
