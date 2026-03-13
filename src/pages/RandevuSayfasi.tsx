@@ -27,7 +27,7 @@ interface Specialist {
   working_hours_start: string;
   working_hours_end: string;
   available_days: string[];
-  available_time_slots?: string[];
+  available_time_slots?: any;
   profile_picture?: string;
   bio?: string;
 }
