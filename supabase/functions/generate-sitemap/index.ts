@@ -18,16 +18,18 @@ interface SpecialistEntry {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Check if XML format requested (for direct sitemap serving)
+    const url = new URL(req.url)
+    const format = url.searchParams.get('format')
 
     console.log('Starting sitemap generation...')
 
@@ -39,7 +41,7 @@ Deno.serve(async (req) => {
         .eq('status', 'published'),
       supabase
         .from('blog_posts')
-        .select('slug, published_at, created_at')
+        .select('slug, published_at, created_at, updated_at')
         .eq('status', 'published')
     ])
 
@@ -61,7 +63,6 @@ Deno.serve(async (req) => {
     // Combine and deduplicate blog entries
     const blogEntries = new Map<string, BlogEntry>()
     
-    // Add from blogs table
     ;(blogsRes.data || []).forEach((blog: any) => {
       blogEntries.set(blog.slug, {
         slug: blog.slug,
@@ -70,20 +71,18 @@ Deno.serve(async (req) => {
       })
     })
 
-    // Add from blog_posts table (merge if exists)
     ;(blogPostsRes.data || []).forEach((post: any) => {
       const existing = blogEntries.get(post.slug)
       if (!existing) {
         blogEntries.set(post.slug, {
           slug: post.slug,
-          updated_at: post.published_at || post.created_at,
+          updated_at: post.updated_at || post.published_at || post.created_at,
           created_at: post.published_at || post.created_at
         })
       } else {
-        // Update with latest information
         blogEntries.set(post.slug, {
           ...existing,
-          updated_at: post.published_at || existing.updated_at,
+          updated_at: post.updated_at || post.published_at || existing.updated_at,
         })
       }
     })
@@ -93,7 +92,6 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${blogs.length} blog posts and ${specialists.length} specialists`)
 
-    // Generate Turkish slug helper
     const generateSlug = (text: string): string => {
       return text.toLowerCase()
         .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
@@ -103,7 +101,6 @@ Deno.serve(async (req) => {
 
     const currentDate = new Date().toISOString().split('T')[0]
 
-    // Generate sitemap XML
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Ana Sayfalar -->
@@ -128,7 +125,7 @@ Deno.serve(async (req) => {
   <url>
     <loc>https://doktorumol.com.tr/blog</loc>
     <lastmod>${currentDate}</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -139,6 +136,12 @@ Deno.serve(async (req) => {
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlar</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/doktor-listesi</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -164,7 +167,19 @@ Deno.serve(async (req) => {
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/uzmanlik/diyetisyen</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/uzmanlik/egitim-danismanligi</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/uzmanlik/fizyoterapist</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -248,9 +263,21 @@ ${specialists.map((specialist: SpecialistEntry) => {
   </url>
 </urlset>`
 
-    console.log('Generated sitemap, uploading to storage...')
+    console.log('Generated sitemap with', blogs.length, 'blogs and', specialists.length, 'specialists')
 
-    // Upload to storage bucket
+    // If XML format requested, return XML directly (for crawlers)
+    if (format === 'xml') {
+      return new Response(sitemap, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        },
+        status: 200
+      })
+    }
+
+    // Upload to storage bucket for backup
     const { error: uploadError } = await supabase.storage
       .from('legal-documents')
       .upload('sitemap.xml', new Blob([sitemap], { type: 'application/xml' }), {
@@ -260,16 +287,12 @@ ${specialists.map((specialist: SpecialistEntry) => {
 
     if (uploadError) {
       console.error('Upload error:', uploadError)
-      throw uploadError
     }
 
-    console.log('Sitemap uploaded successfully')
-
-    // Background task to ping Google to update sitemap
+    // Ping Google about sitemap update
     EdgeRuntime.waitUntil(
       (async () => {
         try {
-          // Ping Google Search Console about sitemap update
           const pingUrl = `https://www.google.com/ping?sitemap=https://doktorumol.com.tr/sitemap.xml`
           const response = await fetch(pingUrl)
           console.log('Google ping response:', response.status)
@@ -281,11 +304,12 @@ ${specialists.map((specialist: SpecialistEntry) => {
 
     return new Response(
       JSON.stringify({
-        message: 'Sitemap generated and uploaded successfully',
+        message: 'Sitemap generated successfully',
+        sitemapXml: sitemap,
         stats: {
           blogs: blogs.length,
           specialists: specialists.length,
-          totalUrls: blogs.length + specialists.length + 13 // 1 per blog + specialists + static pages
+          totalUrls: blogs.length + specialists.length + 15
         }
       }),
       {
