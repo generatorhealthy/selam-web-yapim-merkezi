@@ -117,9 +117,11 @@ AddType text/html .html
 # Dizin görüntülemeyi engelle
 Options -Indexes
 
-# Sitemap ve robots.txt doğrudan sunulsun - blog redirect'ten önce
-RewriteRule ^sitemap\.xml$ - [L]
+# Robots.txt doğrudan sunulsun
 RewriteRule ^robots\.txt$ - [L]
+
+# Sitemap.xml dinamik olarak edge function'dan sunulsun (her zaman güncel)
+RewriteRule ^sitemap\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/generate-sitemap?format=xml [R=302,L]
 
 # Specific blog post redirects
 RewriteRule ^uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/?$ /blog/uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur [R=301,L]
