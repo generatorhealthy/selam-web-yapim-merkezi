@@ -297,10 +297,14 @@ const BlogDetail = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <HorizontalNavigation />
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Blog yazısı yükleniyor...</p>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="bg-white rounded-lg p-0 mb-8">
+            <div style={{ height: '320px', background: '#f0f0f0', borderRadius: '8px 8px 0 0' }}></div>
+            <div style={{ padding: '2rem' }}>
+              <div style={{ height: '2rem', background: '#f0f0f0', borderRadius: '4px', marginBottom: '1rem', width: '60%' }}></div>
+              <div style={{ height: '1rem', background: '#f0f0f0', borderRadius: '4px', marginBottom: '0.5rem' }}></div>
+              <div style={{ height: '1rem', background: '#f0f0f0', borderRadius: '4px', width: '80%' }}></div>
+            </div>
           </div>
         </div>
         <Footer />
