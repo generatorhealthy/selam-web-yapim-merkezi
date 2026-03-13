@@ -144,9 +144,9 @@
       }
       
       if ('requestIdleCallback' in window) {
-        requestIdleCallback(function() { setTimeout(loadGtag, 3000); }, { timeout: 8000 });
+        requestIdleCallback(function() { setTimeout(loadGtag, 5000); }, { timeout: 12000 });
       } else {
-        setTimeout(loadGtag, 5000);
+        setTimeout(loadGtag, 8000);
       }
     </script>
   </head>

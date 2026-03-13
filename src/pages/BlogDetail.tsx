@@ -582,7 +582,7 @@ const BlogDetail = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleShare('whatsapp')}
-                    className="text-green-600 hover:bg-green-50"
+                    className="text-green-700 border-green-700 hover:bg-green-50"
                   >
                     <MessageCircle className="w-4 h-4 mr-1" />
                     WhatsApp
@@ -591,7 +591,7 @@ const BlogDetail = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleShare('facebook')}
-                    className="text-blue-600 hover:bg-blue-50"
+                    className="text-blue-700 border-blue-700 hover:bg-blue-50"
                   >
                     <Facebook className="w-4 h-4 mr-1" />
                     Facebook
@@ -600,7 +600,7 @@ const BlogDetail = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleShare('twitter')}
-                    className="text-blue-400 hover:bg-blue-50"
+                    className="text-gray-800 border-gray-800 hover:bg-gray-50"
                   >
                     <Twitter className="w-4 h-4 mr-1" />
                     Twitter
@@ -609,7 +609,7 @@ const BlogDetail = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleShare('linkedin')}
-                    className="text-blue-700 hover:bg-blue-50"
+                    className="text-blue-800 border-blue-800 hover:bg-blue-50"
                   >
                     <Linkedin className="w-4 h-4 mr-1" />
                     LinkedIn
