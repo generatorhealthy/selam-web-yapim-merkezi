@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,9 @@ interface Specialist {
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
   faq?: string;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string;
 }
 
 interface BlogPost {
@@ -352,8 +356,24 @@ const DoctorProfile = () => {
   const numericRating = typeof specialist.rating === 'string' ? parseFloat(specialist.rating) : (specialist.rating || 4.8);
   const specialtySlugForLinks = createSpecialtySlug(specialist?.specialty || '');
 
+  const pageTitle = specialist.seo_title || `${specialist.name} - ${specialist.specialty} | Doktorum Ol`;
+  const pageDescription = specialist.seo_description || `${specialist.name}, ${specialist.city} bölgesinde ${specialist.specialty} alanında hizmet veren uzman. Online ve yüz yüze danışmanlık.`;
+  const pageKeywords = specialist.seo_keywords || `${specialist.name}, ${specialist.specialty}, ${specialist.city}, online danışmanlık`;
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta name="keywords" content={pageKeywords} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        {specialist.profile_picture && <meta property="og:image" content={specialist.profile_picture} />}
+        <meta property="og:type" content="profile" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
       <HorizontalNavigation />
       
       <div className="container mx-auto px-4 py-6">
