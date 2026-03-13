@@ -309,6 +309,33 @@ const Blog = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Helmet>
+        <title>Blog - Psikoloji ve Danışmanlık Yazıları | Doktorum Ol</title>
+        <meta name="description" content="Psikoloji, aile danışmanlığı, diyetisyen ve fizyoterapi alanlarında uzman görüşleri, güncel makaleler ve faydalı bilgiler. 1000+ uzman yazısı." />
+        <link rel="canonical" href="https://doktorumol.com.tr/blog" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://doktorumol.com.tr/blog" />
+        <meta property="og:title" content="Blog - Psikoloji ve Danışmanlık Yazıları | Doktorum Ol" />
+        <meta property="og:description" content="Psikoloji, aile danışmanlığı, diyetisyen ve fizyoterapi alanlarında uzman görüşleri, güncel makaleler ve faydalı bilgiler." />
+        <meta property="og:image" content="https://doktorumol.com.tr/logo.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Blog - Psikoloji ve Danışmanlık Yazıları | Doktorum Ol" />
+        <meta name="twitter:description" content="Psikoloji, aile danışmanlığı, diyetisyen ve fizyoterapi alanlarında uzman görüşleri, güncel makaleler ve faydalı bilgiler." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "Doktorum Ol Blog",
+            "description": "Psikoloji ve danışmanlık alanlarında uzman yazıları",
+            "url": "https://doktorumol.com.tr/blog",
+            "publisher": {
+              "@type": "Organization",
+              "name": "Doktorum Ol",
+              "logo": { "@type": "ImageObject", "url": "https://doktorumol.com.tr/logo.png" }
+            }
+          })}
+        </script>
+      </Helmet>
       <HorizontalNavigation />
       
       {/* Clean Simple Header */}
