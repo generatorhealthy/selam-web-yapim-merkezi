@@ -494,7 +494,7 @@ const BlogDetail = () => {
                   <span>{getReadTime(blog.word_count)} okuma</span>
                 </div>
                 {blog.word_count && (
-                  <div className="text-gray-400">
+                  <div className="text-muted-foreground">
                     {blog.word_count.toLocaleString('tr-TR')} kelime
                   </div>
                 )}
