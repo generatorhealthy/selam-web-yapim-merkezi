@@ -255,7 +255,10 @@ const SpecialistEdit = () => {
           online_consultation: specialist.online_consultation,
           face_to_face_consultation: specialist.face_to_face_consultation,
           is_active: specialist.is_active,
-          profile_picture: specialist.profile_picture
+          profile_picture: specialist.profile_picture,
+          seo_title: specialist.seo_title || null,
+          seo_description: specialist.seo_description || null,
+          seo_keywords: specialist.seo_keywords || null
         })
         .eq('id', specialist.id)
         .select();
