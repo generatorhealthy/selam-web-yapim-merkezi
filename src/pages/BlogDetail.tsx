@@ -290,7 +290,9 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
         
         {/* Article specific */}
         <meta property="article:published_time" content={blog.published_at} />
+        <meta property="article:modified_time" content={blog.updated_at} />
         <meta property="article:author" content={blog.author_name} />
+        {blog.keywords && <meta name="keywords" content={blog.keywords} />}
         
         {/* Canonical URL */}
         <link rel="canonical" href={`https://doktorumol.com.tr/blog/${blog.slug}`} />
@@ -300,7 +302,7 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
           <link rel="preload" as="image" href={blog.featured_image} />
         )}
         
-        {/* JSON-LD Structured Data */}
+        {/* JSON-LD Article Structured Data */}
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -309,6 +311,8 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
             "description": ogDescription,
             "image": ogImage,
             "datePublished": blog.published_at,
+            "dateModified": blog.updated_at,
+            "wordCount": blog.word_count || undefined,
             "author": {
               "@type": "Person",
               "name": blog.author_name
@@ -325,6 +329,19 @@ const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
               "@type": "WebPage",
               "@id": `https://doktorumol.com.tr/blog/${blog.slug}`
             }
+          })}
+        </script>
+        
+        {/* JSON-LD BreadcrumbList */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Ana Sayfa", "item": "https://doktorumol.com.tr/" },
+              { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://doktorumol.com.tr/blog" },
+              { "@type": "ListItem", "position": 3, "name": blog.title, "item": `https://doktorumol.com.tr/blog/${blog.slug}` }
+            ]
           })}
         </script>
       </Helmet>
