@@ -70,18 +70,26 @@
         isolation: isolate;
       }
       
-      /* Loading skeleton for better perceived performance */
+      /* Loading skeleton - composited animation for performance */
       .loading-skeleton {
-        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-        background-size: 200% 100%;
-        animation: loading 1.5s infinite;
+        background: #f0f0f0;
         border-radius: 8px;
         contain: layout paint;
+        position: relative;
+        overflow: hidden;
+      }
+      .loading-skeleton::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent 0%, #e0e0e0 50%, transparent 100%);
+        animation: loading 1.5s infinite;
+        will-change: transform;
       }
       
       @keyframes loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
       }
       
       /* Hide skeleton when app loads */
@@ -136,9 +144,9 @@
       }
       
       if ('requestIdleCallback' in window) {
-        requestIdleCallback(function() { setTimeout(loadGtag, 3000); }, { timeout: 8000 });
+        requestIdleCallback(function() { setTimeout(loadGtag, 5000); }, { timeout: 12000 });
       } else {
-        setTimeout(loadGtag, 5000);
+        setTimeout(loadGtag, 8000);
       }
     </script>
   </head>
