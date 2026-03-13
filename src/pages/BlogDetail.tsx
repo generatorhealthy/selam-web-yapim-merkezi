@@ -119,8 +119,10 @@ const BlogDetail = () => {
             author_name: blogPostData.author_name,
             author_type: blogPostData.author_type || 'editor',
             published_at: blogPostData.published_at || blogPostData.created_at,
+            updated_at: blogPostData.updated_at || blogPostData.published_at || blogPostData.created_at,
             word_count: blogPostData.word_count,
             specialist_id: blogPostData.specialist_id,
+            keywords: blogPostData.keywords || null,
             specialists: null,
           }
         : {
@@ -133,8 +135,10 @@ const BlogDetail = () => {
             author_name: legacyBlogData.author_name || 'Editör',
             author_type: (legacyBlogData.author_name === 'Admin' || legacyBlogData.author_name === 'admin') ? 'admin' : 'editor',
             published_at: legacyBlogData.updated_at || legacyBlogData.created_at,
+            updated_at: legacyBlogData.updated_at || legacyBlogData.created_at,
             word_count: legacyBlogData.content ? String(legacyBlogData.content).split(/\s+/).filter(Boolean).length : null,
             specialist_id: null,
+            keywords: legacyBlogData.tags ? (Array.isArray(legacyBlogData.tags) ? legacyBlogData.tags.join(', ') : legacyBlogData.tags) : null,
             specialists: null,
           };
 
