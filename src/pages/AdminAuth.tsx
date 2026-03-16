@@ -45,7 +45,7 @@ const AdminAuth = () => {
       
       try {
         const { data, error } = await withTimeout(
-          supabase.rpc('check_admin_login_block', {
+          async () => await supabase.rpc('check_admin_login_block', {
             p_email: loginData.email
           }),
           5000,
