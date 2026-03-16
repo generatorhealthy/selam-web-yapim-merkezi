@@ -105,20 +105,27 @@ const AdminAuth = () => {
     setIsLoading(true);
 
     try {
-      // Supabase Auth ile giriş yap
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: loginData.email,
-        password: loginData.password,
-      });
+      const { data: authData, error: authError } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email: loginData.email,
+          password: loginData.password,
+        }),
+        10000,
+        'Giriş isteği zaman aşımına uğradı'
+      );
 
       if (authError) {
         console.error('Giriş hatası:', authError);
         
-        // Record failed login attempt
-        const { data: blockData } = await supabase.rpc('record_failed_admin_login', {
-          p_email: loginData.email,
-          p_ip_address: null // IP tracking optional
-        });
+        try {
+          const { data: blockData } = await withTimeout(
+            supabase.rpc('record_failed_admin_login', {
+              p_email: loginData.email,
+              p_ip_address: null
+            }),
+            5000,
+            'Başarısız giriş kaydı zaman aşımına uğradı'
+          );
         
         if (blockData && blockData.length > 0) {
           const result = blockData[0];
