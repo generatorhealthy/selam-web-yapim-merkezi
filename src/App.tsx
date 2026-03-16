@@ -230,9 +230,20 @@ const AppContent = () => {
               <Route path="/divan_paneli/cancellation-fees" element={<CancellationFees />} />
               <Route path="/divan_paneli/admin-activity-logs" element={<AdminActivityLogs />} />
                 
+              {/* Test Routes */}
+              <Route path="/test/:testId" element={<TestInterface />} />
+              <Route path="/test/:testId/:specialistId" element={<TestInterface />} />
+              <Route path="/test-al/:testId" element={<TestTaking />} />
+              <Route path="/test-al/:testId/:specialistId" element={<TestTaking />} />
+              <Route path="/test-sonuc/:testId/:specialistId" element={<TestResult />} />
+              <Route path="/:specialtySlug/:specialistName/test/:testId" element={<TestInterface />} />
+              <Route path="/:specialtySlug/:specialistName" element={<DoctorProfile />} />
               
               {/* Doctor Routes */}
               <Route path="/doktor-paneli" element={<DoctorDashboard />} />
+              
+              {/* Dynamic catch-all - MUST be last */}
+              <Route path="/:slug" element={<LegacyBlogRedirect />} />
               
               <Route path="*" element={<NotFound />} />
             </>
