@@ -184,18 +184,8 @@ const AppContent = () => {
               <Route path="/yorum-kurallari" element={<CommentRules />} />
               <Route path="/anasayfa" element={<Landing />} />
               <Route path="/giris-yap" element={<LoginPage />} />
-              <Route path="/:slug" element={<LegacyBlogRedirect />} />
               
-              {/* Test Routes */}
-              <Route path="/test/:testId" element={<TestInterface />} />
-              <Route path="/test/:testId/:specialistId" element={<TestInterface />} />
-              <Route path="/test-al/:testId" element={<TestTaking />} />
-              <Route path="/test-al/:testId/:specialistId" element={<TestTaking />} />
-              <Route path="/test-sonuc/:testId/:specialistId" element={<TestResult />} />
-              <Route path="/:specialtySlug/:specialistName/test/:testId" element={<TestInterface />} />
-              <Route path="/:specialtySlug/:specialistName" element={<DoctorProfile />} />
-              
-              {/* Admin Routes */}
+              {/* Admin Routes - MUST be before dynamic catch-all routes */}
               <Route path="/divan_paneli" element={<AdminAuth />} />
               <Route path="/divan_paneli/dashboard" element={<AdminDashboard />} />
               <Route path="/divan_paneli/tests" element={<TestManagement />} />
