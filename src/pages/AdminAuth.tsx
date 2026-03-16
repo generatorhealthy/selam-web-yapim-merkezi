@@ -119,7 +119,7 @@ const AdminAuth = () => {
         
         try {
           const { data: blockData } = await withTimeout(
-            supabase.rpc('record_failed_admin_login', {
+            async () => await supabase.rpc('record_failed_admin_login', {
               p_email: loginData.email,
               p_ip_address: null
             }),
