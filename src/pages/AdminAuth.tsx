@@ -23,15 +23,34 @@ const AdminAuth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const withTimeout = async <T,>(operation: () => Promise<T>, timeoutMs: number, message: string): Promise<T> => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    try {
+      return await Promise.race([
+        operation(),
+        new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+        }),
+      ]);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  };
+
   // Check if user is blocked when email changes
   useEffect(() => {
     const checkBlockStatus = async () => {
       if (!loginData.email || !loginData.email.includes('@')) return;
       
       try {
-        const { data, error } = await supabase.rpc('check_admin_login_block', {
-          p_email: loginData.email
-        });
+        const { data, error } = await withTimeout(
+          async () => await supabase.rpc('check_admin_login_block', {
+            p_email: loginData.email
+          }),
+          5000,
+          'Blokaj kontrolü zaman aşımına uğradı'
+        );
         
         if (error) {
           console.error('Block check error:', error);
@@ -86,36 +105,46 @@ const AdminAuth = () => {
     setIsLoading(true);
 
     try {
-      // Supabase Auth ile giriş yap
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: loginData.email,
-        password: loginData.password,
-      });
+      const { data: authData, error: authError } = await withTimeout(
+        async () => await supabase.auth.signInWithPassword({
+          email: loginData.email,
+          password: loginData.password,
+        }),
+        10000,
+        'Giriş isteği zaman aşımına uğradı'
+      );
 
       if (authError) {
         console.error('Giriş hatası:', authError);
         
-        // Record failed login attempt
-        const { data: blockData } = await supabase.rpc('record_failed_admin_login', {
-          p_email: loginData.email,
-          p_ip_address: null // IP tracking optional
-        });
+        try {
+          const { data: blockData } = await withTimeout(
+            async () => await supabase.rpc('record_failed_admin_login', {
+              p_email: loginData.email,
+              p_ip_address: null
+            }),
+            5000,
+            'Başarısız giriş kaydı zaman aşımına uğradı'
+          );
         
-        if (blockData && blockData.length > 0) {
-          const result = blockData[0];
-          setIsBlocked(result.is_now_blocked);
-          setBlockedUntil(result.blocked_until ? new Date(result.blocked_until) : null);
-          setAttemptsRemaining(result.attempts_remaining);
-          
-          if (result.is_now_blocked) {
-            toast({
-              title: "Hesap Kilitlendi!",
-              description: `3 başarısız giriş denemesi. ${format(new Date(result.blocked_until), 'dd MMMM yyyy HH:mm', { locale: tr })} tarihine kadar engellendi.`,
-              variant: "destructive"
-            });
-            setTimeout(() => navigate('/'), 3000);
-            return;
+          if (blockData && blockData.length > 0) {
+            const result = blockData[0];
+            setIsBlocked(result.is_now_blocked);
+            setBlockedUntil(result.blocked_until ? new Date(result.blocked_until) : null);
+            setAttemptsRemaining(result.attempts_remaining);
+            
+            if (result.is_now_blocked) {
+              toast({
+                title: "Hesap Kilitlendi!",
+                description: `3 başarısız giriş denemesi. ${format(new Date(result.blocked_until), 'dd MMMM yyyy HH:mm', { locale: tr })} tarihine kadar engellendi.`,
+                variant: "destructive"
+              });
+              setTimeout(() => navigate('/'), 3000);
+              return;
+            }
           }
+        } catch (blockError) {
+          console.error('Başarısız giriş kaydı hatası:', blockError);
         }
         
         if (authError.message.includes('Email not confirmed')) {
@@ -152,12 +181,15 @@ const AdminAuth = () => {
       // Wait a moment for the session to be established
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Kullanıcının admin, staff veya legal olup olmadığını kontrol et
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('role, is_approved')
-        .eq('user_id', authData.user.id)
-        .maybeSingle();
+      const { data: profile, error: profileError } = await withTimeout(
+        async () => await supabase
+          .from('user_profiles')
+          .select('role, is_approved')
+          .eq('user_id', authData.user.id)
+          .maybeSingle(),
+        8000,
+        'Profil kontrolü zaman aşımına uğradı'
+      );
 
       if (profileError) {
         console.error('Profil sorgu hatası:', profileError);
@@ -200,10 +232,17 @@ const AdminAuth = () => {
         return;
       }
 
-      // Reset login attempts on successful login
-      await supabase.rpc('reset_admin_login_attempts', {
-        p_email: loginData.email
-      });
+      try {
+        await withTimeout(
+          async () => await supabase.rpc('reset_admin_login_attempts', {
+            p_email: loginData.email
+          }),
+          5000,
+          'Giriş denemeleri sıfırlanamadı'
+        );
+      } catch (resetError) {
+        console.error('Deneme sıfırlama hatası:', resetError);
+      }
 
       // If remember me is checked, only remember the email (not password)
       if (rememberMe) {
