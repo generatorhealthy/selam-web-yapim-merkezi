@@ -181,12 +181,15 @@ const AdminAuth = () => {
       // Wait a moment for the session to be established
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Kullanıcının admin, staff veya legal olup olmadığını kontrol et
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('role, is_approved')
-        .eq('user_id', authData.user.id)
-        .maybeSingle();
+      const { data: profile, error: profileError } = await withTimeout(
+        supabase
+          .from('user_profiles')
+          .select('role, is_approved')
+          .eq('user_id', authData.user.id)
+          .maybeSingle(),
+        8000,
+        'Profil kontrolü zaman aşımına uğradı'
+      );
 
       if (profileError) {
         console.error('Profil sorgu hatası:', profileError);
