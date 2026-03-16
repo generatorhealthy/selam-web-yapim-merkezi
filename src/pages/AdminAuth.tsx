@@ -182,7 +182,7 @@ const AdminAuth = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const { data: profile, error: profileError } = await withTimeout(
-        supabase
+        async () => await supabase
           .from('user_profiles')
           .select('role, is_approved')
           .eq('user_id', authData.user.id)
