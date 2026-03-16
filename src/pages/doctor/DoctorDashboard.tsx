@@ -72,7 +72,12 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
         .from('appointments')
         .insert(payload);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('appointments_specialist_datetime_key')) {
+          throw new Error(`Bu tarih ve saatte (${formData.appointment_date} ${formData.appointment_time}) zaten bir randevunuz mevcut. Lütfen farklı bir saat seçin.`);
+        }
+        throw error;
+      }
 
       toast({
         title: "Başarılı",
