@@ -44,9 +44,13 @@ const AdminAuth = () => {
       if (!loginData.email || !loginData.email.includes('@')) return;
       
       try {
-        const { data, error } = await supabase.rpc('check_admin_login_block', {
-          p_email: loginData.email
-        });
+        const { data, error } = await withTimeout(
+          supabase.rpc('check_admin_login_block', {
+            p_email: loginData.email
+          }),
+          5000,
+          'Blokaj kontrolü zaman aşımına uğradı'
+        );
         
         if (error) {
           console.error('Block check error:', error);
