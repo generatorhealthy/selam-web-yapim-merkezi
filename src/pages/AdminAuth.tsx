@@ -234,7 +234,7 @@ const AdminAuth = () => {
 
       try {
         await withTimeout(
-          supabase.rpc('reset_admin_login_attempts', {
+          async () => await supabase.rpc('reset_admin_login_attempts', {
             p_email: loginData.email
           }),
           5000,
