@@ -106,7 +106,7 @@ const AdminAuth = () => {
 
     try {
       const { data: authData, error: authError } = await withTimeout(
-        supabase.auth.signInWithPassword({
+        async () => await supabase.auth.signInWithPassword({
           email: loginData.email,
           password: loginData.password,
         }),
