@@ -232,10 +232,17 @@ const AdminAuth = () => {
         return;
       }
 
-      // Reset login attempts on successful login
-      await supabase.rpc('reset_admin_login_attempts', {
-        p_email: loginData.email
-      });
+      try {
+        await withTimeout(
+          supabase.rpc('reset_admin_login_attempts', {
+            p_email: loginData.email
+          }),
+          5000,
+          'Giriş denemeleri sıfırlanamadı'
+        );
+      } catch (resetError) {
+        console.error('Deneme sıfırlama hatası:', resetError);
+      }
 
       // If remember me is checked, only remember the email (not password)
       if (rememberMe) {
