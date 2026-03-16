@@ -127,21 +127,24 @@ const AdminAuth = () => {
             'Başarısız giriş kaydı zaman aşımına uğradı'
           );
         
-        if (blockData && blockData.length > 0) {
-          const result = blockData[0];
-          setIsBlocked(result.is_now_blocked);
-          setBlockedUntil(result.blocked_until ? new Date(result.blocked_until) : null);
-          setAttemptsRemaining(result.attempts_remaining);
-          
-          if (result.is_now_blocked) {
-            toast({
-              title: "Hesap Kilitlendi!",
-              description: `3 başarısız giriş denemesi. ${format(new Date(result.blocked_until), 'dd MMMM yyyy HH:mm', { locale: tr })} tarihine kadar engellendi.`,
-              variant: "destructive"
-            });
-            setTimeout(() => navigate('/'), 3000);
-            return;
+          if (blockData && blockData.length > 0) {
+            const result = blockData[0];
+            setIsBlocked(result.is_now_blocked);
+            setBlockedUntil(result.blocked_until ? new Date(result.blocked_until) : null);
+            setAttemptsRemaining(result.attempts_remaining);
+            
+            if (result.is_now_blocked) {
+              toast({
+                title: "Hesap Kilitlendi!",
+                description: `3 başarısız giriş denemesi. ${format(new Date(result.blocked_until), 'dd MMMM yyyy HH:mm', { locale: tr })} tarihine kadar engellendi.`,
+                variant: "destructive"
+              });
+              setTimeout(() => navigate('/'), 3000);
+              return;
+            }
           }
+        } catch (blockError) {
+          console.error('Başarısız giriş kaydı hatası:', blockError);
         }
         
         if (authError.message.includes('Email not confirmed')) {
