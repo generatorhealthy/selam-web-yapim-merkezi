@@ -10,6 +10,7 @@ import { MobileLayout } from "@/components/MobileLayout";
 import CookieConsent from "@/components/CookieConsent";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -122,6 +123,7 @@ const LegacyBlogRedirect = () => {
 
 const AppContent = () => {
   const { isNative } = usePlatform();
+  useNetworkRecovery();
 
   return (
     <>
