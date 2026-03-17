@@ -104,7 +104,7 @@ export const useAdminActivityTracker = (userProfile: UserProfile | null) => {
     return () => {
       const latestUserProfile = currentUserProfileRef.current;
 
-      if (!sessionStartRef.current || !latestUserProfile || !ALLOWED_ROLES.includes(latestUserProfile.role)) {
+      if (!sessionStartRef.current || !latestUserProfile || !isTrackedRole(latestUserProfile.role)) {
         return;
       }
 
