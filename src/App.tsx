@@ -123,6 +123,7 @@ const LegacyBlogRedirect = () => {
 
 const AppContent = () => {
   const { isNative } = usePlatform();
+  useNetworkRecovery();
 
   return (
     <>
