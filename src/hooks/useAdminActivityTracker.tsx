@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserRole } from "@/hooks/useUserRole";
+import type { UserProfile } from "@/hooks/useUserRole";
 
 const PAGE_TITLES: Record<string, string> = {
   "/divan_paneli/dashboard": "Ana Panel",
@@ -42,36 +42,54 @@ const PAGE_TITLES: Record<string, string> = {
   "/divan_paneli/admin-activity-logs": "Aktivite Logları",
 };
 
-export const useAdminActivityTracker = () => {
+const ALLOWED_ROLES = ["admin", "staff", "legal", "muhasebe"] as const;
+
+type TrackedRole = (typeof ALLOWED_ROLES)[number];
+
+const isTrackedRole = (role: UserProfile["role"]): role is TrackedRole => {
+  return role === "admin" || role === "staff" || role === "legal" || role === "muhasebe";
+};
+
+export const useAdminActivityTracker = (userProfile: UserProfile | null) => {
   const location = useLocation();
-  const { userProfile } = useUserRole();
   const sessionStartRef = useRef<string | null>(null);
   const lastLoggedPath = useRef<string | null>(null);
+  const currentPathRef = useRef(location.pathname);
+  const currentUserProfileRef = useRef<UserProfile | null>(userProfile);
+
+  useEffect(() => {
+    currentPathRef.current = location.pathname;
+  }, [location.pathname]);
+
+  useEffect(() => {
+    currentUserProfileRef.current = userProfile;
+  }, [userProfile]);
 
   useEffect(() => {
     if (!userProfile) return;
-    if (!['admin', 'staff', 'legal', 'muhasebe'].includes(userProfile.role)) return;
-    if (!location.pathname.startsWith('/divan_paneli')) return;
+    if (!isTrackedRole(userProfile.role)) return;
+    if (!location.pathname.startsWith("/divan_paneli")) return;
     if (location.pathname === lastLoggedPath.current) return;
 
     lastLoggedPath.current = location.pathname;
 
     const logActivity = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) return;
 
       if (!sessionStartRef.current) {
         sessionStartRef.current = new Date().toISOString();
       }
 
-      const pageTitle = PAGE_TITLES[location.pathname] || location.pathname.split('/').pop() || 'Bilinmeyen';
+      const pageTitle = PAGE_TITLES[location.pathname] || location.pathname.split("/").pop() || "Bilinmeyen";
 
-      await supabase.from('admin_activity_logs').insert({
+      await supabase.from("admin_activity_logs").insert({
         user_id: user.id,
         user_name: userProfile.name || user.email,
         user_email: userProfile.email || user.email,
         user_role: userProfile.role,
-        action_type: 'page_view',
+        action_type: "page_view",
         page_url: location.pathname,
         page_title: pageTitle,
         session_start: sessionStartRef.current,
@@ -79,30 +97,34 @@ export const useAdminActivityTracker = () => {
       });
     };
 
-    logActivity();
+    void logActivity();
   }, [location.pathname, userProfile]);
 
-  // Log session end on unmount
   useEffect(() => {
     return () => {
-      if (sessionStartRef.current && userProfile) {
-        // Fire and forget
-        supabase.auth.getUser().then(({ data: { user } }) => {
-          if (user) {
-            supabase.from('admin_activity_logs').insert({
-              user_id: user.id,
-              user_name: userProfile.name || user.email,
-              user_email: userProfile.email || user.email,
-              user_role: userProfile.role,
-              action_type: 'session_end',
-              page_url: location.pathname,
-              page_title: 'Oturum Kapatma',
-              session_start: sessionStartRef.current,
-              session_end: new Date().toISOString(),
-            });
-          }
-        });
+      const latestUserProfile = currentUserProfileRef.current;
+
+      if (!sessionStartRef.current || !latestUserProfile || !isTrackedRole(latestUserProfile.role)) {
+        return;
       }
+
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        const user = session?.user;
+
+        if (user) {
+          supabase.from("admin_activity_logs").insert({
+            user_id: user.id,
+            user_name: latestUserProfile.name || user.email,
+            user_email: latestUserProfile.email || user.email,
+            user_role: latestUserProfile.role,
+            action_type: "session_end",
+            page_url: currentPathRef.current,
+            page_title: "Oturum Kapatma",
+            session_start: sessionStartRef.current,
+            session_end: new Date().toISOString(),
+          });
+        }
+      });
     };
   }, []);
 };

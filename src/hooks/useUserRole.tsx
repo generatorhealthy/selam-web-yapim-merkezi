@@ -1,5 +1,6 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 
@@ -12,67 +13,88 @@ export interface UserProfile {
   email?: string;
 }
 
+const FALLBACK_PROFILE: UserProfile = {
+  role: "user",
+  is_approved: false,
+};
+
 export const useUserRole = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const lastLoadedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const getCurrentUserProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          setUserProfile(null);
-          setLoading(false);
-          return;
-        }
+    let mounted = true;
 
-        console.log('Current user ID:', user.id);
-
-        // Direct query to avoid RLS issues
-        const { data: profile, error } = await supabase
-          .from('user_profiles')
-          .select('role, is_approved, name, email')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        console.log('Profile query result:', { profile, error });
-
-        if (error) {
-          console.error('Error fetching user profile:', error);
-          // Fallback: create a basic profile if none exists
-          setUserProfile({ role: 'user', is_approved: false });
-        } else if (profile) {
-          setUserProfile(profile);
-        } else {
-          // No profile found, set as basic user
-          console.log('No profile found, setting as basic user');
-          setUserProfile({ role: 'user', is_approved: false });
-        }
-      } catch (error) {
-        console.error('Error in getCurrentUserProfile:', error);
-        setUserProfile({ role: 'user', is_approved: false });
-      } finally {
-        setLoading(false);
+    const updateProfileState = (profile: UserProfile | null) => {
+      if (mounted) {
+        setUserProfile(profile);
       }
     };
 
-    getCurrentUserProfile();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id);
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          getCurrentUserProfile();
-        } else if (event === 'SIGNED_OUT') {
-          setUserProfile(null);
-          setLoading(false);
-        }
+    const updateLoadingState = (value: boolean) => {
+      if (mounted) {
+        setLoading(value);
       }
-    );
+    };
 
-    return () => subscription.unsubscribe();
+    const loadUserProfile = async (user?: User | null) => {
+      updateLoadingState(true);
+
+      try {
+        const currentUser = user ?? (await supabase.auth.getSession()).data.session?.user ?? null;
+
+        if (!currentUser) {
+          lastLoadedUserIdRef.current = null;
+          updateProfileState(null);
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from("user_profiles")
+          .select("role, is_approved, name, email")
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error fetching user profile:", error);
+          updateProfileState(FALLBACK_PROFILE);
+          return;
+        }
+
+        lastLoadedUserIdRef.current = currentUser.id;
+        updateProfileState(profile ?? FALLBACK_PROFILE);
+      } catch (error) {
+        console.error("Error in loadUserProfile:", error);
+        updateProfileState(FALLBACK_PROFILE);
+      } finally {
+        updateLoadingState(false);
+      }
+    };
+
+    void loadUserProfile();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      if (event === "SIGNED_OUT" || !session?.user) {
+        lastLoadedUserIdRef.current = null;
+        updateProfileState(null);
+        updateLoadingState(false);
+        return;
+      }
+
+      if (event === "TOKEN_REFRESHED" && lastLoadedUserIdRef.current === session.user.id) {
+        return;
+      }
+
+      void loadUserProfile(session.user);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { userProfile, loading };
