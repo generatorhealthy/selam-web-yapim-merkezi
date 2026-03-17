@@ -44,6 +44,12 @@ const PAGE_TITLES: Record<string, string> = {
 
 const ALLOWED_ROLES = ["admin", "staff", "legal", "muhasebe"] as const;
 
+type TrackedRole = (typeof ALLOWED_ROLES)[number];
+
+const isTrackedRole = (role: UserProfile["role"]): role is TrackedRole => {
+  return role === "admin" || role === "staff" || role === "legal" || role === "muhasebe";
+};
+
 export const useAdminActivityTracker = (userProfile: UserProfile | null) => {
   const location = useLocation();
   const sessionStartRef = useRef<string | null>(null);
@@ -61,7 +67,7 @@ export const useAdminActivityTracker = (userProfile: UserProfile | null) => {
 
   useEffect(() => {
     if (!userProfile) return;
-    if (!ALLOWED_ROLES.includes(userProfile.role)) return;
+    if (!isTrackedRole(userProfile.role)) return;
     if (!location.pathname.startsWith("/divan_paneli")) return;
     if (location.pathname === lastLoggedPath.current) return;
 
