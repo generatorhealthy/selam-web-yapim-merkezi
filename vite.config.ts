@@ -7,6 +7,7 @@ import { componentTagger } from "lovable-tagger";
 const LOCAL_RESOLVE: Record<string, string> = {
   "react": "node_modules/react/index.js",
   "react-dom": "node_modules/react-dom/index.js",
+  "react-dom/client": "node_modules/react-dom/client.js",
   "react/jsx-runtime": "node_modules/react/jsx-runtime.js",
   "react/jsx-dev-runtime": "node_modules/react/jsx-dev-runtime.js",
   "react-helmet-async": "node_modules/react-helmet-async/lib/index.esm.js",
