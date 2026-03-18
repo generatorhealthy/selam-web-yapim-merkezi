@@ -55,7 +55,7 @@ const AdminAIAssistant = () => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingImages, setPendingImages] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -90,6 +90,11 @@ const AdminAIAssistant = () => {
     }
   }, [messages]);
 
+  // Default sidebar open on desktop
+  useEffect(() => {
+    if (window.innerWidth >= 768) setSidebarOpen(true);
+  }, []);
+
   const selectConversation = async (conv: Conversation) => {
     setActiveConversationId(conv.id);
     await loadMessages(conv.id);
@@ -100,6 +105,7 @@ const AdminAIAssistant = () => {
     setActiveConversationId(null);
     setMessages([]);
     setPendingImages([]);
+    if (window.innerWidth < 768) setSidebarOpen(false);
   };
 
   const deleteConversation = async (id: string, e: React.MouseEvent) => {
@@ -129,7 +135,6 @@ const AdminAIAssistant = () => {
       };
       reader.readAsDataURL(file);
     });
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -378,16 +383,32 @@ const AdminAIAssistant = () => {
   }
 
   return (
-    <div className="h-screen flex overflow-hidden bg-slate-50">
+    <div className="h-[100dvh] flex overflow-hidden bg-slate-50 relative">
       <Helmet>
         <title>Doki | Doktorum Ol</title>
       </Helmet>
 
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? "w-72" : "w-0"} transition-all duration-300 flex-shrink-0 overflow-hidden`}>
+      {/* Mobile overlay backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - overlay on mobile, static on desktop */}
+      <div
+        className={`
+          fixed md:relative z-50 md:z-auto
+          h-full
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:-translate-x-full"}
+          ${sidebarOpen ? "md:w-72" : "md:w-0"}
+        `}
+      >
         <div className="w-72 h-full flex flex-col bg-slate-900 text-white">
           <div className="p-4 flex items-center gap-3 border-b border-white/10">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center flex-shrink-0">
               <DokiIcon className="w-5 h-5" color="white" />
             </div>
             <span className="font-bold text-lg">Doki</span>
@@ -451,59 +472,55 @@ const AdminAIAssistant = () => {
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <div className="h-14 border-b border-slate-200 bg-white flex items-center px-4 gap-3 flex-shrink-0">
-          {!sidebarOpen && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 w-9 p-0 text-slate-500 hover:text-slate-800"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-          )}
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center">
+        <div className="h-14 border-b border-slate-200 bg-white flex items-center px-3 sm:px-4 gap-2 sm:gap-3 flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 w-9 p-0 text-slate-500 hover:text-slate-800 flex-shrink-0"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center flex-shrink-0">
               <DokiIcon className="w-4 h-4" color="white" />
             </div>
             <span className="font-semibold text-slate-800">Doki</span>
             <span className="text-xs text-slate-400 hidden sm:inline">— Gelişmiş AI Asistan</span>
           </div>
           <div className="ml-auto flex items-center gap-1">
-            {!sidebarOpen && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 w-9 p-0 text-slate-400 hover:text-slate-700"
-                onClick={startNewConversation}
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 w-9 p-0 text-slate-400 hover:text-slate-700"
+              onClick={startNewConversation}
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
           </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-          <div className="max-w-4xl mx-auto px-6 py-6 min-h-full flex flex-col">
+          <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6 min-h-full flex flex-col">
             {messages.length === 0 && (
-              <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-sky-100 flex items-center justify-center mb-5">
-                  <DokiIcon className="w-9 h-9" color="hsl(210, 90%, 50%)" />
+              <div className="flex-1 flex flex-col items-center justify-center px-2">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-sky-100 flex items-center justify-center mb-4 sm:mb-5">
+                  <DokiIcon className="w-8 h-8 sm:w-9 sm:h-9" color="hsl(210, 90%, 50%)" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-700 mb-2">Merhaba! Ben Doki 🚀</h2>
-                <p className="text-sm text-slate-400 max-w-md text-center mb-8">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-700 mb-2">Merhaba! Ben Doki 🚀</h2>
+                <p className="text-xs sm:text-sm text-slate-400 max-w-md text-center mb-6 sm:mb-8">
                   Her konuda yardımcı olabilirim: kod yazma, metin üretme, görsel analiz, kurumsal mesajlar, SEO, strateji ve çok daha fazlası.
                 </p>
-                <div className="flex flex-wrap justify-center gap-2 max-w-2xl">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-2 max-w-2xl w-full sm:w-auto">
                   {QUICK_PROMPTS.map((qp) => (
                     <button
                       key={qp.label}
                       onClick={() => handleSend(qp.prompt)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white border border-slate-200 text-sm text-slate-600 hover:border-blue-300 hover:text-blue-700 hover:shadow-md transition-all duration-200"
+                      className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 px-3 py-3 sm:py-2 rounded-2xl sm:rounded-full bg-white border border-slate-200 text-xs sm:text-sm text-slate-600 hover:border-blue-300 hover:text-blue-700 hover:shadow-md transition-all duration-200"
                     >
-                      <qp.icon className="w-3.5 h-3.5" />
-                      {qp.label}
+                      <qp.icon className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                      <span className="text-center leading-tight">{qp.label}</span>
                     </button>
                   ))}
                 </div>
@@ -511,16 +528,15 @@ const AdminAIAssistant = () => {
             )}
 
             {messages.length > 0 && (
-              <div className="flex-1 space-y-6">
+              <div className="flex-1 space-y-4 sm:space-y-6">
                 {messages.map((msg, i) => (
-                  <div key={i} className={`flex gap-4 ${msg.role === "user" ? "justify-end" : ""}`}>
+                  <div key={i} className={`flex gap-2 sm:gap-4 ${msg.role === "user" ? "justify-end" : ""}`}>
                     {msg.role === "assistant" && (
-                      <div className="w-7 h-7 rounded-full flex-shrink-0 mt-1 overflow-hidden">
-                        <DokiIcon className="w-7 h-7" />
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex-shrink-0 mt-1 overflow-hidden">
+                        <DokiIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                       </div>
                     )}
-                    <div className={`flex-1 ${msg.role === "user" ? "flex flex-col items-end max-w-full" : "max-w-full"}`}>
-                      {/* Show images if any */}
+                    <div className={`flex-1 min-w-0 ${msg.role === "user" ? "flex flex-col items-end max-w-full" : "max-w-full"}`}>
                       {msg.images && msg.images.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-2 justify-end">
                           {msg.images.map((img, imgIdx) => (
@@ -528,7 +544,7 @@ const AdminAIAssistant = () => {
                               key={imgIdx}
                               src={img}
                               alt="Uploaded"
-                              className="max-w-[200px] max-h-[200px] rounded-xl border border-slate-200 object-cover"
+                              className="max-w-[150px] sm:max-w-[200px] max-h-[150px] sm:max-h-[200px] rounded-xl border border-slate-200 object-cover"
                             />
                           ))}
                         </div>
@@ -536,25 +552,25 @@ const AdminAIAssistant = () => {
                       <div
                         className={`inline-block text-left ${
                           msg.role === "user"
-                            ? "bg-gradient-to-r from-blue-500 via-blue-600 to-sky-600 text-white shadow-md rounded-2xl rounded-br-md px-5 py-3 max-w-[75%]"
+                            ? "bg-gradient-to-r from-blue-500 via-blue-600 to-sky-600 text-white shadow-md rounded-2xl rounded-br-md px-3 sm:px-5 py-2.5 sm:py-3 max-w-[85%] sm:max-w-[75%]"
                             : "w-full"
                         }`}
                       >
                         {msg.role === "assistant" ? (
-                          <div className="prose prose-[15px] max-w-none leading-7 prose-headings:text-slate-800 prose-headings:font-semibold prose-p:text-[#374151] prose-p:leading-7 prose-strong:text-slate-800 prose-li:text-[#374151] prose-li:leading-7 prose-code:text-blue-700 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[14px] prose-pre:bg-[#1e1e1e] prose-pre:text-slate-100 prose-pre:rounded-xl" style={{ fontFamily: "'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Ubuntu', 'Cantarell', 'Noto Sans', sans-serif" }}>
+                          <div className="prose prose-sm sm:prose-[15px] max-w-none leading-6 sm:leading-7 prose-headings:text-slate-800 prose-headings:font-semibold prose-p:text-[#374151] prose-p:leading-6 sm:prose-p:leading-7 prose-strong:text-slate-800 prose-li:text-[#374151] prose-li:leading-6 sm:prose-li:leading-7 prose-code:text-blue-700 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[13px] sm:prose-code:text-[14px] prose-pre:bg-[#1e1e1e] prose-pre:text-slate-100 prose-pre:rounded-xl prose-pre:overflow-x-auto" style={{ fontFamily: "'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Ubuntu', 'Cantarell', 'Noto Sans', sans-serif" }}>
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                           </div>
                         ) : (
-                          <p className="text-[15px] whitespace-pre-wrap leading-7" style={{ fontFamily: "'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', sans-serif" }}>{msg.content}</p>
+                          <p className="text-sm sm:text-[15px] whitespace-pre-wrap leading-6 sm:leading-7" style={{ fontFamily: "'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', sans-serif" }}>{msg.content}</p>
                         )}
                       </div>
 
                       {msg.role === "assistant" && !isStreaming && (
-                        <div className="flex items-center gap-1 mt-2">
+                        <div className="flex items-center gap-1 mt-1.5 sm:mt-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 px-2.5 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                            className="h-7 px-2 sm:px-2.5 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                             onClick={() => copyMessage(msg.content, i)}
                           >
                             {copiedIndex === i ? <Check className="w-3 h-3 mr-1 text-emerald-500" /> : <Copy className="w-3 h-3 mr-1" />}
@@ -564,7 +580,7 @@ const AdminAIAssistant = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 px-2.5 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                              className="h-7 px-2 sm:px-2.5 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                               onClick={regenerateLastMessage}
                             >
                               <RotateCcw className="w-3 h-3 mr-1" /> Yeniden Yaz
@@ -574,7 +590,7 @@ const AdminAIAssistant = () => {
                       )}
                     </div>
                     {msg.role === "user" && (
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm text-white text-xs font-bold">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm text-white text-xs font-bold">
                         {userProfile?.name?.charAt(0)?.toUpperCase() || "U"}
                       </div>
                     )}
@@ -582,9 +598,9 @@ const AdminAIAssistant = () => {
                 ))}
 
                 {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
-                  <div className="flex gap-4">
-                    <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden">
-                      <DokiIcon className="w-7 h-7" />
+                  <div className="flex gap-2 sm:gap-4">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex-shrink-0 overflow-hidden">
+                      <DokiIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
                     <div className="flex items-center gap-2 py-3">
                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -598,7 +614,7 @@ const AdminAIAssistant = () => {
         </div>
 
         {/* Input area */}
-        <div className="border-t border-slate-200 bg-white px-6 py-4 flex-shrink-0">
+        <div className="border-t border-slate-200 bg-white px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
           <div className="max-w-4xl mx-auto">
             {/* Pending images preview */}
             {pendingImages.length > 0 && (
@@ -608,11 +624,11 @@ const AdminAIAssistant = () => {
                     <img
                       src={img}
                       alt="Preview"
-                      className="w-20 h-20 object-cover rounded-xl border border-slate-200"
+                      className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-slate-200"
                     />
                     <button
                       onClick={() => removeImage(idx)}
-                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -620,7 +636,7 @@ const AdminAIAssistant = () => {
                 ))}
               </div>
             )}
-            <div className="relative flex items-end gap-2">
+            <div className="relative flex items-end gap-1.5 sm:gap-2">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -639,27 +655,27 @@ const AdminAIAssistant = () => {
               >
                 <ImagePlus className="w-5 h-5" />
               </Button>
-              <div className="relative flex-1">
+              <div className="relative flex-1 min-w-0">
                 <Textarea
                   ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Doki'ye her şeyi sorabilirsiniz... (Shift+Enter ile yeni satır)"
-                  className="resize-none min-h-[56px] max-h-[200px] pr-14 border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 rounded-2xl bg-slate-50 text-base py-4 px-5"
-                  rows={2}
+                  placeholder="Doki'ye sorun..."
+                  className="resize-none min-h-[48px] sm:min-h-[56px] max-h-[120px] sm:max-h-[200px] pr-12 sm:pr-14 border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 rounded-2xl bg-slate-50 text-sm sm:text-base py-3 sm:py-4 px-3 sm:px-5"
+                  rows={1}
                   disabled={isStreaming}
                 />
                 <Button
                   onClick={() => handleSend()}
                   disabled={(!input.trim() && pendingImages.length === 0) || isStreaming}
-                  className="absolute right-2 bottom-2 bg-gradient-to-r from-blue-500 to-sky-600 hover:from-blue-600 hover:to-sky-700 h-10 w-10 rounded-xl shadow-lg shadow-blue-500/20 p-0 flex-shrink-0"
+                  className="absolute right-1.5 sm:right-2 bottom-1.5 sm:bottom-2 bg-gradient-to-r from-blue-500 to-sky-600 hover:from-blue-600 hover:to-sky-700 h-9 w-9 sm:h-10 sm:w-10 rounded-xl shadow-lg shadow-blue-500/20 p-0 flex-shrink-0"
                 >
-                  {isStreaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                  {isStreaming ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Send className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </Button>
               </div>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2 text-center">Doki — Doktorum Ol Gelişmiş AI Asistanı • Görsel yükleyerek analiz yaptırabilirsiniz</p>
+            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1.5 sm:mt-2 text-center hidden sm:block">Doki — Doktorum Ol Gelişmiş AI Asistanı • Görsel yükleyerek analiz yaptırabilirsiniz</p>
           </div>
         </div>
       </div>
