@@ -13,7 +13,8 @@ const FloatingWhatsAppButton = () => {
   if (!isMobile || 
       location.pathname === '/paketler' ||
       location.pathname.startsWith('/uzmanlik/') ||
-      location.pathname.startsWith('/odeme')) {
+      location.pathname.startsWith('/odeme') ||
+      location.pathname.startsWith('/divan_paneli')) {
     return null;
   }
 
