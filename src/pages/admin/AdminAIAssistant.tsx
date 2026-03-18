@@ -583,8 +583,8 @@ const AdminAIAssistant = () => {
 
                 {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <DokiIcon className="w-4 h-4" color="white" />
+                    <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden">
+                      <DokiIcon className="w-7 h-7" />
                     </div>
                     <div className="flex items-center gap-2 py-3">
                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
