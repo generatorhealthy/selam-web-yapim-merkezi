@@ -516,6 +516,18 @@ const AdminDashboard = () => {
       buttonText: "Aktivite Loglarını Görüntüle",
       adminOnly: true
     },
+    {
+      title: "AI Asistan",
+      description: "Kurumsal mesaj ve metin oluşturmak için yapay zeka asistanı",
+      icon: Sparkles,
+      gradient: "from-violet-500 via-purple-500 to-fuchsia-600",
+      bgGradient: "from-violet-50 to-fuchsia-50",
+      shadowColor: "shadow-violet-500/20",
+      route: "/divan_paneli/ai-assistant",
+      buttonText: "AI Asistanı Aç",
+      adminOnly: false,
+      staffOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
