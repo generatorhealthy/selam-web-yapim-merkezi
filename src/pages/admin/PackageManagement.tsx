@@ -1,24 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useToast } from "@/hooks/use-toast";
 import { 
   ShoppingCart, 
   Edit, 
   Save, 
   X, 
-  Crown, 
-  Sparkles,
   Package,
   Plus,
   Trash2,
   Gift,
-  Percent
+  Star
 } from "lucide-react";
 
 interface PackageData {
@@ -30,60 +28,16 @@ interface PackageData {
   icon: string;
   color: string;
   popular?: boolean;
-  link?: string;
+  link: string;
 }
 
 const PackageManagement = () => {
   const { userProfile, loading } = useUserRole();
+  const { toast } = useToast();
   const [packages, setPackages] = useState<PackageData[]>([
     {
-      id: "premium",
-      name: "Premium Paket",
-      price: 2998,
-      originalPrice: 6499,
-      features: [
-        "Santral Sistemden Danışan Yönlendirme Garantisi",
-        "Detaylı Profil",
-        "Branş (Doktorum Ol Üyeliği 1)",
-        "İletişim",
-        "Adres ve Konum",
-        "Video Yayınlama",
-        "Danışan Görüşleri",
-        "Uzman Sayfasına Özgün Seo Çalışması",
-        "Online Randevu Takimi",
-        "Google Reklamları",
-        "Sosyal Medya Paylaşımlarım",
-        "Danışan Takibi"
-      ],
-      icon: "Crown",
-      color: "from-blue-500 to-blue-600",
-      popular: true
-    },
-    {
-      id: "full",
-      name: "Full Paket",
-      price: 4998,
-      originalPrice: 8750,
-      features: [
-        "Santral Sistemden Danışan Yönlendirme Garantisi",
-        "Detaylı Profil",
-        "Branş (Doktorum Ol Üyeliği 1)",
-        "İletişim",
-        "Adres ve Konum",
-        "Video Yayınlama",
-        "Danışan Görüşleri",
-        "Uzman Sayfasına Özgün Seo Çalışması",
-        "Online Randevu Takimi",
-        "Google Reklamları",
-        "Sosyal Medya Paylaşımlarım",
-        "Danışan Takibi"
-      ],
-      icon: "Sparkles",
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      id: "campaign",
-      name: "Kampanyalı Premium Paket",
+      id: "bu-aya-ozel",
+      name: "Premium Paket - Bu Aya Özel",
       price: 3600,
       originalPrice: 7200,
       features: [
@@ -102,14 +56,15 @@ const PackageManagement = () => {
         "Sosyal Medya Reklam ve Yönetimi"
       ],
       icon: "Gift",
-      color: "from-red-500 to-red-600",
-      link: "/kampanyali-premium-paket"
+      color: "from-blue-500 to-blue-600",
+      popular: true,
+      link: "/bu-aya-ozel"
     },
     {
-      id: "discounted",
-      name: "Premium Paket",
-      price: 1998,
-      originalPrice: 3996,
+      id: "ozel-firsat",
+      name: "Premium Paket - Özel Fırsat",
+      price: 4000,
+      originalPrice: 8000,
       features: [
         "Santral Sistemden Danışan Yönlendirme Garantisi",
         "Detaylı Profil",
@@ -124,9 +79,9 @@ const PackageManagement = () => {
         "Sosyal Medya Paylaşımlarım",
         "Danışan Takibi"
       ],
-      icon: "Percent",
-      color: "from-green-500 to-green-600",
-      link: "/indirimli-paket"
+      icon: "Star",
+      color: "from-purple-500 to-purple-600",
+      link: "/ozel-firsat"
     }
   ]);
 
@@ -175,6 +130,10 @@ const PackageManagement = () => {
       setEditingPackage(null);
       setEditedPackage(null);
       setNewFeature("");
+      toast({
+        title: "Paket Güncellendi",
+        description: `${editedPackage.name} başarıyla güncellendi. Link: ${editedPackage.link}`,
+      });
     }
   };
 
@@ -216,10 +175,8 @@ const PackageManagement = () => {
 
   const getIconComponent = (iconName: string) => {
     const icons: { [key: string]: any } = {
-      Crown,
-      Sparkles,
       Gift,
-      Percent,
+      Star,
       Package
     };
     return icons[iconName] || Package;
@@ -237,29 +194,29 @@ const PackageManagement = () => {
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30" style={{ willChange: 'transform', contain: 'strict' }}></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-30" style={{ willChange: 'transform', contain: 'strict' }}></div>
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-12">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white rounded-full text-sm font-semibold mb-6 shadow-lg shadow-blue-500/25">
-              <ShoppingCart className="w-5 h-5 animate-pulse" />
+              <ShoppingCart className="w-5 h-5" />
               <span>Paket Yönetimi</span>
             </div>
             
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
               <span className="bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
-                Paket Fiyatları ve İçerikleri
+                Aktif Paketler
               </span>
             </h1>
             
             <p className="text-xl text-gray-600 leading-relaxed mb-8 max-w-3xl mx-auto">
-              Tüm paketlerin fiyatlarını, özelliklerini ve içeriklerini buradan yönetebilirsiniz.
+              Aktif paketlerinizin fiyatlarını, özelliklerini ve linklerini buradan yönetebilirsiniz.
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {packages.map((pkg) => {
               const IconComponent = getIconComponent(pkg.icon);
               const isEditing = editingPackage === pkg.id;
@@ -277,7 +234,7 @@ const PackageManagement = () => {
                   {pkg.popular && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
                       <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 text-sm font-semibold shadow-lg">
-                        <Crown className="w-4 h-4 mr-2 fill-current" />
+                        <Star className="w-4 h-4 mr-2 fill-current" />
                         En Popüler
                       </Badge>
                     </div>
@@ -302,11 +259,22 @@ const PackageManagement = () => {
                       )}
                     </CardTitle>
                     
-                    {pkg.link && (
-                      <div className="text-sm text-blue-600 mb-2">
-                        Link: {pkg.link}
-                      </div>
-                    )}
+                    {/* Link display/edit */}
+                    <div className="text-sm text-blue-600 mb-2">
+                      {isEditing ? (
+                        <div className="flex items-center gap-2 justify-center">
+                          <span className="text-gray-500">Link:</span>
+                          <Input
+                            value={currentPackage?.link || ''}
+                            onChange={(e) => setEditedPackage(prev => prev ? {...prev, link: e.target.value} : null)}
+                            className="text-center w-48"
+                            placeholder="/paket-linki"
+                          />
+                        </div>
+                      ) : (
+                        <>Link: {pkg.link}</>
+                      )}
+                    </div>
                     
                     <div className="space-y-2">
                       <div className="text-lg text-gray-500 line-through">

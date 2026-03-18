@@ -170,7 +170,7 @@ const AppContent = () => {
               
               <Route path="/kampanyali-paket" element={<CampaignPackage />} />
               <Route path="/kampanyali-premium-paket" element={<CampaignPremiumPackage />} />
-              <Route path="/indirimli-paket" element={<DiscountedPackage />} />
+              <Route path="/indirimli-paket" element={<Navigate to="/ozel-firsat" replace />} />
               <Route path="/bu-aya-ozel" element={<SpecialOffer />} />
               <Route path="/ozel-firsat" element={<SpecialOfferNew />} />
               <Route path="/odeme/:packageType" element={<Checkout />} />
