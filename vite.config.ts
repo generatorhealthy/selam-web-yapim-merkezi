@@ -4,6 +4,31 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+function reactCjsInterop() {
+  return {
+    name: "react-cjs-interop",
+    enforce: "pre" as const,
+    resolveId(source: string, importer: string | undefined) {
+      // Force react and react-dom to resolve from local node_modules
+      if (
+        importer &&
+        (source === "react" ||
+          source === "react-dom" ||
+          source === "react/jsx-runtime" ||
+          source === "react/jsx-dev-runtime")
+      ) {
+        const resolved = path.resolve(
+          __dirname,
+          "node_modules",
+          source.includes("/") ? source + ".js" : source + "/index.js"
+        );
+        return resolved;
+      }
+      return null;
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -22,12 +47,9 @@ export default defineConfig(({ mode }) => ({
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
-    commonjsOptions: {
-      esmExternals: true,
-      requireReturnsDefault: "auto",
-    },
   },
   plugins: [
+    reactCjsInterop(),
     react(),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
@@ -35,10 +57,6 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "react": path.resolve(__dirname, "node_modules/react"),
-      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
-      "react/jsx-runtime": path.resolve(__dirname, "node_modules/react/jsx-runtime.js"),
-      "react/jsx-dev-runtime": path.resolve(__dirname, "node_modules/react/jsx-dev-runtime.js"),
     },
   },
 }));
