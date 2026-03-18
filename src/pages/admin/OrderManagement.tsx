@@ -1842,6 +1842,20 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                       <RotateCcw className="w-4 h-4" />
                       Toplu Geri Getir
                     </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm(`${selectedOrderIds.length} siparişi kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!`)) {
+                          bulkPermanentDeleteMutation.mutate(selectedOrderIds);
+                        }
+                      }}
+                      disabled={bulkPermanentDeleteMutation.isPending}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Toplu Kalıcı Sil
+                    </Button>
                   </div>
                 </div>
               </CardContent>
