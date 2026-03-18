@@ -48,6 +48,14 @@ export default defineConfig(({ mode }) => ({
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+      defaultIsModuleExports: "auto",
+    },
+  },
+  optimizeDeps: {
+    include: ["react-dropzone", "attr-accept"],
   },
   plugins: [
     fixCjsInterop(),
