@@ -4,24 +4,35 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+// Packages that must resolve from local node_modules instead of template-node-modules
+const LOCAL_PACKAGES = [
+  "react",
+  "react-dom",
+  "react/jsx-runtime",
+  "react/jsx-dev-runtime",
+  "react-helmet-async",
+];
+
 function fixCjsInterop(): Plugin {
   return {
     name: "fix-cjs-interop",
     enforce: "pre",
     resolveId(source, importer) {
-      // Force react resolution from local node_modules
-      if (
-        importer &&
-        (source === "react" ||
-          source === "react-dom" ||
-          source === "react/jsx-runtime" ||
-          source === "react/jsx-dev-runtime")
-      ) {
-        return path.resolve(
-          __dirname,
-          "node_modules",
-          source.includes("/") ? source + ".js" : source + "/index.js"
-        );
+      if (!importer) return null;
+      
+      if (LOCAL_PACKAGES.includes(source)) {
+        if (source.includes("/")) {
+          return path.resolve(__dirname, "node_modules", source + ".js");
+        }
+        try {
+          // Use the package.json "module" or "main" field
+          const pkgPath = path.resolve(__dirname, "node_modules", source, "package.json");
+          const pkg = require(pkgPath);
+          const entry = pkg.module || pkg.main || "index.js";
+          return path.resolve(__dirname, "node_modules", source, entry);
+        } catch {
+          return path.resolve(__dirname, "node_modules", source, "index.js");
+        }
       }
       return null;
     },
@@ -56,7 +67,6 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "react-helmet-async": path.resolve(__dirname, "node_modules/react-helmet-async/lib/index.esm.js"),
     },
   },
 }));
