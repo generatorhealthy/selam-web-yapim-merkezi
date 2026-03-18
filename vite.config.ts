@@ -13,6 +13,7 @@ const LOCAL_RESOLVE: Record<string, string> = {
   "shallowequal": "node_modules/shallowequal/index.js",
   "react-fast-compare": "node_modules/react-fast-compare/index.js",
   "invariant": "node_modules/invariant/browser.js",
+  "@supabase/postgrest-js": "node_modules/@supabase/postgrest-js/dist/cjs/index.js",
 };
 
 function fixCjsInterop(): Plugin {
