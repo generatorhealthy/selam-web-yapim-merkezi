@@ -545,7 +545,7 @@ const AdminAIAssistant = () => {
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                           </div>
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                          <p className="text-[15px] whitespace-pre-wrap leading-7" style={{ fontFamily: "'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', sans-serif" }}>{msg.content}</p>
                         )}
                       </div>
 
