@@ -22,19 +22,6 @@ export default defineConfig(({ mode }) => ({
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
-    rollupOptions: {
-      plugins: [
-        {
-          name: "cjs-named-exports",
-          resolveId(source) {
-            if (source === "react/jsx-runtime" || source === "react/jsx-dev-runtime") {
-              return { id: source, moduleSideEffects: false };
-            }
-            return null;
-          },
-        },
-      ],
-    },
   },
   plugins: [
     react(),
