@@ -1,27 +1,14 @@
 const DokiIcon = ({ className = "w-6 h-6", color = "currentColor" }: { className?: string; color?: string }) => (
-  <svg viewBox="0 0 100 100" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    {/* Doktorum Ol asterisk/cross logo icon */}
-    <path
-      d="M50 5 L50 42 L50 5Z"
-      stroke={color}
-      strokeWidth="0"
-    />
-    {/* Center vertical bar */}
-    <rect x="42" y="5" width="16" height="35" rx="3" fill={color} />
-    {/* Bottom vertical bar */}
-    <rect x="42" y="60" width="16" height="35" rx="3" fill={color} />
-    {/* Left horizontal bar */}
-    <rect x="5" y="42" width="35" height="16" rx="3" fill={color} />
-    {/* Right horizontal bar */}
-    <rect x="60" y="42" width="35" height="16" rx="3" fill={color} />
-    {/* Top-left diagonal */}
-    <rect x="10" y="10" width="16" height="32" rx="3" fill={color} transform="rotate(-45 26 26)" />
-    {/* Top-right diagonal */}
-    <rect x="74" y="10" width="16" height="32" rx="3" fill={color} transform="rotate(45 74 26)" />
-    {/* Bottom-left diagonal */}
-    <rect x="10" y="74" width="16" height="32" rx="3" fill={color} transform="rotate(45 26 74)" />
-    {/* Bottom-right diagonal */}
-    <rect x="74" y="74" width="16" height="32" rx="3" fill={color} transform="rotate(-45 74 74)" />
+  <svg viewBox="0 0 24 24" fill={color} className={className} xmlns="http://www.w3.org/2000/svg">
+    {/* Doktorum Ol 8-pointed asterisk logo */}
+    <path d="M11 1h2v8.5h-2V1Z" />
+    <path d="M11 14.5h2V23h-2v-8.5Z" />
+    <path d="M1 11v2h8.5v-2H1Z" />
+    <path d="M14.5 11v2H23v-2h-8.5Z" />
+    <path d="M4.93 3.51l1.41-1.41 6.01 6.01-1.41 1.42-6.01-6.02Z" />
+    <path d="M13.06 11.64l1.41-1.41 6.01 6.01-1.41 1.42-6.01-6.02Z" />
+    <path d="M3.52 19.07l-1.41-1.41 6.01-6.02 1.42 1.42-6.02 6.01Z" />
+    <path d="M11.65 10.94l-1.42-1.41 6.02-6.02 1.41 1.42-6.01 6.01Z" />
   </svg>
 );
 
