@@ -772,7 +772,7 @@ const AdminDashboard = () => {
             
             {/* Main bubble */}
             <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-600 shadow-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 ring-4 ring-white/50">
-              <Sparkles className="w-7 h-7 text-white drop-shadow-lg" />
+              <DokiIcon className="w-8 h-8" color="white" />
             </div>
             
             {/* Label tooltip */}
