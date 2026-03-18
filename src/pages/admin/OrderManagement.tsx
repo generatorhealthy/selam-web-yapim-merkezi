@@ -512,6 +512,32 @@ const OrderManagement = () => {
     },
   });
 
+  // Bulk permanent delete mutation
+  const bulkPermanentDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("orders").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, ids) => {
+      toast({
+        title: "Siparişler Kalıcı Silindi",
+        description: `${ids.length} sipariş kalıcı olarak silindi`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order_stats"] });
+      setSelectedOrderIds([]);
+      setSelectAll(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Siparişler silinirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error bulk permanently deleting orders:", error);
+    },
+  });
+
 
   // Copy order mutation
   const copyOrderMutation = useMutation({
