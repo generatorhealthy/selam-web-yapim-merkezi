@@ -34,6 +34,7 @@ import {
 
 type Message = { role: "user" | "assistant"; content: string; images?: string[] };
 type Conversation = { id: string; title: string; created_at: string; updated_at: string };
+type AssistantResponse = { content: string; images?: string[] };
 
 const QUICK_PROMPTS = [
   { icon: Sparkles, label: "Genel Soru", prompt: "Merhaba Doki, bana nasıl yardımcı olabilirsin?" },
@@ -136,35 +137,66 @@ const AdminAIAssistant = () => {
     setPendingImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const streamChat = async (userMessages: Message[]) => {
-    const { data: { session } } = await supabase.auth.getSession();
+  const streamChat = async (userMessages: Message[]): Promise<AssistantResponse> => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
-      toast.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
-      return;
+      throw new Error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
     }
 
-    const resp = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-ai-chat`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          messages: userMessages.map((m) => ({
-            role: m.role,
-            content: m.content,
-            ...(m.images && m.images.length > 0 ? { images: m.images } : {}),
-          })),
-        }),
-      }
-    );
+    const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-ai-chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        messages: userMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+          ...(m.images && m.images.length > 0 ? { images: m.images } : {}),
+        })),
+      }),
+    });
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ error: "Bilinmeyen hata" }));
       throw new Error(err.error || `HTTP ${resp.status}`);
     }
+
+    const contentType = resp.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      const data = await resp.json().catch(() => null);
+      const images = Array.isArray(data?.images)
+        ? data.images.filter((img: unknown): img is string => typeof img === "string" && img.length > 0)
+        : [];
+
+      const assistantResponse: AssistantResponse = {
+        content: typeof data?.content === "string" ? data.content : "Görsel düzenleme tamamlandı.",
+        ...(images.length > 0 ? { images } : {}),
+      };
+
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        const nextAssistant: Message = {
+          role: "assistant",
+          content: assistantResponse.content,
+          ...(assistantResponse.images && assistantResponse.images.length > 0 ? { images: assistantResponse.images } : {}),
+        };
+
+        if (last?.role === "assistant") {
+          return prev.map((m, i) => (i === prev.length - 1 ? nextAssistant : m));
+        }
+
+        return [...prev, nextAssistant];
+      });
+
+      return assistantResponse;
+    }
+
     if (!resp.body) throw new Error("Stream başlatılamadı");
 
     const reader = resp.body.getReader();
@@ -196,7 +228,10 @@ const AdminAIAssistant = () => {
         if (line.startsWith(":") || line.trim() === "") continue;
         if (!line.startsWith("data: ")) continue;
         const jsonStr = line.slice(6).trim();
-        if (jsonStr === "[DONE]") { streamDone = true; break; }
+        if (jsonStr === "[DONE]") {
+          streamDone = true;
+          break;
+        }
         try {
           const parsed = JSON.parse(jsonStr);
           const content = parsed.choices?.[0]?.delta?.content as string | undefined;
@@ -207,7 +242,22 @@ const AdminAIAssistant = () => {
         }
       }
     }
-    return assistantSoFar;
+
+    return { content: assistantSoFar };
+  };
+
+  const formatAssistantContentForStorage = (assistantResponse: AssistantResponse) => {
+    const baseContent = assistantResponse.content?.trim() || "";
+
+    if (!assistantResponse.images || assistantResponse.images.length === 0) {
+      return baseContent;
+    }
+
+    const imageMarkdown = assistantResponse.images
+      .map((img, index) => `![Doki Görsel ${index + 1}](${img})`)
+      .join("\n\n");
+
+    return [baseContent, imageMarkdown].filter(Boolean).join("\n\n");
   };
 
   const handleSend = async (text?: string) => {
@@ -244,10 +294,15 @@ const AdminAIAssistant = () => {
         await supabase.from("doki_messages").insert({ conversation_id: convId, role: "user", content: userMsg.content });
       }
 
-      const assistantContent = await streamChat(newMessages);
+      const assistantResponse = await streamChat(newMessages);
+      const assistantContentForStorage = formatAssistantContentForStorage(assistantResponse);
 
-      if (convId && assistantContent) {
-        await supabase.from("doki_messages").insert({ conversation_id: convId, role: "assistant", content: assistantContent });
+      if (convId && assistantContentForStorage) {
+        await supabase.from("doki_messages").insert({
+          conversation_id: convId,
+          role: "assistant",
+          content: assistantContentForStorage,
+        });
         await supabase.from("doki_conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
       }
 
@@ -279,8 +334,9 @@ const AdminAIAssistant = () => {
     setMessages(withoutLast);
     setIsStreaming(true);
     try {
-      const assistantContent = await streamChat(withoutLast);
-      if (activeConversationId && assistantContent) {
+      const assistantResponse = await streamChat(withoutLast);
+      const assistantContentForStorage = formatAssistantContentForStorage(assistantResponse);
+      if (activeConversationId && assistantContentForStorage) {
         const { data: lastMsg } = await supabase
           .from("doki_messages")
           .select("id")
@@ -290,7 +346,7 @@ const AdminAIAssistant = () => {
           .limit(1)
           .single();
         if (lastMsg) {
-          await supabase.from("doki_messages").update({ content: assistantContent }).eq("id", lastMsg.id);
+          await supabase.from("doki_messages").update({ content: assistantContentForStorage }).eq("id", lastMsg.id);
         }
       }
     } catch (e: any) {

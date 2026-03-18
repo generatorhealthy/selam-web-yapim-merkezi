@@ -81,14 +81,11 @@ Sen sıradan bir kurumsal bot değilsin - tam kapsamlı, güçlü bir AI asistan
 
     // Process messages to handle multimodal content (images)
     const processedMessages = messages.map((msg: any) => {
-      // If message has images, convert to multimodal format
       if (msg.images && Array.isArray(msg.images) && msg.images.length > 0) {
         const content: any[] = [];
-        // Add text content
         if (msg.content) {
           content.push({ type: "text", text: msg.content });
         }
-        // Add image content
         for (const img of msg.images) {
           content.push({
             type: "image_url",
@@ -100,20 +97,40 @@ Sen sıradan bir kurumsal bot değilsin - tam kapsamlı, güçlü bir AI asistan
       return { role: msg.role, content: msg.content };
     });
 
+    const lastUserMessage = [...messages].reverse().find((msg: any) => msg.role === "user");
+    const lastUserText = (lastUserMessage?.content ?? "").toLowerCase();
+    const hasImageInput = Array.isArray(lastUserMessage?.images) && lastUserMessage.images.length > 0;
+
+    const isAnalysisOnlyPrompt = /(analiz|yorumla|açıkla|değerlendir|incele|betimle|ne görüyorsun|describe|analyze)/i.test(lastUserText);
+    const isImageEditIntent = /(düzenle|değiştir|oluştur|yap|çevir|arka plan|background|stil|style|renk|ışık|kalite|remove|ekle|sil|retouch|new york|realistik|gerçekçi)/i.test(lastUserText);
+    const shouldUseImageModel = hasImageInput && (isImageEditIntent || !isAnalysisOnlyPrompt);
+
+    const requestBody = shouldUseImageModel
+      ? {
+          model: "google/gemini-2.5-flash-image",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...processedMessages,
+          ],
+          modalities: ["image", "text"],
+          stream: false,
+        }
+      : {
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...processedMessages,
+          ],
+          stream: true,
+        };
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...processedMessages,
-        ],
-        stream: true,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -135,6 +152,39 @@ Sen sıradan bir kurumsal bot değilsin - tam kapsamlı, güçlü bir AI asistan
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (shouldUseImageModel) {
+      const data = await response.json();
+      const assistantMessage = data?.choices?.[0]?.message;
+
+      const generatedImages = Array.isArray(assistantMessage?.images)
+        ? assistantMessage.images
+            .map((img: any) => img?.image_url?.url)
+            .filter((url: unknown): url is string => typeof url === "string" && url.length > 0)
+        : [];
+
+      let assistantText = "";
+      if (typeof assistantMessage?.content === "string") {
+        assistantText = assistantMessage.content;
+      } else if (Array.isArray(assistantMessage?.content)) {
+        assistantText = assistantMessage.content
+          .map((part: any) => (part?.type === "text" ? part.text : ""))
+          .filter(Boolean)
+          .join("\n")
+          .trim();
+      }
+
+      return new Response(
+        JSON.stringify({
+          content: assistantText || "Görsel düzenleme tamamlandı.",
+          images: generatedImages,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     return new Response(response.body, {
