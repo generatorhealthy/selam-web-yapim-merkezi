@@ -7,6 +7,7 @@ import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
+import DokiIcon from "@/components/DokiIcon";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,7 +15,6 @@ import ReactMarkdown from "react-markdown";
 import {
   Send,
   Loader2,
-  Sparkles,
   Copy,
   Trash2,
   FileText,
@@ -157,7 +157,6 @@ const AdminAIAssistant = () => {
 
   const regenerateLastMessage = async () => {
     if (isStreaming || messages.length < 2) return;
-    // Remove last assistant message and re-send
     const withoutLast = messages.slice(0, -1);
     setMessages(withoutLast);
     setIsStreaming(true);
@@ -180,7 +179,7 @@ const AdminAIAssistant = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center animate-pulse">
-            <Sparkles className="w-7 h-7 text-white" />
+            <DokiIcon className="w-8 h-8" color="white" />
           </div>
           <p className="text-sm text-slate-500 font-medium">Doki yükleniyor...</p>
         </div>
@@ -210,7 +209,7 @@ const AdminAIAssistant = () => {
         <div className="flex items-center gap-4 mb-6">
           <div className="relative">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-600 flex items-center justify-center shadow-xl shadow-violet-500/30">
-              <Sparkles className="w-7 h-7 text-white" />
+              <DokiIcon className="w-8 h-8" color="white" />
             </div>
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white" />
           </div>
@@ -261,7 +260,7 @@ const AdminAIAssistant = () => {
               {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center mb-4">
-                    <Sparkles className="w-10 h-10 text-violet-400" />
+                    <DokiIcon className="w-10 h-10" color="hsl(271, 91%, 65%)" />
                   </div>
                   <h2 className="text-xl font-bold text-slate-700 mb-2">Merhaba! Ben Doki 👋</h2>
                   <p className="text-sm text-slate-400 max-w-sm">
@@ -274,7 +273,7 @@ const AdminAIAssistant = () => {
                 <div key={i} className={`mb-5 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "assistant" && (
                     <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 mr-3 mt-1 shadow-md">
-                      <Sparkles className="w-4 h-4 text-white" />
+                      <DokiIcon className="w-4 h-4" color="white" />
                     </div>
                   )}
                   <div className="max-w-[80%]">
@@ -324,7 +323,7 @@ const AdminAIAssistant = () => {
               {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
                 <div className="flex justify-start mb-4">
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 mr-3 shadow-md">
-                    <Sparkles className="w-4 h-4 text-white" />
+                    <DokiIcon className="w-4 h-4" color="white" />
                   </div>
                   <div className="bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm">
                     <div className="flex items-center gap-2">
