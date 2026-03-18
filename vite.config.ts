@@ -1,15 +1,15 @@
 
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-function reactCjsInterop() {
+function fixCjsInterop(): Plugin {
   return {
-    name: "react-cjs-interop",
-    enforce: "pre" as const,
-    resolveId(source: string, importer: string | undefined) {
-      // Force react and react-dom to resolve from local node_modules
+    name: "fix-cjs-interop",
+    enforce: "pre",
+    resolveId(source, importer) {
+      // Force react resolution from local node_modules
       if (
         importer &&
         (source === "react" ||
@@ -17,12 +17,21 @@ function reactCjsInterop() {
           source === "react/jsx-runtime" ||
           source === "react/jsx-dev-runtime")
       ) {
-        const resolved = path.resolve(
+        return path.resolve(
           __dirname,
           "node_modules",
           source.includes("/") ? source + ".js" : source + "/index.js"
         );
-        return resolved;
+      }
+      return null;
+    },
+    load(id) {
+      // Provide ESM wrapper for shallowequal CJS module
+      if (id.includes("shallowequal") && id.endsWith("index.js")) {
+        return `
+          import shallowequal_cjs from "${id}?commonjs-proxy";
+          export default shallowequal_cjs;
+        `;
       }
       return null;
     },
@@ -47,13 +56,9 @@ export default defineConfig(({ mode }) => ({
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
-    commonjsOptions: {
-      defaultIsModuleExports: "auto",
-      requireReturnsDefault: "auto",
-    },
   },
   plugins: [
-    reactCjsInterop(),
+    fixCjsInterop(),
     react(),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
