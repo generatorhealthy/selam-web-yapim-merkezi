@@ -350,7 +350,7 @@ const AdminAIAssistant = () => {
             <Button
               variant="ghost"
               className="w-full text-white/60 hover:text-white hover:bg-white/10 gap-2 justify-start rounded-xl h-10"
-              onClick={() => window.location.href = "/divan_paneli"}
+              onClick={() => window.location.href = "/divan_paneli/dashboard"}
             >
               <ArrowLeft className="w-4 h-4" /> Panele Dön
             </Button>
