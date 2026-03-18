@@ -515,8 +515,8 @@ const AdminAIAssistant = () => {
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex gap-4 ${msg.role === "user" ? "justify-end" : ""}`}>
                     {msg.role === "assistant" && (
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
-                        <DokiIcon className="w-4 h-4" color="white" />
+                      <div className="w-7 h-7 rounded-full flex-shrink-0 mt-1 overflow-hidden">
+                        <DokiIcon className="w-7 h-7" />
                       </div>
                     )}
                     <div className={`flex-1 ${msg.role === "user" ? "flex flex-col items-end max-w-full" : "max-w-full"}`}>
