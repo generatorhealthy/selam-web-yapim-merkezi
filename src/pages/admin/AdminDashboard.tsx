@@ -517,14 +517,14 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
-      title: "AI Asistan",
+      title: "Doki",
       description: "Kurumsal mesaj ve metin oluşturmak için yapay zeka asistanı",
       icon: Sparkles,
       gradient: "from-violet-500 via-purple-500 to-fuchsia-600",
       bgGradient: "from-violet-50 to-fuchsia-50",
       shadowColor: "shadow-violet-500/20",
       route: "/divan_paneli/ai-assistant",
-      buttonText: "AI Asistanı Aç",
+      buttonText: "Doki'yi Aç",
       adminOnly: false,
       staffOnly: true
     },
@@ -756,6 +756,30 @@ const AdminDashboard = () => {
                     <span className="font-medium">Son güncelleme: Az önce</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Floating Doki Bubble */}
+        <div 
+          onClick={() => navigate('/divan_paneli/ai-assistant')}
+          className="fixed bottom-8 right-8 z-50 cursor-pointer group"
+        >
+          <div className="relative">
+            {/* Glow ring */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-500 animate-pulse" />
+            
+            {/* Main bubble */}
+            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-600 shadow-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 ring-4 ring-white/50">
+              <Sparkles className="w-7 h-7 text-white drop-shadow-lg" />
+            </div>
+            
+            {/* Label tooltip */}
+            <div className="absolute bottom-full right-0 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
+              <div className="bg-slate-900 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-xl whitespace-nowrap">
+                Doki'ye Sor 🤖
+                <div className="absolute top-full right-6 w-3 h-3 bg-slate-900 transform rotate-45 -translate-y-1.5" />
               </div>
             </div>
           </div>
