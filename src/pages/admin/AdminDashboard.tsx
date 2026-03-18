@@ -772,8 +772,8 @@ const AdminDashboard = () => {
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-500 animate-pulse" />
             
             {/* Main bubble */}
-            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-600 shadow-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 ring-4 ring-white/50">
-              <DokiIcon className="w-8 h-8" color="white" />
+            <div className="relative w-16 h-16 rounded-full shadow-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+              <DokiIcon className="w-16 h-16" />
             </div>
             
             {/* Label tooltip */}
