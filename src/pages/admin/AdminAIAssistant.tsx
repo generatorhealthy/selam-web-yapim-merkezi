@@ -1,12 +1,8 @@
-import { useState, useRef, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Helmet } from "react-helmet-async";
-import { HorizontalNavigation } from "@/components/HorizontalNavigation";
-import Footer from "@/components/Footer";
-import AdminBackButton from "@/components/AdminBackButton";
 import DokiIcon from "@/components/DokiIcon";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,17 +21,22 @@ import {
   MessageSquare,
   RotateCcw,
   Check,
+  Plus,
+  ArrowLeft,
+  Menu,
+  X,
 } from "lucide-react";
 
 type Message = { role: "user" | "assistant"; content: string };
+type Conversation = { id: string; title: string; created_at: string; updated_at: string };
 
 const QUICK_PROMPTS = [
-  { icon: CreditCard, label: "Ödeme Hatırlatma", prompt: "Aylık abonelik ödemesini yapmayan bir uzmana ödeme hatırlatma mesajı yaz. Uzman adı ve paket bilgisini ben vereceğim.", color: "from-rose-500 to-pink-600" },
-  { icon: Scale, label: "Cayma Bedeli Bildirimi", prompt: "Sözleşme kapsamında cayma bedeli uygulanacak bir uzmana resmi bildirim metni yaz. Detayları ben vereceğim.", color: "from-amber-500 to-orange-600" },
-  { icon: FileText, label: "Sözleşme Uyarısı", prompt: "Sözleşme şartlarını ihlal eden bir uzmana yazılacak resmi uyarı metni hazırla.", color: "from-blue-500 to-indigo-600" },
-  { icon: UserPlus, label: "Hoş Geldin Mesajı", prompt: "Platforma yeni kayıt olan bir uzmana hoş geldin mesajı yaz. Profesyonel ve sıcak bir dil kullan.", color: "from-emerald-500 to-teal-600" },
-  { icon: Phone, label: "İletişim Mesajı", prompt: "Bir müşteriye telefonla ulaşamadığımız için SMS ile gönderilecek kısa bir bilgilendirme mesajı yaz.", color: "from-violet-500 to-purple-600" },
-  { icon: MessageSquare, label: "Genel Bilgilendirme", prompt: "Platformdaki değişiklikler hakkında tüm uzmanlara gönderilecek toplu bilgilendirme mesajı yaz.", color: "from-cyan-500 to-blue-600" },
+  { icon: CreditCard, label: "Ödeme Hatırlatma", prompt: "Aylık abonelik ödemesini yapmayan bir uzmana ödeme hatırlatma mesajı yaz." },
+  { icon: Scale, label: "Cayma Bedeli", prompt: "Sözleşme kapsamında cayma bedeli uygulanacak bir uzmana resmi bildirim metni yaz." },
+  { icon: FileText, label: "Sözleşme Uyarısı", prompt: "Sözleşme şartlarını ihlal eden bir uzmana resmi uyarı metni hazırla." },
+  { icon: UserPlus, label: "Hoş Geldin", prompt: "Platforma yeni kayıt olan bir uzmana hoş geldin mesajı yaz." },
+  { icon: Phone, label: "İletişim SMS", prompt: "Telefonla ulaşamadığımız müşteriye SMS bilgilendirme mesajı yaz." },
+  { icon: MessageSquare, label: "Bilgilendirme", prompt: "Tüm uzmanlara gönderilecek toplu bilgilendirme mesajı yaz." },
 ];
 
 const AdminAIAssistant = () => {
@@ -44,14 +45,65 @@ const AdminAIAssistant = () => {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load conversations
+  const loadConversations = useCallback(async () => {
+    const { data } = await supabase
+      .from("doki_conversations")
+      .select("*")
+      .order("updated_at", { ascending: false });
+    if (data) setConversations(data);
+  }, []);
+
+  // Load messages for a conversation
+  const loadMessages = useCallback(async (conversationId: string) => {
+    const { data } = await supabase
+      .from("doki_messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+    if (data) {
+      setMessages(data.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (userProfile) loadConversations();
+  }, [userProfile, loadConversations]);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const selectConversation = async (conv: Conversation) => {
+    setActiveConversationId(conv.id);
+    await loadMessages(conv.id);
+    // Close sidebar on mobile
+    if (window.innerWidth < 768) setSidebarOpen(false);
+  };
+
+  const startNewConversation = () => {
+    setActiveConversationId(null);
+    setMessages([]);
+  };
+
+  const deleteConversation = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await supabase.from("doki_conversations").delete().eq("id", id);
+    if (activeConversationId === id) {
+      setActiveConversationId(null);
+      setMessages([]);
+    }
+    loadConversations();
+    toast.success("Sohbet silindi");
+  };
 
   const streamChat = async (userMessages: Message[]) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -76,7 +128,6 @@ const AdminAIAssistant = () => {
       const err = await resp.json().catch(() => ({ error: "Bilinmeyen hata" }));
       throw new Error(err.error || `HTTP ${resp.status}`);
     }
-
     if (!resp.body) throw new Error("Stream başlatılamadı");
 
     const reader = resp.body.getReader();
@@ -100,7 +151,6 @@ const AdminAIAssistant = () => {
       const { done, value } = await reader.read();
       if (done) break;
       textBuffer += decoder.decode(value, { stream: true });
-
       let newlineIndex: number;
       while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
         let line = textBuffer.slice(0, newlineIndex);
@@ -120,6 +170,7 @@ const AdminAIAssistant = () => {
         }
       }
     }
+    return assistantSoFar;
   };
 
   const handleSend = async (text?: string) => {
@@ -133,7 +184,35 @@ const AdminAIAssistant = () => {
     setIsStreaming(true);
 
     try {
-      await streamChat(newMessages);
+      // Create conversation if new
+      let convId = activeConversationId;
+      if (!convId) {
+        const title = msg.length > 40 ? msg.slice(0, 40) + "..." : msg;
+        const { data: conv } = await supabase
+          .from("doki_conversations")
+          .insert({ user_id: (await supabase.auth.getUser()).data.user!.id, title })
+          .select()
+          .single();
+        if (conv) {
+          convId = conv.id;
+          setActiveConversationId(conv.id);
+        }
+      }
+
+      // Save user message
+      if (convId) {
+        await supabase.from("doki_messages").insert({ conversation_id: convId, role: "user", content: msg });
+      }
+
+      const assistantContent = await streamChat(newMessages);
+
+      // Save assistant message
+      if (convId && assistantContent) {
+        await supabase.from("doki_messages").insert({ conversation_id: convId, role: "assistant", content: assistantContent });
+        await supabase.from("doki_conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
+      }
+
+      loadConversations();
     } catch (e: any) {
       toast.error(e.message || "Doki yanıt veremedi");
     } finally {
@@ -151,7 +230,7 @@ const AdminAIAssistant = () => {
   const copyMessage = (content: string, index: number) => {
     navigator.clipboard.writeText(content);
     setCopiedIndex(index);
-    toast.success("Mesaj panoya kopyalandı");
+    toast.success("Kopyalandı");
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
@@ -161,7 +240,21 @@ const AdminAIAssistant = () => {
     setMessages(withoutLast);
     setIsStreaming(true);
     try {
-      await streamChat(withoutLast);
+      const assistantContent = await streamChat(withoutLast);
+      // Update last assistant message in DB
+      if (activeConversationId && assistantContent) {
+        const { data: lastMsg } = await supabase
+          .from("doki_messages")
+          .select("id")
+          .eq("conversation_id", activeConversationId)
+          .eq("role", "assistant")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        if (lastMsg) {
+          await supabase.from("doki_messages").update({ content: assistantContent }).eq("id", lastMsg.id);
+        }
+      }
     } catch (e: any) {
       toast.error(e.message || "Doki yanıt veremedi");
     } finally {
@@ -169,14 +262,9 @@ const AdminAIAssistant = () => {
     }
   };
 
-  const clearChat = () => {
-    setMessages([]);
-    toast.info("Sohbet temizlendi");
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center animate-pulse">
             <DokiIcon className="w-8 h-8" color="white" />
@@ -189,180 +277,246 @@ const AdminAIAssistant = () => {
 
   if (!userProfile || !["admin", "staff", "legal", "muhasebe"].includes(userProfile.role)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center">
         <p>Bu sayfaya erişim yetkiniz yok.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-fuchsia-50/20">
+    <div className="h-screen flex overflow-hidden bg-slate-50">
       <Helmet>
-        <title>Doki | Doktorum Ol Admin</title>
+        <title>Doki | Doktorum Ol</title>
       </Helmet>
-      <HorizontalNavigation />
 
-      <div className="container mx-auto px-4 py-6 max-w-5xl">
-        <AdminBackButton />
-
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-600 flex items-center justify-center shadow-xl shadow-violet-500/30">
-              <DokiIcon className="w-8 h-8" color="white" />
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? "w-72" : "w-0"} transition-all duration-300 flex-shrink-0 overflow-hidden`}>
+        <div className="w-72 h-full flex flex-col bg-slate-900 text-white">
+          {/* Sidebar header */}
+          <div className="p-4 flex items-center gap-3 border-b border-white/10">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center">
+              <DokiIcon className="w-5 h-5" color="white" />
             </div>
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-700 to-fuchsia-600 bg-clip-text text-transparent">
-              Doki
-            </h1>
-            <p className="text-sm text-slate-500">Kurumsal yapay zeka asistanınız • Mesaj & metin oluşturucu</p>
-          </div>
-          {messages.length > 0 && (
-            <Button variant="outline" size="sm" onClick={clearChat} className="gap-1.5 rounded-xl border-slate-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors">
-              <Trash2 className="w-4 h-4" /> Temizle
+            <span className="font-bold text-lg">Doki</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto text-white/60 hover:text-white hover:bg-white/10 h-8 w-8 p-0"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="w-4 h-4" />
             </Button>
-          )}
-        </div>
+          </div>
 
-        {/* Quick prompts */}
-        {messages.length === 0 && (
-          <div className="mb-6">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">Hızlı Şablonlar</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {QUICK_PROMPTS.map((qp) => (
+          {/* New chat button */}
+          <div className="p-3">
+            <Button
+              onClick={startNewConversation}
+              className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/10 gap-2 rounded-xl h-10"
+              variant="ghost"
+            >
+              <Plus className="w-4 h-4" /> Yeni Sohbet
+            </Button>
+          </div>
+
+          {/* Conversation list */}
+          <ScrollArea className="flex-1 px-3">
+            <div className="space-y-1 pb-4">
+              {conversations.map((conv) => (
                 <button
-                  key={qp.label}
-                  onClick={() => handleSend(qp.prompt)}
-                  className="group relative overflow-hidden rounded-2xl bg-white border border-slate-100 p-4 text-left hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+                  key={conv.id}
+                  onClick={() => selectConversation(conv)}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm truncate transition-colors group flex items-center gap-2 ${
+                    activeConversationId === conv.id
+                      ? "bg-white/15 text-white"
+                      : "text-white/60 hover:text-white hover:bg-white/10"
+                  }`}
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${qp.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-                  <div className="relative flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${qp.color} flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                      <qp.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm text-slate-800">{qp.label}</p>
-                      <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{qp.prompt.slice(0, 55)}...</p>
-                    </div>
-                  </div>
+                  <MessageSquare className="w-4 h-4 flex-shrink-0 opacity-50" />
+                  <span className="truncate flex-1">{conv.title}</span>
+                  <button
+                    onClick={(e) => deleteConversation(conv.id, e)}
+                    className="opacity-0 group-hover:opacity-100 text-white/40 hover:text-red-400 transition-all p-0.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </button>
               ))}
             </div>
+          </ScrollArea>
+
+          {/* Back to dashboard */}
+          <div className="p-3 border-t border-white/10">
+            <Button
+              variant="ghost"
+              className="w-full text-white/60 hover:text-white hover:bg-white/10 gap-2 justify-start rounded-xl h-10"
+              onClick={() => window.location.href = "/divan_paneli"}
+            >
+              <ArrowLeft className="w-4 h-4" /> Panele Dön
+            </Button>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Chat area */}
-        <Card className="border-slate-100 shadow-xl rounded-3xl overflow-hidden">
-          <CardContent className="p-0">
-            <ScrollArea className="h-[500px] p-5" ref={scrollRef}>
-              {messages.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center mb-4">
-                    <DokiIcon className="w-10 h-10" color="hsl(271, 91%, 65%)" />
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-700 mb-2">Merhaba! Ben Doki 👋</h2>
-                  <p className="text-sm text-slate-400 max-w-sm">
-                    Kurumsal mesaj, ödeme hatırlatma, sözleşme metni ve daha fazlası için buradayım. Nasıl yardımcı olabilirim?
-                  </p>
+      {/* Main chat area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <div className="h-14 border-b border-slate-200 bg-white flex items-center px-4 gap-3 flex-shrink-0">
+          {!sidebarOpen && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 w-9 p-0 text-slate-500 hover:text-slate-800"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center">
+              <DokiIcon className="w-4 h-4" color="white" />
+            </div>
+            <span className="font-semibold text-slate-800">Doki</span>
+          </div>
+          <div className="ml-auto flex items-center gap-1">
+            {!sidebarOpen && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 w-9 p-0 text-slate-400 hover:text-slate-700"
+                onClick={startNewConversation}
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Messages */}
+        <ScrollArea className="flex-1" ref={scrollRef}>
+          <div className="max-w-3xl mx-auto px-4 py-6">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center pt-20">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center mb-5">
+                  <DokiIcon className="w-9 h-9" color="hsl(271, 91%, 65%)" />
                 </div>
-              )}
-
-              {messages.map((msg, i) => (
-                <div key={i} className={`mb-5 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {msg.role === "assistant" && (
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 mr-3 mt-1 shadow-md">
-                      <DokiIcon className="w-4 h-4" color="white" />
-                    </div>
-                  )}
-                  <div className="max-w-[80%]">
-                    <div
-                      className={`rounded-2xl px-4 py-3 ${
-                        msg.role === "user"
-                          ? "bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-600 text-white shadow-lg shadow-violet-500/20"
-                          : "bg-white border border-slate-100 shadow-sm"
-                      }`}
+                <h2 className="text-xl font-bold text-slate-700 mb-2">Merhaba! Ben Doki 👋</h2>
+                <p className="text-sm text-slate-400 max-w-sm text-center mb-8">
+                  Kurumsal mesaj, ödeme hatırlatma, sözleşme metni ve daha fazlası için buradayım.
+                </p>
+                {/* Quick prompts as compact chips */}
+                <div className="flex flex-wrap justify-center gap-2 max-w-lg">
+                  {QUICK_PROMPTS.map((qp) => (
+                    <button
+                      key={qp.label}
+                      onClick={() => handleSend(qp.prompt)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white border border-slate-200 text-sm text-slate-600 hover:border-violet-300 hover:text-violet-700 hover:shadow-md transition-all duration-200"
                     >
-                      {msg.role === "assistant" ? (
-                        <div className="prose prose-sm max-w-none prose-headings:text-slate-800 prose-p:text-slate-600 prose-strong:text-slate-800 prose-li:text-slate-600">
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
-                        </div>
-                      ) : (
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                      )}
-                    </div>
+                      <qp.icon className="w-3.5 h-3.5" />
+                      {qp.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                    {msg.role === "assistant" && !isStreaming && (
-                      <div className="flex items-center gap-1 mt-1.5 ml-1">
+            {messages.map((msg, i) => (
+              <div key={i} className={`mb-6 flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+                {msg.role === "assistant" ? (
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                    <DokiIcon className="w-4 h-4" color="white" />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm text-white text-xs font-bold">
+                    {userProfile?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                )}
+                <div className={`max-w-[85%] ${msg.role === "user" ? "text-right" : ""}`}>
+                  <div
+                    className={`rounded-2xl px-4 py-3 inline-block text-left ${
+                      msg.role === "user"
+                        ? "bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-600 text-white shadow-md"
+                        : "bg-white border border-slate-100 shadow-sm"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <div className="prose prose-sm max-w-none prose-headings:text-slate-800 prose-p:text-slate-600 prose-strong:text-slate-800 prose-li:text-slate-600">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    )}
+                  </div>
+
+                  {msg.role === "assistant" && !isStreaming && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg"
+                        onClick={() => copyMessage(msg.content, i)}
+                      >
+                        {copiedIndex === i ? <Check className="w-3 h-3 mr-1 text-emerald-500" /> : <Copy className="w-3 h-3 mr-1" />}
+                        {copiedIndex === i ? "Kopyalandı" : "Kopyala"}
+                      </Button>
+                      {i === messages.length - 1 && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
-                          onClick={() => copyMessage(msg.content, i)}
+                          className="h-6 px-2 text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg"
+                          onClick={regenerateLastMessage}
                         >
-                          {copiedIndex === i ? <Check className="w-3 h-3 mr-1 text-emerald-500" /> : <Copy className="w-3 h-3 mr-1" />}
-                          {copiedIndex === i ? "Kopyalandı" : "Kopyala"}
+                          <RotateCcw className="w-3 h-3 mr-1" /> Yeniden Yaz
                         </Button>
-                        {i === messages.length - 1 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-xs text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
-                            onClick={regenerateLastMessage}
-                          >
-                            <RotateCcw className="w-3 h-3 mr-1" /> Yeniden Yaz
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
-                <div className="flex justify-start mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 mr-3 shadow-md">
-                    <DokiIcon className="w-4 h-4" color="white" />
-                  </div>
-                  <div className="bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-violet-500" />
-                      <span className="text-sm text-slate-400">Doki düşünüyor...</span>
+                      )}
                     </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
+              <div className="flex gap-3 mb-6">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <DokiIcon className="w-4 h-4" color="white" />
+                </div>
+                <div className="bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-violet-500" />
+                    <span className="text-sm text-slate-400">Doki düşünüyor...</span>
                   </div>
                 </div>
-              )}
-            </ScrollArea>
-
-            {/* Input */}
-            <div className="border-t border-slate-100 bg-slate-50/50 p-4">
-              <div className="flex gap-3 items-end">
-                <Textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Doki'ye bir şey sorun... (Shift+Enter ile yeni satır)"
-                  className="resize-none min-h-[48px] max-h-[120px] border-slate-200 focus:border-violet-400 focus:ring-violet-400/20 rounded-xl bg-white"
-                  rows={1}
-                  disabled={isStreaming}
-                />
-                <Button
-                  onClick={() => handleSend()}
-                  disabled={!input.trim() || isStreaming}
-                  className="bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-600 hover:from-violet-600 hover:via-purple-600 hover:to-fuchsia-700 px-5 h-12 rounded-xl shadow-lg shadow-violet-500/20 transition-all duration-300 hover:shadow-xl hover:scale-105"
-                >
-                  {isStreaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                </Button>
               </div>
-              <p className="text-[11px] text-slate-400 mt-2 text-center">Doki, Doktorum Ol platformunun kurumsal yapay zeka asistanıdır.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            )}
+          </div>
+        </ScrollArea>
 
-      <Footer />
+        {/* Input area */}
+        <div className="border-t border-slate-200 bg-white p-4 flex-shrink-0">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex gap-3 items-end">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Doki'ye bir şey sorun..."
+                className="resize-none min-h-[48px] max-h-[150px] border-slate-200 focus:border-violet-400 focus:ring-violet-400/20 rounded-xl bg-slate-50"
+                rows={1}
+                disabled={isStreaming}
+              />
+              <Button
+                onClick={() => handleSend()}
+                disabled={!input.trim() || isStreaming}
+                className="bg-gradient-to-r from-violet-500 to-fuchsia-600 hover:from-violet-600 hover:to-fuchsia-700 h-12 w-12 rounded-xl shadow-lg shadow-violet-500/20 p-0 flex-shrink-0"
+              >
+                {isStreaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+              </Button>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2 text-center">Shift+Enter ile yeni satır • Doki, Doktorum Ol kurumsal asistanıdır</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
