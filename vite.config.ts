@@ -14,36 +14,13 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     assetsDir: "assets",
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'router': ['react-router-dom'],
-          'supabase': ['@supabase/supabase-js'],
-          'query': ['@tanstack/react-query'],
-          'radix-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-toast', '@radix-ui/react-slot', '@radix-ui/react-tabs', '@radix-ui/react-accordion', '@radix-ui/react-popover'],
-          'form': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
-          'charts': ['recharts'],
-          'editor': ['react-quill'],
-          'pdf': ['jspdf', 'html2canvas'],
-          'map': ['mapbox-gl'],
-          'helmet': ['react-helmet-async'],
-        },
-        entryFileNames: 'assets/[name].[hash].js',
-        chunkFileNames: 'assets/[name].[hash].js',
-        assetFileNames: 'assets/[name].[hash].[ext]',
-        format: 'es',
-        inlineDynamicImports: false
-      },
-    },
     target: 'es2020',
     minify: 'esbuild',
     sourcemap: false,
     emptyOutDir: true,
     cssCodeSplit: true,
     cssMinify: true,
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
   },
   plugins: [
