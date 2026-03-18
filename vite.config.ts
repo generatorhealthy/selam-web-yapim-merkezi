@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => ({
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
   plugins: [
     react(),
