@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
+import DokiIcon from "@/components/DokiIcon";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminActivityTracker } from "@/hooks/useAdminActivityTracker";
 import { useEffect, useState } from "react";
