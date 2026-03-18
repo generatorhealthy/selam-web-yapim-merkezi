@@ -769,8 +769,8 @@ const AdminDashboard = () => {
         >
           <div className="relative">
             {/* Main bubble */}
-            <div className="relative w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-              <DokiIcon className="w-20 h-20" />
+            <div className="relative w-24 h-24 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+              <DokiIcon className="w-24 h-24" />
             </div>
             
             {/* Label tooltip */}
