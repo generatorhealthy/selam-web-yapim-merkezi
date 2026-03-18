@@ -515,8 +515,8 @@ const AdminAIAssistant = () => {
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex gap-4 ${msg.role === "user" ? "justify-end" : ""}`}>
                     {msg.role === "assistant" && (
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
-                        <DokiIcon className="w-4 h-4" color="white" />
+                      <div className="w-7 h-7 rounded-full flex-shrink-0 mt-1 overflow-hidden">
+                        <DokiIcon className="w-7 h-7" />
                       </div>
                     )}
                     <div className={`flex-1 ${msg.role === "user" ? "flex flex-col items-end max-w-full" : "max-w-full"}`}>
@@ -541,11 +541,11 @@ const AdminAIAssistant = () => {
                         }`}
                       >
                         {msg.role === "assistant" ? (
-                          <div className="prose prose-base max-w-none prose-headings:text-slate-800 prose-p:text-slate-700 prose-strong:text-slate-800 prose-li:text-slate-700 prose-code:text-blue-700 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-slate-900 prose-pre:text-slate-100">
+                          <div className="prose prose-[15px] max-w-none leading-7 prose-headings:text-slate-800 prose-headings:font-semibold prose-p:text-[#374151] prose-p:leading-7 prose-strong:text-slate-800 prose-li:text-[#374151] prose-li:leading-7 prose-code:text-blue-700 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[14px] prose-pre:bg-[#1e1e1e] prose-pre:text-slate-100 prose-pre:rounded-xl" style={{ fontFamily: "'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Ubuntu', 'Cantarell', 'Noto Sans', sans-serif" }}>
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                           </div>
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                          <p className="text-[15px] whitespace-pre-wrap leading-7" style={{ fontFamily: "'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', sans-serif" }}>{msg.content}</p>
                         )}
                       </div>
 
@@ -583,8 +583,8 @@ const AdminAIAssistant = () => {
 
                 {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <DokiIcon className="w-4 h-4" color="white" />
+                    <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden">
+                      <DokiIcon className="w-7 h-7" />
                     </div>
                     <div className="flex items-center gap-2 py-3">
                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
