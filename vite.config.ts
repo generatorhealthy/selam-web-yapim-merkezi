@@ -4,14 +4,13 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// Packages that must resolve from local node_modules instead of template-node-modules
-const LOCAL_PACKAGES = [
-  "react",
-  "react-dom",
-  "react/jsx-runtime",
-  "react/jsx-dev-runtime",
-  "react-helmet-async",
-];
+const LOCAL_RESOLVE: Record<string, string> = {
+  "react": "node_modules/react/index.js",
+  "react-dom": "node_modules/react-dom/index.js",
+  "react/jsx-runtime": "node_modules/react/jsx-runtime.js",
+  "react/jsx-dev-runtime": "node_modules/react/jsx-dev-runtime.js",
+  "react-helmet-async": "node_modules/react-helmet-async/lib/index.esm.js",
+};
 
 function fixCjsInterop(): Plugin {
   return {
@@ -19,21 +18,8 @@ function fixCjsInterop(): Plugin {
     enforce: "pre",
     resolveId(source, importer) {
       if (!importer) return null;
-      
-      if (LOCAL_PACKAGES.includes(source)) {
-        if (source.includes("/")) {
-          return path.resolve(__dirname, "node_modules", source + ".js");
-        }
-        try {
-          // Use the package.json "module" or "main" field
-          const pkgPath = path.resolve(__dirname, "node_modules", source, "package.json");
-          const pkg = require(pkgPath);
-          const entry = pkg.module || pkg.main || "index.js";
-          return path.resolve(__dirname, "node_modules", source, entry);
-        } catch {
-          return path.resolve(__dirname, "node_modules", source, "index.js");
-        }
-      }
+      const local = LOCAL_RESOLVE[source];
+      if (local) return path.resolve(__dirname, local);
       return null;
     },
   };
