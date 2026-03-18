@@ -512,6 +512,32 @@ const OrderManagement = () => {
     },
   });
 
+  // Bulk permanent delete mutation
+  const bulkPermanentDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("orders").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, ids) => {
+      toast({
+        title: "Siparişler Kalıcı Silindi",
+        description: `${ids.length} sipariş kalıcı olarak silindi`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order_stats"] });
+      setSelectedOrderIds([]);
+      setSelectAll(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: "Siparişler silinirken hata oluştu",
+        variant: "destructive",
+      });
+      console.error("Error bulk permanently deleting orders:", error);
+    },
+  });
+
 
   // Copy order mutation
   const copyOrderMutation = useMutation({
@@ -1815,6 +1841,20 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                     >
                       <RotateCcw className="w-4 h-4" />
                       Toplu Geri Getir
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm(`${selectedOrderIds.length} siparişi kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!`)) {
+                          bulkPermanentDeleteMutation.mutate(selectedOrderIds);
+                        }
+                      }}
+                      disabled={bulkPermanentDeleteMutation.isPending}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Toplu Kalıcı Sil
                     </Button>
                   </div>
                 </div>
