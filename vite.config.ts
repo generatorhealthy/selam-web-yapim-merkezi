@@ -10,6 +10,8 @@ const LOCAL_RESOLVE: Record<string, string> = {
   "react/jsx-runtime": "node_modules/react/jsx-runtime.js",
   "react/jsx-dev-runtime": "node_modules/react/jsx-dev-runtime.js",
   "react-helmet-async": "node_modules/react-helmet-async/lib/index.esm.js",
+  "shallowequal": "node_modules/shallowequal/index.js",
+  "react-fast-compare": "node_modules/react-fast-compare/index.js",
 };
 
 function fixCjsInterop(): Plugin {
