@@ -232,6 +232,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/staff-attendance" element={<StaffAttendance />} />
               <Route path="/divan_paneli/cancellation-fees" element={<CancellationFees />} />
               <Route path="/divan_paneli/admin-activity-logs" element={<AdminActivityLogs />} />
+              <Route path="/divan_paneli/ai-assistant" element={<AdminAIAssistant />} />
                 
               {/* Test Routes */}
               <Route path="/test/:testId" element={<TestInterface />} />
