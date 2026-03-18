@@ -22,6 +22,10 @@ export default defineConfig(({ mode }) => ({
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
+    commonjsOptions: {
+      esmExternals: true,
+      requireReturnsDefault: "auto",
+    },
   },
   plugins: [
     react(),
