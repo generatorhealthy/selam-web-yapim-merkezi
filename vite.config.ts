@@ -25,16 +25,6 @@ function fixCjsInterop(): Plugin {
       }
       return null;
     },
-    load(id) {
-      // Provide ESM wrapper for shallowequal CJS module
-      if (id.includes("shallowequal") && id.endsWith("index.js")) {
-        return `
-          import shallowequal_cjs from "${id}?commonjs-proxy";
-          export default shallowequal_cjs;
-        `;
-      }
-      return null;
-    },
   };
 }
 
@@ -66,6 +56,7 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "shallowequal": path.resolve(__dirname, "src/shims/shallowequal.js"),
     },
   },
 }));
