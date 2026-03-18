@@ -541,7 +541,7 @@ const AdminAIAssistant = () => {
                         }`}
                       >
                         {msg.role === "assistant" ? (
-                          <div className="prose prose-base max-w-none prose-headings:text-slate-800 prose-p:text-slate-700 prose-strong:text-slate-800 prose-li:text-slate-700 prose-code:text-blue-700 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-slate-900 prose-pre:text-slate-100">
+                          <div className="prose prose-[15px] max-w-none leading-7 prose-headings:text-slate-800 prose-headings:font-semibold prose-p:text-[#374151] prose-p:leading-7 prose-strong:text-slate-800 prose-li:text-[#374151] prose-li:leading-7 prose-code:text-blue-700 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[14px] prose-pre:bg-[#1e1e1e] prose-pre:text-slate-100 prose-pre:rounded-xl" style={{ fontFamily: "'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Ubuntu', 'Cantarell', 'Noto Sans', sans-serif" }}>
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                           </div>
                         ) : (
