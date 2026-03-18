@@ -14,21 +14,24 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     assetsDir: "assets",
-    target: 'es2020',
-    minify: 'esbuild',
+    target: "es2020",
+    minify: "esbuild",
     sourcemap: false,
     emptyOutDir: true,
     cssCodeSplit: true,
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
+    commonjsOptions: {
+      include: [/node_modules/, /template-node-modules/],
+    },
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {
+    preserveSymlinks: true,
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
