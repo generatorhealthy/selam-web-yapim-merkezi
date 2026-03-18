@@ -93,6 +93,7 @@ const CancellationFees = lazy(() => import("./pages/admin/CancellationFees"));
 const SpecialistApplications = lazy(() => import("./pages/admin/SpecialistApplications"));
 const StaffAttendance = lazy(() => import("./pages/admin/StaffAttendance"));
 const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
+const AdminAIAssistant = lazy(() => import("./pages/admin/AdminAIAssistant"));
 const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 
 // Doctor pages
