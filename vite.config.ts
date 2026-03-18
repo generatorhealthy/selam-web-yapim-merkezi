@@ -12,6 +12,7 @@ const LOCAL_RESOLVE: Record<string, string> = {
   "react-helmet-async": "node_modules/react-helmet-async/lib/index.esm.js",
   "shallowequal": "node_modules/shallowequal/index.js",
   "react-fast-compare": "node_modules/react-fast-compare/index.js",
+  "invariant": "node_modules/invariant/browser.js",
 };
 
 function fixCjsInterop(): Plugin {
