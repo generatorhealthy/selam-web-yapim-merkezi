@@ -56,7 +56,6 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "shallowequal": path.resolve(__dirname, "src/shims/shallowequal.js"),
     },
   },
 }));
