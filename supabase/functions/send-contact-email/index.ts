@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -190,6 +190,36 @@ const handler = async (req: Request): Promise<Response> => {
     const userResult = await userEmailResponse.json();
 
     console.log("Emails sent successfully via Brevo:", { adminResult, userResult });
+
+    // Log emails to database
+    try {
+      const supabaseAdmin = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      await supabaseAdmin.from('brevo_email_logs').insert([
+        {
+          recipient_email: 'info@doktorumol.com.tr',
+          recipient_name: 'Doktorum Ol Admin',
+          subject: `Yeni İletişim Formu Mesajı - ${subject}`,
+          template_name: 'contact-email',
+          status: 'sent',
+          brevo_message_id: adminResult.messageId || null,
+          metadata: { name, email, phone, subject }
+        },
+        {
+          recipient_email: email,
+          recipient_name: name,
+          subject: 'Mesajınızı Aldık - Doktorum Ol',
+          template_name: 'contact-email',
+          status: 'sent',
+          brevo_message_id: userResult.messageId || null,
+          metadata: { type: 'auto-reply' }
+        }
+      ]);
+    } catch (logErr) {
+      console.error('Email log insert error:', logErr);
+    }
 
     return new Response(JSON.stringify({ 
       success: true, 

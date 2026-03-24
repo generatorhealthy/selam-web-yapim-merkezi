@@ -38,7 +38,8 @@ import {
   Share2,
   HardDrive,
   CreditCard,
-  Gauge
+  Gauge,
+  Mail
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -528,6 +529,17 @@ const AdminDashboard = () => {
       buttonText: "Doki'yi Aç",
       adminOnly: false,
       staffOnly: true
+    },
+    {
+      title: "E-posta Logları",
+      description: "Brevo üzerinden gönderilen tüm e-postaların kaydı",
+      icon: Mail,
+      gradient: "from-sky-500 via-cyan-500 to-teal-600",
+      bgGradient: "from-sky-50 to-teal-50",
+      shadowColor: "shadow-sky-500/20",
+      route: "/divan_paneli/email-logs",
+      buttonText: "E-posta Loglarını Görüntüle",
+      adminOnly: true
     },
   ];
 
