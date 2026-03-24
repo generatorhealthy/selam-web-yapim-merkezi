@@ -162,6 +162,21 @@ const handler = async (req: Request): Promise<Response> => {
     const brevoResult = await brevoResponse.json();
     console.log('Appointment notification email sent successfully via Brevo:', brevoResult);
 
+    // Log email to database
+    try {
+      await supabase.from('brevo_email_logs').insert({
+        recipient_email: specialistEmail,
+        recipient_name: specialistName,
+        subject: `Yeni Randevu: ${patientName} - ${formattedDate} ${appointmentTime}`,
+        template_name: 'appointment-notification',
+        status: 'sent',
+        brevo_message_id: brevoResult.messageId || null,
+        metadata: { appointmentId, patientName, patientEmail, appointmentDate, appointmentTime }
+      });
+    } catch (logErr) {
+      console.error('Email log insert error:', logErr);
+    }
+
     // Send SMS notification to specialist if phone number is available
     let smsResult = null;
     if (specialistPhone) {

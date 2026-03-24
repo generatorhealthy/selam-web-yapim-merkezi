@@ -253,6 +253,36 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("E-postalar başarıyla gönderildi:", { adminResult, userResult });
 
+    // Log emails to database
+    try {
+      const supabaseAdmin = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      await supabaseAdmin.from('brevo_email_logs').insert([
+        {
+          recipient_email: 'info@doktorumol.com.tr',
+          recipient_name: 'Doktorumol Admin',
+          subject: `Yeni Doktor Kayıt Başvurusu - ${requestData.name}`,
+          template_name: 'registration-email',
+          status: 'sent',
+          brevo_message_id: adminResult.messageId || null,
+          metadata: { name: requestData.name, email: requestData.email, specialty: requestData.specialty }
+        },
+        {
+          recipient_email: requestData.email,
+          recipient_name: requestData.name,
+          subject: 'Başvurunuz Alındı - Doktorumol.com.tr',
+          template_name: 'registration-email',
+          status: 'sent',
+          brevo_message_id: userResult.messageId || null,
+          metadata: { type: 'auto-reply' }
+        }
+      ]);
+    } catch (logErr) {
+      console.error('Email log insert error:', logErr);
+    }
+
     return new Response(
       JSON.stringify({ success: true, adminResult, userResult }),
       {
