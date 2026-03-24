@@ -234,6 +234,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/cancellation-fees" element={<CancellationFees />} />
               <Route path="/divan_paneli/admin-activity-logs" element={<AdminActivityLogs />} />
               <Route path="/divan_paneli/ai-assistant" element={<AdminAIAssistant />} />
+              <Route path="/divan_paneli/email-logs" element={<EmailLogs />} />
                 
               {/* Test Routes */}
               <Route path="/test/:testId" element={<TestInterface />} />
