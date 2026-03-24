@@ -67,6 +67,22 @@ export default function EmailLogs() {
     }
   };
 
+  const syncBrevoHistory = async () => {
+    try {
+      setSyncing(true);
+      toast.info("Brevo geçmişi senkronize ediliyor...");
+      const { data, error } = await supabase.functions.invoke('sync-brevo-email-history');
+      if (error) throw error;
+      toast.success(`${data?.imported || 0} e-posta geçmişten aktarıldı`);
+      await fetchEmails();
+    } catch (err: any) {
+      console.error('Sync error:', err);
+      toast.error("Senkronizasyon hatası: " + err.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const filteredEmails = emails.filter(email => {
     const matchesSearch = searchTerm === "" || 
       email.recipient_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
