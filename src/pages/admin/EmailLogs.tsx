@@ -151,10 +151,16 @@ export default function EmailLogs() {
       <AdminTopBar userRole={userProfile?.role || null} />
       
       <div className="container mx-auto px-6 py-8">
-        <div className="mb-8">
-          <AdminBackButton />
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">E-posta Logları</h1>
-          <p className="text-slate-600">Brevo üzerinden gönderilen tüm e-postaların kaydı</p>
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <AdminBackButton />
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">E-posta Logları</h1>
+            <p className="text-slate-600">Brevo üzerinden gönderilen tüm e-postaların kaydı</p>
+          </div>
+          <Button onClick={syncBrevoHistory} disabled={syncing} variant="outline" className="gap-2">
+            <Download className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Senkronize ediliyor...' : 'Brevo Geçmişini Aktar'}
+          </Button>
         </div>
 
         {/* Stats */}
