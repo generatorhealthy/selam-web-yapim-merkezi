@@ -229,6 +229,18 @@ const handler = async (req: Request): Promise<Response> => {
     const result = await response.json();
     console.log('Email sent successfully:', result);
 
+    // Log email to database
+    try {
+      const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+      await supabaseAdmin.from('brevo_email_logs').insert({
+        recipient_email: emailData.to[0].email,
+        recipient_name: emailData.to[0].name,
+        subject: emailData.subject,
+        template_name: 'ticket-notification',
+        status: 'sent',
+        brevo_message_id: result.messageId || null,
+      });
+    } catch (logErr) { console.error('Email log insert error:', logErr); }
     return new Response(
       JSON.stringify({ 
         success: true, 

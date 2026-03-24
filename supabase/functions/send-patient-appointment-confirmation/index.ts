@@ -154,6 +154,19 @@ const handler = async (req: Request): Promise<Response> => {
     const brevoResult = await brevoResponse.json();
     console.log('Patient confirmation email sent successfully:', brevoResult);
 
+    // Log email to database
+    try {
+      const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+      await supabaseAdmin.from('brevo_email_logs').insert({
+        recipient_email: patientEmail,
+        recipient_name: patientName,
+        subject: `Randevu Onayı - ${specialistName}`,
+        template_name: 'patient-confirmation',
+        status: 'sent',
+        brevo_message_id: brevoResult.messageId || null,
+        metadata: { appointmentId, appointmentDate, appointmentTime }
+      });
+    } catch (logErr) { console.error('Email log insert error:', logErr); }
     return new Response(
       JSON.stringify({ 
         success: true, 
