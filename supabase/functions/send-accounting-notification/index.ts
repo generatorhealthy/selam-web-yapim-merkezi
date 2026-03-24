@@ -157,6 +157,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Accounting notification email sent successfully:', responseData);
 
+    // Log email to database
+    try {
+      const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+      await supabaseAdmin.from('brevo_email_logs').insert({
+        recipient_email: 'info@doktorumol.com.tr',
+        recipient_name: 'Doktorum Ol Admin',
+        subject: `Yeni Muhasebe Belgesi - ${getMonthName(month)} ${year}`,
+        template_name: 'accounting-notification',
+        status: 'sent',
+        brevo_message_id: responseData.messageId || null,
+      });
+    } catch (logErr) { console.error('Email log insert error:', logErr); }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
