@@ -158,33 +158,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
         if (error) throw error;
 
-        // Yeni icralık için e-posta bildirimi
-        try {
-          const { error: emailError } = await supabase.functions.invoke(
-            "send-legal-proceeding-notification",
-            {
-              body: {
-                customerName: insertData.customer_name,
-                proceedingAmount: insertData.proceeding_amount,
-                status: insertData.status,
-                notes: insertData.notes,
-                createdAt: new Date().toISOString(),
-              },
-            }
-          );
-
-          if (emailError) {
-            console.error("Email notification error:", emailError);
-            // Ana işlemi başarısız saymayalım
-          }
-        } catch (emailError) {
-          console.error("Failed to send notification email:", emailError);
-          // Ana işlemi başarısız saymayalım
-        }
-
         toast({
           title: "Başarılı",
-          description: "İcralık eklendi ve bildirim e-postası gönderildi.",
+          description: "İcralık başarıyla eklendi.",
         });
       }
 
