@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 interface OrderDocumentsEmailRequest {
+  orderId?: string;
   customerEmail: string;
   customerName: string;
   packageName: string;
@@ -88,6 +89,28 @@ const buildTextContent = (customerName: string, packageName: string, message: st
   return sections.join('\n\n');
 };
 
+const getOrderContractContent = async (supabaseAdmin: ReturnType<typeof createClient>, orderId?: string) => {
+  if (!orderId) {
+    return { preInfoContent: undefined, distanceSalesContent: undefined };
+  }
+
+  const { data: order, error } = await supabaseAdmin
+    .from('orders')
+    .select('pre_info_pdf_content, distance_sales_pdf_content')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Order fetch error:', error);
+    return { preInfoContent: undefined, distanceSalesContent: undefined };
+  }
+
+  return {
+    preInfoContent: order?.pre_info_pdf_content?.trim() || undefined,
+    distanceSalesContent: order?.distance_sales_pdf_content?.trim() || undefined,
+  };
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -103,7 +126,13 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     const {
+      orderId,
       customerEmail,
       customerName,
       packageName,
@@ -116,7 +145,21 @@ const handler = async (req: Request): Promise<Response> => {
       distanceSalesContent
     }: OrderDocumentsEmailRequest = await req.json();
 
+    let resolvedPreInfoContent = preInfoContent?.trim() || undefined;
+    let resolvedDistanceSalesContent = distanceSalesContent?.trim() || undefined;
+
+    if (!resolvedPreInfoContent || !resolvedDistanceSalesContent) {
+      const orderContractContent = await getOrderContractContent(supabaseAdmin, orderId);
+      resolvedPreInfoContent ||= orderContractContent.preInfoContent;
+      resolvedDistanceSalesContent ||= orderContractContent.distanceSalesContent;
+    }
+
     console.log('Sending order documents email to:', customerEmail);
+    console.log('Contract content found:', {
+      orderId,
+      hasPreInfo: !!resolvedPreInfoContent,
+      hasDistanceSales: !!resolvedDistanceSalesContent,
+    });
 
     const attachments: Array<{ content: string; name: string }> = [];
 
@@ -131,8 +174,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const contractSections = [
-      renderContractSection('📋 Ön Bilgilendirme Formu', preInfoContent),
-      renderContractSection('📄 Mesafeli Satış Sözleşmesi', distanceSalesContent),
+      renderContractSection('📋 Ön Bilgilendirme Formu', resolvedPreInfoContent),
+      renderContractSection('📄 Mesafeli Satış Sözleşmesi', resolvedDistanceSalesContent),
     ].join('');
 
     const subject = `Sipariş Onayı & Sözleşmeleriniz • ${packageName} • ${new Date().toLocaleString('tr-TR')}`;
@@ -179,7 +222,7 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    const textContent = buildTextContent(customerName, packageName, message, preInfoContent, distanceSalesContent);
+    const textContent = buildTextContent(customerName, packageName, message, resolvedPreInfoContent, resolvedDistanceSalesContent);
 
     const emailPayload: any = {
       sender: {
@@ -221,7 +264,6 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Email sent successfully:', responseData);
 
     try {
-      const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
       await supabaseAdmin.from('brevo_email_logs').insert({
         recipient_email: customerEmail,
         recipient_name: customerName,
@@ -230,9 +272,10 @@ const handler = async (req: Request): Promise<Response> => {
         status: 'sent',
         brevo_message_id: responseData.messageId || null,
         metadata: {
+          orderId,
           packageName,
-          hasPreInfo: !!preInfoContent,
-          hasDistanceSales: !!distanceSalesContent,
+          hasPreInfo: !!resolvedPreInfoContent,
+          hasDistanceSales: !!resolvedDistanceSalesContent,
           attachmentCount: attachments.length,
         }
       });
