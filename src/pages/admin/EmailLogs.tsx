@@ -38,6 +38,7 @@ export default function EmailLogs() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [templateFilter, setTemplateFilter] = useState("all");
   const [templates, setTemplates] = useState<string[]>([]);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     fetchEmails();
