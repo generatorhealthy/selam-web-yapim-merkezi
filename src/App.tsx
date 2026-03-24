@@ -94,6 +94,7 @@ const SpecialistApplications = lazy(() => import("./pages/admin/SpecialistApplic
 const StaffAttendance = lazy(() => import("./pages/admin/StaffAttendance"));
 const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
 const AdminAIAssistant = lazy(() => import("./pages/admin/AdminAIAssistant"));
+const EmailLogs = lazy(() => import("./pages/admin/EmailLogs"));
 const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 
 // Doctor pages
