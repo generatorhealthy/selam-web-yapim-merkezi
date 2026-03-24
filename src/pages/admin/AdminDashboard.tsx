@@ -38,7 +38,8 @@ import {
   Share2,
   HardDrive,
   CreditCard,
-  Gauge
+  Gauge,
+  Mail
 } from "lucide-react";
 
 const AdminDashboard = () => {
