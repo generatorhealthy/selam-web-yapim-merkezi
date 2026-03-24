@@ -2634,6 +2634,48 @@ export type Database = {
         }
         Relationships: []
       }
+      brevo_email_logs: {
+        Row: {
+          brevo_message_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          recipient_name: string | null
+          sender_email: string
+          status: string
+          subject: string
+          template_name: string | null
+        }
+        Insert: {
+          brevo_message_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          recipient_name?: string | null
+          sender_email?: string
+          status?: string
+          subject: string
+          template_name?: string | null
+        }
+        Update: {
+          brevo_message_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          recipient_name?: string | null
+          sender_email?: string
+          status?: string
+          subject?: string
+          template_name?: string | null
+        }
+        Relationships: []
+      }
       call_reports: {
         Row: {
           created_at: string
