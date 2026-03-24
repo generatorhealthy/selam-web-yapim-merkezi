@@ -49,6 +49,7 @@ interface Order {
   deleted_at?: string | null;
   pre_info_pdf_content?: string | null;
   distance_sales_pdf_content?: string | null;
+  contract_emails_sent?: boolean | null;
   invoice_sent?: boolean;
   invoice_number?: string | null;
   invoice_date?: string | null;
@@ -162,6 +163,53 @@ const OrderManagement = () => {
       }
     } catch (error) {
       console.error('Automatic order güncelleme hatası:', error);
+    }
+  };
+
+  const sendContractEmail = async (order: Order) => {
+    const nameParts = order.customer_name.split(' ');
+    const name = nameParts[0] || '';
+    const surname = nameParts.slice(1).join(' ') || '';
+
+    const emailData = {
+      customerData: {
+        name,
+        surname,
+        email: order.customer_email,
+        phone: order.customer_phone || '',
+        tcNo: order.customer_tc_no || '',
+        address: order.customer_address || '',
+        city: order.customer_city || '',
+        postalCode: '',
+        companyName: order.company_name || undefined,
+        taxNo: order.company_tax_no || undefined,
+        taxOffice: order.company_tax_office || undefined,
+      },
+      packageData: {
+        name: order.package_name,
+        price: Number(order.amount),
+        originalPrice: Number(order.amount),
+      },
+      paymentMethod: order.payment_method,
+      customerType: order.customer_type,
+      orderId: order.id,
+    };
+
+    const { error } = await supabase.functions.invoke('send-order-completion-email', {
+      body: emailData,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ contract_emails_sent: true })
+      .eq('id', order.id);
+
+    if (updateError) {
+      throw updateError;
     }
   };
 
@@ -336,6 +384,11 @@ const OrderManagement = () => {
     },
     onSuccess: async (data) => {
       const previousOrder = orders?.find(o => o.id === data.id);
+      const shouldSendContractEmail =
+        data.status === 'approved' &&
+        previousOrder?.status !== 'approved' &&
+        !data.contract_emails_sent &&
+        (data.is_first_order || (data.subscription_month ?? 0) === 1);
       
       // Otomatik fatura oluştur eğer durum approved'a değişti
       if (data.status === 'approved' && previousOrder?.status !== 'approved') {
@@ -345,6 +398,19 @@ const OrderManagement = () => {
         
         // Müşteri yönetimindeki ödeme durumunu güncelle
         await updateAutomaticOrderPayment(data as Order);
+      }
+
+      if (shouldSendContractEmail) {
+        try {
+          await sendContractEmail(data as Order);
+        } catch (emailError) {
+          console.error('Error sending contract email:', emailError);
+          toast({
+            title: 'Uyarı',
+            description: 'Sipariş onaylandı ancak sözleşme e-postası gönderilemedi.',
+            variant: 'destructive',
+          });
+        }
       }
       
       toast({

@@ -130,8 +130,8 @@ const PaymentManagement = () => {
         await updateAutomaticOrderPayment(order);
       }
 
-      // Eğer sipariş onaylandıysa ve ilk sipariş ise sözleşme e-postalarını gönder
-      if (status === 'approved' && order.is_first_order && !order.contract_emails_sent) {
+      // Eğer sipariş onaylandıysa ve ilk ay / ilk sipariş ise sözleşme e-postalarını gönder
+      if (status === 'approved' && (order.is_first_order || (order.subscription_month ?? 0) === 1) && !order.contract_emails_sent) {
         await sendContractEmails(order);
       }
 

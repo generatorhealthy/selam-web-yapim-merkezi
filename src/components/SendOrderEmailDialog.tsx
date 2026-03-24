@@ -146,6 +146,7 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
     try {
       const { data, error } = await supabase.functions.invoke('send-order-documents-email', {
         body: {
+          orderId: order.id,
           customerEmail: normalizedEmail,
           customerName: order.customer_name,
           packageName: order.package_name,
