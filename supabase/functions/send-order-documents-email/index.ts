@@ -8,6 +8,7 @@ const corsHeaders = {
 
 interface OrderDocumentsEmailRequest {
   orderId?: string;
+  orderCustomerEmail?: string;
   customerEmail: string;
   customerName: string;
   packageName: string;
@@ -89,25 +90,60 @@ const buildTextContent = (customerName: string, packageName: string, message: st
   return sections.join('\n\n');
 };
 
-const getOrderContractContent = async (supabaseAdmin: ReturnType<typeof createClient>, orderId?: string) => {
-  if (!orderId) {
-    return { preInfoContent: undefined, distanceSalesContent: undefined };
+const getOrderContractContent = async (
+  supabaseAdmin: ReturnType<typeof createClient>,
+  options: {
+    orderId?: string;
+    orderCustomerEmail?: string;
+    customerEmail: string;
+    packageName: string;
+  }
+) => {
+  const { orderId, orderCustomerEmail, customerEmail, packageName } = options;
+
+  if (orderId) {
+    const { data: order, error } = await supabaseAdmin
+      .from('orders')
+      .select('id, pre_info_pdf_content, distance_sales_pdf_content')
+      .eq('id', orderId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Order fetch error by id:', error);
+    } else if (order) {
+      return {
+        matchedOrderId: order.id,
+        preInfoContent: order.pre_info_pdf_content?.trim() || undefined,
+        distanceSalesContent: order.distance_sales_pdf_content?.trim() || undefined,
+      };
+    }
   }
 
-  const { data: order, error } = await supabaseAdmin
+  const lookupEmail = orderCustomerEmail?.trim() || customerEmail.trim();
+  if (!lookupEmail) {
+    return { matchedOrderId: undefined, preInfoContent: undefined, distanceSalesContent: undefined };
+  }
+
+  const { data: fallbackOrders, error: fallbackError } = await supabaseAdmin
     .from('orders')
-    .select('pre_info_pdf_content, distance_sales_pdf_content')
-    .eq('id', orderId)
-    .maybeSingle();
+    .select('id, pre_info_pdf_content, distance_sales_pdf_content, created_at')
+    .eq('customer_email', lookupEmail)
+    .eq('package_name', packageName)
+    .in('status', ['approved', 'completed'])
+    .order('created_at', { ascending: false })
+    .limit(1);
 
-  if (error) {
-    console.error('Order fetch error:', error);
-    return { preInfoContent: undefined, distanceSalesContent: undefined };
+  if (fallbackError) {
+    console.error('Order fetch error by email fallback:', fallbackError);
+    return { matchedOrderId: undefined, preInfoContent: undefined, distanceSalesContent: undefined };
   }
+
+  const fallbackOrder = fallbackOrders?.[0];
 
   return {
-    preInfoContent: order?.pre_info_pdf_content?.trim() || undefined,
-    distanceSalesContent: order?.distance_sales_pdf_content?.trim() || undefined,
+    matchedOrderId: fallbackOrder?.id,
+    preInfoContent: fallbackOrder?.pre_info_pdf_content?.trim() || undefined,
+    distanceSalesContent: fallbackOrder?.distance_sales_pdf_content?.trim() || undefined,
   };
 };
 
@@ -133,6 +169,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const {
       orderId,
+      orderCustomerEmail,
       customerEmail,
       customerName,
       packageName,
@@ -147,19 +184,32 @@ const handler = async (req: Request): Promise<Response> => {
 
     let resolvedPreInfoContent = preInfoContent?.trim() || undefined;
     let resolvedDistanceSalesContent = distanceSalesContent?.trim() || undefined;
+    let resolvedOrderId = orderId;
 
     if (!resolvedPreInfoContent || !resolvedDistanceSalesContent) {
-      const orderContractContent = await getOrderContractContent(supabaseAdmin, orderId);
+      const orderContractContent = await getOrderContractContent(supabaseAdmin, {
+        orderId,
+        orderCustomerEmail,
+        customerEmail,
+        packageName,
+      });
+      resolvedOrderId ||= orderContractContent.matchedOrderId;
       resolvedPreInfoContent ||= orderContractContent.preInfoContent;
       resolvedDistanceSalesContent ||= orderContractContent.distanceSalesContent;
     }
 
     console.log('Sending order documents email to:', customerEmail);
     console.log('Contract content found:', {
-      orderId,
+      requestedOrderId: orderId,
+      resolvedOrderId,
+      orderCustomerEmail,
       hasPreInfo: !!resolvedPreInfoContent,
       hasDistanceSales: !!resolvedDistanceSalesContent,
     });
+
+    if (!resolvedPreInfoContent && !resolvedDistanceSalesContent) {
+      throw new Error('Siparişte gönderilecek sözleşme içeriği bulunamadı');
+    }
 
     const attachments: Array<{ content: string; name: string }> = [];
 
@@ -272,7 +322,7 @@ const handler = async (req: Request): Promise<Response> => {
         status: 'sent',
         brevo_message_id: responseData.messageId || null,
         metadata: {
-          orderId,
+          orderId: resolvedOrderId || orderId,
           packageName,
           hasPreInfo: !!resolvedPreInfoContent,
           hasDistanceSales: !!resolvedDistanceSalesContent,
