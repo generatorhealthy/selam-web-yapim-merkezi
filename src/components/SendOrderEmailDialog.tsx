@@ -13,6 +13,8 @@ interface Order {
   customer_name: string;
   customer_email: string;
   package_name: string;
+  pre_info_pdf_content?: string | null;
+  distance_sales_pdf_content?: string | null;
 }
 
 interface SendOrderEmailDialogProps {
@@ -147,6 +149,7 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
       const { data, error } = await supabase.functions.invoke('send-order-documents-email', {
         body: {
           orderId: order.id,
+          orderCustomerEmail: order.customer_email,
           customerEmail: normalizedEmail,
           customerName: order.customer_name,
           packageName: order.package_name,
@@ -154,7 +157,9 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
           invoicePdf: invoiceFile?.base64,
           contractPdf: contractFile?.base64,
           invoiceFileName: invoiceFile?.file.name,
-          contractFileName: contractFile?.file.name
+          contractFileName: contractFile?.file.name,
+          preInfoContent: order.pre_info_pdf_content?.trim() || undefined,
+          distanceSalesContent: order.distance_sales_pdf_content?.trim() || undefined,
         }
       });
 
