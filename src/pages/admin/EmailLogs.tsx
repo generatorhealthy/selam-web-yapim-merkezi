@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Mail, Search, RefreshCw, CheckCircle, XCircle, Clock, Filter } from "lucide-react";
+import { Mail, Search, RefreshCw, CheckCircle, XCircle, Clock, Filter, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminBackButton from "@/components/AdminBackButton";
 import { AdminTopBar } from "@/components/AdminTopBar";
@@ -13,6 +13,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminActivityTracker } from "@/hooks/useAdminActivityTracker";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface EmailLog {
   id: string;
@@ -37,6 +38,7 @@ export default function EmailLogs() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [templateFilter, setTemplateFilter] = useState("all");
   const [templates, setTemplates] = useState<string[]>([]);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     fetchEmails();
@@ -62,6 +64,22 @@ export default function EmailLogs() {
       console.error('Error fetching email logs:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const syncBrevoHistory = async () => {
+    try {
+      setSyncing(true);
+      toast.info("Brevo geçmişi senkronize ediliyor...");
+      const { data, error } = await supabase.functions.invoke('sync-brevo-email-history');
+      if (error) throw error;
+      toast.success(`${data?.imported || 0} e-posta geçmişten aktarıldı`);
+      await fetchEmails();
+    } catch (err: any) {
+      console.error('Sync error:', err);
+      toast.error("Senkronizasyon hatası: " + err.message);
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -133,10 +151,16 @@ export default function EmailLogs() {
       <AdminTopBar userRole={userProfile?.role || null} />
       
       <div className="container mx-auto px-6 py-8">
-        <div className="mb-8">
-          <AdminBackButton />
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">E-posta Logları</h1>
-          <p className="text-slate-600">Brevo üzerinden gönderilen tüm e-postaların kaydı</p>
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <AdminBackButton />
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">E-posta Logları</h1>
+            <p className="text-slate-600">Brevo üzerinden gönderilen tüm e-postaların kaydı</p>
+          </div>
+          <Button onClick={syncBrevoHistory} disabled={syncing} variant="outline" className="gap-2">
+            <Download className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Senkronize ediliyor...' : 'Brevo Geçmişini Aktar'}
+          </Button>
         </div>
 
         {/* Stats */}
