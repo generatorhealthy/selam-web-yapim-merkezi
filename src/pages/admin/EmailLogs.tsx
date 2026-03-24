@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Mail, Search, RefreshCw, CheckCircle, XCircle, Clock, Filter } from "lucide-react";
+import { Mail, Search, RefreshCw, CheckCircle, XCircle, Clock, Filter, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminBackButton from "@/components/AdminBackButton";
 import { AdminTopBar } from "@/components/AdminTopBar";
@@ -13,6 +13,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminActivityTracker } from "@/hooks/useAdminActivityTracker";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface EmailLog {
   id: string;
