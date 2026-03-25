@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity, CreditCard, Package } from "lucide-react";
+import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity, CreditCard, Package, Sparkles, Eye, PenLine } from "lucide-react";
 import ContractDialog from "@/components/ContractDialog";
 import { ClientPortfolio } from "@/components/ClientPortfolio";
 
@@ -266,6 +266,7 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
 
 const DoctorDashboard = () => {
   const [doctor, setDoctor] = useState<any>(null);
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
@@ -344,7 +345,8 @@ const DoctorDashboard = () => {
           fetchAppointments(foundSpecialist.id),
           fetchSupportTickets(foundSpecialist.id),
           fetchContracts(foundSpecialist.email, foundSpecialist.name),
-          fetchBlogNotifications(foundSpecialist.id)
+          fetchBlogNotifications(foundSpecialist.id),
+          fetchBlogPosts(foundSpecialist.id)
         ]);
       } catch (error) {
         console.error('Auth check error:', error);
@@ -441,6 +443,23 @@ const DoctorDashboard = () => {
       setBlogNotifications(data || []);
     } catch (error) {
       console.error('Blog bildirimleri yüklenirken beklenmeyen hata:', error);
+    }
+  };
+
+  const fetchBlogPosts = async (specialistId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('specialist_id', specialistId)
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Blog yazıları yüklenirken hata:', error);
+        return;
+      }
+      setBlogPosts(data || []);
+    } catch (error) {
+      console.error('Blog yazıları yüklenirken beklenmeyen hata:', error);
     }
   };
 
@@ -924,11 +943,11 @@ const DoctorDashboard = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               {/* Dashboard */}
               <TabsContent value="dashboard" className="mt-0 space-y-6">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-background rounded-2xl border p-5 hover:shadow-lg transition-all duration-300 group">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+                {/* Stats Row */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-background rounded-2xl border p-5 hover:shadow-lg transition-all duration-300 group cursor-pointer" onClick={() => setActiveTab('appointments')}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all duration-300">
                         <Calendar className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
                       </div>
                       <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -936,9 +955,8 @@ const DoctorDashboard = () => {
                     <p className="text-2xl font-bold text-foreground">{appointments.length}</p>
                     <p className="text-sm text-muted-foreground mt-1">Toplam Randevu</p>
                   </div>
-
                   <div className="bg-background rounded-2xl border p-5 hover:shadow-lg transition-all duration-300 group">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500 transition-all duration-300">
                         <Clock className="w-5 h-5 text-amber-500 group-hover:text-white" />
                       </div>
@@ -949,9 +967,8 @@ const DoctorDashboard = () => {
                     <p className="text-2xl font-bold text-foreground">{pendingAppointments}</p>
                     <p className="text-sm text-muted-foreground mt-1">Bekleyen Randevular</p>
                   </div>
-
                   <div className="bg-background rounded-2xl border p-5 hover:shadow-lg transition-all duration-300 group">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500 transition-all duration-300">
                         <CheckCircle className="w-5 h-5 text-emerald-500 group-hover:text-white" />
                       </div>
@@ -959,9 +976,8 @@ const DoctorDashboard = () => {
                     <p className="text-2xl font-bold text-foreground">{confirmedAppointments}</p>
                     <p className="text-sm text-muted-foreground mt-1">Onaylanan Randevular</p>
                   </div>
-
                   <div className="bg-background rounded-2xl border p-5 hover:shadow-lg transition-all duration-300 group">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="w-11 h-11 rounded-xl bg-sky-500/10 flex items-center justify-center group-hover:bg-sky-500 transition-all duration-300">
                         <Activity className="w-5 h-5 text-sky-500 group-hover:text-white" />
                       </div>
@@ -971,115 +987,215 @@ const DoctorDashboard = () => {
                   </div>
                 </div>
 
-                {/* Quick Actions */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Upcoming Appointments */}
-                  <div className="lg:col-span-2 bg-background rounded-2xl border p-6">
-                    <div className="flex items-center justify-between mb-5">
-                      <h3 className="text-lg font-semibold text-foreground">Yaklaşan Randevular</h3>
-                      <button onClick={() => setActiveTab('appointments')} className="text-sm text-primary hover:underline flex items-center gap-1">
-                        Tümünü Gör <ChevronRight className="w-4 h-4" />
-                      </button>
+                {/* Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {/* Randevular Kartı */}
+                  <div className="bg-background rounded-2xl border p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group" onClick={() => setActiveTab('appointments')}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all duration-300">
+                          <Calendar className="w-6 h-6 text-primary group-hover:text-primary-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">Randevular</h3>
+                          <p className="text-xs text-muted-foreground">Yaklaşan randevularınız</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     {appointments.filter(a => a.status === 'pending' || a.status === 'confirmed').length === 0 ? (
-                      <div className="text-center py-10">
-                        <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3">
-                          <Calendar className="w-7 h-7 text-muted-foreground" />
-                        </div>
-                        <p className="text-muted-foreground text-sm">Yaklaşan randevunuz bulunmuyor.</p>
-                      </div>
+                      <p className="text-sm text-muted-foreground">Yaklaşan randevunuz yok.</p>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {appointments
                           .filter(a => a.status === 'pending' || a.status === 'confirmed')
-                          .slice(0, 5)
-                          .map((appointment) => (
-                            <div key={appointment.id} className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
-                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                <User className="w-5 h-5 text-primary" />
+                          .slice(0, 3)
+                          .map((apt) => (
+                            <div key={apt.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/50">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <User className="w-4 h-4 text-primary" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground text-sm truncate">{appointment.patient_name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(appointment.appointment_date).toLocaleDateString('tr-TR')} · {appointment.appointment_time}
-                                </p>
+                                <p className="text-sm font-medium text-foreground truncate">{apt.patient_name}</p>
+                                <p className="text-xs text-muted-foreground">{new Date(apt.appointment_date).toLocaleDateString('tr-TR')} · {apt.appointment_time}</p>
                               </div>
-                              <Badge className={`text-xs ${
-                                appointment.status === 'confirmed' 
-                                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
-                                  : 'bg-amber-100 text-amber-700 border-amber-200'
-                              }`}>
-                                {getStatusText(appointment.status)}
+                              <Badge className={`text-[10px] ${apt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                {getStatusText(apt.status)}
                               </Badge>
                             </div>
                           ))}
+                        {appointments.filter(a => a.status === 'pending' || a.status === 'confirmed').length > 3 && (
+                          <p className="text-xs text-primary font-medium text-center pt-1">+{appointments.filter(a => a.status === 'pending' || a.status === 'confirmed').length - 3} daha</p>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Quick Links & Blog Notifications */}
-                  <div className="space-y-6">
-                    {/* Quick Links */}
-                    <div className="bg-background rounded-2xl border p-6">
-                      <h3 className="text-lg font-semibold text-foreground mb-4">Hızlı Erişim</h3>
+                  {/* Blog Yönetimi Kartı */}
+                  <div className="bg-background rounded-2xl border p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group" onClick={() => setActiveTab('blog')}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center group-hover:bg-violet-500 transition-all duration-300">
+                          <PenLine className="w-6 h-6 text-violet-500 group-hover:text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">Blog Yazıları</h3>
+                          <p className="text-xs text-muted-foreground">Yayınlarınızı yönetin</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-violet-500 transition-colors" />
+                    </div>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="flex-1 bg-muted/50 rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-foreground">{blogPosts.length}</p>
+                        <p className="text-[10px] text-muted-foreground">Toplam Yazı</p>
+                      </div>
+                      <div className="flex-1 bg-muted/50 rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-emerald-600">{blogPosts.filter(b => b.status === 'published').length}</p>
+                        <p className="text-[10px] text-muted-foreground">Yayında</p>
+                      </div>
+                      <div className="flex-1 bg-muted/50 rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-amber-600">{blogPosts.filter(b => b.status === 'pending' || b.status === 'draft').length}</p>
+                        <p className="text-[10px] text-muted-foreground">Bekleyen</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setActiveTab('blog'); }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-medium hover:from-violet-600 hover:to-purple-700 transition-all shadow-md shadow-violet-500/20"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Yapay Zeka ile Blog Oluştur
+                    </button>
+                  </div>
+
+                  {/* Aboneliğim Kartı */}
+                  <div className="bg-background rounded-2xl border p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group" onClick={() => setActiveTab('subscription')}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500 transition-all duration-300">
+                          <CreditCard className="w-6 h-6 text-emerald-500 group-hover:text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">Aboneliğim</h3>
+                          <p className="text-xs text-muted-foreground">Ödeme durumunuz</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-500 transition-colors" />
+                    </div>
+                    {contracts.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Aktif aboneliğiniz yok.</p>
+                    ) : (
                       <div className="space-y-2">
-                        {[
-                          { label: 'Randevu Ekle', icon: Plus, tab: 'appointments' },
-                          { label: 'Destek Talebi', icon: MessageSquare, tab: 'support' },
-                          { label: 'Blog Yazıları', icon: FileText, tab: 'blog' },
-                          { label: 'Profil Düzenle', icon: User, tab: 'profile' },
-                        ].map((link) => (
-                          <button
-                            key={link.tab}
-                            onClick={() => setActiveTab(link.tab)}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
-                          >
-                            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <link.icon className="w-4 h-4 text-primary" />
+                        <div className="flex items-center gap-4 mb-3">
+                          <div className="flex-1 bg-muted/50 rounded-xl p-3 text-center">
+                            <p className="text-xl font-bold text-foreground">{contracts.length}</p>
+                            <p className="text-[10px] text-muted-foreground">Toplam</p>
+                          </div>
+                          <div className="flex-1 bg-muted/50 rounded-xl p-3 text-center">
+                            <p className="text-xl font-bold text-amber-600">{contracts.filter(c => c.status === 'pending').length}</p>
+                            <p className="text-[10px] text-muted-foreground">Bekleyen</p>
+                          </div>
+                          <div className="flex-1 bg-muted/50 rounded-xl p-3 text-center">
+                            <p className="text-xl font-bold text-emerald-600">{contracts.filter(c => c.status === 'approved').length}</p>
+                            <p className="text-[10px] text-muted-foreground">Onaylı</p>
+                          </div>
+                        </div>
+                        {contracts.slice(0, 2).map((order: any) => (
+                          <div key={order.id} className="flex items-center justify-between p-2.5 rounded-xl bg-muted/50">
+                            <div className="flex items-center gap-2">
+                              <Package className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm font-medium text-foreground truncate">{order.package_name}</span>
                             </div>
-                            <span className="text-sm font-medium text-foreground">{link.label}</span>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
-                          </button>
+                            <Badge className={`text-[10px] ${
+                              order.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                              order.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              'bg-sky-100 text-sky-700'
+                            }`}>
+                              {order.status === 'approved' ? 'Onaylandı' : order.status === 'pending' ? 'Bekleyen' : 'Tamamlandı'}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Danışan Portföyü Kartı */}
+                  <div className="bg-background rounded-2xl border p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group" onClick={() => setActiveTab('portfolio')}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center group-hover:bg-sky-500 transition-all duration-300">
+                          <Users className="w-6 h-6 text-sky-500 group-hover:text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">Danışan Portföyü</h3>
+                          <p className="text-xs text-muted-foreground">Danışanlarınızı yönetin</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-sky-500 transition-colors" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Danışan portföyünüze erişmek için tıklayın.</p>
+                  </div>
+
+                  {/* Hızlı Erişim Kartı */}
+                  <div className="bg-background rounded-2xl border p-6 hover:shadow-lg transition-all duration-300">
+                    <h3 className="font-semibold text-foreground mb-4">Hızlı Erişim</h3>
+                    <div className="space-y-2">
+                      {[
+                        { label: 'Randevu Ekle', icon: Plus, tab: 'appointments', color: 'text-primary bg-primary/10' },
+                        { label: 'Destek Talebi', icon: MessageSquare, tab: 'support', color: 'text-orange-500 bg-orange-500/10' },
+                        { label: 'Profil Düzenle', icon: User, tab: 'profile', color: 'text-sky-500 bg-sky-500/10' },
+                      ].map((link) => (
+                        <button
+                          key={link.tab}
+                          onClick={() => setActiveTab(link.tab)}
+                          className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
+                        >
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${link.color}`}>
+                            <link.icon className="w-4 h-4" />
+                          </div>
+                          <span className="text-sm font-medium text-foreground">{link.label}</span>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Bildirimler Kartı */}
+                  {blogNotifications.length > 0 && (
+                    <div className="bg-background rounded-2xl border p-6 hover:shadow-lg transition-all duration-300">
+                      <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-primary" />
+                        Bildirimler
+                        {unreadNotifications > 0 && (
+                          <span className="px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">{unreadNotifications}</span>
+                        )}
+                      </h3>
+                      <div className="space-y-2">
+                        {blogNotifications.slice(0, 3).map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                              notification.read ? 'bg-muted/50 border-transparent' : 'bg-primary/5 border-primary/20'
+                            }`}
+                            onClick={() => {
+                              window.open(`/blog/${notification.slug}`, '_blank');
+                              if (!notification.read) markBlogNotificationAsRead(notification.id);
+                            }}
+                          >
+                            <div className="flex items-start gap-2">
+                              {!notification.read && <span className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />}
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{notification.title}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {new Date(notification.created_at).toLocaleDateString('tr-TR')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
-
-                    {/* Blog Notifications */}
-                    {blogNotifications.length > 0 && (
-                      <div className="bg-background rounded-2xl border p-6">
-                        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                          <Bell className="w-5 h-5 text-primary" />
-                          Bildirimler
-                        </h3>
-                        <div className="space-y-3">
-                          {blogNotifications.slice(0, 3).map((notification) => (
-                            <div
-                              key={notification.id}
-                              className={`p-3 rounded-xl border transition-all cursor-pointer ${
-                                notification.read
-                                  ? 'bg-muted/50 border-transparent'
-                                  : 'bg-primary/5 border-primary/20'
-                              }`}
-                              onClick={() => {
-                                window.open(`/blog/${notification.slug}`, '_blank');
-                                if (!notification.read) markBlogNotificationAsRead(notification.id);
-                              }}
-                            >
-                              <div className="flex items-start gap-2">
-                                {!notification.read && <span className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />}
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium text-foreground truncate">{notification.title}</p>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {new Date(notification.created_at).toLocaleDateString('tr-TR')}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               </TabsContent>
 
