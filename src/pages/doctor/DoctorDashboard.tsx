@@ -1329,48 +1329,53 @@ const DoctorDashboard = () => {
                     <p className="text-sm text-muted-foreground mt-1">Müşteri ön bilgilendirme ve mesafeli satış sözleşmeleri</p>
                   </div>
                   <div className="p-6">
-                    {contracts.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-                          <FileSignature className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <p className="text-muted-foreground">Henüz sözleşmeniz bulunmamaktadır.</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {contracts.map((contract) => (
-                          <div key={contract.id} className="rounded-xl border p-5 hover:shadow-md transition-all">
-                            <div className="flex items-start gap-4">
-                              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                                <FileSignature className="w-5 h-5 text-emerald-500" />
+                    {(() => {
+                      // Sadece ilk sipariş sözleşmesini göster (is_first_order veya subscription_month === 1 veya en eski kayıt)
+                      const firstContract = contracts.find((c: any) => c.is_first_order === true || c.subscription_month === 1) || contracts[contracts.length - 1];
+                      
+                      if (!firstContract) {
+                        return (
+                          <div className="text-center py-12">
+                            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                              <FileSignature className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                            <p className="text-muted-foreground">Henüz sözleşmeniz bulunmamaktadır.</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="rounded-xl border p-5 hover:shadow-md transition-all">
+                          <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                              <FileSignature className="w-5 h-5 text-emerald-500" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="font-semibold text-foreground">{firstContract.customer_name}</h3>
+                                <Badge className="bg-emerald-100 text-emerald-700 text-xs">Geçerli Sözleşme</Badge>
                               </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-semibold text-foreground">{contract.customer_name}</h3>
-                                  <Badge className="bg-emerald-100 text-emerald-700 text-xs">Onaylandı</Badge>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                                  <p>📦 {contract.package_name} · ₺{contract.amount}</p>
-                                  <p>💳 {contract.payment_method}</p>
-                                  <p>📧 {contract.customer_email}</p>
-                                  <p>📅 {new Date(contract.created_at).toLocaleDateString('tr-TR')}</p>
-                                </div>
-                                <div className="flex gap-2 mt-4">
-                                  <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openContractDialog(contract, 'preInfo')}>
-                                    <FileText className="w-4 h-4 mr-1.5" />
-                                    Ön Bilgi
-                                  </Button>
-                                  <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openContractDialog(contract, 'distanceSales')}>
-                                    <FileSignature className="w-4 h-4 mr-1.5" />
-                                    Mesafeli Satış
-                                  </Button>
-                                </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                                <p>📦 {firstContract.package_name} · ₺{firstContract.amount}</p>
+                                <p>💳 {firstContract.payment_method}</p>
+                                <p>📧 {firstContract.customer_email}</p>
+                                <p>📅 Sözleşme Tarihi: {new Date(firstContract.created_at).toLocaleDateString('tr-TR')}</p>
+                              </div>
+                              <div className="flex gap-2 mt-4">
+                                <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openContractDialog(firstContract, 'preInfo')}>
+                                  <FileText className="w-4 h-4 mr-1.5" />
+                                  Ön Bilgilendirme Formu
+                                </Button>
+                                <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openContractDialog(firstContract, 'distanceSales')}>
+                                  <FileSignature className="w-4 h-4 mr-1.5" />
+                                  Mesafeli Satış Sözleşmesi
+                                </Button>
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </TabsContent>
