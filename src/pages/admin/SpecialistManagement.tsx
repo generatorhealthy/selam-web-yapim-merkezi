@@ -214,7 +214,8 @@ const SpecialistManagement = () => {
       
       const matchesStatus = filterStatus === "all" || 
                           (filterStatus === "active" && specialist.is_active) ||
-                          (filterStatus === "inactive" && !specialist.is_active);
+                          (filterStatus === "inactive" && !specialist.is_active && (specialist as any).registration_source !== 'self_registration') ||
+                          (filterStatus === "pending" && !specialist.is_active && (specialist as any).registration_source === 'self_registration');
       
       const matchesSpecialty = filterSpecialty === "all" || 
                              specialist.specialty === filterSpecialty;
