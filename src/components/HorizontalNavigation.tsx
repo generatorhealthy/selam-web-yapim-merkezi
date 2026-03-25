@@ -379,13 +379,13 @@ export function HorizontalNavigation() {
                {authInitialized && !isLoggedIn && (
                  <div className="flex items-center gap-3">
                    {currentPath !== '/bu-aya-ozel' && (
-                     <Button 
-                       variant="outline"
-                       className="border-blue-200 text-blue-600 hover:bg-blue-50 rounded-full font-medium px-6 py-2"
-                       onClick={() => setShowRegistrationForm(true)}
-                     >
-                       Kayıt Olmak İstiyorum
-                     </Button>
+                      <Button 
+                        variant="outline"
+                        className="border-blue-200 text-blue-600 hover:bg-blue-50 rounded-full font-medium px-6 py-2"
+                        onClick={() => navigate('/kayit-ol')}
+                      >
+                        Kayıt Olmak İstiyorum
+                      </Button>
                    )}
                    <Button 
                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2"
