@@ -794,6 +794,7 @@ const DoctorDashboard = () => {
     { id: 'dashboard', label: 'Gösterge Paneli', icon: BarChart3 },
     { id: 'appointments', label: 'Randevular', icon: Calendar, badge: pendingAppointments },
     { id: 'contracts', label: 'Sözleşmeler', icon: FileSignature },
+    { id: 'test-results', label: 'Test Cevapları', icon: ClipboardList },
     { id: 'support', label: 'Destek Talebi', icon: MessageSquare },
     { id: 'blog', label: 'Blog Yönetimi', icon: FileText, badge: unreadNotifications },
     { id: 'subscription', label: 'Aboneliğim', icon: CreditCard },
