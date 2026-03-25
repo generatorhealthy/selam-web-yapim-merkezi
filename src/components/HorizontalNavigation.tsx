@@ -317,22 +317,30 @@ export function HorizontalNavigation() {
 
           {/* Mobile Menu Button */}
           {isMobile && (
-            <button
-              className="flex flex-col items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-5 w-5 text-gray-800" />
-              ) : (
-                <>
-                  <div className="flex flex-col gap-1.5">
-                    <div className="w-6 h-[3px] bg-gray-800 rounded-full"></div>
-                    <div className="w-6 h-[3px] bg-gray-800 rounded-full"></div>
-                  </div>
-                  <span className="text-[10px] font-medium text-gray-800 mt-1">MENU</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/kayit-ol"
+                className="px-3 py-2 text-xs font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Kayıt Ol
+              </Link>
+              <button
+                className="flex flex-col items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-5 w-5 text-gray-800" />
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="w-6 h-[3px] bg-gray-800 rounded-full"></div>
+                      <div className="w-6 h-[3px] bg-gray-800 rounded-full"></div>
+                    </div>
+                    <span className="text-[10px] font-medium text-gray-800 mt-1">MENU</span>
+                  </>
+                )}
+              </button>
+            </div>
           )}
 
           {/* Desktop Right Side */}
