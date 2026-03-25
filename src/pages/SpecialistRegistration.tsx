@@ -324,7 +324,7 @@ const SpecialistRegistration = () => {
                   <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <User className="w-8 h-8 text-primary" />
                   </div>
-                  <h1 className="text-3xl font-bold text-foreground mb-2">Hesabınızı Oluşturun</h1>
+                  <h1 className="text-3xl font-bold text-foreground mb-2"><h1 className="text-3xl font-bold text-foreground mb-2">Uzman Üyeliğinizi Oluşturun</h1></h1>
                   <p className="text-muted-foreground">Platformumuza katılmak için e-posta ve şifrenizi belirleyin</p>
                 </div>
 
