@@ -276,8 +276,8 @@ const SpecialistRegistration = () => {
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm border-b border-blue-100 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <a href="/" className="text-2xl font-bold text-primary">
-              Doktorum Ol
+            <a href="/" className="flex items-center">
+              <img src="/logo.png" alt="Doktorum Ol" className="h-8" />
             </a>
             <Badge variant="secondary" className="bg-blue-50 text-primary border-blue-200">
               <Shield className="w-3 h-3 mr-1" />
