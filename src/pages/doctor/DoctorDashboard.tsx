@@ -396,7 +396,7 @@ const TestResultsPanel = ({ specialistId }: { specialistId: string }) => {
   );
 };
 
-
+const DoctorDashboard = () => {
   const [doctor, setDoctor] = useState<any>(null);
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
