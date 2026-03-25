@@ -602,9 +602,20 @@ const SpecialistManagement = () => {
                       <div className="mb-4">
                         <Badge 
                           variant={specialist.is_active ? "default" : "secondary"}
-                          className={specialist.is_active ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}
+                          className={
+                            specialist.is_active 
+                              ? "bg-green-100 text-green-800 hover:bg-green-100" 
+                              : specialist.registration_source === 'self_registration' 
+                                ? "bg-orange-100 text-orange-800 hover:bg-orange-100"
+                                : ""
+                          }
                         >
-                          {specialist.is_active ? "Aktif" : "Pasif"}
+                          {specialist.is_active 
+                            ? "Aktif" 
+                            : specialist.registration_source === 'self_registration' 
+                              ? "🆕 Yeni Kayıt" 
+                              : "Pasif"
+                          }
                         </Badge>
                       </div>
 
