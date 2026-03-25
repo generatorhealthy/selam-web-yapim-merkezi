@@ -345,7 +345,8 @@ const DoctorDashboard = () => {
           fetchAppointments(foundSpecialist.id),
           fetchSupportTickets(foundSpecialist.id),
           fetchContracts(foundSpecialist.email, foundSpecialist.name),
-          fetchBlogNotifications(foundSpecialist.id)
+          fetchBlogNotifications(foundSpecialist.id),
+          fetchBlogPosts(foundSpecialist.id)
         ]);
       } catch (error) {
         console.error('Auth check error:', error);
