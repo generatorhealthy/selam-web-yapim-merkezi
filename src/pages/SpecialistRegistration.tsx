@@ -727,40 +727,65 @@ const SpecialistRegistration = () => {
 
           {/* Step 4: Completion + Package Card */}
           {currentStep === 4 && (
-            <div className="space-y-8">
-              {/* Success message */}
+            <div className="space-y-8 max-w-md mx-auto">
+              {/* Success icon + message */}
               <div className="text-center">
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Check className="w-10 h-10 text-green-600" />
                 </div>
-                <h2 className="text-3xl font-bold text-foreground mb-2">Profiliniz Oluşturuldu! 🎉</h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Uzman profiliniz başarıyla oluşturuldu. Profilinizin yayına alınması için aşağıdaki paketi satın almanız gerekmektedir.
+                <h2 className="text-2xl font-bold text-foreground mb-2">Profiliniz Oluşturuldu! 🎉</h2>
+                <p className="text-muted-foreground text-sm">
+                  Profilinizin yayına alınması için aşağıdaki paketi satın almanız gerekmektedir.
                 </p>
               </div>
 
-              {/* Package Card */}
-              <Card className="border-2 border-primary shadow-2xl shadow-primary/10 overflow-hidden max-w-lg mx-auto">
-                <div className="bg-gradient-to-r from-primary to-blue-600 p-6 text-center">
-                  <Badge className="bg-white/20 text-white border-white/30 mb-3">Özel Fırsat</Badge>
-                  <h3 className="text-2xl font-bold text-white">Uzman Paket</h3>
-                  <div className="mt-3">
-                    <span className="text-5xl font-bold text-white">4.000</span>
-                    <span className="text-2xl text-white/80">₺</span>
-                    <span className="text-white/70 text-sm block mt-1">/ aylık</span>
+              {/* Package Card - clean minimal style */}
+              <Card className="border border-border/60 shadow-lg rounded-2xl overflow-hidden">
+                {/* Header */}
+                <div className="px-6 pt-6 pb-4">
+                  <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Özel Fırsat</p>
+                  <h3 className="text-lg font-bold text-foreground">Uzman Paket</h3>
+                </div>
+
+                {/* Price selection */}
+                <div className="px-6 pb-4">
+                  <div className="border-2 border-primary rounded-xl p-4 flex items-center gap-3 bg-primary/5">
+                    <div className="w-6 h-6 rounded-full border-2 border-primary flex items-center justify-center">
+                      <div className="w-3 h-3 rounded-full bg-primary" />
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-foreground">4.000</span>
+                      <span className="text-lg text-muted-foreground">₺</span>
+                      <span className="text-sm text-muted-foreground ml-1">/ aylık</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 border border-border/60 rounded-xl p-4 flex items-center gap-3 opacity-60">
+                    <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/40" />
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive" className="text-[10px] px-2 py-0.5">6.500₺ yerine</Badge>
+                      <span className="text-lg font-bold text-foreground">4.000 ₺</span>
+                      <span className="text-sm text-muted-foreground">Aylık</span>
+                    </div>
                   </div>
                 </div>
 
-                <CardContent className="p-6">
-                  <ul className="space-y-3 mb-6">
+                {/* Features */}
+                <div className="px-6 pb-4">
+                  <p className="text-sm font-semibold text-foreground mb-3">Neler Kazanırsınız?</p>
+                  <ul className="space-y-2.5">
                     {packageFeatures.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-foreground">{feature}</span>
+                      <li key={i} className="flex items-center gap-2.5 text-sm">
+                        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 text-green-600" />
+                        </div>
+                        <span className="text-foreground/80">{feature}</span>
                       </li>
                     ))}
                   </ul>
+                </div>
 
+                {/* CTA */}
+                <div className="px-6 pb-6 pt-2">
                   <Button
                     onClick={() => navigate('/odeme/ozel-firsat', {
                       state: {
@@ -773,16 +798,15 @@ const SpecialistRegistration = () => {
                         }
                       }
                     })}
-                    className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
+                    className="w-full h-12 text-base font-semibold rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
                   >
                     <CreditCard className="w-5 h-5 mr-2" />
                     Satın Al
                   </Button>
-
-                  <p className="text-center text-xs text-muted-foreground mt-3">
+                  <p className="text-center text-[11px] text-muted-foreground mt-3">
                     Ödemeniz onaylandığında profiliniz otomatik olarak yayına alınacaktır.
                   </p>
-                </CardContent>
+                </div>
               </Card>
             </div>
           )}
