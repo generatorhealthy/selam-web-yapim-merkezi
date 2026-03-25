@@ -804,9 +804,13 @@ const DoctorDashboard = () => {
           {/* Doctor Profile Card */}
           <div className="p-6 border-b">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg">
-                {doctor.name?.charAt(0)?.toUpperCase() || 'D'}
-              </div>
+              {doctor.profile_picture ? (
+                <img src={doctor.profile_picture} alt={doctor.name} className="w-12 h-12 rounded-full object-cover shadow-lg border-2 border-primary/20" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg">
+                  {doctor.name?.charAt(0)?.toUpperCase() || 'D'}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-foreground truncate text-sm">{doctor.name}</h3>
                 <p className="text-xs text-muted-foreground truncate">{doctor.specialty}</p>
