@@ -34,7 +34,7 @@ serve(async (req) => {
       supabaseAdmin
         .from('orders')
         .select('*')
-        .in('status', ['approved', 'completed'])
+        .in('status', ['pending', 'approved', 'completed'])
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
