@@ -264,7 +264,139 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
   );
 };
 
-const DoctorDashboard = () => {
+// Test Results Panel Component
+const TestResultsPanel = ({ specialistId }: { specialistId: string }) => {
+  const [testResults, setTestResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTestResults();
+  }, [specialistId]);
+
+  const fetchTestResults = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('test_results')
+        .select(`
+          *,
+          tests (
+            title,
+            category
+          )
+        `)
+        .eq('specialist_id', specialistId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTestResults(data || []);
+    } catch (error) {
+      console.error('Test sonuçları yüklenirken hata:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatAnswers = (answers: any, questions?: any) => {
+    if (!answers || typeof answers !== 'object') return [];
+    return Object.entries(answers).map(([key, value]) => ({
+      question: `Soru ${key}`,
+      answer: String(value)
+    }));
+  };
+
+  return (
+    <div className="bg-background rounded-2xl border">
+      <div className="p-5 border-b">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <ClipboardList className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-foreground">Test Cevapları</h2>
+            <p className="text-xs text-muted-foreground">Danışanlarınızın gönderdiği test sonuçları</p>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+        </div>
+      ) : testResults.length === 0 ? (
+        <div className="text-center py-12 px-4">
+          <ClipboardList className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground">Henüz test cevabı bulunmamaktadır.</p>
+        </div>
+      ) : (
+        <div className="divide-y">
+          {testResults.map((result) => (
+            <div key={result.id} className="hover:bg-muted/20 transition-colors">
+              <button
+                onClick={() => setExpandedId(expandedId === result.id ? null : result.id)}
+                className="w-full p-4 flex items-center gap-3 text-left"
+              >
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-foreground truncate">{result.patient_name}</h4>
+                    <Badge className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-0">
+                      {result.tests?.category || 'Test'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                    <span>{result.tests?.title || 'Bilinmeyen Test'}</span>
+                    <span>·</span>
+                    <span>{new Date(result.created_at).toLocaleDateString('tr-TR')} {new Date(result.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {result.patient_email && !result.patient_email.includes('@test.com') && (
+                    <span className="text-xs text-muted-foreground hidden sm:inline">{result.patient_email}</span>
+                  )}
+                  <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${expandedId === result.id ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+
+              {expandedId === result.id && (
+                <div className="px-4 pb-4 ml-12">
+                  {/* Contact Info */}
+                  <div className="flex flex-wrap gap-3 mb-3 text-xs text-muted-foreground">
+                    {result.patient_email && (
+                      <span className="flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        {result.patient_email.includes('@test.com') 
+                          ? result.patient_email.replace('@test.com', '') 
+                          : result.patient_email}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Answers */}
+                  <div className="bg-muted/30 rounded-xl p-4 space-y-2">
+                    <h5 className="text-xs font-semibold text-foreground mb-2">Cevaplar</h5>
+                    {formatAnswers(result.answers).map((item, idx) => (
+                      <div key={idx} className="flex gap-2 text-xs">
+                        <span className="font-medium text-muted-foreground min-w-[60px]">{item.question}:</span>
+                        <span className="text-foreground">{item.answer}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
   const [doctor, setDoctor] = useState<any>(null);
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
