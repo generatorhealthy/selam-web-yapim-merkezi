@@ -773,6 +773,7 @@ const DoctorDashboard = () => {
     { id: 'contracts', label: 'Sözleşmeler', icon: FileSignature },
     { id: 'support', label: 'Destek Talebi', icon: MessageSquare },
     { id: 'blog', label: 'Blog Yönetimi', icon: FileText, badge: unreadNotifications },
+    { id: 'subscription', label: 'Aboneliğim', icon: CreditCard },
     { id: 'portfolio', label: 'Danışan Portföyü', icon: Users },
     { id: 'profile', label: 'Profil Düzenle', icon: User },
   ];
