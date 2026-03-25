@@ -446,6 +446,23 @@ const DoctorDashboard = () => {
     }
   };
 
+  const fetchBlogPosts = async (specialistId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('specialist_id', specialistId)
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Blog yazıları yüklenirken hata:', error);
+        return;
+      }
+      setBlogPosts(data || []);
+    } catch (error) {
+      console.error('Blog yazıları yüklenirken beklenmeyen hata:', error);
+    }
+  };
+
   const markBlogNotificationAsRead = async (notificationId: string) => {
     try {
       await supabase
