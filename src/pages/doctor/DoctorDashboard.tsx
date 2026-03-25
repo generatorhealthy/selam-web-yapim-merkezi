@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users } from "lucide-react";
+import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity } from "lucide-react";
 import ContractDialog from "@/components/ContractDialog";
 import { ClientPortfolio } from "@/components/ClientPortfolio";
 
