@@ -1345,7 +1345,7 @@ const DoctorDashboard = () => {
               {/* Blog */}
               <TabsContent value="blog" className="mt-0">
                 <div className="bg-background rounded-2xl border">
-                  <DoctorBlogManagement doctorId={doctor.id} doctorName={doctor.name} />
+                  <DoctorBlogManagement doctorId={doctor.id} doctorName={doctor.name} doctorSpecialty={doctor.specialty} />
                 </div>
               </TabsContent>
 
