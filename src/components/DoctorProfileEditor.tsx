@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Settings, MapPin, Award, FileText, MessageSquare, Calendar, ClipboardList } from "lucide-react";
+import { User, MapPin, Award, FileText, MessageSquare, Phone, ClipboardList, Save, Clock, Mail, GraduationCap, Building2, Briefcase, MapPinned } from "lucide-react";
 import FAQSection from "@/components/FAQSection";
 import TestManagement from "@/components/TestManagement";
 
@@ -82,7 +82,6 @@ const DoctorProfileEditor = () => {
       console.log('Specialist profile loaded:', data);
       setSpecialist(data);
       
-      // FAQ'ları yükle
       if (data.faq) {
         try {
           const parsedFaq = JSON.parse(data.faq);
@@ -110,7 +109,6 @@ const DoctorProfileEditor = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get specialist info first
       const { data: specialistData } = await supabase
         .from('specialists')
         .select('id')
@@ -120,7 +118,6 @@ const DoctorProfileEditor = () => {
 
       if (!specialistData) return;
 
-      // Fetch appointments for this specialist
       const { data: appointmentsData, error } = await supabase
         .from('appointments')
         .select('*')
@@ -176,7 +173,6 @@ const DoctorProfileEditor = () => {
     try {
       console.log('Saving specialist profile:', specialist);
       
-      // FAQ'ları JSON string olarak hazırla
       const validFaqItems = faqItems.filter(item => item.question.trim() && item.answer.trim());
       const faqString = validFaqItems.length > 0 ? JSON.stringify(validFaqItems) : null;
       
@@ -235,36 +231,18 @@ const DoctorProfileEditor = () => {
     if (field === 'phone') {
       return;
     }
-    setSpecialist(prev => ({
+    setSpecialist((prev: any) => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-yellow-100 text-yellow-800';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'confirmed': return 'Onaylandı';
-      case 'cancelled': return 'İptal Edildi';
-      case 'completed': return 'Tamamlandı';
-      default: return 'Beklemede';
-    }
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Profil yükleniyor...</p>
+      <div className="flex items-center justify-center p-12">
+        <div className="text-center space-y-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground text-sm">Profil yükleniyor...</p>
         </div>
       </div>
     );
@@ -272,169 +250,186 @@ const DoctorProfileEditor = () => {
 
   if (!specialist) {
     return (
-      <Card>
-        <CardContent className="text-center p-8">
-          <p className="text-gray-600">Profil bilgileri bulunamadı.</p>
+      <Card className="border-dashed">
+        <CardContent className="text-center py-12">
+          <User className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground">Profil bilgileri bulunamadı.</p>
         </CardContent>
       </Card>
     );
   }
 
+  const allTimeSlots = [
+    "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", 
+    "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", 
+    "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", 
+    "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"
+  ];
+  const selectedSlots = specialist?.available_time_slots || [];
+
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="overflow-x-auto">
-          <TabsList className="grid grid-cols-7 min-w-max md:w-full h-auto p-1">
-            <TabsTrigger 
-              value="about" 
-              className="flex flex-col md:flex-row items-center gap-1 md:gap-2 px-2 py-2 text-xs md:text-sm whitespace-nowrap"
-            >
-              <User className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Hakkında</span>
-              <span className="sm:hidden">Hakkında</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="certifications" 
-              className="flex flex-col md:flex-row items-center gap-1 md:gap-2 px-2 py-2 text-xs md:text-sm whitespace-nowrap"
-            >
-              <Award className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Sertifikalar</span>
-              <span className="sm:hidden">Sertifika</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="address" 
-              className="flex flex-col md:flex-row items-center gap-1 md:gap-2 px-2 py-2 text-xs md:text-sm whitespace-nowrap"
-            >
-              <MapPin className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Adres</span>
-              <span className="sm:hidden">Adres</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="faq" 
-              className="flex flex-col md:flex-row items-center gap-1 md:gap-2 px-2 py-2 text-xs md:text-sm whitespace-nowrap"
-            >
-              <MessageSquare className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">SSS</span>
-              <span className="sm:hidden">SSS</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="tests" 
-              className="flex flex-col md:flex-row items-center gap-1 md:gap-2 px-2 py-2 text-xs md:text-sm whitespace-nowrap"
-            >
-              <ClipboardList className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Testler</span>
-              <span className="sm:hidden">Testler</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="contact" 
-              className="flex flex-col md:flex-row items-center gap-1 md:gap-2 px-2 py-2 text-xs md:text-sm whitespace-nowrap"
-            >
-              <Settings className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">İletişim</span>
-              <span className="sm:hidden">İletişim</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="blog" 
-              className="flex flex-col md:flex-row items-center gap-1 md:gap-2 px-2 py-2 text-xs md:text-sm whitespace-nowrap"
-            >
-              <FileText className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Blog</span>
-              <span className="sm:hidden">Blog</span>
-            </TabsTrigger>
+        <div className="bg-card rounded-xl border shadow-sm p-1.5 overflow-x-auto">
+          <TabsList className="grid grid-cols-7 w-full h-auto bg-transparent gap-1">
+            {[
+              { value: "about", icon: User, label: "Hakkında" },
+              { value: "certifications", icon: Award, label: "Sertifikalar" },
+              { value: "address", icon: MapPin, label: "Adres" },
+              { value: "faq", icon: MessageSquare, label: "SSS" },
+              { value: "tests", icon: ClipboardList, label: "Testler" },
+              { value: "contact", icon: Phone, label: "İletişim" },
+              { value: "blog", icon: FileText, label: "Blog" },
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/60"
+              >
+                <tab.icon className="w-4 h-4 shrink-0" />
+                <span className="hidden md:inline">{tab.label}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
 
-        <TabsContent value="about">
-          <Card>
-            <CardHeader>
-              <CardTitle>Hakkında</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Ad Soyad</Label>
+        <TabsContent value="about" className="space-y-6">
+          <Card className="border shadow-sm rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <User className="w-5 h-5 text-primary" />
+                Kişisel Bilgiler
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Temel profil bilgilerinizi düzenleyin</p>
+            </div>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-muted-foreground" />
+                    Ad Soyad
+                  </Label>
                   <Input
                     id="name"
                     value={specialist.name || ''}
                     onChange={(e) => handleInputChange('name', e.target.value)}
+                    className="h-11"
+                    placeholder="Adınız ve soyadınız"
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="specialty">Uzmanlık</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="specialty" className="text-sm font-medium flex items-center gap-2">
+                    <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
+                    Uzmanlık
+                  </Label>
                   <Input
                     id="specialty"
                     value={specialist.specialty || ''}
                     onChange={(e) => handleInputChange('specialty', e.target.value)}
+                    className="h-11"
+                    placeholder="Uzmanlık alanınız"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="city">Şehir</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="city" className="text-sm font-medium flex items-center gap-2">
+                    <MapPinned className="w-3.5 h-3.5 text-muted-foreground" />
+                    Şehir
+                  </Label>
                   <Input
                     id="city"
                     value={specialist.city || ''}
                     onChange={(e) => handleInputChange('city', e.target.value)}
+                    className="h-11"
+                    placeholder="Bulunduğunuz şehir"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="experience">Deneyim (Yıl)</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="experience" className="text-sm font-medium flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                    Deneyim (Yıl)
+                  </Label>
                   <Input
                     id="experience"
                     type="number"
                     value={specialist.experience || ''}
                     onChange={(e) => handleInputChange('experience', parseInt(e.target.value) || null)}
+                    className="h-11"
+                    placeholder="Kaç yıl deneyiminiz var?"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="university">Üniversite</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="university" className="text-sm font-medium flex items-center gap-2">
+                    <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+                    Üniversite
+                  </Label>
                   <Input
                     id="university"
                     value={specialist.university || ''}
                     onChange={(e) => handleInputChange('university', e.target.value)}
+                    className="h-11"
+                    placeholder="Mezun olduğunuz üniversite"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="education">Eğitim</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="education" className="text-sm font-medium flex items-center gap-2">
+                    <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
+                    Eğitim
+                  </Label>
                   <Input
                     id="education"
                     value={specialist.education || ''}
                     onChange={(e) => handleInputChange('education', e.target.value)}
+                    className="h-11"
+                    placeholder="Eğitim bilgileriniz"
                   />
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="bio">Biyografi</Label>
+              <div className="mt-6 space-y-2">
+                <Label htmlFor="bio" className="text-sm font-medium flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                  Biyografi
+                </Label>
                 <Textarea
                   id="bio"
                   value={specialist.bio || ''}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
-                  rows={4}
-                  placeholder="Kendiniz hakkında bilgi verin..."
+                  rows={6}
+                  placeholder="Kendiniz hakkında detaylı bilgi verin..."
+                  className="resize-y min-h-[120px]"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {specialist.bio ? specialist.bio.split(/\s+/).filter(Boolean).length : 0} kelime
+                </p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="certifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sertifikalar</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <Label htmlFor="certifications">Sertifikalar</Label>
+          <Card className="border shadow-sm rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-600" />
+                Sertifikalar ve Belgeler
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Sahip olduğunuz sertifika ve belgeleri ekleyin</p>
+            </div>
+            <CardContent className="p-6">
+              <div className="space-y-2">
+                <Label htmlFor="certifications" className="text-sm font-medium">Sertifikalarınız</Label>
                 <Textarea
                   id="certifications"
                   value={specialist.certifications || ''}
                   onChange={(e) => handleInputChange('certifications', e.target.value)}
-                  rows={4}
-                  placeholder="Sertifikalarınızı listeleyin..."
+                  rows={6}
+                  placeholder="Her satıra bir sertifika yazarak listeleyin...&#10;Örn: CBT (Bilişsel Davranışçı Terapi) Sertifikası&#10;EMDR Sertifikası"
+                  className="resize-y min-h-[150px]"
                 />
               </div>
             </CardContent>
@@ -442,19 +437,24 @@ const DoctorProfileEditor = () => {
         </TabsContent>
 
         <TabsContent value="address">
-          <Card>
-            <CardHeader>
-              <CardTitle>Adres</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <Label htmlFor="address">Adres</Label>
+          <Card className="border shadow-sm rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-emerald-600" />
+                Muayenehane / Ofis Adresi
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Yüz yüze danışmanlık için adres bilgileriniz</p>
+            </div>
+            <CardContent className="p-6">
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-sm font-medium">Tam Adres</Label>
                 <Textarea
                   id="address"
                   value={specialist.address || ''}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  rows={3}
-                  placeholder="Muayenehane/hastane adresinizi girin..."
+                  rows={4}
+                  placeholder="Muayenehane veya hastane adresinizi detaylı olarak girin..."
+                  className="resize-y min-h-[100px]"
                 />
               </div>
             </CardContent>
@@ -477,114 +477,166 @@ const DoctorProfileEditor = () => {
           />
         </TabsContent>
 
-        <TabsContent value="contact">
-          <Card>
-            <CardHeader>
-              <CardTitle>İletişim ve Randevu Ayarları</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">E-posta</Label>
+        <TabsContent value="contact" className="space-y-6">
+          <Card className="border shadow-sm rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Mail className="w-5 h-5 text-blue-600" />
+                İletişim Bilgileri
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">E-posta ve telefon bilgileriniz</p>
+            </div>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                    E-posta
+                  </Label>
                   <Input
                     id="email"
                     type="email"
                     value={specialist?.email || ''}
                     onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="h-11"
+                    placeholder="ornek@email.com"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="phone">Telefon</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                    Telefon
+                  </Label>
                   <Input
                     id="phone"
                     value="0 216 706 06 11"
                     readOnly
-                    className="bg-gray-100 cursor-not-allowed"
+                    className="h-11 bg-muted/50 cursor-not-allowed"
                   />
+                  <p className="text-xs text-muted-foreground">Telefon numarası sistem tarafından atanmıştır</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border shadow-sm rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20 px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-violet-600" />
+                Danışmanlık Türü
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Hangi tür danışmanlık hizmeti verdiğinizi seçin</p>
+            </div>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label
+                  htmlFor="online-consultation"
+                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    specialist?.online_consultation
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-border hover:border-primary/30 hover:bg-muted/30'
+                  }`}
+                >
+                  <Checkbox
+                    id="online-consultation"
+                    checked={specialist?.online_consultation || false}
+                    onCheckedChange={(checked) => handleInputChange('online_consultation', checked)}
+                  />
+                  <div>
+                    <p className="font-medium text-sm">Online Danışmanlık</p>
+                    <p className="text-xs text-muted-foreground">Video görüşme ile danışmanlık</p>
+                  </div>
+                </label>
+                <label
+                  htmlFor="face-to-face-consultation"
+                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    specialist?.face_to_face_consultation !== false
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-border hover:border-primary/30 hover:bg-muted/30'
+                  }`}
+                >
+                  <Checkbox
+                    id="face-to-face-consultation"
+                    checked={specialist?.face_to_face_consultation !== false}
+                    onCheckedChange={(checked) => handleInputChange('face_to_face_consultation', checked)}
+                  />
+                  <div>
+                    <p className="font-medium text-sm">Yüz Yüze Danışmanlık</p>
+                    <p className="text-xs text-muted-foreground">Ofiste yüz yüze görüşme</p>
+                  </div>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border shadow-sm rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-950/20 dark:to-cyan-950/20 px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Clock className="w-5 h-5 text-sky-600" />
+                Randevu Saatleri
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Müsait olduğunuz saatleri seçin (09:30 - 21:00 arası)</p>
+            </div>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {allTimeSlots.map((time) => {
+                  const isSelected = selectedSlots.includes(time);
+                  return (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => {
+                        const newSlots = isSelected
+                          ? selectedSlots.filter((t: string) => t !== time)
+                          : [...selectedSlots, time].sort();
+                        handleInputChange('available_time_slots', newSlots);
+                      }}
+                      className={`flex items-center justify-center py-2.5 px-3 rounded-lg text-sm font-medium border transition-all ${
+                        isSelected
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50 text-foreground'
+                      }`}
+                    >
+                      {time}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="space-y-3">
-                <Label>Danışmanlık Türü</Label>
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="online-consultation"
-                      checked={specialist?.online_consultation || false}
-                      onCheckedChange={(checked) => handleInputChange('online_consultation', checked)}
-                    />
-                    <Label htmlFor="online-consultation">Online Danışmanlık</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="face-to-face-consultation"
-                      checked={specialist?.face_to_face_consultation !== false}
-                      onCheckedChange={(checked) => handleInputChange('face_to_face_consultation', checked)}
-                    />
-                    <Label htmlFor="face-to-face-consultation">Yüz Yüze Danışmanlık</Label>
+              {selectedSlots.length > 0 && (
+                <div className="mt-4 p-4 bg-muted/30 rounded-xl border">
+                  <p className="text-sm font-medium text-foreground mb-2">
+                    ✓ {selectedSlots.length} saat seçildi
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedSlots.map((time: string) => (
+                      <Badge key={time} variant="secondary" className="text-xs px-2 py-1">
+                        {time}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
-              </div>
-
-              <div className="border-t pt-6 space-y-3">
-                <Label className="text-base font-semibold">Randevu Saatleri</Label>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Randevu almak için müsait olduğunuz saatleri seçin (09:30 - 21:00 arası 30 dakikalık aralıklar)
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto p-2 border rounded-lg">
-                  {(() => {
-                    const allTimeSlots = [
-                      "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", 
-                      "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", 
-                      "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", 
-                      "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"
-                    ];
-                    const selectedSlots = specialist?.available_time_slots || [];
-                    
-                    return allTimeSlots.map((time) => (
-                      <Label key={time} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-muted/50 rounded">
-                        <Checkbox
-                          checked={selectedSlots.includes(time)}
-                          onCheckedChange={(checked) => {
-                            const newSlots = checked 
-                              ? [...selectedSlots, time].sort()
-                              : selectedSlots.filter((t: string) => t !== time);
-                            handleInputChange('available_time_slots', newSlots);
-                          }}
-                        />
-                        <span className="text-sm">{time}</span>
-                      </Label>
-                    ));
-                  })()}
-                </div>
-                {specialist?.available_time_slots && specialist.available_time_slots.length > 0 && (
-                  <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-                    <p className="text-sm font-medium mb-2">Seçilen saatler: {specialist.available_time_slots.length} adet</p>
-                    <div className="flex flex-wrap gap-1">
-                      {specialist.available_time_slots.map((time: string) => (
-                        <Badge key={time} variant="secondary" className="text-xs">
-                          {time}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="blog">
-          <Card>
-            <CardHeader>
-              <CardTitle>Blog Yönetimi</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">
-                Blog yazılarınızı yönetmek için ayrı bir sayfaya yönlendirileceksiniz.
+          <Card className="border shadow-sm rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20 px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <FileText className="w-5 h-5 text-rose-600" />
+                Blog Yönetimi
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Blog yazılarınızı yönetin</p>
+            </div>
+            <CardContent className="p-6">
+              <p className="text-muted-foreground mb-4">
+                Blog yazılarınızı yönetmek için sol menüden "Blog Yönetimi" sekmesine gidin.
               </p>
-              <Button>
+              <Button variant="outline">
+                <FileText className="w-4 h-4 mr-2" />
                 Blog Yazılarım
               </Button>
             </CardContent>
@@ -592,13 +644,15 @@ const DoctorProfileEditor = () => {
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-end">
+      <div className="sticky bottom-4 flex justify-end z-10">
         <Button 
           onClick={handleSave} 
           disabled={saving}
-          className="bg-blue-600 hover:bg-blue-700"
+          size="lg"
+          className="shadow-lg px-8"
         >
-          {saving ? "Kaydediliyor..." : "Kaydet"}
+          <Save className="w-4 h-4 mr-2" />
+          {saving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
         </Button>
       </div>
     </div>
