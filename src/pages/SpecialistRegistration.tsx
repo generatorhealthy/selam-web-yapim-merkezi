@@ -126,7 +126,38 @@ const SpecialistRegistration = () => {
 
       if (error) {
         if (error.message.includes("already registered")) {
-          toast.error("Bu e-posta adresi zaten kayıtlı.");
+          // Email already exists in auth - try signing in
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (signInError) {
+            toast.error("Bu e-posta adresi kayıtlı ancak şifre hatalı. Lütfen doğru şifreyi girin.");
+            return;
+          }
+
+          if (signInData.user) {
+            // Check if user is already approved
+            const { data: profile } = await supabase
+              .from('user_profiles')
+              .select('is_approved')
+              .eq('user_id', signInData.user.id)
+              .maybeSingle();
+
+            if (profile?.is_approved) {
+              toast.error("Bu e-posta adresi ile zaten onaylı bir üyelik bulunmaktadır.");
+              await supabase.auth.signOut();
+              return;
+            }
+
+            // Not approved yet - allow continuing registration
+            setCreatedUserId(signInData.user.id);
+            setCreatedUserEmail(email);
+            toast.success("Mevcut hesabınızla devam ediliyor.");
+            setCurrentStep(2);
+          }
+          return;
         } else {
           toast.error(error.message);
         }
@@ -134,13 +165,13 @@ const SpecialistRegistration = () => {
       }
 
       if (data.user) {
-        // Create user_profile
+        // Create user_profile with role 'specialist' and is_approved false
         const { error: profileError } = await supabase.from('user_profiles').insert({
           user_id: data.user.id,
           email: email,
           name: email.split('@')[0],
-          role: 'user',
-          is_approved: true,
+          role: 'specialist',
+          is_approved: false,
         });
         if (profileError) console.error('Profile creation error:', profileError);
 
