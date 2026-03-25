@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users } from "lucide-react";
+import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity } from "lucide-react";
 import ContractDialog from "@/components/ContractDialog";
 import { ClientPortfolio } from "@/components/ClientPortfolio";
 
@@ -762,10 +762,30 @@ const DoctorDashboard = () => {
     }
   };
 
+  const pendingAppointments = appointments.filter(app => app.status === 'pending').length;
+  const confirmedAppointments = appointments.filter(app => app.status === 'confirmed').length;
+  const completedAppointments = appointments.filter(app => app.status === 'completed').length;
+  const unreadNotifications = blogNotifications.filter(n => !n.read).length;
+
+  const sidebarItems = [
+    { id: 'dashboard', label: 'Gösterge Paneli', icon: BarChart3 },
+    { id: 'appointments', label: 'Randevular', icon: Calendar, badge: pendingAppointments },
+    { id: 'contracts', label: 'Sözleşmeler', icon: FileSignature },
+    { id: 'support', label: 'Destek Talebi', icon: MessageSquare },
+    { id: 'blog', label: 'Blog Yönetimi', icon: FileText, badge: unreadNotifications },
+    { id: 'portfolio', label: 'Danışan Portföyü', icon: Users },
+    { id: 'profile', label: 'Profil Düzenle', icon: User },
+  ];
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center animate-pulse">
+            <Activity className="w-8 h-8 text-primary" />
+          </div>
+          <p className="text-muted-foreground text-sm">Yükleniyor...</p>
+        </div>
       </div>
     );
   }
@@ -775,678 +795,572 @@ const DoctorDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       <HorizontalNavigation />
       
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="hidden lg:flex flex-col w-72 min-h-[calc(100vh-64px)] bg-background border-r sticky top-16">
+          {/* Doctor Profile Card */}
+          <div className="p-6 border-b">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg">
+                {doctor.name?.charAt(0)?.toUpperCase() || 'D'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground truncate text-sm">{doctor.name}</h3>
+                <p className="text-xs text-muted-foreground truncate">{doctor.specialty}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Nav Items */}
+          <nav className="flex-1 p-3 space-y-1">
+            {sidebarItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  {item.badge && item.badge > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                      isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/10 text-primary'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Logout */}
+          <div className="p-3 border-t">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Çıkış Yap</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 min-w-0">
+          {/* Top Bar */}
+          <div className="bg-background border-b px-6 lg:px-8 py-5">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  Hoş geldiniz, {doctor.name}
+                <h1 className="text-2xl font-bold text-foreground">
+                  Hoş geldiniz, {doctor.name} 👋
                 </h1>
-                <p className="text-sm text-gray-500">{doctor.specialty}</p>
+                <p className="text-sm text-muted-foreground mt-1">{doctor.specialty} · Uzman Paneli</p>
               </div>
-            </div>
-            <Button onClick={handleLogout} variant="outline" size="sm">
-              <LogOut className="w-4 h-4 mr-2" />
-              Çıkış Yap
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
-            <div 
-              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
-                activeTab === 'dashboard' 
-                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
-                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
-              }`}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              <div className="p-6 text-center">
-                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
-                  activeTab === 'dashboard' 
-                    ? 'bg-primary text-primary-foreground shadow-lg' 
-                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
-                }`}>
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1">Gösterge Paneli</h3>
-                <p className="text-sm text-muted-foreground">Ana sayfa</p>
-              </div>
-            </div>
-            
-            <div 
-              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
-                activeTab === 'appointments' 
-                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
-                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
-              }`}
-              onClick={() => setActiveTab('appointments')}
-            >
-              <div className="p-6 text-center">
-                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
-                  activeTab === 'appointments' 
-                    ? 'bg-primary text-primary-foreground shadow-lg' 
-                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
-                }`}>
-                  <Calendar className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1">Randevular</h3>
-                <p className="text-sm text-muted-foreground">Randevu yönetimi</p>
-              </div>
-            </div>
-            
-            <div 
-              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
-                activeTab === 'contracts' 
-                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
-                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
-              }`}
-              onClick={() => setActiveTab('contracts')}
-            >
-              <div className="p-6 text-center">
-                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
-                  activeTab === 'contracts' 
-                    ? 'bg-primary text-primary-foreground shadow-lg' 
-                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
-                }`}>
-                  <FileSignature className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1">Sözleşmeler</h3>
-                <p className="text-sm text-muted-foreground">Müşteri sözleşmeleri</p>
+              <div className="flex items-center gap-3">
+                {unreadNotifications > 0 && (
+                  <button
+                    onClick={() => setActiveTab('blog')}
+                    className="relative p-2.5 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
+                  >
+                    <Bell className="w-5 h-5 text-foreground" />
+                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-bold">
+                      {unreadNotifications}
+                    </span>
+                  </button>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="lg:hidden p-2.5 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
+                >
+                  <LogOut className="w-5 h-5 text-foreground" />
+                </button>
               </div>
             </div>
 
-            <div 
-              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
-                activeTab === 'support' 
-                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
-                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
-              }`}
-              onClick={() => setActiveTab('support')}
-            >
-              <div className="p-6 text-center">
-                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
-                  activeTab === 'support' 
-                    ? 'bg-primary text-primary-foreground shadow-lg' 
-                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
-                }`}>
-                  <MessageSquare className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1">Destek Talebi</h3>
-                <p className="text-sm text-muted-foreground">Destek konuları</p>
-              </div>
-            </div>
-            
-            <div 
-              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
-                activeTab === 'blog' 
-                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
-                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
-              }`}
-              onClick={() => setActiveTab('blog')}
-            >
-              <div className="p-6 text-center">
-                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
-                  activeTab === 'blog' 
-                    ? 'bg-primary text-primary-foreground shadow-lg' 
-                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
-                }`}>
-                  <FileText className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1">Blog Yönetimi</h3>
-                <p className="text-sm text-muted-foreground">Blog yazıları</p>
-              </div>
-            </div>
-            
-            <div 
-              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
-                activeTab === 'portfolio' 
-                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
-                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
-              }`}
-              onClick={() => setActiveTab('portfolio')}
-            >
-              <div className="p-6 text-center">
-                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
-                  activeTab === 'portfolio' 
-                    ? 'bg-primary text-primary-foreground shadow-lg' 
-                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
-                }`}>
-                  <Users className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1">Danışan Portföyü</h3>
-                <p className="text-sm text-muted-foreground">Yönlendirmeler</p>
-              </div>
-            </div>
-            
-            <div 
-              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer ${
-                activeTab === 'profile' 
-                  ? 'ring-2 ring-primary shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30' 
-                  : 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20'
-              }`}
-              onClick={() => setActiveTab('profile')}
-            >
-              <div className="p-6 text-center">
-                <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center transition-all duration-300 ${
-                  activeTab === 'profile' 
-                    ? 'bg-primary text-primary-foreground shadow-lg' 
-                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
-                }`}>
-                  <User className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold mb-1">Profil Düzenle</h3>
-                <p className="text-sm text-muted-foreground">Profil ayarları</p>
-              </div>
+            {/* Mobile Nav */}
+            <div className="lg:hidden mt-4 flex gap-2 overflow-x-auto pb-2 -mx-2 px-2">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <TabsContent value="dashboard" className="space-y-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl"></div>
-              <Card className="relative border-0 shadow-lg">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                    Gösterge Paneli
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="border border-primary/20 shadow-sm hover:shadow-md transition-all duration-300 group">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
-                          Toplam Randevu
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <div className="text-3xl font-bold text-foreground">{appointments.length}</div>
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                            <Calendar className="w-5 h-5 text-primary" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="border border-yellow-200 shadow-sm hover:shadow-md transition-all duration-300 group">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-yellow-600 transition-colors">
-                          Bekleyen Randevular
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <div className="text-3xl font-bold text-yellow-600">
-                            {appointments.filter(app => app.status === 'pending').length}
-                          </div>
-                          <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
-                            <Clock className="w-5 h-5 text-yellow-600" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="border border-green-200 shadow-sm hover:shadow-md transition-all duration-300 group">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-green-600 transition-colors">
-                          Onaylanan Randevular
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <div className="text-3xl font-bold text-green-600">
-                            {appointments.filter(app => app.status === 'confirmed').length}
-                          </div>
-                          <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+          {/* Content Area */}
+          <div className="p-6 lg:p-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              {/* Dashboard */}
+              <TabsContent value="dashboard" className="mt-0 space-y-6">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-background rounded-2xl border p-5 hover:shadow-lg transition-all duration-300 group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+                        <Calendar className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
+                      </div>
+                      <TrendingUp className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{appointments.length}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Toplam Randevu</p>
                   </div>
 
-                  {/* Blog Notifications Section */}
-                  {blogNotifications.length > 0 && (
-                    <Card className="mt-6 border border-blue-200 shadow-sm">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-                          <FileText className="w-5 h-5" />
-                          Yeni Blog İçerikleri
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
+                  <div className="bg-background rounded-2xl border p-5 hover:shadow-lg transition-all duration-300 group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500 transition-all duration-300">
+                        <Clock className="w-5 h-5 text-amber-500 group-hover:text-white" />
+                      </div>
+                      {pendingAppointments > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">Bekliyor</span>
+                      )}
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{pendingAppointments}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Bekleyen Randevular</p>
+                  </div>
+
+                  <div className="bg-background rounded-2xl border p-5 hover:shadow-lg transition-all duration-300 group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500 transition-all duration-300">
+                        <CheckCircle className="w-5 h-5 text-emerald-500 group-hover:text-white" />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{confirmedAppointments}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Onaylanan Randevular</p>
+                  </div>
+
+                  <div className="bg-background rounded-2xl border p-5 hover:shadow-lg transition-all duration-300 group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-11 h-11 rounded-xl bg-sky-500/10 flex items-center justify-center group-hover:bg-sky-500 transition-all duration-300">
+                        <Activity className="w-5 h-5 text-sky-500 group-hover:text-white" />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{completedAppointments}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Tamamlanan Randevular</p>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Upcoming Appointments */}
+                  <div className="lg:col-span-2 bg-background rounded-2xl border p-6">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-lg font-semibold text-foreground">Yaklaşan Randevular</h3>
+                      <button onClick={() => setActiveTab('appointments')} className="text-sm text-primary hover:underline flex items-center gap-1">
+                        Tümünü Gör <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {appointments.filter(a => a.status === 'pending' || a.status === 'confirmed').length === 0 ? (
+                      <div className="text-center py-10">
+                        <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3">
+                          <Calendar className="w-7 h-7 text-muted-foreground" />
+                        </div>
+                        <p className="text-muted-foreground text-sm">Yaklaşan randevunuz bulunmuyor.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {appointments
+                          .filter(a => a.status === 'pending' || a.status === 'confirmed')
+                          .slice(0, 5)
+                          .map((appointment) => (
+                            <div key={appointment.id} className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <User className="w-5 h-5 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-foreground text-sm truncate">{appointment.patient_name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(appointment.appointment_date).toLocaleDateString('tr-TR')} · {appointment.appointment_time}
+                                </p>
+                              </div>
+                              <Badge className={`text-xs ${
+                                appointment.status === 'confirmed' 
+                                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+                                  : 'bg-amber-100 text-amber-700 border-amber-200'
+                              }`}>
+                                {getStatusText(appointment.status)}
+                              </Badge>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Links & Blog Notifications */}
+                  <div className="space-y-6">
+                    {/* Quick Links */}
+                    <div className="bg-background rounded-2xl border p-6">
+                      <h3 className="text-lg font-semibold text-foreground mb-4">Hızlı Erişim</h3>
+                      <div className="space-y-2">
+                        {[
+                          { label: 'Randevu Ekle', icon: Plus, tab: 'appointments' },
+                          { label: 'Destek Talebi', icon: MessageSquare, tab: 'support' },
+                          { label: 'Blog Yazarım', icon: FileText, tab: 'blog' },
+                          { label: 'Profil Düzenle', icon: User, tab: 'profile' },
+                        ].map((link) => (
+                          <button
+                            key={link.tab}
+                            onClick={() => setActiveTab(link.tab)}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
+                          >
+                            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <link.icon className="w-4 h-4 text-primary" />
+                            </div>
+                            <span className="text-sm font-medium text-foreground">{link.label}</span>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Blog Notifications */}
+                    {blogNotifications.length > 0 && (
+                      <div className="bg-background rounded-2xl border p-6">
+                        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                          <Bell className="w-5 h-5 text-primary" />
+                          Bildirimler
+                        </h3>
                         <div className="space-y-3">
-                          {blogNotifications.map((notification) => (
+                          {blogNotifications.slice(0, 3).map((notification) => (
                             <div
                               key={notification.id}
-                              className={`p-4 rounded-lg border transition-all ${
+                              className={`p-3 rounded-xl border transition-all cursor-pointer ${
                                 notification.read
-                                  ? 'bg-gray-50 border-gray-200'
-                                  : 'bg-blue-50 border-blue-300 shadow-sm'
+                                  ? 'bg-muted/50 border-transparent'
+                                  : 'bg-primary/5 border-primary/20'
                               }`}
+                              onClick={() => {
+                                window.open(`/blog/${notification.slug}`, '_blank');
+                                if (!notification.read) markBlogNotificationAsRead(notification.id);
+                              }}
                             >
-                              <div className="flex justify-between items-start gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    {!notification.read && (
-                                      <Badge className="bg-blue-600">Yeni</Badge>
-                                    )}
-                                    <h4 className="font-semibold text-gray-900">
-                                      {notification.title}
-                                    </h4>
-                                  </div>
-                                  <p className="text-sm text-gray-600 mb-2">
-                                    Size özel bir blog içeriği yayınlandı.
+                              <div className="flex items-start gap-2">
+                                {!notification.read && <span className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />}
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-foreground truncate">{notification.title}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {new Date(notification.created_at).toLocaleDateString('tr-TR')}
                                   </p>
-                                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                                    <span>
-                                      {new Date(notification.created_at).toLocaleDateString('tr-TR', {
-                                        day: 'numeric',
-                                        month: 'long',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => {
-                                      window.open(`/blog/${notification.slug}`, '_blank');
-                                      if (!notification.read) {
-                                        markBlogNotificationAsRead(notification.id);
-                                      }
-                                    }}
-                                    className="whitespace-nowrap"
-                                  >
-                                    İçeriği Görüntüle
-                                  </Button>
-                                  {!notification.read && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => markBlogNotificationAsRead(notification.id)}
-                                      className="whitespace-nowrap text-xs"
-                                    >
-                                      Okundu İşaretle
-                                    </Button>
-                                  )}
                                 </div>
                               </div>
                             </div>
                           ))}
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="appointments">
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Randevu Yönetimi</h2>
-                    <p className="text-gray-600 mt-2">Randevularınızı görüntüleyin ve yönetin</p>
-                  </div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Randevu Ekle
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Yeni Randevu Ekle</DialogTitle>
-                        <DialogDescription>
-                          Profilinize yeni bir randevu ekleyin.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <AppointmentFormComponent doctorId={doctor.id} onSuccess={() => fetchAppointments(doctor.id)} />
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-
-              {/* Calendar Availability Management */}
-              <div className="p-6 border-b">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-primary" />
-                    Müsaitlik Takvimi
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Aylık takvim üzerinden müsaitlik durumunuzu yönetin. Güne tıklayarak saat dilimlerini özelleştirin, çift tıklayarak günü kapatın.
-                  </p>
-                </div>
-                <TimeSlotManager 
-                  doctorId={doctor.id} 
-                  onUpdate={async () => {
-                    const { data: updatedDoctor } = await supabase
-                      .from('specialists')
-                      .select('*')
-                      .eq('id', doctor.id)
-                      .single();
-                    if (updatedDoctor) {
-                      setDoctor(updatedDoctor);
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="p-6">
-                {appointments.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Henüz randevunuz bulunmamaktadır.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {appointments.map((appointment) => (
-                      <Card key={appointment.id}>
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                  {appointment.patient_name}
-                                </h3>
-                                <Badge className={getStatusColor(appointment.status)}>
-                                  {getStatusText(appointment.status)}
-                                </Badge>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                                <div>
-                                  <p><strong>Tarih:</strong> {new Date(appointment.appointment_date).toLocaleDateString('tr-TR')}</p>
-                                  <p><strong>Saat:</strong> {appointment.appointment_time}</p>
-                                </div>
-                                <div>
-                                  <p><strong>E-posta:</strong> {appointment.patient_email}</p>
-                                  <p><strong>Telefon:</strong> {appointment.patient_phone}</p>
-                                </div>
-                              </div>
-                              <div className="mt-2">
-                                <p><strong>Randevu Türü:</strong> {appointment.appointment_type}</p>
-                                {appointment.notes && (
-                                  <p><strong>Notlar:</strong> {appointment.notes}</p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          {appointment.status === 'pending' && (
-                            <div className="flex gap-2 mt-4">
-                              <Button
-                                size="sm"
-                                onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                Onayla
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-                                className="text-red-600 border-red-600 hover:bg-red-50"
-                              >
-                                İptal Et
-                              </Button>
-                            </div>
-                          )}
-                          {appointment.status === 'confirmed' && (
-                            <div className="flex gap-2 mt-4">
-                              <Button
-                                size="sm"
-                                onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                                className="bg-blue-600 hover:bg-blue-700"
-                              >
-                                Tamamlandı Olarak İşaretle
-                              </Button>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="contracts">
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Sözleşmeler</h2>
-                    <p className="text-gray-600 mt-2">Müşteri ön bilgilendirme ve mesafeli satış sözleşmeleri</p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-6">
-                 {contracts.length === 0 ? (
-                  <div className="text-center py-8">
-                    <FileSignature className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Henüz sözleşmeniz bulunmamaktadır.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {contracts.map((contract) => (
-                      <Card key={contract.id}>
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                  {contract.customer_name}
-                                </h3>
-                                <Badge className="bg-green-100 text-green-800">
-                                  Onaylandı
-                                </Badge>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                                <div>
-                                  <p><strong>Paket:</strong> {contract.package_name}</p>
-                                  <p><strong>Tutar:</strong> ₺{contract.amount}</p>
-                                </div>
-                                <div>
-                                  <p><strong>Ödeme Yöntemi:</strong> {contract.payment_method}</p>
-                                  <p><strong>Tarih:</strong> {new Date(contract.created_at).toLocaleDateString('tr-TR')}</p>
-                                </div>
-                              </div>
-                              <div className="mt-2">
-                                <p><strong>E-posta:</strong> {contract.customer_email}</p>
-                                <p><strong>Telefon:</strong> {contract.customer_phone}</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 mt-4">
-                            <Button
-                              size="sm"
-                              onClick={() => openContractDialog(contract, 'preInfo')}
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              <FileText className="w-4 h-4 mr-2" />
-                              Ön Bilgi
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => openContractDialog(contract, 'distanceSales')}
-                              className="bg-purple-600 hover:bg-purple-700"
-                            >
-                              <FileSignature className="w-4 h-4 mr-2" />
-                              Mesafeli Satış
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="support">
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Destek Talepleri</h2>
-                    <p className="text-gray-600 mt-2">Destek taleplerinizi görüntüleyin ve yeni talep oluşturun</p>
-                  </div>
-                  <Dialog open={isCreateTicketOpen} onOpenChange={setIsCreateTicketOpen}>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Yeni Talep
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Yeni Destek Talebi</DialogTitle>
-                        <DialogDescription>
-                          Destek ekibimize ulaşın. En kısa sürede yanıtlanacaktır.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="title">Konu</Label>
-                          <Input
-                            id="title"
-                            value={newTicket.title}
-                            onChange={(e) => setNewTicket(prev => ({ ...prev, title: e.target.value }))}
-                            placeholder="Destek talebinizin konusunu yazın"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="category">Kategori</Label>
-                            <Select value={newTicket.category} onValueChange={(value) => setNewTicket(prev => ({ ...prev, category: value }))}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="general">Genel</SelectItem>
-                                <SelectItem value="technical">Teknik</SelectItem>
-                                <SelectItem value="payment">Ödeme</SelectItem>
-                                <SelectItem value="account">Hesap</SelectItem>
-                                <SelectItem value="other">Diğer</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label htmlFor="priority">Öncelik</Label>
-                            <Select value={newTicket.priority} onValueChange={(value) => setNewTicket(prev => ({ ...prev, priority: value }))}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="low">Düşük</SelectItem>
-                                <SelectItem value="medium">Orta</SelectItem>
-                                <SelectItem value="high">Yüksek</SelectItem>
-                                <SelectItem value="urgent">Acil</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <div>
-                          <Label htmlFor="description">Açıklama</Label>
-                          <Textarea
-                            id="description"
-                            value={newTicket.description}
-                            onChange={(e) => setNewTicket(prev => ({ ...prev, description: e.target.value }))}
-                            placeholder="Sorununuzu detaylı olarak açıklayın"
-                            rows={5}
-                          />
-                        </div>
-                        <div className="flex justify-end gap-3">
-                          <Button variant="outline" onClick={() => setIsCreateTicketOpen(false)}>
-                            İptal
-                          </Button>
-                          <Button onClick={handleCreateTicket} disabled={submitting}>
-                            {submitting ? "Oluşturuluyor..." : "Talep Oluştur"}
-                          </Button>
-                        </div>
                       </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-              <div className="p-6">
-                {supportTickets.length === 0 ? (
-                  <div className="text-center py-8">
-                    <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Henüz destek talebiniz bulunmamaktadır.</p>
-                    <p className="text-sm text-gray-400 mt-2">Yeni talep oluşturmak için yukarıdaki butonu kullanın.</p>
+                    )}
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {supportTickets.map((ticket) => (
-                      <Card key={ticket.id}>
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-lg font-semibold text-gray-900">{ticket.title}</h3>
-                                <Badge className={getTicketPriorityColor(ticket.priority)}>
-                                  {getTicketPriorityText(ticket.priority)}
-                                </Badge>
-                                <Badge className={getTicketStatusColor(ticket.status)}>
-                                  {getTicketStatusText(ticket.status)}
-                                </Badge>
+                </div>
+              </TabsContent>
+
+              {/* Appointments */}
+              <TabsContent value="appointments" className="mt-0">
+                <div className="bg-background rounded-2xl border">
+                  <div className="p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Randevu Yönetimi</h2>
+                      <p className="text-sm text-muted-foreground mt-1">Randevularınızı görüntüleyin ve yönetin</p>
+                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="rounded-xl">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Randevu Ekle
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Yeni Randevu Ekle</DialogTitle>
+                          <DialogDescription>Profilinize yeni bir randevu ekleyin.</DialogDescription>
+                        </DialogHeader>
+                        <AppointmentFormComponent doctorId={doctor.id} onSuccess={() => fetchAppointments(doctor.id)} />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+
+                  {/* Calendar Availability */}
+                  <div className="p-6 border-b">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-foreground mb-1 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-primary" />
+                        Müsaitlik Takvimi
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Aylık takvim üzerinden müsaitlik durumunuzu yönetin.
+                      </p>
+                    </div>
+                    <TimeSlotManager 
+                      doctorId={doctor.id} 
+                      onUpdate={async () => {
+                        const { data: updatedDoctor } = await supabase
+                          .from('specialists')
+                          .select('*')
+                          .eq('id', doctor.id)
+                          .single();
+                        if (updatedDoctor) setDoctor(updatedDoctor);
+                      }}
+                    />
+                  </div>
+
+                  <div className="p-6">
+                    {appointments.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                          <Calendar className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <p className="text-muted-foreground">Henüz randevunuz bulunmamaktadır.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {appointments.map((appointment) => (
+                          <div key={appointment.id} className="rounded-xl border p-5 hover:shadow-md transition-all">
+                            <div className="flex justify-between items-start">
+                              <div className="flex items-start gap-4 flex-1">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <User className="w-5 h-5 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h3 className="font-semibold text-foreground">{appointment.patient_name}</h3>
+                                    <Badge className={`text-xs ${getStatusColor(appointment.status)}`}>
+                                      {getStatusText(appointment.status)}
+                                    </Badge>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                                    <p>📅 {new Date(appointment.appointment_date).toLocaleDateString('tr-TR')} · {appointment.appointment_time}</p>
+                                    <p>📧 {appointment.patient_email}</p>
+                                    <p>📱 {appointment.patient_phone}</p>
+                                    <p>🏥 {appointment.appointment_type === 'online' ? 'Online' : 'Yüz Yüze'}</p>
+                                  </div>
+                                  {appointment.notes && (
+                                    <p className="text-sm text-muted-foreground mt-2">📝 {appointment.notes}</p>
+                                  )}
+                                </div>
                               </div>
-                              <p className="text-gray-600 mb-2">{ticket.description}</p>
-                              <p className="text-sm text-gray-500">
-                                Oluşturulma: {new Date(ticket.created_at).toLocaleDateString('tr-TR')}
-                              </p>
+                            </div>
+                            {appointment.status === 'pending' && (
+                              <div className="flex gap-2 mt-4 ml-14">
+                                <Button size="sm" className="rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}>
+                                  Onayla
+                                </Button>
+                                <Button size="sm" variant="outline" className="rounded-lg text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}>
+                                  İptal Et
+                                </Button>
+                              </div>
+                            )}
+                            {appointment.status === 'confirmed' && (
+                              <div className="mt-4 ml-14">
+                                <Button size="sm" className="rounded-lg" onClick={() => updateAppointmentStatus(appointment.id, 'completed')}>
+                                  Tamamlandı Olarak İşaretle
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Contracts */}
+              <TabsContent value="contracts" className="mt-0">
+                <div className="bg-background rounded-2xl border">
+                  <div className="p-6 border-b">
+                    <h2 className="text-xl font-bold text-foreground">Sözleşmeler</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Müşteri ön bilgilendirme ve mesafeli satış sözleşmeleri</p>
+                  </div>
+                  <div className="p-6">
+                    {contracts.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                          <FileSignature className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <p className="text-muted-foreground">Henüz sözleşmeniz bulunmamaktadır.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {contracts.map((contract) => (
+                          <div key={contract.id} className="rounded-xl border p-5 hover:shadow-md transition-all">
+                            <div className="flex items-start gap-4">
+                              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                                <FileSignature className="w-5 h-5 text-emerald-500" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="font-semibold text-foreground">{contract.customer_name}</h3>
+                                  <Badge className="bg-emerald-100 text-emerald-700 text-xs">Onaylandı</Badge>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                                  <p>📦 {contract.package_name} · ₺{contract.amount}</p>
+                                  <p>💳 {contract.payment_method}</p>
+                                  <p>📧 {contract.customer_email}</p>
+                                  <p>📅 {new Date(contract.created_at).toLocaleDateString('tr-TR')}</p>
+                                </div>
+                                <div className="flex gap-2 mt-4">
+                                  <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openContractDialog(contract, 'preInfo')}>
+                                    <FileText className="w-4 h-4 mr-1.5" />
+                                    Ön Bilgi
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openContractDialog(contract, 'distanceSales')}>
+                                    <FileSignature className="w-4 h-4 mr-1.5" />
+                                    Mesafeli Satış
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          {ticket.admin_response && (
-                            <div className="bg-blue-50 rounded-lg p-4 mt-4">
-                              <h4 className="font-medium text-blue-900 mb-2">Destek Ekibi Cevabı:</h4>
-                              <p className="text-blue-800 text-sm">{ticket.admin_response}</p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
+                </div>
+              </TabsContent>
 
-          <TabsContent value="blog">
-            <div className="bg-white rounded-lg shadow">
-              <DoctorBlogManagement doctorId={doctor.id} doctorName={doctor.name} />
-            </div>
-          </TabsContent>
+              {/* Support */}
+              <TabsContent value="support" className="mt-0">
+                <div className="bg-background rounded-2xl border">
+                  <div className="p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Destek Talepleri</h2>
+                      <p className="text-sm text-muted-foreground mt-1">Destek taleplerinizi görüntüleyin ve yeni talep oluşturun</p>
+                    </div>
+                    <Dialog open={isCreateTicketOpen} onOpenChange={setIsCreateTicketOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="rounded-xl">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Yeni Talep
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Yeni Destek Talebi</DialogTitle>
+                          <DialogDescription>Destek ekibimize ulaşın. En kısa sürede yanıtlanacaktır.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="title">Konu</Label>
+                            <Input id="title" value={newTicket.title} onChange={(e) => setNewTicket(prev => ({ ...prev, title: e.target.value }))} placeholder="Destek talebinizin konusunu yazın" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="category">Kategori</Label>
+                              <Select value={newTicket.category} onValueChange={(value) => setNewTicket(prev => ({ ...prev, category: value }))}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="general">Genel</SelectItem>
+                                  <SelectItem value="technical">Teknik</SelectItem>
+                                  <SelectItem value="payment">Ödeme</SelectItem>
+                                  <SelectItem value="account">Hesap</SelectItem>
+                                  <SelectItem value="other">Diğer</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label htmlFor="priority">Öncelik</Label>
+                              <Select value={newTicket.priority} onValueChange={(value) => setNewTicket(prev => ({ ...prev, priority: value }))}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="low">Düşük</SelectItem>
+                                  <SelectItem value="medium">Orta</SelectItem>
+                                  <SelectItem value="high">Yüksek</SelectItem>
+                                  <SelectItem value="urgent">Acil</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div>
+                            <Label htmlFor="description">Açıklama</Label>
+                            <Textarea id="description" value={newTicket.description} onChange={(e) => setNewTicket(prev => ({ ...prev, description: e.target.value }))} placeholder="Sorununuzu detaylı olarak açıklayın" rows={5} />
+                          </div>
+                          <div className="flex justify-end gap-3">
+                            <Button variant="outline" onClick={() => setIsCreateTicketOpen(false)}>İptal</Button>
+                            <Button onClick={handleCreateTicket} disabled={submitting}>
+                              {submitting ? "Oluşturuluyor..." : "Talep Oluştur"}
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <div className="p-6">
+                    {supportTickets.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                          <MessageSquare className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <p className="text-muted-foreground">Henüz destek talebiniz bulunmamaktadır.</p>
+                        <p className="text-xs text-muted-foreground mt-2">Yeni talep oluşturmak için yukarıdaki butonu kullanın.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {supportTickets.map((ticket) => (
+                          <div key={ticket.id} className="rounded-xl border p-5 hover:shadow-md transition-all">
+                            <div className="flex items-center gap-3 mb-3">
+                              <h3 className="font-semibold text-foreground">{ticket.title}</h3>
+                              <Badge className={`text-xs ${getTicketPriorityColor(ticket.priority)}`}>{getTicketPriorityText(ticket.priority)}</Badge>
+                              <Badge className={`text-xs ${getTicketStatusColor(ticket.status)}`}>{getTicketStatusText(ticket.status)}</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">{ticket.description}</p>
+                            <p className="text-xs text-muted-foreground">Oluşturulma: {new Date(ticket.created_at).toLocaleDateString('tr-TR')}</p>
+                            {ticket.admin_response && (
+                              <div className="bg-primary/5 rounded-xl p-4 mt-4 border border-primary/10">
+                                <h4 className="font-medium text-foreground mb-1 text-sm">Destek Ekibi Cevabı:</h4>
+                                <p className="text-sm text-muted-foreground">{ticket.admin_response}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
 
-          <TabsContent value="portfolio">
-            <div className="bg-white rounded-lg shadow p-6">
-              <ClientPortfolio specialistId={doctor.id} />
-            </div>
-          </TabsContent>
+              {/* Blog */}
+              <TabsContent value="blog" className="mt-0">
+                <div className="bg-background rounded-2xl border">
+                  <DoctorBlogManagement doctorId={doctor.id} doctorName={doctor.name} />
+                </div>
+              </TabsContent>
 
-          <TabsContent value="profile">
-            <div className="bg-white rounded-lg shadow">
-              <DoctorProfileEditor />
-            </div>
-          </TabsContent>
-        </Tabs>
+              {/* Portfolio */}
+              <TabsContent value="portfolio" className="mt-0">
+                <div className="bg-background rounded-2xl border p-6">
+                  <ClientPortfolio specialistId={doctor.id} />
+                </div>
+              </TabsContent>
+
+              {/* Profile */}
+              <TabsContent value="profile" className="mt-0">
+                <div className="bg-background rounded-2xl border">
+                  <DoctorProfileEditor />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
       </div>
 
       {selectedContract && (
@@ -1479,18 +1393,6 @@ const DoctorDashboard = () => {
           savedDistanceSalesHtml={selectedContract.distance_sales_pdf_content}
         />
       )}
-
-      <footer className="bg-white border-t mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-center space-x-6 text-sm text-gray-500">
-            <span>Hakkımızda</span>
-            <span>Gizlilik Sözleşmesi</span>
-            <span>Ziyaretçi-Danışan Sözleşmesi</span>
-            <span>Aydınlatma Metni</span>
-            <span>Yorum Yayınlanma Kuralları</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
