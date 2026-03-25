@@ -3744,6 +3744,7 @@ export type Database = {
           phone: string | null
           profile_picture: string | null
           rating: number | null
+          registration_source: string | null
           reviews_count: number | null
           seo_description: string | null
           seo_keywords: string | null
@@ -3781,6 +3782,7 @@ export type Database = {
           phone?: string | null
           profile_picture?: string | null
           rating?: number | null
+          registration_source?: string | null
           reviews_count?: number | null
           seo_description?: string | null
           seo_keywords?: string | null
@@ -3818,6 +3820,7 @@ export type Database = {
           phone?: string | null
           profile_picture?: string | null
           rating?: number | null
+          registration_source?: string | null
           reviews_count?: number | null
           seo_description?: string | null
           seo_keywords?: string | null

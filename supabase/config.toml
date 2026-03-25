@@ -39,6 +39,9 @@ verify_jwt = false
 [functions.send-test-results-email]
 verify_jwt = false
 
+[functions.generate-specialist-content]
+verify_jwt = false
+
 [functions.send-appointment-notification]
 verify_jwt = false
 

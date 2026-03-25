@@ -61,6 +61,7 @@ interface Specialist {
   hospital?: string;
   university?: string;
   consultation_fee?: number;
+  registration_source?: string;
 }
 
 const SpecialistManagement = () => {
@@ -214,7 +215,8 @@ const SpecialistManagement = () => {
       
       const matchesStatus = filterStatus === "all" || 
                           (filterStatus === "active" && specialist.is_active) ||
-                          (filterStatus === "inactive" && !specialist.is_active);
+                          (filterStatus === "inactive" && !specialist.is_active && (specialist as any).registration_source !== 'self_registration') ||
+                          (filterStatus === "pending" && !specialist.is_active && (specialist as any).registration_source === 'self_registration');
       
       const matchesSpecialty = filterSpecialty === "all" || 
                              specialist.specialty === filterSpecialty;
@@ -384,7 +386,7 @@ const SpecialistManagement = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <Card className="bg-white shadow-sm border-0">
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -424,7 +426,23 @@ const SpecialistManagement = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Pasif Uzman</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {specialists.filter(s => !s.is_active).length}
+                    {specialists.filter(s => !s.is_active && s.registration_source !== 'self_registration').length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white shadow-sm border-0 border-l-4 border-l-orange-400">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Users className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Yeni Kayıt</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {specialists.filter(s => !s.is_active && s.registration_source === 'self_registration').length}
                   </p>
                 </div>
               </div>
@@ -471,6 +489,7 @@ const SpecialistManagement = () => {
                   <SelectItem value="all">Tüm Durumlar</SelectItem>
                   <SelectItem value="active">Aktif</SelectItem>
                   <SelectItem value="inactive">Pasif</SelectItem>
+                  <SelectItem value="pending">🆕 Yeni Kayıt Olacaklar</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -599,9 +618,20 @@ const SpecialistManagement = () => {
                       <div className="mb-4">
                         <Badge 
                           variant={specialist.is_active ? "default" : "secondary"}
-                          className={specialist.is_active ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}
+                          className={
+                            specialist.is_active 
+                              ? "bg-green-100 text-green-800 hover:bg-green-100" 
+                              : specialist.registration_source === 'self_registration' 
+                                ? "bg-orange-100 text-orange-800 hover:bg-orange-100"
+                                : ""
+                          }
                         >
-                          {specialist.is_active ? "Aktif" : "Pasif"}
+                          {specialist.is_active 
+                            ? "Aktif" 
+                            : specialist.registration_source === 'self_registration' 
+                              ? "🆕 Yeni Kayıt" 
+                              : "Pasif"
+                          }
                         </Badge>
                       </div>
 
