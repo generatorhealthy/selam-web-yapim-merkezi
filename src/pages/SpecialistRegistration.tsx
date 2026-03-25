@@ -762,7 +762,17 @@ const SpecialistRegistration = () => {
                   </ul>
 
                   <Button
-                    onClick={() => navigate('/odeme/ozel-firsat')}
+                    onClick={() => navigate('/odeme/ozel-firsat', {
+                      state: {
+                        packageData: {
+                          id: 'ozel-firsat',
+                          name: "Premium Paket - Özel Fırsat",
+                          price: 4000,
+                          originalPrice: 6500,
+                          features: packageFeatures
+                        }
+                      }
+                    })}
                     className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
                   >
                     <CreditCard className="w-5 h-5 mr-2" />
