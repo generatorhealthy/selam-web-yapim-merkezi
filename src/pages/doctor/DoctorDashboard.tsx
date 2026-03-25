@@ -1350,6 +1350,78 @@ const DoctorDashboard = () => {
                 </div>
               </TabsContent>
 
+              {/* Subscription / Aboneliğim */}
+              <TabsContent value="subscription" className="mt-0">
+                <div className="bg-background rounded-2xl border">
+                  <div className="p-6 border-b">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-foreground">Aboneliğim</h2>
+                        <p className="text-sm text-muted-foreground mt-0.5">Aylık abonelik siparişlerinizi görüntüleyin</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {contracts.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                          <Package className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <p className="text-muted-foreground">Henüz abonelik siparişiniz bulunmamaktadır.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {contracts.map((order: any) => {
+                          const statusConfig: Record<string, { label: string; className: string }> = {
+                            pending: { label: 'Bekleyen', className: 'bg-amber-100 text-amber-700 border-amber-200' },
+                            approved: { label: 'Onaylandı', className: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+                            completed: { label: 'Tamamlandı', className: 'bg-sky-100 text-sky-700 border-sky-200' },
+                            cancelled: { label: 'İptal', className: 'bg-red-100 text-red-700 border-red-200' },
+                          };
+                          const status = statusConfig[order.status] || statusConfig.pending;
+
+                          return (
+                            <div key={order.id} className="rounded-2xl border p-5 hover:shadow-md transition-all">
+                              {/* Header */}
+                              <div className="flex items-center justify-between mb-4">
+                                <Badge className={`text-xs ${status.className}`}>
+                                  {status.label}
+                                </Badge>
+                                {order.subscription_month && (
+                                  <span className="text-xs font-medium text-muted-foreground">{order.subscription_month}. Ay</span>
+                                )}
+                              </div>
+
+                              {/* Package Info */}
+                              <h3 className="font-semibold text-foreground mb-1">{order.package_name}</h3>
+                              <p className="text-xs text-muted-foreground mb-3">{order.package_type}</p>
+
+                              {/* Price */}
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="text-lg font-bold text-primary">{order.amount?.toLocaleString('tr-TR')} ₺</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi'}
+                                </span>
+                              </div>
+
+                              {/* Date */}
+                              <div className="pt-3 border-t">
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(order.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
               {/* Portfolio */}
               <TabsContent value="portfolio" className="mt-0">
                 <div className="bg-background rounded-2xl border p-6">
