@@ -386,7 +386,7 @@ const SpecialistManagement = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <Card className="bg-white shadow-sm border-0">
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -426,7 +426,23 @@ const SpecialistManagement = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Pasif Uzman</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {specialists.filter(s => !s.is_active).length}
+                    {specialists.filter(s => !s.is_active && s.registration_source !== 'self_registration').length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white shadow-sm border-0 border-l-4 border-l-orange-400">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Users className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Yeni Kayıt</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {specialists.filter(s => !s.is_active && s.registration_source === 'self_registration').length}
                   </p>
                 </div>
               </div>
