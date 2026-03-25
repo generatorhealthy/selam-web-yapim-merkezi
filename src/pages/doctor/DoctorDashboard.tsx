@@ -474,12 +474,12 @@ const DoctorDashboard = () => {
         }
       }
 
-      // Önce RLS ile erişilebilen sözleşmeleri getir
+      // Önce RLS ile erişilebilen siparişleri getir
       const [ordersResponse, packagesResponse] = await Promise.all([
         supabase
           .from('orders')
           .select('*')
-          .in('status', ['approved', 'completed'])
+          .in('status', ['pending', 'approved', 'completed'])
           .order('created_at', { ascending: false }),
         supabase
           .from('packages')
@@ -498,8 +498,8 @@ const DoctorDashboard = () => {
       let orders = ordersResponse.data || [];
       console.log('RLS orders count:', orders?.length || 0);
 
-      // RLS nedeniyle sonuç yoksa, servis rolüyle çalışan edge function üzerinden getir (e-posta/isim eşleşmesi)
-      if ((!orders || orders.length === 0) && (specialistEmail || specialistName)) {
+      // RLS bazı satırları gizleyebildiği için edge function sonucunu her zaman birleştir
+      if (specialistEmail || specialistName) {
         try {
           console.log('Invoking edge function get-specialist-contracts with', { email: specialistEmail, name: specialistName });
           const { data: edgeData, error: edgeError } = await supabase.functions.invoke('get-specialist-contracts', {
@@ -513,7 +513,11 @@ const DoctorDashboard = () => {
             console.warn('Edge function sözleşme sorgusu hatası:', edgeError);
           } else if (Array.isArray(edgeData)) {
             console.log('Edge function result count:', edgeData.length);
-            orders = edgeData as any[];
+            orders = Array.from(
+              new Map([...(orders as any[]), ...(edgeData as any[])].map((order: any) => [order.id, order])).values()
+            ).sort(
+              (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
           }
         } catch (edgeEx) {
           console.warn('Edge function çağrısı başarısız:', edgeEx);
