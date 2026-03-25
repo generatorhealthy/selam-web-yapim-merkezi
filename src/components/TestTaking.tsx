@@ -230,11 +230,40 @@ const TestTaking = () => {
         results
       };
 
-      const { error } = await supabase
+      const { data: resultData, error } = await supabase
         .from('test_results')
-        .insert([testResult]);
+        .insert([testResult])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Send email notification to specialist
+      if (finalSpecialistId && finalSpecialistId !== 'genel') {
+        try {
+          const { data: specialistData } = await supabase
+            .from('specialists')
+            .select('email')
+            .eq('id', finalSpecialistId)
+            .single();
+
+          if (specialistData?.email) {
+            await supabase.functions.invoke('send-test-results-email', {
+              body: {
+                testResultId: resultData?.id || 'unknown',
+                specialistEmail: specialistData.email,
+                patientName: patientInfo.name,
+                patientPhone: patientInfo.phone,
+                testTitle: test?.title || 'Test',
+                answers,
+                results
+              }
+            });
+          }
+        } catch (emailErr) {
+          console.error('Email gönderim hatası (kritik değil):', emailErr);
+        }
+      }
 
       toast({
         title: "Başarılı",

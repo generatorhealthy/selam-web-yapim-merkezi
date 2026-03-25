@@ -1560,6 +1560,11 @@ const DoctorDashboard = () => {
                 </div>
               </TabsContent>
 
+              {/* Test Results */}
+              <TabsContent value="test-results" className="mt-0">
+                <TestResultsPanel specialistId={doctor.id} />
+              </TabsContent>
+
               {/* Portfolio */}
               <TabsContent value="portfolio" className="mt-0">
                 <div className="bg-background rounded-2xl border p-6">
