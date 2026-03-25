@@ -61,6 +61,7 @@ interface Specialist {
   hospital?: string;
   university?: string;
   consultation_fee?: number;
+  registration_source?: string;
 }
 
 const SpecialistManagement = () => {
