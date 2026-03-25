@@ -209,35 +209,7 @@ const UserManagement = () => {
   };
 
   const handleDeleteClick = (user: UserProfile) => {
-    const currentCountdown = deletingUsers[user.id];
-    
-    if (currentCountdown && currentCountdown > 0) {
-      return;
-    }
-
-    if (currentCountdown === 0) {
-      handleDelete(user);
-      return;
-    }
-
-    setDeletingUsers(prev => ({ ...prev, [user.id]: 60 }));
-    
-    const countdown = setInterval(() => {
-      setDeletingUsers(prev => {
-        const newCount = prev[user.id] - 1;
-        if (newCount <= 0) {
-          clearInterval(countdown);
-          return { ...prev, [user.id]: 0 };
-        }
-        return { ...prev, [user.id]: newCount };
-      });
-    }, 1000);
-
-    toast({
-      title: "Uyarı",
-      description: "60 saniye sonra 'Tamamen Sil' butonuna tekrar tıklayarak kullanıcıyı tamamen silebilirsiniz.",
-      variant: "destructive"
-    });
+    handleDelete(user);
   };
 
   const handleDelete = async (user: UserProfile) => {

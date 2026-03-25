@@ -1,49 +1,5 @@
-import { MessageCircle } from "lucide-react";
-import { useState } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import RegistrationForm from "./RegistrationForm";
-import { useLocation } from "react-router-dom";
-
 const FloatingWhatsAppButton = () => {
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
-  const isMobile = useIsMobile();
-  const location = useLocation();
-
-  // Sadece mobilde göster, paketler, uzman sayfaları ve ödeme sayfalarında gizle
-  if (!isMobile || 
-      location.pathname === '/paketler' ||
-      location.pathname === '/kayit-ol' ||
-      location.pathname.startsWith('/uzmanlik/') ||
-      location.pathname.startsWith('/odeme') ||
-      location.pathname.startsWith('/divan_paneli')) {
-    return null;
-  }
-
-  const handleClick = () => {
-    setIsRegistrationOpen(true);
-  };
-
-  return (
-    <>
-      <button 
-        onClick={handleClick}
-        className="fixed bottom-6 right-6 z-50 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 font-medium text-sm md:text-base will-change-transform"
-        aria-label="Kayıt Ol"
-        style={{ 
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden' 
-        }}
-      >
-        <MessageCircle size={20} />
-        <span>Kayıt Ol</span>
-      </button>
-      
-      <RegistrationForm 
-        isOpen={isRegistrationOpen} 
-        onClose={() => setIsRegistrationOpen(false)} 
-      />
-    </>
-  );
+  return null;
 };
 
 export default FloatingWhatsAppButton;
