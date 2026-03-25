@@ -1021,7 +1021,7 @@ const DoctorDashboard = () => {
                         {[
                           { label: 'Randevu Ekle', icon: Plus, tab: 'appointments' },
                           { label: 'Destek Talebi', icon: MessageSquare, tab: 'support' },
-                          { label: 'Blog Yazarım', icon: FileText, tab: 'blog' },
+                          { label: 'Blog Yazıları', icon: FileText, tab: 'blog' },
                           { label: 'Profil Düzenle', icon: User, tab: 'profile' },
                         ].map((link) => (
                           <button
