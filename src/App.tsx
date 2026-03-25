@@ -189,6 +189,7 @@ const AppContent = () => {
               <Route path="/yorum-kurallari" element={<CommentRules />} />
               <Route path="/anasayfa" element={<Landing />} />
               <Route path="/giris-yap" element={<LoginPage />} />
+              <Route path="/kayit-ol" element={<SpecialistRegistration />} />
               
               {/* Admin Routes - MUST be before dynamic catch-all routes */}
               <Route path="/divan_paneli" element={<AdminAuth />} />

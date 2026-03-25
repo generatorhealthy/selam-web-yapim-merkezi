@@ -472,6 +472,7 @@ const SpecialistManagement = () => {
                   <SelectItem value="all">Tüm Durumlar</SelectItem>
                   <SelectItem value="active">Aktif</SelectItem>
                   <SelectItem value="inactive">Pasif</SelectItem>
+                  <SelectItem value="pending">🆕 Yeni Kayıt Olacaklar</SelectItem>
                 </SelectContent>
               </Select>
               
