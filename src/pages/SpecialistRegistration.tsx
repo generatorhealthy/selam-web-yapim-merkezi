@@ -343,7 +343,7 @@ const SpecialistRegistration = () => {
           {currentStep === 1 && (
             <div className="space-y-8">
               <div className="text-center space-y-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Hesap Oluşturun</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Uzman Profili Oluşturun</h1>
                 <p className="text-muted-foreground text-sm">Platformumuza katılmak için bilgilerinizi girin</p>
               </div>
 
