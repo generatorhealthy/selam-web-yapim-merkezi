@@ -12,6 +12,7 @@ const FloatingWhatsAppButton = () => {
   // Sadece mobilde göster, paketler, uzman sayfaları ve ödeme sayfalarında gizle
   if (!isMobile || 
       location.pathname === '/paketler' ||
+      location.pathname === '/kayit-ol' ||
       location.pathname.startsWith('/uzmanlik/') ||
       location.pathname.startsWith('/odeme') ||
       location.pathname.startsWith('/divan_paneli')) {
