@@ -266,6 +266,7 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
 
 const DoctorDashboard = () => {
   const [doctor, setDoctor] = useState<any>(null);
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
