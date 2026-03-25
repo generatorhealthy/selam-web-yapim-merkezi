@@ -1201,16 +1201,17 @@ const DoctorDashboard = () => {
 
               {/* Appointments */}
               <TabsContent value="appointments" className="mt-0">
-                <div className="bg-background rounded-2xl border">
-                  <div className="p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="space-y-4">
+                  {/* Header */}
+                  <div className="bg-background rounded-2xl border p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                      <h2 className="text-xl font-bold text-foreground">Randevu Yönetimi</h2>
-                      <p className="text-sm text-muted-foreground mt-1">Randevularınızı görüntüleyin ve yönetin</p>
+                      <h2 className="text-lg font-bold text-foreground">Randevu Yönetimi</h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">Randevularınızı görüntüleyin ve yönetin</p>
                     </div>
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button className="rounded-xl">
-                          <Plus className="w-4 h-4 mr-2" />
+                        <Button size="sm" className="rounded-xl">
+                          <Plus className="w-4 h-4 mr-1.5" />
                           Randevu Ekle
                         </Button>
                       </DialogTrigger>
@@ -1224,83 +1225,94 @@ const DoctorDashboard = () => {
                     </Dialog>
                   </div>
 
-                  {/* Calendar Availability */}
-                  <div className="p-6 border-b">
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-foreground mb-1 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-primary" />
-                        Müsaitlik Takvimi
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Aylık takvim üzerinden müsaitlik durumunuzu yönetin.
-                      </p>
-                    </div>
-                    <TimeSlotManager 
-                      doctorId={doctor.id} 
-                      onUpdate={async () => {
-                        const { data: updatedDoctor } = await supabase
-                          .from('specialists')
-                          .select('*')
-                          .eq('id', doctor.id)
-                          .single();
-                        if (updatedDoctor) setDoctor(updatedDoctor);
-                      }}
-                    />
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: 'Bekleyen', count: appointments.filter(a => a.status === 'pending').length, color: 'bg-amber-500/10 text-amber-600' },
+                      { label: 'Onaylı', count: appointments.filter(a => a.status === 'confirmed').length, color: 'bg-emerald-500/10 text-emerald-600' },
+                      { label: 'Tamamlanan', count: appointments.filter(a => a.status === 'completed').length, color: 'bg-primary/10 text-primary' },
+                    ].map((stat) => (
+                      <div key={stat.label} className="bg-background rounded-xl border p-3 text-center">
+                        <p className={`text-2xl font-bold ${stat.color}`}>{stat.count}</p>
+                        <p className="text-xs text-muted-foreground">{stat.label}</p>
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="p-6">
+                  {/* Calendar - Collapsible */}
+                  <details className="bg-background rounded-2xl border group">
+                    <summary className="p-4 cursor-pointer flex items-center gap-2 hover:bg-muted/30 transition-colors rounded-2xl select-none">
+                      <Clock className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">Müsaitlik Takvimi</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto transition-transform group-open:rotate-90" />
+                    </summary>
+                    <div className="px-4 pb-4">
+                      <TimeSlotManager 
+                        doctorId={doctor.id} 
+                        onUpdate={async () => {
+                          const { data: updatedDoctor } = await supabase
+                            .from('specialists')
+                            .select('*')
+                            .eq('id', doctor.id)
+                            .single();
+                          if (updatedDoctor) setDoctor(updatedDoctor);
+                        }}
+                      />
+                    </div>
+                  </details>
+
+                  {/* Appointment List */}
+                  <div className="bg-background rounded-2xl border">
+                    <div className="p-4 border-b">
+                      <h3 className="text-sm font-semibold text-foreground">Randevular</h3>
+                    </div>
                     {appointments.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-                          <Calendar className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <p className="text-muted-foreground">Henüz randevunuz bulunmamaktadır.</p>
+                      <div className="text-center py-10 px-4">
+                        <Calendar className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Henüz randevunuz bulunmamaktadır.</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="divide-y">
                         {appointments.map((appointment) => (
-                          <div key={appointment.id} className="rounded-xl border p-5 hover:shadow-md transition-all">
-                            <div className="flex justify-between items-start">
-                              <div className="flex items-start gap-4 flex-1">
-                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                  <User className="w-5 h-5 text-primary" />
+                          <div key={appointment.id} className="p-4 hover:bg-muted/20 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <User className="w-4 h-4 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-sm font-semibold text-foreground truncate">{appointment.patient_name}</h4>
+                                  <Badge className={`text-[10px] px-1.5 py-0 ${getStatusColor(appointment.status)}`}>
+                                    {getStatusText(appointment.status)}
+                                  </Badge>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <h3 className="font-semibold text-foreground">{appointment.patient_name}</h3>
-                                    <Badge className={`text-xs ${getStatusColor(appointment.status)}`}>
-                                      {getStatusText(appointment.status)}
-                                    </Badge>
-                                  </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                                    <p>📅 {new Date(appointment.appointment_date).toLocaleDateString('tr-TR')} · {appointment.appointment_time}</p>
-                                    <p>📧 {appointment.patient_email}</p>
-                                    <p>📱 {appointment.patient_phone}</p>
-                                    <p>🏥 {appointment.appointment_type === 'online' ? 'Online' : 'Yüz Yüze'}</p>
-                                  </div>
-                                  {appointment.notes && (
-                                    <p className="text-sm text-muted-foreground mt-2">📝 {appointment.notes}</p>
-                                  )}
+                                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                  <span>{new Date(appointment.appointment_date).toLocaleDateString('tr-TR')} · {appointment.appointment_time}</span>
+                                  <span className="hidden sm:inline">·</span>
+                                  <span className="hidden sm:inline">{appointment.appointment_type === 'online' ? 'Online' : 'Yüz Yüze'}</span>
+                                  <span className="hidden md:inline">· {appointment.patient_phone}</span>
                                 </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {appointment.status === 'pending' && (
+                                  <>
+                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}>
+                                      <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                                      Onayla
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10" onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}>
+                                      İptal
+                                    </Button>
+                                  </>
+                                )}
+                                {appointment.status === 'confirmed' && (
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-primary hover:bg-primary/10" onClick={() => updateAppointmentStatus(appointment.id, 'completed')}>
+                                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                                    Tamamla
+                                  </Button>
+                                )}
                               </div>
                             </div>
-                            {appointment.status === 'pending' && (
-                              <div className="flex gap-2 mt-4 ml-14">
-                                <Button size="sm" className="rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}>
-                                  Onayla
-                                </Button>
-                                <Button size="sm" variant="outline" className="rounded-lg text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}>
-                                  İptal Et
-                                </Button>
-                              </div>
-                            )}
-                            {appointment.status === 'confirmed' && (
-                              <div className="mt-4 ml-14">
-                                <Button size="sm" className="rounded-lg" onClick={() => updateAppointmentStatus(appointment.id, 'completed')}>
-                                  Tamamlandı Olarak İşaretle
-                                </Button>
-                              </div>
-                            )}
                           </div>
                         ))}
                       </div>
