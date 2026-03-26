@@ -29,6 +29,7 @@ const SpecialOfferNew = () => {
     "Sosyal Medya Paylaşımları",
     "Danışan Takibi",
     "Yapay Zeka Destekli Testler",
+    "Yapay Zeka Destekli Blog Sayfası",
     "Dahili Hat Tanımlama"
   ];
 

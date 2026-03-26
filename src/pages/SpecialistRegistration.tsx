@@ -281,7 +281,7 @@ const SpecialistRegistration = () => {
     "Video Yayınlama", "Danışan Görüşleri",
     "Uzman Sayfasına Özgün SEO Çalışması", "Online Randevu Takimi",
     "Profesyonel Makale Yazıları", "Sosyal Medya Paylaşımları",
-    "Danışan Takibi", "Yapay Zeka Destekli Testler", "Dahili Hat Tanımlama"
+    "Danışan Takibi", "Yapay Zeka Destekli Testler", "Yapay Zeka Destekli Blog Sayfası", "Dahili Hat Tanımlama"
   ];
 
   const inputClass = "h-12 rounded-2xl border-muted bg-muted/40 px-4 text-base placeholder:text-muted-foreground/60 focus:bg-background focus:border-primary/40 transition-all";

@@ -78,7 +78,8 @@ const PackageManagement = () => {
         "Online Randevu Takimi",
         "Google Reklamları",
         "Sosyal Medya Paylaşımlarım",
-        "Danışan Takibi"
+        "Danışan Takibi",
+        "Yapay Zeka Destekli Blog Sayfası"
       ],
       icon: "Star",
       color: "from-purple-500 to-purple-600",
