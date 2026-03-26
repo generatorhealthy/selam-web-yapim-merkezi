@@ -312,7 +312,7 @@ const SpecialOffer = () => {
               </div>
               <h3 className="text-xl font-semibold mb-3">Müşteri Desteği</h3>
               <p className="text-muted-foreground text-sm">
-                7/24 profesyonel teknik destek hizmeti
+                Anlık profesyonel teknik destek hizmeti
               </p>
             </Card>
           </div>
