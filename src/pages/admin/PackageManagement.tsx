@@ -53,7 +53,8 @@ const PackageManagement = () => {
         "Doktor Sayfasına Özgün Seo Çalışması",
         "Online Randevu Takimi",
         "Google Reklam ve Yönetimi",
-        "Sosyal Medya Reklam ve Yönetimi"
+        "Sosyal Medya Reklam ve Yönetimi",
+        "Yapay Zeka Destekli Blog Sayfası"
       ],
       icon: "Gift",
       color: "from-blue-500 to-blue-600",
