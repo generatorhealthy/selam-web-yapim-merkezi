@@ -277,12 +277,12 @@ const SpecialOfferNew = () => {
           
           <div className="grid md:grid-cols-4 gap-8">
             <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
-              <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Target className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Aylık Garantili Danışan Yönlendirme</h3>
+              <h3 className="text-xl font-semibold mb-3">Danışan Portföyünüzü Artırın</h3>
               <p className="text-muted-foreground text-sm">
-                Aylık Danışan Yönlendirme Garantisi ile sürekli danışan akışı
+                Profesyonel dijital varlığınızla daha fazla danışana ulaşın ve portföyünüzü büyütün
               </p>
             </Card>
             
