@@ -22,7 +22,8 @@ const campaignPackage = {
     "Online Randevu Takimi",
     "Google Reklamları",
     "Sosyal Medya Paylaşımlarım",
-    "Danışan Takibi"
+    "Danışan Takibi",
+    "Yapay Zeka Destekli Blog Sayfası"
   ]
 };
 
