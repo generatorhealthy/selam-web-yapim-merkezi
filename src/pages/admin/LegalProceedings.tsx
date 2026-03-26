@@ -604,13 +604,15 @@ const handleSubmit = async (e: React.FormEvent) => {
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(proceeding.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {userProfile?.role === 'admin' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(proceeding.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
