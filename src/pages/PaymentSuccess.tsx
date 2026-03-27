@@ -112,7 +112,7 @@ const PaymentSuccess = () => {
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
         <meta name="googlebot" content="noindex, nofollow" />
-        <title>Ödeme Başarılı - Doktorum Ol</title>
+        <title>{orderData?.paymentMethod === 'bank_transfer' ? 'Sipariş Tamamlandı' : 'Ödeme Başarılı'} - Doktorum Ol</title>
       </Helmet>
       
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
@@ -125,10 +125,14 @@ const PaymentSuccess = () => {
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <CardTitle className="text-2xl text-green-600 mb-2">
-                  Ödeme Başarılı!
+                  {orderData?.paymentMethod === 'bank_transfer' 
+                    ? 'Siparişiniz Tamamlanmıştır!' 
+                    : 'Ödeme Başarılı!'}
                 </CardTitle>
                 <p className="text-gray-600">
-                  Paketiniz başarıyla aktifleştirildi. Hoş geldiniz!
+                  {orderData?.paymentMethod === 'bank_transfer'
+                    ? 'Siparişiniz alınmıştır. Aşağıdaki hesap bilgilerine ödemenizi yapabilirsiniz.'
+                    : 'Paketiniz başarıyla aktifleştirildi. Hoş geldiniz!'}
                 </p>
               </CardHeader>
 
@@ -170,7 +174,9 @@ const PaymentSuccess = () => {
                     </div>
                     <div className="flex justify-between py-2">
                       <span>Durum:</span>
-                      <span className="font-medium text-green-600">Aktif</span>
+                      <span className={`font-medium ${orderData?.paymentMethod === 'bank_transfer' ? 'text-orange-600' : 'text-green-600'}`}>
+                        {orderData?.paymentMethod === 'bank_transfer' ? 'Ödeme Bekleniyor' : 'Aktif'}
+                      </span>
                     </div>
                   </div>
                 </div>
