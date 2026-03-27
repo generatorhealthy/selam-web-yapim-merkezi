@@ -112,7 +112,7 @@ const PaymentSuccess = () => {
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
         <meta name="googlebot" content="noindex, nofollow" />
-        <title>Ödeme Başarılı - Doktorum Ol</title>
+        <title>{orderData?.paymentMethod === 'bank_transfer' ? 'Sipariş Tamamlandı' : 'Ödeme Başarılı'} - Doktorum Ol</title>
       </Helmet>
       
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
