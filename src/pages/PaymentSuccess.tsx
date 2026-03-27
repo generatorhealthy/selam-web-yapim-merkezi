@@ -174,7 +174,9 @@ const PaymentSuccess = () => {
                     </div>
                     <div className="flex justify-between py-2">
                       <span>Durum:</span>
-                      <span className="font-medium text-green-600">Aktif</span>
+                      <span className={`font-medium ${orderData?.paymentMethod === 'bank_transfer' ? 'text-orange-600' : 'text-green-600'}`}>
+                        {orderData?.paymentMethod === 'bank_transfer' ? 'Ödeme Bekleniyor' : 'Aktif'}
+                      </span>
                     </div>
                   </div>
                 </div>
