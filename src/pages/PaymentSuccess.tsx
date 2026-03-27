@@ -125,10 +125,14 @@ const PaymentSuccess = () => {
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <CardTitle className="text-2xl text-green-600 mb-2">
-                  Ödeme Başarılı!
+                  {orderData?.paymentMethod === 'bank_transfer' 
+                    ? 'Siparişiniz Tamamlanmıştır!' 
+                    : 'Ödeme Başarılı!'}
                 </CardTitle>
                 <p className="text-gray-600">
-                  Paketiniz başarıyla aktifleştirildi. Hoş geldiniz!
+                  {orderData?.paymentMethod === 'bank_transfer'
+                    ? 'Siparişiniz alınmıştır. Aşağıdaki hesap bilgilerine ödemenizi yapabilirsiniz.'
+                    : 'Paketiniz başarıyla aktifleştirildi. Hoş geldiniz!'}
                 </p>
               </CardHeader>
 
