@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import FileUpload from "@/components/FileUpload";
+import RegistrationAnalyticsTracker from "@/components/RegistrationAnalyticsTracker";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard
@@ -289,6 +290,7 @@ const SpecialistRegistration = () => {
 
   return (
     <>
+      <RegistrationAnalyticsTracker currentStep={currentStep} completed={currentStep === 4} />
       <Helmet>
         <title>Uzman Kayıt Ol - Doktorum Ol</title>
         <meta name="description" content="Doktorum Ol platformuna uzman olarak kayıt olun. Profesyonel profilinizi oluşturun ve danışanlarınıza ulaşın." />

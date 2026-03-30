@@ -41,6 +41,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/divan_paneli/pre-info-form": "Ön Bilgilendirme Formu",
   "/divan_paneli/admin-activity-logs": "Aktivite Logları",
   "/divan_paneli/ai-assistant": "AI Asistan",
+  "/divan_paneli/registration-analytics": "Paket Analiz Sayfası",
 };
 
 const ALLOWED_ROLES = ["admin", "staff", "legal", "muhasebe"] as const;

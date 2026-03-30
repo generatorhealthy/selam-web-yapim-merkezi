@@ -541,6 +541,17 @@ const AdminDashboard = () => {
       buttonText: "E-posta Loglarını Görüntüle",
       adminOnly: true
     },
+    {
+      title: "Paket Analiz Sayfası",
+      description: "Kayıt sayfası ziyaretçi davranışları ve reklam dönüşüm analizi",
+      icon: BarChart3,
+      gradient: "from-fuchsia-500 via-pink-500 to-rose-600",
+      bgGradient: "from-fuchsia-50 to-rose-50",
+      shadowColor: "shadow-fuchsia-500/20",
+      route: "/divan_paneli/registration-analytics",
+      buttonText: "Analizi Görüntüle",
+      adminOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
