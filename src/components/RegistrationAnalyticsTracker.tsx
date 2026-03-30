@@ -127,13 +127,14 @@ const RegistrationAnalyticsTracker = ({ currentStep, completed = false }: Regist
     // Track page leave
     const handleBeforeUnload = () => {
       const timeOnPage = Math.round((Date.now() - startTime.current) / 1000);
+      const blob = new Blob([JSON.stringify({
+        time_on_page: timeOnPage,
+        left_at: new Date().toISOString(),
+        click_events: clickEvents.current.slice(-50),
+      })], { type: 'application/json' });
       navigator.sendBeacon(
         `https://irnfwewabogveofwemvg.supabase.co/rest/v1/registration_analytics?session_id=eq.${sessionId.current}`,
-        JSON.stringify({
-          time_on_page: timeOnPage,
-          left_at: new Date().toISOString(),
-          click_events: clickEvents.current.slice(-50),
-        })
+        blob
       );
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
