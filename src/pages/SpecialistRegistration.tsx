@@ -290,6 +290,7 @@ const SpecialistRegistration = () => {
 
   return (
     <>
+      <RegistrationAnalyticsTracker currentStep={currentStep} completed={currentStep === 4} />
       <Helmet>
         <title>Uzman Kayıt Ol - Doktorum Ol</title>
         <meta name="description" content="Doktorum Ol platformuna uzman olarak kayıt olun. Profesyonel profilinizi oluşturun ve danışanlarınıza ulaşın." />
