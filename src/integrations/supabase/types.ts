@@ -4157,6 +4157,81 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_analytics: {
+        Row: {
+          click_events: Json | null
+          completed: boolean | null
+          created_at: string | null
+          current_step: number | null
+          device_type: string | null
+          id: string
+          landing_url: string | null
+          last_activity_at: string | null
+          left_at: string | null
+          max_step_reached: number | null
+          referrer: string | null
+          session_id: string
+          started_at: string | null
+          step_timestamps: Json | null
+          time_on_page: number | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          click_events?: Json | null
+          completed?: boolean | null
+          created_at?: string | null
+          current_step?: number | null
+          device_type?: string | null
+          id?: string
+          landing_url?: string | null
+          last_activity_at?: string | null
+          left_at?: string | null
+          max_step_reached?: number | null
+          referrer?: string | null
+          session_id: string
+          started_at?: string | null
+          step_timestamps?: Json | null
+          time_on_page?: number | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          click_events?: Json | null
+          completed?: boolean | null
+          created_at?: string | null
+          current_step?: number | null
+          device_type?: string | null
+          id?: string
+          landing_url?: string | null
+          last_activity_at?: string | null
+          left_at?: string | null
+          max_step_reached?: number | null
+          referrer?: string | null
+          session_id?: string
+          started_at?: string | null
+          step_timestamps?: Json | null
+          time_on_page?: number | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string
