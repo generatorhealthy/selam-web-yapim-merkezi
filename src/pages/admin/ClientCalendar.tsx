@@ -7,7 +7,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, MessageSquare, Save, X } from "lucide-react";
+import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Helmet } from "react-helmet-async";
