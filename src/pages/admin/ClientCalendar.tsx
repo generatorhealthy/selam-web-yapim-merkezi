@@ -29,6 +29,8 @@ interface ClientReferral {
 interface SpecialistWithReferral extends Specialist {
   hasReferralInCycle: boolean;
   daysUntilPayment: number;
+  daysSinceLastReferral: number | null;
+  lastReferralDate: string | null;
 }
 
 const ClientCalendar = () => {
