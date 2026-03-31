@@ -314,7 +314,7 @@ const ClientCalendar = () => {
                       🚨 ACİL YÖNLENDİRME GEREKLİ
                     </CardTitle>
                     <p className="text-red-300 text-sm mt-1">
-                      Bu uzmanların mevcut ödeme döngüsünde henüz yönlendirme yapılmadı!
+                      Bu uzmanların son yönlendirmesinin üzerinden 20 gün veya daha fazla geçti!
                     </p>
                   </div>
                 </div>
