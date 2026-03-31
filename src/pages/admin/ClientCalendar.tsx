@@ -63,21 +63,6 @@ const ClientCalendar = () => {
     }
   };
 
-  // Mevcut ödeme döngüsünün başlangıç tarihini hesapla
-  // Örn: Bugün 9 Mart, ödeme günü 9 → Döngü başlangıcı: 9 Şubat
-  // Örn: Bugün 10 Mart, ödeme günü 9 → Döngü başlangıcı: 9 Mart
-  const getCycleStartDate = (paymentDay: number): Date => {
-    const today = new Date();
-    const currentDay = today.getDate();
-    
-    // Eğer bugün ödeme gününü geçtiyse, döngü bu ayın ödeme gününde başladı
-    // Eğer bugün ödeme gününden önce veya aynıysa, döngü geçen ayın ödeme gününde başladı
-    if (currentDay > paymentDay) {
-      return new Date(today.getFullYear(), today.getMonth(), paymentDay, 0, 0, 0, 0);
-    } else {
-      return new Date(today.getFullYear(), today.getMonth() - 1, paymentDay, 0, 0, 0, 0);
-    }
-  };
 
   const fetchSpecialistsWithReferrals = async () => {
     try {
