@@ -29,6 +29,8 @@ interface ClientReferral {
 interface SpecialistWithReferral extends Specialist {
   hasReferralInCycle: boolean;
   daysUntilPayment: number;
+  daysSinceLastReferral: number | null;
+  lastReferralDate: string | null;
 }
 
 const ClientCalendar = () => {
@@ -61,21 +63,6 @@ const ClientCalendar = () => {
     }
   };
 
-  // Mevcut ödeme döngüsünün başlangıç tarihini hesapla
-  // Örn: Bugün 9 Mart, ödeme günü 9 → Döngü başlangıcı: 9 Şubat
-  // Örn: Bugün 10 Mart, ödeme günü 9 → Döngü başlangıcı: 9 Mart
-  const getCycleStartDate = (paymentDay: number): Date => {
-    const today = new Date();
-    const currentDay = today.getDate();
-    
-    // Eğer bugün ödeme gününü geçtiyse, döngü bu ayın ödeme gününde başladı
-    // Eğer bugün ödeme gününden önce veya aynıysa, döngü geçen ayın ödeme gününde başladı
-    if (currentDay > paymentDay) {
-      return new Date(today.getFullYear(), today.getMonth(), paymentDay, 0, 0, 0, 0);
-    } else {
-      return new Date(today.getFullYear(), today.getMonth() - 1, paymentDay, 0, 0, 0, 0);
-    }
-  };
 
   const fetchSpecialistsWithReferrals = async () => {
     try {
@@ -105,23 +92,35 @@ const ClientCalendar = () => {
       // Her uzman için döngü içinde yönlendirme var mı kontrol et
       const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => {
         const paymentDay = specialist.payment_day || 1;
-        const cycleStartDate = getCycleStartDate(paymentDay);
         const today = new Date();
         
-        // Bu uzmanın döngü içindeki yönlendirmelerini bul
-        const hasReferralInCycle = (referralsData || []).some((referral: ClientReferral) => {
-          if (referral.specialist_id !== specialist.id || !referral.referred_at) {
-            return false;
-          }
-          const referralDate = new Date(referral.referred_at);
-          // Döngü başlangıcından bugüne kadar yönlendirme var mı?
-          return referralDate >= cycleStartDate && referralDate <= today;
-        });
+        // Bu uzmanın tüm yönlendirmelerini bul ve en son olanı al
+        const specialistReferrals = (referralsData || [])
+          .filter((r: ClientReferral) => r.specialist_id === specialist.id && r.referred_at)
+          .sort((a: ClientReferral, b: ClientReferral) => 
+            new Date(b.referred_at!).getTime() - new Date(a.referred_at!).getTime()
+          );
+        
+        const lastReferral = specialistReferrals[0];
+        const lastReferralDate = lastReferral?.referred_at || null;
+        
+        let daysSinceLastReferral: number | null = null;
+        let hasReferralInCycle = false;
+        
+        if (lastReferralDate) {
+          const lastDate = new Date(lastReferralDate);
+          const diffMs = today.getTime() - lastDate.getTime();
+          daysSinceLastReferral = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          // 20 gün içinde yönlendirme yapılmışsa OK, yoksa acil
+          hasReferralInCycle = daysSinceLastReferral < 20;
+        }
 
         return {
           ...specialist,
           hasReferralInCycle,
-          daysUntilPayment: calculateDaysUntilPayment(paymentDay)
+          daysUntilPayment: calculateDaysUntilPayment(paymentDay),
+          daysSinceLastReferral,
+          lastReferralDate,
         };
       });
 
@@ -315,7 +314,7 @@ const ClientCalendar = () => {
                       🚨 ACİL YÖNLENDİRME GEREKLİ
                     </CardTitle>
                     <p className="text-red-300 text-sm mt-1">
-                      Bu uzmanların mevcut ödeme döngüsünde henüz yönlendirme yapılmadı!
+                      Bu uzmanların son yönlendirmesinin üzerinden 20 gün veya daha fazla geçti!
                     </p>
                   </div>
                 </div>
@@ -346,13 +345,15 @@ const ClientCalendar = () => {
                         <Badge className="bg-slate-700 text-white border-slate-600 px-3 py-1">
                           Ödeme: Her ayın {specialist.payment_day}'i
                         </Badge>
-                        <Badge 
-                          className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse"
-                        >
-                          {specialist.daysUntilPayment === 0 
-                            ? "BUGÜN!" 
-                            : `${specialist.daysUntilPayment} gün kaldı`}
-                        </Badge>
+                        {specialist.daysSinceLastReferral !== null ? (
+                          <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
+                            Son yönlendirme: {specialist.daysSinceLastReferral} gün önce
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
+                            Hiç yönlendirme yapılmadı
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   ))}
