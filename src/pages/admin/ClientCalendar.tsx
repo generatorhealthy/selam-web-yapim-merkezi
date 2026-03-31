@@ -154,6 +154,8 @@ const ClientCalendar = () => {
     } finally {
       setLoading(false);
     }
+  };
+
   const saveNote = async (specialistId: string, note: string) => {
     setSavingNote(true);
     try {
