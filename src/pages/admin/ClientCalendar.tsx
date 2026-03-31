@@ -107,23 +107,35 @@ const ClientCalendar = () => {
       // Her uzman için döngü içinde yönlendirme var mı kontrol et
       const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => {
         const paymentDay = specialist.payment_day || 1;
-        const cycleStartDate = getCycleStartDate(paymentDay);
         const today = new Date();
         
-        // Bu uzmanın döngü içindeki yönlendirmelerini bul
-        const hasReferralInCycle = (referralsData || []).some((referral: ClientReferral) => {
-          if (referral.specialist_id !== specialist.id || !referral.referred_at) {
-            return false;
-          }
-          const referralDate = new Date(referral.referred_at);
-          // Döngü başlangıcından bugüne kadar yönlendirme var mı?
-          return referralDate >= cycleStartDate && referralDate <= today;
-        });
+        // Bu uzmanın tüm yönlendirmelerini bul ve en son olanı al
+        const specialistReferrals = (referralsData || [])
+          .filter((r: ClientReferral) => r.specialist_id === specialist.id && r.referred_at)
+          .sort((a: ClientReferral, b: ClientReferral) => 
+            new Date(b.referred_at!).getTime() - new Date(a.referred_at!).getTime()
+          );
+        
+        const lastReferral = specialistReferrals[0];
+        const lastReferralDate = lastReferral?.referred_at || null;
+        
+        let daysSinceLastReferral: number | null = null;
+        let hasReferralInCycle = false;
+        
+        if (lastReferralDate) {
+          const lastDate = new Date(lastReferralDate);
+          const diffMs = today.getTime() - lastDate.getTime();
+          daysSinceLastReferral = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          // 20 gün içinde yönlendirme yapılmışsa OK, yoksa acil
+          hasReferralInCycle = daysSinceLastReferral < 20;
+        }
 
         return {
           ...specialist,
           hasReferralInCycle,
-          daysUntilPayment: calculateDaysUntilPayment(paymentDay)
+          daysUntilPayment: calculateDaysUntilPayment(paymentDay),
+          daysSinceLastReferral,
+          lastReferralDate,
         };
       });
 
