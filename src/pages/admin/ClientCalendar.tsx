@@ -85,20 +85,35 @@ const ClientCalendar = () => {
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-      const { data: referralsData, error: referralsError } = await supabase
-        .from('client_referrals')
-        .select('specialist_id, referred_at, is_referred')
-        .eq('is_referred', true)
-        .gte('referred_at', threeMonthsAgo.toISOString());
+      const [referralsResult, notesResult] = await Promise.all([
+        supabase
+          .from('client_referrals')
+          .select('specialist_id, referred_at, is_referred')
+          .eq('is_referred', true)
+          .gte('referred_at', threeMonthsAgo.toISOString()),
+        supabase
+          .from('client_referrals')
+          .select('specialist_id, notes')
+          .eq('is_referred', false)
+          .not('notes', 'is', null)
+      ]);
 
-      if (referralsError) throw referralsError;
+      if (referralsResult.error) throw referralsResult.error;
+      const referralsData = referralsResult.data;
+      
+      // Her uzman için en güncel notu al
+      const notesMap: Record<string, string> = {};
+      (notesResult.data || []).forEach((n: { specialist_id: string; notes: string | null }) => {
+        if (n.notes && n.notes.trim()) {
+          notesMap[n.specialist_id] = n.notes;
+        }
+      });
 
       // Her uzman için döngü içinde yönlendirme var mı kontrol et
       const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => {
         const paymentDay = specialist.payment_day || 1;
         const today = new Date();
         
-        // Bu uzmanın tüm yönlendirmelerini bul ve en son olanı al
         const specialistReferrals = (referralsData || [])
           .filter((r: ClientReferral) => r.specialist_id === specialist.id && r.referred_at)
           .sort((a: ClientReferral, b: ClientReferral) => 
@@ -115,7 +130,6 @@ const ClientCalendar = () => {
           const lastDate = new Date(lastReferralDate);
           const diffMs = today.getTime() - lastDate.getTime();
           daysSinceLastReferral = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-          // 20 gün içinde yönlendirme yapılmışsa OK, yoksa acil
           hasReferralInCycle = daysSinceLastReferral < 20;
         }
 
@@ -125,6 +139,7 @@ const ClientCalendar = () => {
           daysUntilPayment: calculateDaysUntilPayment(paymentDay),
           daysSinceLastReferral,
           lastReferralDate,
+          calendarNote: notesMap[specialist.id] || "",
         };
       });
 
