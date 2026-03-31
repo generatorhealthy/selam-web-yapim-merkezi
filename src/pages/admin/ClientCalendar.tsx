@@ -92,20 +92,18 @@ const ClientCalendar = () => {
           .eq('is_referred', true)
           .gte('referred_at', threeMonthsAgo.toISOString()),
         supabase
-          .from('client_referrals')
-          .select('specialist_id, notes')
-          .eq('is_referred', false)
-          .not('notes', 'is', null)
+          .from('calendar_notes')
+          .select('specialist_id, note')
       ]);
 
       if (referralsResult.error) throw referralsResult.error;
       const referralsData = referralsResult.data;
       
-      // Her uzman için en güncel notu al
+      // Her uzman için takvim notunu al
       const notesMap: Record<string, string> = {};
-      (notesResult.data || []).forEach((n: { specialist_id: string; notes: string | null }) => {
-        if (n.notes && n.notes.trim()) {
-          notesMap[n.specialist_id] = n.notes;
+      (notesResult.data || []).forEach((n: { specialist_id: string; note: string }) => {
+        if (n.note && n.note.trim()) {
+          notesMap[n.specialist_id] = n.note;
         }
       });
 
@@ -159,32 +157,14 @@ const ClientCalendar = () => {
   const saveNote = async (specialistId: string, note: string) => {
     setSavingNote(true);
     try {
-      // Mevcut notu kontrol et
-      const { data: existing } = await supabase
-        .from('client_referrals')
-        .select('id')
-        .eq('specialist_id', specialistId)
-        .eq('is_referred', false)
-        .maybeSingle();
+      const { error } = await supabase
+        .from('calendar_notes')
+        .upsert(
+          { specialist_id: specialistId, note, updated_at: new Date().toISOString() },
+          { onConflict: 'specialist_id' }
+        );
 
-      if (existing) {
-        await supabase
-          .from('client_referrals')
-          .update({ notes: note })
-          .eq('id', existing.id);
-      } else {
-        const now = new Date();
-        await supabase
-          .from('client_referrals')
-          .insert({
-            specialist_id: specialistId,
-            is_referred: false,
-            notes: note,
-            client_name: 'Takvim Notu',
-            month: now.getMonth() + 1,
-            year: now.getFullYear(),
-          });
-      }
+      if (error) throw error;
 
       setSpecialists(prev => prev.map(s => 
         s.id === specialistId ? { ...s, calendarNote: note } : s
