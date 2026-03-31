@@ -92,10 +92,8 @@ const ClientCalendar = () => {
           .eq('is_referred', true)
           .gte('referred_at', threeMonthsAgo.toISOString()),
         supabase
-          .from('client_referrals')
-          .select('specialist_id, notes')
-          .eq('is_referred', false)
-          .not('notes', 'is', null)
+          .from('calendar_notes')
+          .select('specialist_id, note')
       ]);
 
       if (referralsResult.error) throw referralsResult.error;
