@@ -394,35 +394,88 @@ const ClientCalendar = () => {
                   {urgentSpecialists.map(specialist => (
                     <div 
                       key={specialist.id} 
-                      className="flex items-center justify-between p-5 hover:bg-red-900 transition-all"
+                      className="p-5 hover:bg-red-900 transition-all"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
-                          <span className="text-white font-bold text-lg">
-                            {specialist.daysUntilPayment}
-                          </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <span className="text-white font-bold text-lg">
+                              {specialist.daysUntilPayment}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-white text-lg">{specialist.name}</p>
+                            <p className="text-red-300 text-sm">
+                              {specialist.specialty} • {specialist.city}
+                              {specialist.internal_number && ` • #${specialist.internal_number}`}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-white text-lg">{specialist.name}</p>
-                          <p className="text-red-300 text-sm">
-                            {specialist.specialty} • {specialist.city}
-                            {specialist.internal_number && ` • #${specialist.internal_number}`}
-                          </p>
+                        
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-slate-700 text-white border-slate-600 px-3 py-1">
+                            Ödeme: Her ayın {specialist.payment_day}'i
+                          </Badge>
+                          {specialist.daysSinceLastReferral !== null ? (
+                            <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
+                              Son yönlendirme: {specialist.daysSinceLastReferral} gün önce
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
+                              Hiç yönlendirme yapılmadı
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-slate-700 text-white border-slate-600 px-3 py-1">
-                          Ödeme: Her ayın {specialist.payment_day}'i
-                        </Badge>
-                        {specialist.daysSinceLastReferral !== null ? (
-                          <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
-                            Son yönlendirme: {specialist.daysSinceLastReferral} gün önce
-                          </Badge>
+                      {/* Not alanı */}
+                      <div className="mt-3 ml-16">
+                        {editingNoteId === specialist.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={noteText}
+                              onChange={(e) => setNoteText(e.target.value)}
+                              placeholder="Not yazın..."
+                              className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveNote(specialist.id, noteText);
+                                if (e.key === 'Escape') setEditingNoteId(null);
+                              }}
+                            />
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveNote(specialist.id, noteText)}
+                              disabled={savingNote}
+                              className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3"
+                            >
+                              Kaydet
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => setEditingNoteId(null)}
+                              className="text-slate-400 hover:text-white h-8 px-2"
+                            >
+                              İptal
+                            </Button>
+                          </div>
                         ) : (
-                          <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
-                            Hiç yönlendirme yapılmadı
-                          </Badge>
+                          <button
+                            onClick={() => {
+                              setEditingNoteId(specialist.id);
+                              setNoteText(specialist.calendarNote || "");
+                            }}
+                            className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+                          >
+                            <StickyNote className="w-3.5 h-3.5" />
+                            {specialist.calendarNote ? (
+                              <span className="text-amber-300">{specialist.calendarNote}</span>
+                            ) : (
+                              <span className="italic">Not ekle...</span>
+                            )}
+                          </button>
                         )}
                       </div>
                     </div>
