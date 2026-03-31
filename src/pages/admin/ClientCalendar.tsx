@@ -32,6 +32,7 @@ interface SpecialistWithReferral extends Specialist {
   daysUntilPayment: number;
   daysSinceLastReferral: number | null;
   lastReferralDate: string | null;
+  calendarNote: string;
 }
 
 const ClientCalendar = () => {
