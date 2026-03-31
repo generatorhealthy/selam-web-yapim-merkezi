@@ -99,11 +99,11 @@ const ClientCalendar = () => {
       if (referralsResult.error) throw referralsResult.error;
       const referralsData = referralsResult.data;
       
-      // Her uzman için en güncel notu al
+      // Her uzman için takvim notunu al
       const notesMap: Record<string, string> = {};
-      (notesResult.data || []).forEach((n: { specialist_id: string; notes: string | null }) => {
-        if (n.notes && n.notes.trim()) {
-          notesMap[n.specialist_id] = n.notes;
+      (notesResult.data || []).forEach((n: { specialist_id: string; note: string }) => {
+        if (n.note && n.note.trim()) {
+          notesMap[n.specialist_id] = n.note;
         }
       });
 
