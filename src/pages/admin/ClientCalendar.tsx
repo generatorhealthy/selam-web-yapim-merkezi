@@ -7,7 +7,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock } from "lucide-react";
+import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
 
@@ -31,12 +31,16 @@ interface SpecialistWithReferral extends Specialist {
   daysUntilPayment: number;
   daysSinceLastReferral: number | null;
   lastReferralDate: string | null;
+  calendarNote: string;
 }
 
 const ClientCalendar = () => {
   const [specialists, setSpecialists] = useState<SpecialistWithReferral[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   
@@ -81,20 +85,35 @@ const ClientCalendar = () => {
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-      const { data: referralsData, error: referralsError } = await supabase
-        .from('client_referrals')
-        .select('specialist_id, referred_at, is_referred')
-        .eq('is_referred', true)
-        .gte('referred_at', threeMonthsAgo.toISOString());
+      const [referralsResult, notesResult] = await Promise.all([
+        supabase
+          .from('client_referrals')
+          .select('specialist_id, referred_at, is_referred')
+          .eq('is_referred', true)
+          .gte('referred_at', threeMonthsAgo.toISOString()),
+        supabase
+          .from('client_referrals')
+          .select('specialist_id, notes')
+          .eq('is_referred', false)
+          .not('notes', 'is', null)
+      ]);
 
-      if (referralsError) throw referralsError;
+      if (referralsResult.error) throw referralsResult.error;
+      const referralsData = referralsResult.data;
+      
+      // Her uzman için en güncel notu al
+      const notesMap: Record<string, string> = {};
+      (notesResult.data || []).forEach((n: { specialist_id: string; notes: string | null }) => {
+        if (n.notes && n.notes.trim()) {
+          notesMap[n.specialist_id] = n.notes;
+        }
+      });
 
       // Her uzman için döngü içinde yönlendirme var mı kontrol et
       const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => {
         const paymentDay = specialist.payment_day || 1;
         const today = new Date();
         
-        // Bu uzmanın tüm yönlendirmelerini bul ve en son olanı al
         const specialistReferrals = (referralsData || [])
           .filter((r: ClientReferral) => r.specialist_id === specialist.id && r.referred_at)
           .sort((a: ClientReferral, b: ClientReferral) => 
@@ -111,7 +130,6 @@ const ClientCalendar = () => {
           const lastDate = new Date(lastReferralDate);
           const diffMs = today.getTime() - lastDate.getTime();
           daysSinceLastReferral = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-          // 20 gün içinde yönlendirme yapılmışsa OK, yoksa acil
           hasReferralInCycle = daysSinceLastReferral < 20;
         }
 
@@ -121,6 +139,7 @@ const ClientCalendar = () => {
           daysUntilPayment: calculateDaysUntilPayment(paymentDay),
           daysSinceLastReferral,
           lastReferralDate,
+          calendarNote: notesMap[specialist.id] || "",
         };
       });
 
@@ -136,6 +155,49 @@ const ClientCalendar = () => {
       setLoading(false);
     }
   };
+
+  const saveNote = async (specialistId: string, note: string) => {
+    setSavingNote(true);
+    try {
+      // Mevcut notu kontrol et
+      const { data: existing } = await supabase
+        .from('client_referrals')
+        .select('id')
+        .eq('specialist_id', specialistId)
+        .eq('is_referred', false)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from('client_referrals')
+          .update({ notes: note })
+          .eq('id', existing.id);
+      } else {
+        const now = new Date();
+        await supabase
+          .from('client_referrals')
+          .insert({
+            specialist_id: specialistId,
+            is_referred: false,
+            notes: note,
+            client_name: 'Takvim Notu',
+            month: now.getMonth() + 1,
+            year: now.getFullYear(),
+          });
+      }
+
+      setSpecialists(prev => prev.map(s => 
+        s.id === specialistId ? { ...s, calendarNote: note } : s
+      ));
+      setEditingNoteId(null);
+      toast({ title: "Not kaydedildi" });
+    } catch {
+      toast({ title: "Hata", description: "Not kaydedilemedi", variant: "destructive" });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
 
   useEffect(() => {
     if (canAccess) {
@@ -332,35 +394,88 @@ const ClientCalendar = () => {
                   {urgentSpecialists.map(specialist => (
                     <div 
                       key={specialist.id} 
-                      className="flex items-center justify-between p-5 hover:bg-red-900 transition-all"
+                      className="p-5 hover:bg-red-900 transition-all"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
-                          <span className="text-white font-bold text-lg">
-                            {specialist.daysUntilPayment}
-                          </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <span className="text-white font-bold text-lg">
+                              {specialist.daysUntilPayment}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-white text-lg">{specialist.name}</p>
+                            <p className="text-red-300 text-sm">
+                              {specialist.specialty} • {specialist.city}
+                              {specialist.internal_number && ` • #${specialist.internal_number}`}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-white text-lg">{specialist.name}</p>
-                          <p className="text-red-300 text-sm">
-                            {specialist.specialty} • {specialist.city}
-                            {specialist.internal_number && ` • #${specialist.internal_number}`}
-                          </p>
+                        
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-slate-700 text-white border-slate-600 px-3 py-1">
+                            Ödeme: Her ayın {specialist.payment_day}'i
+                          </Badge>
+                          {specialist.daysSinceLastReferral !== null ? (
+                            <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
+                              Son yönlendirme: {specialist.daysSinceLastReferral} gün önce
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
+                              Hiç yönlendirme yapılmadı
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-slate-700 text-white border-slate-600 px-3 py-1">
-                          Ödeme: Her ayın {specialist.payment_day}'i
-                        </Badge>
-                        {specialist.daysSinceLastReferral !== null ? (
-                          <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
-                            Son yönlendirme: {specialist.daysSinceLastReferral} gün önce
-                          </Badge>
+                      {/* Not alanı */}
+                      <div className="mt-3 ml-16">
+                        {editingNoteId === specialist.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={noteText}
+                              onChange={(e) => setNoteText(e.target.value)}
+                              placeholder="Not yazın..."
+                              className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveNote(specialist.id, noteText);
+                                if (e.key === 'Escape') setEditingNoteId(null);
+                              }}
+                            />
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveNote(specialist.id, noteText)}
+                              disabled={savingNote}
+                              className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3"
+                            >
+                              Kaydet
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => setEditingNoteId(null)}
+                              className="text-slate-400 hover:text-white h-8 px-2"
+                            >
+                              İptal
+                            </Button>
+                          </div>
                         ) : (
-                          <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
-                            Hiç yönlendirme yapılmadı
-                          </Badge>
+                          <button
+                            onClick={() => {
+                              setEditingNoteId(specialist.id);
+                              setNoteText(specialist.calendarNote || "");
+                            }}
+                            className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+                          >
+                            <StickyNote className="w-3.5 h-3.5" />
+                            {specialist.calendarNote ? (
+                              <span className="text-amber-300">{specialist.calendarNote}</span>
+                            ) : (
+                              <span className="italic">Not ekle...</span>
+                            )}
+                          </button>
                         )}
                       </div>
                     </div>
