@@ -345,13 +345,15 @@ const ClientCalendar = () => {
                         <Badge className="bg-slate-700 text-white border-slate-600 px-3 py-1">
                           Ödeme: Her ayın {specialist.payment_day}'i
                         </Badge>
-                        <Badge 
-                          className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse"
-                        >
-                          {specialist.daysUntilPayment === 0 
-                            ? "BUGÜN!" 
-                            : `${specialist.daysUntilPayment} gün kaldı`}
-                        </Badge>
+                        {specialist.daysSinceLastReferral !== null ? (
+                          <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
+                            Son yönlendirme: {specialist.daysSinceLastReferral} gün önce
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-red-600 text-white border-red-500 px-3 py-1 animate-pulse">
+                            Hiç yönlendirme yapılmadı
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   ))}
