@@ -156,9 +156,17 @@ const ClientCalendar = () => {
   };
 
   // Acil yönlendirme: Döngü içinde yönlendirme yapılmamış uzmanlar
+  // Hiç yönlendirme yapılmayanlar en üstte, sonra gün sayısına göre sırala
   const urgentSpecialists = specialists
     .filter(s => !s.hasReferralInCycle)
-    .sort((a, b) => a.daysUntilPayment - b.daysUntilPayment);
+    .sort((a, b) => {
+      const aNoReferral = a.daysSinceLastReferral === null;
+      const bNoReferral = b.daysSinceLastReferral === null;
+      if (aNoReferral && !bNoReferral) return -1;
+      if (!aNoReferral && bNoReferral) return 1;
+      if (aNoReferral && bNoReferral) return a.daysUntilPayment - b.daysUntilPayment;
+      return (b.daysSinceLastReferral!) - (a.daysSinceLastReferral!);
+    });
 
   const groupedByPaymentDay = specialists.reduce((acc, specialist) => {
     const day = specialist.payment_day || 0;
