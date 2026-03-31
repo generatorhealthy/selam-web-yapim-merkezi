@@ -39,6 +39,9 @@ const ClientCalendar = () => {
   const [specialists, setSpecialists] = useState<SpecialistWithReferral[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   
