@@ -61,16 +61,31 @@ const RegistrationAnalytics = () => {
   const fetchData = async () => {
     setIsLoading(true);
     const fromDate = subDays(new Date(), parseInt(dateRange));
+    const fromISO = startOfDay(fromDate).toISOString();
     
-    const { data: rows, error } = await supabase
-      .from('registration_analytics')
-      .select('*')
-      .gte('created_at', startOfDay(fromDate).toISOString())
-      .order('created_at', { ascending: false });
+    let allRows: AnalyticsRow[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    let hasMore = true;
 
-    if (!error && rows) {
-      setData(rows as AnalyticsRow[]);
+    while (hasMore) {
+      const { data: rows, error } = await supabase
+        .from('registration_analytics')
+        .select('*')
+        .gte('created_at', fromISO)
+        .order('created_at', { ascending: false })
+        .range(from, from + pageSize - 1);
+
+      if (error || !rows || rows.length === 0) {
+        hasMore = false;
+      } else {
+        allRows = allRows.concat(rows as AnalyticsRow[]);
+        from += pageSize;
+        if (rows.length < pageSize) hasMore = false;
+      }
     }
+
+    setData(allRows);
     setIsLoading(false);
   };
 
