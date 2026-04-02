@@ -128,6 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
       ring_timeout: 30,
       cli: "902167060611",
       call_retries: isTestMode ? 0 : 2,
+      welcome_announcement_id: 131891,
       digit_retries: 1,
       digit_timeout: 4,
       digit_target_1: "queue/200",
