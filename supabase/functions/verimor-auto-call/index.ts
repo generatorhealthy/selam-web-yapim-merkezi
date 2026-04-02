@@ -143,7 +143,7 @@ const handler = async (req: Request): Promise<Response> => {
         digit_target_1: customer.tts_target,
         timeout_target: customer.tts_target,
         invalid_target: customer.tts_target,
-        phone_list: [{ phone: customer.phone }],
+        phone_list: [{ phone: customer.phone, phrase: "#131891" }],
         is_commercial: false,
         recording_enabled: true
       };
