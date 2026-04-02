@@ -15,7 +15,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt, Mail, MessageSquare, Send, StickyNote, Timer, CheckCheck, X } from "lucide-react";
+import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircle, AlertCircle, Trash2, RotateCcw, Download, FileText, Copy, Receipt, Mail, MessageSquare, Send, StickyNote, Timer, CheckCheck, X, Phone, PhoneCall } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { sendSms } from "@/services/smsService";
 import SendOrderEmailDialog from "@/components/SendOrderEmailDialog";
@@ -80,8 +80,38 @@ const OrderManagement = () => {
   const [smsScheduleTime, setSmsScheduleTime] = useState("");
   const [noteInput, setNoteInput] = useState<Record<string, string>>({});
   const [addingNote, setAddingNote] = useState<string | null>(null);
+  const [callingOrder, setCallingOrder] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCallCustomer = async (order: Order) => {
+    if (!order.customer_phone) {
+      toast({ title: "Hata", description: "Telefon numarası bulunamadı", variant: "destructive" });
+      return;
+    }
+    setCallingOrder(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('verimor-auto-call', {
+        body: {
+          test_mode: true,
+          test_phone: order.customer_phone,
+          test_name: order.customer_name,
+          test_payment_day: new Date().getDate()
+        }
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast({ title: "Arama Başlatıldı", description: `${order.customer_name} aranıyor...` });
+      } else {
+        throw new Error(data?.error || 'Arama başlatılamadı');
+      }
+    } catch (error: any) {
+      console.error('Arama hatası:', error);
+      toast({ title: "Arama Hatası", description: error.message || "Arama başlatılamadı", variant: "destructive" });
+    } finally {
+      setCallingOrder(null);
+    }
+  };
 
   // Debounced search - 300ms bekleyerek arama yap (daha hızlı)
   useEffect(() => {
@@ -1706,6 +1736,17 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                                   >
                                     <MessageSquare className="w-3 h-3" />
                                     SMS Gönder
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleCallCustomer(order)}
+                                    disabled={!order.customer_phone || callingOrder === order.id}
+                                    className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 text-xs flex-1"
+                                  >
+                                    <PhoneCall className="w-3 h-3" />
+                                    {callingOrder === order.id ? 'Aranıyor...' : 'Ara'}
                                   </Button>
                                   
                                   <Button
