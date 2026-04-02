@@ -59,6 +59,23 @@ serve(async (req) => {
               console.error("Sipariş onaylama hatası:", updateError);
             } else {
               console.log(`Sipariş otomatik onaylandı: ${order.customer_name} (${customerEmail}) - ${order.amount} TL`);
+              
+              // Otomatik fatura kes
+              try {
+                const invokeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/create-birfatura-invoice`;
+                const invoiceRes = await fetch(invokeUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                  },
+                  body: JSON.stringify({ orderId: order.id }),
+                });
+                const invoiceResult = await invoiceRes.json();
+                console.log("Otomatik fatura sonucu:", JSON.stringify(invoiceResult));
+              } catch (invoiceErr) {
+                console.error("Otomatik fatura hatası:", invoiceErr);
+              }
             }
           } else {
             console.log("Bekleyen sipariş bulunamadı:", customerEmail);
