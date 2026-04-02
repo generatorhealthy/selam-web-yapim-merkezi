@@ -1741,6 +1741,17 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                                   <Button
                                     variant="outline"
                                     size="sm"
+                                    onClick={() => handleCallCustomer(order)}
+                                    disabled={!order.customer_phone || callingOrder === order.id}
+                                    className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 text-xs flex-1"
+                                  >
+                                    <PhoneCall className="w-3 h-3" />
+                                    {callingOrder === order.id ? 'Aranıyor...' : 'Ara'}
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => {
                                       setSelectedOrder(order);
                                       setEditingOrder(order);
