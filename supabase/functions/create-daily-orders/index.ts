@@ -19,79 +19,84 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get today's day of month
-    const today = new Date();
-    const dayOfMonth = today.getDate();
-    console.log(`Today is day ${dayOfMonth} of the month`);
+    // Get today's day of month (Turkey time UTC+3)
+    const now = new Date();
+    const turkeyTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+    const dayOfMonth = turkeyTime.getUTCDate();
+    const todayStr = turkeyTime.toISOString().split('T')[0];
+    console.log(`Turkey time: ${turkeyTime.toISOString()}, day of month: ${dayOfMonth}`);
 
-    // Find active customers whose payment day is today
-    const { data: dueCustomers, error: customersError } = await supabaseAdmin
-      .from('automatic_orders')
-      .select('*')
-      .eq('monthly_payment_day', dayOfMonth)
+    // Find active specialists whose payment_day is today
+    const { data: dueSpecialists, error: specError } = await supabaseAdmin
+      .from('specialists')
+      .select('id, name, email, payment_day, package_price, specialty, city, phone')
+      .eq('payment_day', dayOfMonth)
       .eq('is_active', true);
 
-    if (customersError) {
-      console.error('Error fetching due customers:', customersError);
+    if (specError) {
+      console.error('Error fetching specialists:', specError);
       return new Response(
-        JSON.stringify({ error: customersError.message }),
+        JSON.stringify({ error: specError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!dueCustomers || dueCustomers.length === 0) {
-      console.log('No customers with payment due today');
+    if (!dueSpecialists || dueSpecialists.length === 0) {
+      console.log('No specialists with payment due today');
       return new Response(
         JSON.stringify({ success: true, message: 'No payments due today', created: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Found ${dueCustomers.length} customers with payment due today`);
+    console.log(`Found ${dueSpecialists.length} specialists with payment due today`);
     let createdCount = 0;
     let skippedCount = 0;
     let errorCount = 0;
 
-    for (const customer of dueCustomers) {
+    for (const specialist of dueSpecialists) {
       try {
-        // Find the latest order for this customer by email (not name, since names can change)
+        if (!specialist.email) {
+          console.log(`No email for specialist ${specialist.name}, skipping`);
+          errorCount++;
+          continue;
+        }
+
+        // Check if an order was already created today for this specialist (by email)
+        const { data: existingToday } = await supabaseAdmin
+          .from('orders')
+          .select('id')
+          .eq('customer_email', specialist.email)
+          .is('deleted_at', null)
+          .gte('created_at', `${todayStr}T00:00:00+03:00`)
+          .lte('created_at', `${todayStr}T23:59:59+03:00`)
+          .limit(1);
+
+        if (existingToday && existingToday.length > 0) {
+          console.log(`Order already exists today for ${specialist.email}, skipping`);
+          skippedCount++;
+          continue;
+        }
+
+        // Find the latest order for this specialist by email
         const { data: latestOrders, error: orderError } = await supabaseAdmin
           .from('orders')
           .select('*')
-          .eq('customer_email', customer.customer_email)
+          .eq('customer_email', specialist.email)
           .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(1);
 
         if (orderError) {
-          console.error(`Error fetching latest order for ${customer.customer_email}:`, orderError);
+          console.error(`Error fetching latest order for ${specialist.email}:`, orderError);
           errorCount++;
           continue;
         }
 
-        // Check if an order was already created today for this customer
-        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
-        const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
-        
-        const { data: existingToday, error: existingError } = await supabaseAdmin
-          .from('orders')
-          .select('id')
-          .eq('customer_email', customer.customer_email)
-          .is('deleted_at', null)
-          .gte('created_at', todayStart)
-          .lte('created_at', todayEnd)
-          .limit(1);
-
-        if (!existingError && existingToday && existingToday.length > 0) {
-          console.log(`Order already exists today for ${customer.customer_email}, skipping`);
-          skippedCount++;
-          continue;
-        }
-
-        // Build new order from latest order or from customer data
         let newOrder: Record<string, any>;
 
         if (latestOrders && latestOrders.length > 0) {
+          // Copy from previous order with incremented subscription_month
           const prev = latestOrders[0];
           newOrder = {
             customer_name: prev.customer_name,
@@ -113,22 +118,17 @@ serve(async (req) => {
             subscription_month: (prev.subscription_month || 0) + 1,
           };
         } else {
-          // No previous order exists, create from automatic_orders data
+          // No previous order — create from specialist data
           newOrder = {
-            customer_name: customer.customer_name,
-            customer_email: customer.customer_email,
-            customer_phone: customer.customer_phone,
-            customer_address: customer.customer_address,
-            customer_city: customer.customer_city,
-            customer_tc_no: customer.customer_tc_no,
-            company_name: customer.company_name,
-            company_tax_no: customer.company_tax_no,
-            company_tax_office: customer.company_tax_office,
-            package_name: customer.package_name,
-            package_type: customer.package_type,
-            amount: customer.amount,
-            payment_method: customer.payment_method,
-            customer_type: customer.customer_type,
+            customer_name: specialist.name,
+            customer_email: specialist.email,
+            customer_phone: specialist.phone || '',
+            customer_city: specialist.city || '',
+            package_name: (specialist.specialty || 'Standart') + ' Paketi',
+            package_type: 'premium',
+            amount: specialist.package_price || 2998,
+            payment_method: 'banka_havalesi',
+            customer_type: 'individual',
             status: 'pending',
             is_first_order: true,
             subscription_month: 1,
@@ -140,14 +140,14 @@ serve(async (req) => {
           .insert(newOrder);
 
         if (insertError) {
-          console.error(`Error creating order for ${customer.customer_email}:`, insertError);
+          console.error(`Error creating order for ${specialist.email}:`, insertError);
           errorCount++;
         } else {
-          console.log(`Order created for ${customer.customer_email} (month ${newOrder.subscription_month})`);
+          console.log(`Order created for ${specialist.name} (${specialist.email}) - month ${newOrder.subscription_month}`);
           createdCount++;
         }
       } catch (err) {
-        console.error(`Unexpected error for ${customer.customer_email}:`, err);
+        console.error(`Unexpected error for ${specialist.email}:`, err);
         errorCount++;
       }
     }
@@ -155,7 +155,7 @@ serve(async (req) => {
     const result = {
       success: true,
       message: 'Daily orders processed',
-      totalDue: dueCustomers.length,
+      totalDue: dueSpecialists.length,
       created: createdCount,
       skipped: skippedCount,
       errors: errorCount,
