@@ -136,6 +136,11 @@ const handler = async (req: Request): Promise<Response> => {
       ring_timeout: 30,
       cli: "902167060611",
       call_retries: 2,
+      digit_retries: 1,
+      digit_timeout: 4,
+      digit_target_1: "queue/200",
+      timeout_target: "queue/200",
+      invalid_target: "queue/200",
       phone_list: phoneList,
       is_commercial: false,
       recording_enabled: true
