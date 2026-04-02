@@ -1339,9 +1339,9 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
-                    <p className="text-purple-100 text-sm font-medium">Toplam Tutar</p>
+                    <p className="text-purple-100 text-sm font-medium">Bekleyen Tutar</p>
                     <p className="text-2xl font-bold">
-                      {Number(orderStats?.total_amount ?? 0).toLocaleString('tr-TR')} ₺
+                      {Number(orderStats?.pending_amount ?? 0).toLocaleString('tr-TR')} ₺
                     </p>
                   </div>
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
