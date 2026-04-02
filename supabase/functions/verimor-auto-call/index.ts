@@ -89,6 +89,8 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    const ANNOUNCEMENT_ID = "#131901";
+
     const preparedCustomers = unpaidCustomers
       .filter(c => c.customer_phone && c.customer_phone.trim() !== '')
       .map(c => {
@@ -99,15 +101,9 @@ const handler = async (req: Request): Promise<Response> => {
           phone = '90' + phone;
         }
 
-        const ttsMessage = `Sayın ${c.customer_name}. Bugün aylık abonelik ödeme gününüzdür. Ödemenizi bugün içerisinde gerçekleştirip tarafımıza bilgi vermenizi rica ederiz. Detaylı bilgi için 0216 706 06 11 numarasından bize ulaşabilirsiniz. İyi günler dileriz. Doktorum Ol.`
-          .replace(/[\/#]/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-
         return {
           customer_name: c.customer_name,
           phone,
-          tts_target: `tts/tr-TR/${ttsMessage}`,
         };
       });
 
@@ -140,10 +136,10 @@ const handler = async (req: Request): Promise<Response> => {
         call_retries: isTestMode ? 0 : 2,
         digit_retries: 0,
         digit_timeout: 1,
-        digit_target_1: customer.tts_target,
-        timeout_target: customer.tts_target,
-        invalid_target: customer.tts_target,
-        phone_list: [{ phone: customer.phone, phrase: "#131901" }],
+        digit_target_1: "announcement/131901",
+        timeout_target: "announcement/131901",
+        invalid_target: "announcement/131901",
+        phone_list: [{ phone: customer.phone, phrase: ANNOUNCEMENT_ID }],
         is_commercial: false,
         recording_enabled: true
       };
