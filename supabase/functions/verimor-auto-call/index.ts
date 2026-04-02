@@ -125,23 +125,22 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create IVR campaign via Verimor Bulutsantral API
-    const campaignData = {
+    const campaignData: any = {
       call_type: "ivr",
       name: `Odeme Hatirlatma - ${today.toISOString().split('T')[0]}`,
       date_range_begin: today.toISOString().split('T')[0],
       date_range_end: today.toISOString().split('T')[0],
       time_range_begin: "10:00",
       time_range_end: "18:00",
-      active_days: [1, 2, 3, 4, 5], // Monday to Friday
+      active_days: [1, 2, 3, 4, 5],
       ring_timeout: 30,
       cli: "902167060611",
       call_retries: 2,
       digit_timeout: 4,
-      digit_retries: 1,
-      // When customer presses 1, connect to queue/operator
-      digit_target_1: "replay",
-      timeout_target: "replay",
-      invalid_target: "replay",
+      digit_retries: 0,
+      timeout_target: "timeout",
+      invalid_target: "invalid",
+      digit_target_1: "timeout",
       phone_list: phoneList,
       is_commercial: false,
       recording_enabled: true
