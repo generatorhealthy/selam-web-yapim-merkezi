@@ -4411,6 +4411,7 @@ export type Database = {
         Args: never
         Returns: {
           approved_count: number
+          pending_amount: number
           pending_count: number
           total_amount: number
           total_count: number
