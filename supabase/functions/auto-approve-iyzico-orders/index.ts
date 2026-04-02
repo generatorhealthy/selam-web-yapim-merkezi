@@ -178,7 +178,6 @@ serve(async (req) => {
         .update({
           status: 'approved',
           approved_at: new Date().toISOString(),
-          approved_by: 'system-iyzico-auto',
           payment_method: 'credit_card',
         })
         .eq('id', orderToApprove.id);
