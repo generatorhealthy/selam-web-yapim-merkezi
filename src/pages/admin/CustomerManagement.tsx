@@ -85,6 +85,7 @@ const CustomerManagement = () => {
   const [editingPackagePrice, setEditingPackagePrice] = useState<string | null>(null);
   const [newPackagePrice, setNewPackagePrice] = useState<number>(2998);
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+  const [autoCallLoading, setAutoCallLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
