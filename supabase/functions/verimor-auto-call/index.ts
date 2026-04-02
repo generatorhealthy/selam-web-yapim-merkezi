@@ -135,9 +135,10 @@ const handler = async (req: Request): Promise<Response> => {
         cli: "902167060611",
         call_retries: isTestMode ? 0 : 2,
         digit_retries: 0,
-        digit_timeout: 0,
-        timeout_target: "",
-        invalid_target: "",
+        digit_timeout: 1,
+        digit_target_1: "hangup",
+        timeout_target: "hangup",
+        invalid_target: "hangup",
         phone_list: [{ phone: customer.phone, phrase: ANNOUNCEMENT_ID }],
         is_commercial: false,
         recording_enabled: true
