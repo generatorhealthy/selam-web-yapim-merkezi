@@ -28,7 +28,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award, Clock, Flame, DollarSign, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Eye, Edit, Calendar, User, Mail, Phone, MapPin, CreditCard, Check, X, TrendingUp, Users, Award, Clock, Flame, DollarSign, Trash2, ChevronLeft, ChevronRight, PhoneCall } from "lucide-react";
 import { getMonthName } from "@/utils/monthUtils";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -85,6 +85,7 @@ const CustomerManagement = () => {
   const [editingPackagePrice, setEditingPackagePrice] = useState<string | null>(null);
   const [newPackagePrice, setNewPackagePrice] = useState<number>(2998);
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+  const [autoCallLoading, setAutoCallLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -155,6 +156,38 @@ const CustomerManagement = () => {
       });
     } finally {
       setSpecialistsLoading(false);
+    }
+  };
+
+  const triggerAutoCall = async () => {
+    try {
+      setAutoCallLoading(true);
+      const { data, error } = await supabase.functions.invoke('verimor-auto-call', {
+        body: {}
+      });
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast({
+          title: "Otomatik Arama Başlatıldı",
+          description: `${data.called_count} kişiye otomatik arama kampanyası oluşturuldu`,
+        });
+      } else {
+        toast({
+          title: "Bilgi",
+          description: data?.message || "Aranacak ödeme yapmamış kişi bulunamadı",
+        });
+      }
+    } catch (error: any) {
+      console.error('Auto call error:', error);
+      toast({
+        title: "Hata",
+        description: "Otomatik arama başlatılırken bir hata oluştu: " + (error.message || ''),
+        variant: "destructive"
+      });
+    } finally {
+      setAutoCallLoading(false);
     }
   };
 
@@ -758,7 +791,7 @@ const CustomerManagement = () => {
               
               {todayPaymentDue.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-orange-200">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <Calendar className="w-4 h-4" />
                       <span>Bugün: {new Date().toLocaleDateString('tr-TR', { 
@@ -768,8 +801,21 @@ const CustomerManagement = () => {
                         day: 'numeric' 
                       })}</span>
                     </div>
-                    <div className="text-sm font-medium text-orange-700">
-                      Toplam {todayPaymentDue.reduce((sum, specialist) => sum + (specialist.package_price || 0), 0).toLocaleString('tr-TR')} ₺
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm font-medium text-orange-700">
+                        Toplam {todayPaymentDue.reduce((sum, specialist) => sum + (specialist.package_price || 0), 0).toLocaleString('tr-TR')} ₺
+                      </div>
+                      {!isStaff && (
+                        <Button
+                          onClick={triggerAutoCall}
+                          disabled={autoCallLoading}
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                        >
+                          <PhoneCall className="w-4 h-4" />
+                          {autoCallLoading ? 'Aranıyor...' : 'Otomatik Ara'}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
