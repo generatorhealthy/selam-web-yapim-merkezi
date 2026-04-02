@@ -89,11 +89,9 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Build phone list - using announcement ID for TTS
-    const phoneList = unpaidCustomers
+    const preparedCustomers = unpaidCustomers
       .filter(c => c.customer_phone && c.customer_phone.trim() !== '')
       .map(c => {
-        // Clean phone number
         let phone = c.customer_phone.replace(/\D/g, '');
         if (phone.startsWith('0')) {
           phone = '90' + phone.substring(1);
@@ -101,10 +99,19 @@ const handler = async (req: Request): Promise<Response> => {
           phone = '90' + phone;
         }
 
-        return { phone };
+        const ttsMessage = `Sayın ${c.customer_name}. Bugün aylık abonelik ödeme gününüzdür. Ödemenizi bugün içerisinde gerçekleştirip tarafımıza bilgi vermenizi rica ederiz. Detaylı bilgi için 0216 706 06 11 numarasından bize ulaşabilirsiniz. İyi günler dileriz. Doktorum Ol.`
+          .replace(/[\/#]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        return {
+          customer_name: c.customer_name,
+          phone,
+          tts_target: `tts/tr-TR/${ttsMessage}`,
+        };
       });
 
-    if (phoneList.length === 0) {
+    if (preparedCustomers.length === 0) {
       return new Response(JSON.stringify({
         success: true,
         message: 'No valid phone numbers found for unpaid customers',
@@ -115,63 +122,68 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Create IVR campaign via Verimor Bulutsantral API
     const isTestMode = requestBody.test_mode === true;
-    const campaignData: any = {
-      call_type: "ivr",
-      name: `Odeme Hatirlatma - ${today.toISOString().split('T')[0]}`,
-      date_range_begin: today.toISOString().split('T')[0],
-      date_range_end: today.toISOString().split('T')[0],
-      time_range_begin: isTestMode ? "00:00" : "10:00",
-      time_range_end: isTestMode ? "23:59" : "18:00",
-      active_days: isTestMode ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5],
-      ring_timeout: 30,
-      cli: "902167060611",
-      call_retries: isTestMode ? 0 : 2,
-      welcome_announcement_id: 131891,
-      digit_retries: 0,
-      digit_timeout: 1,
-      digit_target_1: "queue/200",
-      timeout_target: "queue/200",
-      invalid_target: "queue/200",
-      phone_list: phoneList,
-      is_commercial: false,
-      recording_enabled: true
-    };
+    const campaignResults: Array<{ customer_name: string; campaign_id: string }> = [];
 
-    console.log('Creating IVR campaign with', phoneList.length, 'numbers');
-    console.log('Campaign data:', JSON.stringify(campaignData, null, 2));
+    for (const customer of preparedCustomers) {
+      const campaignData: any = {
+        call_type: "ivr",
+        name: `Odeme Hatirlatma - ${customer.customer_name} - ${today.toISOString().split('T')[0]}`,
+        date_range_begin: today.toISOString().split('T')[0],
+        date_range_end: today.toISOString().split('T')[0],
+        time_range_begin: isTestMode ? "00:00" : "10:00",
+        time_range_end: isTestMode ? "23:59" : "18:00",
+        active_days: isTestMode ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5],
+        max_thread_count: 1,
+        ring_timeout: 30,
+        cli: "902167060611",
+        call_retries: isTestMode ? 0 : 2,
+        welcome_announcement_id: 112265,
+        digit_retries: 0,
+        digit_timeout: 1,
+        digit_target_1: customer.tts_target,
+        timeout_target: customer.tts_target,
+        invalid_target: customer.tts_target,
+        phone_list: [{ phone: customer.phone }],
+        is_commercial: false,
+        recording_enabled: true
+      };
 
-    const verimorResponse = await fetch(
-      `https://api.bulutsantralim.com/ivr_campaigns.json?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(campaignData)
+      console.log('Creating IVR campaign for', customer.customer_name, customer.phone);
+      console.log('Campaign data:', JSON.stringify(campaignData, null, 2));
+
+      const verimorResponse = await fetch(
+        `https://api.bulutsantralim.com/ivr_campaigns.json?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(campaignData)
+        }
+      );
+
+      const responseText = await verimorResponse.text();
+      console.log('Verimor IVR response status:', verimorResponse.status);
+      console.log('Verimor IVR response:', responseText);
+
+      if (!verimorResponse.ok) {
+        throw new Error(`Verimor IVR API error for ${customer.customer_name} (${verimorResponse.status}): ${responseText}`);
       }
-    );
 
-    const responseText = await verimorResponse.text();
-    console.log('Verimor IVR response status:', verimorResponse.status);
-    console.log('Verimor IVR response:', responseText);
-
-    if (!verimorResponse.ok) {
-      throw new Error(`Verimor IVR API error (${verimorResponse.status}): ${responseText}`);
+      campaignResults.push({
+        customer_name: customer.customer_name,
+        campaign_id: responseText.trim(),
+      });
     }
-
-    // Log the call campaign
-    const calledNames = unpaidCustomers
-      .filter(c => c.customer_phone && c.customer_phone.trim() !== '')
-      .map(c => c.customer_name);
 
     return new Response(JSON.stringify({
       success: true,
-      message: `IVR campaign created successfully for ${phoneList.length} unpaid customers`,
-      called_count: phoneList.length,
-      called_customers: calledNames,
-      campaign_id: responseText,
+      message: `IVR campaign created successfully for ${campaignResults.length} unpaid customers`,
+      called_count: campaignResults.length,
+      called_customers: campaignResults.map(c => c.customer_name),
+      campaign_id: campaignResults[0]?.campaign_id ?? null,
+      campaign_ids: campaignResults.map(c => c.campaign_id),
       campaign_date: today.toISOString().split('T')[0]
     }), {
       status: 200,
