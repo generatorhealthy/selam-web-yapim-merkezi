@@ -159,6 +159,38 @@ const CustomerManagement = () => {
     }
   };
 
+  const triggerAutoCall = async () => {
+    try {
+      setAutoCallLoading(true);
+      const { data, error } = await supabase.functions.invoke('verimor-auto-call', {
+        body: {}
+      });
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast({
+          title: "Otomatik Arama Başlatıldı",
+          description: `${data.called_count} kişiye otomatik arama kampanyası oluşturuldu`,
+        });
+      } else {
+        toast({
+          title: "Bilgi",
+          description: data?.message || "Aranacak ödeme yapmamış kişi bulunamadı",
+        });
+      }
+    } catch (error: any) {
+      console.error('Auto call error:', error);
+      toast({
+        title: "Hata",
+        description: "Otomatik arama başlatılırken bir hata oluştu: " + (error.message || ''),
+        variant: "destructive"
+      });
+    } finally {
+      setAutoCallLoading(false);
+    }
+  };
+
   const updateSpecialistPaymentDay = async (specialistId: string, paymentDay: number) => {
     try {
       const { error } = await supabase
