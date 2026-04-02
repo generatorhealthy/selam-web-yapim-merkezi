@@ -42,29 +42,41 @@ const handler = async (req: Request): Promise<Response> => {
     const currentDay = today.getDate();
     const currentMonth = today.getMonth() + 1; // 1-based
 
-    // Find unpaid customers: payment day has passed but current month not in paid_months
-    const { data: customers, error: fetchError } = await supabase
-      .from('automatic_orders')
-      .select('customer_name, customer_phone, customer_email, monthly_payment_day, current_month, paid_months')
-      .eq('is_active', true);
+    let unpaidCustomers: UnpaidCustomer[] = [];
 
-    if (fetchError) {
-      throw new Error(`Failed to fetch customers: ${fetchError.message}`);
-    }
+    // Test mode: directly call a specific number
+    if (requestBody.test_mode && requestBody.test_phone) {
+      unpaidCustomers = [{
+        customer_name: requestBody.test_name || 'Test Müşteri',
+        customer_phone: requestBody.test_phone,
+        customer_email: requestBody.test_email || '',
+        monthly_payment_day: requestBody.test_payment_day || currentDay,
+        current_month: null,
+        paid_months: []
+      }];
+      console.log('TEST MODE: Calling', requestBody.test_phone);
+    } else {
+      // Find unpaid customers: payment day has passed but current month not in paid_months
+      const { data: customers, error: fetchError } = await supabase
+        .from('automatic_orders')
+        .select('customer_name, customer_phone, customer_email, monthly_payment_day, current_month, paid_months')
+        .eq('is_active', true);
 
-    // Filter unpaid customers
-    const unpaidCustomers: UnpaidCustomer[] = (customers || []).filter((c: any) => {
-      const paidMonths = c.paid_months || [];
-      const customerCurrentMonth = c.current_month || 1;
-      
-      // Check if the customer's payment day has passed this month
-      // and their current subscription month is not yet paid
-      if (c.monthly_payment_day <= currentDay) {
-        // Check if current subscription month is not paid
-        return !paidMonths.includes(customerCurrentMonth);
+      if (fetchError) {
+        throw new Error(`Failed to fetch customers: ${fetchError.message}`);
       }
-      return false;
-    });
+
+      // Filter unpaid customers
+      unpaidCustomers = (customers || []).filter((c: any) => {
+        const paidMonths = c.paid_months || [];
+        const customerCurrentMonth = c.current_month || 1;
+        
+        if (c.monthly_payment_day <= currentDay) {
+          return !paidMonths.includes(customerCurrentMonth);
+        }
+        return false;
+      });
+    }
 
     if (unpaidCustomers.length === 0) {
       return new Response(JSON.stringify({
