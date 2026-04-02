@@ -89,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Build phone list with personalized TTS messages
+    // Build phone list - using announcement ID for TTS
     const phoneList = unpaidCustomers
       .filter(c => c.customer_phone && c.customer_phone.trim() !== '')
       .map(c => {
@@ -101,16 +101,7 @@ const handler = async (req: Request): Promise<Response> => {
           phone = '90' + phone;
         }
 
-        const paymentDay = c.monthly_payment_day;
-        
-        // Professional TTS message
-        const phrase = `Sayın ${c.customer_name}, bugün aylık abonelik ödeme gününüzdür. Ödemenizi bugün içerisinde gerçekleştirip tarafımıza bilgi vermenizi rica ederiz. Detaylı bilgi için 0216 706 06 11 numarasından bize ulaşabilirsiniz. İyi günler dileriz. Doktorum Ol.`;
-
-        return {
-          phone,
-          phrase,
-          lang: "tr-TR"
-        };
+        return { phone };
       });
 
     if (phoneList.length === 0) {
