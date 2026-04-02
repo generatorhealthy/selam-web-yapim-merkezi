@@ -136,9 +136,9 @@ const handler = async (req: Request): Promise<Response> => {
         call_retries: isTestMode ? 0 : 2,
         digit_retries: 0,
         digit_timeout: 1,
-        digit_target_1: ANNOUNCEMENT_ID,
-        timeout_target: ANNOUNCEMENT_ID,
-        invalid_target: ANNOUNCEMENT_ID,
+        digit_target_1: "announcement/131901",
+        timeout_target: "announcement/131901",
+        invalid_target: "announcement/131901",
         phone_list: [{ phone: customer.phone, phrase: ANNOUNCEMENT_ID }],
         is_commercial: false,
         recording_enabled: true
