@@ -80,8 +80,38 @@ const OrderManagement = () => {
   const [smsScheduleTime, setSmsScheduleTime] = useState("");
   const [noteInput, setNoteInput] = useState<Record<string, string>>({});
   const [addingNote, setAddingNote] = useState<string | null>(null);
+  const [callingOrder, setCallingOrder] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCallCustomer = async (order: Order) => {
+    if (!order.customer_phone) {
+      toast({ title: "Hata", description: "Telefon numarası bulunamadı", variant: "destructive" });
+      return;
+    }
+    setCallingOrder(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('verimor-auto-call', {
+        body: {
+          test_mode: true,
+          test_phone: order.customer_phone,
+          test_name: order.customer_name,
+          test_payment_day: new Date().getDate()
+        }
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast({ title: "Arama Başlatıldı", description: `${order.customer_name} aranıyor...` });
+      } else {
+        throw new Error(data?.error || 'Arama başlatılamadı');
+      }
+    } catch (error: any) {
+      console.error('Arama hatası:', error);
+      toast({ title: "Arama Hatası", description: error.message || "Arama başlatılamadı", variant: "destructive" });
+    } finally {
+      setCallingOrder(null);
+    }
+  };
 
   // Debounced search - 300ms bekleyerek arama yap (daha hızlı)
   useEffect(() => {
