@@ -126,11 +126,6 @@ const handler = async (req: Request): Promise<Response> => {
     const campaignResults: Array<{ customer_name: string; campaign_id: string }> = [];
 
     for (const customer of preparedCustomers) {
-      // Use announcement 131891 (generic payment reminder TTS) as welcome
-      // phrase format: #announcementId dynamicText #announcementId
-      // For personalization: #131891 plays the reminder, customer name read via TTS
-      const phraseText = `${customer.customer_name} #131891`;
-
       const campaignData: any = {
         call_type: "ivr",
         name: `Odeme Hatirlatma - ${customer.customer_name} - ${today.toISOString().split('T')[0]}`,
@@ -145,9 +140,10 @@ const handler = async (req: Request): Promise<Response> => {
         call_retries: isTestMode ? 0 : 2,
         digit_retries: 0,
         digit_timeout: 1,
+        digit_target_1: customer.tts_target,
         timeout_target: customer.tts_target,
         invalid_target: customer.tts_target,
-        phone_list: [{ phone: customer.phone, phrase: phraseText, lang: "tr-TR" }],
+        phone_list: [{ phone: customer.phone, phrase: "#131891" }],
         is_commercial: false,
         recording_enabled: true
       };
