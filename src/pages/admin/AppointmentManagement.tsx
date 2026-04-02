@@ -1,16 +1,17 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Clock, User, Phone, Mail, Search, UserCheck, Trash2, CheckCircle, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Clock, User, Phone, Mail, Search, UserCheck, Trash2, CheckCircle, XCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Users, CalendarDays, AlertCircle, BarChart3 } from "lucide-react";
 import AdminBackButton from "@/components/AdminBackButton";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Appointment {
   id: string;
@@ -23,10 +24,27 @@ interface Appointment {
   status: string;
   notes?: string;
   specialist_id?: string;
+  consultation_topic?: string;
   specialists?: {
     id: string;
     name: string;
     specialty: string;
+    profile_picture?: string;
+  };
+}
+
+interface SpecialistGroup {
+  id: string;
+  name: string;
+  specialty: string;
+  profile_picture?: string;
+  appointments: Appointment[];
+  stats: {
+    total: number;
+    pending: number;
+    confirmed: number;
+    cancelled: number;
+    completed: number;
   };
 }
 
@@ -34,8 +52,11 @@ const AppointmentManagement = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<'specialists' | 'all' | 'monthly'>('specialists');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'all' | 'monthly'>('all');
+  const [expandedSpecialists, setExpandedSpecialists] = useState<Set<string>>(new Set());
+  const [selectedSpecialist, setSelectedSpecialist] = useState<SpecialistGroup | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
   const { userProfile } = useUserRole();
 
@@ -46,8 +67,6 @@ const AppointmentManagement = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      console.log('Fetching appointments...');
-      
       const { data, error } = await supabase
         .from('appointments')
         .select(`
@@ -55,20 +74,14 @@ const AppointmentManagement = () => {
           specialists (
             id,
             name,
-            specialty
+            specialty,
+            profile_picture
           )
         `)
         .eq('created_by_specialist', false)
         .order('appointment_date', { ascending: false });
 
-      console.log('Appointments data:', data);
-      console.log('Appointments error:', error);
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-      
+      if (error) throw error;
       setAppointments(data || []);
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -84,69 +97,44 @@ const AppointmentManagement = () => {
 
   const updateAppointmentStatus = async (appointmentId: string, newStatus: string) => {
     try {
-      console.log('Updating appointment status:', appointmentId, newStatus);
-      
-      // Get appointment details before updating
       const appointment = appointments.find(a => a.id === appointmentId);
-      
       const { error } = await supabase
         .from('appointments')
         .update({ status: newStatus })
         .eq('id', appointmentId);
 
-      if (error) {
-        console.error('Update error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      setAppointments(prev => 
-        prev.map(appointment => 
-          appointment.id === appointmentId 
-            ? { ...appointment, status: newStatus }
-            : appointment
-        )
+      setAppointments(prev =>
+        prev.map(a => a.id === appointmentId ? { ...a, status: newStatus } : a)
       );
 
-      // Send SMS to patient when appointment is confirmed
       if (newStatus === 'confirmed' && appointment?.specialist_id) {
         try {
-          // Get full specialist details to build proper profile link
           const { data: specialistData } = await supabase
             .from('specialists')
             .select('name, specialty')
             .eq('id', appointment.specialist_id)
             .single();
-          
+
           if (specialistData) {
-            // Create URL-friendly slugs using utility functions
             const specialtySlug = createSpecialtySlug(specialistData.specialty);
             const doctorSlug = createDoctorSlug(specialistData.name);
-            
             const profileLink = `https://doktorumol.com.tr/${specialtySlug}/${doctorSlug}`;
             const message = `Merhaba ${appointment.patient_name}, ${specialistData.name} ile randevunuz tamamlandı. Uzmanı değerlendirmek için: ${profileLink}`;
-            
-            const { error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
-              body: {
-                phone: appointment.patient_phone,
-                message: message
-              }
-            });
 
-            if (smsError) {
-              console.error('SMS sending error:', smsError);
-            } else {
-              console.log('SMS sent successfully to:', appointment.patient_phone);
-            }
+            await supabase.functions.invoke('send-sms-via-static-proxy', {
+              body: { phone: appointment.patient_phone, message }
+            });
           }
         } catch (smsError) {
           console.error('SMS error:', smsError);
-          // Don't throw error, just log it - appointment is already confirmed
         }
       }
 
       toast({
         title: "Başarılı",
-        description: newStatus === 'confirmed' 
+        description: newStatus === 'confirmed'
           ? "Randevu onaylandı ve danışana SMS gönderildi."
           : "Randevu durumu güncellendi.",
       });
@@ -162,24 +150,14 @@ const AppointmentManagement = () => {
 
   const deleteAppointment = async (appointmentId: string) => {
     try {
-      console.log('Deleting appointment:', appointmentId);
-      
       const { error } = await supabase
         .from('appointments')
         .delete()
         .eq('id', appointmentId);
 
-      if (error) {
-        console.error('Delete error:', error);
-        throw error;
-      }
-
-      setAppointments(prev => prev.filter(appointment => appointment.id !== appointmentId));
-
-      toast({
-        title: "Başarılı",
-        description: "Randevu silindi.",
-      });
+      if (error) throw error;
+      setAppointments(prev => prev.filter(a => a.id !== appointmentId));
+      toast({ title: "Başarılı", description: "Randevu silindi." });
     } catch (error) {
       console.error('Error deleting appointment:', error);
       toast({
@@ -208,327 +186,477 @@ const AppointmentManagement = () => {
     }
   };
 
-  const filteredAppointments = appointments.filter(appointment => {
-    const matchesSearch = appointment.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.patient_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (appointment.specialists?.name && appointment.specialists.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    if (viewMode === 'monthly') {
-      const appointmentDate = new Date(appointment.appointment_date);
-      const selectedMonthStart = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
-      const selectedMonthEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
-      return matchesSearch && appointmentDate >= selectedMonthStart && appointmentDate <= selectedMonthEnd;
-    }
-    
-    return matchesSearch;
-  });
+  // Global stats
+  const globalStats = useMemo(() => {
+    return {
+      total: appointments.length,
+      pending: appointments.filter(a => a.status === 'pending').length,
+      confirmed: appointments.filter(a => a.status === 'confirmed').length,
+      cancelled: appointments.filter(a => a.status === 'cancelled').length,
+      completed: appointments.filter(a => a.status === 'completed').length,
+      uniqueSpecialists: new Set(appointments.map(a => a.specialist_id).filter(Boolean)).size,
+    };
+  }, [appointments]);
 
-  const getAppointmentsByMonth = () => {
-    const appointmentsByMonth: { [key: string]: Appointment[] } = {};
-    
-    filteredAppointments.forEach(appointment => {
-      const date = new Date(appointment.appointment_date);
-      const monthLabel = date.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
-      
-      if (!appointmentsByMonth[monthLabel]) {
-        appointmentsByMonth[monthLabel] = [];
+  // Group appointments by specialist
+  const specialistGroups = useMemo(() => {
+    const groups: Record<string, SpecialistGroup> = {};
+
+    appointments.forEach(appointment => {
+      const specId = appointment.specialist_id || 'unknown';
+      if (!groups[specId]) {
+        groups[specId] = {
+          id: specId,
+          name: appointment.specialists?.name || 'Bilinmeyen Uzman',
+          specialty: appointment.specialists?.specialty || '',
+          profile_picture: appointment.specialists?.profile_picture,
+          appointments: [],
+          stats: { total: 0, pending: 0, confirmed: 0, cancelled: 0, completed: 0 },
+        };
       }
-      appointmentsByMonth[monthLabel].push(appointment);
+      groups[specId].appointments.push(appointment);
+      groups[specId].stats.total++;
+      if (appointment.status === 'pending') groups[specId].stats.pending++;
+      else if (appointment.status === 'confirmed') groups[specId].stats.confirmed++;
+      else if (appointment.status === 'cancelled') groups[specId].stats.cancelled++;
+      else if (appointment.status === 'completed') groups[specId].stats.completed++;
     });
-    
-    return appointmentsByMonth;
+
+    return Object.values(groups)
+      .filter(g => {
+        if (!searchTerm) return true;
+        const lower = searchTerm.toLowerCase();
+        return g.name.toLowerCase().includes(lower) ||
+          g.specialty.toLowerCase().includes(lower) ||
+          g.appointments.some(a =>
+            a.patient_name.toLowerCase().includes(lower) ||
+            a.patient_email.toLowerCase().includes(lower)
+          );
+      })
+      .sort((a, b) => b.stats.total - a.stats.total);
+  }, [appointments, searchTerm]);
+
+  // Filtered appointments for all/monthly views
+  const filteredAppointments = useMemo(() => {
+    let filtered = appointments;
+
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(a =>
+        a.patient_name.toLowerCase().includes(lower) ||
+        a.patient_email.toLowerCase().includes(lower) ||
+        (a.specialists?.name && a.specialists.name.toLowerCase().includes(lower))
+      );
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(a => a.status === statusFilter);
+    }
+
+    if (viewMode === 'monthly') {
+      const start = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+      const end = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+      filtered = filtered.filter(a => {
+        const d = new Date(a.appointment_date);
+        return d >= start && d <= end;
+      });
+    }
+
+    return filtered;
+  }, [appointments, searchTerm, statusFilter, viewMode, selectedMonth]);
+
+  const getAppointmentsByMonth = (apps: Appointment[]) => {
+    const byMonth: Record<string, Appointment[]> = {};
+    apps.forEach(a => {
+      const d = new Date(a.appointment_date);
+      const label = d.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
+      if (!byMonth[label]) byMonth[label] = [];
+      byMonth[label].push(a);
+    });
+    return byMonth;
   };
 
-  const appointmentsByMonth = getAppointmentsByMonth();
-  const monthKeys = Object.keys(appointmentsByMonth).sort().reverse();
+  const toggleSpecialist = (id: string) => {
+    setExpandedSpecialists(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const isStaff = userProfile?.role === 'staff';
   const canManage = userProfile?.role === 'admin';
 
-  const AppointmentCard = ({ 
-    appointment, 
-    canManage, 
-    updateAppointmentStatus, 
-    deleteAppointment, 
-    getStatusColor, 
-    getStatusText 
-  }: {
-    appointment: Appointment;
-    canManage: boolean;
-    updateAppointmentStatus: (id: string, status: string) => void;
-    deleteAppointment: (id: string) => void;
-    getStatusColor: (status: string) => string;
-    getStatusText: (status: string) => string;
-  }) => (
-    <Card className="bg-white/80 backdrop-blur-sm border-primary/20 shadow-sm hover:shadow-md transition-all duration-200">
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <CardTitle className="text-xl font-semibold text-foreground mb-3">
-              {appointment.patient_name}
-            </CardTitle>
-            {appointment.specialists ? (
-              <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg">
-                <UserCheck className="w-4 h-4 text-primary" />
-                <p className="text-sm text-primary font-medium">
-                  {appointment.specialists.name} - {appointment.specialists.specialty}
-                </p>
-              </div>
-            ) : appointment.specialist_id ? (
-              <div className="flex items-center gap-2 p-2 bg-orange-50 rounded-lg">
-                <User className="w-4 h-4 text-orange-600" />
-                <p className="text-sm text-orange-600 font-medium">
-                  Uzman ID: {appointment.specialist_id} (Uzman kaydı bulunamadı)
-                </p>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 p-2 bg-muted/20 rounded-lg">
-                <User className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Uzman bilgisi belirtilmemiş</p>
-              </div>
-            )}
-          </div>
-          <Badge className={`${getStatusColor(appointment.status)} border font-medium px-3 py-1`}>
+  const AppointmentRow = ({ appointment }: { appointment: Appointment }) => (
+    <div className="flex flex-col lg:flex-row lg:items-center gap-3 p-4 bg-white/60 rounded-xl border border-slate-100 hover:border-primary/30 hover:shadow-sm transition-all">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="font-semibold text-foreground truncate">{appointment.patient_name}</span>
+          <Badge className={`${getStatusColor(appointment.status)} border text-xs px-2 py-0.5`}>
             {getStatusText(appointment.status)}
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
-              <Calendar className="w-5 h-5 text-primary" />
-              <span className="font-medium">{new Date(appointment.appointment_date).toLocaleDateString('tr-TR')}</span>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5" />
+            {new Date(appointment.appointment_date).toLocaleDateString('tr-TR')}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
+            {appointment.appointment_time}
+          </span>
+          <span className="flex items-center gap-1">
+            <Mail className="w-3.5 h-3.5" />
+            {appointment.patient_email}
+          </span>
+          <span className="flex items-center gap-1">
+            <Phone className="w-3.5 h-3.5" />
+            {appointment.patient_phone}
+          </span>
+          <span className="flex items-center gap-1">
+            <User className="w-3.5 h-3.5" />
+            {appointment.appointment_type === 'online' ? 'Online' : 'Yüz Yüze'}
+          </span>
+        </div>
+        {appointment.consultation_topic && (
+          <p className="text-xs text-muted-foreground mt-1 italic">Konu: {appointment.consultation_topic}</p>
+        )}
+      </div>
+
+      {canManage && (
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+            disabled={appointment.status === 'confirmed'}
+            className="h-8 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-xs"
+          >
+            <CheckCircle className="w-3.5 h-3.5 mr-1" />
+            Onayla
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+            disabled={appointment.status === 'cancelled'}
+            className="h-8 bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 text-xs"
+          >
+            <XCircle className="w-3.5 h-3.5 mr-1" />
+            İptal
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => deleteAppointment(appointment.id)}
+            className="h-8 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 text-xs"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
+  const SpecialistCard = ({ group }: { group: SpecialistGroup }) => {
+    const isExpanded = expandedSpecialists.has(group.id);
+    const monthlyBreakdown = getAppointmentsByMonth(group.appointments);
+    const monthKeys = Object.keys(monthlyBreakdown).sort().reverse();
+
+    return (
+      <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+        <div
+          className="p-5 cursor-pointer hover:bg-slate-50/50 transition-colors"
+          onClick={() => toggleSpecialist(group.id)}
+        >
+          <div className="flex items-center gap-4">
+            {/* Avatar */}
+            <div className="shrink-0">
+              {group.profile_picture ? (
+                <img
+                  src={group.profile_picture}
+                  alt={group.name}
+                  className="w-14 h-14 rounded-full object-cover border-2 border-primary/20"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                  <User className="w-7 h-7 text-primary" />
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
-              <Clock className="w-5 h-5 text-primary" />
-              <span className="font-medium">{appointment.appointment_time}</span>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-bold text-foreground truncate">{group.name}</h3>
+              <p className="text-sm text-muted-foreground">{group.specialty}</p>
             </div>
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
-              <User className="w-5 h-5 text-primary" />
-              <span className="font-medium">{appointment.appointment_type}</span>
+
+            {/* Mini Stats */}
+            <div className="hidden md:flex items-center gap-3">
+              <div className="text-center px-3 py-1.5 bg-slate-100 rounded-lg">
+                <p className="text-lg font-bold text-foreground">{group.stats.total}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Toplam</p>
+              </div>
+              <div className="text-center px-3 py-1.5 bg-amber-50 rounded-lg">
+                <p className="text-lg font-bold text-amber-700">{group.stats.pending}</p>
+                <p className="text-[10px] text-amber-600 uppercase tracking-wide">Bekleyen</p>
+              </div>
+              <div className="text-center px-3 py-1.5 bg-emerald-50 rounded-lg">
+                <p className="text-lg font-bold text-emerald-700">{group.stats.confirmed}</p>
+                <p className="text-[10px] text-emerald-600 uppercase tracking-wide">Onaylı</p>
+              </div>
+              <div className="text-center px-3 py-1.5 bg-blue-50 rounded-lg">
+                <p className="text-lg font-bold text-blue-700">{group.stats.completed}</p>
+                <p className="text-[10px] text-blue-600 uppercase tracking-wide">Tamamlanan</p>
+              </div>
+              {group.stats.cancelled > 0 && (
+                <div className="text-center px-3 py-1.5 bg-rose-50 rounded-lg">
+                  <p className="text-lg font-bold text-rose-700">{group.stats.cancelled}</p>
+                  <p className="text-[10px] text-rose-600 uppercase tracking-wide">İptal</p>
+                </div>
+              )}
+            </div>
+
+            {/* Expand icon */}
+            <div className="shrink-0 p-2">
+              {isExpanded ? (
+                <ChevronUp className="w-5 h-5 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+              )}
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
-              <Mail className="w-5 h-5 text-primary" />
-              <span className="font-medium text-sm">{appointment.patient_email}</span>
-            </div>
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
-              <Phone className="w-5 h-5 text-primary" />
-              <span className="font-medium">{appointment.patient_phone}</span>
-            </div>
+
+          {/* Mobile stats */}
+          <div className="flex md:hidden items-center gap-2 mt-3 flex-wrap">
+            <Badge variant="secondary" className="text-xs">{group.stats.total} toplam</Badge>
+            <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">{group.stats.pending} bekleyen</Badge>
+            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs">{group.stats.confirmed} onaylı</Badge>
           </div>
         </div>
-        
-        {appointment.notes && (
-          <div className="mb-6 p-4 bg-accent/20 border border-accent/30 rounded-lg">
-            <h4 className="font-medium text-foreground mb-2">Notlar:</h4>
-            <p className="text-muted-foreground leading-relaxed">{appointment.notes}</p>
+
+        {/* Expanded: Monthly breakdown */}
+        {isExpanded && (
+          <div className="border-t border-slate-100 px-5 pb-5">
+            {monthKeys.map(monthLabel => (
+              <div key={monthLabel} className="mt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <CalendarDays className="w-4 h-4 text-primary" />
+                  <h4 className="font-semibold text-foreground">{monthLabel}</h4>
+                  <Badge variant="secondary" className="text-xs">{monthlyBreakdown[monthLabel].length}</Badge>
+                </div>
+                <div className="space-y-2 ml-6">
+                  {monthlyBreakdown[monthLabel]
+                    .sort((a, b) => new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime())
+                    .map(appointment => (
+                      <AppointmentRow key={appointment.id} appointment={appointment} />
+                    ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
-        
-        {canManage && (
-          <div className="flex flex-wrap gap-3">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
-              disabled={appointment.status === 'confirmed'}
-              className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 font-medium"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Onayla
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-              disabled={appointment.status === 'cancelled'}
-              className="bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 font-medium"
-            >
-              <XCircle className="w-4 h-4 mr-2" />
-              İptal Et
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => deleteAppointment(appointment.id)}
-              className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 font-medium"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Sil
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
       <div className="container mx-auto max-w-7xl">
         <AdminBackButton />
-        
+
+        {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-2">
             <div className="p-3 bg-primary/10 rounded-xl">
               <Calendar className="w-8 h-8 text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                 Randevu Yönetimi
               </h1>
-              <p className="text-muted-foreground">Tüm randevuları görüntüleyin ve yönetin</p>
+              <p className="text-muted-foreground">Uzman bazlı randevu takibi ve yönetimi</p>
             </div>
           </div>
         </div>
 
-        <div className="mb-8 space-y-6">
-          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'all' | 'monthly')} className="w-full">
-            <TabsList className="grid w-fit grid-cols-2 bg-white/80 backdrop-blur-sm border border-primary/20">
-              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                Tüm Randevular
-              </TabsTrigger>
-              <TabsTrigger value="monthly" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                Aylık Görünüm
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <p className="text-3xl font-bold">{globalStats.total}</p>
+              <p className="text-blue-100 text-xs mt-1">Toplam Randevu</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-amber-500 to-orange-500 text-white border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <p className="text-3xl font-bold">{globalStats.pending}</p>
+              <p className="text-amber-100 text-xs mt-1">Bekleyen</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-emerald-500 to-green-600 text-white border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <p className="text-3xl font-bold">{globalStats.confirmed}</p>
+              <p className="text-emerald-100 text-xs mt-1">Onaylanan</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-sky-500 to-cyan-600 text-white border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <p className="text-3xl font-bold">{globalStats.completed}</p>
+              <p className="text-sky-100 text-xs mt-1">Tamamlanan</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-rose-500 to-pink-600 text-white border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <p className="text-3xl font-bold">{globalStats.cancelled}</p>
+              <p className="text-rose-100 text-xs mt-1">İptal</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-violet-500 to-purple-600 text-white border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <p className="text-3xl font-bold">{globalStats.uniqueSpecialists}</p>
+              <p className="text-violet-100 text-xs mt-1">Uzman</p>
+            </CardContent>
+          </Card>
+        </div>
 
-          {viewMode === 'monthly' && (
-            <Card className="bg-white/80 backdrop-blur-sm border-primary/20 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const newMonth = new Date(selectedMonth);
-                      newMonth.setMonth(newMonth.getMonth() - 1);
-                      setSelectedMonth(newMonth);
-                    }}
-                    className="bg-white/50 border-primary/20 hover:bg-primary/10"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {selectedMonth.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })}
-                  </h3>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const newMonth = new Date(selectedMonth);
-                      newMonth.setMonth(newMonth.getMonth() + 1);
-                      setSelectedMonth(newMonth);
-                    }}
-                    className="bg-white/50 border-primary/20 hover:bg-primary/10"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        {/* Toolbar */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1 max-w-lg">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               placeholder="Hasta adı, email veya uzman adı ile ara..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-12 bg-white/80 backdrop-blur-sm border-primary/20 focus:border-primary/40 shadow-sm"
+              className="pl-11 h-11 bg-white/80 backdrop-blur-sm border-slate-200"
             />
           </div>
+
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-fit">
+            <TabsList className="bg-white/80 border border-slate-200">
+              <TabsTrigger value="specialists" className="data-[state=active]:bg-primary data-[state=active]:text-white text-xs">
+                <Users className="w-4 h-4 mr-1" />
+                Uzman Bazlı
+              </TabsTrigger>
+              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-white text-xs">
+                <BarChart3 className="w-4 h-4 mr-1" />
+                Tümü
+              </TabsTrigger>
+              <TabsTrigger value="monthly" className="data-[state=active]:bg-primary data-[state=active]:text-white text-xs">
+                <CalendarDays className="w-4 h-4 mr-1" />
+                Aylık
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {viewMode !== 'specialists' && (
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-11 px-3 rounded-lg border border-slate-200 bg-white/80 text-sm"
+            >
+              <option value="all">Tüm Durumlar</option>
+              <option value="pending">Bekleyen</option>
+              <option value="confirmed">Onaylanan</option>
+              <option value="completed">Tamamlanan</option>
+              <option value="cancelled">İptal</option>
+            </select>
+          )}
         </div>
 
-{loading ? (
-          <div className="text-center py-12">
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
+        {/* Monthly navigation */}
+        {viewMode === 'monthly' && (
+          <Card className="bg-white/80 border-slate-200 shadow-sm mb-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const nm = new Date(selectedMonth);
+                    nm.setMonth(nm.getMonth() - 1);
+                    setSelectedMonth(nm);
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <h3 className="text-lg font-semibold">
+                  {selectedMonth.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })}
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const nm = new Date(selectedMonth);
+                    nm.setMonth(nm.getMonth() + 1);
+                    setSelectedMonth(nm);
+                  }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Content */}
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/80 rounded-xl shadow-sm">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
               <span className="text-muted-foreground">Randevular yükleniyor...</span>
             </div>
           </div>
-        ) : filteredAppointments.length === 0 ? (
-          <Card className="bg-white/80 backdrop-blur-sm border-primary/20 shadow-sm">
-            <CardContent className="text-center py-12">
-              <div className="p-4 bg-muted/20 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <Calendar className="w-10 h-10 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground text-lg">
-                {viewMode === 'monthly' 
-                  ? `${selectedMonth.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })} ayında randevu bulunmuyor.`
-                  : 'Henüz randevu bulunmuyor.'
-                }
-              </p>
-            </CardContent>
-          </Card>
-        ) : viewMode === 'monthly' ? (
-          <div className="space-y-8">
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 rounded-xl border border-primary/20">
-              <h2 className="text-2xl font-bold text-foreground mb-2">
-                {selectedMonth.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })}
-              </h2>
-              <p className="text-muted-foreground">
-                {filteredAppointments.length} randevu bulundu
-              </p>
-            </div>
-            
-            <div className="grid gap-6">
-              {filteredAppointments.map((appointment) => (
-                <AppointmentCard 
-                  key={appointment.id} 
-                  appointment={appointment} 
-                  canManage={canManage}
-                  updateAppointmentStatus={updateAppointmentStatus}
-                  deleteAppointment={deleteAppointment}
-                  getStatusColor={getStatusColor}
-                  getStatusText={getStatusText}
-                />
+        ) : viewMode === 'specialists' ? (
+          /* Specialist-based view */
+          specialistGroups.length === 0 ? (
+            <Card className="bg-white/80 border-slate-200">
+              <CardContent className="text-center py-16">
+                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg">Randevu bulunmuyor.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {specialistGroups.map(group => (
+                <SpecialistCard key={group.id} group={group} />
               ))}
             </div>
-          </div>
-        ) : Object.keys(appointmentsByMonth).length === 0 ? (
-          <Card className="bg-white/80 backdrop-blur-sm border-primary/20 shadow-sm">
-            <CardContent className="text-center py-12">
-              <div className="p-4 bg-muted/20 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <Calendar className="w-10 h-10 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground text-lg">Henüz randevu bulunmuyor.</p>
-            </CardContent>
-          </Card>
+          )
         ) : (
-          <div className="space-y-8">
-            {monthKeys.map((monthLabel) => (
-              <div key={monthLabel} className="space-y-4">
-                <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 rounded-xl border border-primary/20">
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    {monthLabel}
-                  </h2>
-                  <p className="text-muted-foreground">
-                    {appointmentsByMonth[monthLabel].length} randevu
-                  </p>
-                </div>
-                
-                <div className="grid gap-6">
-                  {appointmentsByMonth[monthLabel].map((appointment) => (
-                    <AppointmentCard 
-                      key={appointment.id} 
-                      appointment={appointment} 
-                      canManage={canManage}
-                      updateAppointmentStatus={updateAppointmentStatus}
-                      deleteAppointment={deleteAppointment}
-                      getStatusColor={getStatusColor}
-                      getStatusText={getStatusText}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          /* All / Monthly view */
+          filteredAppointments.length === 0 ? (
+            <Card className="bg-white/80 border-slate-200">
+              <CardContent className="text-center py-16">
+                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg">Randevu bulunmuyor.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {(() => {
+                const byMonth = getAppointmentsByMonth(filteredAppointments);
+                const keys = Object.keys(byMonth).sort().reverse();
+                return keys.map(monthLabel => (
+                  <div key={monthLabel}>
+                    <div className="flex items-center gap-2 mb-3 mt-4">
+                      <CalendarDays className="w-5 h-5 text-primary" />
+                      <h3 className="text-lg font-bold text-foreground">{monthLabel}</h3>
+                      <Badge variant="secondary">{byMonth[monthLabel].length}</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {byMonth[monthLabel]
+                        .sort((a, b) => new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime())
+                        .map(appointment => (
+                          <AppointmentRow key={appointment.id} appointment={appointment} />
+                        ))}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          )
         )}
       </div>
     </div>
