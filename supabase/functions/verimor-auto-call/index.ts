@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
         const paymentDay = c.monthly_payment_day;
         
         // Professional TTS message
-        const phrase = `Sayın ${c.customer_name}, her ayın ${paymentDay}. günü gerçekleşmesi gereken aylık ödemeniz henüz tarafımıza ulaşmamıştır. Ödemenizi en kısa sürede gerçekleştirip tarafımıza bilgi vermenizi rica ederiz. Detaylı bilgi için 0216 706 06 11 numarasından bize ulaşabilirsiniz. İyi günler dileriz. Doktorum Ol.`;
+        const phrase = `Sayın ${c.customer_name}, bugün aylık abonelik ödeme gününüzdür. Ödemenizi bugün içerisinde gerçekleştirip tarafımıza bilgi vermenizi rica ederiz. Detaylı bilgi için 0216 706 06 11 numarasından bize ulaşabilirsiniz. İyi günler dileriz. Doktorum Ol.`;
 
         return {
           phone,
