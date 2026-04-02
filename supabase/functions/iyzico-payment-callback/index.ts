@@ -50,7 +50,6 @@ serve(async (req) => {
               .update({
                 status: 'approved',
                 approved_at: new Date().toISOString(),
-                approved_by: 'system-iyzico-callback',
                 payment_method: 'credit_card',
                 payment_transaction_id: body.subscriptionReferenceCode || body.paymentId || null,
               })
