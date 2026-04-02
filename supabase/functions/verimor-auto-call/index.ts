@@ -139,9 +139,9 @@ const handler = async (req: Request): Promise<Response> => {
       digit_timeout: 4,
       digit_retries: 1,
       // When customer presses 1, connect to queue/operator
-      digit_target_1: "hangup",
-      timeout_target: "hangup",
-      invalid_target: "hangup",
+      digit_target_1: "replay",
+      timeout_target: "replay",
+      invalid_target: "replay",
       phone_list: phoneList,
       is_commercial: false,
       recording_enabled: true
