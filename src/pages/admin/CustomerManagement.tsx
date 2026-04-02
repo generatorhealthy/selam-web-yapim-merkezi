@@ -791,7 +791,7 @@ const CustomerManagement = () => {
               
               {todayPaymentDue.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-orange-200">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <Calendar className="w-4 h-4" />
                       <span>Bugün: {new Date().toLocaleDateString('tr-TR', { 
@@ -801,8 +801,21 @@ const CustomerManagement = () => {
                         day: 'numeric' 
                       })}</span>
                     </div>
-                    <div className="text-sm font-medium text-orange-700">
-                      Toplam {todayPaymentDue.reduce((sum, specialist) => sum + (specialist.package_price || 0), 0).toLocaleString('tr-TR')} ₺
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm font-medium text-orange-700">
+                        Toplam {todayPaymentDue.reduce((sum, specialist) => sum + (specialist.package_price || 0), 0).toLocaleString('tr-TR')} ₺
+                      </div>
+                      {!isStaff && (
+                        <Button
+                          onClick={triggerAutoCall}
+                          disabled={autoCallLoading}
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                        >
+                          <PhoneCall className="w-4 h-4" />
+                          {autoCallLoading ? 'Aranıyor...' : 'Otomatik Ara'}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
