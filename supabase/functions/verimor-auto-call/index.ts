@@ -91,8 +91,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     const ANNOUNCEMENT_ID = "#131901";
 
+    // Office/default numbers to skip - these are not real customer phones
+    const OFFICE_NUMBERS = ['02167060611', '2167060611'];
+
     const preparedCustomers = unpaidCustomers
-      .filter(c => c.customer_phone && c.customer_phone.trim() !== '')
+      .filter(c => {
+        if (!c.customer_phone || c.customer_phone.trim() === '') return false;
+        // Strip non-digits to compare
+        const digits = c.customer_phone.replace(/\D/g, '');
+        // Skip office/default numbers
+        if (OFFICE_NUMBERS.some(office => digits.endsWith(office) || digits === office)) {
+          console.log(`Skipping ${c.customer_name}: office/default phone number`);
+          return false;
+        }
+        // Only allow mobile numbers (starting with 5 after country code)
+        const normalized = digits.startsWith('90') ? digits.substring(2) : (digits.startsWith('0') ? digits.substring(1) : digits);
+        if (!normalized.startsWith('5')) {
+          console.log(`Skipping ${c.customer_name}: not a mobile number (${c.customer_phone})`);
+          return false;
+        }
+        return true;
+      })
       .map(c => {
         let phone = c.customer_phone.replace(/\D/g, '');
         if (phone.startsWith('0')) {
