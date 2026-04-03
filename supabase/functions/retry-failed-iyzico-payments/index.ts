@@ -300,11 +300,12 @@ serve(async (req) => {
       
       for (const order of subscription.orders) {
         // Sadece WAITING veya başarısız ödemeleri kontrol et
+        // WAITING veya FAILED durumundaki siparişleri kontrol et
         const hasFailedAttempt = order.paymentAttempts?.some(
           attempt => attempt.paymentStatus === "FAILED"
         );
         
-        if (order.orderStatus === "WAITING" && hasFailedAttempt) {
+        if ((order.orderStatus === "WAITING" || order.orderStatus === "FAILED") && hasFailedAttempt) {
           console.log(`Başarısız ödeme bulundu - Order: ${order.referenceCode}, Tutar: ${order.price} TL`);
           
           // Son başarısız deneme tarihini kontrol et
