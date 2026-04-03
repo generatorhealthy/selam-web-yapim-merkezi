@@ -319,8 +319,8 @@ serve(async (req) => {
             console.log(`Son deneme: ${lastAttemptDate.toISOString()}, ${hoursSinceLastAttempt.toFixed(1)} saat önce`);
             console.log(`Son hata mesajı: ${lastAttempt.errorMessage || 'Belirtilmemiş'}`);
             
-            // En az 6 saat geçmişse tekrar dene (günde max 4 deneme)
-            if (hoursSinceLastAttempt >= 6) {
+            // En az 2 saat geçmişse tekrar dene (günde 4 deneme: 10, 13, 18, 21)
+            if (hoursSinceLastAttempt >= 2) {
               console.log(`Ödeme tekrar deneniyor: ${order.referenceCode}`);
               
               const retryResult = await retryPayment(
