@@ -90,7 +90,7 @@ verify_jwt = false
 [functions.create-birfatura-invoice]
 verify_jwt = false
 
-[functions.daily-order-generator]
+[functions.create-daily-orders]
 verify_jwt = false
 
 [functions.share-blog-to-social]
