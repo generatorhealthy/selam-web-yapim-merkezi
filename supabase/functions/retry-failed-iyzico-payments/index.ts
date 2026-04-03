@@ -320,41 +320,37 @@ serve(async (req) => {
             console.log(`Son deneme: ${lastAttemptDate.toISOString()}, ${hoursSinceLastAttempt.toFixed(1)} saat önce`);
             console.log(`Son hata mesajı: ${lastAttempt.errorMessage || 'Belirtilmemiş'}`);
             
-            // Scheduled (cron) çağrılarında bekleme süresi olmadan dene
-            if (true) {
-              console.log(`Ödeme tekrar deneniyor: ${order.referenceCode}`);
-              
-              const retryResult = await retryPayment(
-                IYZICO_API_KEY,
-                IYZICO_SECRET_KEY,
-                IYZICO_BASE_URL,
+            // Her cron çağrısında direkt dene (günde 4 kez: 10, 13, 18, 21 İstanbul saati)
+            console.log(`Ödeme tekrar deneniyor: ${order.referenceCode}`);
+            
+            const retryResult = await retryPayment(
+              IYZICO_API_KEY,
+              IYZICO_SECRET_KEY,
+              IYZICO_BASE_URL,
+              order.referenceCode
+            );
+            
+            retryResults.push({
+              subscriptionRef: subscription.referenceCode,
+              customerEmail: subscription.customerEmail,
+              orderRef: order.referenceCode,
+              success: retryResult.success,
+              message: retryResult.message
+            });
+            
+            // Başarılı ödeme sonrası SMS gönder (otomatik deneme)
+            if (retryResult.success && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+              await sendSuccessNotificationSms(
+                SUPABASE_URL,
+                SUPABASE_SERVICE_ROLE_KEY,
+                subscription.customerEmail,
+                subscription.pricingPlanName,
+                order.price,
                 order.referenceCode
               );
-              
-              retryResults.push({
-                subscriptionRef: subscription.referenceCode,
-                customerEmail: subscription.customerEmail,
-                orderRef: order.referenceCode,
-                success: retryResult.success,
-                message: retryResult.message
-              });
-              
-              // Başarılı ödeme sonrası SMS gönder (otomatik deneme)
-              if (retryResult.success && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-                await sendSuccessNotificationSms(
-                  SUPABASE_URL,
-                  SUPABASE_SERVICE_ROLE_KEY,
-                  subscription.customerEmail,
-                  subscription.pricingPlanName,
-                  order.price,
-                  order.referenceCode
-                );
-              }
-
-              console.log(`Sonuç: ${retryResult.success ? 'BAŞARILI' : 'BAŞARISIZ'} - ${retryResult.message}`);
-            } else {
-              console.log(`Son denemeden 6 saat geçmemiş, atlanıyor`);
             }
+
+            console.log(`Sonuç: ${retryResult.success ? 'BAŞARILI' : 'BAŞARISIZ'} - ${retryResult.message}`);
           }
         }
       }
