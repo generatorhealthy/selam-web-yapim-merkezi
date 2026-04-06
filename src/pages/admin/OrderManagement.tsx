@@ -403,10 +403,26 @@ const OrderManagement = () => {
 
   const updateOrderMutation = useMutation({
     mutationFn: async (order: Order) => {
+      const { id, created_at, ...rest } = order;
+      const updatePayload: Record<string, unknown> = {};
+      const allowedFields = [
+        'customer_name', 'customer_email', 'package_name', 'amount', 'status',
+        'customer_phone', 'customer_address', 'customer_city', 'customer_tc_no',
+        'company_name', 'company_tax_no', 'company_tax_office', 'package_type',
+        'payment_method', 'customer_type', 'contract_ip_address', 'is_first_order',
+        'subscription_month', 'deleted_at', 'pre_info_pdf_content',
+        'distance_sales_pdf_content', 'contract_emails_sent', 'invoice_sent',
+        'invoice_number', 'invoice_date'
+      ];
+      for (const key of allowedFields) {
+        if (key in rest) {
+          updatePayload[key] = (rest as Record<string, unknown>)[key];
+        }
+      }
       const { data, error } = await supabase
         .from("orders")
-        .update(order)
-        .eq("id", order.id)
+        .update(updatePayload)
+        .eq("id", id)
         .select()
         .single();
       if (error) throw error;
