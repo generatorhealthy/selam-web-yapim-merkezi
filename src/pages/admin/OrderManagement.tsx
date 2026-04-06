@@ -417,7 +417,7 @@ const OrderManagement = () => {
       const updatePayload: Record<string, unknown> = {};
       for (const key of allowedFields) {
         if (key in order && key !== 'id') {
-          updatePayload[key] = (order as Record<string, unknown>)[key];
+          updatePayload[key] = (order as unknown as Record<string, unknown>)[key];
         }
       }
       updatePayload.updated_at = new Date().toISOString();
