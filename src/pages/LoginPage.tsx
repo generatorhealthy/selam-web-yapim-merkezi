@@ -33,11 +33,14 @@ const LoginPage = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         // Check if user is specialist
-        const { data: specialist } = await supabase
+        const { data: specialists } = await supabase
           .from('specialists')
           .select('id')
           .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
-          .single();
+          .eq('is_active', true)
+          .limit(1);
+        
+        const specialist = specialists && specialists.length > 0 ? specialists[0] : null;
         
         if (specialist) {
           navigate('/doktor-paneli');
@@ -107,12 +110,14 @@ const LoginPage = () => {
 
       // Kullanıcının specialists tablosunda kayıtlı olup olmadığını kontrol et
       // Hem user_id hem de email ile kontrol et
-      const { data: specialist, error: specialistError } = await supabase
+      const { data: specialists, error: specialistError } = await supabase
         .from('specialists')
-        .select('*')
+        .select('id, name, email, is_active')
         .or(`user_id.eq.${authData.user.id},email.eq.${loginData.email}`)
         .eq('is_active', true)
-        .maybeSingle();
+        .limit(1);
+      
+      const specialist = specialists && specialists.length > 0 ? specialists[0] : null;
 
       // Security: Remove detailed query logs in production
 
