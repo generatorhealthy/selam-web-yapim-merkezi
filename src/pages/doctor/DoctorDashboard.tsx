@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import DoctorAuth from "@/components/DoctorAuth";
+import { Navigate, useNavigate } from "react-router-dom";
 import DoctorProfileEditor from "@/components/DoctorProfileEditor";
 import DoctorBlogManagement from "@/components/DoctorBlogManagement";
 import { TimeSlotManager } from "@/components/TimeSlotManager";
@@ -443,22 +442,26 @@ const DoctorDashboard = () => {
 
         console.log('Session found, checking specialist profile...');
 
-        // First try by user_id, then fallback to email
-        const { data: specialistByUser } = await supabase
+        const specialistFilters = [`user_id.eq.${session.user.id}`];
+        if (session.user.email) {
+          specialistFilters.push(`email.eq.${session.user.email}`);
+        }
+
+        const { data: specialists, error: specialistError } = await supabase
           .from('specialists')
           .select('*')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
+          .or(specialistFilters.join(','))
+          .eq('is_active', true)
+          .limit(1);
 
-        let foundSpecialist = specialistByUser || null;
-        if (!foundSpecialist) {
-          const { data: specialistByEmail } = await supabase
-            .from('specialists')
-            .select('*')
-            .eq('email', session.user.email)
-            .maybeSingle();
-          foundSpecialist = specialistByEmail || null;
+        if (specialistError) {
+          console.error('Specialist lookup error:', specialistError);
+          setDoctor(null);
+          setIsLoading(false);
+          return;
         }
+
+        const foundSpecialist = specialists && specialists.length > 0 ? specialists[0] : null;
 
         if (!mounted) return;
 
@@ -883,10 +886,6 @@ const DoctorDashboard = () => {
     }
   };
 
-  const handleLogin = (doctorData: any) => {
-    setDoctor(doctorData);
-  };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setDoctor(null);
@@ -948,7 +947,7 @@ const DoctorDashboard = () => {
   }
 
   if (!doctor) {
-    return <DoctorAuth onLogin={handleLogin} />;
+    return <Navigate to="/giris-yap" replace />;
   }
 
   return (
