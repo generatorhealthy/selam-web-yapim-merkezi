@@ -107,12 +107,14 @@ const LoginPage = () => {
 
       // Kullanıcının specialists tablosunda kayıtlı olup olmadığını kontrol et
       // Hem user_id hem de email ile kontrol et
-      const { data: specialist, error: specialistError } = await supabase
+      const { data: specialists, error: specialistError } = await supabase
         .from('specialists')
-        .select('*')
+        .select('id, name, email, is_active')
         .or(`user_id.eq.${authData.user.id},email.eq.${loginData.email}`)
         .eq('is_active', true)
-        .maybeSingle();
+        .limit(1);
+      
+      const specialist = specialists && specialists.length > 0 ? specialists[0] : null;
 
       // Security: Remove detailed query logs in production
 
