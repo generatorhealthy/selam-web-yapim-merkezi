@@ -33,11 +33,14 @@ const LoginPage = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         // Check if user is specialist
-        const { data: specialist } = await supabase
+        const { data: specialists } = await supabase
           .from('specialists')
           .select('id')
           .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
-          .single();
+          .eq('is_active', true)
+          .limit(1);
+        
+        const specialist = specialists && specialists.length > 0 ? specialists[0] : null;
         
         if (specialist) {
           navigate('/doktor-paneli');
