@@ -721,6 +721,10 @@ const OrderManagement = () => {
     },
     onSuccess: (data) => {
       if (data && data.success === false) {
+        // Already invoiced orders are not errors - just skip silently or show info
+        if (data.error?.includes('already sent') || data.error?.includes('already')) {
+          return;
+        }
         toast({
           title: "Fatura Oluşturma Hatası",
           description: data.error || "BirFatura'dan başarısız yanıt alındı",
