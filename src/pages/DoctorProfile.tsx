@@ -125,6 +125,15 @@ const DoctorProfile = () => {
       console.log('Setting specialist data:', foundSpecialist);
       setSpecialist(foundSpecialist);
       
+      // Track recently viewed
+      addToRecentlyViewed({
+        id: foundSpecialist.id,
+        name: foundSpecialist.name,
+        specialty: foundSpecialist.specialty,
+        profile_picture: foundSpecialist.profile_picture,
+        city: foundSpecialist.city,
+      });
+      
       // Fetch blog posts and reviews for this specialist
       if (foundSpecialist?.id) {
         fetchBlogPosts(foundSpecialist.id, foundSpecialist.user_id, foundSpecialist.name);
