@@ -14,6 +14,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import GoogleMap from "@/components/GoogleMap";
 import SpecialistTests from "@/components/SpecialistTests";
+import RecentlyViewedSpecialists, { addToRecentlyViewed } from "@/components/RecentlyViewedSpecialists";
 
 interface Specialist {
   id: string;
@@ -123,6 +124,15 @@ const DoctorProfile = () => {
 
       console.log('Setting specialist data:', foundSpecialist);
       setSpecialist(foundSpecialist);
+      
+      // Track recently viewed
+      addToRecentlyViewed({
+        id: foundSpecialist.id,
+        name: foundSpecialist.name,
+        specialty: foundSpecialist.specialty,
+        profile_picture: foundSpecialist.profile_picture,
+        city: foundSpecialist.city,
+      });
       
       // Fetch blog posts and reviews for this specialist
       if (foundSpecialist?.id) {
@@ -375,6 +385,7 @@ const DoctorProfile = () => {
         <meta name="twitter:description" content={pageDescription} />
       </Helmet>
       <HorizontalNavigation />
+      <RecentlyViewedSpecialists currentSpecialistId={specialist.id} />
       
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
