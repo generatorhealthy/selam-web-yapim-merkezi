@@ -385,6 +385,7 @@ const DoctorProfile = () => {
         <meta name="twitter:description" content={pageDescription} />
       </Helmet>
       <HorizontalNavigation />
+      <RecentlyViewedSpecialists currentSpecialistId={specialist.id} />
       
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
