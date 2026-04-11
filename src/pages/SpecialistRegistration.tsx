@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import FileUpload from "@/components/FileUpload";
 import RegistrationAnalyticsTracker from "@/components/RegistrationAnalyticsTracker";
+import { sendSms } from "@/services/smsService";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard
@@ -270,6 +271,27 @@ const SpecialistRegistration = () => {
 
       toast.success("Uzman profiliniz başarıyla oluşturuldu!");
       setCurrentStep(4);
+
+      // Otomatik e-posta gönder
+      try {
+        await supabase.functions.invoke('send-specialist-welcome-email', {
+          body: { name: formData.name, email: createdUserEmail }
+        });
+        console.log('Welcome email sent to', createdUserEmail);
+      } catch (emailErr) {
+        console.error('Welcome email error:', emailErr);
+      }
+
+      // Otomatik SMS gönder
+      if (phone) {
+        try {
+          const smsMessage = `Sayın ${formData.name}, Doktorumol.com.tr profiliniz oluşturuldu. Profilinizin yayına alınması için ödemenizi tamamlayın: https://doktorumol.com.tr/ozel-firsat`;
+          await sendSms(phone, smsMessage);
+          console.log('Welcome SMS sent to', phone);
+        } catch (smsErr) {
+          console.error('Welcome SMS error:', smsErr);
+        }
+      }
     } catch (err: any) {
       console.error(err);
       toast.error("Bir hata oluştu.");
