@@ -1,8 +1,14 @@
 
 // Utility functions for doctor name URL handling
 export const createDoctorSlug = (name: string): string => {
-  // Remove "Dr." prefix and convert to URL-friendly format
-  const cleanName = name.replace(/^(Dr\.|Prof\. Dr\.)?\s*/, '');
+  // Remove all titles/prefixes and dots, then convert to URL-friendly format
+  const cleanName = name
+    .replace(/Prof\.\s*Dr\.\s*/gi, '')
+    .replace(/Dr\.\s*/gi, '')
+    .replace(/Dan\.\s*/gi, '')
+    .replace(/Uzm\.\s*/gi, '')
+    .replace(/Doç\.\s*/gi, '')
+    .replace(/\./g, '');
   
   // Turkish character mapping
   const turkishCharMap: { [key: string]: string } = {
