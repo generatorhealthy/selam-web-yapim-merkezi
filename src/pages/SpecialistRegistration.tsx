@@ -61,6 +61,7 @@ const SpecialistRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [createdUserId, setCreatedUserId] = useState("");
   const [createdUserEmail, setCreatedUserEmail] = useState("");
+  const [notificationsSent, setNotificationsSent] = useState(false);
 
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
