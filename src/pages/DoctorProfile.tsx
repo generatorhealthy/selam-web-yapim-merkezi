@@ -14,6 +14,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import GoogleMap from "@/components/GoogleMap";
 import SpecialistTests from "@/components/SpecialistTests";
+import RecentlyViewedSpecialists, { addToRecentlyViewed } from "@/components/RecentlyViewedSpecialists";
 
 interface Specialist {
   id: string;
