@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { sendSms } from "@/services/smsService";
 import { useUserRole } from "@/hooks/useUserRole";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import AdminBackButton from "@/components/AdminBackButton";
