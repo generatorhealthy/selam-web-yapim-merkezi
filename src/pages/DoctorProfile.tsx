@@ -481,6 +481,42 @@ const DoctorProfile = () => {
           </div>
         </div>
 
+        {/* Son Değerlendirme */}
+        {reviews.length > 0 && (
+          <div className="mt-4">
+            <Card className="bg-white rounded-2xl shadow-sm border-0">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageCircle className="w-5 h-5 text-blue-500" />
+                  <h3 className="font-semibold text-gray-900">Son Değerlendirme</h3>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {reviews[0].comment.length > 150 
+                    ? reviews[0].comment.substring(0, 150) + "..." 
+                    : reviews[0].comment}
+                  {reviews[0].comment.length > 150 && (
+                    <button 
+                      onClick={() => {
+                        const tabsEl = document.querySelector('[value="reviews"]') as HTMLElement;
+                        tabsEl?.click();
+                      }}
+                      className="text-blue-600 font-medium ml-1 hover:underline"
+                    >
+                      devamı
+                    </button>
+                  )}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex">{renderStars(reviews[0].rating)}</div>
+                  <span className="text-xs text-gray-400">
+                    {new Date(reviews[0].created_at).toLocaleDateString('tr-TR')}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <div className="mt-6">
           <Tabs defaultValue="about" className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
