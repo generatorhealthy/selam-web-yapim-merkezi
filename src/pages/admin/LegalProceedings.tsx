@@ -113,8 +113,15 @@ const LegalProceedings = () => {
       } as const;
 
       if (editingProceeding) {
+        const oldStatus = editingProceeding.status;
         const { error } = await supabase.from("legal_proceedings").update(commonData).eq("id", editingProceeding.id);
         if (error) throw error;
+        if (oldStatus !== formData.status) {
+          const newLabel = statusOptions.find(opt => opt.value === formData.status)?.label || formData.status;
+          const oldLabel = statusOptions.find(opt => opt.value === oldStatus)?.label || oldStatus;
+          const smsMsg = `ICRA DURUM DEGISIKLIGI: ${formData.customer_name.trim()} - ${oldLabel} > ${newLabel} - Tutar: ${formatCurrency(proceedingAmount)} TL`;
+          try { await sendSms("905316852275", smsMsg); } catch (e) { console.error("SMS hatası:", e); }
+        }
         toast({ title: "Başarılı", description: "İcralık güncellendi." });
       } else {
         const { error } = await supabase.from("legal_proceedings").insert([{ ...commonData, unpaid_months: 1, total_months: 1 }]).select().single();
