@@ -754,7 +754,7 @@ const SpecialistRegistration = () => {
               <div className="bg-muted/30 rounded-3xl p-6 space-y-5">
                 <div>
                   <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-1">Özel Fırsat</p>
-                  <h3 className="text-lg font-bold text-foreground">Uzman Paket</h3>
+                  <h3 className="text-lg font-bold text-foreground">Uzman Paket <span className="text-sm font-medium text-muted-foreground">· 12 Aylık</span></h3>
                 </div>
 
                 <div className="bg-background rounded-2xl border-2 border-foreground/10 p-4 flex items-center gap-3">
