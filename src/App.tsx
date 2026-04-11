@@ -49,6 +49,7 @@ const TestInterface = lazy(() => import("./components/TestInterface"));
 const TestTaking = lazy(() => import("./components/TestTaking"));
 const TestResult = lazy(() => import("./pages/TestResult"));
 const SpecialistRegistration = lazy(() => import("./pages/SpecialistRegistration"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 // Admin pages - lazy loaded (never needed on initial visit)
 const AdminAuth = lazy(() => import("./pages/AdminAuth"));

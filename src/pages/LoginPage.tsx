@@ -188,7 +188,7 @@ const LoginPage = () => {
 
       // Şifre sıfırlama e-postası gönder
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `${window.location.origin}/doktor-paneli`
+        redirectTo: `${window.location.origin}/sifre-sifirla`
       });
 
       if (error) {
