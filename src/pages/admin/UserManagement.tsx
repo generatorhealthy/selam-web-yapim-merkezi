@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Edit, Eye, EyeOff, Trash2, Users, RefreshCw, Camera, Search, X, UserCheck, UserX, Shield } from "lucide-react";
+import { ArrowLeft, Edit, Eye, EyeOff, Trash2, Users, RefreshCw, Camera, Search, X, UserCheck, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Database } from "@/integrations/supabase/types";
 import CaptureEvidenceDialog from "./CaptureEvidenceDialog";
