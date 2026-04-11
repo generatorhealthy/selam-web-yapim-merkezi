@@ -4261,6 +4261,7 @@ export type Database = {
           id: string
           is_approved: boolean
           name: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
           user_id: string
@@ -4271,6 +4272,7 @@ export type Database = {
           id?: string
           is_approved?: boolean
           name?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id: string
@@ -4281,6 +4283,7 @@ export type Database = {
           id?: string
           is_approved?: boolean
           name?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id?: string
