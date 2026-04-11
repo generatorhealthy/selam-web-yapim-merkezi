@@ -120,6 +120,10 @@ const SpecialistRegistration = () => {
         password,
         options: {
           emailRedirectTo: window.location.origin,
+          data: {
+            role: 'specialist',
+            name: email.split('@')[0],
+          }
         }
       });
 
