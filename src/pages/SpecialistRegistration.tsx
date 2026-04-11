@@ -232,6 +232,28 @@ const SpecialistRegistration = () => {
     } finally {
       setIsGeneratingAI(false);
       setCurrentStep(3);
+
+      // Adım 3'e geçtiğinde SMS ve e-posta gönder (müşteriyi kaçırmamak için)
+      if (!notificationsSent) {
+        setNotificationsSent(true);
+        try {
+          await supabase.functions.invoke('send-specialist-welcome-email', {
+            body: { name: formData.name, email: createdUserEmail || email }
+          });
+          console.log('Welcome email sent to', createdUserEmail || email);
+        } catch (emailErr) {
+          console.error('Welcome email error:', emailErr);
+        }
+        if (phone) {
+          try {
+            const smsMessage = `Sayın ${formData.name}, Doktorumol.com.tr profiliniz oluşturuldu. Profilinizin yayına alınması için ödemenizi tamamlayın: https://doktorumol.com.tr/ozel-firsat`;
+            await sendSms(phone, smsMessage);
+            console.log('Welcome SMS sent to', phone);
+          } catch (smsErr) {
+            console.error('Welcome SMS error:', smsErr);
+          }
+        }
+      }
     }
   };
 
@@ -273,26 +295,7 @@ const SpecialistRegistration = () => {
       toast.success("Uzman profiliniz başarıyla oluşturuldu!");
       setCurrentStep(4);
 
-      // Otomatik e-posta gönder
-      try {
-        await supabase.functions.invoke('send-specialist-welcome-email', {
-          body: { name: formData.name, email: createdUserEmail }
-        });
-        console.log('Welcome email sent to', createdUserEmail);
-      } catch (emailErr) {
-        console.error('Welcome email error:', emailErr);
-      }
-
-      // Otomatik SMS gönder
-      if (phone) {
-        try {
-          const smsMessage = `Sayın ${formData.name}, Doktorumol.com.tr profiliniz oluşturuldu. Profilinizin yayına alınması için ödemenizi tamamlayın: https://doktorumol.com.tr/ozel-firsat`;
-          await sendSms(phone, smsMessage);
-          console.log('Welcome SMS sent to', phone);
-        } catch (smsErr) {
-          console.error('Welcome SMS error:', smsErr);
-        }
-      }
+      // SMS ve e-posta artık adım 3'e geçişte gönderiliyor
     } catch (err: any) {
       console.error(err);
       toast.error("Bir hata oluştu.");
