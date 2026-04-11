@@ -62,6 +62,7 @@ const SpecialistRegistration = () => {
   const [createdUserEmail, setCreatedUserEmail] = useState("");
 
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
 
@@ -97,7 +98,7 @@ const SpecialistRegistration = () => {
   };
 
   const handleCreateAccount = async () => {
-    if (!email || !password || !passwordConfirm) {
+    if (!email || !phone || !password || !passwordConfirm) {
       toast.error("Lütfen tüm alanları doldurun.");
       return;
     }
@@ -161,10 +162,11 @@ const SpecialistRegistration = () => {
         const { error: profileError } = await supabase.from('user_profiles').insert({
           user_id: data.user.id,
           email: email,
+          phone: phone,
           name: email.split('@')[0],
           role: 'specialist',
           is_approved: false,
-        });
+        } as any);
         if (profileError) console.error('Profile creation error:', profileError);
 
         setCreatedUserId(data.user.id);
@@ -364,6 +366,17 @@ const SpecialistRegistration = () => {
                       <Check className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
                     )}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground font-normal">Telefon numaranız *</Label>
+                  <Input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="05XX XXX XX XX"
+                    className={inputClass}
+                  />
                 </div>
 
                 <div className="space-y-2">

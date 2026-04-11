@@ -24,6 +24,7 @@ interface UserProfile {
   created_at: string;
   email?: string;
   name?: string;
+  phone?: string;
 }
 
 const UserManagement = () => {
@@ -386,6 +387,7 @@ const UserManagement = () => {
                 <TableRow>
                   <TableHead>Ad Soyad</TableHead>
                   <TableHead>E-posta</TableHead>
+                  <TableHead>Telefon</TableHead>
                   <TableHead>Rol</TableHead>
                   <TableHead>Onay Durumu</TableHead>
                   <TableHead>Oluşturulma Tarihi</TableHead>
@@ -400,6 +402,9 @@ const UserManagement = () => {
                     </TableCell>
                     <TableCell className="font-mono text-sm">
                       {user.email}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {user.phone || '-'}
                     </TableCell>
                     <TableCell>
                       <Badge className={getRoleBadgeColor(user.role)}>
