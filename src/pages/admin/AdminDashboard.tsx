@@ -552,6 +552,18 @@ const AdminDashboard = () => {
       buttonText: "Analizi Görüntüle",
       adminOnly: true
     },
+    {
+      title: "WhatsApp Destek",
+      description: "Şirket WhatsApp hatlarını yönet ve QR kod ile bağlan",
+      icon: MessageCircle,
+      gradient: "from-green-500 via-emerald-500 to-teal-600",
+      bgGradient: "from-green-50 to-teal-50",
+      shadowColor: "shadow-green-500/20",
+      route: "/divan_paneli/whatsapp",
+      buttonText: "WhatsApp Hatlarını Yönet",
+      adminOnly: false,
+      staffOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
