@@ -97,9 +97,9 @@ const WhatsappManagement = () => {
   const [chats, setChats] = useState<any[]>([]);
   const [chatsLoading, setChatsLoading] = useState(false);
 
-  const getSessionName = (_line: WhatsappLine) => {
-    // WAHA Core only supports a single session named 'default'
-    return 'default';
+  const getSessionName = (line: WhatsappLine) => {
+    // WAHA Plus supports multiple sessions - use line id as unique session name
+    return `line_${line.id.replace(/-/g, '').substring(0, 16)}`;
   };
 
   const fetchLines = async () => {
