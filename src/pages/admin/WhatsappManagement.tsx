@@ -77,6 +77,10 @@ const WhatsappManagement = () => {
   const [activeChat, setActiveChat] = useState<any | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [newChatName, setNewChatName] = useState("");
+  const [newChatSurname, setNewChatSurname] = useState("");
+  const [newChatPhone, setNewChatPhone] = useState("");
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -328,6 +332,27 @@ const WhatsappManagement = () => {
       .eq('id', editingId);
     if (error) toast.error("Güncellenemedi");
     else { toast.success("Hat güncellendi"); setEditingId(null); fetchLines(); }
+  };
+
+  const startNewChat = () => {
+    if (!newChatPhone.trim()) {
+      toast.error("Telefon numarası gerekli");
+      return;
+    }
+    const num = newChatPhone.replace(/[^0-9]/g, '');
+    const fullName = `${newChatName.trim()} ${newChatSurname.trim()}`.trim();
+    const fakeChatObj = {
+      id: { _serialized: num + '@c.us', user: num },
+      name: fullName || num,
+      _isNewChat: true,
+    };
+    setActiveChat(fakeChatObj);
+    setChatTo(num);
+    setChatMessages([]);
+    setShowNewChatDialog(false);
+    setNewChatName("");
+    setNewChatSurname("");
+    setNewChatPhone("");
   };
 
   const filteredChats = chats.filter(chat => {
@@ -691,7 +716,39 @@ const WhatsappManagement = () => {
                             </div>
                           ) : (
                             <div className="flex flex-col items-center justify-center h-full">
-                              <p className="text-[#8696a0] text-sm">Sohbet seçin veya yeni mesaj gönderin</p>
+                              <div className="bg-[#202c33] rounded-2xl p-6 max-w-sm w-full shadow-xl">
+                                <h3 className="text-[#e9edef] text-lg font-medium mb-4 text-center">Yeni Sohbet Başlat</h3>
+                                <div className="space-y-3">
+                                  <input
+                                    type="text"
+                                    placeholder="Ad"
+                                    value={newChatName}
+                                    onChange={(e) => setNewChatName(e.target.value)}
+                                    className="w-full bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-4 py-2.5 border border-[#313d45] focus:border-[#00a884] transition-colors"
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="Soyad"
+                                    value={newChatSurname}
+                                    onChange={(e) => setNewChatSurname(e.target.value)}
+                                    className="w-full bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-4 py-2.5 border border-[#313d45] focus:border-[#00a884] transition-colors"
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="905XXXXXXXXX"
+                                    value={newChatPhone}
+                                    onChange={(e) => setNewChatPhone(e.target.value)}
+                                    className="w-full bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-4 py-2.5 border border-[#313d45] focus:border-[#00a884] transition-colors"
+                                  />
+                                  <Button
+                                    onClick={startNewChat}
+                                    disabled={!newChatPhone.trim()}
+                                    className="w-full bg-[#00a884] hover:bg-[#06cf9c] text-white"
+                                  >
+                                    <Send className="w-4 h-4 mr-2" /> Sohbeti Başlat
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
                           )}
                           <div ref={messagesEndRef} />
@@ -700,21 +757,8 @@ const WhatsappManagement = () => {
                     </div>
 
                     {/* Message input bar */}
-                    {sessionStatus === 'WORKING' && (
+                    {sessionStatus === 'WORKING' && activeChat && (
                       <div className="bg-[#202c33] px-4 py-2.5 border-t border-[#313d45]">
-                        {/* Recipient input if no active chat */}
-                        {!activeChat && (
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[#8696a0] text-xs">Alıcı:</span>
-                            <input
-                              type="text"
-                              placeholder="905XXXXXXXXX"
-                              value={chatTo}
-                              onChange={(e) => setChatTo(e.target.value)}
-                              className="flex-1 bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-3 py-1.5"
-                            />
-                          </div>
-                        )}
                         <div className="flex items-center gap-2">
                           <button className="p-2 rounded-full hover:bg-[#313d45] text-[#8696a0] flex-shrink-0">
                             <Smile className="w-6 h-6" />
