@@ -694,6 +694,16 @@ const WhatsappManagement = () => {
                               <p className="text-[#8696a0] text-sm">Sohbet seçin veya yeni mesaj gönderin</p>
                             </div>
                           )}
+                          <div ref={messagesEndRef} />
+                              ) : (
+                                <p className="text-[#8696a0] text-sm">Henüz mesaj yok</p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-full">
+                              <p className="text-[#8696a0] text-sm">Sohbet seçin veya yeni mesaj gönderin</p>
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
