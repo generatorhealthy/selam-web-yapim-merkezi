@@ -279,7 +279,7 @@ export function HorizontalNavigation() {
             <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="h-14 overflow-hidden">
                 <img 
-                  src="/logo.png" 
+                  src="/logo.webp" 
                   alt="Doktorum Ol Logo" 
                   className="h-full w-auto object-contain"
                   width="120"

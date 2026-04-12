@@ -35,7 +35,7 @@ const Landing = () => {
             {/* Logo */}
             <div className="flex justify-center mb-8">
               <img 
-                src="/logo.png" 
+                src="/logo.webp" 
                 alt="Doktorum Ol Logo" 
                 className="h-16 w-auto object-contain"
                 loading="eager"

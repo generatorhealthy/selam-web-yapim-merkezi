@@ -50,7 +50,7 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="flex items-center gap-2 mt-2">
             <img 
-              src="/logo.png" 
+              src="/logo.webp" 
               alt="Doktorum Ol Logo"
               width="120"
               height="40"

@@ -328,7 +328,7 @@ const SpecialistRegistration = () => {
         <div className="border-b border-border/40 bg-background sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <a href="/" className="flex items-center">
-              <img src="/logo.png" alt="Doktorum Ol" className="h-8" />
+              <img src="/logo.webp" alt="Doktorum Ol" className="h-8" />
             </a>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Shield className="w-3.5 h-3.5" />
