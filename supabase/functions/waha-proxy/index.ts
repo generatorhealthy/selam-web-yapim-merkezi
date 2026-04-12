@@ -9,7 +9,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const wahaUrl = Deno.env.get('WAHA_API_URL');
+    let wahaUrl = Deno.env.get('WAHA_API_URL');
+    if (wahaUrl && !wahaUrl.startsWith('http')) {
+      wahaUrl = 'https://' + wahaUrl;
+    }
+    if (wahaUrl) {
+      wahaUrl = wahaUrl.replace(/\/+$/, '');
+    }
     const wahaApiKey = Deno.env.get('WAHA_API_KEY');
 
     if (!wahaUrl) {
