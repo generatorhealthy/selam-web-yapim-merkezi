@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, Eye, EyeOff, Users } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useRateLimit } from "@/hooks/useRateLimit";
@@ -22,6 +22,7 @@ const UserCreate = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    phone: "",
     role: "specialist" as "admin" | "specialist" | "staff" | "legal" | "muhasebe",
     name: ""
   });
@@ -231,7 +232,8 @@ const UserCreate = () => {
           role: formData.role as any,
           is_approved: true,
           name: formData.name,
-          email: formData.email
+          email: formData.email,
+          phone: formData.phone || null
         }]);
 
       if (profileError) {
@@ -268,6 +270,7 @@ const UserCreate = () => {
       setFormData({
         email: "",
         password: "",
+        phone: "",
         role: "specialist",
         name: ""
       });
@@ -334,6 +337,18 @@ const UserCreate = () => {
                     required
                     maxLength={50}
                     minLength={2}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="phone">Telefon Numarası</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="05XX XXX XX XX"
+                    maxLength={20}
                   />
                 </div>
 
