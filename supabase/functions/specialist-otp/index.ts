@@ -177,7 +177,7 @@ serve(async (req) => {
       // Mark OTP as used
       await supabase.from('otp_codes').update({ is_used: true }).eq('id', otp.id);
 
-      // Find user email from specialist
+      // Find user email from specialist or automatic_orders
       const phoneVariants2 = [cleaned, '+' + cleaned, '0' + cleaned.substring(2), cleaned.substring(2)];
       let userEmail = '';
       
@@ -191,6 +191,31 @@ serve(async (req) => {
         if (data && data.length > 0 && data[0].email) {
           userEmail = data[0].email;
           break;
+        }
+      }
+
+      // If not found, check automatic_orders
+      if (!userEmail) {
+        for (const variant of phoneVariants2) {
+          const { data } = await supabase
+            .from('automatic_orders')
+            .select('customer_email')
+            .eq('customer_phone', variant)
+            .eq('is_active', true)
+            .limit(1);
+          if (data && data.length > 0 && data[0].customer_email) {
+            // Verify specialist exists
+            const { data: specData } = await supabase
+              .from('specialists')
+              .select('email')
+              .eq('email', data[0].customer_email)
+              .eq('is_active', true)
+              .limit(1);
+            if (specData && specData.length > 0) {
+              userEmail = specData[0].email;
+              break;
+            }
+          }
         }
       }
 
