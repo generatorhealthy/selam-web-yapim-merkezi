@@ -4358,7 +4358,47 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string | null
+          rating: number | null
+          reviewer_name: string | null
+          specialist_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string | null
+          rating?: number | null
+          reviewer_name?: string | null
+          specialist_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string | null
+          rating?: number | null
+          reviewer_name?: string | null
+          specialist_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_get_client_referrals: {
@@ -4499,6 +4539,10 @@ export type Database = {
       }
       is_admin_or_staff_user: { Args: never; Returns: boolean }
       is_admin_user: { Args: never; Returns: boolean }
+      is_specialist_owner: {
+        Args: { _specialist_user_id: string }
+        Returns: boolean
+      }
       is_user_approved: { Args: { user_id: string }; Returns: boolean }
       list_client_referrals_backups: {
         Args: never
