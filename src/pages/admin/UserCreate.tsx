@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, Eye, EyeOff, Users } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useRateLimit } from "@/hooks/useRateLimit";

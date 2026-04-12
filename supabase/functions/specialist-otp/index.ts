@@ -148,19 +148,11 @@ serve(async (req) => {
       // Mark OTP as used
       await supabase.from('otp_codes').update({ is_used: true }).eq('id', otp.id);
 
-      // Generate a magic link / custom token for the user
-      // Use generateLink to create a sign-in link
-      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email: '', // will be filled below
-      });
-
-      // Instead, get the user and generate a session directly
       // Find user email from specialist
-      const phoneVariants = [cleaned, '+' + cleaned, '0' + cleaned.substring(2), cleaned.substring(2)];
+      const phoneVariants2 = [cleaned, '+' + cleaned, '0' + cleaned.substring(2), cleaned.substring(2)];
       let userEmail = '';
       
-      for (const variant of phoneVariants) {
+      for (const variant of phoneVariants2) {
         const { data } = await supabase
           .from('specialists')
           .select('email')
