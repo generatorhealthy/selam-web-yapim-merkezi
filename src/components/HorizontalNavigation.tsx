@@ -320,7 +320,7 @@ export function HorizontalNavigation() {
             <div className="flex items-center gap-2">
               <Link
                 to="/kayit-ol"
-                className="px-3 py-2 text-xs font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+                className="px-4 py-2 text-xs font-bold text-primary bg-white border-2 border-primary rounded-full hover:bg-primary hover:text-white transition-all duration-300 shadow-sm"
               >
                 Kayıt Ol
               </Link>
