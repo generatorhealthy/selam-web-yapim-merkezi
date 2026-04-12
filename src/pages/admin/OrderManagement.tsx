@@ -1896,6 +1896,16 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                       </Select>
                     </div>
                     <div>
+                      <Label htmlFor="customer_phone">Telefon</Label>
+                      <Input
+                        type="text"
+                        id="customer_phone"
+                        value={editingOrder.customer_phone || ''}
+                        onChange={(e) => handleUpdateOrder(e, "customer_phone")}
+                        placeholder="Telefon numarasını girin"
+                      />
+                    </div>
+                    <div>
                       <Label htmlFor="customer_tc_no">TC Kimlik No</Label>
                       <Input
                         type="text"
