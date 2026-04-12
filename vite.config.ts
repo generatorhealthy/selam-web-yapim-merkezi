@@ -48,6 +48,33 @@ export default defineConfig(({ mode }) => ({
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
+    modulePreload: {
+      resolveDependencies: (_filename, deps, { hostId, hostType }) => {
+        // Don't preload heavy chunks that are only used in admin/lazy pages
+        return deps.filter(dep => 
+          !dep.includes('pdf.') && 
+          !dep.includes('html2canvas') &&
+          !dep.includes('docx.')
+        );
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Isolate heavy PDF/document libraries into their own chunks
+          if (id.includes('node_modules/jspdf')) return 'pdf';
+          if (id.includes('node_modules/html2canvas')) return 'html2canvas';
+          if (id.includes('node_modules/docx')) return 'docx';
+          // Keep react vendor separate
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) return 'react-vendor';
+          // Supabase in its own chunk
+          if (id.includes('node_modules/@supabase/')) return 'supabase';
+          // Radix UI in its own chunk
+          if (id.includes('node_modules/@radix-ui/')) return 'radix-ui';
+          return undefined;
+        },
+      },
+    },
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,
