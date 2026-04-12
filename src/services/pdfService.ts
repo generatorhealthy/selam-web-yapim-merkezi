@@ -82,7 +82,8 @@ export const generatePreInfoPDF = async (orderId: string) => {
     const formContent = formData?.content || 'DOKTORUM OL ÜYELİK SÖZLEŞMESİ';
     console.log('📝 Form içeriği alındı, uzunluk:', formContent.length);
 
-    console.log('✅ Veriler kontrol edildi, PDF oluşturuluyor...');
+    const jsPDFModule = await import('jspdf');
+    const jsPDF = jsPDFModule.default;
 
     const doc = new jsPDF({
       orientation: 'portrait',
