@@ -1,5 +1,6 @@
-import jsPDF from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
+// Dynamic imports to prevent jspdf/docx from being bundled into shared chunks
+const getJsPDF = () => import('jspdf').then(m => m.default);
+const getDocx = () => import('docx');
 
 interface CustomerData {
   name: string;
