@@ -1,6 +1,4 @@
-// Dynamic imports to prevent jspdf/docx from being bundled into shared chunks
-const getJsPDF = () => import('jspdf').then(m => m.default);
-const getDocx = () => import('docx');
+// No top-level imports for jspdf/docx - they are dynamically imported to avoid bloating shared chunks
 
 interface CustomerData {
   name: string;
