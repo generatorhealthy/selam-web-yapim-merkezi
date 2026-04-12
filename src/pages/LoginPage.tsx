@@ -272,7 +272,7 @@ const LoginPage = () => {
       
       <div className="flex-1 flex">
         {/* Left side - Branding (hidden on mobile) */}
-        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary via-blue-600 to-indigo-700">
+        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary via-primary/80 to-primary/60">
           {/* Decorative elements */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
