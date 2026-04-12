@@ -178,19 +178,36 @@ const WhatsappManagement = () => {
     setDisconnecting(false);
   };
 
+  const getActiveChatId = () => {
+    if (activeChat) {
+      return activeChat.id?._serialized || activeChat.id?.user + '@c.us' || '';
+    }
+    const num = chatTo.replace(/[^0-9]/g, '');
+    return num ? num + '@c.us' : '';
+  };
+
   const sendMessage = async () => {
-    if (!selectedLine || !chatTo.trim() || !chatMessage.trim()) {
-      toast.error("Numara ve mesaj gerekli");
+    if (!selectedLine || !chatMessage.trim()) {
+      toast.error("Mesaj gerekli");
+      return;
+    }
+    const chatId = getActiveChatId();
+    if (!chatId) {
+      toast.error("Alıcı numarası gerekli");
       return;
     }
     setSending(true);
+    const msgText = chatMessage;
+    setChatMessage("");
+    // Optimistic: add message locally
+    setChatMessages(prev => [...prev, { body: msgText, fromMe: true, timestamp: Math.floor(Date.now() / 1000), _optimistic: true }]);
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
-      const chatId = chatTo.replace(/[^0-9]/g, '') + '@c.us';
-      await wahaApi('sendText', getSessionName(selectedLine), { chatId, text: chatMessage });
-      toast.success("Mesaj gönderildi!");
-      setChatMessage("");
+      await wahaApi('sendText', getSessionName(selectedLine), { chatId, text: msgText });
     } catch (err: any) {
       toast.error("Mesaj gönderilemedi: " + (err.message || ''));
+      setChatMessage(msgText);
+      setChatMessages(prev => prev.filter(m => !m._optimistic));
     }
     setSending(false);
   };
