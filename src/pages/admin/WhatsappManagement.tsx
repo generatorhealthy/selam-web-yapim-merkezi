@@ -78,6 +78,10 @@ const WhatsappManagement = () => {
   const [activeChat, setActiveChat] = useState<any | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [newChatName, setNewChatName] = useState("");
+  const [newChatSurname, setNewChatSurname] = useState("");
+  const [newChatPhone, setNewChatPhone] = useState("");
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
