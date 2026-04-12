@@ -242,6 +242,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/ai-assistant" element={<AdminAIAssistant />} />
               <Route path="/divan_paneli/email-logs" element={<EmailLogs />} />
               <Route path="/divan_paneli/registration-analytics" element={<RegistrationAnalytics />} />
+              <Route path="/divan_paneli/whatsapp" element={<WhatsappManagement />} />
                 
               {/* Test Routes */}
               <Route path="/test/:testId" element={<TestInterface />} />

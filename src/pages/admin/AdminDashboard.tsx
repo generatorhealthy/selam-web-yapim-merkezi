@@ -39,7 +39,8 @@ import {
   HardDrive,
   CreditCard,
   Gauge,
-  Mail
+  Mail,
+  MessagesSquare
 } from "lucide-react";
 
 const AdminDashboard = () => {
