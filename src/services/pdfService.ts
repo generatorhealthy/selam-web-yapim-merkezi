@@ -1,5 +1,4 @@
-import jsPDF from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
+// No top-level imports for jspdf/docx - they are dynamically imported to avoid bloating shared chunks
 
 interface CustomerData {
   name: string;
@@ -83,7 +82,8 @@ export const generatePreInfoPDF = async (orderId: string) => {
     const formContent = formData?.content || 'DOKTORUM OL ÜYELİK SÖZLEŞMESİ';
     console.log('📝 Form içeriği alındı, uzunluk:', formContent.length);
 
-    console.log('✅ Veriler kontrol edildi, PDF oluşturuluyor...');
+    const jsPDFModule = await import('jspdf');
+    const jsPDF = jsPDFModule.default;
 
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -318,13 +318,15 @@ export const generatePreInfoPDF = async (orderId: string) => {
   }
 };
 
-export const generateDistanceSalesPDF = (
+export const generateDistanceSalesPDF = async (
   customerData: CustomerData,
   packageData: PackageData,
-  paymentMethod: string,
-  customerType: string,
-  clientIP: string
+  _paymentMethod: string,
+  _customerType: string,
+  _clientIP: string
 ) => {
+  const jsPDFModule = await import('jspdf');
+  const jsPDF = jsPDFModule.default;
   // Basit bir mesafeli satış PDF'i oluşturma fonksiyonu
   const pdf = new jsPDF();
   
@@ -347,6 +349,8 @@ export const generatePreInfoWord = async (
   customerType: string,
   clientIP: string
 ) => {
+  // Dynamic import docx to avoid bundling into shared chunks
+  const { Document, Packer, Paragraph, TextRun, AlignmentType } = await import('docx');
   // Import supabase here to avoid issues
   const { createClient } = await import('@supabase/supabase-js');
   const supabase = createClient(
