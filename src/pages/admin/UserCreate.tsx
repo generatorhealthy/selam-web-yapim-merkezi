@@ -22,6 +22,7 @@ const UserCreate = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    phone: "",
     role: "specialist" as "admin" | "specialist" | "staff" | "legal" | "muhasebe",
     name: ""
   });
