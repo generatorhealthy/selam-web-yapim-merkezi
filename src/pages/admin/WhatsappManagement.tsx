@@ -97,8 +97,9 @@ const WhatsappManagement = () => {
   const [chats, setChats] = useState<any[]>([]);
   const [chatsLoading, setChatsLoading] = useState(false);
 
-  const getSessionName = (line: WhatsappLine) => {
-    return `line_${line.phone_number.replace(/[^0-9]/g, '')}`;
+  const getSessionName = (_line: WhatsappLine) => {
+    // WAHA Core only supports a single session named 'default'
+    return 'default';
   };
 
   const fetchLines = async () => {
