@@ -318,13 +318,15 @@ export const generatePreInfoPDF = async (orderId: string) => {
   }
 };
 
-export const generateDistanceSalesPDF = (
+export const generateDistanceSalesPDF = async (
   customerData: CustomerData,
   packageData: PackageData,
-  paymentMethod: string,
-  customerType: string,
-  clientIP: string
+  _paymentMethod: string,
+  _customerType: string,
+  _clientIP: string
 ) => {
+  const jsPDFModule = await import('jspdf');
+  const jsPDF = jsPDFModule.default;
   // Basit bir mesafeli satış PDF'i oluşturma fonksiyonu
   const pdf = new jsPDF();
   
