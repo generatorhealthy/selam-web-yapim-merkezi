@@ -1,18 +1,19 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield, Phone } from "lucide-react";
 import { useRateLimit } from "@/hooks/useRateLimit";
 
 const LoginPage = () => {
-  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [loginIdentifier, setLoginIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -21,18 +22,31 @@ const LoginPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Rate limiting - 5 attempts per 15 minutes
   const rateLimit = useRateLimit({
     maxAttempts: 5,
-    windowMs: 15 * 60 * 1000 // 15 minutes
+    windowMs: 15 * 60 * 1000
   });
 
-  // Check if user is already logged in
+  // Detect if input looks like a phone number
+  const isPhoneNumber = (value: string) => {
+    const cleaned = value.replace(/\s/g, '');
+    return /^(\+?[0-9]{10,13})$/.test(cleaned) || /^0[0-9]{10}$/.test(cleaned);
+  };
+
+  // Normalize phone: remove spaces, ensure starts with country code
+  const normalizePhone = (phone: string) => {
+    let cleaned = phone.replace(/\s/g, '').replace(/[^0-9+]/g, '');
+    if (cleaned.startsWith('+90')) cleaned = cleaned.substring(1);
+    if (cleaned.startsWith('90') && cleaned.length >= 12) return cleaned;
+    if (cleaned.startsWith('0')) cleaned = '9' + cleaned;
+    if (!cleaned.startsWith('90')) cleaned = '90' + cleaned;
+    return cleaned;
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Check if user is specialist
         const { data: specialists } = await supabase
           .from('specialists')
           .select('id')
@@ -41,7 +55,6 @@ const LoginPage = () => {
           .limit(1);
         
         const specialist = specialists && specialists.length > 0 ? specialists[0] : null;
-        
         if (specialist) {
           navigate('/doktor-paneli');
         } else {
@@ -49,28 +62,25 @@ const LoginPage = () => {
         }
       }
     };
-    
     checkAuth();
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check rate limiting
     if (rateLimit.isRateLimited()) {
       toast({
         title: "Çok Fazla Deneme",
-        description: `Çok fazla başarısız giriş denemesi. ${rateLimit.remainingAttempts} deneme hakkınız kaldı. 15 dakika sonra tekrar deneyin.`,
+        description: `Çok fazla başarısız giriş denemesi. 15 dakika sonra tekrar deneyin.`,
         variant: "destructive"
       });
       return;
     }
 
-    // Record attempt
     if (!rateLimit.recordAttempt()) {
       toast({
         title: "Giriş Denemesi Sınırı",
-        description: "15 dakika içinde maksimum 5 deneme yapabilirsiniz. Lütfen daha sonra tekrar deneyin.",
+        description: "15 dakika içinde maksimum 5 deneme yapabilirsiniz.",
         variant: "destructive"
       });
       return;
@@ -79,19 +89,58 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      // Security: Remove sensitive console logs in production
+      let email = loginIdentifier.trim();
 
-      // Supabase Auth ile giriş yap
+      // If phone number entered, find the specialist's email
+      if (isPhoneNumber(email)) {
+        const normalizedPhone = normalizePhone(email);
+        
+        // Try multiple phone formats to find the specialist
+        const phoneVariants = [
+          normalizedPhone,                          // e.g. 905xxxxxxxxx
+          '+' + normalizedPhone,                    // e.g. +905xxxxxxxxx
+          '0' + normalizedPhone.substring(2),       // e.g. 05xxxxxxxxx
+          normalizedPhone.substring(2),             // e.g. 5xxxxxxxxx
+        ];
+
+        let specialistEmail: string | null = null;
+
+        for (const phoneVariant of phoneVariants) {
+          const { data: specialists } = await supabase
+            .from('specialists')
+            .select('email')
+            .eq('phone', phoneVariant)
+            .eq('is_active', true)
+            .limit(1);
+
+          if (specialists && specialists.length > 0 && specialists[0].email) {
+            specialistEmail = specialists[0].email;
+            break;
+          }
+        }
+
+        if (!specialistEmail) {
+          toast({
+            title: "Uzman Bulunamadı",
+            description: "Bu telefon numarası ile kayıtlı bir uzman bulunamadı.",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        email = specialistEmail;
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: loginData.email,
-        password: loginData.password,
+        email,
+        password,
       });
 
       if (authError) {
-        // Security: Don't log sensitive auth errors in production
         toast({
           title: "Giriş Hatası",
-          description: "E-posta veya şifre hatalı.",
+          description: "E-posta/telefon veya şifre hatalı.",
           variant: "destructive"
         });
         return;
@@ -106,20 +155,14 @@ const LoginPage = () => {
         return;
       }
 
-      // Security: Remove detailed logs in production
-
-      // Kullanıcının specialists tablosunda kayıtlı olup olmadığını kontrol et
-      // Hem user_id hem de email ile kontrol et
       const { data: specialists, error: specialistError } = await supabase
         .from('specialists')
         .select('id, name, email, is_active')
-        .or(`user_id.eq.${authData.user.id},email.eq.${loginData.email}`)
+        .or(`user_id.eq.${authData.user.id},email.eq.${email}`)
         .eq('is_active', true)
         .limit(1);
       
       const specialist = specialists && specialists.length > 0 ? specialists[0] : null;
-
-      // Security: Remove detailed query logs in production
 
       if (specialistError) {
         console.error('Uzman sorgu hatası:', specialistError);
@@ -136,16 +179,14 @@ const LoginPage = () => {
         await supabase.auth.signOut();
         toast({
           title: "Yetkisiz Erişim",
-          description: "Bu e-posta adresi ile kayıtlı bir uzman bulunamadı. Lütfen admin ile iletişime geçin.",
+          description: "Bu bilgiler ile kayıtlı bir uzman bulunamadı. Lütfen admin ile iletişime geçin.",
           variant: "destructive"
         });
         return;
       }
 
-      // Reset rate limiting on successful login
       rateLimit.reset();
       
-      // Başarılı giriş - doktor paneline yönlendir
       toast({
         title: "Giriş Başarılı",
         description: "Doktor paneline yönlendiriliyorsunuz...",
@@ -170,14 +211,13 @@ const LoginPage = () => {
     setIsResetLoading(true);
 
     try {
-      // Önce uzmanın kayıtlı olup olmadığını kontrol et
-      const { data: specialist, error: specialistError } = await supabase
+      const { data: specialist } = await supabase
         .from('specialists')
         .select('email')
         .eq('email', forgotPasswordEmail)
         .maybeSingle();
 
-      if (specialistError || !specialist) {
+      if (!specialist) {
         toast({
           title: "E-posta Bulunamadı",
           description: "Bu e-posta adresi ile kayıtlı bir uzman bulunamadı.",
@@ -186,13 +226,11 @@ const LoginPage = () => {
         return;
       }
 
-      // Şifre sıfırlama e-postası gönder
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
         redirectTo: `${window.location.origin}/sifre-sifirla`
       });
 
       if (error) {
-        console.error('Şifre sıfırlama hatası:', error);
         toast({
           title: "Hata",
           description: "Şifre sıfırlama e-postası gönderilemedi.",
@@ -205,10 +243,8 @@ const LoginPage = () => {
         title: "E-posta Gönderildi",
         description: "Şifre sıfırlama linki e-posta adresinize gönderildi.",
       });
-
       setShowForgotPassword(false);
       setForgotPasswordEmail("");
-
     } catch (error) {
       console.error('Şifre sıfırlama hatası:', error);
       toast({
@@ -220,6 +256,8 @@ const LoginPage = () => {
       setIsResetLoading(false);
     }
   };
+
+  const inputIsPhone = isPhoneNumber(loginIdentifier);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -238,7 +276,7 @@ const LoginPage = () => {
             <p className="text-gray-600">
               {showForgotPassword 
                 ? "E-posta adresinizi girin, şifre sıfırlama linki göndereceğiz"
-                : "Sadece kayıtlı uzmanlar giriş yapabilir"
+                : "E-posta veya telefon numaranız ile giriş yapın"
               }
             </p>
           </div>
@@ -299,22 +337,31 @@ const LoginPage = () => {
               ) : (
                 <form onSubmit={handleLogin} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                      E-posta Adresi
+                    <Label htmlFor="identifier" className="text-sm font-medium text-gray-700">
+                      E-posta veya Telefon Numarası
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      {inputIsPhone ? (
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5" />
+                      ) : (
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      )}
                       <Input
-                        id="email"
-                        type="email"
-                        value={loginData.email}
-                        onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                        id="identifier"
+                        type="text"
+                        value={loginIdentifier}
+                        onChange={(e) => setLoginIdentifier(e.target.value)}
                         required
                         disabled={isLoading}
-                        placeholder="uzman@email.com"
+                        placeholder="uzman@email.com veya 0531 685 22 75"
                         className="pl-11 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>
+                    {inputIsPhone && (
+                      <p className="text-xs text-blue-600 mt-1">
+                        📱 Telefon numarası ile giriş yapılacak
+                      </p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
@@ -326,8 +373,8 @@ const LoginPage = () => {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        value={loginData.password}
-                        onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={isLoading}
                         placeholder="••••••••"
