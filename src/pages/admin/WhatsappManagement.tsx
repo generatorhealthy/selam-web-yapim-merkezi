@@ -224,22 +224,28 @@ const WhatsappManagement = () => {
     setChatsLoading(false);
   };
 
-  const fetchChatMessages = async (chat: any) => {
+  const fetchChatMessages = async (chat?: any, silent = false) => {
     if (!selectedLine) return;
-    setMessagesLoading(true);
-    const chatId = chat.id?._serialized || chat.id?.user + '@c.us' || '';
+    const targetChat = chat || activeChat;
+    if (!targetChat) return;
+    if (!silent) setMessagesLoading(true);
+    const chatId = targetChat.id?._serialized || targetChat.id?.user + '@c.us' || '';
     try {
       const res = await wahaApi('chats.messages', getSessionName(selectedLine), { chatId, limit: 50 });
       if (res.success && res.data) {
-        setChatMessages(Array.isArray(res.data) ? res.data : []);
+        const msgs = Array.isArray(res.data) ? res.data : [];
+        // Sort by timestamp ascending (oldest first)
+        msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
+        setChatMessages(msgs);
+        if (!silent) setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       }
     } catch {}
-    setMessagesLoading(false);
+    if (!silent) setMessagesLoading(false);
   };
 
   const openChat = (chat: any) => {
     setActiveChat(chat);
-    const num = chat.id?.user || chat.id?._serialized?.replace('@c.us', '') || '';
+    const num = chat.id?.user || chat.id?._serialized?.replace('@c.us', '').replace('@lid', '') || '';
     setChatTo(num);
     fetchChatMessages(chat);
   };
@@ -260,6 +266,15 @@ const WhatsappManagement = () => {
       fetchChats();
     }
   }, [sessionStatus, selectedLine]);
+
+  // Auto-refresh messages every 3 seconds when a chat is open
+  useEffect(() => {
+    if (sessionStatus !== 'WORKING' || !activeChat) return;
+    const interval = setInterval(() => {
+      fetchChatMessages(activeChat, true);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [sessionStatus, activeChat, selectedLine]);
 
   const addLine = async () => {
     if (!newPhone.trim() || !newLabel.trim()) {
