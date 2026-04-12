@@ -11,7 +11,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
-import { QRCodeSVG } from "qrcode.react";
+
 import { 
   MessageCircle, 
   Plus, 
@@ -19,7 +19,7 @@ import {
   Phone, 
   QrCode, 
   Check, 
-  X,
+  
   Edit2,
   Save
 } from "lucide-react";
@@ -135,13 +135,6 @@ const WhatsappManagement = () => {
     }
   };
 
-  const formatPhoneForWhatsApp = (phone: string) => {
-    return phone.replace(/\D/g, '').replace(/^0/, '90');
-  };
-
-  const getWhatsAppUrl = (phone: string) => {
-    return `https://wa.me/${formatPhoneForWhatsApp(phone)}`;
-  };
 
   return (
     <>
@@ -315,30 +308,24 @@ const WhatsappManagement = () => {
               </Card>
             </div>
 
-            {/* Right: QR Code display */}
-            <div className="lg:sticky lg:top-8">
+            {/* Right: WhatsApp Web panel */}
+            <div className="lg:sticky lg:top-8 space-y-6">
+              {/* Selected line info & WhatsApp Web button */}
               <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-br from-green-500 to-emerald-600 text-white">
                   <CardTitle className="text-xl flex items-center gap-2">
-                    <QrCode className="w-6 h-6" />
-                    WhatsApp QR Kod
+                    <MessageCircle className="w-6 h-6" />
+                    WhatsApp Web
                   </CardTitle>
                   <CardDescription className="text-green-100">
-                    QR kodu okutarak seçili hattan WhatsApp sohbeti başlatın
+                    Seçili hattın WhatsApp Web hesabını açın
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-8">
                   {selectedLine ? (
                     <div className="flex flex-col items-center space-y-6">
-                      <div className="p-6 bg-white rounded-3xl shadow-inner border-2 border-green-100">
-                        <QRCodeSVG
-                          value={getWhatsAppUrl(selectedLine.phone_number)}
-                          size={220}
-                          bgColor="#ffffff"
-                          fgColor="#075e54"
-                          level="H"
-                          includeMargin={false}
-                        />
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-xl shadow-green-500/30">
+                        <MessageCircle className="w-12 h-12 text-white" />
                       </div>
                       
                       <div className="text-center space-y-2">
@@ -354,34 +341,71 @@ const WhatsappManagement = () => {
 
                       <div className="w-full space-y-3">
                         <Button
-                          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 h-12 text-base"
-                          onClick={() => window.open(getWhatsAppUrl(selectedLine.phone_number), '_blank')}
+                          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 h-14 text-lg font-semibold"
+                          onClick={() => window.open('https://web.whatsapp.com', '_blank')}
                         >
-                          <MessageCircle className="w-5 h-5 mr-2" />
-                          WhatsApp'ta Aç
+                          <QrCode className="w-6 h-6 mr-2" />
+                          WhatsApp Web Aç
                         </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full border-green-200 text-green-700 hover:bg-green-50 h-12"
-                          onClick={() => {
-                            navigator.clipboard.writeText(selectedLine.phone_number);
-                            toast.success("Numara kopyalandı!");
-                          }}
-                        >
-                          <Phone className="w-4 h-4 mr-2" />
-                          Numarayı Kopyala
-                        </Button>
+                        <p className="text-xs text-center text-slate-400">
+                          Açılan sayfada telefonunuzdan ({selectedLine.label}) QR kodu okutun
+                        </p>
+                        <div className="border-t border-slate-100 pt-3 space-y-2">
+                          <Button
+                            variant="outline"
+                            className="w-full border-green-200 text-green-700 hover:bg-green-50 h-11"
+                            onClick={() => {
+                              navigator.clipboard.writeText(selectedLine.phone_number);
+                              toast.success("Numara kopyalandı!");
+                            }}
+                          >
+                            <Phone className="w-4 h-4 mr-2" />
+                            Numarayı Kopyala
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-16 text-slate-400">
-                      <QrCode className="w-16 h-16 mb-4 opacity-30" />
+                      <MessageCircle className="w-16 h-16 mb-4 opacity-30" />
                       <p className="text-lg font-medium">Hat Seçilmedi</p>
                       <p className="text-sm">Soldaki listeden bir hat seçin</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
+
+              {/* Quick access: all active lines */}
+              {lines.filter(l => l.is_active).length > 1 && (
+                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-xl rounded-2xl">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base text-slate-700">Hızlı Erişim - Tüm Aktif Hatlar</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {lines.filter(l => l.is_active).map((line) => (
+                      <Button
+                        key={line.id}
+                        variant={selectedLine?.id === line.id ? "default" : "outline"}
+                        className={`w-full justify-between h-12 ${
+                          selectedLine?.id === line.id 
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' 
+                            : 'border-green-100 text-slate-700 hover:bg-green-50'
+                        }`}
+                        onClick={() => {
+                          setSelectedLine(line);
+                          window.open('https://web.whatsapp.com', '_blank');
+                        }}
+                      >
+                        <span className="flex items-center gap-2">
+                          <MessageCircle className="w-4 h-4" />
+                          {line.label}
+                        </span>
+                        <span className="text-xs opacity-75">{line.phone_number}</span>
+                      </Button>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
