@@ -25,7 +25,7 @@ serve(async (req) => {
       if (cleaned.startsWith('0')) cleaned = '9' + cleaned;
       if (!cleaned.startsWith('90')) cleaned = '90' + cleaned;
 
-      // Find specialist by phone
+      // Find specialist by phone - check both specialists and automatic_orders tables
       const phoneVariants = [
         cleaned,
         '+' + cleaned,
@@ -36,6 +36,7 @@ serve(async (req) => {
       let specialistEmail: string | null = null;
       let specialistUserId: string | null = null;
 
+      // First try specialists table
       for (const variant of phoneVariants) {
         const { data } = await supabase
           .from('specialists')
@@ -48,6 +49,34 @@ serve(async (req) => {
           specialistEmail = data[0].email;
           specialistUserId = data[0].user_id;
           break;
+        }
+      }
+
+      // If not found in specialists, try automatic_orders (customer phone)
+      if (!specialistEmail) {
+        for (const variant of phoneVariants) {
+          const { data } = await supabase
+            .from('automatic_orders')
+            .select('customer_email, customer_name')
+            .eq('customer_phone', variant)
+            .eq('is_active', true)
+            .limit(1);
+
+          if (data && data.length > 0 && data[0].customer_email) {
+            // Verify this email belongs to an active specialist
+            const { data: specData } = await supabase
+              .from('specialists')
+              .select('email, user_id')
+              .eq('email', data[0].customer_email)
+              .eq('is_active', true)
+              .limit(1);
+
+            if (specData && specData.length > 0) {
+              specialistEmail = specData[0].email;
+              specialistUserId = specData[0].user_id;
+              break;
+            }
+          }
         }
       }
 
@@ -148,7 +177,7 @@ serve(async (req) => {
       // Mark OTP as used
       await supabase.from('otp_codes').update({ is_used: true }).eq('id', otp.id);
 
-      // Find user email from specialist
+      // Find user email from specialist or automatic_orders
       const phoneVariants2 = [cleaned, '+' + cleaned, '0' + cleaned.substring(2), cleaned.substring(2)];
       let userEmail = '';
       
@@ -162,6 +191,31 @@ serve(async (req) => {
         if (data && data.length > 0 && data[0].email) {
           userEmail = data[0].email;
           break;
+        }
+      }
+
+      // If not found, check automatic_orders
+      if (!userEmail) {
+        for (const variant of phoneVariants2) {
+          const { data } = await supabase
+            .from('automatic_orders')
+            .select('customer_email')
+            .eq('customer_phone', variant)
+            .eq('is_active', true)
+            .limit(1);
+          if (data && data.length > 0 && data[0].customer_email) {
+            // Verify specialist exists
+            const { data: specData } = await supabase
+              .from('specialists')
+              .select('email')
+              .eq('email', data[0].customer_email)
+              .eq('is_active', true)
+              .limit(1);
+            if (specData && specData.length > 0) {
+              userEmail = specData[0].email;
+              break;
+            }
+          }
         }
       }
 
