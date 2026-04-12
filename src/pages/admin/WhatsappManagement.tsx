@@ -54,7 +54,16 @@ const wahaApi = async (action: string, sessionName?: string, payload?: any) => {
   const { data, error } = await supabase.functions.invoke('waha-proxy', {
     body: { action, sessionName, payload },
   });
-  if (error) throw new Error(error.message);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success) {
+    const detailedError = data?.error || data?.data?.message || data?.data?.error || 'Bilinmeyen WAHA hatası';
+    throw new Error(String(detailedError));
+  }
+
   return data;
 };
 
@@ -152,8 +161,7 @@ const WhatsappManagement = () => {
     try {
       await wahaApi('sessions.start', getSessionName(selectedLine));
       toast.success("Oturum başlatılıyor...");
-      
-      // Start polling for QR code
+
       setTimeout(() => fetchQrCode(selectedLine), 2000);
       qrIntervalRef.current = setInterval(async () => {
         await checkSessionStatus(selectedLine);
@@ -161,12 +169,14 @@ const WhatsappManagement = () => {
           await fetchQrCode(selectedLine);
         }
       }, 5000);
-      
+
       setSessionStatus('SCAN_QR_CODE');
     } catch (err: any) {
-      toast.error("Oturum başlatılamadı: " + (err.message || ''));
+      const message = err?.message || 'Bilinmeyen hata';
+      toast.error(`Oturum başlatılamadı: ${message}`);
+    } finally {
+      setConnecting(false);
     }
-    setConnecting(false);
   };
 
   const stopSession = async () => {
