@@ -7,19 +7,65 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("=== Iyzico Callback Received ===");
+  console.log("Method:", req.method);
+  console.log("URL:", req.url);
+  
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const body = await req.json();
-    console.log("Iyzico callback verisi:", JSON.stringify(body));
+    const contentType = req.headers.get("content-type") || "";
+    console.log("Content-Type:", contentType);
+    
+    let body: any = {};
+    const rawBody = await req.text();
+    console.log("Raw body (first 500 chars):", rawBody.substring(0, 500));
+    
+    // Try to parse as JSON first, then as form-urlencoded
+    if (rawBody) {
+      try {
+        body = JSON.parse(rawBody);
+        console.log("Parsed as JSON");
+      } catch {
+        // Try form-urlencoded
+        try {
+          const params = new URLSearchParams(rawBody);
+          body = Object.fromEntries(params.entries());
+          console.log("Parsed as form-urlencoded");
+        } catch {
+          console.log("Could not parse body, using raw");
+          body = { raw: rawBody };
+        }
+      }
+    }
+    
+    // Also check query parameters (iyzico sometimes sends data as query params)
+    const url = new URL(req.url);
+    const queryParams = Object.fromEntries(url.searchParams.entries());
+    if (Object.keys(queryParams).length > 0) {
+      console.log("Query params:", JSON.stringify(queryParams));
+      body = { ...body, ...queryParams };
+    }
+    
+    console.log("Parsed callback body:", JSON.stringify(body));
 
-    if (body.status === "success" || body.paymentStatus === "SUCCESS") {
-      const customerEmail = body.customerEmail?.toLowerCase();
+    // Determine payment status - check multiple possible fields
+    const isSuccess = 
+      body.status === "success" || 
+      body.paymentStatus === "SUCCESS" ||
+      body.iyziEventType === "SUBSCRIPTION_ORDER_SUCCESS" ||
+      body.orderStatus === "SUCCESS" ||
+      body.status === "SUCCESS";
+
+    console.log("Payment success:", isSuccess);
+
+    if (isSuccess) {
+      const customerEmail = (body.customerEmail || body.customer_email || "")?.toLowerCase().trim();
       console.log("Başarılı ödeme - Email:", customerEmail);
 
-      // Siparişi otomatik onayla
+      // Auto-approve order in database
       if (customerEmail) {
         try {
           const supabaseAdmin = createClient(
@@ -27,7 +73,7 @@ serve(async (req) => {
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
           );
 
-          // Son 48 saatteki bekleyen siparişi bul
+          // Find pending order from last 48 hours
           const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
           
           const { data: pendingOrders, error: fetchError } = await supabaseAdmin
@@ -51,16 +97,16 @@ serve(async (req) => {
                 status: 'approved',
                 approved_at: new Date().toISOString(),
                 payment_method: 'credit_card',
-                payment_transaction_id: body.subscriptionReferenceCode || body.paymentId || null,
+                payment_transaction_id: body.subscriptionReferenceCode || body.paymentId || body.token || null,
               })
               .eq('id', order.id);
 
             if (updateError) {
               console.error("Sipariş onaylama hatası:", updateError);
             } else {
-              console.log(`Sipariş otomatik onaylandı: ${order.customer_name} (${customerEmail}) - ${order.amount} TL`);
+              console.log(`✅ Sipariş otomatik onaylandı: ${order.customer_name} (${customerEmail}) - ${order.amount} TL`);
               
-              // Otomatik fatura kes
+              // Auto-create invoice
               try {
                 const invokeUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/create-birfatura-invoice`;
                 const invoiceRes = await fetch(invokeUrl, {
@@ -78,14 +124,25 @@ serve(async (req) => {
               }
             }
           } else {
-            console.log("Bekleyen sipariş bulunamadı:", customerEmail);
+            console.log("⚠️ Bekleyen sipariş bulunamadı:", customerEmail);
+            
+            // Try broader search without time limit
+            const { data: allPending } = await supabaseAdmin
+              .from('orders')
+              .select('id, customer_name, customer_email, amount, created_at, status')
+              .eq('customer_email', customerEmail)
+              .is('deleted_at', null)
+              .order('created_at', { ascending: false })
+              .limit(3);
+            
+            console.log("Bu email için tüm siparişler:", JSON.stringify(allPending));
           }
         } catch (dbError) {
           console.error("DB işlem hatası:", dbError);
         }
       }
 
-      // Paket bilgilerini belirle
+      // Build redirect URL
       const getPackagePrice = (pricingPlanCode: string) => {
         const priceMap: Record<string, number> = {
           "e01a059d-9392-4690-b030-0002064f9421": 998,
@@ -128,6 +185,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Location": redirectUrl }
       });
     } else {
+      console.log("❌ Ödeme başarısız veya bilinmeyen durum:", JSON.stringify(body));
       return new Response(null, {
         status: 302,
         headers: { ...corsHeaders, "Location": "https://doktorumol.com.tr/" }
