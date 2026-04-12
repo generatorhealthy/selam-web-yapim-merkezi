@@ -11,7 +11,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
-import { QRCodeSVG } from "qrcode.react";
+
 import { 
   MessageCircle, 
   Plus, 
@@ -19,7 +19,7 @@ import {
   Phone, 
   QrCode, 
   Check, 
-  X,
+  
   Edit2,
   Save
 } from "lucide-react";
@@ -135,13 +135,6 @@ const WhatsappManagement = () => {
     }
   };
 
-  const formatPhoneForWhatsApp = (phone: string) => {
-    return phone.replace(/\D/g, '').replace(/^0/, '90');
-  };
-
-  const getWhatsAppUrl = (phone: string) => {
-    return `https://wa.me/${formatPhoneForWhatsApp(phone)}`;
-  };
 
   return (
     <>
