@@ -3397,6 +3397,36 @@ export type Database = {
           },
         ]
       }
+      otp_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          is_used: boolean
+          phone: string
+          user_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_used?: boolean
+          phone: string
+          user_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_used?: boolean
+          phone?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       packages: {
         Row: {
           color: string
@@ -4396,6 +4426,7 @@ export type Database = {
           is_blocked: boolean
         }[]
       }
+      cleanup_expired_otps: { Args: never; Returns: undefined }
       cleanup_old_backups: { Args: never; Returns: undefined }
       cleanup_old_sessions: { Args: never; Returns: undefined }
       create_full_database_backup: {
