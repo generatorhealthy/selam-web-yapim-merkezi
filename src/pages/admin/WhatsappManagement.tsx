@@ -97,9 +97,9 @@ const WhatsappManagement = () => {
   const [chats, setChats] = useState<any[]>([]);
   const [chatsLoading, setChatsLoading] = useState(false);
 
-  const getSessionName = (_line: WhatsappLine) => {
-    // WAHA Core only supports a single session named 'default'
-    return 'default';
+  const getSessionName = (line: WhatsappLine) => {
+    // WAHA Plus supports multiple sessions - use line id as unique session name
+    return `line_${line.id.replace(/-/g, '').substring(0, 16)}`;
   };
 
   const fetchLines = async () => {
@@ -159,25 +159,31 @@ const WhatsappManagement = () => {
     if (!selectedLine) return;
     setConnecting(true);
     setQrCode(null);
+    stopQrPolling();
     try {
       await wahaApi('sessions.start', getSessionName(selectedLine));
       toast.success("Oturum başlatılıyor...");
-
-      setTimeout(() => fetchQrCode(selectedLine), 2000);
-      qrIntervalRef.current = setInterval(async () => {
-        await checkSessionStatus(selectedLine);
-        if (sessionStatus !== 'WORKING') {
-          await fetchQrCode(selectedLine);
-        }
-      }, 5000);
-
-      setSessionStatus('SCAN_QR_CODE');
     } catch (err: any) {
       const message = err?.message || 'Bilinmeyen hata';
-      toast.error(`Oturum başlatılamadı: ${message}`);
-    } finally {
-      setConnecting(false);
+      // If session is already started, continue to QR polling
+      if (!message.includes('already started')) {
+        toast.error(`Oturum başlatılamadı: ${message}`);
+        setConnecting(false);
+        return;
+      }
+      toast.info("Oturum zaten başlatılmış, QR kod alınıyor...");
     }
+
+    // Start QR polling regardless
+    setSessionStatus('SCAN_QR_CODE');
+    setTimeout(() => fetchQrCode(selectedLine), 1500);
+    qrIntervalRef.current = setInterval(async () => {
+      await checkSessionStatus(selectedLine);
+      if (sessionStatus !== 'WORKING') {
+        await fetchQrCode(selectedLine);
+      }
+    }, 5000);
+    setConnecting(false);
   };
 
   const stopSession = async () => {
