@@ -98,6 +98,7 @@ const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
 const AdminAIAssistant = lazy(() => import("./pages/admin/AdminAIAssistant"));
 const EmailLogs = lazy(() => import("./pages/admin/EmailLogs"));
 const RegistrationAnalytics = lazy(() => import("./pages/admin/RegistrationAnalytics"));
+const WhatsappManagement = lazy(() => import("./pages/admin/WhatsappManagement"));
 const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 
 // Doctor pages
