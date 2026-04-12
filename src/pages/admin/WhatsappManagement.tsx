@@ -335,6 +335,27 @@ const WhatsappManagement = () => {
     else { toast.success("Hat güncellendi"); setEditingId(null); fetchLines(); }
   };
 
+  const startNewChat = () => {
+    if (!newChatPhone.trim()) {
+      toast.error("Telefon numarası gerekli");
+      return;
+    }
+    const num = newChatPhone.replace(/[^0-9]/g, '');
+    const fullName = `${newChatName.trim()} ${newChatSurname.trim()}`.trim();
+    const fakeChatObj = {
+      id: { _serialized: num + '@c.us', user: num },
+      name: fullName || num,
+      _isNewChat: true,
+    };
+    setActiveChat(fakeChatObj);
+    setChatTo(num);
+    setChatMessages([]);
+    setShowNewChatDialog(false);
+    setNewChatName("");
+    setNewChatSurname("");
+    setNewChatPhone("");
+  };
+
   const filteredChats = chats.filter(chat => {
     if (!searchQuery) return true;
     const name = chat.name || chat.id?.user || '';
