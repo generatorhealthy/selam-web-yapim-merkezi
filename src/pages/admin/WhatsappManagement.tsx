@@ -65,6 +65,8 @@ const WhatsappManagement = () => {
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const qrIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesRefreshRef = useRef<NodeJS.Timeout | null>(null);
 
   const [chatMessage, setChatMessage] = useState("");
   const [chatTo, setChatTo] = useState("");
@@ -75,6 +77,10 @@ const WhatsappManagement = () => {
   const [activeChat, setActiveChat] = useState<any | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const getSessionName = (line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`;
 
