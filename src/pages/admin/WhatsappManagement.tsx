@@ -65,6 +65,8 @@ const WhatsappManagement = () => {
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const qrIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesRefreshRef = useRef<NodeJS.Timeout | null>(null);
 
   const [chatMessage, setChatMessage] = useState("");
   const [chatTo, setChatTo] = useState("");
@@ -75,6 +77,10 @@ const WhatsappManagement = () => {
   const [activeChat, setActiveChat] = useState<any | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const getSessionName = (line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`;
 
@@ -172,19 +178,36 @@ const WhatsappManagement = () => {
     setDisconnecting(false);
   };
 
+  const getActiveChatId = () => {
+    if (activeChat) {
+      return activeChat.id?._serialized || activeChat.id?.user + '@c.us' || '';
+    }
+    const num = chatTo.replace(/[^0-9]/g, '');
+    return num ? num + '@c.us' : '';
+  };
+
   const sendMessage = async () => {
-    if (!selectedLine || !chatTo.trim() || !chatMessage.trim()) {
-      toast.error("Numara ve mesaj gerekli");
+    if (!selectedLine || !chatMessage.trim()) {
+      toast.error("Mesaj gerekli");
+      return;
+    }
+    const chatId = getActiveChatId();
+    if (!chatId) {
+      toast.error("Alıcı numarası gerekli");
       return;
     }
     setSending(true);
+    const msgText = chatMessage;
+    setChatMessage("");
+    // Optimistic: add message locally
+    setChatMessages(prev => [...prev, { body: msgText, fromMe: true, timestamp: Math.floor(Date.now() / 1000), _optimistic: true }]);
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
-      const chatId = chatTo.replace(/[^0-9]/g, '') + '@c.us';
-      await wahaApi('sendText', getSessionName(selectedLine), { chatId, text: chatMessage });
-      toast.success("Mesaj gönderildi!");
-      setChatMessage("");
+      await wahaApi('sendText', getSessionName(selectedLine), { chatId, text: msgText });
     } catch (err: any) {
       toast.error("Mesaj gönderilemedi: " + (err.message || ''));
+      setChatMessage(msgText);
+      setChatMessages(prev => prev.filter(m => !m._optimistic));
     }
     setSending(false);
   };
@@ -201,22 +224,28 @@ const WhatsappManagement = () => {
     setChatsLoading(false);
   };
 
-  const fetchChatMessages = async (chat: any) => {
+  const fetchChatMessages = async (chat?: any, silent = false) => {
     if (!selectedLine) return;
-    setMessagesLoading(true);
-    const chatId = chat.id?._serialized || chat.id?.user + '@c.us' || '';
+    const targetChat = chat || activeChat;
+    if (!targetChat) return;
+    if (!silent) setMessagesLoading(true);
+    const chatId = targetChat.id?._serialized || targetChat.id?.user + '@c.us' || '';
     try {
       const res = await wahaApi('chats.messages', getSessionName(selectedLine), { chatId, limit: 50 });
       if (res.success && res.data) {
-        setChatMessages(Array.isArray(res.data) ? res.data : []);
+        const msgs = Array.isArray(res.data) ? res.data : [];
+        // Sort by timestamp ascending (oldest first)
+        msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
+        setChatMessages(msgs);
+        if (!silent) setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       }
     } catch {}
-    setMessagesLoading(false);
+    if (!silent) setMessagesLoading(false);
   };
 
   const openChat = (chat: any) => {
     setActiveChat(chat);
-    const num = chat.id?.user || chat.id?._serialized?.replace('@c.us', '') || '';
+    const num = chat.id?.user || chat.id?._serialized?.replace('@c.us', '').replace('@lid', '') || '';
     setChatTo(num);
     fetchChatMessages(chat);
   };
@@ -237,6 +266,15 @@ const WhatsappManagement = () => {
       fetchChats();
     }
   }, [sessionStatus, selectedLine]);
+
+  // Auto-refresh messages every 3 seconds when a chat is open
+  useEffect(() => {
+    if (sessionStatus !== 'WORKING' || !activeChat) return;
+    const interval = setInterval(() => {
+      fetchChatMessages(activeChat, true);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [sessionStatus, activeChat, selectedLine]);
 
   const addLine = async () => {
     if (!newPhone.trim() || !newLabel.trim()) {
@@ -656,6 +694,7 @@ const WhatsappManagement = () => {
                               <p className="text-[#8696a0] text-sm">Sohbet seçin veya yeni mesaj gönderin</p>
                             </div>
                           )}
+                          <div ref={messagesEndRef} />
                         </>
                       )}
                     </div>
