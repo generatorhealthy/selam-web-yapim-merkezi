@@ -232,7 +232,8 @@ const UserCreate = () => {
           role: formData.role as any,
           is_approved: true,
           name: formData.name,
-          email: formData.email
+          email: formData.email,
+          phone: formData.phone || null
         }]);
 
       if (profileError) {
@@ -269,6 +270,7 @@ const UserCreate = () => {
       setFormData({
         email: "",
         password: "",
+        phone: "",
         role: "specialist",
         name: ""
       });
@@ -335,6 +337,18 @@ const UserCreate = () => {
                     required
                     maxLength={50}
                     minLength={2}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="phone">Telefon Numarası</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="05XX XXX XX XX"
+                    maxLength={20}
                   />
                 </div>
 
