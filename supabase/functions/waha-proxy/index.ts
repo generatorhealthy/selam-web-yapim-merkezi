@@ -5,6 +5,64 @@ const corsHeaders = {
 
 const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
 
+const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+
+  return btoa(binary);
+};
+
+const normalizeQrPayload = (payload: unknown, contentType: string | null) => {
+  if (!payload) {
+    return null;
+  }
+
+  if (typeof payload === 'string') {
+    const trimmedPayload = payload.trim();
+
+    if (!trimmedPayload) {
+      return null;
+    }
+
+    const qrValue = trimmedPayload.startsWith('data:') || trimmedPayload.startsWith('http')
+      ? trimmedPayload
+      : (contentType?.startsWith('image/') ? `data:${contentType};base64,${trimmedPayload}` : trimmedPayload);
+
+    return {
+      value: qrValue,
+      qr: qrValue,
+      raw: trimmedPayload,
+    };
+  }
+
+  if (typeof payload === 'object') {
+    const record = payload as Record<string, unknown>;
+    const candidates = [record.qr, record.value, record.data, record.base64, record.image];
+    const firstString = candidates.find((candidate): candidate is string => typeof candidate === 'string' && candidate.trim().length > 0);
+
+    if (!firstString) {
+      return record;
+    }
+
+    const qrValue = firstString.startsWith('data:') || firstString.startsWith('http')
+      ? firstString
+      : `data:image/png;base64,${firstString}`;
+
+    return {
+      ...record,
+      value: qrValue,
+      qr: qrValue,
+      raw: firstString,
+    };
+  }
+
+  return null;
+};
+
 const respond = (payload: Record<string, unknown>) =>
   new Response(JSON.stringify(payload), {
     status: 200,
@@ -67,22 +125,54 @@ Deno.serve(async (req) => {
         break;
       case 'auth.qr': {
         endpoint = `/api/${sessionName}/auth/qr`;
-        const qrRes = await fetch(`${wahaUrl}${endpoint}`, { headers });
-        const qrText = await qrRes.text();
-        const qrData = (() => {
-          try {
-            return qrText ? JSON.parse(qrText) : null;
-          } catch {
-            return null;
-          }
-        })();
+        const qrHeaders = {
+          ...headers,
+          Accept: 'application/json, image/png;q=0.9, */*;q=0.8',
+        };
+        const qrRes = await fetch(`${wahaUrl}${endpoint}`, { headers: qrHeaders });
+        const qrContentType = qrRes.headers.get('content-type');
+
+        let qrData: Record<string, unknown> | null = null;
+        let qrErrorText: string | null = null;
+
+        if (qrContentType?.startsWith('image/')) {
+          const qrImageBuffer = await qrRes.arrayBuffer();
+          const dataUrl = `data:${qrContentType};base64,${arrayBufferToBase64(qrImageBuffer)}`;
+          qrData = {
+            value: dataUrl,
+            qr: dataUrl,
+            raw: dataUrl,
+          };
+        } else {
+          const qrText = await qrRes.text();
+          qrErrorText = qrText || null;
+
+          const parsedPayload = (() => {
+            try {
+              return qrText ? JSON.parse(qrText) : null;
+            } catch {
+              return qrText || null;
+            }
+          })();
+
+          qrData = normalizeQrPayload(parsedPayload, qrContentType);
+        }
 
         if (!qrRes.ok) {
           return respond({
             success: false,
             status: qrRes.status,
-            error: qrData?.message || qrData?.error || qrText || 'QR alınamadı',
+            error: qrData?.message || qrData?.error || qrErrorText || 'QR alınamadı',
             data: qrData,
+          });
+        }
+
+        if (!qrData) {
+          return respond({
+            success: false,
+            status: qrRes.status,
+            error: 'QR verisi henüz hazır değil',
+            data: null,
           });
         }
 

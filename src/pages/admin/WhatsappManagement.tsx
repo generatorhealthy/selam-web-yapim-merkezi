@@ -148,7 +148,7 @@ const WhatsappManagement = () => {
     try {
       const res = await wahaApi('auth.qr', getSessionName(line));
       if (res.success && res.data) {
-        setQrCode(res.data.value || res.data.qr || null);
+        setQrCode(res.data.qr || res.data.value || (typeof res.data === 'string' ? res.data : null));
       }
     } catch {
       // QR not available yet
