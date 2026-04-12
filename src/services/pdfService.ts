@@ -349,6 +349,8 @@ export const generatePreInfoWord = async (
   customerType: string,
   clientIP: string
 ) => {
+  // Dynamic import docx to avoid bundling into shared chunks
+  const { Document, Packer, Paragraph, TextRun, AlignmentType } = await import('docx');
   // Import supabase here to avoid issues
   const { createClient } = await import('@supabase/supabase-js');
   const supabase = createClient(
