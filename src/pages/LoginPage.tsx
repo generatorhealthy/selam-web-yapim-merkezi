@@ -290,7 +290,7 @@ const LoginPage = () => {
                 <br />
                 Hoş Geldiniz
               </h2>
-              <p className="text-lg text-blue-100 leading-relaxed max-w-md">
+              <p className="text-lg text-primary-foreground/80 leading-relaxed max-w-md">
                 Doktorumol uzman paneli ile hastalarınızı yönetin, randevularınızı takip edin.
               </p>
             </div>
@@ -301,7 +301,7 @@ const LoginPage = () => {
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
                     <CheckCircle2 className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-blue-50 text-sm">{feature}</span>
+                  <span className="text-primary-foreground/90 text-sm">{feature}</span>
                 </div>
               ))}
             </div>
@@ -313,7 +313,7 @@ const LoginPage = () => {
           <div className="w-full max-w-md">
             {/* Mobile-only branding */}
             <div className="lg:hidden text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-indigo-600 mb-4 shadow-lg shadow-primary/30">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 mb-4 shadow-lg shadow-primary/30">
                 <Shield className="w-8 h-8 text-white" />
               </div>
             </div>
