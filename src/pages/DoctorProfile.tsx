@@ -261,7 +261,7 @@ const DoctorProfile = () => {
       }
 
       console.log('Reviews fetched:', data);
-      setReviews(data || []);
+      setReviews((data as unknown as Review[]) || []);
     } catch (error) {
       console.error('Değerlendirmeler yüklenirken hata:', error);
     } finally {
