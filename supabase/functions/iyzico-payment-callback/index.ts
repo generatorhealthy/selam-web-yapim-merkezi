@@ -6,6 +6,72 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
 
+async function generateIyzicoAuth(
+  apiKey: string,
+  secretKey: string,
+  uriPath: string,
+): Promise<{ authorization: string; randomKey: string }> {
+  const randomKey = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  const dataToEncrypt = randomKey + uriPath;
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secretKey);
+  const messageData = encoder.encode(dataToEncrypt);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
+  const signatureHex = Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  const authorizationString = `apiKey:${apiKey}&randomKey:${randomKey}&signature:${signatureHex}`;
+  const base64EncodedAuthorization = btoa(authorizationString);
+
+  return {
+    authorization: `IYZWSv2 ${base64EncodedAuthorization}`,
+    randomKey,
+  };
+}
+
+async function getCustomerFromIyzico(customerReferenceCode: string): Promise<string | null> {
+  const apiKey = Deno.env.get("IYZICO_API_KEY");
+  const secretKey = Deno.env.get("IYZICO_SECRET_KEY");
+  const baseUrl = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
+
+  if (!apiKey || !secretKey) return null;
+
+  const uriPath = `/v2/subscription/customers/${customerReferenceCode}`;
+  const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath);
+
+  try {
+    const response = await fetch(`${baseUrl}${uriPath}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: authorization,
+        "x-iyzi-rnd": randomKey,
+      },
+    });
+
+    const result = await response.json();
+    console.log("Iyzico customer lookup result:", JSON.stringify(result));
+
+    if (result.status === "success" && result.data?.email) {
+      return result.data.email.toLowerCase().trim();
+    }
+  } catch (err) {
+    console.error("Iyzico customer lookup error:", err);
+  }
+
+  return null;
+}
+
 serve(async (req) => {
   console.log("=== Iyzico Callback Received ===");
   console.log("Method:", req.method);
@@ -23,13 +89,11 @@ serve(async (req) => {
     const rawBody = await req.text();
     console.log("Raw body (first 500 chars):", rawBody.substring(0, 500));
     
-    // Try to parse as JSON first, then as form-urlencoded
     if (rawBody) {
       try {
         body = JSON.parse(rawBody);
         console.log("Parsed as JSON");
       } catch {
-        // Try form-urlencoded
         try {
           const params = new URLSearchParams(rawBody);
           body = Object.fromEntries(params.entries());
@@ -41,7 +105,6 @@ serve(async (req) => {
       }
     }
     
-    // Also check query parameters (iyzico sometimes sends data as query params)
     const url = new URL(req.url);
     const queryParams = Object.fromEntries(url.searchParams.entries());
     if (Object.keys(queryParams).length > 0) {
@@ -51,21 +114,30 @@ serve(async (req) => {
     
     console.log("Parsed callback body:", JSON.stringify(body));
 
-    // Determine payment status - check multiple possible fields
+    // Determine payment status - check multiple possible fields including subscription events
+    const eventType = (body.iyziEventType || "").toLowerCase();
     const isSuccess = 
       body.status === "success" || 
       body.paymentStatus === "SUCCESS" ||
-      body.iyziEventType === "SUBSCRIPTION_ORDER_SUCCESS" ||
+      eventType === "subscription_order_success" ||
+      eventType === "subscription.order.success" ||
       body.orderStatus === "SUCCESS" ||
       body.status === "SUCCESS";
 
-    console.log("Payment success:", isSuccess);
+    console.log("Event type:", eventType, "| Payment success:", isSuccess);
 
     if (isSuccess) {
-      const customerEmail = (body.customerEmail || body.customer_email || "")?.toLowerCase().trim();
+      // Try to get email from body first, then from Iyzico API using customerReferenceCode
+      let customerEmail = (body.customerEmail || body.customer_email || "")?.toLowerCase().trim();
+      
+      if (!customerEmail && body.customerReferenceCode) {
+        console.log("No email in callback, fetching from Iyzico API with customerRef:", body.customerReferenceCode);
+        customerEmail = await getCustomerFromIyzico(body.customerReferenceCode);
+        console.log("Email from Iyzico API:", customerEmail);
+      }
+
       console.log("Başarılı ödeme - Email:", customerEmail);
 
-      // Auto-approve order in database
       if (customerEmail) {
         try {
           const supabaseAdmin = createClient(
@@ -73,7 +145,6 @@ serve(async (req) => {
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
           );
 
-          // Find pending order from last 48 hours
           const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
           
           const { data: pendingOrders, error: fetchError } = await supabaseAdmin
@@ -104,7 +175,7 @@ serve(async (req) => {
             if (updateError) {
               console.error("Sipariş onaylama hatası:", updateError);
             } else {
-              console.log(`✅ Sipariş otomatik onaylandı: ${order.customer_name} (${customerEmail}) - ${order.amount} TL`);
+              console.log(`✅ Sipariş otomatik onaylandı: ${order.customer_name} (${customerEmail}) - ${order.amount} TL - Ay ${order.subscription_month}`);
               
               // Auto-create invoice
               try {
@@ -126,7 +197,6 @@ serve(async (req) => {
           } else {
             console.log("⚠️ Bekleyen sipariş bulunamadı:", customerEmail);
             
-            // Try broader search without time limit
             const { data: allPending } = await supabaseAdmin
               .from('orders')
               .select('id, customer_name, customer_email, amount, created_at, status')
@@ -140,6 +210,8 @@ serve(async (req) => {
         } catch (dbError) {
           console.error("DB işlem hatası:", dbError);
         }
+      } else {
+        console.log("⚠️ Email bulunamadı, otomatik onay yapılamadı. Body:", JSON.stringify(body));
       }
 
       // Build redirect URL
