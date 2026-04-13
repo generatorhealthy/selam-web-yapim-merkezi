@@ -99,12 +99,14 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get ACTIVE subscriptions from Iyzico
-    const activeSubscriptions = await getAllSubscriptions(
-      IYZICO_API_KEY, IYZICO_SECRET_KEY, IYZICO_BASE_URL, "ACTIVE"
-    );
+    // Get subscriptions from Iyzico (ACTIVE + UNPAID)
+    const [activeSubscriptions, unpaidSubscriptions] = await Promise.all([
+      getAllSubscriptions(IYZICO_API_KEY, IYZICO_SECRET_KEY, IYZICO_BASE_URL, "ACTIVE"),
+      getAllSubscriptions(IYZICO_API_KEY, IYZICO_SECRET_KEY, IYZICO_BASE_URL, "UNPAID"),
+    ]);
 
-    console.log(`Found ${activeSubscriptions.length} active Iyzico subscriptions`);
+    const allSubscriptions = [...activeSubscriptions, ...unpaidSubscriptions];
+    console.log(`Found ${activeSubscriptions.length} active + ${unpaidSubscriptions.length} unpaid = ${allSubscriptions.length} total Iyzico subscriptions`);
 
     // Build sets of emails with successful/failed recent payments
     const successfulEmails = new Set<string>();
