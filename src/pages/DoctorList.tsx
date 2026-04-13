@@ -27,6 +27,7 @@ interface Specialist {
   face_to_face_consultation?: boolean;
   phone?: string;
   referral_count?: number;
+  slug?: string;
 }
 
 const DoctorList = () => {
@@ -247,8 +248,7 @@ const DoctorList = () => {
 
   const handleProfileClick = (specialist: Specialist) => {
     const specialtySlug = createSpecialtySlug(specialist.specialty);
-    const doctorSlug = createDoctorSlug(specialist.name);
-    navigate(`/${specialtySlug}/${doctorSlug}`);
+    navigate(`/${specialtySlug}/${specialist.slug}`);
   };
 
   if (loading) {
@@ -358,7 +358,6 @@ const DoctorList = () => {
             <div className="space-y-4 md:space-y-8">
               {displayedSpecialists.map((specialist) => {
                 const specialtySlug = createSpecialtySlug(specialist.specialty);
-                const doctorSlug = createDoctorSlug(specialist.name);
                 
                 return (
                   <Card key={specialist.id} className="bg-white border-0 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-2xl overflow-hidden animate-fade-in">

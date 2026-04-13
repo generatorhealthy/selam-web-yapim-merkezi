@@ -248,9 +248,9 @@ const Index = () => {
                             key={specialist.id}
                             className="p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-200"
                             onClick={() => {
-                              const doctorSlug = createDoctorSlug(specialist.name);
                               const specialtySlug = createSpecialtySlug(specialist.specialty);
-                              navigate(`/${specialtySlug}/${doctorSlug}`);
+                              navigate(`/${specialtySlug}/${specialist.slug}`);
+                              setShowResults(false);
                               setShowResults(false);
                             }}
                           >
