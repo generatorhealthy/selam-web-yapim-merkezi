@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Calendar, Star, Phone, MessageCircle, GraduationCap, CheckCircle, Award, FileText } from "lucide-react";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReviewForm from "@/components/ReviewForm";
@@ -124,6 +124,7 @@ const DoctorProfile = () => {
         specialty: foundSpecialist.specialty,
         profile_picture: foundSpecialist.profile_picture,
         city: foundSpecialist.city,
+        slug: foundSpecialist.slug,
       });
       
       // Fetch blog posts and reviews for this specialist
