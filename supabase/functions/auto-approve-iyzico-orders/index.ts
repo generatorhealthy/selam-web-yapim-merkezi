@@ -112,7 +112,7 @@ serve(async (req) => {
     const successfulEmails = new Set<string>();
     const failedEmails = new Set<string>();
 
-    for (const sub of activeSubscriptions) {
+    for (const sub of allSubscriptions) {
       const email = sub.customerEmail;
       if (!email) continue;
 
