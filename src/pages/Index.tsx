@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { supabase } from "@/integrations/supabase/client";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 import AppointmentWizard from "@/components/AppointmentWizard";
 
 // Lazy load below-fold content (reviews, how it works, specialists, footer)

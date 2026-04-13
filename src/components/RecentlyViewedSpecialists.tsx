@@ -71,7 +71,7 @@ const RecentlyViewedSpecialists = ({ currentSpecialistId }: { currentSpecialistI
               return (
                 <Link
                   key={s.id}
-                  to={`/${specialtySlug}/${doctorSlug}`}
+                  to={`/${specialtySlug}/${s.slug}`}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors shrink-0 group"
                 >
                   {s.profile_picture ? (

@@ -12,7 +12,7 @@ import { ArrowLeft, Save, ExternalLink, Copy } from "lucide-react";
 import { Link } from "react-router-dom";
 import FileUpload from "@/components/FileUpload";
 import FAQSection from "@/components/FAQSection";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 
 interface Specialist {
   id: string;
@@ -36,6 +36,7 @@ interface Specialist {
   is_active: boolean;
   profile_picture?: string;
   updated_at?: string;
+  slug?: string;
 }
 
 interface FAQItem {
@@ -158,7 +159,7 @@ const SpecialistEdit = () => {
   const copyLinkToClipboard = async () => {
     if (!specialist) return;
     
-    const link = generateProfileLink(specialist.name, specialist.specialty);
+    const link = generateProfileLink();
     try {
       await navigator.clipboard.writeText(link);
       toast({
@@ -338,7 +339,7 @@ const SpecialistEdit = () => {
     );
   }
 
-  const profileLink = generateProfileLink(specialist.name, specialist.specialty);
+  const profileLink = generateProfileLink();
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">

@@ -18,7 +18,7 @@ import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { sendAppointmentNotification, sendDoctorNotification } from "@/services/notificationService";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 
 const BookAppointment = () => {
   const { specialtySlug, doctorName } = useParams();
