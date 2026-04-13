@@ -5230,6 +5230,7 @@ export type Database = {
       }
       public_specialists: {
         Row: {
+          address_summary: string | null
           bio: string | null
           city: string | null
           consultation_fee: number | null
@@ -5248,6 +5249,7 @@ export type Database = {
           specialty: string | null
         }
         Insert: {
+          address_summary?: never
           bio?: string | null
           city?: string | null
           consultation_fee?: number | null
@@ -5266,6 +5268,7 @@ export type Database = {
           specialty?: string | null
         }
         Update: {
+          address_summary?: never
           bio?: string | null
           city?: string | null
           consultation_fee?: number | null
