@@ -226,7 +226,7 @@ const WhatsappManagement = () => {
     if (!silent) setMessagesLoading(true);
     const chatId = targetChat.id?._serialized || targetChat.id?.user + '@c.us' || '';
     try {
-      const res = await wahaApi('chats.messages', getSessionName(selectedLine), { chatId, limit: 50 });
+      const res = await wahaApi('chats.messages', getSessionName(selectedLine), { chatId, limit: 1000 });
       if (res.success && res.data) {
         const msgs = Array.isArray(res.data) ? res.data : [];
         msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
@@ -360,21 +360,21 @@ const WhatsappManagement = () => {
         <title>WhatsApp Destek - Divan Paneli</title>
       </Helmet>
 
-      <div className="fixed inset-0 bg-[#111b21] flex flex-col">
+      <div className="fixed inset-0 bg-[#f0f2f5] flex flex-col">
         {/* Top bar */}
-        <div className="h-12 bg-[#202c33] border-b border-[#313d45] flex items-center px-4 gap-3 flex-shrink-0 z-10">
+        <div className="h-12 bg-[#008069] flex items-center px-4 gap-3 flex-shrink-0 z-10">
           <AdminBackButton />
           <div className="flex items-center gap-2 ml-2">
             <div className="w-8 h-8 rounded-full bg-[#00a884] flex items-center justify-center">
               <MessageCircle className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-[#e9edef] text-sm font-semibold">WhatsApp Destek</h1>
+             <h1 className="text-white text-sm font-semibold">WhatsApp Destek</h1>
           </div>
           {selectedLine && (
             <div className="flex items-center gap-2 ml-4">
               <div className={`w-2 h-2 rounded-full ${connectionStatusColor}`} />
-              <span className="text-[#8696a0] text-xs">{connectionStatusText}</span>
-              <span className="text-[#8696a0] text-xs">• {selectedLine.label}</span>
+               <span className="text-white/80 text-xs">{connectionStatusText}</span>
+               <span className="text-white/80 text-xs">• {selectedLine.label}</span>
             </div>
           )}
           <div className="ml-auto flex items-center gap-1">
@@ -395,7 +395,7 @@ const WhatsappManagement = () => {
                 variant="ghost"
                 onClick={stopSession}
                 disabled={disconnecting}
-                className="text-red-400 hover:bg-[#313d45] h-8 text-xs gap-1"
+                className="text-white hover:bg-white/20 h-8 text-xs gap-1"
               >
                 {disconnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3 h-3" />}
                 Çıkış
@@ -407,39 +407,39 @@ const WhatsappManagement = () => {
         {/* Main content */}
         <div className="flex flex-1 overflow-hidden">
           {/* ===== LEFT SIDEBAR ===== */}
-          <div className="w-[360px] flex-shrink-0 flex flex-col border-r border-[#313d45] bg-[#111b21]">
+          <div className="w-[360px] flex-shrink-0 flex flex-col border-r border-[#e9edef] bg-white">
             
             {/* Line selector dropdown + actions */}
-            <div className="bg-[#202c33] px-3 py-2 flex items-center gap-2 border-b border-[#313d45]">
+            <div className="bg-[#f0f2f5] px-3 py-2 flex items-center gap-2 border-b border-[#e9edef]">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex-1 flex items-center gap-2 bg-[#2a3942] rounded-lg px-3 py-2 text-left hover:bg-[#313d45] transition-colors">
+                  <button className="flex-1 flex items-center gap-2 bg-[#f5f6f6] rounded-lg px-3 py-2 text-left hover:bg-[#e9edef] transition-colors">
                     <Phone className="w-4 h-4 text-[#00a884] flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[#e9edef] text-sm truncate">
+                      <p className="text-[#111b21] text-sm truncate">
                         {selectedLine ? selectedLine.label : 'Hat Seçin'}
                       </p>
                       {selectedLine && (
-                        <p className="text-[#8696a0] text-[10px]">{selectedLine.phone_number}</p>
+                        <p className="text-[#667781] text-[10px]">{selectedLine.phone_number}</p>
                       )}
                     </div>
-                    <ChevronDown className="w-4 h-4 text-[#8696a0] flex-shrink-0" />
+                    <ChevronDown className="w-4 h-4 text-[#667781] flex-shrink-0" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-[#233138] border-[#313d45] w-[320px]" align="start">
+                <DropdownMenuContent className="bg-white border-[#e9edef] w-[320px]" align="start">
                   {lines.map(line => (
                     <DropdownMenuItem
                       key={line.id}
                       onClick={() => setSelectedLine(line)}
-                      className={`text-[#e9edef] hover:bg-[#2a3942] cursor-pointer py-2.5 ${selectedLine?.id === line.id ? 'bg-[#2a3942]' : ''}`}
+                      className={`text-[#111b21] hover:bg-[#f5f6f6] cursor-pointer py-2.5 ${selectedLine?.id === line.id ? 'bg-[#f5f6f6]' : ''}`}
                     >
                       <div className="flex items-center gap-3 w-full">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${line.is_active ? 'bg-[#00a884]' : 'bg-[#3b4a54]'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${line.is_active ? 'bg-[#00a884]' : 'bg-[#dfe5e7]'}`}>
                           <Phone className="w-3.5 h-3.5 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm truncate">{line.label}</p>
-                          <p className="text-[#8696a0] text-xs">{line.phone_number}</p>
+                          <p className="text-[#667781] text-xs">{line.phone_number}</p>
                         </div>
                         {line.is_active && <span className="text-[10px] text-[#00a884]">● Aktif</span>}
                       </div>
@@ -447,10 +447,10 @@ const WhatsappManagement = () => {
                   ))}
                   {isAdmin && (
                     <>
-                      <DropdownMenuSeparator className="bg-[#313d45]" />
+                      <DropdownMenuSeparator className="bg-[#e9edef]" />
                       <DropdownMenuItem
                         onClick={() => setShowAddLineDialog(true)}
-                        className="text-[#00a884] hover:bg-[#2a3942] cursor-pointer"
+                        className="text-[#00a884] hover:bg-[#f5f6f6] cursor-pointer"
                       >
                         <Plus className="w-4 h-4 mr-2" /> Yeni Hat Ekle
                       </DropdownMenuItem>
@@ -463,24 +463,24 @@ const WhatsappManagement = () => {
               {isAdmin && selectedLine && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="p-2 rounded-lg hover:bg-[#313d45] text-[#aebac1]">
+                    <button className="p-2 rounded-lg hover:bg-[#e9edef] text-[#54656f]">
                       <MoreVertical className="w-4 h-4" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-[#233138] border-[#313d45]" align="end">
+                  <DropdownMenuContent className="bg-white border-[#e9edef]" align="end">
                     <DropdownMenuItem
                       onClick={() => {
                         setEditingLine(selectedLine);
                         setEditPhone(selectedLine.phone_number);
                         setEditLabel(selectedLine.label);
                       }}
-                      className="text-[#e9edef] hover:bg-[#2a3942] cursor-pointer"
+                      className="text-[#111b21] hover:bg-[#f5f6f6] cursor-pointer"
                     >
                       <Edit2 className="w-4 h-4 mr-2" /> Hattı Düzenle
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => deleteLine(selectedLine.id)}
-                      className="text-red-400 hover:bg-[#2a3942] cursor-pointer"
+                      className="text-red-400 hover:bg-[#f5f6f6] cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4 mr-2" /> Hattı Sil
                     </DropdownMenuItem>
@@ -492,7 +492,7 @@ const WhatsappManagement = () => {
               {sessionStatus === 'WORKING' && (
                 <button
                   onClick={() => setShowNewChatDialog(true)}
-                  className="p-2 rounded-lg hover:bg-[#313d45] text-[#00a884] flex-shrink-0"
+                  className="p-2 rounded-lg hover:bg-[#e9edef] text-[#00a884] flex-shrink-0"
                   title="Yeni Sohbet"
                 >
                   <UserPlus className="w-5 h-5" />
@@ -502,17 +502,17 @@ const WhatsappManagement = () => {
 
             {/* Search bar */}
             <div className="px-3 py-2">
-              <div className="flex items-center bg-[#202c33] rounded-lg px-3 py-2">
-                <Search className="w-4 h-4 text-[#8696a0] mr-3 flex-shrink-0" />
+              <div className="flex items-center bg-[#f0f2f5] rounded-lg px-3 py-2">
+                <Search className="w-4 h-4 text-[#667781] mr-3 flex-shrink-0" />
                 <input
                   type="text"
                   placeholder="Sohbet ara..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none w-full"
+                  className="bg-transparent text-[#111b21] text-sm placeholder:text-[#667781] outline-none w-full"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery("")} className="text-[#8696a0] hover:text-[#e9edef]">
+                  <button onClick={() => setSearchQuery("")} className="text-[#667781] hover:text-[#111b21]">
                     <X className="w-4 h-4" />
                   </button>
                 )}
@@ -535,25 +535,25 @@ const WhatsappManagement = () => {
                         <div
                           key={i}
                           onClick={() => openChat(chat)}
-                          className={`flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors border-b border-[#202c33] ${
-                            isActive ? 'bg-[#2a3942]' : 'hover:bg-[#202c33]'
+                          className={`flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors border-b border-[#f0f2f5] ${
+                            isActive ? 'bg-[#f5f6f6]' : 'hover:bg-[#f0f2f5]'
                           }`}
                         >
-                          <div className="w-12 h-12 rounded-full bg-[#6b7c85] flex items-center justify-center flex-shrink-0">
-                            <Users className="w-6 h-6 text-[#cfd6da]" />
+                          <div className="w-12 h-12 rounded-full bg-[#dfe5e7] flex items-center justify-center flex-shrink-0">
+                            <Users className="w-6 h-6 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <p className="text-[#e9edef] text-sm font-medium truncate">
+                              <p className="text-[#111b21] text-sm font-medium truncate">
                                 {chat.name || chat.id?.user || 'Bilinmeyen'}
                               </p>
-                              <span className="text-[#8696a0] text-[11px] flex-shrink-0 ml-2">
+                              <span className="text-[#667781] text-[11px] flex-shrink-0 ml-2">
                                 {lastMsgTime ? formatDate(lastMsgTime) : ''}
                               </span>
                             </div>
                             <div className="flex items-center gap-1 mt-0.5">
                               {chat.lastMessage?.fromMe && <CheckCheck className="w-3 h-3 text-[#53bdeb] flex-shrink-0" />}
-                              <p className="text-[#8696a0] text-xs truncate">
+                              <p className="text-[#667781] text-xs truncate">
                                 {chat.lastMessage?.body || ''}
                               </p>
                             </div>
@@ -569,7 +569,7 @@ const WhatsappManagement = () => {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-16 text-center px-6">
                       <MessageCircle className="w-12 h-12 text-[#3b4a54] mb-3" />
-                      <p className="text-[#8696a0] text-sm">
+                      <p className="text-[#667781] text-sm">
                         {searchQuery ? 'Sonuç bulunamadı' : 'Henüz sohbet yok'}
                       </p>
                       {!searchQuery && (
@@ -583,11 +583,11 @@ const WhatsappManagement = () => {
                     </div>
                   )}
                   {/* Refresh button */}
-                  <div className="px-3 py-2 border-t border-[#202c33]">
+                  <div className="px-3 py-2 border-t border-[#f0f2f5]">
                     <button
                       onClick={fetchChats}
                       disabled={chatsLoading}
-                      className="w-full flex items-center justify-center gap-2 py-2 text-[#8696a0] hover:text-[#e9edef] text-xs transition-colors"
+                      className="w-full flex items-center justify-center gap-2 py-2 text-[#667781] hover:text-[#111b21] text-xs transition-colors"
                     >
                       <RefreshCw className={`w-3 h-3 ${chatsLoading ? 'animate-spin' : ''}`} />
                       Sohbetleri Yenile
@@ -601,12 +601,12 @@ const WhatsappManagement = () => {
                   ) : !selectedLine ? (
                     <>
                       <Phone className="w-12 h-12 text-[#3b4a54] mb-3" />
-                      <p className="text-[#8696a0] text-sm">Yukarıdan bir hat seçin</p>
+                      <p className="text-[#667781] text-sm">Yukarıdan bir hat seçin</p>
                     </>
                   ) : (
                     <>
                       <Power className="w-12 h-12 text-[#3b4a54] mb-3" />
-                      <p className="text-[#8696a0] text-sm mb-3">Hat bağlı değil</p>
+                      <p className="text-[#667781] text-sm mb-3">Hat bağlı değil</p>
                       <Button
                         size="sm"
                         onClick={startSession}
@@ -624,34 +624,34 @@ const WhatsappManagement = () => {
           </div>
 
           {/* ===== RIGHT PANEL ===== */}
-          <div className="flex-1 flex flex-col bg-[#0b141a]" style={{
+          <div className="flex-1 flex flex-col bg-[#efeae2]" style={{
             backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'400\' height=\'400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cdefs%3E%3Cpattern id=\'p\' width=\'40\' height=\'40\' patternUnits=\'userSpaceOnUse\'%3E%3Cpath d=\'M20 0 L20 40 M0 20 L40 20\' stroke=\'%23ffffff\' stroke-width=\'0.3\' opacity=\'0.03\'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill=\'url(%23p)\' width=\'400\' height=\'400\'/%3E%3C/svg%3E")',
           }}>
             {activeChat ? (
               <>
                 {/* Chat header */}
-                <div className="bg-[#202c33] px-4 py-2 flex items-center justify-between border-b border-[#313d45] flex-shrink-0">
+                <div className="bg-[#f0f2f5] px-4 py-2 flex items-center justify-between border-b border-[#e9edef] flex-shrink-0">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => { setActiveChat(null); setChatMessages([]); }}
-                      className="p-1.5 rounded-full hover:bg-[#313d45] text-[#aebac1] lg:hidden"
+                      className="p-1.5 rounded-full hover:bg-[#e9edef] text-[#54656f] lg:hidden"
                     >
                       <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div className="w-10 h-10 rounded-full bg-[#6b7c85] flex items-center justify-center">
-                      <Users className="w-5 h-5 text-[#cfd6da]" />
+                    <div className="w-10 h-10 rounded-full bg-[#dfe5e7] flex items-center justify-center">
+                      <Users className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-[#e9edef] text-sm font-medium">
+                      <p className="text-[#111b21] text-sm font-medium">
                         {activeChat.name || activeChat.id?.user || 'Sohbet'}
                       </p>
-                      <p className="text-[#8696a0] text-xs">{activeChat.id?.user || ''}</p>
+                      <p className="text-[#667781] text-xs">{activeChat.id?.user || ''}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => fetchChatMessages(activeChat)}
-                      className="p-2 rounded-full hover:bg-[#313d45] text-[#aebac1]"
+                      className="p-2 rounded-full hover:bg-[#e9edef] text-[#54656f]"
                       title="Mesajları yenile"
                     >
                       <RefreshCw className={`w-4 h-4 ${messagesLoading ? 'animate-spin' : ''}`} />
@@ -676,18 +676,18 @@ const WhatsappManagement = () => {
                           <div key={i}>
                             {showDate && msg.timestamp && (
                               <div className="flex justify-center my-3">
-                                <span className="bg-[#182229] text-[#8696a0] text-[11px] px-3 py-1 rounded-lg shadow">
+                                <span className="bg-white/90 text-[#667781] text-[11px] px-3 py-1 rounded-lg shadow">
                                   {formatDate(msg.timestamp)}
                                 </span>
                               </div>
                             )}
                             <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                               <div className={`max-w-[65%] rounded-lg px-3 py-1.5 mb-0.5 shadow-sm ${
-                                isMe ? 'bg-[#005c4b] text-[#e9edef]' : 'bg-[#202c33] text-[#e9edef]'
+                                isMe ? 'bg-[#d9fdd3] text-[#111b21]' : 'bg-[#f0f2f5] text-[#111b21]'
                               }`}>
                                 <p className="text-[13px] whitespace-pre-wrap break-words leading-relaxed">{msg.body || ''}</p>
                                 <div className="flex items-center justify-end gap-1 mt-0.5">
-                                  <span className="text-[10px] text-[#8696a0]">
+                                  <span className="text-[10px] text-[#667781]">
                                     {msg.timestamp ? formatTime(msg.timestamp) : ''}
                                   </span>
                                   {isMe && <CheckCheck className="w-3.5 h-3.5 text-[#53bdeb]" />}
@@ -701,9 +701,9 @@ const WhatsappManagement = () => {
                   ) : (
                     <div className="flex items-center justify-center h-full">
                       <div className="text-center">
-                        <div className="bg-[#182229] rounded-xl px-6 py-4 shadow">
-                          <p className="text-[#8696a0] text-sm">Henüz mesaj yok</p>
-                          <p className="text-[#8696a0] text-xs mt-1">Aşağıdan mesaj yazarak sohbete başlayın</p>
+                        <div className="bg-white/90 rounded-xl px-6 py-4 shadow">
+                          <p className="text-[#667781] text-sm">Henüz mesaj yok</p>
+                          <p className="text-[#667781] text-xs mt-1">Aşağıdan mesaj yazarak sohbete başlayın</p>
                         </div>
                       </div>
                     </div>
@@ -712,9 +712,9 @@ const WhatsappManagement = () => {
                 </div>
 
                 {/* Message input */}
-                <div className="bg-[#202c33] px-4 py-2.5 border-t border-[#313d45] flex-shrink-0">
+                <div className="bg-[#f0f2f5] px-4 py-2.5 border-t border-[#e9edef] flex-shrink-0">
                   <div className="flex items-center gap-2">
-                    <button className="p-2 rounded-full hover:bg-[#313d45] text-[#8696a0] flex-shrink-0">
+                    <button className="p-2 rounded-full hover:bg-[#e9edef] text-[#667781] flex-shrink-0">
                       <Paperclip className="w-5 h-5" />
                     </button>
                     <div className="flex-1">
@@ -724,19 +724,19 @@ const WhatsappManagement = () => {
                         value={chatMessage}
                         onChange={(e) => setChatMessage(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
-                        className="w-full bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-4 py-2.5"
+                        className="w-full bg-[#f5f6f6] text-[#111b21] text-sm placeholder:text-[#667781] outline-none rounded-lg px-4 py-2.5"
                       />
                     </div>
                     {chatMessage.trim() ? (
                       <button
                         onClick={sendMessage}
                         disabled={sending}
-                        className="p-2 rounded-full hover:bg-[#313d45] text-[#00a884] flex-shrink-0"
+                        className="p-2 rounded-full hover:bg-[#e9edef] text-[#00a884] flex-shrink-0"
                       >
                         {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                       </button>
                     ) : (
-                      <button className="p-2 rounded-full hover:bg-[#313d45] text-[#8696a0] flex-shrink-0">
+                      <button className="p-2 rounded-full hover:bg-[#e9edef] text-[#667781] flex-shrink-0">
                         <Mic className="w-5 h-5" />
                       </button>
                     )}
@@ -747,12 +747,12 @@ const WhatsappManagement = () => {
               /* No active chat - QR or welcome */
               <div className="flex-1 flex items-center justify-center">
                 {(sessionStatus === 'SCAN_QR_CODE' || qrCode) && sessionStatus !== 'WORKING' ? (
-                  <div className="bg-[#202c33] rounded-2xl p-8 max-w-md w-full text-center shadow-xl">
+                  <div className="bg-[#f0f2f5] rounded-2xl p-8 max-w-md w-full text-center shadow-xl">
                     <div className="w-16 h-16 rounded-full bg-[#00a884] flex items-center justify-center mx-auto mb-4">
                       <QrCode className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-[#e9edef] text-xl font-light mb-2">QR Kod ile Bağlanın</h3>
-                    <p className="text-[#8696a0] text-sm mb-6">
+                    <h3 className="text-[#111b21] text-xl font-light mb-2">QR Kod ile Bağlanın</h3>
+                    <p className="text-[#667781] text-sm mb-6">
                       Telefonunuzda WhatsApp → Ayarlar → Bağlı Cihazlar → Cihaz Bağla
                     </p>
                     {qrCode ? (
@@ -766,7 +766,7 @@ const WhatsappManagement = () => {
                     ) : (
                       <div className="flex flex-col items-center gap-3 py-8">
                         <Loader2 className="w-10 h-10 animate-spin text-[#00a884]" />
-                        <p className="text-[#8696a0] text-sm">QR kod yükleniyor...</p>
+                        <p className="text-[#667781] text-sm">QR kod yükleniyor...</p>
                       </div>
                     )}
                     <button
@@ -778,11 +778,11 @@ const WhatsappManagement = () => {
                   </div>
                 ) : sessionStatus === 'WORKING' ? (
                   <div className="text-center">
-                    <div className="w-20 h-20 rounded-full bg-[#182229] flex items-center justify-center mx-auto mb-4">
+                    <div className="w-20 h-20 rounded-full bg-white/90 flex items-center justify-center mx-auto mb-4">
                       <MessageCircle className="w-10 h-10 text-[#3b4a54]" />
                     </div>
-                    <h2 className="text-[#e9edef] text-2xl font-light mb-2">WhatsApp Destek</h2>
-                    <p className="text-[#8696a0] text-sm max-w-sm mx-auto">
+                    <h2 className="text-[#111b21] text-2xl font-light mb-2">WhatsApp Destek</h2>
+                    <p className="text-[#667781] text-sm max-w-sm mx-auto">
                       Soldaki listeden bir sohbet seçin veya yeni sohbet başlatın
                     </p>
                     <button
@@ -794,11 +794,11 @@ const WhatsappManagement = () => {
                   </div>
                 ) : (
                   <div className="text-center">
-                    <div className="w-24 h-24 rounded-full bg-[#182229] flex items-center justify-center mx-auto mb-4">
+                    <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center mx-auto mb-4">
                       <MessageCircle className="w-12 h-12 text-[#3b4a54]" />
                     </div>
-                    <h2 className="text-[#e9edef] text-2xl font-light mb-2">WhatsApp Destek</h2>
-                    <p className="text-[#8696a0] text-sm max-w-sm mx-auto">
+                    <h2 className="text-[#111b21] text-2xl font-light mb-2">WhatsApp Destek</h2>
+                    <p className="text-[#667781] text-sm max-w-sm mx-auto">
                       {selectedLine 
                         ? 'Oturumu başlatmak için üstteki "Bağlan" butonuna tıklayın'
                         : 'Sol üstten bir hat seçerek başlayın'
@@ -814,44 +814,44 @@ const WhatsappManagement = () => {
 
       {/* New Chat Dialog */}
       <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
-        <DialogContent className="bg-[#233138] border-[#313d45] text-[#e9edef] max-w-sm">
+        <DialogContent className="bg-white border-[#e9edef] text-[#111b21] max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-[#e9edef] flex items-center gap-2">
+            <DialogTitle className="text-[#111b21] flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-[#00a884]" />
               Yeni Sohbet Başlat
             </DialogTitle>
-            <DialogDescription className="text-[#8696a0]">
+            <DialogDescription className="text-[#667781]">
               Müşteri bilgilerini girerek sohbet başlatın
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 mt-2">
             <div>
-              <label className="text-[#8696a0] text-xs mb-1 block">Ad</label>
+              <label className="text-[#667781] text-xs mb-1 block">Ad</label>
               <Input
                 placeholder="Müşteri adı"
                 value={newChatName}
                 onChange={(e) => setNewChatName(e.target.value)}
-                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+                className="bg-[#f5f6f6] border-[#e9edef] text-[#111b21] placeholder:text-[#667781] focus:border-[#00a884]"
               />
             </div>
             <div>
-              <label className="text-[#8696a0] text-xs mb-1 block">Soyad</label>
+              <label className="text-[#667781] text-xs mb-1 block">Soyad</label>
               <Input
                 placeholder="Müşteri soyadı"
                 value={newChatSurname}
                 onChange={(e) => setNewChatSurname(e.target.value)}
-                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+                className="bg-[#f5f6f6] border-[#e9edef] text-[#111b21] placeholder:text-[#667781] focus:border-[#00a884]"
               />
             </div>
             <div>
-              <label className="text-[#8696a0] text-xs mb-1 block">Telefon Numarası *</label>
+              <label className="text-[#667781] text-xs mb-1 block">Telefon Numarası *</label>
               <Input
                 placeholder="905XXXXXXXXX"
                 value={newChatPhone}
                 onChange={(e) => setNewChatPhone(e.target.value)}
-                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+                className="bg-[#f5f6f6] border-[#e9edef] text-[#111b21] placeholder:text-[#667781] focus:border-[#00a884]"
               />
-              <p className="text-[#8696a0] text-[10px] mt-1">Ülke kodu ile birlikte girin (örn: 905XX)</p>
+              <p className="text-[#667781] text-[10px] mt-1">Ülke kodu ile birlikte girin (örn: 905XX)</p>
             </div>
             <Button
               onClick={startNewChat}
@@ -866,33 +866,33 @@ const WhatsappManagement = () => {
 
       {/* Add Line Dialog */}
       <Dialog open={showAddLineDialog} onOpenChange={setShowAddLineDialog}>
-        <DialogContent className="bg-[#233138] border-[#313d45] text-[#e9edef] max-w-sm">
+        <DialogContent className="bg-white border-[#e9edef] text-[#111b21] max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-[#e9edef] flex items-center gap-2">
+            <DialogTitle className="text-[#111b21] flex items-center gap-2">
               <Plus className="w-5 h-5 text-[#00a884]" />
               Yeni Hat Ekle
             </DialogTitle>
-            <DialogDescription className="text-[#8696a0]">
+            <DialogDescription className="text-[#667781]">
               WhatsApp hattı bilgilerini girin
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 mt-2">
             <div>
-              <label className="text-[#8696a0] text-xs mb-1 block">Hat Adı</label>
+              <label className="text-[#667781] text-xs mb-1 block">Hat Adı</label>
               <Input
                 placeholder="Örn: Destek Hattı 1"
                 value={newLabel}
                 onChange={(e) => setNewLabel(e.target.value)}
-                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+                className="bg-[#f5f6f6] border-[#e9edef] text-[#111b21] placeholder:text-[#667781] focus:border-[#00a884]"
               />
             </div>
             <div>
-              <label className="text-[#8696a0] text-xs mb-1 block">Telefon Numarası</label>
+              <label className="text-[#667781] text-xs mb-1 block">Telefon Numarası</label>
               <Input
                 placeholder="905XXXXXXXXX"
                 value={newPhone}
                 onChange={(e) => setNewPhone(e.target.value)}
-                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+                className="bg-[#f5f6f6] border-[#e9edef] text-[#111b21] placeholder:text-[#667781] focus:border-[#00a884]"
               />
             </div>
             <Button
@@ -909,31 +909,31 @@ const WhatsappManagement = () => {
 
       {/* Edit Line Dialog */}
       <Dialog open={!!editingLine} onOpenChange={(open) => !open && setEditingLine(null)}>
-        <DialogContent className="bg-[#233138] border-[#313d45] text-[#e9edef] max-w-sm">
+        <DialogContent className="bg-white border-[#e9edef] text-[#111b21] max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-[#e9edef] flex items-center gap-2">
+            <DialogTitle className="text-[#111b21] flex items-center gap-2">
               <Edit2 className="w-5 h-5 text-[#00a884]" />
               Hattı Düzenle
             </DialogTitle>
-            <DialogDescription className="text-[#8696a0]">
+            <DialogDescription className="text-[#667781]">
               Hat bilgilerini güncelleyin
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 mt-2">
             <div>
-              <label className="text-[#8696a0] text-xs mb-1 block">Hat Adı</label>
+              <label className="text-[#667781] text-xs mb-1 block">Hat Adı</label>
               <Input
                 value={editLabel}
                 onChange={(e) => setEditLabel(e.target.value)}
-                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] focus:border-[#00a884]"
+                className="bg-[#f5f6f6] border-[#e9edef] text-[#111b21] focus:border-[#00a884]"
               />
             </div>
             <div>
-              <label className="text-[#8696a0] text-xs mb-1 block">Telefon Numarası</label>
+              <label className="text-[#667781] text-xs mb-1 block">Telefon Numarası</label>
               <Input
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
-                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] focus:border-[#00a884]"
+                className="bg-[#f5f6f6] border-[#e9edef] text-[#111b21] focus:border-[#00a884]"
               />
             </div>
             <Button
