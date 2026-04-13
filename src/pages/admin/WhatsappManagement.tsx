@@ -77,6 +77,7 @@ const WhatsappManagement = () => {
 
   // New chat dialog
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [profilePics, setProfilePics] = useState<Record<string, string>>({});
   const [newChatName, setNewChatName] = useState("");
   const [newChatSurname, setNewChatSurname] = useState("");
   const [newChatPhone, setNewChatPhone] = useState("");
@@ -213,10 +214,31 @@ const WhatsappManagement = () => {
     try {
       const res = await wahaApi('chats.list', getSessionName(selectedLine));
       if (res.success && res.data) {
-        setChats(Array.isArray(res.data) ? res.data.slice(0, 50) : []);
+        const chatList = Array.isArray(res.data) ? res.data.slice(0, 50) : [];
+        setChats(chatList);
+        // Fetch profile pictures for all chats
+        chatList.forEach((chat: any) => {
+          const contactId = chat.id?._serialized || (chat.id?.user ? chat.id.user + '@c.us' : '');
+          if (contactId && !profilePics[contactId]) {
+            fetchProfilePic(contactId);
+          }
+        });
       }
     } catch {}
     setChatsLoading(false);
+  };
+
+  const fetchProfilePic = async (contactId: string) => {
+    if (!selectedLine || profilePics[contactId]) return;
+    try {
+      const res = await wahaApi('contacts.profile-picture', getSessionName(selectedLine), { contactId });
+      if (res.success && res.data) {
+        const picUrl = typeof res.data === 'string' ? res.data : res.data?.profilePictureUrl || res.data?.url || res.data?.profilePicUrl || null;
+        if (picUrl) {
+          setProfilePics(prev => ({ ...prev, [contactId]: picUrl }));
+        }
+      }
+    } catch {}
   };
 
   const fetchChatMessages = async (chat?: any, silent = false) => {
