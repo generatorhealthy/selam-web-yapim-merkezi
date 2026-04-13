@@ -1,0 +1,1 @@
+UPDATE orders SET payment_status = 'failed' WHERE id IN ('45d7a7dc-1835-463e-b806-076ae6560a17', 'cbac3aba-023f-42fe-aa7e-8be77d6b6602', '89be8952-a864-4c2d-b07e-c998eea27a7f') AND status = 'pending';
