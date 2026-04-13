@@ -53,6 +53,7 @@ interface Order {
   invoice_sent?: boolean;
   invoice_number?: string | null;
   invoice_date?: string | null;
+  payment_status?: string | null;
 }
 
 
@@ -1547,6 +1548,12 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                    order.status === 'approved' ? 'Onaylanan' :
                                    order.status === 'completed' ? 'Tamamlanan' : 'İptal'}
                                 </Badge>
+                                {order.payment_status === 'failed' && (
+                                  <Badge variant="destructive" className="flex items-center gap-1 font-medium text-xs bg-red-600">
+                                    <XCircle className="w-3 h-3" />
+                                    Ödeme Başarısız
+                                  </Badge>
+                                )}
                               </div>
                               {order.subscription_month ? (
                                 <Badge variant="outline" className="font-medium text-xs">{order.subscription_month}. Ay</Badge>
