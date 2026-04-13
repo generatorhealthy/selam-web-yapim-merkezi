@@ -63,10 +63,12 @@ interface BlogPost {
 
 interface Review {
   id: string;
-  reviewer_display_name: string; // SECURITY: Use display name instead of real name
+  reviewer_name: string;
   rating: number;
   comment: string;
   created_at: string;
+  specialist_name?: string;
+  specialist_specialty?: string;
 }
 
 const DoctorProfile = () => {
