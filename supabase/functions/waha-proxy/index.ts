@@ -223,6 +223,9 @@ Deno.serve(async (req) => {
       case 'contacts.list':
         endpoint = `/api/contacts?session=${sessionName}`;
         break;
+      case 'contacts.profile-picture':
+        endpoint = `/api/contacts/profile-picture?contactId=${payload.contactId}&session=${sessionName}`;
+        break;
       default:
         return respond({ success: false, error: `Unknown action: ${action}` });
     }
