@@ -69,6 +69,80 @@ const respond = (payload: Record<string, unknown>) =>
     headers: jsonHeaders,
   });
 
+const parseResponse = async (response: Response) => {
+  const text = await response.text();
+  const data = (() => {
+    try {
+      return text ? JSON.parse(text) : null;
+    } catch {
+      return text || null;
+    }
+  })();
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    text,
+    data,
+  };
+};
+
+const getErrorMessage = (data: unknown, fallbackText = '', status = 500) => {
+  if (typeof data === 'object' && data !== null) {
+    const record = data as Record<string, unknown>;
+    const exception = record.exception as Record<string, unknown> | undefined;
+    const message = record.message ?? record.error ?? exception?.message;
+
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+  }
+
+  if (typeof data === 'string' && data.trim()) {
+    return data;
+  }
+
+  if (fallbackText.trim()) {
+    return fallbackText;
+  }
+
+  return `WAHA request failed with status ${status}`;
+};
+
+const normalizePicturePayload = (data: unknown) => {
+  if (typeof data === 'string') {
+    return { url: data, profilePictureURL: data };
+  }
+
+  if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>;
+    const pictureUrl = record.profilePictureURL ?? record.profilePictureUrl ?? record.profilePicUrl ?? record.url ?? record.picture ?? null;
+
+    return {
+      ...record,
+      url: typeof pictureUrl === 'string' ? pictureUrl : null,
+      profilePictureURL: typeof pictureUrl === 'string' ? pictureUrl : null,
+    };
+  }
+
+  return {
+    url: null,
+    profilePictureURL: null,
+  };
+};
+
+const fetchWahaResult = async (wahaUrl: string, endpoint: string, options: RequestInit) => {
+  console.log(`WAHA Proxy: ${options.method ?? 'GET'} ${wahaUrl}${endpoint}`);
+  const response = await fetch(`${wahaUrl}${endpoint}`, options);
+  const parsed = await parseResponse(response);
+
+  return {
+    endpoint,
+    response,
+    ...parsed,
+  };
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -217,34 +291,127 @@ Deno.serve(async (req) => {
       case 'chats.list':
         endpoint = `/api/${sessionName}/chats`;
         break;
-      case 'chats.messages':
-        {
-          const safeLimit = Math.min(Math.max(Number(payload?.limit) || 50, 1), 100);
-          const params = new URLSearchParams({ limit: String(safeLimit) });
-          const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
-          const encodedChatId = encodeURIComponent(String(payload?.chatId ?? ''));
+      case 'chats.messages': {
+        const safeLimit = Math.min(Math.max(Number(payload?.limit) || 50, 1), 100);
+        const mergeValue = typeof payload?.merge === 'boolean' ? payload.merge : true;
+        const downloadMediaValue = typeof payload?.downloadMedia === 'boolean' ? payload.downloadMedia : false;
+        const sortByValue = String(payload?.sortBy ?? 'timestamp');
+        const sortOrderValue = String(payload?.sortOrder ?? 'asc');
+        const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
+        const encodedChatId = encodeURIComponent(String(payload?.chatId ?? ''));
 
+        const appendOptionalParams = (params: URLSearchParams) => {
           if (typeof payload?.offset === 'number' && Number.isFinite(payload.offset) && payload.offset >= 0) {
             params.set('offset', String(payload.offset));
           }
 
-          if (typeof payload?.downloadMedia === 'boolean') {
-            params.set('downloadMedia', String(payload.downloadMedia));
+          const filterTimestampLte = payload?.['filter.timestamp.lte'];
+          if (typeof filterTimestampLte === 'number' && Number.isFinite(filterTimestampLte)) {
+            params.set('filter.timestamp.lte', String(filterTimestampLte));
           }
 
-          if (typeof payload?.merge === 'boolean') {
-            params.set('merge', String(payload.merge));
+          const filterTimestampGte = payload?.['filter.timestamp.gte'];
+          if (typeof filterTimestampGte === 'number' && Number.isFinite(filterTimestampGte)) {
+            params.set('filter.timestamp.gte', String(filterTimestampGte));
           }
 
-          endpoint = `/api/${encodedSessionName}/chats/${encodedChatId}/messages?${params.toString()}`;
+          if (typeof payload?.['filter.fromMe'] === 'boolean') {
+            params.set('filter.fromMe', String(payload['filter.fromMe']));
+          }
+
+          if (typeof payload?.['filter.ack'] === 'string' && payload['filter.ack'].trim()) {
+            params.set('filter.ack', payload['filter.ack']);
+          }
+        };
+
+        const primaryParams = new URLSearchParams({
+          limit: String(safeLimit),
+          downloadMedia: String(downloadMediaValue),
+          merge: String(mergeValue),
+          sortBy: sortByValue,
+          sortOrder: sortOrderValue,
+        });
+        appendOptionalParams(primaryParams);
+
+        const legacyParams = new URLSearchParams({
+          chatId: String(payload?.chatId ?? ''),
+          session: String(sessionName ?? ''),
+          limit: String(safeLimit),
+          downloadMedia: String(downloadMediaValue),
+          merge: String(mergeValue),
+          sortBy: sortByValue,
+          sortOrder: sortOrderValue,
+        });
+        appendOptionalParams(legacyParams);
+
+        const candidateEndpoints = [
+          `/api/${encodedSessionName}/chats/${encodedChatId}/messages?${primaryParams.toString()}`,
+          `/api/messages?${legacyParams.toString()}`,
+        ];
+
+        let lastFailure: Awaited<ReturnType<typeof fetchWahaResult>> | null = null;
+
+        for (const candidateEndpoint of candidateEndpoints) {
+          const result = await fetchWahaResult(wahaUrl, candidateEndpoint, { method: 'GET', headers });
+          if (result.ok) {
+            return respond({ success: true, status: result.status, data: result.data });
+          }
+          lastFailure = result;
         }
-        break;
+
+        return respond({
+          success: false,
+          status: lastFailure?.status ?? 500,
+          data: lastFailure?.data ?? null,
+          error: getErrorMessage(lastFailure?.data, lastFailure?.text ?? '', lastFailure?.status ?? 500),
+        });
+      }
       case 'contacts.list':
         endpoint = `/api/contacts?session=${sessionName}`;
         break;
-      case 'contacts.profile-picture':
-        endpoint = `/api/contacts/profile-picture?contactId=${encodeURIComponent(String(payload?.contactId ?? ''))}&session=${encodeURIComponent(String(sessionName ?? ''))}`;
-        break;
+      case 'contacts.profile-picture': {
+        const contactIds = (Array.isArray(payload?.contactIds) ? payload.contactIds : [payload?.contactId])
+          .map((value) => String(value ?? '').trim())
+          .filter(Boolean);
+        const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
+
+        let lastFailure: Awaited<ReturnType<typeof fetchWahaResult>> | null = null;
+        let emptySuccess: { status: number; data: Record<string, unknown> } | null = null;
+
+        for (const contactId of contactIds) {
+          const encodedContactId = encodeURIComponent(contactId);
+          const candidateEndpoints = [
+            `/api/contacts/profile-picture?contactId=${encodedContactId}&session=${encodedSessionName}`,
+            `/api/${encodedSessionName}/chats/${encodedContactId}/picture`,
+          ];
+
+          for (const candidateEndpoint of candidateEndpoints) {
+            const result = await fetchWahaResult(wahaUrl, candidateEndpoint, { method: 'GET', headers });
+
+            if (result.ok) {
+              const data = normalizePicturePayload(result.data);
+              if (data.profilePictureURL || data.url) {
+                return respond({ success: true, status: result.status, data });
+              }
+              emptySuccess = { status: result.status, data };
+              continue;
+            }
+
+            lastFailure = result;
+          }
+        }
+
+        if (emptySuccess) {
+          return respond({ success: true, status: emptySuccess.status, data: emptySuccess.data });
+        }
+
+        return respond({
+          success: false,
+          status: lastFailure?.status ?? 500,
+          data: lastFailure?.data ?? null,
+          error: getErrorMessage(lastFailure?.data, lastFailure?.text ?? '', lastFailure?.status ?? 500),
+        });
+      }
       default:
         return respond({ success: false, error: `Unknown action: ${action}` });
     }
@@ -252,22 +419,13 @@ Deno.serve(async (req) => {
     const fetchOptions: RequestInit = { method, headers };
     if (body) fetchOptions.body = body;
 
-    console.log(`WAHA Proxy: ${method} ${wahaUrl}${endpoint}`);
-    const response = await fetch(`${wahaUrl}${endpoint}`, fetchOptions);
-    const text = await response.text();
-    const data = (() => {
-      try {
-        return text ? JSON.parse(text) : null;
-      } catch {
-        return text || null;
-      }
-    })();
+    const result = await fetchWahaResult(wahaUrl, endpoint, fetchOptions);
 
     return respond({
-      success: response.ok,
-      status: response.status,
-      data,
-      error: response.ok ? null : (typeof data === 'object' && data !== null ? (data as Record<string, unknown>).message ?? (data as Record<string, unknown>).error : data) || `WAHA request failed with status ${response.status}`,
+      success: result.ok,
+      status: result.status,
+      data: result.data,
+      error: result.ok ? null : getErrorMessage(result.data, result.text, result.status),
     });
   } catch (error) {
     console.error('WAHA Proxy error:', error);
