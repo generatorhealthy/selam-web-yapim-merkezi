@@ -65,17 +65,7 @@ export default function MobileHome() {
 
       // Fetch reviews
       const { data: reviewsData } = await supabase
-        .from('reviews')
-        .select(`
-          id, specialist_id, reviewer_name, rating, comment, status, created_at,
-          specialists (
-            name,
-            specialty
-          )
-        `)
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .rpc('get_public_reviews', { p_limit: 5 });
 
       // Fetch specialists - randomize on every load
       const { data: specialistsData } = await supabase
