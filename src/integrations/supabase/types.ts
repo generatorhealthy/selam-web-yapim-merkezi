@@ -5230,100 +5230,58 @@ export type Database = {
       }
       public_specialists: {
         Row: {
-          available_days: string[] | null
-          available_time_slots: Json | null
           bio: string | null
-          certifications: string | null
           city: string | null
           consultation_fee: number | null
           consultation_type: string | null
-          created_at: string | null
           education: string | null
           experience: number | null
           face_to_face_consultation: boolean | null
-          faq: string | null
           hospital: string | null
           id: string | null
-          is_active: boolean | null
           name: string | null
           online_consultation: boolean | null
           profile_picture: string | null
           rating: number | null
-          registration_source: string | null
           reviews_count: number | null
-          seo_description: string | null
-          seo_keywords: string | null
-          seo_title: string | null
+          slug: string | null
           specialty: string | null
-          university: string | null
-          updated_at: string | null
-          user_id: string | null
-          working_hours_end: string | null
-          working_hours_start: string | null
         }
         Insert: {
-          available_days?: string[] | null
-          available_time_slots?: Json | null
           bio?: string | null
-          certifications?: string | null
           city?: string | null
           consultation_fee?: number | null
           consultation_type?: string | null
-          created_at?: string | null
           education?: string | null
           experience?: number | null
           face_to_face_consultation?: boolean | null
-          faq?: string | null
           hospital?: string | null
           id?: string | null
-          is_active?: boolean | null
           name?: string | null
           online_consultation?: boolean | null
           profile_picture?: string | null
           rating?: number | null
-          registration_source?: string | null
           reviews_count?: number | null
-          seo_description?: string | null
-          seo_keywords?: string | null
-          seo_title?: string | null
+          slug?: string | null
           specialty?: string | null
-          university?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          working_hours_end?: string | null
-          working_hours_start?: string | null
         }
         Update: {
-          available_days?: string[] | null
-          available_time_slots?: Json | null
           bio?: string | null
-          certifications?: string | null
           city?: string | null
           consultation_fee?: number | null
           consultation_type?: string | null
-          created_at?: string | null
           education?: string | null
           experience?: number | null
           face_to_face_consultation?: boolean | null
-          faq?: string | null
           hospital?: string | null
           id?: string | null
-          is_active?: boolean | null
           name?: string | null
           online_consultation?: boolean | null
           profile_picture?: string | null
           rating?: number | null
-          registration_source?: string | null
           reviews_count?: number | null
-          seo_description?: string | null
-          seo_keywords?: string | null
-          seo_title?: string | null
+          slug?: string | null
           specialty?: string | null
-          university?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          working_hours_end?: string | null
-          working_hours_start?: string | null
         }
         Relationships: []
       }
@@ -5453,17 +5411,13 @@ export type Database = {
         Args: never
         Returns: {
           address_summary: string
-          available_days: string[]
           bio: string
-          certifications: string
           city: string
           consultation_fee: number
           consultation_type: string
-          created_at: string
           education: string
           experience: number
           face_to_face_consultation: boolean
-          faq: string
           hospital: string
           id: string
           name: string
@@ -5471,14 +5425,8 @@ export type Database = {
           profile_picture: string
           rating: number
           reviews_count: number
-          seo_description: string
-          seo_keywords: string
-          seo_title: string
+          slug: string
           specialty: string
-          university: string
-          updated_at: string
-          working_hours_end: string
-          working_hours_start: string
         }[]
       }
       is_admin_or_staff_user: { Args: never; Returns: boolean }
