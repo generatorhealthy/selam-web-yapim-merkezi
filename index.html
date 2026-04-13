@@ -112,7 +112,57 @@
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="/og-image.png" />
-    
+
+    <!-- Schema.org Structured Data: Organization + WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.dokturumol.com/#organization",
+          "name": "Doktorum Ol",
+          "url": "https://www.dokturumol.com",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.dokturumol.com/lovable-uploads/3db3e51c-c5db-4938-a759-095d2948086b.png"
+          },
+          "description": "Doktorum Ol ile psikologdan aile danışmanına birçok branşta uzmanı bul, online ya da yüz yüze kolayca randevu al.",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer service",
+            "availableLanguage": ["Turkish"]
+          },
+          "sameAs": []
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.dokturumol.com/#website",
+          "url": "https://www.dokturumol.com",
+          "name": "Doktorum Ol Randevu Sitesi",
+          "publisher": { "@id": "https://www.dokturumol.com/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.dokturumol.com/uzmanlar?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "MedicalBusiness",
+          "@id": "https://www.dokturumol.com/#business",
+          "name": "Doktorum Ol",
+          "url": "https://www.dokturumol.com",
+          "description": "Online ve yüz yüze psikolog, aile danışmanı, diyetisyen ve daha birçok branşta uzman randevu platformu.",
+          "medicalSpecialty": ["Psychology", "Psychiatry", "Dietetics", "Gynecology"],
+          "areaServed": {
+            "@type": "Country",
+            "name": "Turkey"
+          }
+        }
+      ]
+    }
+    </script>
+
     <!-- Main app script loaded as module -->
     
     <!-- Google tag (gtag.js) - Google Analytics & Ads -->
@@ -156,14 +206,41 @@
     <div id="root">
       <!-- Static LCP content + loading skeleton for fastest paint -->
       <div id="loading-skeleton">
-        <!-- Static hero matching React hero - this IS the LCP element -->
-        <div style="background: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(250 95% 64%) 50%, hsl(280 87% 55%) 100%); padding: 3rem 1rem; text-align: center; min-height: 320px; display: flex; align-items: center; justify-content: center;">
+      <!-- Static hero matching React hero - this IS the LCP element -->
+        <div style="background: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(250 95% 64%) 50%, hsl(280 87% 55%) 100%); padding: 3rem 1rem; text-align: center; min-height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
           <h1 style="font-size: clamp(1.875rem, 4vw, 3rem); font-weight: 700; color: white; letter-spacing: -0.025em; margin: 0; line-height: 1.2;">
             Doktorum Ol Randevu Sitesi
           </h1>
+          <p style="color: rgba(255,255,255,0.9); font-size: 1.125rem; max-width: 600px; margin: 0;">
+            Psikologdan aile danışmanına birçok branşta uzmanı bul, online ya da yüz yüze kolayca randevu al.
+          </p>
         </div>
-        <!-- Skeleton cards below hero -->
-        <div style="padding: 2rem; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Static content for SEO & LLM readability -->
+        <main style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
+          <section>
+            <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: #1e293b;">Popüler Uzmanlık Alanları</h2>
+            <nav aria-label="Uzmanlık alanları">
+              <ul style="display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; margin: 0 0 2rem 0;">
+                <li><a href="/uzmanlik/psikolog" style="color: #4f46e5; text-decoration: none;">Psikolog</a></li>
+                <li><a href="/uzmanlik/psikolojik-danismanlik" style="color: #4f46e5; text-decoration: none;">Psikolojik Danışmanlık</a></li>
+                <li><a href="/uzmanlik/aile-danismani" style="color: #4f46e5; text-decoration: none;">Aile Danışmanı</a></li>
+                <li><a href="/uzmanlik/psikiyatri" style="color: #4f46e5; text-decoration: none;">Psikiyatri</a></li>
+                <li><a href="/uzmanlik/diyetisyen" style="color: #4f46e5; text-decoration: none;">Diyetisyen</a></li>
+                <li><a href="/uzmanlik/klinik-psikolog" style="color: #4f46e5; text-decoration: none;">Klinik Psikolog</a></li>
+              </ul>
+            </nav>
+          </section>
+          <section>
+            <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: #1e293b;">Nasıl Çalışır?</h2>
+            <ol style="padding-left: 1.25rem; color: #475569; line-height: 2;">
+              <li>Branş veya uzman adına göre arama yapın</li>
+              <li>Size uygun uzmanı seçin ve profilini inceleyin</li>
+              <li>Online veya yüz yüze randevu alın</li>
+            </ol>
+          </section>
+        </main>
+        <!-- Skeleton cards -->
+        <div style="padding: 0 2rem 2rem; max-width: 1200px; margin: 0 auto;">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
             <div class="loading-skeleton" style="height: 200px; border-radius: 16px;"></div>
             <div class="loading-skeleton" style="height: 200px; border-radius: 16px;"></div>
