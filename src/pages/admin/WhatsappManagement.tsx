@@ -362,19 +362,19 @@ const WhatsappManagement = () => {
 
       <div className="fixed inset-0 bg-[#f0f2f5] flex flex-col">
         {/* Top bar */}
-        <div className="h-12 bg-[#f0f2f5] border-b border-[#e9edef] flex items-center px-4 gap-3 flex-shrink-0 z-10">
+        <div className="h-12 bg-[#008069] flex items-center px-4 gap-3 flex-shrink-0 z-10">
           <AdminBackButton />
           <div className="flex items-center gap-2 ml-2">
             <div className="w-8 h-8 rounded-full bg-[#00a884] flex items-center justify-center">
               <MessageCircle className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-[#111b21] text-sm font-semibold">WhatsApp Destek</h1>
+             <h1 className="text-white text-sm font-semibold">WhatsApp Destek</h1>
           </div>
           {selectedLine && (
             <div className="flex items-center gap-2 ml-4">
               <div className={`w-2 h-2 rounded-full ${connectionStatusColor}`} />
-              <span className="text-[#667781] text-xs">{connectionStatusText}</span>
-              <span className="text-[#667781] text-xs">• {selectedLine.label}</span>
+               <span className="text-white/80 text-xs">{connectionStatusText}</span>
+               <span className="text-white/80 text-xs">• {selectedLine.label}</span>
             </div>
           )}
           <div className="ml-auto flex items-center gap-1">
@@ -395,7 +395,7 @@ const WhatsappManagement = () => {
                 variant="ghost"
                 onClick={stopSession}
                 disabled={disconnecting}
-                className="text-red-400 hover:bg-[#e9edef] h-8 text-xs gap-1"
+                className="text-white hover:bg-white/20 h-8 text-xs gap-1"
               >
                 {disconnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3 h-3" />}
                 Çıkış
