@@ -153,21 +153,13 @@ serve(async (req) => {
       failedEmails.delete(email);
     }
 
-    console.log(`Found ${successfulEmails.size} emails with recent successful payments`);
+    console.log(`Found ${successfulEmails.size} emails with recent successful payments, ${failedEmails.size} with failed payments`);
 
-    if (successfulEmails.size === 0) {
-      return new Response(
-        JSON.stringify({ success: true, message: 'No recent successful payments found', approved: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Find pending orders for these emails and auto-approve
+    // Find pending orders for successful emails and auto-approve
     let approvedCount = 0;
-    let alreadyApprovedCount = 0;
+    let failedMarkedCount = 0;
 
     for (const email of successfulEmails) {
-      // Find pending orders for this email (created in last 48 hours)
       const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
       const { data: pendingOrders, error: fetchError } = await supabaseAdmin
@@ -184,11 +176,8 @@ serve(async (req) => {
         continue;
       }
 
-      if (!pendingOrders || pendingOrders.length === 0) {
-        continue;
-      }
+      if (!pendingOrders || pendingOrders.length === 0) continue;
 
-      // Approve the most recent pending order
       const orderToApprove = pendingOrders[0];
 
       const { error: updateError } = await supabaseAdmin
@@ -197,6 +186,7 @@ serve(async (req) => {
           status: 'approved',
           approved_at: new Date().toISOString(),
           payment_method: 'credit_card',
+          payment_status: 'success',
         })
         .eq('id', orderToApprove.id);
 
@@ -208,11 +198,43 @@ serve(async (req) => {
       }
     }
 
+    // Mark failed payment orders
+    for (const email of failedEmails) {
+      const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+
+      const { data: pendingOrders, error: fetchError } = await supabaseAdmin
+        .from('orders')
+        .select('id, customer_name, payment_status')
+        .eq('customer_email', email)
+        .eq('status', 'pending')
+        .is('deleted_at', null)
+        .gte('created_at', twoDaysAgo)
+        .order('created_at', { ascending: false });
+
+      if (fetchError || !pendingOrders || pendingOrders.length === 0) continue;
+
+      for (const order of pendingOrders) {
+        if (order.payment_status === 'failed') continue;
+
+        const { error: updateError } = await supabaseAdmin
+          .from('orders')
+          .update({ payment_status: 'failed' })
+          .eq('id', order.id);
+
+        if (!updateError) {
+          console.log(`Marked payment as failed for ${order.customer_name} (${email})`);
+          failedMarkedCount++;
+        }
+      }
+    }
+
     const result = {
       success: true,
       message: 'Auto-approval from Iyzico completed',
       totalSuccessfulPayments: successfulEmails.size,
+      totalFailedPayments: failedEmails.size,
       approved: approvedCount,
+      failedMarked: failedMarkedCount,
       timestamp: new Date().toISOString(),
     };
 
