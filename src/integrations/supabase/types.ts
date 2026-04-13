@@ -3314,6 +3314,7 @@ export type Database = {
           package_type: string
           parent_order_id: string | null
           payment_method: string
+          payment_status: string | null
           payment_transaction_id: string | null
           pre_info_pdf_content: string | null
           status: string
@@ -3349,6 +3350,7 @@ export type Database = {
           package_type: string
           parent_order_id?: string | null
           payment_method: string
+          payment_status?: string | null
           payment_transaction_id?: string | null
           pre_info_pdf_content?: string | null
           status?: string
@@ -3384,6 +3386,7 @@ export type Database = {
           package_type?: string
           parent_order_id?: string | null
           payment_method?: string
+          payment_status?: string | null
           payment_transaction_id?: string | null
           pre_info_pdf_content?: string | null
           status?: string
