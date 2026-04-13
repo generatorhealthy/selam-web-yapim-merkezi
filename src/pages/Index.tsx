@@ -141,7 +141,7 @@ const Index = () => {
               </h1>
             </header>
             {/* Enhanced Search Form */}
-            <div ref={searchContainerRef} className="bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0 border border-white/20 animate-scale-in">
+            <div ref={searchContainerRef} className="bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0 border border-white/20">
               <div className="space-y-6 md:space-y-8">
                 {/* Appointment Type Toggle */}
                 <div className="flex justify-center">
@@ -347,8 +347,8 @@ const Index = () => {
       {/* Below fold - lazy loaded */}
       <Suspense fallback={
         <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="loading-skeleton" style={{ height: '200px', borderRadius: '12px' }}></div>
-          <div className="loading-skeleton" style={{ height: '300px', borderRadius: '12px' }}></div>
+          <div className="animate-pulse bg-muted rounded-xl" style={{ height: '200px' }}></div>
+          <div className="animate-pulse bg-muted rounded-xl" style={{ height: '300px' }}></div>
         </div>
       }>
         <IndexBelowFold onSearch={handleSearch} />
