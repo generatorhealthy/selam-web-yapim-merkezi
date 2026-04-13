@@ -127,14 +127,21 @@ const DoctorList = () => {
       const currentYear = new Date().getFullYear();
       const currentMonth = new Date().getMonth() + 1;
 
-      const { data: referralData, error: referralError } = await supabase
-        .from('client_referrals')
-        .select('specialist_id, referral_count, is_referred')
-        .eq('year', currentYear)
-        .eq('month', currentMonth);
+      let referralData: any[] | null = null;
+      try {
+        const { data, error: referralError } = await supabase
+          .from('client_referrals')
+          .select('specialist_id, referral_count, is_referred')
+          .eq('year', currentYear)
+          .eq('month', currentMonth);
 
-      if (referralError) {
-        console.error('Danışan yönlendirme verileri çekilirken hata:', referralError);
+        if (!referralError) {
+          referralData = data;
+        } else {
+          console.warn('Danışan yönlendirme verileri alınamadı (yetki kısıtlaması olabilir):', referralError.message);
+        }
+      } catch {
+        console.warn('Danışan yönlendirme verileri alınamadı');
       }
 
       // Uzman verilerini danışan yönlendirme sayıları ile birleştir
