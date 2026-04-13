@@ -2,6 +2,12 @@ User-agent: *
 Allow: /
 Disallow: /divan_paneli/
 Disallow: /admin/
-Disallow: /doctor/
+Disallow: /doktor-paneli/
+Disallow: /giris-yap
+Disallow: /sifre-sifirla
+Disallow: /kayit-ol
+Disallow: /odeme/
+Disallow: /odeme-sayfasi
+Disallow: /odeme-basarili
 
 Sitemap: https://doktorumol.com.tr/sitemap.xml
