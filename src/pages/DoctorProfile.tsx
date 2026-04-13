@@ -444,7 +444,7 @@ const DoctorProfile = () => {
                   className="h-12 px-6 text-base font-semibold rounded-xl text-white w-full" 
                   style={{ backgroundColor: '#4f7cff' }}
                 >
-                  <Link to={`/randevu-al/${specialtySlugForLinks}/${createDoctorSlug(specialist.name)}`}>
+                  <Link to={`/randevu-al/${specialtySlugForLinks}/${specialist.slug || doctorName}`}>
                     <Calendar className="w-4 h-4 mr-2" />
                     Randevu Al
                   </Link>
