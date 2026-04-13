@@ -43,18 +43,52 @@ const wahaApi = async (action: string, sessionName?: string, payload?: any) => {
 const CHAT_HISTORY_PAGE_SIZE = 100;
 const CHAT_HISTORY_MAX_PAGES = 100;
 
+const normalizePhoneDigits = (value: string) => value.replace(/\D/g, '');
+
+const normalizeTurkishPhone = (value: string) => {
+  const digits = normalizePhoneDigits(value);
+
+  if (!digits) return '';
+  if (digits.startsWith('90') && digits.length === 12) return digits;
+  if (digits.startsWith('0') && digits.length === 11) return `9${digits}`;
+  if (digits.length === 10) return `90${digits}`;
+
+  return digits;
+};
+
+const getChatDisplayName = (chat: any) => (
+  chat?.name
+  ?? chat?.pushName
+  ?? chat?.pushname
+  ?? chat?.formattedTitle
+  ?? chat?._data?.formattedTitle
+  ?? chat?.id?.user
+  ?? 'Bilinmeyen'
+);
+
+const getChatPictureUrl = (chat: any) => {
+  const picture = chat?.picture ?? chat?._data?.picture ?? null;
+  return typeof picture === 'string' && picture.trim() ? picture : null;
+};
+
+const getAvatarUrlFromData = (data: any) => (
+  typeof data === 'string'
+    ? data
+    : data?.profilePictureURL ?? data?.profilePictureUrl ?? data?.profilePicUrl ?? data?.url ?? data?.picture ?? null
+);
+
 const normalizeChatMessage = (message: any) => ({
   ...message,
-  body: message?.body ?? message?._data?.body ?? "",
-  timestamp: Number(message?.timestamp ?? message?._data?.t ?? 0),
+  body: message?.body ?? message?._data?.body ?? '',
+  timestamp: Number(message?.timestamp ?? message?.messageTimestamp ?? message?._data?.t ?? 0),
   fromMe: Boolean(message?.fromMe ?? message?._data?.id?.fromMe ?? false),
 });
 
-const getChatMessageKey = (message: any, fallback = "") => String(
+const getChatMessageKey = (message: any, fallback = '') => String(
   message?.id?._serialized
     ?? message?.id
     ?? message?._data?.id?._serialized
-    ?? `${message?.timestamp ?? message?._data?.t ?? 0}-${message?.fromMe ?? message?._data?.id?.fromMe ?? false}-${message?.body ?? message?._data?.body ?? ""}-${fallback}`,
+    ?? `${message?.timestamp ?? message?._data?.t ?? 0}-${message?.fromMe ?? message?._data?.id?.fromMe ?? false}-${message?.body ?? message?._data?.body ?? ''}-${fallback}`,
 );
 
 const mergeChatMessages = (messages: any[]) => {
@@ -72,82 +106,130 @@ const getSerializedChatId = (chat: any) => {
   const directId =
     chat?.id?._serialized ??
     chat?._data?.id?._serialized ??
-    (typeof chat?.id === "string" ? chat.id : null) ??
+    (typeof chat?.id === 'string' ? chat.id : null) ??
     chat?.chatId ??
     null;
 
-  if (typeof directId === "string" && directId.trim()) {
+  if (typeof directId === 'string' && directId.trim()) {
     return directId;
   }
 
-  const user = chat?.id?.user ?? chat?._data?.id?.user ?? chat?.wid?.user ?? "";
-  const server = chat?.id?.server ?? chat?._data?.id?.server ?? chat?.wid?.server ?? "c.us";
+  const user = chat?.id?.user ?? chat?._data?.id?.user ?? chat?.wid?.user ?? '';
+  const server = chat?.id?.server ?? chat?._data?.id?.server ?? chat?.wid?.server ?? 'c.us';
 
-  return user ? `${user}@${server}` : "";
+  return user ? `${user}@${server}` : '';
 };
 
 const getChatInputValue = (chat: any) => {
   const serializedId = getSerializedChatId(chat);
-  return serializedId.replace(/@(c\.us|lid|g\.us|s\.whatsapp\.net)$/i, "");
+  return serializedId.replace(/@(c\.us|lid|g\.us|s\.whatsapp\.net)$/i, '');
+};
+
+const getChatPhoneCandidate = (chat: any) => {
+  const candidates = [
+    chat?.name,
+    chat?.pushName,
+    chat?.pushname,
+    chat?.formattedTitle,
+    chat?._data?.formattedTitle,
+    chat?.lastMessage?._data?.notifyName,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string' || !candidate.trim()) continue;
+
+    const normalized = normalizeTurkishPhone(candidate);
+    if (normalized.startsWith('90') && normalized.length === 12) {
+      return normalized;
+    }
+  }
+
+  return '';
+};
+
+const getChatIdCandidates = (chat: any) => {
+  const ids = new Set<string>();
+  const directId = getSerializedChatId(chat);
+
+  if (directId) {
+    ids.add(directId);
+    const [user, server] = directId.split('@');
+    if (user?.startsWith('90')) {
+      ids.add(`${user}@${server === 'c.us' ? 'lid' : 'c.us'}`);
+    }
+  }
+
+  const phoneCandidate = getChatPhoneCandidate(chat);
+  if (phoneCandidate) {
+    ids.add(`${phoneCandidate}@c.us`);
+    ids.add(`${phoneCandidate}@lid`);
+  }
+
+  return Array.from(ids).filter(Boolean);
 };
 
 const WhatsappManagement = () => {
   const { userProfile } = useUserRole();
   const isAdmin = userProfile?.role === 'admin';
 
-  // Lines
   const [lines, setLines] = useState<WhatsappLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLine, setSelectedLine] = useState<WhatsappLine | null>(null);
   const [showAddLineDialog, setShowAddLineDialog] = useState(false);
-  const [newPhone, setNewPhone] = useState("");
-  const [newLabel, setNewLabel] = useState("");
+  const [newPhone, setNewPhone] = useState('');
+  const [newLabel, setNewLabel] = useState('');
   const [adding, setAdding] = useState(false);
   const [editingLine, setEditingLine] = useState<WhatsappLine | null>(null);
-  const [editPhone, setEditPhone] = useState("");
-  const [editLabel, setEditLabel] = useState("");
+  const [editPhone, setEditPhone] = useState('');
+  const [editLabel, setEditLabel] = useState('');
 
-  // Session
-  const [sessionStatus, setSessionStatus] = useState<string>("UNKNOWN");
+  const [sessionStatus, setSessionStatus] = useState<string>('UNKNOWN');
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const qrIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Chat
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatTo, setChatTo] = useState("");
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatTo, setChatTo] = useState('');
   const [sending, setSending] = useState(false);
   const [chats, setChats] = useState<any[]>([]);
   const [chatsLoading, setChatsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeChat, setActiveChat] = useState<any | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
 
-  // New chat dialog
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [profilePics, setProfilePics] = useState<Record<string, string>>({});
-  const [newChatName, setNewChatName] = useState("");
-  const [newChatSurname, setNewChatSurname] = useState("");
-  const [newChatPhone, setNewChatPhone] = useState("");
+  const [newChatName, setNewChatName] = useState('');
+  const [newChatSurname, setNewChatSurname] = useState('');
+  const [newChatPhone, setNewChatPhone] = useState('');
 
   const getSessionName = (line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`;
 
-  const getContactId = (chat: any) => getSerializedChatId(chat);
-
   const ContactAvatar = ({ chat, size = 'md' }: { chat: any; size?: 'sm' | 'md' }) => {
-    const contactId = getContactId(chat);
-    const picUrl = profilePics[contactId];
+    const contactIds = getChatIdCandidates(chat);
+    const picUrl = contactIds.map((id) => profilePics[id]).find(Boolean) || getChatPictureUrl(chat);
     const dim = size === 'md' ? 'w-12 h-12' : 'w-10 h-10';
     const iconSize = size === 'md' ? 'w-6 h-6' : 'w-5 h-5';
-    if (picUrl) {
-      return <img src={picUrl} alt="" className={`${dim} rounded-full object-cover flex-shrink-0`} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }} />;
-    }
+
     return (
-      <div className={`${dim} rounded-full bg-[#dfe5e7] flex items-center justify-center flex-shrink-0`}>
-        <Users className={`${iconSize} text-white`} />
+      <div className={`${dim} rounded-full overflow-hidden bg-[#dfe5e7] flex items-center justify-center flex-shrink-0`}>
+        {picUrl && (
+          <img
+            src={picUrl}
+            alt={`${getChatDisplayName(chat)} profil fotoğrafı`}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={(event) => {
+              event.currentTarget.style.display = 'none';
+              const fallback = event.currentTarget.parentElement?.querySelector('[data-avatar-fallback]');
+              fallback?.classList.remove('hidden');
+            }}
+          />
+        )}
+        <Users data-avatar-fallback className={`${iconSize} text-white ${picUrl ? 'hidden' : ''}`} />
       </div>
     );
   };
@@ -165,11 +247,11 @@ const WhatsappManagement = () => {
       .select('*')
       .order('sort_order', { ascending: true });
     if (error) {
-      toast.error("Hatlar yüklenemedi");
+      toast.error('Hatlar yüklenemedi');
     } else {
       setLines(data || []);
       if (!selectedLine && data && data.length > 0) {
-        const activeLine = data.find(l => l.is_active) || data[0];
+        const activeLine = data.find((line) => line.is_active) || data[0];
         setSelectedLine(activeLine);
       }
     }
@@ -210,7 +292,7 @@ const WhatsappManagement = () => {
     stopQrPolling();
     try {
       await wahaApi('sessions.start', getSessionName(selectedLine));
-      toast.success("Oturum başlatılıyor...");
+      toast.success('Oturum başlatılıyor...');
     } catch (err: any) {
       const message = err?.message || '';
       if (!message.includes('already started')) {
@@ -239,9 +321,9 @@ const WhatsappManagement = () => {
       setSessionStatus('STOPPED');
       setQrCode(null);
       stopQrPolling();
-      toast.success("Oturum kapatıldı");
+      toast.success('Oturum kapatıldı');
     } catch {
-      toast.error("Oturum kapatılamadı");
+      toast.error('Oturum kapatılamadı');
     }
     setDisconnecting(false);
   };
@@ -251,29 +333,72 @@ const WhatsappManagement = () => {
       return getSerializedChatId(activeChat);
     }
     const num = chatTo.replace(/[^0-9]/g, '');
-    return num ? num + '@c.us' : '';
+    return num ? `${num}@c.us` : '';
   };
 
   const sendMessage = async () => {
     if (!selectedLine || !chatMessage.trim()) return;
     const chatId = getActiveChatId();
     if (!chatId) {
-      toast.error("Alıcı numarası gerekli");
+      toast.error('Alıcı numarası gerekli');
       return;
     }
     setSending(true);
     const msgText = chatMessage;
-    setChatMessage("");
-    setChatMessages(prev => [...prev, { body: msgText, fromMe: true, timestamp: Math.floor(Date.now() / 1000), _optimistic: true }]);
+    setChatMessage('');
+    setChatMessages((prev) => [...prev, { body: msgText, fromMe: true, timestamp: Math.floor(Date.now() / 1000), _optimistic: true }]);
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
       await wahaApi('sendText', getSessionName(selectedLine), { chatId, text: msgText });
     } catch (err: any) {
-      toast.error("Mesaj gönderilemedi: " + (err.message || ''));
+      toast.error(`Mesaj gönderilemedi: ${err.message || ''}`);
       setChatMessage(msgText);
-      setChatMessages(prev => prev.filter(m => !m._optimistic));
+      setChatMessages((prev) => prev.filter((message) => !message._optimistic));
     }
     setSending(false);
+  };
+
+  const fetchProfilePic = async (chatOrContact: any) => {
+    if (!selectedLine) return;
+
+    const sessionName = getSessionName(selectedLine);
+    const candidateIds = typeof chatOrContact === 'string'
+      ? [chatOrContact]
+      : getChatIdCandidates(chatOrContact);
+    const uniqueIds = Array.from(new Set(candidateIds.filter(Boolean)));
+
+    if (uniqueIds.length === 0) return;
+    if (uniqueIds.some((id) => profilePics[id])) return;
+
+    const embeddedPic = typeof chatOrContact === 'object' ? getChatPictureUrl(chatOrContact) : null;
+    if (embeddedPic) {
+      setProfilePics((prev) => {
+        const next = { ...prev };
+        uniqueIds.forEach((id) => {
+          next[id] = embeddedPic;
+        });
+        return next;
+      });
+      return;
+    }
+
+    try {
+      const res = await wahaApi('contacts.profile-picture', sessionName, {
+        contactId: uniqueIds[0],
+        contactIds: uniqueIds,
+        refresh: false,
+      });
+      const picUrl = getAvatarUrlFromData(res.data);
+      if (picUrl) {
+        setProfilePics((prev) => {
+          const next = { ...prev };
+          uniqueIds.forEach((id) => {
+            next[id] = picUrl;
+          });
+          return next;
+        });
+      }
+    } catch {}
   };
 
   const fetchChats = async () => {
@@ -284,11 +409,25 @@ const WhatsappManagement = () => {
       if (res.success && res.data) {
         const chatList = Array.isArray(res.data) ? res.data.slice(0, 50) : [];
         setChats(chatList);
-        // Fetch profile pictures for all chats
+
+        const embeddedPictures: Record<string, string> = {};
         chatList.forEach((chat: any) => {
-          const contactId = getSerializedChatId(chat);
-          if (contactId && !profilePics[contactId]) {
-            fetchProfilePic(contactId);
+          const chatPicture = getChatPictureUrl(chat);
+          if (!chatPicture) return;
+          getChatIdCandidates(chat).forEach((id) => {
+            embeddedPictures[id] = chatPicture;
+          });
+        });
+
+        if (Object.keys(embeddedPictures).length > 0) {
+          setProfilePics((prev) => ({ ...prev, ...embeddedPictures }));
+        }
+
+        chatList.forEach((chat: any) => {
+          const candidateIds = getChatIdCandidates(chat);
+          const hasPicture = candidateIds.some((id) => embeddedPictures[id] || profilePics[id]);
+          if (!hasPicture) {
+            void fetchProfilePic(chat);
           }
         });
       }
@@ -296,28 +435,17 @@ const WhatsappManagement = () => {
     setChatsLoading(false);
   };
 
-  const fetchProfilePic = async (contactId: string) => {
-    if (!selectedLine || profilePics[contactId]) return;
-    try {
-      const res = await wahaApi('contacts.profile-picture', getSessionName(selectedLine), { contactId });
-      if (res.success && res.data) {
-        const picUrl = typeof res.data === 'string' ? res.data : res.data?.profilePictureUrl || res.data?.url || res.data?.profilePicUrl || null;
-        if (picUrl) {
-          setProfilePics(prev => ({ ...prev, [contactId]: picUrl }));
-        }
-      }
-    } catch {}
-  };
-
   const fetchChatMessages = async (chat?: any, silent = false) => {
     if (!selectedLine) return;
     const targetChat = chat || activeChat;
     if (!targetChat) return;
-    if (!silent) setMessagesLoading(true);
-    const chatId = getSerializedChatId(targetChat);
-    const sessionName = getSessionName(selectedLine);
 
-    if (!chatId) {
+    const sessionName = getSessionName(selectedLine);
+    const chatIdCandidates = getChatIdCandidates(targetChat);
+
+    if (!silent) setMessagesLoading(true);
+
+    if (chatIdCandidates.length === 0) {
       if (!silent) {
         toast.error('Sohbet kimliği bulunamadı');
         setMessagesLoading(false);
@@ -325,41 +453,38 @@ const WhatsappManagement = () => {
       return;
     }
 
-    try {
-      if (silent) {
-        const res = await wahaApi('chats.messages', sessionName, {
-          chatId,
-          limit: CHAT_HISTORY_PAGE_SIZE,
-          offset: 0,
-          downloadMedia: false,
-          merge: true,
-        });
-
-        const latestMessages = Array.isArray(res.data) ? res.data : [];
-        setChatMessages((prev) => mergeChatMessages([...prev, ...latestMessages]));
-        return;
-      }
-
+    const fetchMessagesForChatId = async (chatId: string, maxPages: number) => {
       const allMessages: any[] = [];
       const seenMessageKeys = new Set<string>();
+      let succeeded = false;
 
-      for (let page = 0; page < CHAT_HISTORY_MAX_PAGES; page += 1) {
-        const res = await wahaApi('chats.messages', sessionName, {
-          chatId,
-          limit: CHAT_HISTORY_PAGE_SIZE,
-          offset: page * CHAT_HISTORY_PAGE_SIZE,
-          downloadMedia: false,
-          merge: true,
-        });
+      for (let page = 0; page < maxPages; page += 1) {
+        let res: any;
+
+        try {
+          res = await wahaApi('chats.messages', sessionName, {
+            chatId,
+            limit: CHAT_HISTORY_PAGE_SIZE,
+            offset: page * CHAT_HISTORY_PAGE_SIZE,
+            downloadMedia: false,
+            merge: true,
+            sortBy: 'timestamp',
+            sortOrder: 'asc',
+          });
+          succeeded = true;
+        } catch (error) {
+          if (page === 0) throw error;
+          break;
+        }
 
         const batch = Array.isArray(res.data) ? res.data : [];
         if (batch.length === 0) break;
 
         let newMessageCount = 0;
 
-        batch.forEach((message, index) => {
+        batch.forEach((message: any, index: number) => {
           const normalizedMessage = normalizeChatMessage(message);
-          const messageKey = getChatMessageKey(normalizedMessage, `${page}-${index}`);
+          const messageKey = getChatMessageKey(normalizedMessage, `${chatId}-${page}-${index}`);
 
           if (!seenMessageKeys.has(messageKey)) {
             seenMessageKeys.add(messageKey);
@@ -371,8 +496,37 @@ const WhatsappManagement = () => {
         if (batch.length < CHAT_HISTORY_PAGE_SIZE || newMessageCount === 0) break;
       }
 
-      setChatMessages(mergeChatMessages(allMessages));
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      return {
+        succeeded,
+        messages: mergeChatMessages(allMessages),
+      };
+    };
+
+    let lastError: unknown = null;
+
+    try {
+      void fetchProfilePic(targetChat);
+
+      for (const chatId of chatIdCandidates) {
+        try {
+          const result = await fetchMessagesForChatId(chatId, silent ? 1 : CHAT_HISTORY_MAX_PAGES);
+          if (!result.succeeded) continue;
+
+          if (silent) {
+            if (result.messages.length > 0) {
+              setChatMessages((prev) => mergeChatMessages([...prev, ...result.messages]));
+            }
+          } else {
+            setChatMessages(result.messages);
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+          }
+          return;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      throw lastError ?? new Error('Mesaj geçmişi alınamadı');
     } catch (error) {
       console.error('Mesaj geçmişi alınamadı:', error);
       if (!silent) {
@@ -385,10 +539,10 @@ const WhatsappManagement = () => {
 
   const openChat = (chat: any) => {
     setActiveChat(chat);
-    const num = getChatInputValue(chat);
-    setChatTo(num);
+    setChatTo(getChatPhoneCandidate(chat) || getChatInputValue(chat));
     setChatMessages([]);
-    fetchChatMessages(chat);
+    void fetchProfilePic(chat);
+    void fetchChatMessages(chat);
   };
 
   const startNewChat = () => {
