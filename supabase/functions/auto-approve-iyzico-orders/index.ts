@@ -106,21 +106,23 @@ serve(async (req) => {
 
     console.log(`Found ${activeSubscriptions.length} active Iyzico subscriptions`);
 
-    // Build a set of emails with successful recent payments
+    // Build sets of emails with successful/failed recent payments
     const successfulEmails = new Set<string>();
+    const failedEmails = new Set<string>();
 
     for (const sub of activeSubscriptions) {
       const email = sub.customerEmail;
       if (!email) continue;
 
-      // Check if there's a recent successful order payment
       for (const order of (sub.orders || [])) {
         const hasSuccessfulPayment = order.paymentAttempts?.some(
           (attempt: any) => attempt.paymentStatus === "SUCCESS"
         );
+        const hasFailedPayment = order.paymentAttempts?.some(
+          (attempt: any) => attempt.paymentStatus === "FAILED"
+        );
 
         if (hasSuccessfulPayment && order.orderStatus === "SUCCESS") {
-          // Check if this payment is recent (last 48 hours)
           const latestSuccess = order.paymentAttempts
             ?.filter((a: any) => a.paymentStatus === "SUCCESS")
             ?.sort((a: any, b: any) => b.createdDate - a.createdDate)[0];
@@ -131,8 +133,24 @@ serve(async (req) => {
               successfulEmails.add(email.toLowerCase());
             }
           }
+        } else if (hasFailedPayment && !hasSuccessfulPayment) {
+          const latestFailed = order.paymentAttempts
+            ?.filter((a: any) => a.paymentStatus === "FAILED")
+            ?.sort((a: any, b: any) => b.createdDate - a.createdDate)[0];
+
+          if (latestFailed) {
+            const hoursSince = (Date.now() - latestFailed.createdDate) / (1000 * 60 * 60);
+            if (hoursSince <= 48) {
+              failedEmails.add(email.toLowerCase());
+            }
+          }
         }
       }
+    }
+
+    // Remove emails that also have successful payments
+    for (const email of successfulEmails) {
+      failedEmails.delete(email);
     }
 
     console.log(`Found ${successfulEmails.size} emails with recent successful payments`);
