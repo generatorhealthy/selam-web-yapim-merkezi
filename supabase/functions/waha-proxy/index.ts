@@ -288,9 +288,46 @@ Deno.serve(async (req) => {
           caption: payload.caption,
         });
         break;
-      case 'chats.list':
-        endpoint = `/api/${sessionName}/chats`;
+      case 'chats.overview': {
+        const safeLimit = Math.min(Math.max(Number(payload?.limit) || 100, 1), 200);
+        const safeOffset = Number.isFinite(Number(payload?.offset)) && Number(payload?.offset) >= 0
+          ? Number(payload?.offset)
+          : 0;
+        const mergeValue = typeof payload?.merge === 'boolean' ? payload.merge : true;
+        const params = new URLSearchParams({
+          limit: String(safeLimit),
+          offset: String(safeOffset),
+          merge: String(mergeValue),
+        });
+
+        const ids = Array.isArray(payload?.ids) ? payload.ids : [];
+        ids
+          .map((value) => String(value ?? '').trim())
+          .filter(Boolean)
+          .forEach((value) => params.append('ids', value));
+
+        endpoint = `/api/${encodeURIComponent(String(sessionName ?? ''))}/chats/overview?${params.toString()}`;
         break;
+      }
+      case 'chats.list': {
+        const safeLimit = Math.min(Math.max(Number(payload?.limit) || 200, 1), 500);
+        const safeOffset = Number.isFinite(Number(payload?.offset)) && Number(payload?.offset) >= 0
+          ? Number(payload?.offset)
+          : 0;
+        const mergeValue = typeof payload?.merge === 'boolean' ? payload.merge : true;
+        const sortByValue = typeof payload?.sortBy === 'string' && payload.sortBy.trim() ? payload.sortBy.trim() : 'timestamp';
+        const sortOrderValue = typeof payload?.sortOrder === 'string' && payload.sortOrder.trim() ? payload.sortOrder.trim() : 'desc';
+        const params = new URLSearchParams({
+          limit: String(safeLimit),
+          offset: String(safeOffset),
+          merge: String(mergeValue),
+          sortBy: sortByValue,
+          sortOrder: sortOrderValue,
+        });
+
+        endpoint = `/api/${encodeURIComponent(String(sessionName ?? ''))}/chats?${params.toString()}`;
+        break;
+      }
       case 'chats.messages': {
         const safeLimit = Math.min(Math.max(Number(payload?.limit) || 50, 1), 100);
         const mergeValue = typeof payload?.merge === 'boolean' ? payload.merge : true;

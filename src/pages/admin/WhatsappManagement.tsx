@@ -42,6 +42,7 @@ const wahaApi = async (action: string, sessionName?: string, payload?: any) => {
 
 const CHAT_HISTORY_PAGE_SIZE = 100;
 const CHAT_HISTORY_MAX_PAGES = 100;
+const CHAT_LIST_PAGE_SIZE = 200;
 
 const normalizePhoneDigits = (value: string) => value.replace(/\D/g, '');
 
@@ -58,6 +59,9 @@ const getStringCandidates = (value: unknown): string[] => {
 
   return [
     record._serialized,
+    record.serialized,
+    record.chatId,
+    record.remote,
     record.user,
     record.id,
     record.phone,
@@ -143,16 +147,25 @@ const getExpandedChatIdCandidates = (value: string) => {
 
 const getChatDisplayName = (chat: any) => (
   chat?.name
+  ?? chat?._chat?.name
   ?? chat?.pushName
+  ?? chat?._chat?.pushName
   ?? chat?.pushname
+  ?? chat?._chat?.pushname
   ?? chat?.formattedTitle
+  ?? chat?._chat?.formattedTitle
   ?? chat?._data?.formattedTitle
+  ?? chat?._chat?._data?.formattedTitle
+  ?? chat?.contact?.pushName
+  ?? chat?._chat?.contact?.pushName
   ?? chat?.id?.user
+  ?? chat?._chat?.id?.user
+  ?? (typeof chat?.id === 'string' ? chat.id.replace(/@(c\.us|lid|g\.us|s\.whatsapp\.net)$/i, '') : null)
   ?? 'Bilinmeyen'
 );
 
 const getChatPictureUrl = (chat: any) => {
-  const picture = chat?.picture ?? chat?._data?.picture ?? null;
+  const picture = chat?.picture ?? chat?._chat?.picture ?? chat?._data?.picture ?? chat?._chat?._data?.picture ?? null;
   return typeof picture === 'string' && picture.trim() ? picture : null;
 };
 
@@ -191,16 +204,20 @@ const getSerializedChatId = (chat: any) => {
   const directId =
     chat?.id?._serialized ??
     chat?._data?.id?._serialized ??
+    chat?._chat?.id?._serialized ??
+    chat?._chat?._data?.id?._serialized ??
     (typeof chat?.id === 'string' ? chat.id : null) ??
+    (typeof chat?._chat?.id === 'string' ? chat._chat.id : null) ??
     chat?.chatId ??
+    chat?._chat?.chatId ??
     null;
 
   if (typeof directId === 'string' && directId.trim()) {
     return directId;
   }
 
-  const user = chat?.id?.user ?? chat?._data?.id?.user ?? chat?.wid?.user ?? '';
-  const server = chat?.id?.server ?? chat?._data?.id?.server ?? chat?.wid?.server ?? 'c.us';
+  const user = chat?.id?.user ?? chat?._data?.id?.user ?? chat?.wid?.user ?? chat?._chat?.id?.user ?? chat?._chat?._data?.id?.user ?? chat?._chat?.wid?.user ?? '';
+  const server = chat?.id?.server ?? chat?._data?.id?.server ?? chat?.wid?.server ?? chat?._chat?.id?.server ?? chat?._chat?._data?.id?.server ?? chat?._chat?.wid?.server ?? 'c.us';
 
   return user ? `${user}@${server}` : '';
 };
@@ -213,23 +230,42 @@ const getChatInputValue = (chat: any) => {
 const getChatPhoneCandidate = (chat: any) => {
   const candidates = [
     chat?.name,
+    chat?._chat?.name,
     chat?.pushName,
+    chat?._chat?.pushName,
     chat?.pushname,
+    chat?._chat?.pushname,
     chat?.formattedTitle,
+    chat?._chat?.formattedTitle,
     chat?._data?.formattedTitle,
+    chat?._chat?._data?.formattedTitle,
     chat?.lastMessage?._data?.notifyName,
+    chat?._chat?.lastMessage?._data?.notifyName,
     chat?.id,
+    chat?._chat?.id,
     chat?._data?.id,
+    chat?._chat?._data?.id,
     chat?.wid,
+    chat?._chat?.wid,
     chat?.contact,
-    chat?._data?.contact,
     chat?._chat?.contact,
+    chat?._data?.contact,
+    chat?._chat?._data?.contact,
+    chat?._chat?.contact,
+    chat?.lastMessage?.id?.remote,
+    chat?._chat?.lastMessage?.id?.remote,
     chat?.lastMessage?.from,
+    chat?._chat?.lastMessage?.from,
     chat?.lastMessage?.to,
+    chat?._chat?.lastMessage?.to,
     chat?.lastMessage?.author,
+    chat?._chat?.lastMessage?.author,
     chat?.lastMessage?._data?.from,
+    chat?._chat?.lastMessage?._data?.from,
     chat?.lastMessage?._data?.to,
+    chat?._chat?.lastMessage?._data?.to,
     chat?.lastMessage?._data?.author,
+    chat?._chat?.lastMessage?._data?.author,
   ];
 
   for (const candidate of candidates.flatMap(getStringCandidates)) {
@@ -247,31 +283,53 @@ const getChatPhoneCandidate = (chat: any) => {
 const getRemoteParticipantCandidate = (chat: any) => {
   const rawCandidates = [
     chat?.id,
+    chat?._chat?.id,
     chat?._data?.id,
+    chat?._chat?._data?.id,
     chat?.wid,
+    chat?._chat?.wid,
     chat?.contact?.id,
+    chat?._chat?.contact?.id,
     chat?._data?.contact?.id,
+    chat?._chat?._data?.contact?.id,
     chat?._chat?.contact?.id,
     chat?.lastMessage?.id?.remote,
+    chat?._chat?.lastMessage?.id?.remote,
     chat?.lastMessage?._data?.id?.remote,
+    chat?._chat?.lastMessage?._data?.id?.remote,
     chat?.lastMessage?.to,
+    chat?._chat?.lastMessage?.to,
     chat?.lastMessage?._data?.to,
+    chat?._chat?.lastMessage?._data?.to,
     chat?.lastMessage?.from,
+    chat?._chat?.lastMessage?.from,
     chat?.lastMessage?._data?.from,
+    chat?._chat?.lastMessage?._data?.from,
     chat?.lastMessage?.author,
+    chat?._chat?.lastMessage?.author,
     chat?.lastMessage?._data?.author,
+    chat?._chat?.lastMessage?._data?.author,
   ];
 
-  for (const candidate of rawCandidates.flatMap(getStringCandidates)) {
-    const expanded = getExpandedChatIdCandidates(candidate);
-    const nonSelfDirectChat = expanded.find((id) => id.endsWith('@lid') || id.endsWith('@c.us'));
+  const preferredIds: string[] = [];
+  const fallbackIds: string[] = [];
 
-    if (nonSelfDirectChat) {
-      return nonSelfDirectChat;
+  for (const candidate of rawCandidates.flatMap(getStringCandidates)) {
+    for (const expandedCandidate of getExpandedChatIdCandidates(candidate)) {
+      if (expandedCandidate.endsWith('@c.us')) {
+        if (!preferredIds.includes(expandedCandidate)) {
+          preferredIds.push(expandedCandidate);
+        }
+        continue;
+      }
+
+      if (expandedCandidate.endsWith('@lid') && !fallbackIds.includes(expandedCandidate)) {
+        fallbackIds.push(expandedCandidate);
+      }
     }
   }
 
-  return '';
+  return preferredIds[0] ?? fallbackIds[0] ?? '';
 };
 
 const getChatIdCandidates = (chat: any) => {
@@ -304,7 +362,9 @@ const getChatIdCandidates = (chat: any) => {
     chat?._data?.contact?.id,
     chat?._chat?.contact?.id,
     chat?.wid,
+    chat?._chat?.wid,
     chat?.id,
+    chat?._chat?.id,
   ]
     .flatMap(getStringCandidates)
     .forEach((candidate) => addId(candidate, candidate.includes('@c.us')));
@@ -317,6 +377,43 @@ const getChatIdCandidates = (chat: any) => {
 
   return Array.from(new Set([...preferredIds, ...fallbackIds])).filter(Boolean);
 };
+
+const getLastChatMessage = (chat: any) => (
+  chat?.lastMessage
+  ?? chat?._chat?.lastMessage
+  ?? chat?._chat?._data?.lastMessage
+  ?? null
+);
+
+const getLastMessageTimestamp = (chat: any) => Number(
+  getLastChatMessage(chat)?.timestamp
+    ?? getLastChatMessage(chat)?._data?.timestamp
+    ?? chat?._chat?.timestamp
+    ?? chat?.timestamp
+    ?? 0,
+);
+
+const getLastMessageBody = (chat: any) => (
+  getLastChatMessage(chat)?.body
+  ?? getLastChatMessage(chat)?._data?.body
+  ?? ''
+);
+
+const getChatSecondaryText = (chat: any) => {
+  const phoneCandidate = getChatPhoneCandidate(chat);
+  if (phoneCandidate) {
+    return phoneCandidate;
+  }
+
+  const serializedId = getSerializedChatId(chat);
+  return serializedId.replace(/@(c\.us|lid|g\.us|s\.whatsapp\.net)$/i, '');
+};
+
+const getChatSelectionKey = (chat: any) => (
+  getChatIdCandidates(chat)[0]
+  ?? getSerializedChatId(chat)
+  ?? `${getChatDisplayName(chat)}-${getLastMessageTimestamp(chat)}`
+);
 
 const WhatsappManagement = () => {
   const { userProfile } = useUserRole();
@@ -480,7 +577,7 @@ const WhatsappManagement = () => {
 
   const getActiveChatId = () => {
     if (activeChat) {
-      return getSerializedChatId(activeChat);
+      return getChatIdCandidates(activeChat)[0] ?? getSerializedChatId(activeChat);
     }
     const num = chatTo.replace(/[^0-9]/g, '');
     return num ? `${num}@c.us` : '';
@@ -555,13 +652,33 @@ const WhatsappManagement = () => {
     if (!selectedLine) return;
     setChatsLoading(true);
     try {
-      const res = await wahaApi('chats.list', getSessionName(selectedLine));
-      if (res.success && res.data) {
-        const rawChatList = Array.isArray(res.data) ? res.data : [];
+      const sessionName = getSessionName(selectedLine);
+      let rawChatList: any[] = [];
+
+      try {
+        const overviewRes = await wahaApi('chats.overview', sessionName, {
+          limit: CHAT_LIST_PAGE_SIZE,
+          offset: 0,
+          merge: true,
+        });
+        rawChatList = Array.isArray(overviewRes.data) ? overviewRes.data : [];
+      } catch (overviewError) {
+        console.warn('Chats overview alınamadı, chats.list fallback çalışıyor:', overviewError);
+        const listRes = await wahaApi('chats.list', sessionName, {
+          limit: CHAT_LIST_PAGE_SIZE,
+          offset: 0,
+          merge: true,
+          sortBy: 'timestamp',
+          sortOrder: 'desc',
+        });
+        rawChatList = Array.isArray(listRes.data) ? listRes.data : [];
+      }
+
+      if (rawChatList.length > 0) {
         const uniqueChatMap = new Map<string, any>();
 
         rawChatList.forEach((chat: any) => {
-          const preferredKey = getRemoteParticipantCandidate(chat) || getSerializedChatId(chat) || `${getChatDisplayName(chat)}-${chat?.timestamp ?? chat?.lastMessage?.timestamp ?? ''}`;
+          const preferredKey = getChatSelectionKey(chat);
           const existing = uniqueChatMap.get(preferredKey);
 
           if (!existing) {
@@ -569,8 +686,8 @@ const WhatsappManagement = () => {
             return;
           }
 
-          const existingTimestamp = Number(existing?.lastMessage?.timestamp ?? existing?.timestamp ?? 0);
-          const currentTimestamp = Number(chat?.lastMessage?.timestamp ?? chat?.timestamp ?? 0);
+          const existingTimestamp = getLastMessageTimestamp(existing);
+          const currentTimestamp = getLastMessageTimestamp(chat);
 
           if (currentTimestamp >= existingTimestamp) {
             uniqueChatMap.set(preferredKey, chat);
@@ -578,10 +695,13 @@ const WhatsappManagement = () => {
         });
 
         const chatList = Array.from(uniqueChatMap.values())
-          .sort((a, b) => Number(b?.lastMessage?.timestamp ?? b?.timestamp ?? 0) - Number(a?.lastMessage?.timestamp ?? a?.timestamp ?? 0))
-          .slice(0, 50);
+          .sort((a, b) => getLastMessageTimestamp(b) - getLastMessageTimestamp(a));
 
         setChats(chatList);
+        setActiveChat((prev) => {
+          if (!prev) return prev;
+          return chatList.find((chat) => getChatSelectionKey(chat) === getChatSelectionKey(prev)) ?? prev;
+        });
 
         const embeddedPictures: Record<string, string> = {};
         chatList.forEach((chat: any) => {
@@ -604,8 +724,12 @@ const WhatsappManagement = () => {
           }
         });
       }
-    } catch {}
-    setChatsLoading(false);
+    } catch (error) {
+      console.error('Sohbetler alınamadı:', error);
+      toast.error('Sohbetler alınamadı');
+    } finally {
+      setChatsLoading(false);
+    }
   };
 
   const fetchChatMessages = async (chat?: any, silent = false) => {
@@ -633,9 +757,10 @@ const WhatsappManagement = () => {
 
       for (let page = 0; page < maxPages; page += 1) {
         let res: any;
+        let lastRequestError: unknown = null;
 
-        try {
-          res = await wahaApi('chats.messages', sessionName, {
+        const requestPayloads = [
+          {
             chatId,
             limit: CHAT_HISTORY_PAGE_SIZE,
             offset: page * CHAT_HISTORY_PAGE_SIZE,
@@ -643,14 +768,45 @@ const WhatsappManagement = () => {
             merge: true,
             sortBy: 'timestamp',
             sortOrder: 'asc',
-          });
-          succeeded = true;
-        } catch (error) {
-          if (page === 0) throw error;
+          },
+          {
+            chatId,
+            limit: CHAT_HISTORY_PAGE_SIZE,
+            offset: page * CHAT_HISTORY_PAGE_SIZE,
+            downloadMedia: false,
+            merge: true,
+          },
+          {
+            chatId,
+            limit: CHAT_HISTORY_PAGE_SIZE,
+            offset: page * CHAT_HISTORY_PAGE_SIZE,
+            downloadMedia: false,
+            merge: false,
+          },
+        ];
+
+        for (const requestPayload of requestPayloads) {
+          try {
+            res = await wahaApi('chats.messages', sessionName, requestPayload);
+            succeeded = true;
+            break;
+          } catch (error) {
+            lastRequestError = error;
+          }
+        }
+
+        if (!res) {
+          if (page === 0) throw lastRequestError;
           break;
         }
 
-        const batch = Array.isArray(res.data) ? res.data : [];
+        const batch = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.messages)
+            ? res.data.messages
+            : Array.isArray(res.data?.items)
+              ? res.data.items
+              : [];
         if (batch.length === 0) break;
 
         let newMessageCount = 0;
@@ -817,8 +973,8 @@ const WhatsappManagement = () => {
 
   const filteredChats = chats.filter(chat => {
     if (!searchQuery) return true;
-    const name = chat.name || chat.id?.user || '';
-    return name.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchableText = `${getChatDisplayName(chat)} ${getChatSecondaryText(chat)}`.toLowerCase();
+    return searchableText.includes(searchQuery.toLowerCase());
   });
 
   const formatTime = (timestamp: number) => {
@@ -1017,8 +1173,8 @@ const WhatsappManagement = () => {
                     </div>
                   ) : filteredChats.length > 0 ? (
                     filteredChats.map((chat, i) => {
-                      const isActive = activeChat && (getSerializedChatId(activeChat) === getSerializedChatId(chat));
-                      const lastMsgTime = chat.lastMessage?.timestamp;
+                      const isActive = activeChat && (getChatSelectionKey(activeChat) === getChatSelectionKey(chat));
+                      const lastMsgTime = getLastMessageTimestamp(chat);
                       return (
                         <div
                           key={i}
@@ -1031,16 +1187,16 @@ const WhatsappManagement = () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
                               <p className="text-[#111b21] text-sm font-medium truncate">
-                                {chat.name || chat.id?.user || 'Bilinmeyen'}
+                                {getChatDisplayName(chat)}
                               </p>
                               <span className="text-[#667781] text-[11px] flex-shrink-0 ml-2">
                                 {lastMsgTime ? formatDate(lastMsgTime) : ''}
                               </span>
                             </div>
                             <div className="flex items-center gap-1 mt-0.5">
-                              {chat.lastMessage?.fromMe && <CheckCheck className="w-3 h-3 text-[#53bdeb] flex-shrink-0" />}
+                              {Boolean(getLastChatMessage(chat)?.fromMe) && <CheckCheck className="w-3 h-3 text-[#53bdeb] flex-shrink-0" />}
                               <p className="text-[#667781] text-xs truncate">
-                                {chat.lastMessage?.body || ''}
+                                {getLastMessageBody(chat)}
                               </p>
                             </div>
                           </div>
@@ -1127,9 +1283,9 @@ const WhatsappManagement = () => {
                      <ContactAvatar chat={activeChat} size="sm" />
                     <div>
                       <p className="text-[#111b21] text-sm font-medium">
-                        {activeChat.name || activeChat.id?.user || 'Sohbet'}
+                        {getChatDisplayName(activeChat)}
                       </p>
-                      <p className="text-[#667781] text-xs">{activeChat.id?.user || ''}</p>
+                      <p className="text-[#667781] text-xs">{getChatSecondaryText(activeChat)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
