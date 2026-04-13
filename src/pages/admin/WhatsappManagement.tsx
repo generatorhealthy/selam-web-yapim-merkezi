@@ -244,10 +244,41 @@ const getChatPhoneCandidate = (chat: any) => {
   return '';
 };
 
+const getRemoteParticipantCandidate = (chat: any) => {
+  const rawCandidates = [
+    chat?.id,
+    chat?._data?.id,
+    chat?.wid,
+    chat?.contact?.id,
+    chat?._data?.contact?.id,
+    chat?._chat?.contact?.id,
+    chat?.lastMessage?.id?.remote,
+    chat?.lastMessage?._data?.id?.remote,
+    chat?.lastMessage?.to,
+    chat?.lastMessage?._data?.to,
+    chat?.lastMessage?.from,
+    chat?.lastMessage?._data?.from,
+    chat?.lastMessage?.author,
+    chat?.lastMessage?._data?.author,
+  ];
+
+  for (const candidate of rawCandidates.flatMap(getStringCandidates)) {
+    const expanded = getExpandedChatIdCandidates(candidate);
+    const nonSelfDirectChat = expanded.find((id) => id.endsWith('@lid') || id.endsWith('@c.us'));
+
+    if (nonSelfDirectChat) {
+      return nonSelfDirectChat;
+    }
+  }
+
+  return '';
+};
+
 const getChatIdCandidates = (chat: any) => {
   const preferredIds = new Set<string>();
   const fallbackIds = new Set<string>();
   const directId = getSerializedChatId(chat);
+  const remoteParticipantId = getRemoteParticipantCandidate(chat);
 
   const addId = (value: string, preferred = false) => {
     getExpandedChatIdCandidates(value).forEach((normalizedId) => {
@@ -264,13 +295,11 @@ const getChatIdCandidates = (chat: any) => {
     addId(directId);
   }
 
+  if (remoteParticipantId) {
+    addId(remoteParticipantId, true);
+  }
+
   [
-    chat?.lastMessage?.from,
-    chat?.lastMessage?.to,
-    chat?.lastMessage?.author,
-    chat?.lastMessage?._data?.from,
-    chat?.lastMessage?._data?.to,
-    chat?.lastMessage?._data?.author,
     chat?.contact?.id,
     chat?._data?.contact?.id,
     chat?._chat?.contact?.id,
@@ -280,7 +309,7 @@ const getChatIdCandidates = (chat: any) => {
     .flatMap(getStringCandidates)
     .forEach((candidate) => addId(candidate, candidate.includes('@c.us')));
 
-  const phoneCandidate = getChatPhoneCandidate(chat);
+  const phoneCandidate = remoteParticipantId ? normalizeTurkishPhone(remoteParticipantId) : getChatPhoneCandidate(chat);
   if (phoneCandidate) {
     preferredIds.add(`${phoneCandidate}@c.us`);
     preferredIds.add(`${phoneCandidate}@lid`);
@@ -528,7 +557,30 @@ const WhatsappManagement = () => {
     try {
       const res = await wahaApi('chats.list', getSessionName(selectedLine));
       if (res.success && res.data) {
-        const chatList = Array.isArray(res.data) ? res.data.slice(0, 50) : [];
+        const rawChatList = Array.isArray(res.data) ? res.data : [];
+        const uniqueChatMap = new Map<string, any>();
+
+        rawChatList.forEach((chat: any) => {
+          const preferredKey = getRemoteParticipantCandidate(chat) || getSerializedChatId(chat) || `${getChatDisplayName(chat)}-${chat?.timestamp ?? chat?.lastMessage?.timestamp ?? ''}`;
+          const existing = uniqueChatMap.get(preferredKey);
+
+          if (!existing) {
+            uniqueChatMap.set(preferredKey, chat);
+            return;
+          }
+
+          const existingTimestamp = Number(existing?.lastMessage?.timestamp ?? existing?.timestamp ?? 0);
+          const currentTimestamp = Number(chat?.lastMessage?.timestamp ?? chat?.timestamp ?? 0);
+
+          if (currentTimestamp >= existingTimestamp) {
+            uniqueChatMap.set(preferredKey, chat);
+          }
+        });
+
+        const chatList = Array.from(uniqueChatMap.values())
+          .sort((a, b) => Number(b?.lastMessage?.timestamp ?? b?.timestamp ?? 0) - Number(a?.lastMessage?.timestamp ?? a?.timestamp ?? 0))
+          .slice(0, 50);
+
         setChats(chatList);
 
         const embeddedPictures: Record<string, string> = {};
