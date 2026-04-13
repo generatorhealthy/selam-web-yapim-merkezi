@@ -149,10 +149,10 @@ const SpecialistEdit = () => {
     fetchSpecialist();
   }, [currentUser, id, navigate, toast]);
 
-  const generateProfileLink = (name: string, specialty: string) => {
-    const doctorSlug = createDoctorSlug(name);
-    const specialtySlug = createSpecialtySlug(specialty);
-    return `${window.location.origin}/${specialtySlug}/${doctorSlug}`;
+  const generateProfileLink = () => {
+    if (!specialist) return '';
+    const specialtySlug = createSpecialtySlug(specialist.specialty);
+    return `${window.location.origin}/${specialtySlug}/${specialist.slug || ''}`;
   };
 
   const copyLinkToClipboard = async () => {

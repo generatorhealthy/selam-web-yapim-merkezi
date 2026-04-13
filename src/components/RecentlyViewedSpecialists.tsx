@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { X, Clock, ChevronLeft, ChevronRight } from "lucide-react";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { useRef } from "react";
 
 export interface RecentSpecialist {
@@ -10,6 +10,7 @@ export interface RecentSpecialist {
   specialty: string;
   profile_picture?: string;
   city?: string;
+  slug?: string;
 }
 
 const STORAGE_KEY = "recently_viewed_specialists";
@@ -67,7 +68,6 @@ const RecentlyViewedSpecialists = ({ currentSpecialistId }: { currentSpecialistI
           <div ref={scrollRef} className="flex gap-2 overflow-x-auto scrollbar-hide flex-1" style={{ scrollbarWidth: "none" }}>
             {recent.map((s) => {
               const specialtySlug = createSpecialtySlug(s.specialty);
-              const doctorSlug = createDoctorSlug(s.name);
               return (
                 <Link
                   key={s.id}
