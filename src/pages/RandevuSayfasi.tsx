@@ -25,12 +25,13 @@ interface Specialist {
   hospital: string;
   online_consultation: boolean;
   face_to_face_consultation: boolean;
-  working_hours_start: string;
-  working_hours_end: string;
-  available_days: string[];
+  working_hours_start?: string;
+  working_hours_end?: string;
+  available_days?: string[];
   available_time_slots?: any;
   profile_picture?: string;
   bio?: string;
+  slug?: string;
 }
 
 // Consultation types mapping with images and descriptions
