@@ -142,7 +142,7 @@ serve(async (req) => {
 
           if (latestFailed) {
             const hoursSince = (Date.now() - latestFailed.createdDate) / (1000 * 60 * 60);
-            if (hoursSince <= 48) {
+            if (hoursSince <= 168) { // 7 days for failed payments
               failedEmails.add(email.toLowerCase());
             }
           }
