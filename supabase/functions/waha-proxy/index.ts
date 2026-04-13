@@ -221,6 +221,8 @@ Deno.serve(async (req) => {
         {
           const safeLimit = Math.min(Math.max(Number(payload?.limit) || 50, 1), 100);
           const params = new URLSearchParams({ limit: String(safeLimit) });
+          const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
+          const encodedChatId = encodeURIComponent(String(payload?.chatId ?? ''));
 
           if (typeof payload?.offset === 'number' && Number.isFinite(payload.offset) && payload.offset >= 0) {
             params.set('offset', String(payload.offset));
@@ -230,14 +232,18 @@ Deno.serve(async (req) => {
             params.set('downloadMedia', String(payload.downloadMedia));
           }
 
-          endpoint = `/api/${sessionName}/chats/${payload.chatId}/messages?${params.toString()}`;
+          if (typeof payload?.merge === 'boolean') {
+            params.set('merge', String(payload.merge));
+          }
+
+          endpoint = `/api/${encodedSessionName}/chats/${encodedChatId}/messages?${params.toString()}`;
         }
         break;
       case 'contacts.list':
         endpoint = `/api/contacts?session=${sessionName}`;
         break;
       case 'contacts.profile-picture':
-        endpoint = `/api/contacts/profile-picture?contactId=${payload.contactId}&session=${sessionName}`;
+        endpoint = `/api/contacts/profile-picture?contactId=${encodeURIComponent(String(payload?.contactId ?? ''))}&session=${encodeURIComponent(String(sessionName ?? ''))}`;
         break;
       default:
         return respond({ success: false, error: `Unknown action: ${action}` });
