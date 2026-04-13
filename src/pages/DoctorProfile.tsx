@@ -94,13 +94,11 @@ const DoctorProfile = () => {
       setLoading(true);
       console.log('Fetching specialist for:', doctorName, 'in specialty:', specialtySlug);
       
-      // Query directly by slug for permanent URLs
-      const { data: foundSpecialist, error: slugError } = await supabase
-        .from('specialists')
-        .select('id, name, specialty, hospital, city, experience, rating, reviews_count, bio, education, university, certifications, profile_picture, consultation_type, working_hours_start, working_hours_end, available_days, available_time_slots, address, phone, email, online_consultation, face_to_face_consultation, faq, seo_title, seo_description, seo_keywords, user_id, slug')
-        .eq('is_active', true)
-        .eq('slug', doctorName)
-        .maybeSingle();
+      // Query via RPC for permanent URLs (bypasses RLS safely)
+      const { data: foundSpecialists, error: slugError } = await supabase
+        .rpc('get_public_specialist_by_slug', { p_slug: doctorName });
+
+      const foundSpecialist = foundSpecialists?.[0] || null;
 
       if (slugError) {
         console.error('Error fetching specialist by slug:', slugError);

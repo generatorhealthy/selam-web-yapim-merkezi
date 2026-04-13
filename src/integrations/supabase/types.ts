@@ -5407,6 +5407,41 @@ export type Database = {
               specialist_id: string
             }[]
           }
+      get_public_specialist_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          address: string
+          available_days: string[]
+          available_time_slots: Json
+          bio: string
+          certifications: string
+          city: string
+          consultation_fee: number
+          consultation_type: string
+          education: string
+          email: string
+          experience: number
+          face_to_face_consultation: boolean
+          faq: string
+          hospital: string
+          id: string
+          name: string
+          online_consultation: boolean
+          phone: string
+          profile_picture: string
+          rating: number
+          reviews_count: number
+          seo_description: string
+          seo_keywords: string
+          seo_title: string
+          slug: string
+          specialty: string
+          university: string
+          user_id: string
+          working_hours_end: string
+          working_hours_start: string
+        }[]
+      }
       get_public_specialists: {
         Args: never
         Returns: {
