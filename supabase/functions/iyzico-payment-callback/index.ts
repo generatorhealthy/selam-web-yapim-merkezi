@@ -264,6 +264,40 @@ serve(async (req) => {
       });
     } else {
       console.log("❌ Ödeme başarısız veya bilinmeyen durum:", JSON.stringify(body));
+      
+      // Mark pending orders as payment failed
+      if (isFailed) {
+        let failedEmail = (body.customerEmail || body.customer_email || "")?.toLowerCase().trim();
+        if (!failedEmail && body.customerReferenceCode) {
+          failedEmail = await getCustomerFromIyzico(body.customerReferenceCode);
+        }
+        if (failedEmail) {
+          try {
+            const supabaseAdmin = createClient(
+              Deno.env.get('SUPABASE_URL') ?? '',
+              Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+            );
+            const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+            const { data: pendingOrders } = await supabaseAdmin
+              .from('orders')
+              .select('id')
+              .eq('customer_email', failedEmail)
+              .eq('status', 'pending')
+              .is('deleted_at', null)
+              .gte('created_at', twoDaysAgo);
+            
+            if (pendingOrders?.length) {
+              for (const order of pendingOrders) {
+                await supabaseAdmin.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
+              }
+              console.log(`Marked ${pendingOrders.length} orders as payment_failed for ${failedEmail}`);
+            }
+          } catch (e) {
+            console.error("Failed to mark orders:", e);
+          }
+        }
+      }
+
       return new Response(null, {
         status: 302,
         headers: { ...corsHeaders, "Location": "https://doktorumol.com.tr/" }
