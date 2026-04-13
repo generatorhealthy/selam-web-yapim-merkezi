@@ -1,0 +1,1 @@
+ALTER TABLE public.specialists ALTER COLUMN slug SET DEFAULT '';

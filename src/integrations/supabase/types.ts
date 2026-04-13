@@ -4712,7 +4712,7 @@ export type Database = {
           seo_description?: string | null
           seo_keywords?: string | null
           seo_title?: string | null
-          slug: string
+          slug?: string
           specialty: string
           university?: string | null
           updated_at?: string
