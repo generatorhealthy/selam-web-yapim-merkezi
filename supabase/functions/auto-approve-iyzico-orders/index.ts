@@ -99,18 +99,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get ACTIVE subscriptions from Iyzico
-    const activeSubscriptions = await getAllSubscriptions(
-      IYZICO_API_KEY, IYZICO_SECRET_KEY, IYZICO_BASE_URL, "ACTIVE"
-    );
+    // Get subscriptions from Iyzico (ACTIVE + UNPAID)
+    const [activeSubscriptions, unpaidSubscriptions] = await Promise.all([
+      getAllSubscriptions(IYZICO_API_KEY, IYZICO_SECRET_KEY, IYZICO_BASE_URL, "ACTIVE"),
+      getAllSubscriptions(IYZICO_API_KEY, IYZICO_SECRET_KEY, IYZICO_BASE_URL, "UNPAID"),
+    ]);
 
-    console.log(`Found ${activeSubscriptions.length} active Iyzico subscriptions`);
+    const allSubscriptions = [...activeSubscriptions, ...unpaidSubscriptions];
+    console.log(`Found ${activeSubscriptions.length} active + ${unpaidSubscriptions.length} unpaid = ${allSubscriptions.length} total Iyzico subscriptions`);
 
     // Build sets of emails with successful/failed recent payments
     const successfulEmails = new Set<string>();
     const failedEmails = new Set<string>();
 
-    for (const sub of activeSubscriptions) {
+    for (const sub of allSubscriptions) {
       const email = sub.customerEmail;
       if (!email) continue;
 
@@ -140,7 +142,7 @@ serve(async (req) => {
 
           if (latestFailed) {
             const hoursSince = (Date.now() - latestFailed.createdDate) / (1000 * 60 * 60);
-            if (hoursSince <= 48) {
+            if (hoursSince <= 168) { // 7 days for failed payments
               failedEmails.add(email.toLowerCase());
             }
           }
@@ -200,7 +202,7 @@ serve(async (req) => {
 
     // Mark failed payment orders
     for (const email of failedEmails) {
-      const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
       const { data: pendingOrders, error: fetchError } = await supabaseAdmin
         .from('orders')
@@ -208,7 +210,7 @@ serve(async (req) => {
         .eq('customer_email', email)
         .eq('status', 'pending')
         .is('deleted_at', null)
-        .gte('created_at', twoDaysAgo)
+        .gte('created_at', sevenDaysAgo)
         .order('created_at', { ascending: false });
 
       if (fetchError || !pendingOrders || pendingOrders.length === 0) continue;
