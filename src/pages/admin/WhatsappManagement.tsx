@@ -68,6 +68,29 @@ const mergeChatMessages = (messages: any[]) => {
   return Array.from(messageMap.values()).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 };
 
+const getSerializedChatId = (chat: any) => {
+  const directId =
+    chat?.id?._serialized ??
+    chat?._data?.id?._serialized ??
+    (typeof chat?.id === "string" ? chat.id : null) ??
+    chat?.chatId ??
+    null;
+
+  if (typeof directId === "string" && directId.trim()) {
+    return directId;
+  }
+
+  const user = chat?.id?.user ?? chat?._data?.id?.user ?? chat?.wid?.user ?? "";
+  const server = chat?.id?.server ?? chat?._data?.id?.server ?? chat?.wid?.server ?? "c.us";
+
+  return user ? `${user}@${server}` : "";
+};
+
+const getChatInputValue = (chat: any) => {
+  const serializedId = getSerializedChatId(chat);
+  return serializedId.replace(/@(c\.us|lid|g\.us|s\.whatsapp\.net)$/i, "");
+};
+
 const WhatsappManagement = () => {
   const { userProfile } = useUserRole();
   const isAdmin = userProfile?.role === 'admin';
@@ -112,7 +135,7 @@ const WhatsappManagement = () => {
 
   const getSessionName = (line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`;
 
-  const getContactId = (chat: any) => chat?.id?._serialized || (chat?.id?.user ? chat.id.user + '@c.us' : '');
+  const getContactId = (chat: any) => getSerializedChatId(chat);
 
   const ContactAvatar = ({ chat, size = 'md' }: { chat: any; size?: 'sm' | 'md' }) => {
     const contactId = getContactId(chat);
@@ -225,7 +248,7 @@ const WhatsappManagement = () => {
 
   const getActiveChatId = () => {
     if (activeChat) {
-      return activeChat.id?._serialized || activeChat.id?.user + '@c.us' || '';
+      return getSerializedChatId(activeChat);
     }
     const num = chatTo.replace(/[^0-9]/g, '');
     return num ? num + '@c.us' : '';
@@ -263,7 +286,7 @@ const WhatsappManagement = () => {
         setChats(chatList);
         // Fetch profile pictures for all chats
         chatList.forEach((chat: any) => {
-          const contactId = chat.id?._serialized || (chat.id?.user ? chat.id.user + '@c.us' : '');
+          const contactId = getSerializedChatId(chat);
           if (contactId && !profilePics[contactId]) {
             fetchProfilePic(contactId);
           }
@@ -291,8 +314,16 @@ const WhatsappManagement = () => {
     const targetChat = chat || activeChat;
     if (!targetChat) return;
     if (!silent) setMessagesLoading(true);
-    const chatId = targetChat.id?._serialized || targetChat.id?.user + '@c.us' || '';
+    const chatId = getSerializedChatId(targetChat);
     const sessionName = getSessionName(selectedLine);
+
+    if (!chatId) {
+      if (!silent) {
+        toast.error('Sohbet kimliği bulunamadı');
+        setMessagesLoading(false);
+      }
+      return;
+    }
 
     try {
       if (silent) {
@@ -301,6 +332,7 @@ const WhatsappManagement = () => {
           limit: CHAT_HISTORY_PAGE_SIZE,
           offset: 0,
           downloadMedia: false,
+          merge: true,
         });
 
         const latestMessages = Array.isArray(res.data) ? res.data : [];
@@ -317,6 +349,7 @@ const WhatsappManagement = () => {
           limit: CHAT_HISTORY_PAGE_SIZE,
           offset: page * CHAT_HISTORY_PAGE_SIZE,
           downloadMedia: false,
+          merge: true,
         });
 
         const batch = Array.isArray(res.data) ? res.data : [];
@@ -352,7 +385,7 @@ const WhatsappManagement = () => {
 
   const openChat = (chat: any) => {
     setActiveChat(chat);
-    const num = chat.id?.user || chat.id?._serialized?.replace('@c.us', '').replace('@lid', '') || '';
+    const num = getChatInputValue(chat);
     setChatTo(num);
     setChatMessages([]);
     fetchChatMessages(chat);
@@ -643,7 +676,7 @@ const WhatsappManagement = () => {
                     </div>
                   ) : filteredChats.length > 0 ? (
                     filteredChats.map((chat, i) => {
-                      const isActive = activeChat && (activeChat.id?._serialized === chat.id?._serialized);
+                      const isActive = activeChat && (getSerializedChatId(activeChat) === getSerializedChatId(chat));
                       const lastMsgTime = chat.lastMessage?.timestamp;
                       return (
                         <div
