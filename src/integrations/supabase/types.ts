@@ -4673,6 +4673,7 @@ export type Database = {
           seo_description: string | null
           seo_keywords: string | null
           seo_title: string | null
+          slug: string
           specialty: string
           university: string | null
           updated_at: string
@@ -4711,6 +4712,7 @@ export type Database = {
           seo_description?: string | null
           seo_keywords?: string | null
           seo_title?: string | null
+          slug: string
           specialty: string
           university?: string | null
           updated_at?: string
@@ -4749,6 +4751,7 @@ export type Database = {
           seo_description?: string | null
           seo_keywords?: string | null
           seo_title?: string | null
+          slug?: string
           specialty?: string
           university?: string | null
           updated_at?: string
@@ -5407,6 +5410,7 @@ export type Database = {
         Returns: undefined
       }
       extract_first_int: { Args: { p_text: string }; Returns: number }
+      generate_specialist_slug: { Args: { p_name: string }; Returns: string }
       get_current_user_role: { Args: never; Returns: string }
       get_default_time_slots: { Args: never; Returns: Json }
       get_order_stats: {
