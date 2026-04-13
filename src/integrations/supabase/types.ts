@@ -5419,17 +5419,32 @@ export type Database = {
           total_count: number
         }[]
       }
-      get_public_reviews: {
-        Args: { p_specialist_id?: string }
-        Returns: {
-          comment: string
-          created_at: string
-          id: string
-          rating: number
-          reviewer_display_name: string
-          specialist_id: string
-        }[]
-      }
+      get_public_reviews:
+        | {
+            Args: { p_limit?: number; p_specialist_id?: string }
+            Returns: {
+              comment: string
+              created_at: string
+              id: string
+              rating: number
+              reviewer_name: string
+              specialist_id: string
+              specialist_name: string
+              specialist_specialty: string
+              status: string
+            }[]
+          }
+        | {
+            Args: { p_specialist_id?: string }
+            Returns: {
+              comment: string
+              created_at: string
+              id: string
+              rating: number
+              reviewer_display_name: string
+              specialist_id: string
+            }[]
+          }
       get_public_specialists: {
         Args: never
         Returns: {

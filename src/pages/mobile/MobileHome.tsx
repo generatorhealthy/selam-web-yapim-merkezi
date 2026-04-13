@@ -65,17 +65,7 @@ export default function MobileHome() {
 
       // Fetch reviews
       const { data: reviewsData } = await supabase
-        .from('reviews')
-        .select(`
-          id, specialist_id, reviewer_name, rating, comment, status, created_at,
-          specialists (
-            name,
-            specialty
-          )
-        `)
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .rpc('get_public_reviews', { p_limit: 5 });
 
       // Fetch specialists - randomize on every load
       const { data: specialistsData } = await supabase
@@ -268,9 +258,9 @@ export default function MobileHome() {
                         <p className="text-sm text-muted-foreground line-clamp-3">
                           {review.comment}
                         </p>
-                        {review.specialists && (
+                        {(review as any).specialist_name && (
                           <p className="text-xs text-primary font-medium">
-                            {review.specialists.name} - {review.specialists.specialty}
+                            {(review as any).specialist_name} - {(review as any).specialist_specialty}
                           </p>
                         )}
                       </div>
