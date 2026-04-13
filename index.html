@@ -112,7 +112,57 @@
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="/og-image.png" />
-    
+
+    <!-- Schema.org Structured Data: Organization + WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.dokturumol.com/#organization",
+          "name": "Doktorum Ol",
+          "url": "https://www.dokturumol.com",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.dokturumol.com/lovable-uploads/3db3e51c-c5db-4938-a759-095d2948086b.png"
+          },
+          "description": "Doktorum Ol ile psikologdan aile danışmanına birçok branşta uzmanı bul, online ya da yüz yüze kolayca randevu al.",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer service",
+            "availableLanguage": ["Turkish"]
+          },
+          "sameAs": []
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.dokturumol.com/#website",
+          "url": "https://www.dokturumol.com",
+          "name": "Doktorum Ol Randevu Sitesi",
+          "publisher": { "@id": "https://www.dokturumol.com/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.dokturumol.com/uzmanlar?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "MedicalBusiness",
+          "@id": "https://www.dokturumol.com/#business",
+          "name": "Doktorum Ol",
+          "url": "https://www.dokturumol.com",
+          "description": "Online ve yüz yüze psikolog, aile danışmanı, diyetisyen ve daha birçok branşta uzman randevu platformu.",
+          "medicalSpecialty": ["Psychology", "Psychiatry", "Dietetics", "Gynecology"],
+          "areaServed": {
+            "@type": "Country",
+            "name": "Turkey"
+          }
+        }
+      ]
+    }
+    </script>
+
     <!-- Main app script loaded as module -->
     
     <!-- Google tag (gtag.js) - Google Analytics & Ads -->
