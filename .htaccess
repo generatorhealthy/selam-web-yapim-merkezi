@@ -120,8 +120,8 @@ Options -Indexes
 # Robots.txt doğrudan sunulsun
 RewriteRule ^robots\.txt$ - [L]
 
-# Sitemap.xml dinamik olarak edge function'dan sunulsun (her zaman güncel)
-RewriteRule ^sitemap\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/generate-sitemap?format=xml [R=302,L]
+# Sitemap.xml dinamik olarak edge function'dan sunulsun (301 kalıcı yönlendirme - Google için güvenilir)
+RewriteRule ^sitemap\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/generate-sitemap?format=xml [R=301,L]
 
 # Specific blog post redirects
 RewriteRule ^uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/?$ /blog/uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur [R=301,L]
@@ -130,7 +130,7 @@ RewriteRule ^uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/?$ /blog/uzun-sure-ci
 RewriteCond %{REQUEST_URI} !^/blog/
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/assets/
-RewriteCond %{REQUEST_URI} !^/(about|hakkimizda|iletisim|uzmanlar|uzmanlik|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|psikolog-paketi|diyetisyen-paketi|fizyoterapist-paketi|aile-danismani-paketi|odeme|odeme-sayfasi|odeme-basarili|privacy|gizlilik-politikasi|disclosure-text|aydinlatma-metni|mesafeli-satis-sozlesmesi|visitor-consultant-agreement|ziyaretci-danisan-sozlesmesi|comment-rules|yorum-kurallari|anasayfa|giris-yap|test|test-al|test-sonuc|divan_paneli|doktor-paneli|kayit-ol)
+RewriteCond %{REQUEST_URI} !^/(about|hakkimizda|iletisim|uzmanlar|uzmanlik|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|psikolog-paketi|diyetisyen-paketi|fizyoterapist-paketi|aile-danismani-paketi|odeme|odeme-sayfasi|odeme-basarili|privacy|gizlilik-politikasi|disclosure-text|aydinlatma-metni|mesafeli-satis-sozlesmesi|visitor-consultant-agreement|ziyaretci-danisan-sozlesmesi|comment-rules|yorum-kurallari|anasayfa|giris-yap|sifre-sifirla|kayit-ol|test|test-al|test-sonuc|divan_paneli|doktor-paneli|ozel-firsat|bu-aya-ozel|randevu-sayfasi|randevu-al)
 RewriteCond %{REQUEST_URI} !^/randevu-al/
 RewriteCond %{REQUEST_URI} !^/yazilar/
 RewriteCond %{REQUEST_FILENAME} !-f
