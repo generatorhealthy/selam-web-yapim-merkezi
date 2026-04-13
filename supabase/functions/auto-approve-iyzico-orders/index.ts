@@ -202,7 +202,7 @@ serve(async (req) => {
 
     // Mark failed payment orders
     for (const email of failedEmails) {
-      const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
       const { data: pendingOrders, error: fetchError } = await supabaseAdmin
         .from('orders')
