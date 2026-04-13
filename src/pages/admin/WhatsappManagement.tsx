@@ -40,6 +40,34 @@ const wahaApi = async (action: string, sessionName?: string, payload?: any) => {
   return data;
 };
 
+const CHAT_HISTORY_PAGE_SIZE = 100;
+const CHAT_HISTORY_MAX_PAGES = 100;
+
+const normalizeChatMessage = (message: any) => ({
+  ...message,
+  body: message?.body ?? message?._data?.body ?? "",
+  timestamp: Number(message?.timestamp ?? message?._data?.t ?? 0),
+  fromMe: Boolean(message?.fromMe ?? message?._data?.id?.fromMe ?? false),
+});
+
+const getChatMessageKey = (message: any, fallback = "") => String(
+  message?.id?._serialized
+    ?? message?.id
+    ?? message?._data?.id?._serialized
+    ?? `${message?.timestamp ?? message?._data?.t ?? 0}-${message?.fromMe ?? message?._data?.id?.fromMe ?? false}-${message?.body ?? message?._data?.body ?? ""}-${fallback}`,
+);
+
+const mergeChatMessages = (messages: any[]) => {
+  const messageMap = new Map<string, any>();
+
+  messages.forEach((message, index) => {
+    const normalizedMessage = normalizeChatMessage(message);
+    messageMap.set(getChatMessageKey(normalizedMessage, String(index)), normalizedMessage);
+  });
+
+  return Array.from(messageMap.values()).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+};
+
 const WhatsappManagement = () => {
   const { userProfile } = useUserRole();
   const isAdmin = userProfile?.role === 'admin';
@@ -264,22 +292,69 @@ const WhatsappManagement = () => {
     if (!targetChat) return;
     if (!silent) setMessagesLoading(true);
     const chatId = targetChat.id?._serialized || targetChat.id?.user + '@c.us' || '';
+    const sessionName = getSessionName(selectedLine);
+
     try {
-      const res = await wahaApi('chats.messages', getSessionName(selectedLine), { chatId, limit: 1000 });
-      if (res.success && res.data) {
-        const msgs = Array.isArray(res.data) ? res.data : [];
-        msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
-        setChatMessages(msgs);
-        if (!silent) setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      if (silent) {
+        const res = await wahaApi('chats.messages', sessionName, {
+          chatId,
+          limit: CHAT_HISTORY_PAGE_SIZE,
+          offset: 0,
+          downloadMedia: false,
+        });
+
+        const latestMessages = Array.isArray(res.data) ? res.data : [];
+        setChatMessages((prev) => mergeChatMessages([...prev, ...latestMessages]));
+        return;
       }
-    } catch {}
-    if (!silent) setMessagesLoading(false);
+
+      const allMessages: any[] = [];
+      const seenMessageKeys = new Set<string>();
+
+      for (let page = 0; page < CHAT_HISTORY_MAX_PAGES; page += 1) {
+        const res = await wahaApi('chats.messages', sessionName, {
+          chatId,
+          limit: CHAT_HISTORY_PAGE_SIZE,
+          offset: page * CHAT_HISTORY_PAGE_SIZE,
+          downloadMedia: false,
+        });
+
+        const batch = Array.isArray(res.data) ? res.data : [];
+        if (batch.length === 0) break;
+
+        let newMessageCount = 0;
+
+        batch.forEach((message, index) => {
+          const normalizedMessage = normalizeChatMessage(message);
+          const messageKey = getChatMessageKey(normalizedMessage, `${page}-${index}`);
+
+          if (!seenMessageKeys.has(messageKey)) {
+            seenMessageKeys.add(messageKey);
+            allMessages.push(normalizedMessage);
+            newMessageCount += 1;
+          }
+        });
+
+        if (batch.length < CHAT_HISTORY_PAGE_SIZE || newMessageCount === 0) break;
+      }
+
+      setChatMessages(mergeChatMessages(allMessages));
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch (error) {
+      console.error('Mesaj geçmişi alınamadı:', error);
+      if (!silent) {
+        toast.error('Mesaj geçmişi alınamadı');
+      }
+    } finally {
+      if (!silent) setMessagesLoading(false);
+    }
   };
 
   const openChat = (chat: any) => {
     setActiveChat(chat);
     const num = chat.id?.user || chat.id?._serialized?.replace('@c.us', '').replace('@lid', '') || '';
     setChatTo(num);
+    setChatMessages([]);
     fetchChatMessages(chat);
   };
 
