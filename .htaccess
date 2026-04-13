@@ -53,7 +53,7 @@ RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
     AddType text/css .css
     
     # Diğer dosya türleri
-    AddType text/html .html
+    AddType "text/html; charset=UTF-8" .html
     AddType application/json .json
     AddType image/svg+xml .svg
     AddType font/woff2 .woff2
@@ -104,7 +104,7 @@ RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
 RemoveType .js .css .html
 AddType application/javascript .js
 AddType text/css .css
-AddType text/html .html
+AddType "text/html; charset=UTF-8" .html
 
 # Güvenlik başlıkları
 <IfModule mod_headers.c>
