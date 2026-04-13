@@ -82,6 +82,11 @@ RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
         Header always set X-Content-Type-Options nosniff
     </Files>
     
+    # HTML dosyaları
+    <FilesMatch "\.html$">
+        Header always set Content-Type "text/html; charset=UTF-8"
+    </FilesMatch>
+    
     # CSS dosyaları
     <FilesMatch "\.css$">
         Header always set Content-Type "text/css; charset=utf-8"
