@@ -2,20 +2,22 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Helmet } from "react-helmet-async";
-import { HorizontalNavigation } from "@/components/HorizontalNavigation";
-import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
-import { Textarea } from "@/components/ui/textarea";
-
-import { 
+import {
   MessageCircle, Plus, Trash2, Phone, QrCode, Check, Edit2, Save,
-  Send, RefreshCw, LogOut, Power, Loader2, Users, MessageSquare,
-  Search, MoreVertical, Smile, Paperclip, Mic, ArrowLeft, Settings,
-  CircleDot, X, CheckCheck
+  Send, RefreshCw, LogOut, Power, Loader2, Users, Search,
+  MoreVertical, Smile, Paperclip, Mic, ArrowLeft, X, CheckCheck,
+  UserPlus, ChevronDown
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 
 interface WhatsappLine {
   id: string;
@@ -24,12 +26,6 @@ interface WhatsappLine {
   is_active: boolean;
   sort_order: number;
   created_at: string;
-}
-
-interface WahaSession {
-  name: string;
-  status: string;
-  me?: { id: string; pushName: string };
 }
 
 const wahaApi = async (action: string, sessionName?: string, payload?: any) => {
@@ -48,26 +44,27 @@ const WhatsappManagement = () => {
   const { userProfile } = useUserRole();
   const isAdmin = userProfile?.role === 'admin';
 
+  // Lines
   const [lines, setLines] = useState<WhatsappLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLine, setSelectedLine] = useState<WhatsappLine | null>(null);
+  const [showAddLineDialog, setShowAddLineDialog] = useState(false);
   const [newPhone, setNewPhone] = useState("");
   const [newLabel, setNewLabel] = useState("");
   const [adding, setAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingLine, setEditingLine] = useState<WhatsappLine | null>(null);
   const [editPhone, setEditPhone] = useState("");
   const [editLabel, setEditLabel] = useState("");
-  const [showAddForm, setShowAddForm] = useState(false);
 
+  // Session
   const [sessionStatus, setSessionStatus] = useState<string>("UNKNOWN");
   const [qrCode, setQrCode] = useState<string | null>(null);
-  const [qrLoading, setQrLoading] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const qrIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const messagesRefreshRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Chat
   const [chatMessage, setChatMessage] = useState("");
   const [chatTo, setChatTo] = useState("");
   const [sending, setSending] = useState(false);
@@ -77,16 +74,21 @@ const WhatsappManagement = () => {
   const [activeChat, setActiveChat] = useState<any | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+
+  // New chat dialog
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [newChatName, setNewChatName] = useState("");
   const [newChatSurname, setNewChatSurname] = useState("");
   const [newChatPhone, setNewChatPhone] = useState("");
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const getSessionName = (line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`;
+
+  const stopQrPolling = () => {
+    if (qrIntervalRef.current) {
+      clearInterval(qrIntervalRef.current);
+      qrIntervalRef.current = null;
+    }
+  };
 
   const fetchLines = async () => {
     const { data, error } = await supabase
@@ -109,8 +111,9 @@ const WhatsappManagement = () => {
     try {
       const res = await wahaApi('sessions.status', getSessionName(line));
       if (res.success && res.data) {
-        setSessionStatus(res.data.status || 'STOPPED');
-        if (res.data.status === 'WORKING') {
+        const status = res.data.status || 'STOPPED';
+        setSessionStatus(status);
+        if (status === 'WORKING') {
           setQrCode(null);
           stopQrPolling();
         }
@@ -121,13 +124,6 @@ const WhatsappManagement = () => {
       setSessionStatus('STOPPED');
     }
   }, []);
-
-  const stopQrPolling = () => {
-    if (qrIntervalRef.current) {
-      clearInterval(qrIntervalRef.current);
-      qrIntervalRef.current = null;
-    }
-  };
 
   const fetchQrCode = async (line: WhatsappLine) => {
     try {
@@ -153,7 +149,6 @@ const WhatsappManagement = () => {
         setConnecting(false);
         return;
       }
-      toast.info("Oturum zaten başlatılmış, QR kod alınıyor...");
     }
     setSessionStatus('SCAN_QR_CODE');
     setTimeout(() => fetchQrCode(selectedLine), 1500);
@@ -191,10 +186,7 @@ const WhatsappManagement = () => {
   };
 
   const sendMessage = async () => {
-    if (!selectedLine || !chatMessage.trim()) {
-      toast.error("Mesaj gerekli");
-      return;
-    }
+    if (!selectedLine || !chatMessage.trim()) return;
     const chatId = getActiveChatId();
     if (!chatId) {
       toast.error("Alıcı numarası gerekli");
@@ -203,7 +195,6 @@ const WhatsappManagement = () => {
     setSending(true);
     const msgText = chatMessage;
     setChatMessage("");
-    // Optimistic: add message locally
     setChatMessages(prev => [...prev, { body: msgText, fromMe: true, timestamp: Math.floor(Date.now() / 1000), _optimistic: true }]);
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
@@ -238,7 +229,6 @@ const WhatsappManagement = () => {
       const res = await wahaApi('chats.messages', getSessionName(selectedLine), { chatId, limit: 50 });
       if (res.success && res.data) {
         const msgs = Array.isArray(res.data) ? res.data : [];
-        // Sort by timestamp ascending (oldest first)
         msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
         setChatMessages(msgs);
         if (!silent) setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -252,86 +242,6 @@ const WhatsappManagement = () => {
     const num = chat.id?.user || chat.id?._serialized?.replace('@c.us', '').replace('@lid', '') || '';
     setChatTo(num);
     fetchChatMessages(chat);
-  };
-
-  useEffect(() => { fetchLines(); }, []);
-  useEffect(() => {
-    if (selectedLine) {
-      checkSessionStatus(selectedLine);
-      setActiveChat(null);
-      setChats([]);
-      setChatMessages([]);
-    }
-    return () => stopQrPolling();
-  }, [selectedLine]);
-
-  useEffect(() => {
-    if (sessionStatus === 'WORKING' && selectedLine) {
-      fetchChats();
-    }
-  }, [sessionStatus, selectedLine]);
-
-  // Auto-refresh messages every 3 seconds when a chat is open
-  useEffect(() => {
-    if (sessionStatus !== 'WORKING' || !activeChat) return;
-    const interval = setInterval(() => {
-      fetchChatMessages(activeChat, true);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [sessionStatus, activeChat, selectedLine]);
-
-  const addLine = async () => {
-    if (!newPhone.trim() || !newLabel.trim()) {
-      toast.error("Telefon numarası ve etiket gerekli");
-      return;
-    }
-    setAdding(true);
-    const { error } = await supabase.from('whatsapp_lines').insert({
-      phone_number: newPhone.trim(),
-      label: newLabel.trim(),
-      sort_order: lines.length
-    });
-    if (error) {
-      toast.error("Hat eklenemedi");
-    } else {
-      toast.success("Hat eklendi");
-      setNewPhone(""); setNewLabel(""); setShowAddForm(false);
-      fetchLines();
-    }
-    setAdding(false);
-  };
-
-  const deleteLine = async (id: string) => {
-    if (!confirm("Bu hattı silmek istediğinize emin misiniz?")) return;
-    const { error } = await supabase.from('whatsapp_lines').delete().eq('id', id);
-    if (error) {
-      toast.error("Hat silinemedi");
-    } else {
-      toast.success("Hat silindi");
-      if (selectedLine?.id === id) setSelectedLine(null);
-      fetchLines();
-    }
-  };
-
-  const toggleActive = async (line: WhatsappLine) => {
-    const { error } = await supabase.from('whatsapp_lines').update({ is_active: !line.is_active }).eq('id', line.id);
-    if (error) toast.error("Durum güncellenemedi");
-    else fetchLines();
-  };
-
-  const startEdit = (line: WhatsappLine) => {
-    setEditingId(line.id);
-    setEditPhone(line.phone_number);
-    setEditLabel(line.label);
-  };
-
-  const saveEdit = async () => {
-    if (!editingId) return;
-    const { error } = await supabase.from('whatsapp_lines')
-      .update({ phone_number: editPhone.trim(), label: editLabel.trim() })
-      .eq('id', editingId);
-    if (error) toast.error("Güncellenemedi");
-    else { toast.success("Hat güncellendi"); setEditingId(null); fetchLines(); }
   };
 
   const startNewChat = () => {
@@ -355,6 +265,68 @@ const WhatsappManagement = () => {
     setNewChatPhone("");
   };
 
+  const addLine = async () => {
+    if (!newPhone.trim() || !newLabel.trim()) {
+      toast.error("Telefon numarası ve etiket gerekli");
+      return;
+    }
+    setAdding(true);
+    const { error } = await supabase.from('whatsapp_lines').insert({
+      phone_number: newPhone.trim(),
+      label: newLabel.trim(),
+      sort_order: lines.length
+    });
+    if (error) {
+      toast.error("Hat eklenemedi");
+    } else {
+      toast.success("Hat eklendi");
+      setNewPhone(""); setNewLabel(""); setShowAddLineDialog(false);
+      fetchLines();
+    }
+    setAdding(false);
+  };
+
+  const deleteLine = async (id: string) => {
+    if (!confirm("Bu hattı silmek istediğinize emin misiniz?")) return;
+    const { error } = await supabase.from('whatsapp_lines').delete().eq('id', id);
+    if (error) toast.error("Hat silinemedi");
+    else {
+      toast.success("Hat silindi");
+      if (selectedLine?.id === id) setSelectedLine(null);
+      fetchLines();
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!editingLine) return;
+    const { error } = await supabase.from('whatsapp_lines')
+      .update({ phone_number: editPhone.trim(), label: editLabel.trim() })
+      .eq('id', editingLine.id);
+    if (error) toast.error("Güncellenemedi");
+    else { toast.success("Hat güncellendi"); setEditingLine(null); fetchLines(); }
+  };
+
+  useEffect(() => { fetchLines(); }, []);
+  useEffect(() => {
+    if (selectedLine) {
+      checkSessionStatus(selectedLine);
+      setActiveChat(null);
+      setChats([]);
+      setChatMessages([]);
+    }
+    return () => stopQrPolling();
+  }, [selectedLine]);
+
+  useEffect(() => {
+    if (sessionStatus === 'WORKING' && selectedLine) fetchChats();
+  }, [sessionStatus, selectedLine]);
+
+  useEffect(() => {
+    if (sessionStatus !== 'WORKING' || !activeChat) return;
+    const interval = setInterval(() => fetchChatMessages(activeChat, true), 3000);
+    return () => clearInterval(interval);
+  }, [sessionStatus, activeChat, selectedLine]);
+
   const filteredChats = chats.filter(chat => {
     if (!searchQuery) return true;
     const name = chat.name || chat.id?.user || '';
@@ -367,174 +339,204 @@ const WhatsappManagement = () => {
     return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatDate = (timestamp: number) => {
+    if (!timestamp) return '';
+    const d = new Date(timestamp * 1000);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.toDateString() === today.toDateString()) return 'Bugün';
+    if (d.toDateString() === yesterday.toDateString()) return 'Dün';
+    return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const connectionStatusColor = sessionStatus === 'WORKING' ? 'bg-green-500' : sessionStatus === 'SCAN_QR_CODE' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500';
+  const connectionStatusText = sessionStatus === 'WORKING' ? 'Bağlı' : sessionStatus === 'SCAN_QR_CODE' ? 'QR Bekleniyor' : 'Bağlı Değil';
+
   return (
     <>
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
         <title>WhatsApp Destek - Divan Paneli</title>
       </Helmet>
-      <div className="min-h-screen bg-[#111b21]">
-        <HorizontalNavigation />
-        <div className="container mx-auto px-2 sm:px-4 py-4 max-w-7xl">
+
+      <div className="fixed inset-0 bg-[#111b21] flex flex-col">
+        {/* Top bar */}
+        <div className="h-12 bg-[#202c33] border-b border-[#313d45] flex items-center px-4 gap-3 flex-shrink-0 z-10">
           <AdminBackButton />
+          <div className="flex items-center gap-2 ml-2">
+            <div className="w-8 h-8 rounded-full bg-[#00a884] flex items-center justify-center">
+              <MessageCircle className="w-4 h-4 text-white" />
+            </div>
+            <h1 className="text-[#e9edef] text-sm font-semibold">WhatsApp Destek</h1>
+          </div>
+          {selectedLine && (
+            <div className="flex items-center gap-2 ml-4">
+              <div className={`w-2 h-2 rounded-full ${connectionStatusColor}`} />
+              <span className="text-[#8696a0] text-xs">{connectionStatusText}</span>
+              <span className="text-[#8696a0] text-xs">• {selectedLine.label}</span>
+            </div>
+          )}
+          <div className="ml-auto flex items-center gap-1">
+            {selectedLine && sessionStatus !== 'WORKING' && (
+              <Button
+                size="sm"
+                onClick={startSession}
+                disabled={connecting}
+                className="bg-[#00a884] hover:bg-[#06cf9c] text-white h-8 text-xs gap-1"
+              >
+                {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Power className="w-3 h-3" />}
+                Bağlan
+              </Button>
+            )}
+            {selectedLine && sessionStatus === 'WORKING' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={stopSession}
+                disabled={disconnecting}
+                className="text-red-400 hover:bg-[#313d45] h-8 text-xs gap-1"
+              >
+                {disconnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3 h-3" />}
+                Çıkış
+              </Button>
+            )}
+          </div>
+        </div>
 
-          {/* WhatsApp-style container */}
-          <div className="bg-[#222e35] rounded-lg overflow-hidden shadow-2xl border border-[#313d45]" style={{ height: 'calc(100vh - 160px)', minHeight: '600px' }}>
-            <div className="flex h-full">
-
-              {/* ===== LEFT SIDEBAR ===== */}
-              <div className="w-[340px] flex-shrink-0 flex flex-col border-r border-[#313d45] bg-[#111b21]">
-                
-                {/* Sidebar Header - Line selector */}
-                <div className="bg-[#202c33] px-4 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center">
-                      <MessageCircle className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-[#e9edef] text-sm font-medium">
-                        {selectedLine ? selectedLine.label : 'WhatsApp'}
-                      </h2>
+        {/* Main content */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* ===== LEFT SIDEBAR ===== */}
+          <div className="w-[360px] flex-shrink-0 flex flex-col border-r border-[#313d45] bg-[#111b21]">
+            
+            {/* Line selector dropdown + actions */}
+            <div className="bg-[#202c33] px-3 py-2 flex items-center gap-2 border-b border-[#313d45]">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex-1 flex items-center gap-2 bg-[#2a3942] rounded-lg px-3 py-2 text-left hover:bg-[#313d45] transition-colors">
+                    <Phone className="w-4 h-4 text-[#00a884] flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[#e9edef] text-sm truncate">
+                        {selectedLine ? selectedLine.label : 'Hat Seçin'}
+                      </p>
                       {selectedLine && (
-                        <p className="text-[#8696a0] text-xs">{selectedLine.phone_number}</p>
+                        <p className="text-[#8696a0] text-[10px]">{selectedLine.phone_number}</p>
                       )}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {sessionStatus === 'WORKING' && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#00a884] mr-1" />
-                    )}
-                    {isAdmin && (
-                      <button
-                        onClick={() => setShowAddForm(!showAddForm)}
-                        className="p-2 rounded-full hover:bg-[#313d45] text-[#aebac1] transition-colors"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    )}
-                    <button className="p-2 rounded-full hover:bg-[#313d45] text-[#aebac1] transition-colors">
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Add line form */}
-                {showAddForm && isAdmin && (
-                  <div className="bg-[#202c33] border-b border-[#313d45] px-4 py-3 space-y-2">
-                    <Input
-                      placeholder="Hat adı"
-                      value={newLabel}
-                      onChange={(e) => setNewLabel(e.target.value)}
-                      className="bg-[#2a3942] border-0 text-[#e9edef] placeholder:text-[#8696a0] h-9 text-sm rounded-lg"
-                    />
-                    <Input
-                      placeholder="905XXXXXXXXX"
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      className="bg-[#2a3942] border-0 text-[#e9edef] placeholder:text-[#8696a0] h-9 text-sm rounded-lg"
-                    />
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={addLine} disabled={adding} className="flex-1 bg-[#00a884] hover:bg-[#06cf9c] text-white h-8 text-xs">
-                        <Plus className="w-3 h-3 mr-1" /> Ekle
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setShowAddForm(false)} className="text-[#8696a0] hover:bg-[#313d45] h-8 text-xs">
-                        İptal
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Search bar */}
-                <div className="px-3 py-2 bg-[#111b21]">
-                  <div className="flex items-center bg-[#202c33] rounded-lg px-3 py-1.5">
-                    <Search className="w-4 h-4 text-[#8696a0] mr-3 flex-shrink-0" />
-                    <input
-                      type="text"
-                      placeholder="Ara veya yeni sohbet başlat"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-transparent text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none w-full"
-                    />
-                  </div>
-                </div>
-
-                {/* Lines / Chats list */}
-                <div className="flex-1 overflow-y-auto">
-                  {/* Lines section */}
-                  <div className="px-3 py-2">
-                    <p className="text-[#00a884] text-xs font-medium px-1 mb-1">HATLAR ({lines.length})</p>
-                  </div>
-                  {loading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-[#00a884]" />
-                    </div>
-                  ) : (
-                    lines.map((line) => (
-                      <div
-                        key={line.id}
-                        onClick={() => setSelectedLine(line)}
-                        className={`flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors border-b border-[#222e35] ${
-                          selectedLine?.id === line.id ? 'bg-[#2a3942]' : 'hover:bg-[#202c33]'
-                        }`}
-                      >
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          line.is_active ? 'bg-[#00a884]' : 'bg-[#3b4a54]'
-                        }`}>
-                          <Phone className="w-5 h-5 text-white" />
+                    <ChevronDown className="w-4 h-4 text-[#8696a0] flex-shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-[#233138] border-[#313d45] w-[320px]" align="start">
+                  {lines.map(line => (
+                    <DropdownMenuItem
+                      key={line.id}
+                      onClick={() => setSelectedLine(line)}
+                      className={`text-[#e9edef] hover:bg-[#2a3942] cursor-pointer py-2.5 ${selectedLine?.id === line.id ? 'bg-[#2a3942]' : ''}`}
+                    >
+                      <div className="flex items-center gap-3 w-full">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${line.is_active ? 'bg-[#00a884]' : 'bg-[#3b4a54]'}`}>
+                          <Phone className="w-3.5 h-3.5 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="text-[#e9edef] text-sm font-medium truncate">{line.label}</p>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                              line.is_active ? 'text-[#00a884]' : 'text-[#8696a0]'
-                            }`}>
-                              {line.is_active ? '● Aktif' : '○ Pasif'}
-                            </span>
-                          </div>
-                          <p className="text-[#8696a0] text-xs truncate">{line.phone_number}</p>
+                          <p className="text-sm truncate">{line.label}</p>
+                          <p className="text-[#8696a0] text-xs">{line.phone_number}</p>
                         </div>
-                        {isAdmin && (
-                          <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-                            <button onClick={() => startEdit(line)} className="p-1.5 rounded hover:bg-[#313d45] text-[#8696a0]">
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                            <button onClick={() => deleteLine(line.id)} className="p-1.5 rounded hover:bg-[#313d45] text-[#8696a0] hover:text-red-400">
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        )}
+                        {line.is_active && <span className="text-[10px] text-[#00a884]">● Aktif</span>}
                       </div>
-                    ))
-                  )}
-
-                  {/* Edit modal inline */}
-                  {editingId && (
-                    <div className="px-3 py-3 bg-[#202c33] border-b border-[#313d45] space-y-2">
-                      <Input value={editLabel} onChange={(e) => setEditLabel(e.target.value)}
-                        className="bg-[#2a3942] border-0 text-[#e9edef] h-8 text-sm" />
-                      <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)}
-                        className="bg-[#2a3942] border-0 text-[#e9edef] h-8 text-sm" />
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={saveEdit} className="bg-[#00a884] hover:bg-[#06cf9c] h-7 text-xs">
-                          <Save className="w-3 h-3 mr-1" /> Kaydet
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} className="text-[#8696a0] h-7 text-xs">İptal</Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Chats section (when connected) */}
-                  {sessionStatus === 'WORKING' && chats.length > 0 && (
+                    </DropdownMenuItem>
+                  ))}
+                  {isAdmin && (
                     <>
-                      <div className="px-3 py-2 mt-2">
-                        <p className="text-[#00a884] text-xs font-medium px-1 mb-1">SOHBETLER</p>
-                      </div>
-                      {filteredChats.map((chat, i) => (
+                      <DropdownMenuSeparator className="bg-[#313d45]" />
+                      <DropdownMenuItem
+                        onClick={() => setShowAddLineDialog(true)}
+                        className="text-[#00a884] hover:bg-[#2a3942] cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4 mr-2" /> Yeni Hat Ekle
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Line management for admin */}
+              {isAdmin && selectedLine && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-2 rounded-lg hover:bg-[#313d45] text-[#aebac1]">
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-[#233138] border-[#313d45]" align="end">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setEditingLine(selectedLine);
+                        setEditPhone(selectedLine.phone_number);
+                        setEditLabel(selectedLine.label);
+                      }}
+                      className="text-[#e9edef] hover:bg-[#2a3942] cursor-pointer"
+                    >
+                      <Edit2 className="w-4 h-4 mr-2" /> Hattı Düzenle
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => deleteLine(selectedLine.id)}
+                      className="text-red-400 hover:bg-[#2a3942] cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" /> Hattı Sil
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {/* New chat button */}
+              {sessionStatus === 'WORKING' && (
+                <button
+                  onClick={() => setShowNewChatDialog(true)}
+                  className="p-2 rounded-lg hover:bg-[#313d45] text-[#00a884] flex-shrink-0"
+                  title="Yeni Sohbet"
+                >
+                  <UserPlus className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
+            {/* Search bar */}
+            <div className="px-3 py-2">
+              <div className="flex items-center bg-[#202c33] rounded-lg px-3 py-2">
+                <Search className="w-4 h-4 text-[#8696a0] mr-3 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Sohbet ara..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none w-full"
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery("")} className="text-[#8696a0] hover:text-[#e9edef]">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Chats list */}
+            <div className="flex-1 overflow-y-auto">
+              {sessionStatus === 'WORKING' ? (
+                <>
+                  {chatsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#00a884]" />
+                    </div>
+                  ) : filteredChats.length > 0 ? (
+                    filteredChats.map((chat, i) => {
+                      const isActive = activeChat && (activeChat.id?._serialized === chat.id?._serialized);
+                      const lastMsgTime = chat.lastMessage?.timestamp;
+                      return (
                         <div
                           key={i}
                           onClick={() => openChat(chat)}
-                          className={`flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors border-b border-[#222e35] ${
-                            activeChat === chat ? 'bg-[#2a3942]' : 'hover:bg-[#202c33]'
+                          className={`flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors border-b border-[#202c33] ${
+                            isActive ? 'bg-[#2a3942]' : 'hover:bg-[#202c33]'
                           }`}
                         >
                           <div className="w-12 h-12 rounded-full bg-[#6b7c85] flex items-center justify-center flex-shrink-0">
@@ -545,274 +547,404 @@ const WhatsappManagement = () => {
                               <p className="text-[#e9edef] text-sm font-medium truncate">
                                 {chat.name || chat.id?.user || 'Bilinmeyen'}
                               </p>
-                              <span className="text-[#8696a0] text-[11px] flex-shrink-0">
-                                {chat.lastMessage?.timestamp ? formatTime(chat.lastMessage.timestamp) : ''}
+                              <span className="text-[#8696a0] text-[11px] flex-shrink-0 ml-2">
+                                {lastMsgTime ? formatDate(lastMsgTime) : ''}
                               </span>
                             </div>
-                            <p className="text-[#8696a0] text-xs truncate mt-0.5">
-                              {chat.lastMessage?.body || ''}
-                            </p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              {chat.lastMessage?.fromMe && <CheckCheck className="w-3 h-3 text-[#53bdeb] flex-shrink-0" />}
+                              <p className="text-[#8696a0] text-xs truncate">
+                                {chat.lastMessage?.body || ''}
+                              </p>
+                            </div>
                           </div>
+                          {chat.unreadCount > 0 && (
+                            <span className="bg-[#00a884] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">
+                              {chat.unreadCount}
+                            </span>
+                          )}
                         </div>
-                      ))}
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+                      <MessageCircle className="w-12 h-12 text-[#3b4a54] mb-3" />
+                      <p className="text-[#8696a0] text-sm">
+                        {searchQuery ? 'Sonuç bulunamadı' : 'Henüz sohbet yok'}
+                      </p>
+                      {!searchQuery && (
+                        <button
+                          onClick={() => setShowNewChatDialog(true)}
+                          className="text-[#00a884] text-sm mt-2 hover:underline flex items-center gap-1"
+                        >
+                          <UserPlus className="w-4 h-4" /> Yeni sohbet başlat
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {/* Refresh button */}
+                  <div className="px-3 py-2 border-t border-[#202c33]">
+                    <button
+                      onClick={fetchChats}
+                      disabled={chatsLoading}
+                      className="w-full flex items-center justify-center gap-2 py-2 text-[#8696a0] hover:text-[#e9edef] text-xs transition-colors"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${chatsLoading ? 'animate-spin' : ''}`} />
+                      Sohbetleri Yenile
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                  {loading ? (
+                    <Loader2 className="w-8 h-8 animate-spin text-[#00a884]" />
+                  ) : !selectedLine ? (
+                    <>
+                      <Phone className="w-12 h-12 text-[#3b4a54] mb-3" />
+                      <p className="text-[#8696a0] text-sm">Yukarıdan bir hat seçin</p>
+                    </>
+                  ) : (
+                    <>
+                      <Power className="w-12 h-12 text-[#3b4a54] mb-3" />
+                      <p className="text-[#8696a0] text-sm mb-3">Hat bağlı değil</p>
+                      <Button
+                        size="sm"
+                        onClick={startSession}
+                        disabled={connecting}
+                        className="bg-[#00a884] hover:bg-[#06cf9c] text-white h-9 text-xs gap-1.5"
+                      >
+                        {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Power className="w-3 h-3" />}
+                        Bağlantıyı Başlat
+                      </Button>
                     </>
                   )}
                 </div>
-              </div>
+              )}
+            </div>
+          </div>
 
-              {/* ===== RIGHT PANEL ===== */}
-              <div className="flex-1 flex flex-col bg-[#0b141a]" style={{
-                backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'400\' height=\'400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cdefs%3E%3Cpattern id=\'p\' width=\'40\' height=\'40\' patternUnits=\'userSpaceOnUse\'%3E%3Cpath d=\'M20 0 L20 40 M0 20 L40 20\' stroke=\'%23ffffff\' stroke-width=\'0.3\' opacity=\'0.03\'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill=\'url(%23p)\' width=\'400\' height=\'400\'/%3E%3C/svg%3E")',
-              }}>
-                {selectedLine ? (
-                  <>
-                    {/* Chat header */}
-                    <div className="bg-[#202c33] px-4 py-2.5 flex items-center justify-between border-b border-[#313d45]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#6b7c85] flex items-center justify-center">
-                          {activeChat ? (
-                            <Users className="w-5 h-5 text-[#cfd6da]" />
-                          ) : (
-                            <MessageCircle className="w-5 h-5 text-white" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-[#e9edef] text-sm font-medium">
-                            {activeChat ? (activeChat.name || activeChat.id?.user || 'Sohbet') : selectedLine.label}
-                          </p>
-                          <p className="text-[#8696a0] text-xs">
-                            {activeChat 
-                              ? (activeChat.id?.user || '') 
-                              : (sessionStatus === 'WORKING' ? 'Çevrimiçi' : sessionStatus === 'SCAN_QR_CODE' ? 'QR bekleniyor...' : 'Çevrimdışı')
-                            }
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {sessionStatus === 'WORKING' && (
-                          <>
-                            <button onClick={fetchChats} className="p-2 rounded-full hover:bg-[#313d45] text-[#aebac1]">
-                              <RefreshCw className={`w-5 h-5 ${chatsLoading ? 'animate-spin' : ''}`} />
-                            </button>
-                          </>
-                        )}
-                        <button
-                          onClick={() => checkSessionStatus(selectedLine)}
-                          className="p-2 rounded-full hover:bg-[#313d45] text-[#aebac1]"
-                        >
-                          <Search className="w-5 h-5" />
-                        </button>
-                        {sessionStatus === 'WORKING' ? (
-                          <button
-                            onClick={stopSession}
-                            disabled={disconnecting}
-                            className="p-2 rounded-full hover:bg-[#313d45] text-red-400"
-                          >
-                            {disconnecting ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogOut className="w-5 h-5" />}
-                          </button>
-                        ) : (
-                          <button
-                            onClick={startSession}
-                            disabled={connecting}
-                            className="p-2 rounded-full hover:bg-[#313d45] text-[#00a884]"
-                          >
-                            {connecting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Power className="w-5 h-5" />}
-                          </button>
-                        )}
-                      </div>
+          {/* ===== RIGHT PANEL ===== */}
+          <div className="flex-1 flex flex-col bg-[#0b141a]" style={{
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'400\' height=\'400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cdefs%3E%3Cpattern id=\'p\' width=\'40\' height=\'40\' patternUnits=\'userSpaceOnUse\'%3E%3Cpath d=\'M20 0 L20 40 M0 20 L40 20\' stroke=\'%23ffffff\' stroke-width=\'0.3\' opacity=\'0.03\'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill=\'url(%23p)\' width=\'400\' height=\'400\'/%3E%3C/svg%3E")',
+          }}>
+            {activeChat ? (
+              <>
+                {/* Chat header */}
+                <div className="bg-[#202c33] px-4 py-2 flex items-center justify-between border-b border-[#313d45] flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => { setActiveChat(null); setChatMessages([]); }}
+                      className="p-1.5 rounded-full hover:bg-[#313d45] text-[#aebac1] lg:hidden"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div className="w-10 h-10 rounded-full bg-[#6b7c85] flex items-center justify-center">
+                      <Users className="w-5 h-5 text-[#cfd6da]" />
                     </div>
+                    <div>
+                      <p className="text-[#e9edef] text-sm font-medium">
+                        {activeChat.name || activeChat.id?.user || 'Sohbet'}
+                      </p>
+                      <p className="text-[#8696a0] text-xs">{activeChat.id?.user || ''}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => fetchChatMessages(activeChat)}
+                      className="p-2 rounded-full hover:bg-[#313d45] text-[#aebac1]"
+                      title="Mesajları yenile"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${messagesLoading ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
+                </div>
 
-                    {/* Chat body */}
-                    <div className="flex-1 overflow-y-auto px-[10%] py-4">
-                      {/* QR Code state */}
-                      {(sessionStatus === 'SCAN_QR_CODE' || qrCode) && sessionStatus !== 'WORKING' && (
-                        <div className="flex flex-col items-center justify-center h-full">
-                          <div className="bg-[#202c33] rounded-2xl p-8 max-w-md w-full text-center shadow-xl">
-                            <div className="w-16 h-16 rounded-full bg-[#00a884] flex items-center justify-center mx-auto mb-4">
-                              <QrCode className="w-8 h-8 text-white" />
-                            </div>
-                            <h3 className="text-[#e9edef] text-xl font-light mb-2">WhatsApp Web'i kullanın</h3>
-                            <p className="text-[#8696a0] text-sm mb-6">
-                              Telefonunuzda WhatsApp açın → Ayarlar → Bağlı Cihazlar → Cihaz Bağla
-                            </p>
-                            {qrCode ? (
-                              <div className="bg-white rounded-xl p-4 inline-block mb-4">
-                                <img
-                                  src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
-                                  alt="WhatsApp QR Code"
-                                  className="w-56 h-56 object-contain"
-                                />
-                              </div>
-                            ) : (
-                              <div className="flex flex-col items-center gap-3 py-8">
-                                <Loader2 className="w-10 h-10 animate-spin text-[#00a884]" />
-                                <p className="text-[#8696a0] text-sm">QR kod yükleniyor...</p>
+                {/* Messages area */}
+                <div className="flex-1 overflow-y-auto px-[8%] py-4">
+                  {messagesLoading && chatMessages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#00a884]" />
+                    </div>
+                  ) : chatMessages.length > 0 ? (
+                    <div className="space-y-1">
+                      {chatMessages.map((msg, i) => {
+                        const isMe = msg.fromMe;
+                        // Show date separator
+                        const prevMsg = chatMessages[i - 1];
+                        const showDate = !prevMsg || formatDate(msg.timestamp) !== formatDate(prevMsg?.timestamp);
+                        return (
+                          <div key={i}>
+                            {showDate && msg.timestamp && (
+                              <div className="flex justify-center my-3">
+                                <span className="bg-[#182229] text-[#8696a0] text-[11px] px-3 py-1 rounded-lg shadow">
+                                  {formatDate(msg.timestamp)}
+                                </span>
                               </div>
                             )}
-                            <button
-                              onClick={() => fetchQrCode(selectedLine)}
-                              className="text-[#00a884] text-sm hover:underline flex items-center gap-1 mx-auto"
-                            >
-                              <RefreshCw className="w-3 h-3" /> QR kodu yenile
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Not connected state */}
-                      {sessionStatus !== 'WORKING' && sessionStatus !== 'SCAN_QR_CODE' && !qrCode && (
-                        <div className="flex flex-col items-center justify-center h-full">
-                          <div className="bg-[#202c33] rounded-2xl p-8 max-w-md w-full text-center">
-                            <div className="w-20 h-20 rounded-full bg-[#2a3942] flex items-center justify-center mx-auto mb-4">
-                              <MessageCircle className="w-10 h-10 text-[#8696a0]" />
-                            </div>
-                            <h3 className="text-[#e9edef] text-xl font-light mb-2">WhatsApp Web</h3>
-                            <p className="text-[#8696a0] text-sm mb-6">
-                              Oturumu başlatmak için sağ üstteki <Power className="w-4 h-4 inline text-[#00a884]" /> butonuna tıklayın
-                            </p>
-                            <Button
-                              onClick={startSession}
-                              disabled={connecting}
-                              className="bg-[#00a884] hover:bg-[#06cf9c] text-white px-8"
-                            >
-                              {connecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Power className="w-4 h-4 mr-2" />}
-                              Oturumu Başlat
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Connected - chat messages or new message */}
-                      {sessionStatus === 'WORKING' && (
-                        <>
-                          {activeChat && chatMessages.length > 0 ? (
-                            <div className="space-y-1">
-                              {chatMessages.map((msg, i) => {
-                                const isMe = msg.fromMe;
-                                return (
-                                  <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[65%] rounded-lg px-3 py-1.5 mb-0.5 shadow-sm ${
-                                      isMe ? 'bg-[#005c4b] text-[#e9edef]' : 'bg-[#202c33] text-[#e9edef]'
-                                    }`}>
-                                      <p className="text-sm whitespace-pre-wrap break-words">{msg.body || ''}</p>
-                                      <div className="flex items-center justify-end gap-1 mt-0.5">
-                                        <span className="text-[10px] text-[#8696a0]">
-                                          {msg.timestamp ? formatTime(msg.timestamp) : ''}
-                                        </span>
-                                        {isMe && <CheckCheck className="w-3 h-3 text-[#53bdeb]" />}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : activeChat ? (
-                            <div className="flex items-center justify-center h-full">
-                              {messagesLoading ? (
-                                <Loader2 className="w-8 h-8 animate-spin text-[#00a884]" />
-                              ) : (
-                                <p className="text-[#8696a0] text-sm">Henüz mesaj yok</p>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center h-full">
-                              <div className="bg-[#202c33] rounded-2xl p-6 max-w-sm w-full shadow-xl">
-                                <h3 className="text-[#e9edef] text-lg font-medium mb-4 text-center">Yeni Sohbet Başlat</h3>
-                                <div className="space-y-3">
-                                  <input
-                                    type="text"
-                                    placeholder="Ad"
-                                    value={newChatName}
-                                    onChange={(e) => setNewChatName(e.target.value)}
-                                    className="w-full bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-4 py-2.5 border border-[#313d45] focus:border-[#00a884] transition-colors"
-                                  />
-                                  <input
-                                    type="text"
-                                    placeholder="Soyad"
-                                    value={newChatSurname}
-                                    onChange={(e) => setNewChatSurname(e.target.value)}
-                                    className="w-full bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-4 py-2.5 border border-[#313d45] focus:border-[#00a884] transition-colors"
-                                  />
-                                  <input
-                                    type="text"
-                                    placeholder="905XXXXXXXXX"
-                                    value={newChatPhone}
-                                    onChange={(e) => setNewChatPhone(e.target.value)}
-                                    className="w-full bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-4 py-2.5 border border-[#313d45] focus:border-[#00a884] transition-colors"
-                                  />
-                                  <Button
-                                    onClick={startNewChat}
-                                    disabled={!newChatPhone.trim()}
-                                    className="w-full bg-[#00a884] hover:bg-[#06cf9c] text-white"
-                                  >
-                                    <Send className="w-4 h-4 mr-2" /> Sohbeti Başlat
-                                  </Button>
+                            <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[65%] rounded-lg px-3 py-1.5 mb-0.5 shadow-sm ${
+                                isMe ? 'bg-[#005c4b] text-[#e9edef]' : 'bg-[#202c33] text-[#e9edef]'
+                              }`}>
+                                <p className="text-[13px] whitespace-pre-wrap break-words leading-relaxed">{msg.body || ''}</p>
+                                <div className="flex items-center justify-end gap-1 mt-0.5">
+                                  <span className="text-[10px] text-[#8696a0]">
+                                    {msg.timestamp ? formatTime(msg.timestamp) : ''}
+                                  </span>
+                                  {isMe && <CheckCheck className="w-3.5 h-3.5 text-[#53bdeb]" />}
                                 </div>
                               </div>
                             </div>
-                          )}
-                          <div ref={messagesEndRef} />
-                        </>
-                      )}
-                    </div>
-
-                    {/* Message input bar */}
-                    {sessionStatus === 'WORKING' && activeChat && (
-                      <div className="bg-[#202c33] px-4 py-2.5 border-t border-[#313d45]">
-                        <div className="flex items-center gap-2">
-                          <button className="p-2 rounded-full hover:bg-[#313d45] text-[#8696a0] flex-shrink-0">
-                            <Smile className="w-6 h-6" />
-                          </button>
-                          <button className="p-2 rounded-full hover:bg-[#313d45] text-[#8696a0] flex-shrink-0">
-                            <Paperclip className="w-6 h-6" />
-                          </button>
-                          <div className="flex-1">
-                            <input
-                              type="text"
-                              placeholder="Bir mesaj yazın"
-                              value={chatMessage}
-                              onChange={(e) => setChatMessage(e.target.value)}
-                              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
-                              className="w-full bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-4 py-2.5"
-                            />
                           </div>
-                          {chatMessage.trim() ? (
-                            <button
-                              onClick={sendMessage}
-                              disabled={sending}
-                              className="p-2 rounded-full hover:bg-[#313d45] text-[#00a884] flex-shrink-0"
-                            >
-                              {sending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
-                            </button>
-                          ) : (
-                            <button className="p-2 rounded-full hover:bg-[#313d45] text-[#8696a0] flex-shrink-0">
-                              <Mic className="w-6 h-6" />
-                            </button>
-                          )}
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <div className="bg-[#182229] rounded-xl px-6 py-4 shadow">
+                          <p className="text-[#8696a0] text-sm">Henüz mesaj yok</p>
+                          <p className="text-[#8696a0] text-xs mt-1">Aşağıdan mesaj yazarak sohbete başlayın</p>
                         </div>
                       </div>
-                    )}
-                  </>
-                ) : (
-                  /* No line selected */
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <div className="text-center">
-                      <div className="w-[320px] h-[188px] mx-auto mb-6 flex items-center justify-center">
-                        <MessageCircle className="w-24 h-24 text-[#364147]" />
-                      </div>
-                      <h2 className="text-[#e9edef] text-3xl font-light mb-3">WhatsApp Web</h2>
-                      <p className="text-[#8696a0] text-sm max-w-sm">
-                        Soldaki listeden bir hat seçerek WhatsApp oturumunu başlatın
-                      </p>
                     </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Message input */}
+                <div className="bg-[#202c33] px-4 py-2.5 border-t border-[#313d45] flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 rounded-full hover:bg-[#313d45] text-[#8696a0] flex-shrink-0">
+                      <Paperclip className="w-5 h-5" />
+                    </button>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        placeholder="Bir mesaj yazın"
+                        value={chatMessage}
+                        onChange={(e) => setChatMessage(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
+                        className="w-full bg-[#2a3942] text-[#e9edef] text-sm placeholder:text-[#8696a0] outline-none rounded-lg px-4 py-2.5"
+                      />
+                    </div>
+                    {chatMessage.trim() ? (
+                      <button
+                        onClick={sendMessage}
+                        disabled={sending}
+                        className="p-2 rounded-full hover:bg-[#313d45] text-[#00a884] flex-shrink-0"
+                      >
+                        {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                      </button>
+                    ) : (
+                      <button className="p-2 rounded-full hover:bg-[#313d45] text-[#8696a0] flex-shrink-0">
+                        <Mic className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* No active chat - QR or welcome */
+              <div className="flex-1 flex items-center justify-center">
+                {(sessionStatus === 'SCAN_QR_CODE' || qrCode) && sessionStatus !== 'WORKING' ? (
+                  <div className="bg-[#202c33] rounded-2xl p-8 max-w-md w-full text-center shadow-xl">
+                    <div className="w-16 h-16 rounded-full bg-[#00a884] flex items-center justify-center mx-auto mb-4">
+                      <QrCode className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-[#e9edef] text-xl font-light mb-2">QR Kod ile Bağlanın</h3>
+                    <p className="text-[#8696a0] text-sm mb-6">
+                      Telefonunuzda WhatsApp → Ayarlar → Bağlı Cihazlar → Cihaz Bağla
+                    </p>
+                    {qrCode ? (
+                      <div className="bg-white rounded-xl p-4 inline-block mb-4">
+                        <img
+                          src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
+                          alt="QR Code"
+                          className="w-56 h-56 object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 py-8">
+                        <Loader2 className="w-10 h-10 animate-spin text-[#00a884]" />
+                        <p className="text-[#8696a0] text-sm">QR kod yükleniyor...</p>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => selectedLine && fetchQrCode(selectedLine)}
+                      className="text-[#00a884] text-sm hover:underline flex items-center gap-1 mx-auto mt-2"
+                    >
+                      <RefreshCw className="w-3 h-3" /> Yenile
+                    </button>
+                  </div>
+                ) : sessionStatus === 'WORKING' ? (
+                  <div className="text-center">
+                    <div className="w-20 h-20 rounded-full bg-[#182229] flex items-center justify-center mx-auto mb-4">
+                      <MessageCircle className="w-10 h-10 text-[#3b4a54]" />
+                    </div>
+                    <h2 className="text-[#e9edef] text-2xl font-light mb-2">WhatsApp Destek</h2>
+                    <p className="text-[#8696a0] text-sm max-w-sm mx-auto">
+                      Soldaki listeden bir sohbet seçin veya yeni sohbet başlatın
+                    </p>
+                    <button
+                      onClick={() => setShowNewChatDialog(true)}
+                      className="mt-4 bg-[#00a884] hover:bg-[#06cf9c] text-white px-6 py-2 rounded-lg text-sm inline-flex items-center gap-2 transition-colors"
+                    >
+                      <UserPlus className="w-4 h-4" /> Yeni Sohbet
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="w-24 h-24 rounded-full bg-[#182229] flex items-center justify-center mx-auto mb-4">
+                      <MessageCircle className="w-12 h-12 text-[#3b4a54]" />
+                    </div>
+                    <h2 className="text-[#e9edef] text-2xl font-light mb-2">WhatsApp Destek</h2>
+                    <p className="text-[#8696a0] text-sm max-w-sm mx-auto">
+                      {selectedLine 
+                        ? 'Oturumu başlatmak için üstteki "Bağlan" butonuna tıklayın'
+                        : 'Sol üstten bir hat seçerek başlayın'
+                      }
+                    </p>
                   </div>
                 )}
               </div>
-            </div>
+            )}
           </div>
         </div>
-        <Footer />
       </div>
+
+      {/* New Chat Dialog */}
+      <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
+        <DialogContent className="bg-[#233138] border-[#313d45] text-[#e9edef] max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#e9edef] flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-[#00a884]" />
+              Yeni Sohbet Başlat
+            </DialogTitle>
+            <DialogDescription className="text-[#8696a0]">
+              Müşteri bilgilerini girerek sohbet başlatın
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div>
+              <label className="text-[#8696a0] text-xs mb-1 block">Ad</label>
+              <Input
+                placeholder="Müşteri adı"
+                value={newChatName}
+                onChange={(e) => setNewChatName(e.target.value)}
+                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+              />
+            </div>
+            <div>
+              <label className="text-[#8696a0] text-xs mb-1 block">Soyad</label>
+              <Input
+                placeholder="Müşteri soyadı"
+                value={newChatSurname}
+                onChange={(e) => setNewChatSurname(e.target.value)}
+                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+              />
+            </div>
+            <div>
+              <label className="text-[#8696a0] text-xs mb-1 block">Telefon Numarası *</label>
+              <Input
+                placeholder="905XXXXXXXXX"
+                value={newChatPhone}
+                onChange={(e) => setNewChatPhone(e.target.value)}
+                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+              />
+              <p className="text-[#8696a0] text-[10px] mt-1">Ülke kodu ile birlikte girin (örn: 905XX)</p>
+            </div>
+            <Button
+              onClick={startNewChat}
+              disabled={!newChatPhone.trim()}
+              className="w-full bg-[#00a884] hover:bg-[#06cf9c] text-white mt-2"
+            >
+              <Send className="w-4 h-4 mr-2" /> Sohbeti Başlat
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Line Dialog */}
+      <Dialog open={showAddLineDialog} onOpenChange={setShowAddLineDialog}>
+        <DialogContent className="bg-[#233138] border-[#313d45] text-[#e9edef] max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#e9edef] flex items-center gap-2">
+              <Plus className="w-5 h-5 text-[#00a884]" />
+              Yeni Hat Ekle
+            </DialogTitle>
+            <DialogDescription className="text-[#8696a0]">
+              WhatsApp hattı bilgilerini girin
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div>
+              <label className="text-[#8696a0] text-xs mb-1 block">Hat Adı</label>
+              <Input
+                placeholder="Örn: Destek Hattı 1"
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+              />
+            </div>
+            <div>
+              <label className="text-[#8696a0] text-xs mb-1 block">Telefon Numarası</label>
+              <Input
+                placeholder="905XXXXXXXXX"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] placeholder:text-[#8696a0] focus:border-[#00a884]"
+              />
+            </div>
+            <Button
+              onClick={addLine}
+              disabled={adding || !newPhone.trim() || !newLabel.trim()}
+              className="w-full bg-[#00a884] hover:bg-[#06cf9c] text-white"
+            >
+              {adding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+              Hat Ekle
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Line Dialog */}
+      <Dialog open={!!editingLine} onOpenChange={(open) => !open && setEditingLine(null)}>
+        <DialogContent className="bg-[#233138] border-[#313d45] text-[#e9edef] max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#e9edef] flex items-center gap-2">
+              <Edit2 className="w-5 h-5 text-[#00a884]" />
+              Hattı Düzenle
+            </DialogTitle>
+            <DialogDescription className="text-[#8696a0]">
+              Hat bilgilerini güncelleyin
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div>
+              <label className="text-[#8696a0] text-xs mb-1 block">Hat Adı</label>
+              <Input
+                value={editLabel}
+                onChange={(e) => setEditLabel(e.target.value)}
+                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] focus:border-[#00a884]"
+              />
+            </div>
+            <div>
+              <label className="text-[#8696a0] text-xs mb-1 block">Telefon Numarası</label>
+              <Input
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                className="bg-[#2a3942] border-[#313d45] text-[#e9edef] focus:border-[#00a884]"
+              />
+            </div>
+            <Button
+              onClick={saveEdit}
+              className="w-full bg-[#00a884] hover:bg-[#06cf9c] text-white"
+            >
+              <Save className="w-4 h-4 mr-2" /> Kaydet
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
