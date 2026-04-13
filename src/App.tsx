@@ -256,8 +256,7 @@ const AppContent = () => {
               {/* Doctor Routes */}
               <Route path="/doktor-paneli" element={<DoctorDashboard />} />
               
-              {/* Dynamic catch-all - MUST be last */}
-              <Route path="/:slug" element={<LegacyBlogRedirect />} />
+              {/* Dynamic catch-all for legacy blog slugs - handled by .htaccess in production */}
               
               <Route path="*" element={<NotFound />} />
             </>
