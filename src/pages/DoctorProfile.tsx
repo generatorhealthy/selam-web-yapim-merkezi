@@ -699,7 +699,7 @@ const DoctorProfile = () => {
                           <div key={review.id} className="border-b pb-6 last:border-b-0">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                                <div className="flex items-center gap-2">
-                                 <span className="font-medium">{review.reviewer_display_name}</span>
+                                 <span className="font-medium">{review.reviewer_name}</span>
                                 <div className="flex items-center gap-1">
                                   {renderStars(review.rating)}
                                 </div>
