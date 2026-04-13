@@ -218,7 +218,20 @@ Deno.serve(async (req) => {
         endpoint = `/api/${sessionName}/chats`;
         break;
       case 'chats.messages':
-        endpoint = `/api/${sessionName}/chats/${payload.chatId}/messages?limit=${payload.limit || 50}`;
+        {
+          const safeLimit = Math.min(Math.max(Number(payload?.limit) || 50, 1), 100);
+          const params = new URLSearchParams({ limit: String(safeLimit) });
+
+          if (typeof payload?.offset === 'number' && Number.isFinite(payload.offset) && payload.offset >= 0) {
+            params.set('offset', String(payload.offset));
+          }
+
+          if (typeof payload?.downloadMedia === 'boolean') {
+            params.set('downloadMedia', String(payload.downloadMedia));
+          }
+
+          endpoint = `/api/${sessionName}/chats/${payload.chatId}/messages?${params.toString()}`;
+        }
         break;
       case 'contacts.list':
         endpoint = `/api/contacts?session=${sessionName}`;
