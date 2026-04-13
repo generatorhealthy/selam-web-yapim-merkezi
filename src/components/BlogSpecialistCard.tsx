@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 
 interface Specialist {
   id: string;
@@ -15,6 +15,7 @@ interface Specialist {
   profile_picture: string | null;
   online_consultation: boolean;
   face_to_face_consultation: boolean;
+  slug?: string;
 }
 
 interface BlogSpecialistCardProps {
@@ -22,7 +23,6 @@ interface BlogSpecialistCardProps {
 }
 
 const BlogSpecialistCard = ({ specialist }: BlogSpecialistCardProps) => {
-  const doctorSlug = createDoctorSlug(specialist.name);
   const specialtySlug = createSpecialtySlug(specialist.specialty);
 
   return (
@@ -98,12 +98,12 @@ const BlogSpecialistCard = ({ specialist }: BlogSpecialistCardProps) => {
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
               <Button asChild className="bg-primary hover:bg-primary/90">
-                <Link to={`/${specialtySlug}/${doctorSlug}`}>
+                <Link to={`/${specialtySlug}/${specialist.slug}`}>
                   Profili İncele
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to={`/randevu-al/${specialtySlug}/${doctorSlug}`}>
+                <Link to={`/randevu-al/${specialtySlug}/${specialist.slug}`}>
                   🗓 Randevu Al
                 </Link>
               </Button>

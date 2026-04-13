@@ -18,7 +18,7 @@ import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { sendAppointmentNotification, sendDoctorNotification } from "@/services/notificationService";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 
 const BookAppointment = () => {
   const { specialtySlug, doctorName } = useParams();
@@ -48,26 +48,18 @@ const BookAppointment = () => {
       setLoading(true);
       console.log('Fetching specialist for:', doctorName, 'in specialty:', specialtySlug);
       
-      const { data: allSpecialists, error: allError } = await supabase
+      // Query directly by slug for permanent URLs
+      const { data: foundSpecialist, error: slugError } = await supabase
         .from('specialists')
-        .select('id, name, specialty, hospital, city, experience, rating, reviews_count, bio, profile_picture, consultation_type, working_hours_start, working_hours_end, available_days, available_time_slots, online_consultation, face_to_face_consultation, phone, user_id')
-        .eq('is_active', true);
+        .select('id, name, specialty, hospital, city, experience, rating, reviews_count, bio, profile_picture, consultation_type, working_hours_start, working_hours_end, available_days, available_time_slots, online_consultation, face_to_face_consultation, phone, user_id, slug')
+        .eq('is_active', true)
+        .eq('slug', doctorName)
+        .maybeSingle();
 
-      console.log('All specialists:', allSpecialists);
-
-      if (allError) {
-        console.error('Error fetching all specialists:', allError);
-        throw allError;
+      if (slugError) {
+        console.error('Error fetching specialist by slug:', slugError);
+        throw slugError;
       }
-
-      const foundSpecialist = allSpecialists?.find(s => {
-        const doctorSlugMatch = createDoctorSlug(s.name) === doctorName;
-        const specialtySlugMatch = createSpecialtySlug(s.specialty) === specialtySlug;
-        console.log(`Checking specialist ${s.name}:`);
-        console.log(`  Doctor slug: ${createDoctorSlug(s.name)} === ${doctorName} ? ${doctorSlugMatch}`);
-        console.log(`  Specialty slug: ${createSpecialtySlug(s.specialty)} === ${specialtySlug} ? ${specialtySlugMatch}`);
-        return doctorSlugMatch && specialtySlugMatch;
-      });
 
       console.log('Found specialist by slug match:', foundSpecialist);
 

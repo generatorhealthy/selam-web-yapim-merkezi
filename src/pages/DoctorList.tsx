@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Search, MessageCircle, Phone, CheckCircle, Filter } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
@@ -27,6 +27,7 @@ interface Specialist {
   face_to_face_consultation?: boolean;
   phone?: string;
   referral_count?: number;
+  slug?: string;
 }
 
 const DoctorList = () => {
@@ -247,8 +248,7 @@ const DoctorList = () => {
 
   const handleProfileClick = (specialist: Specialist) => {
     const specialtySlug = createSpecialtySlug(specialist.specialty);
-    const doctorSlug = createDoctorSlug(specialist.name);
-    navigate(`/${specialtySlug}/${doctorSlug}`);
+    navigate(`/${specialtySlug}/${specialist.slug}`);
   };
 
   if (loading) {
@@ -358,7 +358,6 @@ const DoctorList = () => {
             <div className="space-y-4 md:space-y-8">
               {displayedSpecialists.map((specialist) => {
                 const specialtySlug = createSpecialtySlug(specialist.specialty);
-                const doctorSlug = createDoctorSlug(specialist.name);
                 
                 return (
                   <Card key={specialist.id} className="bg-white border-0 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-2xl overflow-hidden animate-fade-in">
@@ -442,7 +441,7 @@ const DoctorList = () => {
                               className={`${isMobile ? 'w-full' : ''} h-12 px-8 text-base font-semibold rounded-xl text-white`} 
                               style={{ backgroundColor: '#4f7cff' }}
                             >
-                              <Link to={`/${specialtySlug}/${doctorSlug}`}>
+                              <Link to={`/${specialtySlug}/${specialist.slug}`}>
                                 Profili İncele
                               </Link>
                             </Button>
@@ -453,7 +452,7 @@ const DoctorList = () => {
                               className={`${isMobile ? 'w-full' : ''} h-12 px-8 text-base font-semibold rounded-xl border-2`}
                               style={{ borderColor: '#4f7cff', color: '#4f7cff' }}
                             >
-                              <Link to={`/randevu-al/${specialtySlug}/${doctorSlug}`}>
+                              <Link to={`/randevu-al/${specialtySlug}/${specialist.slug}`}>
                                 📅 Randevu Al
                               </Link>
                             </Button>

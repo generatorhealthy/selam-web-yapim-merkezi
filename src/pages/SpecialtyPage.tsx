@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, ArrowLeft, MessageCircle, Phone, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
@@ -24,6 +24,7 @@ interface Specialist {
   online_consultation?: boolean;
   face_to_face_consultation?: boolean;
   phone?: string;
+  slug?: string;
 }
 
 const SpecialtyPage = () => {
@@ -164,8 +165,7 @@ const SpecialtyPage = () => {
 
   const handleProfileClick = (specialist: Specialist) => {
     const specialtySlugForLinks = createSpecialtySlug(specialist.specialty);
-    const doctorSlug = createDoctorSlug(specialist.name);
-    navigate(`/${specialtySlugForLinks}/${doctorSlug}`);
+    navigate(`/${specialtySlugForLinks}/${specialist.slug}`);
   };
 
   if (loading) {
@@ -213,7 +213,6 @@ const SpecialtyPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-7xl mx-auto">
             {specialists.map((specialist) => {
               const specialtySlugForLinks = createSpecialtySlug(specialist.specialty);
-              const doctorSlug = createDoctorSlug(specialist.name);
               
               return (
                 <Card key={specialist.id} className="hover:shadow-lg transition-shadow">
@@ -271,14 +270,14 @@ const SpecialtyPage = () => {
 
                       <div className="flex flex-col sm:flex-row gap-2 pt-3">
                         <Button asChild className="w-full sm:flex-1">
-                          <Link to={`/${specialtySlugForLinks}/${doctorSlug}`}>
+                          <Link to={`/${specialtySlugForLinks}/${specialist.slug}`}>
                             Profili Görüntüle
                           </Link>
                         </Button>
                         
                         <div className="flex gap-2 w-full sm:w-auto">
                           <Button variant="outline" asChild className="flex-1 sm:flex-none">
-                            <Link to={`/randevu-al/${specialtySlugForLinks}/${doctorSlug}`}>
+                            <Link to={`/randevu-al/${specialtySlugForLinks}/${specialist.slug}`}>
                               <Calendar className="w-4 h-4 mr-1 sm:mr-2" />
                               <span className="hidden sm:inline">Randevu</span>
                               <span className="sm:hidden">Randevu</span>

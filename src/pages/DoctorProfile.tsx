@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Calendar, Star, Phone, MessageCircle, GraduationCap, CheckCircle, Award, FileText } from "lucide-react";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReviewForm from "@/components/ReviewForm";
@@ -43,6 +43,7 @@ interface Specialist {
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string;
+  slug?: string;
 }
 
 interface BlogPost {
@@ -93,28 +94,18 @@ const DoctorProfile = () => {
       setLoading(true);
       console.log('Fetching specialist for:', doctorName, 'in specialty:', specialtySlug);
       
-      // Get all specialists to find the right one
-      const { data: allSpecialists, error: allError } = await supabase
+      // Query directly by slug for permanent URLs
+      const { data: foundSpecialist, error: slugError } = await supabase
         .from('specialists')
-        .select('id, name, specialty, hospital, city, experience, rating, reviews_count, bio, education, university, certifications, profile_picture, consultation_type, working_hours_start, working_hours_end, available_days, available_time_slots, address, phone, email, online_consultation, face_to_face_consultation, faq, seo_title, seo_description, seo_keywords, user_id')
-        .eq('is_active', true);
+        .select('id, name, specialty, hospital, city, experience, rating, reviews_count, bio, education, university, certifications, profile_picture, consultation_type, working_hours_start, working_hours_end, available_days, available_time_slots, address, phone, email, online_consultation, face_to_face_consultation, faq, seo_title, seo_description, seo_keywords, user_id, slug')
+        .eq('is_active', true)
+        .eq('slug', doctorName)
+        .maybeSingle();
 
-      console.log('All specialists:', allSpecialists);
-
-      if (allError) {
-        console.error('Error fetching all specialists:', allError);
-        throw allError;
+      if (slugError) {
+        console.error('Error fetching specialist by slug:', slugError);
+        throw slugError;
       }
-
-      // Find specialist by matching both doctor name slug and specialty slug
-      let foundSpecialist = allSpecialists?.find(s => {
-        const doctorSlugMatch = createDoctorSlug(s.name) === doctorName;
-        const specialtySlugMatch = createSpecialtySlug(s.specialty) === specialtySlug;
-        console.log(`Checking specialist ${s.name}:`);
-        console.log(`  Doctor slug: ${createDoctorSlug(s.name)} === ${doctorName} ? ${doctorSlugMatch}`);
-        console.log(`  Specialty slug: ${createSpecialtySlug(s.specialty)} === ${specialtySlug} ? ${specialtySlugMatch}`);
-        return doctorSlugMatch && specialtySlugMatch;
-      });
 
       console.log('Found specialist by slug match:', foundSpecialist);
 
@@ -134,6 +125,7 @@ const DoctorProfile = () => {
         specialty: foundSpecialist.specialty,
         profile_picture: foundSpecialist.profile_picture,
         city: foundSpecialist.city,
+        slug: foundSpecialist.slug,
       });
       
       // Fetch blog posts and reviews for this specialist
@@ -453,7 +445,7 @@ const DoctorProfile = () => {
                   className="h-12 px-6 text-base font-semibold rounded-xl text-white w-full" 
                   style={{ backgroundColor: '#4f7cff' }}
                 >
-                  <Link to={`/randevu-al/${specialtySlugForLinks}/${createDoctorSlug(specialist.name)}`}>
+                  <Link to={`/randevu-al/${specialtySlugForLinks}/${specialist.slug || doctorName}`}>
                     <Calendar className="w-4 h-4 mr-2" />
                     Randevu Al
                   </Link>

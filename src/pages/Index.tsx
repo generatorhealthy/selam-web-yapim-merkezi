@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { supabase } from "@/integrations/supabase/client";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 import AppointmentWizard from "@/components/AppointmentWizard";
 
 // Lazy load below-fold content (reviews, how it works, specialists, footer)
@@ -51,6 +51,7 @@ interface Specialist {
   image_url?: string;
   bio?: string;
   profile_picture?: string;
+  slug?: string;
 }
 
 const Index = () => {
@@ -248,9 +249,9 @@ const Index = () => {
                             key={specialist.id}
                             className="p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-200"
                             onClick={() => {
-                              const doctorSlug = createDoctorSlug(specialist.name);
                               const specialtySlug = createSpecialtySlug(specialist.specialty);
-                              navigate(`/${specialtySlug}/${doctorSlug}`);
+                              navigate(`/${specialtySlug}/${specialist.slug}`);
+                              setShowResults(false);
                               setShowResults(false);
                             }}
                           >

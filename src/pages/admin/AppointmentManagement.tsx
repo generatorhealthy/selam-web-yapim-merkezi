@@ -10,7 +10,7 @@ import { Calendar, Clock, User, Phone, Mail, Search, UserCheck, Trash2, CheckCir
 import AdminBackButton from "@/components/AdminBackButton";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Appointment {
@@ -118,9 +118,13 @@ const AppointmentManagement = () => {
             .single();
 
           if (specialistData) {
+            const { data: specialistSlugData } = await supabase
+              .from('specialists')
+              .select('slug')
+              .eq('id', appointment.specialist_id)
+              .single();
             const specialtySlug = createSpecialtySlug(specialistData.specialty);
-            const doctorSlug = createDoctorSlug(specialistData.name);
-            const profileLink = `https://doktorumol.com.tr/${specialtySlug}/${doctorSlug}`;
+            const profileLink = `https://doktorumol.com.tr/${specialtySlug}/${specialistSlugData?.slug || ''}`;
             const message = `Merhaba ${appointment.patient_name}, ${specialistData.name} ile randevunuz tamamlandı. Uzmanı değerlendirmek için: ${profileLink}`;
 
             await supabase.functions.invoke('send-sms-via-static-proxy', {
