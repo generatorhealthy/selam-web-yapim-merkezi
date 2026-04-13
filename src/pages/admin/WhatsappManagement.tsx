@@ -45,6 +45,29 @@ const CHAT_HISTORY_MAX_PAGES = 100;
 
 const normalizePhoneDigits = (value: string) => value.replace(/\D/g, '');
 
+const getStringCandidates = (value: unknown): string[] => {
+  if (typeof value === 'string' && value.trim()) {
+    return [value.trim()];
+  }
+
+  if (!value || typeof value !== 'object') {
+    return [];
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return [
+    record._serialized,
+    record.user,
+    record.id,
+    record.phone,
+    record.number,
+    record.userid,
+    record.value,
+    record.lid,
+  ].filter((candidate): candidate is string => typeof candidate === 'string' && candidate.trim().length > 0);
+};
+
 const normalizeTurkishPhone = (value: string) => {
   const digits = normalizePhoneDigits(value);
 
@@ -54,6 +77,30 @@ const normalizeTurkishPhone = (value: string) => {
   if (digits.length === 10) return `90${digits}`;
 
   return digits;
+};
+
+const normalizeChatIdCandidate = (value: string) => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue.includes('@')) return '';
+
+  const [rawUser, rawServer] = trimmedValue.split('@');
+  if (!rawUser || !rawServer) return '';
+
+  const server = rawServer.toLowerCase();
+  if (!['c.us', 'lid', 'g.us', 's.whatsapp.net'].includes(server)) {
+    return '';
+  }
+
+  if (server === 'g.us') {
+    return `${rawUser}@${server}`;
+  }
+
+  const normalizedPhone = normalizeTurkishPhone(rawUser);
+  if (normalizedPhone.startsWith('90') && normalizedPhone.length === 12) {
+    return `${normalizedPhone}@${server === 's.whatsapp.net' ? 'c.us' : server}`;
+  }
+
+  return `${rawUser}@${server}`;
 };
 
 const getChatDisplayName = (chat: any) => (
@@ -133,10 +180,22 @@ const getChatPhoneCandidate = (chat: any) => {
     chat?.formattedTitle,
     chat?._data?.formattedTitle,
     chat?.lastMessage?._data?.notifyName,
+    chat?.id,
+    chat?._data?.id,
+    chat?.wid,
+    chat?.contact,
+    chat?._data?.contact,
+    chat?._chat?.contact,
+    chat?.lastMessage?.from,
+    chat?.lastMessage?.to,
+    chat?.lastMessage?.author,
+    chat?.lastMessage?._data?.from,
+    chat?.lastMessage?._data?.to,
+    chat?.lastMessage?._data?.author,
   ];
 
-  for (const candidate of candidates) {
-    if (typeof candidate !== 'string' || !candidate.trim()) continue;
+  for (const candidate of candidates.flatMap(getStringCandidates)) {
+    if (!candidate) continue;
 
     const normalized = normalizeTurkishPhone(candidate);
     if (normalized.startsWith('90') && normalized.length === 12) {
@@ -148,24 +207,59 @@ const getChatPhoneCandidate = (chat: any) => {
 };
 
 const getChatIdCandidates = (chat: any) => {
-  const ids = new Set<string>();
+  const preferredIds = new Set<string>();
+  const fallbackIds = new Set<string>();
   const directId = getSerializedChatId(chat);
 
+  const addId = (value: string, preferred = false) => {
+    const normalizedId = normalizeChatIdCandidate(value);
+    if (!normalizedId) return;
+
+    if (preferred) {
+      preferredIds.add(normalizedId);
+      return;
+    }
+
+    fallbackIds.add(normalizedId);
+  };
+
   if (directId) {
-    ids.add(directId);
+    addId(directId);
     const [user, server] = directId.split('@');
-    if (user?.startsWith('90')) {
-      ids.add(`${user}@${server === 'c.us' ? 'lid' : 'c.us'}`);
+    const normalizedPhone = normalizeTurkishPhone(user ?? '');
+
+    if (normalizedPhone.startsWith('90') && normalizedPhone.length === 12) {
+      preferredIds.add(`${normalizedPhone}@c.us`);
+
+      if (server !== 'g.us') {
+        preferredIds.add(`${normalizedPhone}@lid`);
+      }
     }
   }
 
+  [
+    chat?.lastMessage?.from,
+    chat?.lastMessage?.to,
+    chat?.lastMessage?.author,
+    chat?.lastMessage?._data?.from,
+    chat?.lastMessage?._data?.to,
+    chat?.lastMessage?._data?.author,
+    chat?.contact?.id,
+    chat?._data?.contact?.id,
+    chat?._chat?.contact?.id,
+    chat?.wid,
+    chat?.id,
+  ]
+    .flatMap(getStringCandidates)
+    .forEach((candidate) => addId(candidate, candidate.includes('@c.us')));
+
   const phoneCandidate = getChatPhoneCandidate(chat);
   if (phoneCandidate) {
-    ids.add(`${phoneCandidate}@c.us`);
-    ids.add(`${phoneCandidate}@lid`);
+    preferredIds.add(`${phoneCandidate}@c.us`);
+    preferredIds.add(`${phoneCandidate}@lid`);
   }
 
-  return Array.from(ids).filter(Boolean);
+  return Array.from(new Set([...preferredIds, ...fallbackIds])).filter(Boolean);
 };
 
 const WhatsappManagement = () => {
@@ -503,6 +597,7 @@ const WhatsappManagement = () => {
     };
 
     let lastError: unknown = null;
+    let hadSuccessfulEmptyResponse = false;
 
     try {
       void fetchProfilePic(targetChat);
@@ -511,6 +606,11 @@ const WhatsappManagement = () => {
         try {
           const result = await fetchMessagesForChatId(chatId, silent ? 1 : CHAT_HISTORY_MAX_PAGES);
           if (!result.succeeded) continue;
+
+          if (result.messages.length === 0) {
+            hadSuccessfulEmptyResponse = true;
+            continue;
+          }
 
           if (silent) {
             if (result.messages.length > 0) {
@@ -524,6 +624,13 @@ const WhatsappManagement = () => {
         } catch (error) {
           lastError = error;
         }
+      }
+
+      if (hadSuccessfulEmptyResponse) {
+        if (!silent) {
+          setChatMessages([]);
+        }
+        return;
       }
 
       throw lastError ?? new Error('Mesaj geçmişi alınamadı');
