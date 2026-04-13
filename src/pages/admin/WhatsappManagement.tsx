@@ -103,6 +103,44 @@ const normalizeChatIdCandidate = (value: string) => {
   return `${rawUser}@${server}`;
 };
 
+const getExpandedChatIdCandidates = (value: string) => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue.includes('@')) return [];
+
+  const [rawUser, rawServer] = trimmedValue.split('@');
+  if (!rawUser || !rawServer) return [];
+
+  const server = rawServer.toLowerCase();
+  if (!['c.us', 'lid', 'g.us', 's.whatsapp.net'].includes(server)) {
+    return [];
+  }
+
+  const canonicalServer = server === 's.whatsapp.net' ? 'c.us' : server;
+  const baseUser = rawUser.includes(':') ? rawUser.split(':')[0].trim() : rawUser.trim();
+  const normalizedPhone = canonicalServer === 'g.us' ? '' : normalizeTurkishPhone(baseUser || rawUser);
+  const candidates: string[] = [];
+
+  const addCandidate = (candidate: string) => {
+    const normalizedCandidate = normalizeChatIdCandidate(candidate);
+    if (normalizedCandidate && !candidates.includes(normalizedCandidate)) {
+      candidates.push(normalizedCandidate);
+    }
+  };
+
+  if (normalizedPhone.startsWith('90') && normalizedPhone.length === 12) {
+    addCandidate(`${normalizedPhone}@c.us`);
+    addCandidate(`${normalizedPhone}@lid`);
+  }
+
+  addCandidate(`${rawUser}@${canonicalServer}`);
+
+  if (baseUser && baseUser !== rawUser) {
+    addCandidate(`${baseUser}@${canonicalServer}`);
+  }
+
+  return candidates;
+};
+
 const getChatDisplayName = (chat: any) => (
   chat?.name
   ?? chat?.pushName
@@ -212,29 +250,18 @@ const getChatIdCandidates = (chat: any) => {
   const directId = getSerializedChatId(chat);
 
   const addId = (value: string, preferred = false) => {
-    const normalizedId = normalizeChatIdCandidate(value);
-    if (!normalizedId) return;
+    getExpandedChatIdCandidates(value).forEach((normalizedId) => {
+      if (preferred || normalizedId.endsWith('@c.us')) {
+        preferredIds.add(normalizedId);
+        return;
+      }
 
-    if (preferred) {
-      preferredIds.add(normalizedId);
-      return;
-    }
-
-    fallbackIds.add(normalizedId);
+      fallbackIds.add(normalizedId);
+    });
   };
 
   if (directId) {
     addId(directId);
-    const [user, server] = directId.split('@');
-    const normalizedPhone = normalizeTurkishPhone(user ?? '');
-
-    if (normalizedPhone.startsWith('90') && normalizedPhone.length === 12) {
-      preferredIds.add(`${normalizedPhone}@c.us`);
-
-      if (server !== 'g.us') {
-        preferredIds.add(`${normalizedPhone}@lid`);
-      }
-    }
   }
 
   [
@@ -597,7 +624,8 @@ const WhatsappManagement = () => {
     };
 
     let lastError: unknown = null;
-    let hadSuccessfulEmptyResponse = false;
+    let hadSuccessfulResponse = false;
+    const collectedMessages: any[] = [];
 
     try {
       void fetchProfilePic(targetChat);
@@ -606,30 +634,30 @@ const WhatsappManagement = () => {
         try {
           const result = await fetchMessagesForChatId(chatId, silent ? 1 : CHAT_HISTORY_MAX_PAGES);
           if (!result.succeeded) continue;
+          hadSuccessfulResponse = true;
 
-          if (result.messages.length === 0) {
-            hadSuccessfulEmptyResponse = true;
-            continue;
+          if (result.messages.length > 0) {
+            collectedMessages.push(...result.messages);
           }
-
-          if (silent) {
-            if (result.messages.length > 0) {
-              setChatMessages((prev) => mergeChatMessages([...prev, ...result.messages]));
-            }
-          } else {
-            setChatMessages(result.messages);
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-          }
-          return;
         } catch (error) {
           lastError = error;
         }
       }
 
-      if (hadSuccessfulEmptyResponse) {
-        if (!silent) {
-          setChatMessages([]);
+      if (hadSuccessfulResponse) {
+        const mergedMessages = mergeChatMessages(collectedMessages);
+
+        if (silent) {
+          if (mergedMessages.length > 0) {
+            setChatMessages((prev) => mergeChatMessages([...prev, ...mergedMessages]));
+          }
+        } else {
+          setChatMessages(mergedMessages);
+          if (mergedMessages.length > 0) {
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+          }
         }
+
         return;
       }
 
