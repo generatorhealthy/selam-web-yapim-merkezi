@@ -441,7 +441,7 @@ const DoctorList = () => {
                               className={`${isMobile ? 'w-full' : ''} h-12 px-8 text-base font-semibold rounded-xl text-white`} 
                               style={{ backgroundColor: '#4f7cff' }}
                             >
-                              <Link to={`/${specialtySlug}/${doctorSlug}`}>
+                              <Link to={`/${specialtySlug}/${specialist.slug}`}>
                                 Profili İncele
                               </Link>
                             </Button>
@@ -452,7 +452,7 @@ const DoctorList = () => {
                               className={`${isMobile ? 'w-full' : ''} h-12 px-8 text-base font-semibold rounded-xl border-2`}
                               style={{ borderColor: '#4f7cff', color: '#4f7cff' }}
                             >
-                              <Link to={`/randevu-al/${specialtySlug}/${doctorSlug}`}>
+                              <Link to={`/randevu-al/${specialtySlug}/${specialist.slug}`}>
                                 📅 Randevu Al
                               </Link>
                             </Button>

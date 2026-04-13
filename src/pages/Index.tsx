@@ -51,6 +51,7 @@ interface Specialist {
   image_url?: string;
   bio?: string;
   profile_picture?: string;
+  slug?: string;
 }
 
 const Index = () => {

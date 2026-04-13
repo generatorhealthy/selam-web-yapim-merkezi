@@ -270,14 +270,14 @@ const SpecialtyPage = () => {
 
                       <div className="flex flex-col sm:flex-row gap-2 pt-3">
                         <Button asChild className="w-full sm:flex-1">
-                          <Link to={`/${specialtySlugForLinks}/${doctorSlug}`}>
+                          <Link to={`/${specialtySlugForLinks}/${specialist.slug}`}>
                             Profili Görüntüle
                           </Link>
                         </Button>
                         
                         <div className="flex gap-2 w-full sm:w-auto">
                           <Button variant="outline" asChild className="flex-1 sm:flex-none">
-                            <Link to={`/randevu-al/${specialtySlugForLinks}/${doctorSlug}`}>
+                            <Link to={`/randevu-al/${specialtySlugForLinks}/${specialist.slug}`}>
                               <Calendar className="w-4 h-4 mr-1 sm:mr-2" />
                               <span className="hidden sm:inline">Randevu</span>
                               <span className="sm:hidden">Randevu</span>
