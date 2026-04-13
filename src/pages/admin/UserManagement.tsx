@@ -46,6 +46,7 @@ const UserManagement = () => {
   } | null>(null);
   const [editForm, setEditForm] = useState({
     email: "",
+    phone: "",
     password: "",
     role: "user" as UserRole,
     is_approved: false
@@ -127,6 +128,7 @@ const UserManagement = () => {
     setSelectedUser(user);
     setEditForm({
       email: user.email || "",
+      phone: user.phone || "",
       password: "",
       role: user.role,
       is_approved: user.is_approved
@@ -167,6 +169,7 @@ const UserManagement = () => {
           userId: selectedUser.user_id,
           userData: {
             email: editForm.email,
+            phone: editForm.phone || undefined,
             password: editForm.password || undefined,
             role: editForm.role,
             is_approved: editForm.is_approved
@@ -181,7 +184,7 @@ const UserManagement = () => {
 
       toast({ title: "Başarılı", description: "Kullanıcı bilgileri başarıyla güncellendi." });
       setIsEditDialogOpen(false);
-      setEditForm({ email: "", password: "", role: "user", is_approved: false });
+      setEditForm({ email: "", phone: "", password: "", role: "user", is_approved: false });
       fetchUsers();
     } catch (error) {
       toast({ title: "Hata", description: "Beklenmeyen bir hata oluştu: " + (error as Error).message, variant: "destructive" });
@@ -530,6 +533,17 @@ const UserManagement = () => {
                     placeholder="E-posta adresi"
                     maxLength={100}
                     required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-phone">Telefon</Label>
+                  <Input
+                    id="edit-phone"
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                    placeholder="05XX XXX XX XX"
+                    maxLength={20}
                   />
                 </div>
                 <div>

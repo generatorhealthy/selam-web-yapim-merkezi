@@ -103,6 +103,7 @@ serve(async (req) => {
       if (userData.role) profileUpdateData.role = userData.role
       if (typeof userData.is_approved === 'boolean') profileUpdateData.is_approved = userData.is_approved
       if (userData.email) profileUpdateData.email = userData.email
+      if (userData.phone) profileUpdateData.phone = userData.phone
 
       if (Object.keys(profileUpdateData).length > 0) {
         const { error: profileUpdateError } = await supabaseAdmin
