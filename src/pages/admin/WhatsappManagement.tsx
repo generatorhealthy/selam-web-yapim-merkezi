@@ -84,6 +84,23 @@ const WhatsappManagement = () => {
 
   const getSessionName = (line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`;
 
+  const getContactId = (chat: any) => chat?.id?._serialized || (chat?.id?.user ? chat.id.user + '@c.us' : '');
+
+  const ContactAvatar = ({ chat, size = 'md' }: { chat: any; size?: 'sm' | 'md' }) => {
+    const contactId = getContactId(chat);
+    const picUrl = profilePics[contactId];
+    const dim = size === 'md' ? 'w-12 h-12' : 'w-10 h-10';
+    const iconSize = size === 'md' ? 'w-6 h-6' : 'w-5 h-5';
+    if (picUrl) {
+      return <img src={picUrl} alt="" className={`${dim} rounded-full object-cover flex-shrink-0`} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }} />;
+    }
+    return (
+      <div className={`${dim} rounded-full bg-[#dfe5e7] flex items-center justify-center flex-shrink-0`}>
+        <Users className={`${iconSize} text-white`} />
+      </div>
+    );
+  };
+
   const stopQrPolling = () => {
     if (qrIntervalRef.current) {
       clearInterval(qrIntervalRef.current);
@@ -561,9 +578,7 @@ const WhatsappManagement = () => {
                             isActive ? 'bg-[#f5f6f6]' : 'hover:bg-[#f0f2f5]'
                           }`}
                         >
-                          <div className="w-12 h-12 rounded-full bg-[#dfe5e7] flex items-center justify-center flex-shrink-0">
-                            <Users className="w-6 h-6 text-white" />
-                          </div>
+                          <ContactAvatar chat={chat} size="md" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
                               <p className="text-[#111b21] text-sm font-medium truncate">
@@ -660,9 +675,7 @@ const WhatsappManagement = () => {
                     >
                       <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div className="w-10 h-10 rounded-full bg-[#dfe5e7] flex items-center justify-center">
-                      <Users className="w-5 h-5 text-white" />
-                    </div>
+                     <ContactAvatar chat={activeChat} size="sm" />
                     <div>
                       <p className="text-[#111b21] text-sm font-medium">
                         {activeChat.name || activeChat.id?.user || 'Sohbet'}
