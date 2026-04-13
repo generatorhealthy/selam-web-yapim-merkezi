@@ -140,12 +140,6 @@ Deno.serve(async (req) => {
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-  <url>
-    <loc>https://doktorumol.com.tr/doktor-listesi</loc>
-    <lastmod>${currentDate}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
 
   <!-- Uzman Kategorileri -->
   <url>
@@ -213,7 +207,7 @@ Deno.serve(async (req) => {
 ${blogs.map(blog => `  <url>
     <loc>https://doktorumol.com.tr/blog/${blog.slug}</loc>
     <lastmod>${new Date(blog.updated_at).toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>`).join('\n')}
 
