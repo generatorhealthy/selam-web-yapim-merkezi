@@ -210,7 +210,7 @@ serve(async (req) => {
         .eq('customer_email', email)
         .eq('status', 'pending')
         .is('deleted_at', null)
-        .gte('created_at', twoDaysAgo)
+        .gte('created_at', sevenDaysAgo)
         .order('created_at', { ascending: false });
 
       if (fetchError || !pendingOrders || pendingOrders.length === 0) continue;
