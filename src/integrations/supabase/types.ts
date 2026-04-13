@@ -5189,7 +5189,6 @@ export type Database = {
           reviewer_name: string | null
           specialist_id: string | null
           status: string | null
-          updated_at: string | null
         }
         Insert: {
           comment?: string | null
@@ -5199,7 +5198,6 @@ export type Database = {
           reviewer_name?: string | null
           specialist_id?: string | null
           status?: string | null
-          updated_at?: string | null
         }
         Update: {
           comment?: string | null
@@ -5209,7 +5207,6 @@ export type Database = {
           reviewer_name?: string | null
           specialist_id?: string | null
           status?: string | null
-          updated_at?: string | null
         }
         Relationships: [
           {
