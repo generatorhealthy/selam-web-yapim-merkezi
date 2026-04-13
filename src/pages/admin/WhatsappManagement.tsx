@@ -407,7 +407,7 @@ const WhatsappManagement = () => {
         {/* Main content */}
         <div className="flex flex-1 overflow-hidden">
           {/* ===== LEFT SIDEBAR ===== */}
-          <div className="w-[360px] flex-shrink-0 flex flex-col border-r border-[#e9edef] bg-[#f0f2f5]">
+          <div className="w-[360px] flex-shrink-0 flex flex-col border-r border-[#e9edef] bg-white">
             
             {/* Line selector dropdown + actions */}
             <div className="bg-[#f0f2f5] px-3 py-2 flex items-center gap-2 border-b border-[#e9edef]">
