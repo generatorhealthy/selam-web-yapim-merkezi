@@ -124,6 +124,12 @@ serve(async (req) => {
       body.orderStatus === "SUCCESS" ||
       body.status === "SUCCESS";
 
+    const isFailed =
+      body.paymentStatus === "FAILED" ||
+      eventType === "subscription_order_failure" ||
+      eventType === "subscription.order.failure" ||
+      body.orderStatus === "FAILED";
+
     console.log("Event type:", eventType, "| Payment success:", isSuccess);
 
     if (isSuccess) {
