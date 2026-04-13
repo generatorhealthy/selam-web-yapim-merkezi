@@ -50,7 +50,7 @@ const BookAppointment = () => {
       
       const { data: allSpecialists, error: allError } = await supabase
         .from('specialists')
-        .select('*')
+        .select('id, name, specialty, hospital, city, experience, rating, reviews_count, bio, profile_picture, consultation_type, working_hours_start, working_hours_end, available_days, available_time_slots, online_consultation, face_to_face_consultation, phone, user_id')
         .eq('is_active', true);
 
       console.log('All specialists:', allSpecialists);
