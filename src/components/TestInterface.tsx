@@ -64,7 +64,7 @@ const TestInterface = () => {
       if (specialistId) {
         const { data: specialistData, error: specialistError } = await supabase
           .from('specialists')
-          .select('*')
+          .select('id, name, specialty, profile_picture, city, bio, rating, reviews_count, online_consultation, face_to_face_consultation')
           .eq('id', specialistId)
           .eq('is_active', true)
           .single();
@@ -77,7 +77,7 @@ const TestInterface = () => {
         const formattedName = specialistName.replace(/-/g, ' ');
         const { data: specialistData, error: specialistError } = await supabase
           .from('specialists')
-          .select('*')
+          .select('id, name, specialty, profile_picture, city, bio, rating, reviews_count, online_consultation, face_to_face_consultation')
           .ilike('name', `%${formattedName}%`)
           .eq('is_active', true)
           .limit(1)

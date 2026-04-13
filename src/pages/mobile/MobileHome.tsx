@@ -67,7 +67,7 @@ export default function MobileHome() {
       const { data: reviewsData } = await supabase
         .from('reviews')
         .select(`
-          *,
+          id, specialist_id, reviewer_name, rating, comment, status, created_at,
           specialists (
             name,
             specialty

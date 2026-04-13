@@ -94,7 +94,7 @@ const DoctorProfile = () => {
       // Get all specialists to find the right one
       const { data: allSpecialists, error: allError } = await supabase
         .from('specialists')
-        .select('*')
+        .select('id, name, specialty, hospital, city, experience, rating, reviews_count, bio, education, university, certifications, profile_picture, consultation_type, working_hours_start, working_hours_end, available_days, available_time_slots, address, phone, email, online_consultation, face_to_face_consultation, faq, seo_title, seo_description, seo_keywords, user_id')
         .eq('is_active', true);
 
       console.log('All specialists:', allSpecialists);
