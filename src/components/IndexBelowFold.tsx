@@ -27,7 +27,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
   useEffect(() => {
     const fetchRandomReviews = async () => {
       try {
-        const { data: reviewsData, error: reviewsError } = await supabase.rpc('get_public_reviews');
+        const { data: reviewsData, error: reviewsError } = await supabase.rpc('get_public_reviews', { p_limit: 20 });
         if (reviewsError) throw reviewsError;
         if (reviewsData && reviewsData.length > 0) {
           const shuffled = [...reviewsData].sort(() => 0.5 - Math.random());
