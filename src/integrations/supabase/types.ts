@@ -5512,6 +5512,8 @@ export type Database = {
         Args: { p_backup_id: number; p_table_name?: string }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       user_role:
