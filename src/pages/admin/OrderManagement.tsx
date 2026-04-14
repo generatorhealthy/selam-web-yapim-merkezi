@@ -262,9 +262,9 @@ const OrderManagement = () => {
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
-      // Arama varsa filtrele
+      // Arama varsa filtrele - PostgREST or() içinde * joker karakter kullanılmalı (% değil)
       if (searchTerm) {
-        query = query.or(`customer_name.ilike.%${searchTerm}%,customer_email.ilike.%${searchTerm}%,package_name.ilike.%${searchTerm}%`);
+        query = query.or(`customer_name.ilike.*${searchTerm}*,customer_email.ilike.*${searchTerm}*,package_name.ilike.*${searchTerm}*,customer_phone.ilike.*${searchTerm}*`);
       }
 
       // Durum filtresi
