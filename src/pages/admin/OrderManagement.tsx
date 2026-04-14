@@ -137,7 +137,11 @@ const OrderManagement = () => {
     };
   }, [searchInput]);
 
-  const PAGE_SIZE = 50;
+  const BROWSE_PAGE_SIZE = 50;
+  const SEARCH_PAGE_SIZE = 250;
+  const isSearchMode = searchTerm.trim().length > 0;
+  const ORDER_LIST_SELECT = "id, customer_name, customer_email, package_name, amount, status, created_at, customer_phone, customer_address, customer_city, customer_tc_no, company_name, company_tax_no, company_tax_office, package_type, payment_method, customer_type, contract_ip_address, is_first_order, subscription_month, deleted_at, contract_emails_sent, invoice_sent, invoice_number, invoice_date, payment_status, updated_at, approved_by, approved_at, parent_order_id, payment_transaction_id";
+  const DELETED_ORDER_SELECT = "id, customer_name, customer_email, package_name, amount, deleted_at";
 
   // Order stats via RPC (fast aggregation, avoids paginated client-side counts)
   const { data: orderStats } = useQuery({
@@ -254,32 +258,31 @@ const OrderManagement = () => {
     isFetching: isOrdersFetching,
     error: ordersError,
   } = useInfiniteQuery({
-    queryKey: ["orders", searchTerm, statusFilter],
+    queryKey: ["orders", statusFilter, isSearchMode ? "search" : "browse"],
     queryFn: async ({ pageParam = 0 }) => {
+      const pageSize = isSearchMode ? SEARCH_PAGE_SIZE : BROWSE_PAGE_SIZE;
       let query = supabase
         .from("orders")
-        .select("id, customer_name, customer_email, package_name, amount, status, created_at, customer_phone, customer_address, customer_city, customer_tc_no, company_name, company_tax_no, company_tax_office, package_type, payment_method, customer_type, contract_ip_address, is_first_order, subscription_month, deleted_at, contract_emails_sent, invoice_sent, invoice_number, invoice_date, payment_status, updated_at, approved_by, approved_at, parent_order_id, payment_transaction_id")
+        .select(ORDER_LIST_SELECT)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
-
-      // Arama varsa filtrele - PostgREST or() içinde * joker karakter kullanılmalı (% değil)
-      if (searchTerm) {
-        query = query.or(`customer_name.ilike.*${searchTerm}*,customer_email.ilike.*${searchTerm}*,package_name.ilike.*${searchTerm}*,customer_phone.ilike.*${searchTerm}*`);
-      }
 
       // Durum filtresi
       if (statusFilter !== "all") {
         query = query.eq("status", statusFilter);
       }
 
-      // PAGE_SIZE + 1 çekerek daha fazla sayfa olup olmadığını kontrol et
+      const rangeStart = pageParam * pageSize;
+      const rangeEnd = rangeStart + pageSize;
+
+      // pageSize + 1 çekerek daha fazla sayfa olup olmadığını kontrol et
       const { data, error } = await query
-        .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE);
+        .range(rangeStart, rangeEnd);
 
       if (error) throw error;
       
-      const hasMore = data && data.length > PAGE_SIZE;
-      const pageData = hasMore ? data.slice(0, PAGE_SIZE) : (data || []);
+      const hasMore = (data?.length ?? 0) > pageSize;
+      const pageData = hasMore ? data.slice(0, pageSize) : (data || []);
       
       return { data: pageData as Order[], hasMore };
     },
@@ -292,24 +295,26 @@ const OrderManagement = () => {
   });
 
   // Flatten pages into single array
-  const rawOrders = ordersData?.pages.flatMap(page => page.data) || [];
+  const rawOrders = useMemo(() => ordersData?.pages.flatMap(page => page.data) || [], [ordersData]);
   
-  // Client-side instant filtering while server query runs
+  // Sunucu tarafı text araması timeout ürettiği için arama burada yapılıyor
   const orders = useMemo(() => {
-    if (!searchInput || searchInput === searchTerm) {
+    const normalizedSearch = searchInput.trim().toLowerCase();
+
+    if (!normalizedSearch) {
       return rawOrders;
     }
-    // Anlık filtreleme - sunucu yanıtı gelene kadar mevcut verileri filtrele
-    const lowerSearch = searchInput.toLowerCase();
+
     return rawOrders.filter(order => 
-      order.customer_name?.toLowerCase().includes(lowerSearch) ||
-      order.customer_email?.toLowerCase().includes(lowerSearch) ||
-      order.package_name?.toLowerCase().includes(lowerSearch) ||
-      order.customer_phone?.toLowerCase().includes(lowerSearch)
+      order.customer_name?.toLowerCase().includes(normalizedSearch) ||
+      order.customer_email?.toLowerCase().includes(normalizedSearch) ||
+      order.package_name?.toLowerCase().includes(normalizedSearch) ||
+      order.customer_phone?.toLowerCase().includes(normalizedSearch)
     );
-  }, [rawOrders, searchInput, searchTerm]);
+  }, [rawOrders, searchInput]);
 
   const totalOrders = orders.length;
+  const isSearchLoadingAllResults = isSearchMode && (isOrdersFetching || isFetchingNextPage || hasNextPage);
 
   const {
     data: deletedOrders,
@@ -320,11 +325,11 @@ const OrderManagement = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("*")
+        .select(DELETED_ORDER_SELECT)
         .not("deleted_at", "is", null)
         .order("deleted_at", { ascending: false });
       if (error) throw error;
-      return data as Order[];
+      return data as unknown as Order[];
     },
   });
 
@@ -1292,6 +1297,8 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
 
   // Observer for infinite scroll
   useEffect(() => {
+    if (isSearchMode) return;
+
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -1311,7 +1318,13 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
         observer.unobserve(currentTarget);
       }
     };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isSearchMode]);
+
+  useEffect(() => {
+    if (isSearchMode && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isSearchMode]);
 
   // Filtreleme useMemo'da yapılıyor, burada direkt orders kullanılıyor
   const filteredOrders = orders;
@@ -1442,7 +1455,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                     onChange={(e) => setSearchInput(e.target.value)}
                     className="pl-12 h-12 border-0 bg-white/80 backdrop-blur-sm shadow-inner text-gray-700 placeholder:text-gray-500"
                   />
-                  {searchInput !== searchTerm && (
+                  {(searchInput !== searchTerm || isSearchLoadingAllResults) && (
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
                     </div>
@@ -1803,6 +1816,13 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                         </Card>
                       ))}
                     </div>
+                  ) : isSearchLoadingAllResults ? (
+                    <div className="flex justify-center py-12">
+                      <div className="flex items-center gap-3">
+                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-200 border-t-blue-600"></div>
+                        <span className="text-gray-600 font-medium">Arama sonuçları yükleniyor...</span>
+                      </div>
+                    </div>
                   ) : (
                     <div className="text-center py-12">
                       <div className="p-6 bg-gray-50 text-gray-600 rounded-lg border-2 border-dashed border-gray-200 inline-block">
@@ -1814,7 +1834,7 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                   )}
                   
                   {/* Infinite scroll observer */}
-                  {hasNextPage && (
+                  {!isSearchMode && hasNextPage && (
                     <div ref={observerTarget} className="flex justify-center py-8">
                       {isFetchingNextPage && (
                         <div className="flex items-center gap-3">
