@@ -244,7 +244,7 @@ const DoctorProfile = () => {
       
       // SECURITY: Use secure function instead of direct table access
       const { data, error } = await supabase
-        .rpc('get_public_reviews', { p_specialist_id: specialistId });
+        .rpc('get_public_reviews', { p_specialist_id: specialistId, p_limit: 50 });
 
       if (error) {
         console.error('Değerlendirmeler çekilirken hata:', error);
