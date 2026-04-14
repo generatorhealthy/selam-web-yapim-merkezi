@@ -56,6 +56,12 @@ interface Order {
   payment_status?: string | null;
 }
 
+interface OrdersPage {
+  data: Order[];
+  hasMore: boolean;
+  nextCursor?: string;
+}
+
 
 const OrderManagement = () => {
   const { toast } = useToast();
@@ -257,39 +263,41 @@ const OrderManagement = () => {
     isLoading: isOrdersLoading,
     isFetching: isOrdersFetching,
     error: ordersError,
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<OrdersPage>({
     queryKey: ["orders", statusFilter, isSearchMode ? "search" : "browse"],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam }) => {
       const pageSize = isSearchMode ? SEARCH_PAGE_SIZE : BROWSE_PAGE_SIZE;
+      const cursor = pageParam as string | null;
+
       let query = supabase
         .from("orders")
         .select(ORDER_LIST_SELECT)
         .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false });
 
       // Durum filtresi
       if (statusFilter !== "all") {
         query = query.eq("status", statusFilter);
       }
 
-      const rangeStart = pageParam * pageSize;
-      const rangeEnd = rangeStart + pageSize;
+      if (cursor) {
+        query = query.lt("created_at", cursor);
+      }
 
-      // pageSize + 1 çekerek daha fazla sayfa olup olmadığını kontrol et
-      const { data, error } = await query
-        .range(rangeStart, rangeEnd);
+      const { data, error } = await query.limit(pageSize + 1);
 
       if (error) throw error;
-      
-      const hasMore = (data?.length ?? 0) > pageSize;
-      const pageData = hasMore ? data.slice(0, pageSize) : (data || []);
-      
-      return { data: pageData as Order[], hasMore };
+
+      const fetchedOrders = (data ?? []) as Order[];
+      const hasMore = fetchedOrders.length > pageSize;
+      const pageData = hasMore ? fetchedOrders.slice(0, pageSize) : fetchedOrders;
+      const nextCursor = hasMore ? pageData[pageData.length - 1]?.created_at : undefined;
+
+      return { data: pageData, hasMore, nextCursor };
     },
-    getNextPageParam: (lastPage, allPages) => {
-      return lastPage.hasMore ? allPages.length : undefined;
-    },
-    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.nextCursor ?? undefined : undefined,
+    initialPageParam: null as string | null,
     staleTime: 30000, // 30 saniye cache
     gcTime: 60000, // 1 dakika garbage collection
   });
@@ -314,7 +322,8 @@ const OrderManagement = () => {
   }, [rawOrders, searchInput]);
 
   const totalOrders = orders.length;
-  const isSearchLoadingAllResults = isSearchMode && (isOrdersFetching || isFetchingNextPage || hasNextPage);
+  const hasLoadedActiveOrders = rawOrders.length > 0;
+  const isSearchLoadingAllResults = isSearchMode && !ordersError && (isOrdersFetching || isFetchingNextPage || hasNextPage);
 
   const {
     data: deletedOrders,
@@ -331,6 +340,7 @@ const OrderManagement = () => {
       if (error) throw error;
       return data as unknown as Order[];
     },
+    enabled: activeTab === "trash",
   });
 
   // Order notes query
@@ -1528,21 +1538,38 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {isOrdersLoading ? (
+              {isOrdersLoading && !hasLoadedActiveOrders ? (
                 <div className="flex justify-center py-12">
                   <div className="flex items-center gap-3">
                     <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-200 border-t-blue-600"></div>
                     <span className="text-gray-600 font-medium">Yükleniyor...</span>
                   </div>
                 </div>
-              ) : ordersError ? (
+              ) : ordersError && !hasLoadedActiveOrders ? (
                 <div className="text-center py-12">
-                  <div className="p-4 bg-red-50 text-red-600 rounded-lg border border-red-200 inline-block">
+                  <div className="inline-block rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-destructive">
                     Hata: {ordersError.message}
                   </div>
                 </div>
               ) : (
                 <div className="w-full space-y-4">
+                  {ordersError && hasLoadedActiveOrders && (
+                    <div className="px-6 pt-6">
+                      <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+                        <span>Arama sırasında bazı kayıtlar yüklenemedi, bulunan siparişler gösteriliyor.</span>
+                        {hasNextPage && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fetchNextPage()}
+                            disabled={isFetchingNextPage}
+                          >
+                            {isFetchingNextPage ? "Yeniden deneniyor..." : "Tekrar Dene"}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   {filteredOrders && filteredOrders.length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                       {filteredOrders.map((order) => (
@@ -1815,6 +1842,24 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                           </CardContent>
                         </Card>
                       ))}
+                    </div>
+                  ) : ordersError && hasLoadedActiveOrders ? (
+                    <div className="text-center py-12">
+                      <div className="inline-block rounded-lg border border-border bg-muted/40 p-6 text-muted-foreground">
+                        <Calendar className="mx-auto mb-4 h-12 w-12 opacity-60" />
+                        <div className="mb-2 text-lg font-medium">Arama tamamlanamadı</div>
+                        <div className="mb-4 text-sm">Bazı kayıtlar yüklenemediği için aradığınız sipariş henüz görünmüyor olabilir.</div>
+                        {hasNextPage && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fetchNextPage()}
+                            disabled={isFetchingNextPage}
+                          >
+                            {isFetchingNextPage ? "Yükleniyor..." : "Yeniden Dene"}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ) : isSearchLoadingAllResults ? (
                     <div className="flex justify-center py-12">
