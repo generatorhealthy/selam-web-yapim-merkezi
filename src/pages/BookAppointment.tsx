@@ -48,13 +48,11 @@ const BookAppointment = () => {
       setLoading(true);
       console.log('Fetching specialist for:', doctorName, 'in specialty:', specialtySlug);
       
-      // Query directly by slug for permanent URLs
-      const { data: foundSpecialist, error: slugError } = await supabase
-        .from('specialists')
-        .select('id, name, specialty, hospital, city, experience, rating, reviews_count, bio, profile_picture, consultation_type, working_hours_start, working_hours_end, available_days, available_time_slots, online_consultation, face_to_face_consultation, phone, user_id, slug')
-        .eq('is_active', true)
-        .eq('slug', doctorName)
-        .maybeSingle();
+      // Query via RPC to bypass RLS for anonymous users
+      const { data: foundSpecialists, error: slugError } = await supabase
+        .rpc('get_public_specialist_by_slug', { p_slug: doctorName });
+
+      const foundSpecialist = foundSpecialists?.[0] || null;
 
       if (slugError) {
         console.error('Error fetching specialist by slug:', slugError);
