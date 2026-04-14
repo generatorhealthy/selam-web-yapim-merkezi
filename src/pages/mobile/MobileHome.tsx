@@ -19,7 +19,8 @@ interface Test {
 
 interface Review {
   id: string;
-  reviewer_name: string;
+  reviewer_name?: string;
+  reviewer_display_name?: string;
   comment: string;
   rating: number;
   created_at: string;
@@ -241,7 +242,7 @@ export default function MobileHome() {
                       </div>
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm">{review.reviewer_name}</span>
+                          <span className="font-bold text-sm">{review.reviewer_display_name || review.reviewer_name || 'Anonim'}</span>
                           <div className="flex gap-0.5">
                             {Array.from({ length: 5 }).map((_, i) => (
                               <Star
