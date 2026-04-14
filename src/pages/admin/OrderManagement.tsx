@@ -304,7 +304,8 @@ const OrderManagement = () => {
     return rawOrders.filter(order => 
       order.customer_name?.toLowerCase().includes(lowerSearch) ||
       order.customer_email?.toLowerCase().includes(lowerSearch) ||
-      order.package_name?.toLowerCase().includes(lowerSearch)
+      order.package_name?.toLowerCase().includes(lowerSearch) ||
+      order.customer_phone?.toLowerCase().includes(lowerSearch)
     );
   }, [rawOrders, searchInput, searchTerm]);
 
