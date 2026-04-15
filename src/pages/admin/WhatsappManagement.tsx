@@ -233,12 +233,31 @@ const getQrPayloadValue = (payload: unknown, depth = 0): string | null => {
   return null;
 };
 
-const normalizeChatMessage = (message: any) => ({
-  ...message,
-  body: message?.body ?? message?._data?.body ?? '',
-  timestamp: Number(message?.timestamp ?? message?.messageTimestamp ?? message?._data?.t ?? 0),
-  fromMe: Boolean(message?.fromMe ?? message?._data?.id?.fromMe ?? false),
-});
+const normalizeChatMessage = (message: any) => {
+  const body = message?.body
+    ?? message?.text
+    ?? message?.content
+    ?? message?.message
+    ?? message?._data?.body
+    ?? message?._data?.text
+    ?? message?._data?.content
+    ?? message?.payload?.body
+    ?? message?.payload?.text
+    ?? '';
+
+  // Debug: log first message structure if body is empty
+  if (!body && message && !message._debugLogged) {
+    console.warn('[WAHA] Message with empty body, keys:', Object.keys(message), 'sample:', JSON.stringify(message).slice(0, 500));
+    message._debugLogged = true;
+  }
+
+  return {
+    ...message,
+    body,
+    timestamp: Number(message?.timestamp ?? message?.messageTimestamp ?? message?._data?.t ?? 0),
+    fromMe: Boolean(message?.fromMe ?? message?._data?.id?.fromMe ?? false),
+  };
+};
 
 const getChatMessageKey = (message: any, fallback = '') => String(
   message?.id?._serialized
