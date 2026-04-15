@@ -175,6 +175,54 @@ const getAvatarUrlFromData = (data: any) => (
     : data?.profilePictureURL ?? data?.profilePictureUrl ?? data?.profilePicUrl ?? data?.url ?? data?.picture ?? null
 );
 
+const getQrPayloadValue = (payload: unknown, depth = 0): string | null => {
+  if (depth > 5 || payload == null) {
+    return null;
+  }
+
+  if (typeof payload === 'string') {
+    const trimmedPayload = payload.trim();
+    return trimmedPayload || null;
+  }
+
+  if (Array.isArray(payload)) {
+    for (const item of payload) {
+      const nestedValue = getQrPayloadValue(item, depth + 1);
+      if (nestedValue) {
+        return nestedValue;
+      }
+    }
+
+    return null;
+  }
+
+  if (typeof payload !== 'object') {
+    return null;
+  }
+
+  const record = payload as Record<string, unknown>;
+  const candidates = [
+    record.qr,
+    record.value,
+    record.data,
+    record.base64,
+    record.image,
+    record.qrCode,
+    record.code,
+    record.src,
+    record.url,
+  ];
+
+  for (const candidate of candidates) {
+    const nestedValue = getQrPayloadValue(candidate, depth + 1);
+    if (nestedValue) {
+      return nestedValue;
+    }
+  }
+
+  return null;
+};
+
 const normalizeChatMessage = (message: any) => ({
   ...message,
   body: message?.body ?? message?._data?.body ?? '',
@@ -453,7 +501,7 @@ const WhatsappManagement = () => {
   const [newChatSurname, setNewChatSurname] = useState('');
   const [newChatPhone, setNewChatPhone] = useState('');
 
-  const getSessionName = (line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`;
+  const getSessionName = useCallback((line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`, []);
 
   const ContactAvatar = ({ chat, size = 'md' }: { chat: any; size?: 'sm' | 'md' }) => {
     const contactIds = getChatIdCandidates(chat);
@@ -513,32 +561,42 @@ const WhatsappManagement = () => {
         setSessionStatus(status);
         if (status === 'WORKING') {
           setQrCode(null);
+          setConnecting(false);
           stopQrPolling();
         }
+        return status;
       } else {
         setSessionStatus('STOPPED');
+        return 'STOPPED';
       }
     } catch {
       setSessionStatus('STOPPED');
+      return 'STOPPED';
     }
-  }, []);
+  }, [getSessionName]);
 
-  const fetchQrCode = async (line: WhatsappLine) => {
+  const fetchQrCode = useCallback(async (line: WhatsappLine) => {
     try {
       const res = await wahaApi('auth.qr', getSessionName(line));
-      if (res.success && res.data) {
-        setQrCode(res.data.qr || res.data.value || (typeof res.data === 'string' ? res.data : null));
+      const nextQrCode = getQrPayloadValue(res.data);
+      if (nextQrCode) {
+        setQrCode(nextQrCode);
+        setSessionStatus('SCAN_QR_CODE');
+        return nextQrCode;
       }
     } catch {}
-  };
+
+    return null;
+  }, [getSessionName]);
 
   const startSession = async () => {
     if (!selectedLine) return;
+    const line = selectedLine;
     setConnecting(true);
     setQrCode(null);
     stopQrPolling();
     try {
-      await wahaApi('sessions.start', getSessionName(selectedLine));
+      await wahaApi('sessions.start', getSessionName(line));
       toast.success('Oturum başlatılıyor...');
     } catch (err: any) {
       const message = err?.message || '';
@@ -550,48 +608,17 @@ const WhatsappManagement = () => {
     }
     setSessionStatus('SCAN_QR_CODE');
 
-    // First QR fetch after a short delay for WAHA to prepare the QR
-    const line = selectedLine;
-    const doFetchQr = async () => {
-      try {
-        const res = await wahaApi('auth.qr', getSessionName(line));
-        if (res.success && res.data) {
-          const qr = res.data.qr || res.data.value || (typeof res.data === 'string' ? res.data : null);
-          if (qr) {
-            setQrCode(qr);
-            setConnecting(false);
-          }
-        }
-      } catch {
-        console.log('QR code not ready yet, will retry...');
-      }
-    };
-
-    // Try fetching QR a few times quickly first (500ms, 1500ms, 3000ms)
-    for (const delay of [500, 1000, 1500]) {
+    for (const delay of [500, 1000, 1500, 2500]) {
       await new Promise(r => setTimeout(r, delay));
-      await doFetchQr();
+      const qr = await fetchQrCode(line);
+      if (qr) {
+        setConnecting(false);
+        break;
+      }
     }
-    setConnecting(false);
 
-    // Then continue polling every 4 seconds until session is WORKING
-    qrIntervalRef.current = setInterval(async () => {
-      try {
-        const statusRes = await wahaApi('sessions.status', getSessionName(line));
-        if (statusRes.success && statusRes.data) {
-          const status = statusRes.data.status || 'STOPPED';
-          setSessionStatus(status);
-          if (status === 'WORKING') {
-            setQrCode(null);
-            stopQrPolling();
-            toast.success('WhatsApp bağlantısı başarılı!');
-            return;
-          }
-        }
-      } catch {}
-      // Still not connected, refresh QR
-      await doFetchQr();
-    }, 4000);
+    await checkSessionStatus(line);
+    setConnecting(false);
   };
 
   const stopSession = async () => {
@@ -988,13 +1015,49 @@ const WhatsappManagement = () => {
   useEffect(() => { fetchLines(); }, []);
   useEffect(() => {
     if (selectedLine) {
-      checkSessionStatus(selectedLine);
+      setQrCode(null);
+      void checkSessionStatus(selectedLine);
       setActiveChat(null);
       setChats([]);
       setChatMessages([]);
     }
     return () => stopQrPolling();
   }, [selectedLine]);
+
+  useEffect(() => {
+    if (!selectedLine || sessionStatus !== 'SCAN_QR_CODE') return;
+
+    let cancelled = false;
+    const line = selectedLine;
+
+    const pollQrCode = async () => {
+      if (cancelled) return;
+
+      const qr = await fetchQrCode(line);
+      if (cancelled || qr) {
+        setConnecting(false);
+        return;
+      }
+
+      const status = await checkSessionStatus(line);
+      if (cancelled) return;
+
+      if (status === 'WORKING') {
+        toast.success('WhatsApp bağlantısı başarılı!');
+      }
+    };
+
+    stopQrPolling();
+    void pollQrCode();
+    qrIntervalRef.current = setInterval(() => {
+      void pollQrCode();
+    }, 4000);
+
+    return () => {
+      cancelled = true;
+      stopQrPolling();
+    };
+  }, [selectedLine, sessionStatus, checkSessionStatus, fetchQrCode]);
 
   useEffect(() => {
     if (sessionStatus === 'WORKING' && selectedLine) fetchChats();
