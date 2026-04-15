@@ -20,8 +20,97 @@ interface AppointmentNotificationRequest {
   notes?: string;
 }
 
+const PLACEHOLDER_PHONE_DIGITS = new Set(['02167060611', '902167060611']);
+
+const normalizePhone = (value?: string | null) => (value ?? '').replace(/\D/g, '');
+
+const isUsablePhone = (value?: string | null) => {
+  const digits = normalizePhone(value);
+  return digits.length >= 10 && !PLACEHOLDER_PHONE_DIGITS.has(digits);
+};
+
+const pickFirstUsablePhone = (values: Array<string | null | undefined>) => {
+  const match = values.find((value) => isUsablePhone(value));
+  return match?.trim() ?? null;
+};
+
+const resolveSpecialistPhone = async (
+  supabase: ReturnType<typeof createClient>,
+  specialistEmail: string,
+  specialistName: string,
+  requestedPhone?: string,
+) => {
+  const requestPhone = pickFirstUsablePhone([requestedPhone]);
+  if (requestPhone) {
+    return { phone: requestPhone, source: 'request' };
+  }
+
+  try {
+    const { data: specialistRow, error } = await supabase
+      .from('specialists')
+      .select('phone')
+      .eq('email', specialistEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error reading specialist phone from specialists:', error);
+    }
+
+    const specialistPhone = pickFirstUsablePhone([specialistRow?.phone]);
+    if (specialistPhone) {
+      return { phone: specialistPhone, source: 'specialists' };
+    }
+  } catch (error) {
+    console.error('Specialists phone lookup failed:', error);
+  }
+
+  try {
+    const { data: orderRows, error } = await supabase
+      .from('orders')
+      .select('customer_phone, created_at')
+      .eq('customer_email', specialistEmail)
+      .not('customer_phone', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error('Error reading specialist phone from orders by email:', error);
+    }
+
+    const orderPhone = pickFirstUsablePhone((orderRows ?? []).map((row) => row.customer_phone));
+    if (orderPhone) {
+      return { phone: orderPhone, source: 'orders_email' };
+    }
+  } catch (error) {
+    console.error('Orders phone lookup by email failed:', error);
+  }
+
+  try {
+    const { data: namedOrderRows, error } = await supabase
+      .from('orders')
+      .select('customer_phone, created_at')
+      .eq('customer_name', specialistName)
+      .not('customer_phone', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error('Error reading specialist phone from orders by name:', error);
+    }
+
+    const namedOrderPhone = pickFirstUsablePhone((namedOrderRows ?? []).map((row) => row.customer_phone));
+    if (namedOrderPhone) {
+      return { phone: namedOrderPhone, source: 'orders_name' };
+    }
+  } catch (error) {
+    console.error('Orders phone lookup by name failed:', error);
+  }
+
+  return { phone: null, source: 'none' };
+};
+
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
     const brevoApiKey = Deno.env.get('BREVO_API_KEY');
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+
     if (!brevoApiKey) {
       console.error('BREVO_API_KEY not found');
       return new Response(
@@ -53,7 +142,28 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const payload = await req.json() as Partial<AppointmentNotificationRequest>;
+    const missingFields = [
+      'appointmentId',
+      'patientName',
+      'patientEmail',
+      'patientPhone',
+      'specialistEmail',
+      'specialistName',
+      'appointmentDate',
+      'appointmentTime',
+      'appointmentType',
+    ].filter((field) => !payload[field as keyof AppointmentNotificationRequest]);
+
+    if (missingFields.length > 0) {
+      return new Response(
+        JSON.stringify({ error: `Missing required fields: ${missingFields.join(', ')}` }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     const {
       appointmentId,
@@ -66,27 +176,30 @@ const handler = async (req: Request): Promise<Response> => {
       appointmentDate,
       appointmentTime,
       appointmentType,
-      notes
-    }: AppointmentNotificationRequest = await req.json();
+      notes,
+    } = payload as AppointmentNotificationRequest;
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log('Appointment notification request received:', {
       appointmentId,
       patientName,
       specialistEmail,
       appointmentDate,
-      appointmentTime
+      appointmentTime,
     });
 
-    // Format appointment type for display
-    const appointmentTypeText = appointmentType === 'face-to-face' ? 'Yüz Yüze' : 
-                               appointmentType === 'online' ? 'Online' : appointmentType;
+    const appointmentTypeText = appointmentType === 'face-to-face'
+      ? 'Yüz Yüze'
+      : appointmentType === 'online'
+        ? 'Online'
+        : appointmentType;
 
-    // Format date for display
     const formattedDate = new Date(appointmentDate).toLocaleDateString('tr-TR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      weekday: 'long'
+      weekday: 'long',
     });
 
     const emailContent = `
@@ -131,7 +244,6 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email using Brevo API
     const brevoResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
@@ -142,15 +254,15 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         sender: {
           email: 'info@doktorumol.com.tr',
-          name: 'Doktor Umol'
+          name: 'Doktor Umol',
         },
         to: [{
           email: specialistEmail,
-          name: specialistName
+          name: specialistName,
         }],
         subject: `Yeni Randevu: ${patientName} - ${formattedDate} ${appointmentTime}`,
-        htmlContent: emailContent
-      })
+        htmlContent: emailContent,
+      }),
     });
 
     if (!brevoResponse.ok) {
@@ -162,7 +274,20 @@ const handler = async (req: Request): Promise<Response> => {
     const brevoResult = await brevoResponse.json();
     console.log('Appointment notification email sent successfully via Brevo:', brevoResult);
 
-    // Log email to database
+    const { phone: resolvedSpecialistPhone, source: smsPhoneSource } = await resolveSpecialistPhone(
+      supabase,
+      specialistEmail,
+      specialistName,
+      specialistPhone,
+    );
+
+    console.log('Resolved specialist phone for appointment SMS:', {
+      specialistEmail,
+      specialistName,
+      smsPhoneSource,
+      hasPhone: Boolean(resolvedSpecialistPhone),
+    });
+
     try {
       await supabase.from('brevo_email_logs').insert({
         recipient_email: specialistEmail,
@@ -171,25 +296,31 @@ const handler = async (req: Request): Promise<Response> => {
         template_name: 'appointment-notification',
         status: 'sent',
         brevo_message_id: brevoResult.messageId || null,
-        metadata: { appointmentId, patientName, patientEmail, appointmentDate, appointmentTime }
+        metadata: {
+          appointmentId,
+          patientName,
+          patientEmail,
+          appointmentDate,
+          appointmentTime,
+          smsPhoneSource,
+        },
       });
     } catch (logErr) {
       console.error('Email log insert error:', logErr);
     }
 
-    // Send SMS notification to specialist if phone number is available
     let smsResult = null;
-    if (specialistPhone) {
+    if (resolvedSpecialistPhone) {
       try {
-        console.log('Sending SMS notification to specialist:', specialistPhone);
-        
+        console.log('Sending SMS notification to specialist:', resolvedSpecialistPhone);
+
         const smsMessage = `Yeni randevu alındı!\nHasta: ${patientName}\nTarih: ${formattedDate}\nSaat: ${appointmentTime}\nTür: ${appointmentTypeText}\nTelefon: ${patientPhone}${notes ? `\nNot: ${notes}` : ''}`;
-        
+
         const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
           body: {
-            phone: specialistPhone,
-            message: smsMessage
-          }
+            phone: resolvedSpecialistPhone,
+            message: smsMessage,
+          },
         });
 
         if (smsError) {
@@ -202,21 +333,21 @@ const handler = async (req: Request): Promise<Response> => {
         console.error('SMS sending failed:', smsError);
       }
     } else {
-      console.log('No specialist phone number provided, skipping SMS');
+      console.log('No usable specialist phone found in request, specialists or orders; skipping SMS');
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         messageId: brevoResult.messageId,
-        smsResult: smsResult
+        smsResult,
+        smsPhoneSource,
       }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-
   } catch (error: any) {
     console.error('Error in send-appointment-notification function:', error);
     return new Response(
