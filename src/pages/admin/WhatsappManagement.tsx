@@ -417,11 +417,18 @@ const getChatIdCandidates = (chat: any) => {
     .flatMap(getStringCandidates)
     .forEach((candidate) => addId(candidate, candidate.includes('@c.us')));
 
-  const phoneCandidate = remoteParticipantId ? normalizeTurkishPhone(remoteParticipantId) : getChatPhoneCandidate(chat);
-  if (phoneCandidate) {
-    preferredIds.add(`${phoneCandidate}@c.us`);
-    preferredIds.add(`${phoneCandidate}@lid`);
-  }
+  Array.from(new Set([
+    getChatPhoneCandidate(chat),
+    getChatSecondaryText(chat),
+    directId,
+    remoteParticipantId,
+  ]))
+    .map((candidate) => normalizeTurkishPhone(String(candidate ?? '')))
+    .filter((candidate) => candidate.startsWith('90') && candidate.length === 12)
+    .forEach((candidate) => {
+      preferredIds.add(`${candidate}@c.us`);
+      fallbackIds.add(`${candidate}@lid`);
+    });
 
   return Array.from(new Set([...preferredIds, ...fallbackIds])).filter(Boolean);
 };
@@ -446,6 +453,46 @@ const getLastMessageBody = (chat: any) => (
   ?? getLastChatMessage(chat)?._data?.body
   ?? ''
 );
+
+const getPositiveNumericValue = (value: unknown) => {
+  const numericValue = typeof value === 'number'
+    ? value
+    : typeof value === 'string'
+      ? Number(value)
+      : NaN;
+
+  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : 0;
+};
+
+const getChatUnreadCount = (chat: any) => {
+  const unreadCandidates = [
+    chat?.unreadCount,
+    chat?.unread,
+    chat?.unreadMessages,
+    chat?.unreadMessagesCount,
+    chat?.counter,
+    chat?._chat?.unreadCount,
+    chat?._chat?.unread,
+    chat?._chat?.unreadMessages,
+    chat?._chat?.unreadMessagesCount,
+    chat?._chat?.counter,
+    chat?._data?.unreadCount,
+    chat?._data?.unread,
+    chat?._data?.unreadMessages,
+    chat?._data?.unreadMessagesCount,
+    chat?._data?.counter,
+    chat?._chat?._data?.unreadCount,
+    chat?._chat?._data?.unread,
+    chat?._chat?._data?.unreadMessages,
+    chat?._chat?._data?.unreadMessagesCount,
+    chat?._chat?._data?.counter,
+  ];
+
+  return unreadCandidates.reduce(
+    (maxCount, candidate) => Math.max(maxCount, getPositiveNumericValue(candidate)),
+    0,
+  );
+};
 
 const getChatSecondaryText = (chat: any) => {
   const phoneCandidate = getChatPhoneCandidate(chat);
@@ -865,6 +912,9 @@ const WhatsappManagement = () => {
 
       if (rawChatList.length > 0) {
         const previousChats = chatsRef.current;
+        const previousChatMap = new Map(
+          previousChats.map((chat: any) => [getChatSelectionKey(chat), chat]),
+        );
         const uniqueChatMap = new Map<string, any>();
 
         rawChatList.forEach((chat: any) => {
@@ -885,15 +935,41 @@ const WhatsappManagement = () => {
         });
 
         const chatList = Array.from(uniqueChatMap.values())
-          .sort((a, b) => getLastMessageTimestamp(b) - getLastMessageTimestamp(a));
+          .sort((a, b) => getLastMessageTimestamp(b) - getLastMessageTimestamp(a))
+          .map((chat: any) => {
+            const selectionKey = getChatSelectionKey(chat);
+            const previousChat = previousChatMap.get(selectionKey);
+            const backendUnreadCount = getChatUnreadCount(chat);
+            const previousUnreadCount = getChatUnreadCount(previousChat);
+            const currentLastMessage = getLastChatMessage(chat);
+            const currentTimestamp = getLastMessageTimestamp(chat);
+            const previousTimestamp = getLastMessageTimestamp(previousChat);
+            const normalizedLastMessage = currentLastMessage
+              ? normalizeChatMessage(currentLastMessage)
+              : null;
+            const hasNewIncomingMessage = Boolean(
+              previousChat
+                && currentTimestamp
+                && currentTimestamp > previousTimestamp
+                && normalizedLastMessage
+                && !normalizedLastMessage.fromMe,
+            );
+
+            return {
+              ...chat,
+              unreadCount: selectionKey === activeChatSelectionKeyRef.current
+                ? 0
+                : backendUnreadCount > 0
+                  ? backendUnreadCount
+                  : hasNewIncomingMessage
+                    ? Math.max(previousUnreadCount + 1, 1)
+                    : previousUnreadCount,
+            };
+          });
 
         setChats(chatList);
 
         if (silent && previousChats.length > 0) {
-          const previousChatMap = new Map(
-            previousChats.map((chat: any) => [getChatSelectionKey(chat), chat]),
-          );
-
           chatList.forEach((chat: any) => {
             const selectionKey = getChatSelectionKey(chat);
             if (selectionKey === activeChatSelectionKeyRef.current) {
@@ -1151,8 +1227,14 @@ const WhatsappManagement = () => {
 
   const openChat = (chat: any) => {
     void ensureNotificationPermission();
-    activeChatSelectionKeyRef.current = getChatSelectionKey(chat);
-    setActiveChat(chat);
+    const selectionKey = getChatSelectionKey(chat);
+    activeChatSelectionKeyRef.current = selectionKey;
+    setChats((prev) => prev.map((item) => (
+      getChatSelectionKey(item) === selectionKey
+        ? { ...item, unreadCount: 0 }
+        : item
+    )));
+    setActiveChat({ ...chat, unreadCount: 0 });
     setChatTo(getChatPhoneCandidate(chat) || getChatInputValue(chat));
     setChatMessages([]);
     void fetchProfilePic(chat);
