@@ -257,16 +257,93 @@ Deno.serve(async (req) => {
       case 'sessions.list':
         endpoint = '/api/sessions';
         break;
-      case 'sessions.start':
-        endpoint = '/api/sessions/start';
-        method = 'POST';
-        body = JSON.stringify({ name: sessionName, config: { webhooks: [] } });
-        break;
-      case 'sessions.stop':
-        endpoint = '/api/sessions/stop';
-        method = 'POST';
-        body = JSON.stringify({ name: sessionName });
-        break;
+      case 'sessions.start': {
+        const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
+        const candidateRequests = [
+          {
+            endpoint: `/api/sessions/${encodedSessionName}/start`,
+            method: 'POST',
+          },
+          {
+            endpoint: '/api/sessions',
+            method: 'POST',
+            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
+          },
+          {
+            endpoint: '/api/sessions/start',
+            method: 'POST',
+            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
+          },
+          {
+            endpoint: `/api/sessions/${encodedSessionName}`,
+            method: 'PUT',
+            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
+          },
+          {
+            endpoint: `/api/sessions/${encodedSessionName}`,
+            method: 'POST',
+            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
+          },
+        ];
+
+        let lastFailure: Awaited<ReturnType<typeof fetchWahaResult>> | null = null;
+
+        for (const candidateRequest of candidateRequests) {
+          const fetchOptions: RequestInit = { method: candidateRequest.method, headers };
+          if (candidateRequest.body) {
+            fetchOptions.body = candidateRequest.body;
+          }
+
+          const result = await fetchWahaResult(wahaUrl, candidateRequest.endpoint, fetchOptions);
+          if (result.ok) {
+            return respond({ success: true, status: result.status, data: result.data, error: null });
+          }
+          lastFailure = result;
+        }
+
+        return respond({
+          success: false,
+          status: lastFailure?.status ?? 500,
+          data: lastFailure?.data ?? null,
+          error: getErrorMessage(lastFailure?.data, lastFailure?.text ?? '', lastFailure?.status ?? 500),
+        });
+      }
+      case 'sessions.stop': {
+        const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
+        const candidateRequests = [
+          {
+            endpoint: `/api/sessions/${encodedSessionName}/stop`,
+            method: 'POST',
+          },
+          {
+            endpoint: '/api/sessions/stop',
+            method: 'POST',
+            body: JSON.stringify({ name: sessionName }),
+          },
+        ];
+
+        let lastFailure: Awaited<ReturnType<typeof fetchWahaResult>> | null = null;
+
+        for (const candidateRequest of candidateRequests) {
+          const fetchOptions: RequestInit = { method: candidateRequest.method, headers };
+          if (candidateRequest.body) {
+            fetchOptions.body = candidateRequest.body;
+          }
+
+          const result = await fetchWahaResult(wahaUrl, candidateRequest.endpoint, fetchOptions);
+          if (result.ok) {
+            return respond({ success: true, status: result.status, data: result.data, error: null });
+          }
+          lastFailure = result;
+        }
+
+        return respond({
+          success: false,
+          status: lastFailure?.status ?? 500,
+          data: lastFailure?.data ?? null,
+          error: getErrorMessage(lastFailure?.data, lastFailure?.text ?? '', lastFailure?.status ?? 500),
+        });
+      }
       case 'sessions.logout':
         endpoint = '/api/sessions/logout';
         method = 'POST';
@@ -281,19 +358,26 @@ Deno.serve(async (req) => {
           ...headers,
           Accept: 'application/json, image/png;q=0.9, */*;q=0.8',
         };
-        const candidateEndpoints = [
-          `/api/${encodedSessionName}/auth/qr`,
-          `/api/sessions/${encodedSessionName}/auth/qr`,
-          `/api/${encodedSessionName}/auth/qr?format=image`,
-          `/api/sessions/${encodedSessionName}/auth/qr?format=image`,
+        const candidateRequests = [
+          { endpoint: `/api/${encodedSessionName}/auth/qr`, method: 'GET', headers: qrHeaders },
+          { endpoint: `/api/${encodedSessionName}/auth/qr`, method: 'POST', headers: qrHeaders },
+          { endpoint: `/api/${encodedSessionName}/auth/qr?format=image`, method: 'GET', headers: qrHeaders },
+          { endpoint: `/api/${encodedSessionName}/auth/qr?format=image`, method: 'POST', headers: qrHeaders },
+          { endpoint: `/api/${encodedSessionName}/auth/qr?format=raw`, method: 'GET', headers: qrHeaders },
+          { endpoint: `/api/${encodedSessionName}/auth/qr?format=raw`, method: 'POST', headers: qrHeaders },
+          { endpoint: `/api/sessions/${encodedSessionName}/auth/qr`, method: 'GET', headers: qrHeaders },
+          { endpoint: `/api/sessions/${encodedSessionName}/auth/qr?format=image`, method: 'GET', headers: qrHeaders },
         ];
 
         let lastFailure: { status: number; data: Record<string, unknown> | null; text: string } | null = null;
         let emptySuccess: { status: number; data: Record<string, unknown> | null } | null = null;
 
-        for (const candidateEndpoint of candidateEndpoints) {
-          console.log(`WAHA Proxy: GET ${wahaUrl}${candidateEndpoint}`);
-          const qrRes = await fetch(`${wahaUrl}${candidateEndpoint}`, { headers: qrHeaders });
+        for (const candidateRequest of candidateRequests) {
+          console.log(`WAHA Proxy: ${candidateRequest.method} ${wahaUrl}${candidateRequest.endpoint}`);
+          const qrRes = await fetch(`${wahaUrl}${candidateRequest.endpoint}`, {
+            method: candidateRequest.method,
+            headers: candidateRequest.headers,
+          });
           const { qrContentType, qrData, qrErrorText } = await parseQrResponse(qrRes);
 
           if (qrRes.ok) {
