@@ -442,12 +442,14 @@ const LoginPage = () => {
             </div>
 
             {/* Step indicator */}
-            {step !== 'identifier' && (
+             {step !== 'identifier' && (
               <button
                 onClick={() => {
                   if (step === 'password') { setStep('identifier'); setPassword(''); }
                   else if (step === 'otp') { setStep('identifier'); setOtpCode(''); }
                   else if (step === 'forgot') { setStep('identifier'); }
+                  else if (step === 'forgot-otp') { setStep('forgot'); setOtpCode(''); }
+                  else if (step === 'forgot-reset') { setStep('identifier'); }
                 }}
                 className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
               >
