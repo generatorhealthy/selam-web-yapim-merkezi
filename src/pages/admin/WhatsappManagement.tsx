@@ -897,18 +897,38 @@ const WhatsappManagement = () => {
         return;
       }
     }
+
+    // Force SCAN_QR_CODE status so the QR polling useEffect activates
     setSessionStatus('SCAN_QR_CODE');
 
-    for (const delay of [500, 1000, 1500, 2500]) {
+    // Try a few quick attempts to get QR immediately
+    for (const delay of [800, 1500, 2500, 4000, 6000]) {
       await new Promise(r => setTimeout(r, delay));
+      
+      // Check if session became WORKING (already connected)
+      try {
+        const statusRes = await wahaApi('sessions.status', getSessionName(line));
+        if (statusRes.success && String(statusRes.data?.status || '').toUpperCase() === 'WORKING') {
+          setSessionStatus('WORKING');
+          setLineSessionStatuses(prev => ({ ...prev, [line.id]: 'WORKING' }));
+          setConnecting(false);
+          setQrCode(null);
+          toast.success('WhatsApp bağlantısı başarılı!');
+          return;
+        }
+      } catch {}
+
       const qr = await fetchQrCode(line);
       if (qr) {
-        setConnecting(false);
+        // QR found, keep connecting=true so polling continues
         return;
       }
     }
 
-    void checkSessionStatus(line);
+    // If we still don't have QR after attempts, keep status as SCAN_QR_CODE
+    // so the polling effect continues trying
+    setSessionStatus('SCAN_QR_CODE');
+    // Don't set connecting to false - let the polling effect handle it
   };
 
   const stopSession = async () => {
