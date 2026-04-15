@@ -632,6 +632,40 @@ const WhatsappManagement = () => {
     }
   }, []);
 
+  const playNotificationSound = useCallback(() => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // First tone
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.frequency.value = 880;
+      osc1.type = 'sine';
+      gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      osc1.start(audioCtx.currentTime);
+      osc1.stop(audioCtx.currentTime + 0.15);
+
+      // Second tone (higher)
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.frequency.value = 1320;
+      osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0.3, audioCtx.currentTime + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+      osc2.start(audioCtx.currentTime + 0.15);
+      osc2.stop(audioCtx.currentTime + 0.35);
+
+      setTimeout(() => audioCtx.close(), 500);
+    } catch (e) {
+      console.warn('Bildirim sesi çalınamadı:', e);
+    }
+  }, []);
+
   const showIncomingMessageNotification = useCallback((chat: any, message: any) => {
     if (typeof document === 'undefined') {
       return;
@@ -650,6 +684,9 @@ const WhatsappManagement = () => {
 
     notifiedMessageKeysRef.current.add(messageKey);
 
+    // Play notification sound
+    playNotificationSound();
+
     const previewText = normalizedMessage.body?.trim()
       || (message?.hasMedia || message?._data?.hasMedia ? 'Yeni medya mesajı' : 'Yeni mesaj');
     const title = getChatDisplayName(chat);
@@ -667,7 +704,7 @@ const WhatsappManagement = () => {
         notification.close();
       };
     }
-  }, []);
+  }, [playNotificationSound]);
 
   const cleanupStaleSessions = useCallback(async (line: WhatsappLine) => {
     try {
