@@ -536,6 +536,43 @@ const WhatsappManagement = () => {
     }
   };
 
+  const cleanupStaleSessions = useCallback(async (line: WhatsappLine) => {
+    try {
+      const res = await wahaApi('sessions.list');
+      const sessions = Array.isArray(res.data) ? res.data : [];
+      const validSessionNames = new Set(lines.map(getSessionName));
+      const currentSessionName = getSessionName(line);
+
+      const staleSessions = sessions.filter((session: any) => {
+        const sessionName = typeof session?.name === 'string' ? session.name : '';
+        const status = typeof session?.status === 'string' ? session.status.toUpperCase() : '';
+
+        if (!sessionName || status === 'WORKING') {
+          return false;
+        }
+
+        if (sessionName === currentSessionName) {
+          return ['FAILED', 'STARTING', 'SCAN_QR_CODE', 'STOPPED'].includes(status);
+        }
+
+        return !validSessionNames.has(sessionName) && ['FAILED', 'SCAN_QR_CODE', 'STARTING', 'STOPPED'].includes(status);
+      });
+
+      if (staleSessions.length === 0) {
+        return;
+      }
+
+      await Promise.allSettled(
+        staleSessions.flatMap((session: any) => [
+          wahaApi('sessions.logout', session.name),
+          wahaApi('sessions.stop', session.name),
+        ]),
+      );
+    } catch (error) {
+      console.warn('WAHA stale session cleanup skipped:', error);
+    }
+  }, [getSessionName, lines]);
+
   const fetchLines = async () => {
     const { data, error } = await supabase
       .from('whatsapp_lines')
@@ -554,10 +591,18 @@ const WhatsappManagement = () => {
   };
 
   const checkSessionStatus = useCallback(async (line: WhatsappLine) => {
+    const connectingFallbackStatus = connecting ? 'SCAN_QR_CODE' : 'STOPPED';
+
     try {
       const res = await wahaApi('sessions.status', getSessionName(line));
       if (res.success && res.data) {
-        const status = res.data.status || 'STOPPED';
+        const status = String(res.data.status || 'STOPPED').toUpperCase();
+
+        if (connecting && status !== 'WORKING') {
+          setSessionStatus('SCAN_QR_CODE');
+          return 'SCAN_QR_CODE';
+        }
+
         setSessionStatus(status);
         if (status === 'WORKING') {
           setQrCode(null);
@@ -566,14 +611,14 @@ const WhatsappManagement = () => {
         }
         return status;
       } else {
-        setSessionStatus('STOPPED');
-        return 'STOPPED';
+        setSessionStatus(connectingFallbackStatus);
+        return connectingFallbackStatus;
       }
     } catch {
-      setSessionStatus('STOPPED');
-      return 'STOPPED';
+      setSessionStatus(connectingFallbackStatus);
+      return connectingFallbackStatus;
     }
-  }, [getSessionName]);
+  }, [connecting, getSessionName]);
 
   const fetchQrCode = useCallback(async (line: WhatsappLine) => {
     try {
@@ -595,6 +640,9 @@ const WhatsappManagement = () => {
     setConnecting(true);
     setQrCode(null);
     stopQrPolling();
+
+    await cleanupStaleSessions(line);
+
     try {
       await wahaApi('sessions.start', getSessionName(line));
       toast.success('Oturum başlatılıyor...');
@@ -613,12 +661,11 @@ const WhatsappManagement = () => {
       const qr = await fetchQrCode(line);
       if (qr) {
         setConnecting(false);
-        break;
+        return;
       }
     }
 
-    await checkSessionStatus(line);
-    setConnecting(false);
+    void checkSessionStatus(line);
   };
 
   const stopSession = async () => {
@@ -629,6 +676,7 @@ const WhatsappManagement = () => {
       await wahaApi('sessions.stop', getSessionName(selectedLine));
       setSessionStatus('STOPPED');
       setQrCode(null);
+      setConnecting(false);
       stopQrPolling();
       toast.success('Oturum kapatıldı');
     } catch {
@@ -1015,6 +1063,8 @@ const WhatsappManagement = () => {
   useEffect(() => { fetchLines(); }, []);
   useEffect(() => {
     if (selectedLine) {
+      stopQrPolling();
+      setConnecting(false);
       setQrCode(null);
       void checkSessionStatus(selectedLine);
       setActiveChat(null);
@@ -1025,7 +1075,7 @@ const WhatsappManagement = () => {
   }, [selectedLine]);
 
   useEffect(() => {
-    if (!selectedLine || sessionStatus !== 'SCAN_QR_CODE') return;
+    if (!selectedLine || (!connecting && sessionStatus !== 'SCAN_QR_CODE')) return;
 
     let cancelled = false;
     const line = selectedLine;
@@ -1334,6 +1384,12 @@ const WhatsappManagement = () => {
                     </button>
                   </div>
                 </>
+              ) : sessionStatus === 'SCAN_QR_CODE' || connecting ? (
+                <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#00a884] mb-3" />
+                  <p className="text-[#667781] text-sm mb-1">QR hazırlanıyor</p>
+                  <p className="text-[#667781] text-xs">Birazdan sağ tarafta otomatik görünecek</p>
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                   {loading ? (
