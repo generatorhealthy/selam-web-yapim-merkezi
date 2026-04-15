@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity, CreditCard, Package, Sparkles, Eye, PenLine, ClipboardList, Phone } from "lucide-react";
 import ContractDialog from "@/components/ContractDialog";
 import { ClientPortfolio } from "@/components/ClientPortfolio";
+import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
 
 // Appointment Form Component
 const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; onSuccess: () => void }) => {
