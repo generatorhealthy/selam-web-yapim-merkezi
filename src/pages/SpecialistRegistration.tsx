@@ -171,15 +171,26 @@ const SpecialistRegistration = () => {
       }
 
       if (data.user) {
+        // Insert profile - use separate update for phone since types may not include it
         const { error: profileError } = await supabase.from('user_profiles').insert({
           user_id: data.user.id,
           email: email,
-          phone: phone,
           name: email.split('@')[0],
-          role: 'specialist',
+          role: 'specialist' as any,
           is_approved: false,
-        } as any);
-        if (profileError) console.error('Profile creation error:', profileError);
+        });
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+        }
+        
+        // Update phone separately to ensure it's saved
+        if (phone) {
+          const { error: phoneError } = await supabase
+            .from('user_profiles')
+            .update({ phone } as any)
+            .eq('user_id', data.user.id);
+          if (phoneError) console.error('Phone update error:', phoneError);
+        }
 
         setCreatedUserId(data.user.id);
         setCreatedUserEmail(email);
