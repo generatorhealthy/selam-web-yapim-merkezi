@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
 import {
-  MessageCircle, Plus, Trash2, Phone, QrCode, Check, Edit2, Save,
+  MessageCircle, Plus, Trash2, Phone, QrCode, Edit2, Save,
   Send, RefreshCw, LogOut, Power, Loader2, Users, Search,
-  MoreVertical, Smile, Paperclip, Mic, ArrowLeft, X, CheckCheck,
+  MoreVertical, Paperclip, Mic, ArrowLeft, X, CheckCheck,
   UserPlus, ChevronDown
 } from "lucide-react";
 import {
@@ -517,6 +517,8 @@ const WhatsappManagement = () => {
   const [lines, setLines] = useState<WhatsappLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLine, setSelectedLine] = useState<WhatsappLine | null>(null);
+  const [allLinesMode, setAllLinesMode] = useState(true);
+  const [lineSessionStatuses, setLineSessionStatuses] = useState<Record<string, string>>({});
   const [showAddLineDialog, setShowAddLineDialog] = useState(false);
   const [newPhone, setNewPhone] = useState('');
   const [newLabel, setNewLabel] = useState('');
@@ -572,6 +574,12 @@ const WhatsappManagement = () => {
   }, []);
 
   const getSessionName = useCallback((line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`, []);
+
+  const getWorkingLines = useCallback(() => {
+    return lines.filter(l => lineSessionStatuses[l.id] === 'WORKING');
+  }, [lines, lineSessionStatuses]);
+
+  const anyLineWorking = Object.values(lineSessionStatuses).some(s => s === 'WORKING');
 
   const ContactAvatar = ({ chat, size = 'md' }: { chat: any; size?: 'sm' | 'md' }) => {
     const contactIds = getChatIdCandidates(chat);
@@ -715,6 +723,33 @@ const WhatsappManagement = () => {
     setLoading(false);
   };
 
+  // Check session status for a single line
+  const checkLineSessionStatus = useCallback(async (line: WhatsappLine): Promise<string> => {
+    try {
+      const res = await wahaApi('sessions.status', getSessionName(line));
+      if (res.success && res.data) {
+        const status = String(res.data.status || 'STOPPED').toUpperCase();
+        return status;
+      }
+      return 'STOPPED';
+    } catch {
+      return 'STOPPED';
+    }
+  }, [getSessionName]);
+
+  // Check all lines' session statuses
+  const checkAllLineStatuses = useCallback(async (linesList: WhatsappLine[]) => {
+    const statuses: Record<string, string> = {};
+    await Promise.allSettled(
+      linesList.map(async (line) => {
+        const status = await checkLineSessionStatus(line);
+        statuses[line.id] = status;
+      })
+    );
+    setLineSessionStatuses(statuses);
+    return statuses;
+  }, [checkLineSessionStatus]);
+
   const checkSessionStatus = useCallback(async (line: WhatsappLine) => {
     const connectingFallbackStatus = connecting ? 'SCAN_QR_CODE' : 'STOPPED';
 
@@ -729,6 +764,8 @@ const WhatsappManagement = () => {
         }
 
         setSessionStatus(status);
+        // Also update per-line status
+        setLineSessionStatuses(prev => ({ ...prev, [line.id]: status }));
         if (status === 'WORKING') {
           setQrCode(null);
           setConnecting(false);
@@ -801,6 +838,7 @@ const WhatsappManagement = () => {
       await wahaApi('sessions.logout', getSessionName(selectedLine));
       await wahaApi('sessions.stop', getSessionName(selectedLine));
       setSessionStatus('STOPPED');
+      setLineSessionStatuses(prev => ({ ...prev, [selectedLine.id]: 'STOPPED' }));
       setQrCode(null);
       setConnecting(false);
       stopQrPolling();
@@ -820,7 +858,8 @@ const WhatsappManagement = () => {
   };
 
   const sendMessage = async () => {
-    if (!selectedLine || !chatMessage.trim()) return;
+    const effectiveLine = activeChat?._lineId ? lines.find(l => l.id === activeChat._lineId) : selectedLine;
+    if (!effectiveLine || !chatMessage.trim()) return;
     const chatId = getActiveChatId();
     if (!chatId) {
       toast.error('Alıcı numarası gerekli');
@@ -833,9 +872,9 @@ const WhatsappManagement = () => {
     setChatMessages((prev) => [...prev, { body: msgText, fromMe: true, timestamp: msgTimestamp, _optimistic: true }]);
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
-      await wahaApi('sendText', getSessionName(selectedLine), { chatId, text: msgText });
+      await wahaApi('sendText', getSessionName(effectiveLine), { chatId, text: msgText });
       // Store sent message to Supabase for history
-      const sessionName = getSessionName(selectedLine);
+      const sessionName = getSessionName(effectiveLine);
       supabase.from('whatsapp_messages').insert({
         session_name: sessionName,
         chat_id: chatId,
@@ -856,10 +895,11 @@ const WhatsappManagement = () => {
     setSending(false);
   };
 
-  const fetchProfilePic = async (chatOrContact: any) => {
-    if (!selectedLine) return;
+  const fetchProfilePic = async (chatOrContact: any, line?: WhatsappLine) => {
+    const effectiveLine = line || (chatOrContact?._lineId ? lines.find(l => l.id === chatOrContact._lineId) : null) || selectedLine;
+    if (!effectiveLine) return;
 
-    const sessionName = getSessionName(selectedLine);
+    const sessionName = getSessionName(effectiveLine);
     const candidateIds = typeof chatOrContact === 'string'
       ? [chatOrContact]
       : getChatIdCandidates(chatOrContact);
@@ -899,22 +939,21 @@ const WhatsappManagement = () => {
     } catch {}
   };
 
-  const fetchChats = async (silent = false) => {
-    if (!selectedLine) return;
-    if (!silent) setChatsLoading(true);
-    try {
-      const sessionName = getSessionName(selectedLine);
-      let rawChatList: any[] = [];
+  // Fetch chats for a specific line
+  const fetchChatsForLine = async (line: WhatsappLine): Promise<any[]> => {
+    const sessionName = getSessionName(line);
+    let rawChatList: any[] = [];
 
+    try {
+      const overviewRes = await wahaApi('chats.overview', sessionName, {
+        limit: CHAT_LIST_PAGE_SIZE,
+        offset: 0,
+        merge: true,
+      });
+      rawChatList = Array.isArray(overviewRes.data) ? overviewRes.data : [];
+    } catch (overviewError) {
+      console.warn(`Chats overview alınamadı (${line.label}), chats.list fallback:`, overviewError);
       try {
-        const overviewRes = await wahaApi('chats.overview', sessionName, {
-          limit: CHAT_LIST_PAGE_SIZE,
-          offset: 0,
-          merge: true,
-        });
-        rawChatList = Array.isArray(overviewRes.data) ? overviewRes.data : [];
-      } catch (overviewError) {
-        console.warn('Chats overview alınamadı, chats.list fallback çalışıyor:', overviewError);
         const listRes = await wahaApi('chats.list', sessionName, {
           limit: CHAT_LIST_PAGE_SIZE,
           offset: 0,
@@ -923,16 +962,53 @@ const WhatsappManagement = () => {
           sortOrder: 'desc',
         });
         rawChatList = Array.isArray(listRes.data) ? listRes.data : [];
+      } catch {
+        return [];
       }
+    }
 
-      if (rawChatList.length > 0) {
+    // Tag each chat with line info
+    return rawChatList.map((chat: any) => ({
+      ...chat,
+      _lineId: line.id,
+      _lineLabel: line.label,
+      _sessionName: sessionName,
+    }));
+  };
+
+  const fetchChats = async (silent = false) => {
+    // Determine which lines to fetch from
+    const linesToFetch = allLinesMode
+      ? lines.filter(l => lineSessionStatuses[l.id] === 'WORKING')
+      : (selectedLine && (lineSessionStatuses[selectedLine.id] === 'WORKING' || sessionStatus === 'WORKING') ? [selectedLine] : []);
+
+    if (linesToFetch.length === 0) {
+      if (!silent) setChats([]);
+      return;
+    }
+
+    if (!silent) setChatsLoading(true);
+    try {
+      // Fetch chats from all working lines in parallel
+      const results = await Promise.allSettled(
+        linesToFetch.map(line => fetchChatsForLine(line))
+      );
+
+      const allRawChats: any[] = [];
+      results.forEach((result) => {
+        if (result.status === 'fulfilled') {
+          allRawChats.push(...result.value);
+        }
+      });
+
+      if (allRawChats.length > 0) {
         const previousChats = chatsRef.current;
         const previousChatMap = new Map(
           previousChats.map((chat: any) => [getChatSelectionKey(chat), chat]),
         );
         const uniqueChatMap = new Map<string, any>();
 
-        rawChatList.forEach((chat: any) => {
+        allRawChats.forEach((chat: any) => {
           const preferredKey = getChatSelectionKey(chat);
           const existing = uniqueChatMap.get(preferredKey);
 
@@ -1007,7 +1083,7 @@ const WhatsappManagement = () => {
           });
         }
 
-        setActiveChat((prev) => {
+        setActiveChat((prev: any) => {
           if (!prev) return prev;
           return chatList.find((chat) => getChatSelectionKey(chat) === getChatSelectionKey(prev)) ?? prev;
         });
@@ -1080,11 +1156,14 @@ const WhatsappManagement = () => {
   };
 
   const fetchChatMessages = async (chat?: any, silent = false) => {
-    if (!selectedLine) return;
     const targetChat = chat || activeChat;
     if (!targetChat) return;
 
-    const sessionName = getSessionName(selectedLine);
+    // Use the chat's own line if available
+    const effectiveLine = targetChat?._lineId ? lines.find(l => l.id === targetChat._lineId) : selectedLine;
+    if (!effectiveLine) return;
+
+    const sessionName = getSessionName(effectiveLine);
     const targetChatSelectionKey = getChatSelectionKey(targetChat);
     const chatIdCandidates = getChatIdCandidates(targetChat);
     const latestKnownTimestamp = silent
@@ -1287,10 +1366,20 @@ const WhatsappManagement = () => {
     }
     const num = newChatPhone.replace(/[^0-9]/g, '');
     const fullName = `${newChatName.trim()} ${newChatSurname.trim()}`.trim();
+    
+    // In all lines mode, use the first working line for new chats
+    const workingLines = getWorkingLines();
+    const targetLine = selectedLine && lineSessionStatuses[selectedLine.id] === 'WORKING' 
+      ? selectedLine 
+      : workingLines[0];
+    
     const fakeChatObj = {
       id: { _serialized: num + '@c.us', user: num },
       name: fullName || num,
       _isNewChat: true,
+      _lineId: targetLine?.id || selectedLine?.id,
+      _lineLabel: targetLine?.label || selectedLine?.label,
+      _sessionName: targetLine ? getSessionName(targetLine) : undefined,
     };
     setActiveChat(fakeChatObj);
     setChatTo(num);
@@ -1347,8 +1436,15 @@ const WhatsappManagement = () => {
     activeChatSelectionKeyRef.current = activeChat ? getChatSelectionKey(activeChat) : null;
   }, [activeChat]);
 
+  // Check all line statuses when lines load
   useEffect(() => {
-    if (selectedLine) {
+    if (lines.length > 0) {
+      void checkAllLineStatuses(lines);
+    }
+  }, [lines]);
+
+  useEffect(() => {
+    if (selectedLine && !allLinesMode) {
       stopQrPolling();
       setConnecting(false);
       setQrCode(null);
@@ -1360,7 +1456,7 @@ const WhatsappManagement = () => {
       setChatMessages([]);
     }
     return () => stopQrPolling();
-  }, [selectedLine]);
+  }, [selectedLine, allLinesMode]);
 
   useEffect(() => {
     if (!selectedLine || (!connecting && sessionStatus !== 'SCAN_QR_CODE')) return;
@@ -1382,6 +1478,8 @@ const WhatsappManagement = () => {
 
       if (status === 'WORKING') {
         toast.success('WhatsApp bağlantısı başarılı!');
+        // Refresh all statuses
+        void checkAllLineStatuses(lines);
       }
     };
 
@@ -1397,8 +1495,13 @@ const WhatsappManagement = () => {
     };
   }, [selectedLine, sessionStatus, checkSessionStatus, fetchQrCode]);
 
+  // Fetch chats when any line is working (all lines mode) or selected line is working
   useEffect(() => {
-    if (sessionStatus !== 'WORKING' || !selectedLine) return;
+    const hasWorkingLine = allLinesMode 
+      ? anyLineWorking 
+      : (selectedLine && sessionStatus === 'WORKING');
+    
+    if (!hasWorkingLine) return;
 
     void fetchChats();
     const interval = setInterval(() => {
@@ -1406,17 +1509,30 @@ const WhatsappManagement = () => {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [sessionStatus, selectedLine]);
+  }, [allLinesMode, anyLineWorking, sessionStatus, selectedLine, lineSessionStatuses]);
 
+  // Refresh messages for active chat
   useEffect(() => {
-    if (sessionStatus !== 'WORKING' || !activeChat) return;
+    if (!activeChat) return;
+    const effectiveLine = activeChat?._lineId ? lines.find(l => l.id === activeChat._lineId) : selectedLine;
+    const lineStatus = effectiveLine ? lineSessionStatuses[effectiveLine.id] : sessionStatus;
+    if (lineStatus !== 'WORKING') return;
     const interval = setInterval(() => fetchChatMessages(activeChat, true), 5000);
     return () => clearInterval(interval);
-  }, [sessionStatus, activeChat, selectedLine]);
+  }, [activeChat, selectedLine, lineSessionStatuses, lines]);
+
+  // Periodically refresh all line statuses
+  useEffect(() => {
+    if (lines.length === 0) return;
+    const interval = setInterval(() => {
+      void checkAllLineStatuses(lines);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [lines, checkAllLineStatuses]);
 
   const filteredChats = chats.filter(chat => {
     if (!searchQuery) return true;
-    const searchableText = `${getChatDisplayName(chat)} ${getChatSecondaryText(chat)}`.toLowerCase();
+    const searchableText = `${getChatDisplayName(chat)} ${getChatSecondaryText(chat)} ${chat._lineLabel || ''}`.toLowerCase();
     return searchableText.includes(searchQuery.toLowerCase());
   });
 
@@ -1437,8 +1553,17 @@ const WhatsappManagement = () => {
     return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  const connectionStatusColor = sessionStatus === 'WORKING' ? 'bg-green-500' : sessionStatus === 'SCAN_QR_CODE' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500';
-  const connectionStatusText = sessionStatus === 'WORKING' ? 'Bağlı' : sessionStatus === 'SCAN_QR_CODE' ? 'QR Bekleniyor' : 'Bağlı Değil';
+  // Determine overall connection status for display
+  const workingLinesCount = Object.values(lineSessionStatuses).filter(s => s === 'WORKING').length;
+  const connectionStatusColor = allLinesMode
+    ? (anyLineWorking ? 'bg-green-500' : 'bg-red-500')
+    : (sessionStatus === 'WORKING' ? 'bg-green-500' : sessionStatus === 'SCAN_QR_CODE' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500');
+  const connectionStatusText = allLinesMode
+    ? (anyLineWorking ? `${workingLinesCount} hat bağlı` : 'Bağlı değil')
+    : (sessionStatus === 'WORKING' ? 'Bağlı' : sessionStatus === 'SCAN_QR_CODE' ? 'QR Bekleniyor' : 'Bağlı Değil');
+
+  // For single line mode, show session status
+  const effectiveSessionWorking = allLinesMode ? anyLineWorking : sessionStatus === 'WORKING';
 
   return (
     <>
@@ -1457,15 +1582,15 @@ const WhatsappManagement = () => {
             </div>
              <h1 className="text-white text-sm font-semibold">WhatsApp Destek</h1>
           </div>
-          {selectedLine && (
-            <div className="flex items-center gap-2 ml-4">
-              <div className={`w-2 h-2 rounded-full ${connectionStatusColor}`} />
-               <span className="text-white/80 text-xs">{connectionStatusText}</span>
-               <span className="text-white/80 text-xs">• {selectedLine.label}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 ml-4">
+            <div className={`w-2 h-2 rounded-full ${connectionStatusColor}`} />
+            <span className="text-white/80 text-xs">{connectionStatusText}</span>
+            {!allLinesMode && selectedLine && (
+              <span className="text-white/80 text-xs">• {selectedLine.label}</span>
+            )}
+          </div>
           <div className="ml-auto flex items-center gap-1">
-            {selectedLine && sessionStatus !== 'WORKING' && (
+            {!allLinesMode && selectedLine && sessionStatus !== 'WORKING' && (
               <Button
                 size="sm"
                 onClick={startSession}
@@ -1476,7 +1601,7 @@ const WhatsappManagement = () => {
                 Bağlan
               </Button>
             )}
-            {selectedLine && sessionStatus === 'WORKING' && (
+            {!allLinesMode && selectedLine && sessionStatus === 'WORKING' && (
               <Button
                 size="sm"
                 variant="ghost"
@@ -1504,9 +1629,12 @@ const WhatsappManagement = () => {
                     <Phone className="w-4 h-4 text-[#00a884] flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-[#111b21] text-sm truncate">
-                        {selectedLine ? selectedLine.label : 'Hat Seçin'}
+                        {allLinesMode ? 'Tüm Hatlar' : (selectedLine ? selectedLine.label : 'Hat Seçin')}
                       </p>
-                      {selectedLine && (
+                      {allLinesMode && (
+                        <p className="text-[#667781] text-[10px]">{workingLinesCount}/{lines.length} aktif</p>
+                      )}
+                      {!allLinesMode && selectedLine && (
                         <p className="text-[#667781] text-[10px]">{selectedLine.phone_number}</p>
                       )}
                     </div>
@@ -1514,24 +1642,60 @@ const WhatsappManagement = () => {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white border-[#e9edef] w-[320px]" align="start">
-                  {lines.map(line => (
-                    <DropdownMenuItem
-                      key={line.id}
-                      onClick={() => setSelectedLine(line)}
-                      className={`text-[#111b21] hover:bg-[#f5f6f6] cursor-pointer py-2.5 ${selectedLine?.id === line.id ? 'bg-[#f5f6f6]' : ''}`}
-                    >
-                      <div className="flex items-center gap-3 w-full">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${line.is_active ? 'bg-[#00a884]' : 'bg-[#dfe5e7]'}`}>
-                          <Phone className="w-3.5 h-3.5 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm truncate">{line.label}</p>
-                          <p className="text-[#667781] text-xs">{line.phone_number}</p>
-                        </div>
-                        {line.is_active && <span className="text-[10px] text-[#00a884]">● Aktif</span>}
+                  {/* All Lines option */}
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setAllLinesMode(true);
+                      setActiveChat(null);
+                      setChatMessages([]);
+                      activeChatSelectionKeyRef.current = null;
+                    }}
+                    className={`text-[#111b21] hover:bg-[#f5f6f6] cursor-pointer py-2.5 ${allLinesMode ? 'bg-[#f5f6f6]' : ''}`}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-[#00a884]">
+                        <Users className="w-3.5 h-3.5 text-white" />
                       </div>
-                    </DropdownMenuItem>
-                  ))}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">Tüm Hatlar</p>
+                        <p className="text-[#667781] text-xs">{workingLinesCount} hat bağlı</p>
+                      </div>
+                      {allLinesMode && <span className="text-[10px] text-[#00a884]">● Seçili</span>}
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-[#e9edef]" />
+                  {lines.map(line => {
+                    const lineStatus = lineSessionStatuses[line.id] || 'UNKNOWN';
+                    const isWorking = lineStatus === 'WORKING';
+                    return (
+                      <DropdownMenuItem
+                        key={line.id}
+                        onClick={() => {
+                          setAllLinesMode(false);
+                          setSelectedLine(line);
+                          setActiveChat(null);
+                          setChatMessages([]);
+                          activeChatSelectionKeyRef.current = null;
+                          // Set session status for this line
+                          setSessionStatus(lineStatus);
+                        }}
+                        className={`text-[#111b21] hover:bg-[#f5f6f6] cursor-pointer py-2.5 ${!allLinesMode && selectedLine?.id === line.id ? 'bg-[#f5f6f6]' : ''}`}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isWorking ? 'bg-[#00a884]' : 'bg-[#dfe5e7]'}`}>
+                            <Phone className="w-3.5 h-3.5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm truncate">{line.label}</p>
+                            <p className="text-[#667781] text-xs">{line.phone_number}</p>
+                          </div>
+                          <span className={`text-[10px] ${isWorking ? 'text-[#00a884]' : 'text-[#667781]'}`}>
+                            {isWorking ? '● Aktif' : '○ Kapalı'}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    );
+                  })}
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator className="bg-[#e9edef]" />
@@ -1547,7 +1711,7 @@ const WhatsappManagement = () => {
               </DropdownMenu>
 
               {/* Line management for admin */}
-              {isAdmin && selectedLine && (
+              {isAdmin && !allLinesMode && selectedLine && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="p-2 rounded-lg hover:bg-[#e9edef] text-[#54656f]">
@@ -1576,7 +1740,7 @@ const WhatsappManagement = () => {
               )}
 
               {/* New chat button */}
-              {sessionStatus === 'WORKING' && (
+              {effectiveSessionWorking && (
                 <button
                   onClick={() => setShowNewChatDialog(true)}
                   className="p-2 rounded-lg hover:bg-[#e9edef] text-[#00a884] flex-shrink-0"
@@ -1608,7 +1772,7 @@ const WhatsappManagement = () => {
 
             {/* Chats list */}
             <div className="flex-1 overflow-y-auto">
-              {sessionStatus === 'WORKING' ? (
+              {effectiveSessionWorking ? (
                 <>
                   {chatsLoading ? (
                     <div className="flex items-center justify-center py-12">
@@ -1618,6 +1782,7 @@ const WhatsappManagement = () => {
                     filteredChats.map((chat, i) => {
                       const isActive = activeChat && (getChatSelectionKey(activeChat) === getChatSelectionKey(chat));
                       const lastMsgTime = getLastMessageTimestamp(chat);
+                      const chatLineLabel = chat._lineLabel;
                       return (
                         <div
                           key={i}
@@ -1638,9 +1803,14 @@ const WhatsappManagement = () => {
                             </div>
                             <div className="flex items-center gap-1 mt-0.5">
                               {Boolean(getLastChatMessage(chat)?.fromMe) && <CheckCheck className="w-3 h-3 text-[#53bdeb] flex-shrink-0" />}
-                              <p className="text-[#667781] text-xs truncate">
+                              <p className="text-[#667781] text-xs truncate flex-1">
                                 {getLastMessageBody(chat)}
                               </p>
+                              {allLinesMode && chatLineLabel && (
+                                <span className="text-[9px] text-white bg-[#00a884] rounded px-1 py-0.5 flex-shrink-0 ml-1">
+                                  {chatLineLabel}
+                                </span>
+                              )}
                             </div>
                           </div>
                           {chat.unreadCount > 0 && (
@@ -1679,7 +1849,7 @@ const WhatsappManagement = () => {
                     </button>
                   </div>
                 </>
-              ) : sessionStatus === 'SCAN_QR_CODE' || connecting ? (
+              ) : !allLinesMode && (sessionStatus === 'SCAN_QR_CODE' || connecting) ? (
                 <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                   <Loader2 className="w-8 h-8 animate-spin text-[#00a884] mb-3" />
                   <p className="text-[#667781] text-sm mb-1">QR hazırlanıyor</p>
@@ -1689,6 +1859,30 @@ const WhatsappManagement = () => {
                 <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                   {loading ? (
                     <Loader2 className="w-8 h-8 animate-spin text-[#00a884]" />
+                  ) : allLinesMode ? (
+                    <>
+                      <Power className="w-12 h-12 text-[#3b4a54] mb-3" />
+                      <p className="text-[#667781] text-sm mb-3">Hiçbir hat bağlı değil</p>
+                      <p className="text-[#667781] text-xs mb-4">Hatları bağlamak için aşağıdan bir hat seçin</p>
+                      {lines.map(line => {
+                        const lineStatus = lineSessionStatuses[line.id] || 'UNKNOWN';
+                        return (
+                          <Button
+                            key={line.id}
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setAllLinesMode(false);
+                              setSelectedLine(line);
+                              setSessionStatus(lineStatus);
+                            }}
+                            className="mb-2 text-xs gap-1.5 border-[#e9edef] text-[#111b21] hover:bg-[#f5f6f6]"
+                          >
+                            <Phone className="w-3 h-3" /> {line.label}
+                          </Button>
+                        );
+                      })}
+                    </>
                   ) : !selectedLine ? (
                     <>
                       <Phone className="w-12 h-12 text-[#3b4a54] mb-3" />
@@ -1734,7 +1928,14 @@ const WhatsappManagement = () => {
                       <p className="text-[#111b21] text-sm font-medium">
                         {getChatDisplayName(activeChat)}
                       </p>
-                      <p className="text-[#667781] text-xs">{getChatSecondaryText(activeChat)}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-[#667781] text-xs">{getChatSecondaryText(activeChat)}</p>
+                        {activeChat._lineLabel && (
+                          <span className="text-[9px] text-white bg-[#00a884] rounded px-1 py-0.5 ml-1">
+                            {activeChat._lineLabel}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -1835,7 +2036,7 @@ const WhatsappManagement = () => {
             ) : (
               /* No active chat - QR or welcome */
               <div className="flex-1 flex items-center justify-center">
-                {(sessionStatus === 'SCAN_QR_CODE' || qrCode) && sessionStatus !== 'WORKING' ? (
+                {!allLinesMode && (sessionStatus === 'SCAN_QR_CODE' || qrCode) && sessionStatus !== 'WORKING' ? (
                   <div className="bg-[#f0f2f5] rounded-2xl p-8 max-w-md w-full text-center shadow-xl">
                     <div className="w-16 h-16 rounded-full bg-[#00a884] flex items-center justify-center mx-auto mb-4">
                       <QrCode className="w-8 h-8 text-white" />
@@ -1865,7 +2066,7 @@ const WhatsappManagement = () => {
                       <RefreshCw className="w-3 h-3" /> Yenile
                     </button>
                   </div>
-                ) : sessionStatus === 'WORKING' ? (
+                ) : effectiveSessionWorking ? (
                   <div className="text-center">
                     <div className="w-20 h-20 rounded-full bg-white/90 flex items-center justify-center mx-auto mb-4">
                       <MessageCircle className="w-10 h-10 text-[#3b4a54]" />
@@ -1888,9 +2089,11 @@ const WhatsappManagement = () => {
                     </div>
                     <h2 className="text-[#111b21] text-2xl font-light mb-2">WhatsApp Destek</h2>
                     <p className="text-[#667781] text-sm max-w-sm mx-auto">
-                      {selectedLine 
-                        ? 'Oturumu başlatmak için üstteki "Bağlan" butonuna tıklayın'
-                        : 'Sol üstten bir hat seçerek başlayın'
+                      {allLinesMode 
+                        ? 'Hatları bağlamak için sol üstten bir hat seçin'
+                        : selectedLine 
+                          ? 'Oturumu başlatmak için üstteki "Bağlan" butonuna tıklayın'
+                          : 'Sol üstten bir hat seçerek başlayın'
                       }
                     </p>
                   </div>
