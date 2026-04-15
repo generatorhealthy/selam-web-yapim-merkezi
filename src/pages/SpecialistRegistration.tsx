@@ -267,7 +267,7 @@ const SpecialistRegistration = () => {
         specialty: formData.specialty,
         city: formData.city,
         email: createdUserEmail,
-        phone: "0 216 706 06 11",
+        phone: phone || "0 216 706 06 11",
         bio: bio || null,
         education: formData.education || null,
         university: formData.university || null,
