@@ -174,6 +174,7 @@ const BookAppointment = () => {
               patientPhone: formData.patientPhone,
               specialistEmail: specialist.email,
               specialistName: specialist.name,
+              specialistPhone: specialist.phone || '',
               appointmentDate: formData.appointmentDate,
               appointmentTime: formData.appointmentTime,
               appointmentType: formData.appointmentType,
