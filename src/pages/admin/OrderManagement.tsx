@@ -452,27 +452,39 @@ const OrderManagement = () => {
       return data;
     },
     onMutate: async (updatedOrder) => {
-      // Optimistic update: immediately reflect changes in UI
-      await queryClient.cancelQueries({ queryKey: ["orders"] });
-      const previousOrders = queryClient.getQueryData(["orders"]);
+      // Save previous status before optimistic update for onSuccess logic
+      const prevStatus = orders?.find(o => o.id === updatedOrder.id)?.status;
       
-      queryClient.setQueryData(["orders"], (old: Order[] | undefined) => {
-        if (!old) return old;
-        return old.map(o => o.id === updatedOrder.id ? { ...o, ...updatedOrder, updated_at: new Date().toISOString() } : o);
+      // Optimistic update: immediately reflect changes in UI
+      const queryKey = ["orders", statusFilter, isSearchMode ? "search" : "browse"];
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData(queryKey);
+      
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: OrdersPage) => ({
+            ...page,
+            data: page.data.map((o: Order) => 
+              o.id === updatedOrder.id ? { ...o, ...updatedOrder, updated_at: new Date().toISOString() } : o
+            ),
+          })),
+        };
       });
       
-      return { previousOrders };
+      return { previousData, queryKey, prevStatus };
     },
-    onSuccess: async (data) => {
-      const previousOrder = orders?.find(o => o.id === data.id);
+    onSuccess: async (data, _vars, context) => {
+      const prevStatus = context?.prevStatus;
       const shouldSendContractEmail =
         data.status === 'approved' &&
-        previousOrder?.status !== 'approved' &&
+        prevStatus !== 'approved' &&
         !data.contract_emails_sent &&
         (data.is_first_order || (data.subscription_month ?? 0) === 1);
       
       // Otomatik fatura oluştur eğer durum approved'a değişti
-      if (data.status === 'approved' && previousOrder?.status !== 'approved') {
+      if (data.status === 'approved' && prevStatus !== 'approved') {
         setTimeout(() => {
           createInvoiceMutation.mutate(data.id);
         }, 1000);
@@ -495,9 +507,16 @@ const OrderManagement = () => {
       }
       
       // Update cache with server response
-      queryClient.setQueryData(["orders"], (old: Order[] | undefined) => {
-        if (!old) return old;
-        return old.map(o => o.id === data.id ? data as Order : o);
+      const queryKey = context?.queryKey || ["orders", statusFilter, isSearchMode ? "search" : "browse"];
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: OrdersPage) => ({
+            ...page,
+            data: page.data.map((o: Order) => o.id === data.id ? data as Order : o),
+          })),
+        };
       });
       
       toast({
@@ -510,8 +529,8 @@ const OrderManagement = () => {
     },
     onError: (error, _updatedOrder, context) => {
       // Rollback optimistic update
-      if (context?.previousOrders) {
-        queryClient.setQueryData(["orders"], context.previousOrders);
+      if (context?.previousData && context?.queryKey) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
       }
       toast({
         title: "Hata",
