@@ -10,7 +10,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield, Phone, ArrowLeft, CheckCircle2, Fingerprint } from "lucide-react";
 import { useRateLimit } from "@/hooks/useRateLimit";
 
-type LoginStep = 'identifier' | 'password' | 'otp' | 'forgot';
+type LoginStep = 'identifier' | 'password' | 'otp' | 'forgot' | 'forgot-otp' | 'forgot-reset';
 
 const LoginPage = () => {
   const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -19,10 +19,14 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<LoginStep>('identifier');
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordIdentifier, setForgotPasswordIdentifier] = useState("");
+  
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(0);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -224,36 +228,154 @@ const LoginPage = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    const identifier = forgotPasswordIdentifier.trim();
+    if (!identifier) return;
+    
     setIsResetLoading(true);
 
     try {
-      const { data: specialist } = await supabase
-        .from('specialists')
-        .select('email')
-        .eq('email', forgotPasswordEmail)
-        .maybeSingle();
+      if (isPhoneNumber(identifier)) {
+        // Phone-based reset: send OTP
+        const { data, error } = await supabase.functions.invoke('specialist-otp', {
+          body: { action: 'send', phone: identifier }
+        });
 
-      if (!specialist) {
-        toast({ title: "E-posta Bulunamadı", description: "Bu e-posta ile kayıtlı uzman bulunamadı.", variant: "destructive" });
-        return;
+        if (error || (data && !data.success)) {
+          toast({ title: "Hata", description: data?.error || "Bu telefon numarası ile kayıtlı uzman bulunamadı.", variant: "destructive" });
+          return;
+        }
+
+        setStep('forgot-otp');
+        setOtpCountdown(120);
+        setOtpCode('');
+        toast({ title: "Kod Gönderildi", description: "Telefonunuza 6 haneli doğrulama kodu gönderildi." });
+      } else {
+        // Email-based reset
+        const { data: specialist } = await supabase
+          .from('specialists')
+          .select('email')
+          .eq('email', identifier)
+          .maybeSingle();
+
+        if (!specialist) {
+          toast({ title: "E-posta Bulunamadı", description: "Bu e-posta ile kayıtlı uzman bulunamadı.", variant: "destructive" });
+          return;
+        }
+
+        const { error } = await supabase.auth.resetPasswordForEmail(identifier, {
+          redirectTo: `${window.location.origin}/sifre-sifirla`
+        });
+
+        if (error) {
+          toast({ title: "Hata", description: "Şifre sıfırlama e-postası gönderilemedi.", variant: "destructive" });
+          return;
+        }
+
+        toast({ title: "E-posta Gönderildi", description: "Şifre sıfırlama linki e-posta adresinize gönderildi." });
+        setStep('identifier');
+        setForgotPasswordIdentifier("");
       }
-
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `${window.location.origin}/sifre-sifirla`
-      });
-
-      if (error) {
-        toast({ title: "Hata", description: "Şifre sıfırlama e-postası gönderilemedi.", variant: "destructive" });
-        return;
-      }
-
-      toast({ title: "E-posta Gönderildi", description: "Şifre sıfırlama linki e-posta adresinize gönderildi." });
-      setStep('identifier');
-      setForgotPasswordEmail("");
-    } catch (error) {
+    } catch {
       toast({ title: "Hata", description: "Beklenmeyen bir hata oluştu.", variant: "destructive" });
     } finally {
       setIsResetLoading(false);
+    }
+  };
+
+  const handleForgotOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) {
+      toast({ title: "Hata", description: "6 haneli kodu girin.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('specialist-otp', {
+        body: { action: 'verify', phone: forgotPasswordIdentifier.trim(), code: otpCode }
+      });
+
+      if (error || !data?.success) {
+        toast({ title: "Doğrulama Hatası", description: data?.error || "Geçersiz veya süresi dolmuş kod.", variant: "destructive" });
+        return;
+      }
+
+      if (data.action_link) {
+        const url = new URL(data.action_link);
+        const token_hash = url.searchParams.get('token') || data.token_hash;
+        
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: token_hash || data.token_hash,
+          type: 'magiclink',
+        });
+
+        if (verifyError) {
+          toast({ title: "Hata", description: "Oturum açılamadı. Lütfen tekrar deneyin.", variant: "destructive" });
+          return;
+        }
+
+        // Session created, now show new password form
+        setStep('forgot-reset');
+        toast({ title: "Doğrulandı", description: "Şimdi yeni şifrenizi belirleyin." });
+        return;
+      }
+
+      toast({ title: "Hata", description: "Doğrulama başarısız oldu.", variant: "destructive" });
+    } catch {
+      toast({ title: "Hata", description: "Beklenmeyen bir hata oluştu.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotResendOtp = async () => {
+    if (otpCountdown > 0) return;
+    setOtpSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('specialist-otp', {
+        body: { action: 'send', phone: forgotPasswordIdentifier.trim() }
+      });
+      if (!error && data?.success) {
+        toast({ title: "Kod Gönderildi", description: "Yeni doğrulama kodu gönderildi." });
+        setOtpCountdown(120);
+      } else {
+        toast({ title: "Hata", description: data?.error || "Kod gönderilemedi.", variant: "destructive" });
+      }
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword.length < 6) {
+      toast({ title: "Şifre Çok Kısa", description: "Şifre en az 6 karakter olmalıdır.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast({ title: "Şifreler Eşleşmiyor", description: "Girdiğiniz şifreler birbiriyle eşleşmiyor.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        toast({ title: "Hata", description: "Şifre güncellenirken bir hata oluştu.", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Şifre Güncellendi", description: "Şifreniz başarıyla güncellendi. Giriş yapabilirsiniz." });
+      await supabase.auth.signOut();
+      setStep('identifier');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setForgotPasswordIdentifier('');
+    } catch {
+      toast({ title: "Hata", description: "Beklenmeyen bir hata oluştu.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -319,12 +441,14 @@ const LoginPage = () => {
             </div>
 
             {/* Step indicator */}
-            {step !== 'identifier' && (
+             {step !== 'identifier' && (
               <button
                 onClick={() => {
                   if (step === 'password') { setStep('identifier'); setPassword(''); }
                   else if (step === 'otp') { setStep('identifier'); setOtpCode(''); }
                   else if (step === 'forgot') { setStep('identifier'); }
+                  else if (step === 'forgot-otp') { setStep('forgot'); setOtpCode(''); }
+                  else if (step === 'forgot-reset') { setStep('identifier'); }
                 }}
                 className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
               >
@@ -337,12 +461,16 @@ const LoginPage = () => {
             <div className="mb-8">
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                 {step === 'forgot' ? "Şifre Sıfırlama" :
+                 step === 'forgot-otp' ? "Telefon Doğrulama" :
+                 step === 'forgot-reset' ? "Yeni Şifre Belirle" :
                  step === 'otp' ? "Telefon Doğrulama" :
                  step === 'password' ? "Şifrenizi Girin" :
                  "Uzman Girişi"}
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">
-                {step === 'forgot' ? "E-posta adresinizi girin, şifre sıfırlama linki göndereceğiz" :
+                {step === 'forgot' ? "E-posta veya telefon numaranızı girin" :
+                 step === 'forgot-otp' ? `${forgotPasswordIdentifier} numarasına gönderilen 6 haneli kodu girin` :
+                 step === 'forgot-reset' ? "Yeni şifrenizi aşağıya girin" :
                  step === 'otp' ? `${loginIdentifier} numarasına gönderilen 6 haneli kodu girin` :
                  step === 'password' ? `${loginIdentifier} hesabı için şifrenizi girin` :
                  "E-posta veya telefon numaranız ile giriş yapın"}
@@ -406,6 +534,15 @@ const LoginPage = () => {
                     <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <span>Telefon numarası ile giriş yaparsanız SMS doğrulama kodu alırsınız</span>
                   </div>
+                  <div className="mt-3 text-center">
+                    <button
+                      type="button"
+                      className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+                      onClick={() => { setStep('forgot'); setForgotPasswordIdentifier(''); }}
+                    >
+                      Şifreni mi unuttun?
+                    </button>
+                  </div>
                 </div>
               </form>
             )}
@@ -452,7 +589,7 @@ const LoginPage = () => {
                   <button
                     type="button"
                     className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
-                    onClick={() => { setStep('forgot'); setForgotPasswordEmail(loginIdentifier); }}
+                    onClick={() => { setStep('forgot'); setForgotPasswordIdentifier(loginIdentifier); }}
                   >
                     Şifreni mi unuttun?
                   </button>
@@ -551,20 +688,27 @@ const LoginPage = () => {
             {step === 'forgot' && (
               <form onSubmit={handleForgotPassword} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="forgotEmail" className="text-sm font-medium">E-posta Adresi</Label>
+                  <Label htmlFor="forgotIdentifier" className="text-sm font-medium">E-posta veya Telefon Numarası</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <div className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                      {isPhoneNumber(forgotPasswordIdentifier) ? <Phone className="w-5 h-5 text-primary" /> : <Mail className="w-5 h-5" />}
+                    </div>
                     <Input
-                      id="forgotEmail"
-                      type="email"
-                      value={forgotPasswordEmail}
-                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      id="forgotIdentifier"
+                      type="text"
+                      value={forgotPasswordIdentifier}
+                      onChange={(e) => setForgotPasswordIdentifier(e.target.value)}
                       required
                       disabled={isResetLoading}
-                      placeholder="uzman@email.com"
+                      placeholder="uzman@email.com veya Telefon Numarası"
                       className="pl-12 h-12 text-base border-border/60 focus:border-primary bg-muted/30 rounded-xl"
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isPhoneNumber(forgotPasswordIdentifier)
+                      ? "Telefonunuza SMS ile doğrulama kodu gönderilecek"
+                      : "E-posta adresinize şifre sıfırlama linki gönderilecek"}
+                  </p>
                 </div>
                 
                 <Button 
@@ -579,7 +723,138 @@ const LoginPage = () => {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      Şifre Sıfırlama Linki Gönder
+                      {isPhoneNumber(forgotPasswordIdentifier) ? "Doğrulama Kodu Gönder" : "Şifre Sıfırlama Linki Gönder"}
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  )}
+                </Button>
+              </form>
+            )}
+
+            {/* Step: Forgot OTP Verification */}
+            {step === 'forgot-otp' && (
+              <form onSubmit={handleForgotOtpVerify} className="space-y-5">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl border border-border/40">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{forgotPasswordIdentifier}</p>
+                    <p className="text-xs text-muted-foreground">SMS ile şifre sıfırlama</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="forgotOtp" className="text-sm font-medium">Doğrulama Kodu</Label>
+                  <Input
+                    id="forgotOtp"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    required
+                    autoFocus
+                    placeholder="• • • • • •"
+                    className="h-14 text-center text-2xl tracking-[0.5em] font-mono border-border/60 focus:border-primary bg-muted/30 rounded-xl"
+                  />
+                  {otpCountdown > 0 && (
+                    <p className="text-xs text-muted-foreground text-center mt-1">
+                      Kod geçerlilik süresi: {Math.floor(otpCountdown / 60)}:{String(otpCountdown % 60).padStart(2, '0')}
+                    </p>
+                  )}
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
+                  disabled={isLoading || otpCode.length !== 6}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Doğrulanıyor...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      Doğrula
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  )}
+                </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:text-primary/80 font-medium disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors"
+                    onClick={handleForgotResendOtp}
+                    disabled={otpCountdown > 0 || otpSending}
+                  >
+                    {otpCountdown > 0
+                      ? `Tekrar gönder (${Math.floor(otpCountdown / 60)}:${String(otpCountdown % 60).padStart(2, '0')})`
+                      : "Kodu Tekrar Gönder"
+                    }
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Step: Set New Password (after phone OTP verification) */}
+            {step === 'forgot-reset' && (
+              <form onSubmit={handleSetNewPassword} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-sm font-medium">Yeni Şifre</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <Input
+                      id="newPassword"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      autoFocus
+                      placeholder="En az 6 karakter"
+                      className="pl-12 pr-12 h-12 text-base border-border/60 focus:border-primary bg-muted/30 rounded-xl"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmNewPassword" className="text-sm font-medium">Şifre Tekrar</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <Input
+                      id="confirmNewPassword"
+                      type={showNewPassword ? "text" : "password"}
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      required
+                      placeholder="Şifrenizi tekrar girin"
+                      className="pl-12 h-12 text-base border-border/60 focus:border-primary bg-muted/30 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Güncelleniyor...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      Şifreyi Güncelle
                       <ArrowRight className="w-4 h-4" />
                     </div>
                   )}
