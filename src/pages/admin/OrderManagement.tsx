@@ -508,7 +508,11 @@ const OrderManagement = () => {
       setEditingOrder(null);
       setSelectedOrder(null);
     },
-    onError: (error) => {
+    onError: (error, _updatedOrder, context) => {
+      // Rollback optimistic update
+      if (context?.previousOrders) {
+        queryClient.setQueryData(["orders"], context.previousOrders);
+      }
       toast({
         title: "Hata",
         description: "Sipariş güncellenirken hata oluştu",
