@@ -680,20 +680,27 @@ const LoginPage = () => {
             {step === 'forgot' && (
               <form onSubmit={handleForgotPassword} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="forgotEmail" className="text-sm font-medium">E-posta Adresi</Label>
+                  <Label htmlFor="forgotIdentifier" className="text-sm font-medium">E-posta veya Telefon Numarası</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <div className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                      {isPhoneNumber(forgotPasswordIdentifier) ? <Phone className="w-5 h-5 text-primary" /> : <Mail className="w-5 h-5" />}
+                    </div>
                     <Input
-                      id="forgotEmail"
-                      type="email"
-                      value={forgotPasswordEmail}
-                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      id="forgotIdentifier"
+                      type="text"
+                      value={forgotPasswordIdentifier}
+                      onChange={(e) => setForgotPasswordIdentifier(e.target.value)}
                       required
                       disabled={isResetLoading}
-                      placeholder="uzman@email.com"
+                      placeholder="uzman@email.com veya Telefon Numarası"
                       className="pl-12 h-12 text-base border-border/60 focus:border-primary bg-muted/30 rounded-xl"
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isPhoneNumber(forgotPasswordIdentifier)
+                      ? "Telefonunuza SMS ile doğrulama kodu gönderilecek"
+                      : "E-posta adresinize şifre sıfırlama linki gönderilecek"}
+                  </p>
                 </div>
                 
                 <Button 
@@ -708,7 +715,138 @@ const LoginPage = () => {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      Şifre Sıfırlama Linki Gönder
+                      {isPhoneNumber(forgotPasswordIdentifier) ? "Doğrulama Kodu Gönder" : "Şifre Sıfırlama Linki Gönder"}
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  )}
+                </Button>
+              </form>
+            )}
+
+            {/* Step: Forgot OTP Verification */}
+            {step === 'forgot-otp' && (
+              <form onSubmit={handleForgotOtpVerify} className="space-y-5">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl border border-border/40">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{forgotPasswordIdentifier}</p>
+                    <p className="text-xs text-muted-foreground">SMS ile şifre sıfırlama</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="forgotOtp" className="text-sm font-medium">Doğrulama Kodu</Label>
+                  <Input
+                    id="forgotOtp"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    required
+                    autoFocus
+                    placeholder="• • • • • •"
+                    className="h-14 text-center text-2xl tracking-[0.5em] font-mono border-border/60 focus:border-primary bg-muted/30 rounded-xl"
+                  />
+                  {otpCountdown > 0 && (
+                    <p className="text-xs text-muted-foreground text-center mt-1">
+                      Kod geçerlilik süresi: {Math.floor(otpCountdown / 60)}:{String(otpCountdown % 60).padStart(2, '0')}
+                    </p>
+                  )}
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
+                  disabled={isLoading || otpCode.length !== 6}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Doğrulanıyor...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      Doğrula
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  )}
+                </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:text-primary/80 font-medium disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors"
+                    onClick={handleForgotResendOtp}
+                    disabled={otpCountdown > 0 || otpSending}
+                  >
+                    {otpCountdown > 0
+                      ? `Tekrar gönder (${Math.floor(otpCountdown / 60)}:${String(otpCountdown % 60).padStart(2, '0')})`
+                      : "Kodu Tekrar Gönder"
+                    }
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Step: Set New Password (after phone OTP verification) */}
+            {step === 'forgot-reset' && (
+              <form onSubmit={handleSetNewPassword} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-sm font-medium">Yeni Şifre</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <Input
+                      id="newPassword"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      autoFocus
+                      placeholder="En az 6 karakter"
+                      className="pl-12 pr-12 h-12 text-base border-border/60 focus:border-primary bg-muted/30 rounded-xl"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmNewPassword" className="text-sm font-medium">Şifre Tekrar</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <Input
+                      id="confirmNewPassword"
+                      type={showNewPassword ? "text" : "password"}
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      required
+                      placeholder="Şifrenizi tekrar girin"
+                      className="pl-12 h-12 text-base border-border/60 focus:border-primary bg-muted/30 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Güncelleniyor...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      Şifreyi Güncelle
                       <ArrowRight className="w-4 h-4" />
                     </div>
                   )}
