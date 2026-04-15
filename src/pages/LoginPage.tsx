@@ -581,7 +581,7 @@ const LoginPage = () => {
                   <button
                     type="button"
                     className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
-                    onClick={() => { setStep('forgot'); setForgotPasswordEmail(loginIdentifier); }}
+                    onClick={() => { setStep('forgot'); setForgotPasswordIdentifier(loginIdentifier); }}
                   >
                     Şifreni mi unuttun?
                   </button>
