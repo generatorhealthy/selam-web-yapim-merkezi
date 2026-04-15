@@ -223,6 +223,8 @@ serve(async (req) => {
       message: string;
     }> = [];
 
+    const supabaseManual = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
     // Manuel tekil sipariş tekrarı
     if (specificOrderRef) {
       console.log(`Manuel sipariş tekrarı: ${specificOrderRef}`);
@@ -260,6 +262,30 @@ serve(async (req) => {
               order.price,
               specificOrderRef
             );
+          }
+
+          // Başarısız ödeme → veritabanında payment_status='failed' olarak işaretle
+          if (!retryResult.success) {
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            const { data: pendingOrders } = await supabaseManual
+              .from('orders')
+              .select('id, customer_name, payment_status')
+              .eq('customer_email', subscription.customerEmail)
+              .eq('status', 'pending')
+              .is('deleted_at', null)
+              .gte('created_at', sevenDaysAgo)
+              .order('created_at', { ascending: false });
+
+            if (pendingOrders?.length) {
+              for (const pendingOrder of pendingOrders) {
+                if (pendingOrder.payment_status === 'failed') continue;
+                await supabaseManual
+                  .from('orders')
+                  .update({ payment_status: 'failed' })
+                  .eq('id', pendingOrder.id);
+                console.log(`Manuel: payment_status='failed' işaretlendi: ${pendingOrder.customer_name}`);
+              }
+            }
           }
           
           console.log(`Manuel deneme sonucu: ${retryResult.success ? 'BAŞARILI' : 'BAŞARISIZ'} - ${retryResult.message}`);
