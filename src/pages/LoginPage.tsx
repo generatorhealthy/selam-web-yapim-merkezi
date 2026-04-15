@@ -534,6 +534,15 @@ const LoginPage = () => {
                     <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <span>Telefon numarası ile giriş yaparsanız SMS doğrulama kodu alırsınız</span>
                   </div>
+                  <div className="mt-3 text-center">
+                    <button
+                      type="button"
+                      className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+                      onClick={() => { setStep('forgot'); setForgotPasswordIdentifier(''); }}
+                    >
+                      Şifreni mi unuttun?
+                    </button>
+                  </div>
                 </div>
               </form>
             )}
