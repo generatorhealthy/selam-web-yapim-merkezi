@@ -409,14 +409,14 @@ Deno.serve(async (req) => {
       }
       case 'chats.messages': {
         const safeLimit = Math.min(Math.max(Number(payload?.limit) || 50, 1), 100);
-        const mergeValue = typeof payload?.merge === 'boolean' ? payload.merge : true;
+        const mergeValue = typeof payload?.merge === 'boolean' ? payload.merge : null;
         const downloadMediaValue = typeof payload?.downloadMedia === 'boolean' ? payload.downloadMedia : false;
-        const sortByValue = String(payload?.sortBy ?? 'timestamp');
-        const sortOrderValue = String(payload?.sortOrder ?? 'asc');
+        const sortByValue = typeof payload?.sortBy === 'string' && payload.sortBy.trim() ? payload.sortBy.trim() : null;
+        const sortOrderValue = typeof payload?.sortOrder === 'string' && payload.sortOrder.trim() ? payload.sortOrder.trim() : null;
         const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
         const encodedChatId = encodeURIComponent(String(payload?.chatId ?? ''));
 
-        const appendOptionalParams = (params: URLSearchParams) => {
+        const appendOptionalParams = (params: URLSearchParams, includeCompatibilityUnsafeParams = true) => {
           if (typeof payload?.offset === 'number' && Number.isFinite(payload.offset) && payload.offset >= 0) {
             params.set('offset', String(payload.offset));
           }
@@ -438,32 +438,48 @@ Deno.serve(async (req) => {
           if (typeof payload?.['filter.ack'] === 'string' && payload['filter.ack'].trim()) {
             params.set('filter.ack', payload['filter.ack']);
           }
+
+          if (includeCompatibilityUnsafeParams) {
+            if (mergeValue !== null) {
+              params.set('merge', String(mergeValue));
+            }
+
+            if (sortByValue) {
+              params.set('sortBy', sortByValue);
+            }
+
+            if (sortOrderValue) {
+              params.set('sortOrder', sortOrderValue);
+            }
+          }
         };
 
-        const primaryParams = new URLSearchParams({
-          limit: String(safeLimit),
-          downloadMedia: String(downloadMediaValue),
-          merge: String(mergeValue),
-          sortBy: sortByValue,
-          sortOrder: sortOrderValue,
-        });
-        appendOptionalParams(primaryParams);
+        const createParams = (includeLegacyParams = false, includeCompatibilityUnsafeParams = true) => {
+          const params = new URLSearchParams({
+            limit: String(safeLimit),
+            downloadMedia: String(downloadMediaValue),
+          });
 
-        const legacyParams = new URLSearchParams({
-          chatId: String(payload?.chatId ?? ''),
-          session: String(sessionName ?? ''),
-          limit: String(safeLimit),
-          downloadMedia: String(downloadMediaValue),
-          merge: String(mergeValue),
-          sortBy: sortByValue,
-          sortOrder: sortOrderValue,
-        });
-        appendOptionalParams(legacyParams);
+          if (includeLegacyParams) {
+            params.set('chatId', String(payload?.chatId ?? ''));
+            params.set('session', String(sessionName ?? ''));
+          }
 
-        const candidateEndpoints = [
+          appendOptionalParams(params, includeCompatibilityUnsafeParams);
+          return params;
+        };
+
+        const primaryParams = createParams(false, true);
+        const compatibilityPrimaryParams = createParams(false, false);
+        const legacyParams = createParams(true, true);
+        const compatibilityLegacyParams = createParams(true, false);
+
+        const candidateEndpoints = Array.from(new Set([
           `/api/${encodedSessionName}/chats/${encodedChatId}/messages?${primaryParams.toString()}`,
+          `/api/${encodedSessionName}/chats/${encodedChatId}/messages?${compatibilityPrimaryParams.toString()}`,
           `/api/messages?${legacyParams.toString()}`,
-        ];
+          `/api/messages?${compatibilityLegacyParams.toString()}`,
+        ]));
 
         let lastFailure: Awaited<ReturnType<typeof fetchWahaResult>> | null = null;
 
