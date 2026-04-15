@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity, CreditCard, Package, Sparkles, Eye, PenLine, ClipboardList, Phone } from "lucide-react";
 import ContractDialog from "@/components/ContractDialog";
 import { ClientPortfolio } from "@/components/ClientPortfolio";
+import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
 
 // Appointment Form Component
 const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; onSuccess: () => void }) => {
@@ -828,27 +829,17 @@ const DoctorDashboard = () => {
       // Send SMS to patient when appointment is confirmed
       if (newStatus === 'confirmed' && appointment && doctor) {
         try {
-          // Create URL-friendly slugs
-          const specialtySlug = doctor.specialty
-            .toLowerCase()
-            .replace(/ı/g, 'i')
-            .replace(/ğ/g, 'g')
-            .replace(/ü/g, 'u')
-            .replace(/ş/g, 's')
-            .replace(/ö/g, 'o')
-            .replace(/ç/g, 'c')
-            .replace(/\s+/g, '-');
+          // Use proper slug functions that remove titles and dots
+          const specialtySlug = createSpecialtySlug(doctor.specialty);
           
-          const doctorSlug = doctor.name
-            .toLowerCase()
-            .replace(/ı/g, 'i')
-            .replace(/ğ/g, 'g')
-            .replace(/ü/g, 'u')
-            .replace(/ş/g, 's')
-            .replace(/ö/g, 'o')
-            .replace(/ç/g, 'c')
-            .replace(/\s+/g, '-');
+          // Fetch stored slug from DB for consistency
+          const { data: slugData } = await supabase
+            .from('specialists')
+            .select('slug')
+            .eq('id', doctor.id)
+            .single();
           
+          const doctorSlug = slugData?.slug || createDoctorSlug(doctor.name);
           const profileLink = `https://doktorumol.com.tr/${specialtySlug}/${doctorSlug}`;
           const message = `Merhaba ${appointment.patient_name}, ${doctor.name} ile randevunuz tamamlandı. Uzmanı değerlendirmek için: ${profileLink}`;
           
