@@ -245,7 +245,6 @@ const LoginPage = () => {
           return;
         }
 
-        setForgotMethod('phone');
         setStep('forgot-otp');
         setOtpCountdown(120);
         setOtpCode('');
