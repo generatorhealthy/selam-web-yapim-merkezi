@@ -835,7 +835,7 @@ const DoctorDashboard = () => {
           const { data: slugData } = await supabase
             .from('specialists')
             .select('slug')
-            .eq('user_id', session?.user?.id)
+            .eq('id', doctor.id)
             .single();
           
           const doctorSlug = slugData?.slug || createDoctorSlug(doctor.name);
