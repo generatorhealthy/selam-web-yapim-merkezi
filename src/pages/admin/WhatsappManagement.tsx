@@ -517,6 +517,8 @@ const WhatsappManagement = () => {
   const [lines, setLines] = useState<WhatsappLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLine, setSelectedLine] = useState<WhatsappLine | null>(null);
+  const [allLinesMode, setAllLinesMode] = useState(true);
+  const [lineSessionStatuses, setLineSessionStatuses] = useState<Record<string, string>>({});
   const [showAddLineDialog, setShowAddLineDialog] = useState(false);
   const [newPhone, setNewPhone] = useState('');
   const [newLabel, setNewLabel] = useState('');
