@@ -16,6 +16,54 @@ const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
   return btoa(binary);
 };
 
+const getNestedQrString = (value: unknown, depth = 0): string | null => {
+  if (depth > 5 || value == null) {
+    return null;
+  }
+
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim();
+    return trimmedValue || null;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const nestedValue = getNestedQrString(item, depth + 1);
+      if (nestedValue) {
+        return nestedValue;
+      }
+    }
+
+    return null;
+  }
+
+  if (typeof value !== 'object') {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const candidates = [
+    record.qr,
+    record.value,
+    record.data,
+    record.base64,
+    record.image,
+    record.qrCode,
+    record.code,
+    record.src,
+    record.url,
+  ];
+
+  for (const candidate of candidates) {
+    const nestedValue = getNestedQrString(candidate, depth + 1);
+    if (nestedValue) {
+      return nestedValue;
+    }
+  }
+
+  return null;
+};
+
 const normalizeQrPayload = (payload: unknown, contentType: string | null) => {
   if (!payload) {
     return null;
@@ -41,8 +89,7 @@ const normalizeQrPayload = (payload: unknown, contentType: string | null) => {
 
   if (typeof payload === 'object') {
     const record = payload as Record<string, unknown>;
-    const candidates = [record.qr, record.value, record.data, record.base64, record.image];
-    const firstString = candidates.find((candidate): candidate is string => typeof candidate === 'string' && candidate.trim().length > 0);
+    const firstString = getNestedQrString(record);
 
     if (!firstString) {
       return record;
@@ -61,6 +108,37 @@ const normalizeQrPayload = (payload: unknown, contentType: string | null) => {
   }
 
   return null;
+};
+
+const parseQrResponse = async (response: Response) => {
+  const qrContentType = response.headers.get('content-type');
+  let qrData: Record<string, unknown> | null = null;
+  let qrErrorText: string | null = null;
+
+  if (qrContentType?.startsWith('image/')) {
+    const qrImageBuffer = await response.arrayBuffer();
+    const dataUrl = `data:${qrContentType};base64,${arrayBufferToBase64(qrImageBuffer)}`;
+    qrData = {
+      value: dataUrl,
+      qr: dataUrl,
+      raw: dataUrl,
+    };
+  } else {
+    const qrText = await response.text();
+    qrErrorText = qrText || null;
+
+    const parsedPayload = (() => {
+      try {
+        return qrText ? JSON.parse(qrText) : null;
+      } catch {
+        return qrText || null;
+      }
+    })();
+
+    qrData = normalizeQrPayload(parsedPayload, qrContentType);
+  }
+
+  return { qrContentType, qrData, qrErrorText };
 };
 
 const respond = (payload: Record<string, unknown>) =>
@@ -198,59 +276,60 @@ Deno.serve(async (req) => {
         endpoint = `/api/sessions/${sessionName}`;
         break;
       case 'auth.qr': {
-        endpoint = `/api/${sessionName}/auth/qr`;
+        const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
         const qrHeaders = {
           ...headers,
           Accept: 'application/json, image/png;q=0.9, */*;q=0.8',
         };
-        const qrRes = await fetch(`${wahaUrl}${endpoint}`, { headers: qrHeaders });
-        const qrContentType = qrRes.headers.get('content-type');
+        const candidateEndpoints = [
+          `/api/${encodedSessionName}/auth/qr`,
+          `/api/sessions/${encodedSessionName}/auth/qr`,
+          `/api/${encodedSessionName}/auth/qr?format=image`,
+          `/api/sessions/${encodedSessionName}/auth/qr?format=image`,
+        ];
 
-        let qrData: Record<string, unknown> | null = null;
-        let qrErrorText: string | null = null;
+        let lastFailure: { status: number; data: Record<string, unknown> | null; text: string } | null = null;
+        let emptySuccess: { status: number; data: Record<string, unknown> | null } | null = null;
 
-        if (qrContentType?.startsWith('image/')) {
-          const qrImageBuffer = await qrRes.arrayBuffer();
-          const dataUrl = `data:${qrContentType};base64,${arrayBufferToBase64(qrImageBuffer)}`;
-          qrData = {
-            value: dataUrl,
-            qr: dataUrl,
-            raw: dataUrl,
-          };
-        } else {
-          const qrText = await qrRes.text();
-          qrErrorText = qrText || null;
+        for (const candidateEndpoint of candidateEndpoints) {
+          console.log(`WAHA Proxy: GET ${wahaUrl}${candidateEndpoint}`);
+          const qrRes = await fetch(`${wahaUrl}${candidateEndpoint}`, { headers: qrHeaders });
+          const { qrContentType, qrData, qrErrorText } = await parseQrResponse(qrRes);
 
-          const parsedPayload = (() => {
-            try {
-              return qrText ? JSON.parse(qrText) : null;
-            } catch {
-              return qrText || null;
+          if (qrRes.ok) {
+            const normalizedQrData = normalizeQrPayload(qrData, qrContentType) ?? qrData;
+            const qrValue = normalizedQrData ? getNestedQrString(normalizedQrData) : null;
+
+            if (qrValue && normalizedQrData) {
+              return respond({ success: true, status: qrRes.status, data: normalizedQrData });
             }
-          })();
 
-          qrData = normalizeQrPayload(parsedPayload, qrContentType);
-        }
+            emptySuccess = { status: qrRes.status, data: normalizedQrData };
+            continue;
+          }
 
-        if (!qrRes.ok) {
-          return respond({
-            success: false,
+          lastFailure = {
             status: qrRes.status,
-            error: qrData?.message || qrData?.error || qrErrorText || 'QR alınamadı',
             data: qrData,
-          });
+            text: qrErrorText || '',
+          };
         }
 
-        if (!qrData) {
+        if (emptySuccess) {
           return respond({
             success: false,
-            status: qrRes.status,
+            status: emptySuccess.status,
             error: 'QR verisi henüz hazır değil',
-            data: null,
+            data: emptySuccess.data,
           });
         }
 
-        return respond({ success: true, status: qrRes.status, data: qrData });
+        return respond({
+          success: false,
+          status: lastFailure?.status ?? 500,
+          error: getErrorMessage(lastFailure?.data, lastFailure?.text ?? '', lastFailure?.status ?? 500),
+          data: lastFailure?.data ?? null,
+        });
       }
       case 'screenshot': {
         endpoint = `/api/screenshot?session=${sessionName}`;
