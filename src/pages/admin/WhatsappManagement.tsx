@@ -828,11 +828,26 @@ const WhatsappManagement = () => {
     }
     setSending(true);
     const msgText = chatMessage;
+    const msgTimestamp = Math.floor(Date.now() / 1000);
     setChatMessage('');
-    setChatMessages((prev) => [...prev, { body: msgText, fromMe: true, timestamp: Math.floor(Date.now() / 1000), _optimistic: true }]);
+    setChatMessages((prev) => [...prev, { body: msgText, fromMe: true, timestamp: msgTimestamp, _optimistic: true }]);
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
       await wahaApi('sendText', getSessionName(selectedLine), { chatId, text: msgText });
+      // Store sent message to Supabase for history
+      const sessionName = getSessionName(selectedLine);
+      supabase.from('whatsapp_messages').insert({
+        session_name: sessionName,
+        chat_id: chatId,
+        message_id: `sent_${msgTimestamp}_${Math.random().toString(36).substring(2, 8)}`,
+        body: msgText,
+        from_me: true,
+        timestamp: msgTimestamp,
+        has_media: false,
+        sender_name: null,
+      }).then(({ error }) => {
+        if (error) console.warn('Gönderilen mesaj DB kayıt hatası:', error);
+      });
     } catch (err: any) {
       toast.error(`Mesaj gönderilemedi: ${err.message || ''}`);
       setChatMessage(msgText);
