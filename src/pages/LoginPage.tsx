@@ -10,7 +10,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield, Phone, ArrowLeft, CheckCircle2, Fingerprint } from "lucide-react";
 import { useRateLimit } from "@/hooks/useRateLimit";
 
-type LoginStep = 'identifier' | 'password' | 'otp' | 'forgot';
+type LoginStep = 'identifier' | 'password' | 'otp' | 'forgot' | 'forgot-otp' | 'forgot-reset';
 
 const LoginPage = () => {
   const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -19,10 +19,14 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<LoginStep>('identifier');
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordIdentifier, setForgotPasswordIdentifier] = useState("");
+  const [forgotMethod, setForgotMethod] = useState<'email' | 'phone' | null>(null);
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(0);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   
