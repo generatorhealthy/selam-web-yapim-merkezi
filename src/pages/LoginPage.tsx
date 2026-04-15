@@ -228,36 +228,155 @@ const LoginPage = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    const identifier = forgotPasswordIdentifier.trim();
+    if (!identifier) return;
+    
     setIsResetLoading(true);
 
     try {
-      const { data: specialist } = await supabase
-        .from('specialists')
-        .select('email')
-        .eq('email', forgotPasswordEmail)
-        .maybeSingle();
+      if (isPhoneNumber(identifier)) {
+        // Phone-based reset: send OTP
+        const { data, error } = await supabase.functions.invoke('specialist-otp', {
+          body: { action: 'send', phone: identifier }
+        });
 
-      if (!specialist) {
-        toast({ title: "E-posta Bulunamadı", description: "Bu e-posta ile kayıtlı uzman bulunamadı.", variant: "destructive" });
-        return;
+        if (error || (data && !data.success)) {
+          toast({ title: "Hata", description: data?.error || "Bu telefon numarası ile kayıtlı uzman bulunamadı.", variant: "destructive" });
+          return;
+        }
+
+        setForgotMethod('phone');
+        setStep('forgot-otp');
+        setOtpCountdown(120);
+        setOtpCode('');
+        toast({ title: "Kod Gönderildi", description: "Telefonunuza 6 haneli doğrulama kodu gönderildi." });
+      } else {
+        // Email-based reset
+        const { data: specialist } = await supabase
+          .from('specialists')
+          .select('email')
+          .eq('email', identifier)
+          .maybeSingle();
+
+        if (!specialist) {
+          toast({ title: "E-posta Bulunamadı", description: "Bu e-posta ile kayıtlı uzman bulunamadı.", variant: "destructive" });
+          return;
+        }
+
+        const { error } = await supabase.auth.resetPasswordForEmail(identifier, {
+          redirectTo: `${window.location.origin}/sifre-sifirla`
+        });
+
+        if (error) {
+          toast({ title: "Hata", description: "Şifre sıfırlama e-postası gönderilemedi.", variant: "destructive" });
+          return;
+        }
+
+        toast({ title: "E-posta Gönderildi", description: "Şifre sıfırlama linki e-posta adresinize gönderildi." });
+        setStep('identifier');
+        setForgotPasswordIdentifier("");
       }
-
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `${window.location.origin}/sifre-sifirla`
-      });
-
-      if (error) {
-        toast({ title: "Hata", description: "Şifre sıfırlama e-postası gönderilemedi.", variant: "destructive" });
-        return;
-      }
-
-      toast({ title: "E-posta Gönderildi", description: "Şifre sıfırlama linki e-posta adresinize gönderildi." });
-      setStep('identifier');
-      setForgotPasswordEmail("");
-    } catch (error) {
+    } catch {
       toast({ title: "Hata", description: "Beklenmeyen bir hata oluştu.", variant: "destructive" });
     } finally {
       setIsResetLoading(false);
+    }
+  };
+
+  const handleForgotOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) {
+      toast({ title: "Hata", description: "6 haneli kodu girin.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('specialist-otp', {
+        body: { action: 'verify', phone: forgotPasswordIdentifier.trim(), code: otpCode }
+      });
+
+      if (error || !data?.success) {
+        toast({ title: "Doğrulama Hatası", description: data?.error || "Geçersiz veya süresi dolmuş kod.", variant: "destructive" });
+        return;
+      }
+
+      if (data.action_link) {
+        const url = new URL(data.action_link);
+        const token_hash = url.searchParams.get('token') || data.token_hash;
+        
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: token_hash || data.token_hash,
+          type: 'magiclink',
+        });
+
+        if (verifyError) {
+          toast({ title: "Hata", description: "Oturum açılamadı. Lütfen tekrar deneyin.", variant: "destructive" });
+          return;
+        }
+
+        // Session created, now show new password form
+        setStep('forgot-reset');
+        toast({ title: "Doğrulandı", description: "Şimdi yeni şifrenizi belirleyin." });
+        return;
+      }
+
+      toast({ title: "Hata", description: "Doğrulama başarısız oldu.", variant: "destructive" });
+    } catch {
+      toast({ title: "Hata", description: "Beklenmeyen bir hata oluştu.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotResendOtp = async () => {
+    if (otpCountdown > 0) return;
+    setOtpSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('specialist-otp', {
+        body: { action: 'send', phone: forgotPasswordIdentifier.trim() }
+      });
+      if (!error && data?.success) {
+        toast({ title: "Kod Gönderildi", description: "Yeni doğrulama kodu gönderildi." });
+        setOtpCountdown(120);
+      } else {
+        toast({ title: "Hata", description: data?.error || "Kod gönderilemedi.", variant: "destructive" });
+      }
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword.length < 6) {
+      toast({ title: "Şifre Çok Kısa", description: "Şifre en az 6 karakter olmalıdır.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast({ title: "Şifreler Eşleşmiyor", description: "Girdiğiniz şifreler birbiriyle eşleşmiyor.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        toast({ title: "Hata", description: "Şifre güncellenirken bir hata oluştu.", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Şifre Güncellendi", description: "Şifreniz başarıyla güncellendi. Giriş yapabilirsiniz." });
+      await supabase.auth.signOut();
+      setStep('identifier');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setForgotPasswordIdentifier('');
+    } catch {
+      toast({ title: "Hata", description: "Beklenmeyen bir hata oluştu.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
