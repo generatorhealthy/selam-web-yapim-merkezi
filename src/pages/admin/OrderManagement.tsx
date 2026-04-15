@@ -451,6 +451,18 @@ const OrderManagement = () => {
       }
       return data;
     },
+    onMutate: async (updatedOrder) => {
+      // Optimistic update: immediately reflect changes in UI
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const previousOrders = queryClient.getQueryData(["orders"]);
+      
+      queryClient.setQueryData(["orders"], (old: Order[] | undefined) => {
+        if (!old) return old;
+        return old.map(o => o.id === updatedOrder.id ? { ...o, ...updatedOrder, updated_at: new Date().toISOString() } : o);
+      });
+      
+      return { previousOrders };
+    },
     onSuccess: async (data) => {
       const previousOrder = orders?.find(o => o.id === data.id);
       const shouldSendContractEmail =
@@ -482,11 +494,16 @@ const OrderManagement = () => {
         }
       }
       
+      // Update cache with server response
+      queryClient.setQueryData(["orders"], (old: Order[] | undefined) => {
+        if (!old) return old;
+        return old.map(o => o.id === data.id ? data as Order : o);
+      });
+      
       toast({
         title: "Sipariş Güncellendi",
         description: "Sipariş başarıyla güncellendi",
       });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["order_stats"] });
       setEditingOrder(null);
       setSelectedOrder(null);
