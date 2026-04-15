@@ -549,14 +549,49 @@ const WhatsappManagement = () => {
       }
     }
     setSessionStatus('SCAN_QR_CODE');
-    setTimeout(() => fetchQrCode(selectedLine), 1500);
-    qrIntervalRef.current = setInterval(async () => {
-      await checkSessionStatus(selectedLine);
-      if (sessionStatus !== 'WORKING') {
-        await fetchQrCode(selectedLine);
+
+    // First QR fetch after a short delay for WAHA to prepare the QR
+    const line = selectedLine;
+    const doFetchQr = async () => {
+      try {
+        const res = await wahaApi('auth.qr', getSessionName(line));
+        if (res.success && res.data) {
+          const qr = res.data.qr || res.data.value || (typeof res.data === 'string' ? res.data : null);
+          if (qr) {
+            setQrCode(qr);
+            setConnecting(false);
+          }
+        }
+      } catch {
+        console.log('QR code not ready yet, will retry...');
       }
-    }, 5000);
+    };
+
+    // Try fetching QR a few times quickly first (500ms, 1500ms, 3000ms)
+    for (const delay of [500, 1000, 1500]) {
+      await new Promise(r => setTimeout(r, delay));
+      await doFetchQr();
+    }
     setConnecting(false);
+
+    // Then continue polling every 4 seconds until session is WORKING
+    qrIntervalRef.current = setInterval(async () => {
+      try {
+        const statusRes = await wahaApi('sessions.status', getSessionName(line));
+        if (statusRes.success && statusRes.data) {
+          const status = statusRes.data.status || 'STOPPED';
+          setSessionStatus(status);
+          if (status === 'WORKING') {
+            setQrCode(null);
+            stopQrPolling();
+            toast.success('WhatsApp bağlantısı başarılı!');
+            return;
+          }
+        }
+      } catch {}
+      // Still not connected, refresh QR
+      await doFetchQr();
+    }, 4000);
   };
 
   const stopSession = async () => {
