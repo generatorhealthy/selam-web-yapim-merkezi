@@ -104,6 +104,12 @@ const SpecialistRegistration = () => {
       toast.error("Lütfen tüm alanları doldurun.");
       return;
     }
+    // Telefon validasyonu
+    const phoneClean = phone.replace(/\s/g, '');
+    if (!/^0[5]\d{9}$/.test(phoneClean) && !/^\+90[5]\d{9}$/.test(phoneClean)) {
+      toast.error("Geçerli bir telefon numarası girin (05XX XXX XX XX).");
+      return;
+    }
     if (password !== passwordConfirm) {
       toast.error("Şifreler eşleşmiyor.");
       return;
@@ -165,15 +171,26 @@ const SpecialistRegistration = () => {
       }
 
       if (data.user) {
+        // Insert profile - use separate update for phone since types may not include it
         const { error: profileError } = await supabase.from('user_profiles').insert({
           user_id: data.user.id,
           email: email,
-          phone: phone,
           name: email.split('@')[0],
-          role: 'specialist',
+          role: 'specialist' as any,
           is_approved: false,
-        } as any);
-        if (profileError) console.error('Profile creation error:', profileError);
+        });
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+        }
+        
+        // Update phone separately to ensure it's saved
+        if (phone) {
+          const { error: phoneError } = await supabase
+            .from('user_profiles')
+            .update({ phone } as any)
+            .eq('user_id', data.user.id);
+          if (phoneError) console.error('Phone update error:', phoneError);
+        }
 
         setCreatedUserId(data.user.id);
         setCreatedUserEmail(email);
@@ -250,7 +267,7 @@ const SpecialistRegistration = () => {
         specialty: formData.specialty,
         city: formData.city,
         email: createdUserEmail,
-        phone: "0 216 706 06 11",
+        phone: phone || "0 216 706 06 11",
         bio: bio || null,
         education: formData.education || null,
         university: formData.university || null,
