@@ -23,6 +23,7 @@ serve(async (req) => {
 
   try {
     const { email, name }: RequestBody = await req.json();
+    console.log('get-specialist-contracts called with:', { email, name });
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
