@@ -43,6 +43,16 @@ const wahaApi = async (action: string, sessionName?: string, payload?: any) => {
 const CHAT_HISTORY_PAGE_SIZE = 100;
 const CHAT_HISTORY_MAX_PAGES = 5;
 const CHAT_LIST_PAGE_SIZE = 100;
+const WAHA_CHAT_LIST_TIMEOUT_MS = 7000;
+const WAHA_MESSAGE_TIMEOUT_MS = 4000;
+const WAHA_MESSAGE_SILENT_TIMEOUT_MS = 2500;
+const WAHA_PROFILE_PIC_TIMEOUT_MS = 2500;
+
+const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms)),
+  ]);
 
 const normalizePhoneDigits = (value: string) => value.replace(/\D/g, '');
 
@@ -545,15 +555,20 @@ const WhatsappManagement = () => {
   const [messagesLoading, setMessagesLoading] = useState(false);
 
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
-  const [profilePics, setProfilePics] = useState<Record<string, string>>({});
+  const [profilePics, setProfilePicsState] = useState<Record<string, string>>({});
   const [newChatName, setNewChatName] = useState('');
   const [newChatSurname, setNewChatSurname] = useState('');
   const [newChatPhone, setNewChatPhone] = useState('');
   const chatsRef = useRef<any[]>([]);
   const chatMessagesRef = useRef<any[]>([]);
+  const profilePicsRef = useRef<Record<string, string>>({});
   const activeChatSelectionKeyRef = useRef<string | null>(null);
   const notifiedMessageKeysRef = useRef<Set<string>>(new Set());
   const notificationPermissionRequestedRef = useRef(false);
+  const pendingProfilePicIdsRef = useRef<Set<string>>(new Set());
+  const chatsFetchInFlightRef = useRef(false);
+  const chatMessagesFetchInFlightRef = useRef<Set<string>>(new Set());
+  const activeMessageRequestIdRef = useRef(0);
 
   const setChats = useCallback((value: any[] | ((prev: any[]) => any[])) => {
     const nextValue = typeof value === 'function'
@@ -571,6 +586,15 @@ const WhatsappManagement = () => {
 
     chatMessagesRef.current = nextValue;
     setChatMessagesState(nextValue);
+  }, []);
+
+  const setProfilePics = useCallback((value: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => {
+    const nextValue = typeof value === 'function'
+      ? (value as (prev: Record<string, string>) => Record<string, string>)(profilePicsRef.current)
+      : value;
+
+    profilePicsRef.current = nextValue;
+    setProfilePicsState(nextValue);
   }, []);
 
   const getSessionName = useCallback((line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`, []);
@@ -942,8 +966,9 @@ const WhatsappManagement = () => {
       : getChatIdCandidates(chatOrContact);
     const uniqueIds = Array.from(new Set(candidateIds.filter(Boolean)));
 
-    if (uniqueIds.length === 0) return;
-    if (uniqueIds.some((id) => profilePics[id])) return;
+    const uncachedIds = uniqueIds.filter((id) => !profilePicsRef.current[id] && !pendingProfilePicIdsRef.current.has(id));
+
+    if (uniqueIds.length === 0 || uncachedIds.length === 0) return;
 
     const embeddedPic = typeof chatOrContact === 'object' ? getChatPictureUrl(chatOrContact) : null;
     if (embeddedPic) {
@@ -957,23 +982,28 @@ const WhatsappManagement = () => {
       return;
     }
 
+    uncachedIds.forEach((id) => pendingProfilePicIdsRef.current.add(id));
+
     try {
-      const res = await wahaApi('contacts.profile-picture', sessionName, {
-        contactId: uniqueIds[0],
-        contactIds: uniqueIds,
+      const res = await withTimeout(wahaApi('contacts.profile-picture', sessionName, {
+        contactId: uncachedIds[0],
+        contactIds: uncachedIds,
         refresh: false,
-      });
+      }), WAHA_PROFILE_PIC_TIMEOUT_MS);
       const picUrl = getAvatarUrlFromData(res.data);
       if (picUrl) {
         setProfilePics((prev) => {
           const next = { ...prev };
-          uniqueIds.forEach((id) => {
+          uncachedIds.forEach((id) => {
             next[id] = picUrl;
           });
           return next;
         });
       }
-    } catch {}
+    } catch {
+    } finally {
+      uncachedIds.forEach((id) => pendingProfilePicIdsRef.current.delete(id));
+    }
   };
 
   // Fetch chats for a specific line
@@ -981,18 +1011,12 @@ const WhatsappManagement = () => {
     const sessionName = getSessionName(line);
     let rawChatList: any[] = [];
 
-    const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
-      Promise.race([
-        promise,
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms)),
-      ]);
-
     try {
       const overviewRes = await withTimeout(wahaApi('chats.overview', sessionName, {
         limit: CHAT_LIST_PAGE_SIZE,
         offset: 0,
         merge: true,
-      }), 15000);
+      }), WAHA_CHAT_LIST_TIMEOUT_MS);
       rawChatList = Array.isArray(overviewRes.data) ? overviewRes.data : [];
     } catch (overviewError) {
       console.warn(`Chats overview alınamadı (${line.label}), chats.list fallback:`, overviewError);
@@ -1003,7 +1027,7 @@ const WhatsappManagement = () => {
           merge: true,
           sortBy: 'timestamp',
           sortOrder: 'desc',
-        }), 15000);
+        }), WAHA_CHAT_LIST_TIMEOUT_MS);
         rawChatList = Array.isArray(listRes.data) ? listRes.data : [];
       } catch (listError) {
         console.warn(`Chats list de alınamadı (${line.label}):`, listError);
@@ -1031,7 +1055,12 @@ const WhatsappManagement = () => {
       return;
     }
 
+    if (chatsFetchInFlightRef.current) {
+      return;
+    }
+
     if (!silent) setChatsLoading(true);
+    chatsFetchInFlightRef.current = true;
     try {
       // Fetch chats from all working lines in parallel
       const results = await Promise.allSettled(
@@ -1145,10 +1174,10 @@ const WhatsappManagement = () => {
           setProfilePics((prev) => ({ ...prev, ...embeddedPictures }));
         }
 
-        const visibleChats = chatList.slice(0, 20);
+        const visibleChats = chatList.slice(0, 10);
         visibleChats.forEach((chat: any) => {
           const candidateIds = getChatIdCandidates(chat);
-          const hasPicture = candidateIds.some((id) => embeddedPictures[id] || profilePics[id]);
+          const hasPicture = candidateIds.some((id) => embeddedPictures[id] || profilePicsRef.current[id]);
           if (!hasPicture) {
             void fetchProfilePic(chat);
           }
@@ -1162,6 +1191,7 @@ const WhatsappManagement = () => {
         toast.error('Sohbetler alınamadı');
       }
     } finally {
+      chatsFetchInFlightRef.current = false;
       if (!silent) setChatsLoading(false);
     }
   };
@@ -1214,8 +1244,6 @@ const WhatsappManagement = () => {
       ? chatMessagesRef.current.reduce((maxTimestamp, message) => Math.max(maxTimestamp, Number(message?.timestamp ?? 0)), 0)
       : 0;
 
-    if (!silent) setMessagesLoading(true);
-
     if (chatIdCandidates.length === 0) {
       if (!silent) {
         toast.error('Sohbet kimliği bulunamadı');
@@ -1223,6 +1251,28 @@ const WhatsappManagement = () => {
       }
       return;
     }
+
+    if (chatMessagesFetchInFlightRef.current.has(targetChatSelectionKey)) {
+      return;
+    }
+
+    chatMessagesFetchInFlightRef.current.add(targetChatSelectionKey);
+    const requestId = ++activeMessageRequestIdRef.current;
+    const isCurrentRequest = () => requestId === activeMessageRequestIdRef.current;
+    let initialMessagesRendered = false;
+
+    const revealInitialMessages = (messages: any[]) => {
+      if (silent || initialMessagesRendered || messages.length === 0 || !isCurrentRequest()) {
+        return;
+      }
+
+      initialMessagesRendered = true;
+      setChatMessages(messages);
+      setMessagesLoading(false);
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    };
+
+    if (!silent) setMessagesLoading(true);
 
     const fetchMessagesForChatId = async (chatId: string, maxPages: number) => {
       const allMessages: any[] = [];
@@ -1261,7 +1311,10 @@ const WhatsappManagement = () => {
 
         for (const requestPayload of requestPayloads) {
           try {
-            res = await wahaApi('chats.messages', sessionName, requestPayload);
+            res = await withTimeout(
+              wahaApi('chats.messages', sessionName, requestPayload),
+              silent ? WAHA_MESSAGE_SILENT_TIMEOUT_MS : WAHA_MESSAGE_TIMEOUT_MS,
+            );
             succeeded = true;
             break;
           } catch (error) {
@@ -1296,6 +1349,10 @@ const WhatsappManagement = () => {
           }
         });
 
+        if (!silent && allMessages.length > 0) {
+          revealInitialMessages(mergeChatMessages(allMessages));
+        }
+
         if (batch.length < CHAT_HISTORY_PAGE_SIZE || newMessageCount === 0) break;
       }
 
@@ -1308,6 +1365,13 @@ const WhatsappManagement = () => {
     let lastError: unknown = null;
     let hadSuccessfulResponse = false;
     const collectedMessages: any[] = [];
+    const initialDbMessagesPromise = silent
+      ? null
+      : fetchMessagesFromSupabase(sessionName, chatIdCandidates).then((dbMessages) => {
+          const mergedDbMessages = mergeChatMessages(dbMessages);
+          revealInitialMessages(mergedDbMessages);
+          return mergedDbMessages;
+        });
 
     try {
       void fetchProfilePic(targetChat);
@@ -1327,18 +1391,23 @@ const WhatsappManagement = () => {
         }
       }
 
-      // If WAHA API failed or returned no messages, try Supabase DB
-      if (!hadSuccessfulResponse || collectedMessages.length === 0) {
-        console.log('WAHA API mesaj döndüremedi, Supabase DB deneniyor...');
-        const dbMessages = await fetchMessagesFromSupabase(sessionName, chatIdCandidates);
-        if (dbMessages.length > 0) {
-          collectedMessages.push(...dbMessages);
-          hadSuccessfulResponse = true;
-        }
+      const dbMessages = initialDbMessagesPromise
+        ? await initialDbMessagesPromise
+        : (!hadSuccessfulResponse || collectedMessages.length === 0)
+          ? mergeChatMessages(await fetchMessagesFromSupabase(sessionName, chatIdCandidates))
+          : [];
+
+      if (dbMessages.length > 0) {
+        collectedMessages.push(...dbMessages);
+        hadSuccessfulResponse = true;
       }
 
       if (hadSuccessfulResponse) {
         const mergedMessages = mergeChatMessages(collectedMessages);
+
+        if (!isCurrentRequest()) {
+          return;
+        }
 
         if (silent) {
           if (mergedMessages.length > 0) {
@@ -1368,6 +1437,7 @@ const WhatsappManagement = () => {
           }
         } else {
           setChatMessages(mergedMessages);
+          setMessagesLoading(false);
           if (mergedMessages.length > 0) {
             setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
           }
@@ -1379,11 +1449,12 @@ const WhatsappManagement = () => {
       throw lastError ?? new Error('Mesaj geçmişi alınamadı');
     } catch (error) {
       console.error('Mesaj geçmişi alınamadı:', error);
-      if (!silent) {
+      if (!silent && !initialMessagesRendered && isCurrentRequest()) {
         toast.error('Mesaj geçmişi alınamadı');
       }
     } finally {
-      if (!silent) setMessagesLoading(false);
+      chatMessagesFetchInFlightRef.current.delete(targetChatSelectionKey);
+      if (!silent && isCurrentRequest()) setMessagesLoading(false);
     }
   };
 
