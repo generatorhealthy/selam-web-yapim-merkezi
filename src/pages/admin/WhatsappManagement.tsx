@@ -1549,7 +1549,7 @@ const WhatsappManagement = () => {
                   {/* Refresh button */}
                   <div className="px-3 py-2 border-t border-[#f0f2f5]">
                     <button
-                      onClick={fetchChats}
+                      onClick={() => fetchChats()}
                       disabled={chatsLoading}
                       className="w-full flex items-center justify-center gap-2 py-2 text-[#667781] hover:text-[#111b21] text-xs transition-colors"
                     >
