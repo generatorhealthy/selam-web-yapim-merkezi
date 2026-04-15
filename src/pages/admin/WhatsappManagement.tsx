@@ -2113,6 +2113,14 @@ const WhatsappManagement = () => {
                     <div className="space-y-1">
                       {chatMessages.map((msg, i) => {
                         const isMe = msg.fromMe;
+                        const isCiphertext = (!msg.body || msg.body.trim() === '') && (msg.type === 'ciphertext' || msg?._data?.type === 'ciphertext');
+                        const displayBody = msg.body?.trim()
+                          || (msg.hasMedia || msg?._data?.hasMedia ? '📎 Medya' : '')
+                          || (isCiphertext ? '🔒 Şifreli mesaj' : '');
+                        
+                        // Skip completely empty messages that aren't ciphertext
+                        if (!displayBody && !msg.body) return null;
+
                         // Show date separator
                         const prevMsg = chatMessages[i - 1];
                         const showDate = !prevMsg || formatDate(msg.timestamp) !== formatDate(prevMsg?.timestamp);
@@ -2129,7 +2137,7 @@ const WhatsappManagement = () => {
                               <div className={`max-w-[65%] rounded-lg px-3 py-1.5 mb-0.5 shadow-sm ${
                                 isMe ? 'bg-[#d9fdd3] text-[#111b21]' : 'bg-[#f0f2f5] text-[#111b21]'
                               }`}>
-                                <p className="text-[13px] whitespace-pre-wrap break-words leading-relaxed">{msg.body || ''}</p>
+                                <p className={`text-[13px] whitespace-pre-wrap break-words leading-relaxed ${isCiphertext ? 'italic text-[#667781]' : ''}`}>{displayBody}</p>
                                 <div className="flex items-center justify-end gap-1 mt-0.5">
                                   <span className="text-[10px] text-[#667781]">
                                     {msg.timestamp ? formatTime(msg.timestamp) : ''}
