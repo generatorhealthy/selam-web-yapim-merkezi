@@ -575,26 +575,11 @@ const WhatsappManagement = () => {
 
   const getSessionName = useCallback((line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`, []);
 
-  const getLineForChat = useCallback((chat: any): WhatsappLine | null => {
-    if (chat?._lineId) {
-      return lines.find(l => l.id === chat._lineId) || null;
-    }
-    return selectedLine;
-  }, [lines, selectedLine]);
-
   const getWorkingLines = useCallback(() => {
     return lines.filter(l => lineSessionStatuses[l.id] === 'WORKING');
   }, [lines, lineSessionStatuses]);
 
   const anyLineWorking = Object.values(lineSessionStatuses).some(s => s === 'WORKING');
-
-  // Effective line for current chat context
-  const getEffectiveLine = useCallback((): WhatsappLine | null => {
-    if (activeChat?._lineId) {
-      return lines.find(l => l.id === activeChat._lineId) || selectedLine;
-    }
-    return selectedLine;
-  }, [activeChat, lines, selectedLine]);
 
   const ContactAvatar = ({ chat, size = 'md' }: { chat: any; size?: 'sm' | 'md' }) => {
     const contactIds = getChatIdCandidates(chat);
