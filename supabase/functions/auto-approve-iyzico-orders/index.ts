@@ -109,14 +109,23 @@ serve(async (req) => {
     console.log(`Found ${activeSubscriptions.length} active + ${unpaidSubscriptions.length} unpaid = ${allSubscriptions.length} total Iyzico subscriptions`);
 
     // Build sets of emails with successful/failed recent payments
+    // Track per-order to avoid masking a failed current order by a past successful one
     const successfulEmails = new Set<string>();
     const failedEmails = new Set<string>();
 
     for (const sub of allSubscriptions) {
       const email = sub.customerEmail;
       if (!email) continue;
+      const emailLower = email.toLowerCase();
 
-      for (const order of (sub.orders || [])) {
+      // Sort orders by most recent first
+      const sortedOrders = (sub.orders || []).slice().sort((a: any, b: any) => {
+        const aDate = a.paymentAttempts?.[0]?.createdDate || 0;
+        const bDate = b.paymentAttempts?.[0]?.createdDate || 0;
+        return bDate - aDate;
+      });
+
+      for (const order of sortedOrders) {
         const hasSuccessfulPayment = order.paymentAttempts?.some(
           (attempt: any) => attempt.paymentStatus === "SUCCESS"
         );
@@ -132,10 +141,14 @@ serve(async (req) => {
           if (latestSuccess) {
             const hoursSince = (Date.now() - latestSuccess.createdDate) / (1000 * 60 * 60);
             if (hoursSince <= 48) {
-              successfulEmails.add(email.toLowerCase());
+              successfulEmails.add(emailLower);
             }
           }
-        } else if (hasFailedPayment && !hasSuccessfulPayment) {
+        }
+        
+        // Check failed payments independently - don't require !hasSuccessfulPayment
+        // A current order can have failed payments even if a previous order succeeded
+        if (hasFailedPayment && order.orderStatus !== "SUCCESS") {
           const latestFailed = order.paymentAttempts
             ?.filter((a: any) => a.paymentStatus === "FAILED")
             ?.sort((a: any, b: any) => b.createdDate - a.createdDate)[0];
@@ -143,17 +156,15 @@ serve(async (req) => {
           if (latestFailed) {
             const hoursSince = (Date.now() - latestFailed.createdDate) / (1000 * 60 * 60);
             if (hoursSince <= 168) { // 7 days for failed payments
-              failedEmails.add(email.toLowerCase());
+              failedEmails.add(emailLower);
             }
           }
         }
       }
     }
 
-    // Remove emails that also have successful payments
-    for (const email of successfulEmails) {
-      failedEmails.delete(email);
-    }
+    // Don't remove failed emails just because they had a recent success on a DIFFERENT order
+    // Both can coexist - a specialist can have a successful past order AND a failed current one
 
     console.log(`Found ${successfulEmails.size} emails with recent successful payments, ${failedEmails.size} with failed payments`);
 
