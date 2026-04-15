@@ -462,12 +462,16 @@ const LoginPage = () => {
             <div className="mb-8">
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                 {step === 'forgot' ? "Şifre Sıfırlama" :
+                 step === 'forgot-otp' ? "Telefon Doğrulama" :
+                 step === 'forgot-reset' ? "Yeni Şifre Belirle" :
                  step === 'otp' ? "Telefon Doğrulama" :
                  step === 'password' ? "Şifrenizi Girin" :
                  "Uzman Girişi"}
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">
-                {step === 'forgot' ? "E-posta adresinizi girin, şifre sıfırlama linki göndereceğiz" :
+                {step === 'forgot' ? "E-posta veya telefon numaranızı girin" :
+                 step === 'forgot-otp' ? `${forgotPasswordIdentifier} numarasına gönderilen 6 haneli kodu girin` :
+                 step === 'forgot-reset' ? "Yeni şifrenizi aşağıya girin" :
                  step === 'otp' ? `${loginIdentifier} numarasına gönderilen 6 haneli kodu girin` :
                  step === 'password' ? `${loginIdentifier} hesabı için şifrenizi girin` :
                  "E-posta veya telefon numaranız ile giriş yapın"}
