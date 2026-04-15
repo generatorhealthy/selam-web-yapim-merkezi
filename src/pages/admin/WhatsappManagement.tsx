@@ -41,8 +41,8 @@ const wahaApi = async (action: string, sessionName?: string, payload?: any) => {
 };
 
 const CHAT_HISTORY_PAGE_SIZE = 100;
-const CHAT_HISTORY_MAX_PAGES = 100;
-const CHAT_LIST_PAGE_SIZE = 200;
+const CHAT_HISTORY_MAX_PAGES = 5;
+const CHAT_LIST_PAGE_SIZE = 100;
 
 const normalizePhoneDigits = (value: string) => value.replace(/\D/g, '');
 
@@ -1025,7 +1025,8 @@ const WhatsappManagement = () => {
           setProfilePics((prev) => ({ ...prev, ...embeddedPictures }));
         }
 
-        chatList.forEach((chat: any) => {
+        const visibleChats = chatList.slice(0, 20);
+        visibleChats.forEach((chat: any) => {
           const candidateIds = getChatIdCandidates(chat);
           const hasPicture = candidateIds.some((id) => embeddedPictures[id] || profilePics[id]);
           if (!hasPicture) {
@@ -1402,14 +1403,14 @@ const WhatsappManagement = () => {
     void fetchChats();
     const interval = setInterval(() => {
       void fetchChats(true);
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [sessionStatus, selectedLine]);
 
   useEffect(() => {
     if (sessionStatus !== 'WORKING' || !activeChat) return;
-    const interval = setInterval(() => fetchChatMessages(activeChat, true), 3000);
+    const interval = setInterval(() => fetchChatMessages(activeChat, true), 5000);
     return () => clearInterval(interval);
   }, [sessionStatus, activeChat, selectedLine]);
 
