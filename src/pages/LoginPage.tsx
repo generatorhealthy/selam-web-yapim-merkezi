@@ -20,7 +20,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<LoginStep>('identifier');
   const [forgotPasswordIdentifier, setForgotPasswordIdentifier] = useState("");
-  const [forgotMethod, setForgotMethod] = useState<'email' | 'phone' | null>(null);
+  
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(0);
