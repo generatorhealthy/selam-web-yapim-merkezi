@@ -1004,7 +1004,7 @@ const WhatsappManagement = () => {
         <title>WhatsApp Destek - Divan Paneli</title>
       </Helmet>
 
-      <div className="fixed inset-0 bg-[#f0f2f5] flex flex-col">
+      <div className="fixed inset-0 bg-[#f0f2f5] flex flex-col light" data-theme="light" style={{ colorScheme: 'light' }}>
         {/* Top bar */}
         <div className="h-12 bg-[#008069] flex items-center px-4 gap-3 flex-shrink-0 z-10">
           <AdminBackButton />
