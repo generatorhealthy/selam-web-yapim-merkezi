@@ -828,11 +828,26 @@ const WhatsappManagement = () => {
     }
     setSending(true);
     const msgText = chatMessage;
+    const msgTimestamp = Math.floor(Date.now() / 1000);
     setChatMessage('');
-    setChatMessages((prev) => [...prev, { body: msgText, fromMe: true, timestamp: Math.floor(Date.now() / 1000), _optimistic: true }]);
+    setChatMessages((prev) => [...prev, { body: msgText, fromMe: true, timestamp: msgTimestamp, _optimistic: true }]);
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     try {
       await wahaApi('sendText', getSessionName(selectedLine), { chatId, text: msgText });
+      // Store sent message to Supabase for history
+      const sessionName = getSessionName(selectedLine);
+      supabase.from('whatsapp_messages').insert({
+        session_name: sessionName,
+        chat_id: chatId,
+        message_id: `sent_${msgTimestamp}_${Math.random().toString(36).substring(2, 8)}`,
+        body: msgText,
+        from_me: true,
+        timestamp: msgTimestamp,
+        has_media: false,
+        sender_name: null,
+      }).then(({ error }) => {
+        if (error) console.warn('Gönderilen mesaj DB kayıt hatası:', error);
+      });
     } catch (err: any) {
       toast.error(`Mesaj gönderilemedi: ${err.message || ''}`);
       setChatMessage(msgText);
@@ -1030,6 +1045,39 @@ const WhatsappManagement = () => {
     }
   };
 
+  const fetchMessagesFromSupabase = async (sessionName: string, chatIdCandidates: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('whatsapp_messages')
+        .select('*')
+        .eq('session_name', sessionName)
+        .in('chat_id', chatIdCandidates)
+        .order('timestamp', { ascending: true })
+        .limit(500);
+
+      if (error) {
+        console.error('Supabase mesaj sorgusu hatası:', error);
+        return [];
+      }
+
+      return (data || []).map((row: any) => ({
+        body: row.body || '',
+        fromMe: Boolean(row.from_me),
+        timestamp: Number(row.timestamp || 0),
+        hasMedia: Boolean(row.has_media),
+        type: row.media_type,
+        id: row.message_id || row.id,
+        _fromDb: true,
+        _data: {
+          notifyName: row.sender_name || '',
+        },
+      }));
+    } catch (err) {
+      console.error('Supabase mesaj yükleme hatası:', err);
+      return [];
+    }
+  };
+
   const fetchChatMessages = async (chat?: any, silent = false) => {
     if (!selectedLine) return;
     const targetChat = chat || activeChat;
@@ -1077,13 +1125,6 @@ const WhatsappManagement = () => {
                 offset: 0,
                 downloadMedia: false,
               },
-              {
-                chatId,
-                limit: CHAT_HISTORY_PAGE_SIZE,
-                offset: 0,
-                downloadMedia: false,
-                merge: false,
-              },
             ]
           : [
               {
@@ -1091,20 +1132,6 @@ const WhatsappManagement = () => {
                 limit: CHAT_HISTORY_PAGE_SIZE,
                 offset: page * CHAT_HISTORY_PAGE_SIZE,
                 downloadMedia: false,
-              },
-              {
-                chatId,
-                limit: CHAT_HISTORY_PAGE_SIZE,
-                offset: page * CHAT_HISTORY_PAGE_SIZE,
-                downloadMedia: false,
-                merge: true,
-              },
-              {
-                chatId,
-                limit: CHAT_HISTORY_PAGE_SIZE,
-                offset: page * CHAT_HISTORY_PAGE_SIZE,
-                downloadMedia: false,
-                merge: false,
               },
             ];
 
@@ -1161,6 +1188,7 @@ const WhatsappManagement = () => {
     try {
       void fetchProfilePic(targetChat);
 
+      // Try WAHA API first
       for (const chatId of chatIdCandidates) {
         try {
           const result = await fetchMessagesForChatId(chatId, silent ? 1 : CHAT_HISTORY_MAX_PAGES);
@@ -1172,6 +1200,16 @@ const WhatsappManagement = () => {
           }
         } catch (error) {
           lastError = error;
+        }
+      }
+
+      // If WAHA API failed or returned no messages, try Supabase DB
+      if (!hadSuccessfulResponse || collectedMessages.length === 0) {
+        console.log('WAHA API mesaj döndüremedi, Supabase DB deneniyor...');
+        const dbMessages = await fetchMessagesFromSupabase(sessionName, chatIdCandidates);
+        if (dbMessages.length > 0) {
+          collectedMessages.push(...dbMessages);
+          hadSuccessfulResponse = true;
         }
       }
 

@@ -4470,6 +4470,51 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_messages: {
+        Row: {
+          body: string | null
+          chat_id: string
+          created_at: string
+          from_me: boolean
+          has_media: boolean | null
+          id: string
+          media_type: string | null
+          message_id: string | null
+          raw_data: Json | null
+          sender_name: string | null
+          session_name: string
+          timestamp: number
+        }
+        Insert: {
+          body?: string | null
+          chat_id: string
+          created_at?: string
+          from_me?: boolean
+          has_media?: boolean | null
+          id?: string
+          media_type?: string | null
+          message_id?: string | null
+          raw_data?: Json | null
+          sender_name?: string | null
+          session_name: string
+          timestamp?: number
+        }
+        Update: {
+          body?: string | null
+          chat_id?: string
+          created_at?: string
+          from_me?: boolean
+          has_media?: boolean | null
+          id?: string
+          media_type?: string | null
+          message_id?: string | null
+          raw_data?: Json | null
+          sender_name?: string | null
+          session_name?: string
+          timestamp?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       public_reviews: {
