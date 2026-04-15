@@ -981,25 +981,32 @@ const WhatsappManagement = () => {
     const sessionName = getSessionName(line);
     let rawChatList: any[] = [];
 
+    const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms)),
+      ]);
+
     try {
-      const overviewRes = await wahaApi('chats.overview', sessionName, {
+      const overviewRes = await withTimeout(wahaApi('chats.overview', sessionName, {
         limit: CHAT_LIST_PAGE_SIZE,
         offset: 0,
         merge: true,
-      });
+      }), 15000);
       rawChatList = Array.isArray(overviewRes.data) ? overviewRes.data : [];
     } catch (overviewError) {
       console.warn(`Chats overview alınamadı (${line.label}), chats.list fallback:`, overviewError);
       try {
-        const listRes = await wahaApi('chats.list', sessionName, {
+        const listRes = await withTimeout(wahaApi('chats.list', sessionName, {
           limit: CHAT_LIST_PAGE_SIZE,
           offset: 0,
           merge: true,
           sortBy: 'timestamp',
           sortOrder: 'desc',
-        });
+        }), 15000);
         rawChatList = Array.isArray(listRes.data) ? listRes.data : [];
-      } catch {
+      } catch (listError) {
+        console.warn(`Chats list de alınamadı (${line.label}):`, listError);
         return [];
       }
     }
