@@ -81,8 +81,8 @@ serve(async (req) => {
       }
 
       if (!specialistEmail) {
-        return new Response(JSON.stringify({ success: false, error: 'Uzman bulunamadı' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        return new Response(JSON.stringify({ success: false, error: 'Bu telefon numarası ile kayıtlı bir uzman bulunamadı.' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
@@ -94,8 +94,8 @@ serve(async (req) => {
       }
 
       if (!specialistUserId) {
-        return new Response(JSON.stringify({ success: false, error: 'Uzman hesabı bulunamadı' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        return new Response(JSON.stringify({ success: false, error: 'Uzman hesabı bulunamadı. Lütfen admin ile iletişime geçin.' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
@@ -112,7 +112,7 @@ serve(async (req) => {
 
       if (recentOtps && recentOtps.length >= 3) {
         return new Response(JSON.stringify({ success: false, error: 'Çok fazla deneme. 10 dakika bekleyin.' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
@@ -168,7 +168,7 @@ serve(async (req) => {
 
       if (!otpData || otpData.length === 0) {
         return new Response(JSON.stringify({ success: false, error: 'Geçersiz veya süresi dolmuş kod' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
@@ -221,7 +221,7 @@ serve(async (req) => {
 
       if (!userEmail) {
         return new Response(JSON.stringify({ success: false, error: 'Uzman bulunamadı' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
@@ -234,7 +234,7 @@ serve(async (req) => {
       if (magicError || !magicData) {
         console.error('Magic link error:', magicError);
         return new Response(JSON.stringify({ success: false, error: 'Oturum oluşturulamadı' }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
@@ -251,8 +251,8 @@ serve(async (req) => {
       });
 
     } else {
-      return new Response(JSON.stringify({ error: 'Invalid action' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({ success: false, error: 'Invalid action' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
