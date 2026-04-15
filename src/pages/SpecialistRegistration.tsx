@@ -104,6 +104,12 @@ const SpecialistRegistration = () => {
       toast.error("Lütfen tüm alanları doldurun.");
       return;
     }
+    // Telefon validasyonu
+    const phoneClean = phone.replace(/\s/g, '');
+    if (!/^0[5]\d{9}$/.test(phoneClean) && !/^\+90[5]\d{9}$/.test(phoneClean)) {
+      toast.error("Geçerli bir telefon numarası girin (05XX XXX XX XX).");
+      return;
+    }
     if (password !== passwordConfirm) {
       toast.error("Şifreler eşleşmiyor.");
       return;
