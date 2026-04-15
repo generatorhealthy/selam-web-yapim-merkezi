@@ -629,13 +629,21 @@ const DoctorDashboard = () => {
         }
       }
 
-      // Önce RLS ile erişilebilen siparişleri getir
+      // Önce RLS ile erişilebilen siparişleri getir (email filtresi ile)
+      const ordersQuery = supabase
+        .from('orders')
+        .select('*')
+        .in('status', ['pending', 'approved', 'completed'])
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      // Email varsa filtre ekle
+      if (specialistEmail) {
+        ordersQuery.ilike('customer_email', specialistEmail);
+      }
+
       const [ordersResponse, packagesResponse] = await Promise.all([
-        supabase
-          .from('orders')
-          .select('*')
-          .in('status', ['pending', 'approved', 'completed'])
-          .order('created_at', { ascending: false }),
+        ordersQuery,
         supabase
           .from('packages')
           .select('name, features')
@@ -643,7 +651,6 @@ const DoctorDashboard = () => {
 
       if (ordersResponse.error) {
         console.error('Sözleşmeler yüklenirken hata:', ordersResponse.error);
-        return;
       }
 
       if (packagesResponse.error) {
