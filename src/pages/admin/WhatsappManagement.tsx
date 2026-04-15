@@ -488,11 +488,11 @@ const WhatsappManagement = () => {
   const [chatMessage, setChatMessage] = useState('');
   const [chatTo, setChatTo] = useState('');
   const [sending, setSending] = useState(false);
-  const [chats, setChats] = useState<any[]>([]);
+  const [chats, setChatsState] = useState<any[]>([]);
   const [chatsLoading, setChatsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeChat, setActiveChat] = useState<any | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatMessages, setChatMessagesState] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
 
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
@@ -500,6 +500,29 @@ const WhatsappManagement = () => {
   const [newChatName, setNewChatName] = useState('');
   const [newChatSurname, setNewChatSurname] = useState('');
   const [newChatPhone, setNewChatPhone] = useState('');
+  const chatsRef = useRef<any[]>([]);
+  const chatMessagesRef = useRef<any[]>([]);
+  const activeChatSelectionKeyRef = useRef<string | null>(null);
+  const notifiedMessageKeysRef = useRef<Set<string>>(new Set());
+  const notificationPermissionRequestedRef = useRef(false);
+
+  const setChats = useCallback((value: any[] | ((prev: any[]) => any[])) => {
+    const nextValue = typeof value === 'function'
+      ? (value as (prev: any[]) => any[])(chatsRef.current)
+      : value;
+
+    chatsRef.current = nextValue;
+    setChatsState(nextValue);
+  }, []);
+
+  const setChatMessages = useCallback((value: any[] | ((prev: any[]) => any[])) => {
+    const nextValue = typeof value === 'function'
+      ? (value as (prev: any[]) => any[])(chatMessagesRef.current)
+      : value;
+
+    chatMessagesRef.current = nextValue;
+    setChatMessagesState(nextValue);
+  }, []);
 
   const getSessionName = useCallback((line: WhatsappLine) => `line_${line.id.replace(/-/g, '').substring(0, 16)}`, []);
 
@@ -535,6 +558,61 @@ const WhatsappManagement = () => {
       qrIntervalRef.current = null;
     }
   };
+
+  const ensureNotificationPermission = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      return;
+    }
+
+    if (Notification.permission !== 'default' || notificationPermissionRequestedRef.current) {
+      return;
+    }
+
+    notificationPermissionRequestedRef.current = true;
+
+    try {
+      await Notification.requestPermission();
+    } catch (error) {
+      console.warn('Bildirim izni alınamadı:', error);
+    }
+  }, []);
+
+  const showIncomingMessageNotification = useCallback((chat: any, message: any) => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const normalizedMessage = normalizeChatMessage(message);
+    if (normalizedMessage.fromMe) {
+      return;
+    }
+
+    const selectionKey = getChatSelectionKey(chat);
+    const messageKey = getChatMessageKey(normalizedMessage, selectionKey);
+    if (notifiedMessageKeysRef.current.has(messageKey)) {
+      return;
+    }
+
+    notifiedMessageKeysRef.current.add(messageKey);
+
+    const previewText = normalizedMessage.body?.trim()
+      || (message?.hasMedia || message?._data?.hasMedia ? 'Yeni medya mesajı' : 'Yeni mesaj');
+    const title = getChatDisplayName(chat);
+
+    toast.info(`${title}: ${previewText}`);
+
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && document.hidden) {
+      const notification = new Notification(title, {
+        body: previewText,
+        tag: messageKey,
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+    }
+  }, []);
 
   const cleanupStaleSessions = useCallback(async (line: WhatsappLine) => {
     try {
@@ -637,6 +715,7 @@ const WhatsappManagement = () => {
   const startSession = async () => {
     if (!selectedLine) return;
     const line = selectedLine;
+    void ensureNotificationPermission();
     setConnecting(true);
     setQrCode(null);
     stopQrPolling();
@@ -758,9 +837,9 @@ const WhatsappManagement = () => {
     } catch {}
   };
 
-  const fetchChats = async () => {
+  const fetchChats = async (silent = false) => {
     if (!selectedLine) return;
-    setChatsLoading(true);
+    if (!silent) setChatsLoading(true);
     try {
       const sessionName = getSessionName(selectedLine);
       let rawChatList: any[] = [];
@@ -785,6 +864,7 @@ const WhatsappManagement = () => {
       }
 
       if (rawChatList.length > 0) {
+        const previousChats = chatsRef.current;
         const uniqueChatMap = new Map<string, any>();
 
         rawChatList.forEach((chat: any) => {
@@ -808,6 +888,34 @@ const WhatsappManagement = () => {
           .sort((a, b) => getLastMessageTimestamp(b) - getLastMessageTimestamp(a));
 
         setChats(chatList);
+
+        if (silent && previousChats.length > 0) {
+          const previousChatMap = new Map(
+            previousChats.map((chat: any) => [getChatSelectionKey(chat), chat]),
+          );
+
+          chatList.forEach((chat: any) => {
+            const selectionKey = getChatSelectionKey(chat);
+            if (selectionKey === activeChatSelectionKeyRef.current) {
+              return;
+            }
+
+            const previousChat = previousChatMap.get(selectionKey);
+            const currentLastMessage = getLastChatMessage(chat);
+            const currentTimestamp = getLastMessageTimestamp(chat);
+            const previousTimestamp = getLastMessageTimestamp(previousChat);
+
+            if (!currentLastMessage || !currentTimestamp || currentTimestamp <= previousTimestamp) {
+              return;
+            }
+
+            const normalizedLastMessage = normalizeChatMessage(currentLastMessage);
+            if (!normalizedLastMessage.fromMe) {
+              showIncomingMessageNotification(chat, normalizedLastMessage);
+            }
+          });
+        }
+
         setActiveChat((prev) => {
           if (!prev) return prev;
           return chatList.find((chat) => getChatSelectionKey(chat) === getChatSelectionKey(prev)) ?? prev;
@@ -833,12 +941,16 @@ const WhatsappManagement = () => {
             void fetchProfilePic(chat);
           }
         });
+      } else if (!silent) {
+        setChats([]);
       }
     } catch (error) {
       console.error('Sohbetler alınamadı:', error);
-      toast.error('Sohbetler alınamadı');
+      if (!silent) {
+        toast.error('Sohbetler alınamadı');
+      }
     } finally {
-      setChatsLoading(false);
+      if (!silent) setChatsLoading(false);
     }
   };
 
@@ -848,7 +960,11 @@ const WhatsappManagement = () => {
     if (!targetChat) return;
 
     const sessionName = getSessionName(selectedLine);
+    const targetChatSelectionKey = getChatSelectionKey(targetChat);
     const chatIdCandidates = getChatIdCandidates(targetChat);
+    const latestKnownTimestamp = silent
+      ? chatMessagesRef.current.reduce((maxTimestamp, message) => Math.max(maxTimestamp, Number(message?.timestamp ?? 0)), 0)
+      : 0;
 
     if (!silent) setMessagesLoading(true);
 
@@ -869,31 +985,52 @@ const WhatsappManagement = () => {
         let res: any;
         let lastRequestError: unknown = null;
 
-        const requestPayloads = [
-          {
-            chatId,
-            limit: CHAT_HISTORY_PAGE_SIZE,
-            offset: page * CHAT_HISTORY_PAGE_SIZE,
-            downloadMedia: false,
-            merge: true,
-            sortBy: 'timestamp',
-            sortOrder: 'asc',
-          },
-          {
-            chatId,
-            limit: CHAT_HISTORY_PAGE_SIZE,
-            offset: page * CHAT_HISTORY_PAGE_SIZE,
-            downloadMedia: false,
-            merge: true,
-          },
-          {
-            chatId,
-            limit: CHAT_HISTORY_PAGE_SIZE,
-            offset: page * CHAT_HISTORY_PAGE_SIZE,
-            downloadMedia: false,
-            merge: false,
-          },
-        ];
+        const requestPayloads = silent
+          ? [
+              {
+                chatId,
+                limit: CHAT_HISTORY_PAGE_SIZE,
+                downloadMedia: false,
+                ...(latestKnownTimestamp > 0
+                  ? { 'filter.timestamp.gte': Math.max(latestKnownTimestamp - 1, 0) }
+                  : {}),
+              },
+              {
+                chatId,
+                limit: CHAT_HISTORY_PAGE_SIZE,
+                offset: 0,
+                downloadMedia: false,
+              },
+              {
+                chatId,
+                limit: CHAT_HISTORY_PAGE_SIZE,
+                offset: 0,
+                downloadMedia: false,
+                merge: false,
+              },
+            ]
+          : [
+              {
+                chatId,
+                limit: CHAT_HISTORY_PAGE_SIZE,
+                offset: page * CHAT_HISTORY_PAGE_SIZE,
+                downloadMedia: false,
+              },
+              {
+                chatId,
+                limit: CHAT_HISTORY_PAGE_SIZE,
+                offset: page * CHAT_HISTORY_PAGE_SIZE,
+                downloadMedia: false,
+                merge: true,
+              },
+              {
+                chatId,
+                limit: CHAT_HISTORY_PAGE_SIZE,
+                offset: page * CHAT_HISTORY_PAGE_SIZE,
+                downloadMedia: false,
+                merge: false,
+              },
+            ];
 
         for (const requestPayload of requestPayloads) {
           try {
@@ -967,7 +1104,29 @@ const WhatsappManagement = () => {
 
         if (silent) {
           if (mergedMessages.length > 0) {
-            setChatMessages((prev) => mergeChatMessages([...prev, ...mergedMessages]));
+            const previousMessages = chatMessagesRef.current;
+            const previousMessageKeys = new Set(
+              previousMessages.map((message, index) => getChatMessageKey(normalizeChatMessage(message), `${targetChatSelectionKey}-prev-${index}`)),
+            );
+            const nextMessages = mergeChatMessages([...previousMessages, ...mergedMessages]);
+            const newIncomingMessages = nextMessages.filter((message, index) => {
+              if (message.fromMe) {
+                return false;
+              }
+
+              const messageKey = getChatMessageKey(message, `${targetChatSelectionKey}-next-${index}`);
+              return !previousMessageKeys.has(messageKey);
+            });
+
+            setChatMessages(nextMessages);
+
+            if (newIncomingMessages.length > 0) {
+              if (typeof document !== 'undefined' && document.hidden) {
+                newIncomingMessages.forEach((message) => showIncomingMessageNotification(targetChat, message));
+              }
+
+              setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            }
           }
         } else {
           setChatMessages(mergedMessages);
@@ -991,6 +1150,8 @@ const WhatsappManagement = () => {
   };
 
   const openChat = (chat: any) => {
+    void ensureNotificationPermission();
+    activeChatSelectionKeyRef.current = getChatSelectionKey(chat);
     setActiveChat(chat);
     setChatTo(getChatPhoneCandidate(chat) || getChatInputValue(chat));
     setChatMessages([]);
@@ -1062,11 +1223,17 @@ const WhatsappManagement = () => {
 
   useEffect(() => { fetchLines(); }, []);
   useEffect(() => {
+    activeChatSelectionKeyRef.current = activeChat ? getChatSelectionKey(activeChat) : null;
+  }, [activeChat]);
+
+  useEffect(() => {
     if (selectedLine) {
       stopQrPolling();
       setConnecting(false);
       setQrCode(null);
       void checkSessionStatus(selectedLine);
+      activeChatSelectionKeyRef.current = null;
+      notifiedMessageKeysRef.current = new Set();
       setActiveChat(null);
       setChats([]);
       setChatMessages([]);
@@ -1110,7 +1277,14 @@ const WhatsappManagement = () => {
   }, [selectedLine, sessionStatus, checkSessionStatus, fetchQrCode]);
 
   useEffect(() => {
-    if (sessionStatus === 'WORKING' && selectedLine) fetchChats();
+    if (sessionStatus !== 'WORKING' || !selectedLine) return;
+
+    void fetchChats();
+    const interval = setInterval(() => {
+      void fetchChats(true);
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [sessionStatus, selectedLine]);
 
   useEffect(() => {
