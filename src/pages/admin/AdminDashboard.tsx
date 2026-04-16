@@ -552,18 +552,6 @@ const AdminDashboard = () => {
       buttonText: "Analizi Görüntüle",
       adminOnly: true
     },
-    {
-      title: "WhatsApp Destek",
-      description: "Şirket WhatsApp hatlarını yönet ve QR kod ile bağlan",
-      icon: MessageCircle,
-      gradient: "from-green-500 via-emerald-500 to-teal-600",
-      bgGradient: "from-green-50 to-teal-50",
-      shadowColor: "shadow-green-500/20",
-      route: "/divan_paneli/whatsapp",
-      buttonText: "WhatsApp Hatlarını Yönet",
-      adminOnly: false,
-      staffOnly: true
-    },
   ];
 
   const visibleCards = adminCards.filter(card => {
@@ -668,7 +656,7 @@ const AdminDashboard = () => {
                       { title: "Danışan Takvimi", route: "/divan_paneli/client-calendar", icon: Calendar, gradient: "from-purple-500 to-blue-600" },
                       { title: "Uzman Başvuruları", route: "/divan_paneli/specialist-applications", icon: UserPlus, gradient: "from-lime-500 to-emerald-600", badge: newApplicationCount },
                       { title: "E-posta Logları", route: "/divan_paneli/email-logs", icon: Mail, gradient: "from-blue-500 to-indigo-600" },
-                      { title: "WhatsApp Destek", route: "/divan_paneli/whatsapp", icon: MessageCircle, gradient: "from-green-500 to-emerald-600" },
+                      
                     ].map((item) => {
                       const Icon = item.icon;
                       return (
