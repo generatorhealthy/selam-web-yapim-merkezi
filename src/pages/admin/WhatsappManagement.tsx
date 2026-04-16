@@ -902,13 +902,16 @@ const WhatsappManagement = () => {
     setSessionStatus('SCAN_QR_CODE');
 
     // Try a few quick attempts to get QR immediately
-    for (const delay of [800, 1500, 2500, 4000, 6000]) {
+    // WAHA needs time to transition from STARTING → SCAN_QR_CODE (5-15s)
+    for (const delay of [1500, 3000, 5000, 8000, 12000, 16000]) {
       await new Promise(r => setTimeout(r, delay));
       
-      // Check if session became WORKING (already connected)
+      // Check session status
       try {
         const statusRes = await wahaApi('sessions.status', getSessionName(line));
-        if (statusRes.success && String(statusRes.data?.status || '').toUpperCase() === 'WORKING') {
+        const currentStatus = String(statusRes.data?.status || '').toUpperCase();
+        
+        if (currentStatus === 'WORKING') {
           setSessionStatus('WORKING');
           setLineSessionStatuses(prev => ({ ...prev, [line.id]: 'WORKING' }));
           setConnecting(false);
@@ -916,11 +919,25 @@ const WhatsappManagement = () => {
           toast.success('WhatsApp bağlantısı başarılı!');
           return;
         }
+        
+        // Only try QR when session is in SCAN_QR_CODE state
+        if (currentStatus === 'SCAN_QR_CODE') {
+          const qr = await fetchQrCode(line);
+          if (qr) {
+            return;
+          }
+        }
+        
+        // Still STARTING — continue waiting
+        if (currentStatus === 'STARTING') {
+          console.log(`Session still STARTING, waiting... (${delay}ms elapsed)`);
+          continue;
+        }
       } catch {}
 
+      // Fallback: try QR anyway
       const qr = await fetchQrCode(line);
       if (qr) {
-        // QR found, keep connecting=true so polling continues
         return;
       }
     }

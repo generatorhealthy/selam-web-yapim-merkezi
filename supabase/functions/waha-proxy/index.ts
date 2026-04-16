@@ -356,64 +356,66 @@ Deno.serve(async (req) => {
         const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
         const qrHeaders = {
           ...headers,
-          Accept: 'application/json, image/png;q=0.9, */*;q=0.8',
+          Accept: 'image/png, application/json',
         };
-        const candidateRequests = [
-          { endpoint: `/api/${encodedSessionName}/auth/qr`, method: 'GET', headers: qrHeaders },
-          { endpoint: `/api/${encodedSessionName}/auth/qr`, method: 'POST', headers: qrHeaders },
-          { endpoint: `/api/${encodedSessionName}/auth/qr?format=image`, method: 'GET', headers: qrHeaders },
-          { endpoint: `/api/${encodedSessionName}/auth/qr?format=image`, method: 'POST', headers: qrHeaders },
-          { endpoint: `/api/${encodedSessionName}/auth/qr?format=raw`, method: 'GET', headers: qrHeaders },
-          { endpoint: `/api/${encodedSessionName}/auth/qr?format=raw`, method: 'POST', headers: qrHeaders },
-          { endpoint: `/api/sessions/${encodedSessionName}/auth/qr`, method: 'GET', headers: qrHeaders },
-          { endpoint: `/api/sessions/${encodedSessionName}/auth/qr?format=image`, method: 'GET', headers: qrHeaders },
+
+        // Try the two most common WAHA QR endpoints in parallel
+        const qrEndpoints = [
+          `/api/${encodedSessionName}/auth/qr?format=image`,
+          `/api/${encodedSessionName}/auth/qr`,
         ];
 
-        let lastFailure: { status: number; data: Record<string, unknown> | null; text: string } | null = null;
-        let emptySuccess: { status: number; data: Record<string, unknown> | null } | null = null;
+        const abortController = new AbortController();
+        const timeoutId = setTimeout(() => abortController.abort(), 12000);
 
-        for (const candidateRequest of candidateRequests) {
-          console.log(`WAHA Proxy: ${candidateRequest.method} ${wahaUrl}${candidateRequest.endpoint}`);
-          const qrRes = await fetch(`${wahaUrl}${candidateRequest.endpoint}`, {
-            method: candidateRequest.method,
-            headers: candidateRequest.headers,
-          });
-          const { qrContentType, qrData, qrErrorText } = await parseQrResponse(qrRes);
+        try {
+          const qrResults = await Promise.allSettled(
+            qrEndpoints.map(async (ep) => {
+              console.log(`WAHA Proxy QR: GET ${wahaUrl}${ep}`);
+              const res = await fetch(`${wahaUrl}${ep}`, {
+                method: 'GET',
+                headers: qrHeaders,
+                signal: abortController.signal,
+              });
+              return { ep, res };
+            })
+          );
 
-          if (qrRes.ok) {
-            const normalizedQrData = normalizeQrPayload(qrData, qrContentType) ?? qrData;
-            const qrValue = normalizedQrData ? getNestedQrString(normalizedQrData) : null;
+          clearTimeout(timeoutId);
 
-            if (qrValue && normalizedQrData) {
-              return respond({ success: true, status: qrRes.status, data: normalizedQrData });
+          let lastFailure: { status: number; data: Record<string, unknown> | null; text: string } | null = null;
+
+          for (const result of qrResults) {
+            if (result.status !== 'fulfilled') continue;
+            const { res } = result.value;
+            const { qrContentType, qrData, qrErrorText } = await parseQrResponse(res);
+
+            if (res.ok) {
+              const normalizedQrData = normalizeQrPayload(qrData, qrContentType) ?? qrData;
+              const qrValue = normalizedQrData ? getNestedQrString(normalizedQrData) : null;
+              if (qrValue && normalizedQrData) {
+                return respond({ success: true, status: res.status, data: normalizedQrData });
+              }
             }
 
-            emptySuccess = { status: qrRes.status, data: normalizedQrData };
-            continue;
+            lastFailure = { status: res.status, data: qrData, text: qrErrorText || '' };
           }
 
-          lastFailure = {
-            status: qrRes.status,
-            data: qrData,
-            text: qrErrorText || '',
-          };
-        }
-
-        if (emptySuccess) {
           return respond({
             success: false,
-            status: emptySuccess.status,
-            error: 'QR verisi henüz hazır değil',
-            data: emptySuccess.data,
+            status: lastFailure?.status ?? 404,
+            error: lastFailure ? getErrorMessage(lastFailure.data, lastFailure.text, lastFailure.status) : 'QR verisi henüz hazır değil - oturum STARTING durumunda olabilir',
+            data: lastFailure?.data ?? null,
+          });
+        } catch (e) {
+          clearTimeout(timeoutId);
+          return respond({
+            success: false,
+            status: 408,
+            error: 'QR isteği zaman aşımına uğradı',
+            data: null,
           });
         }
-
-        return respond({
-          success: false,
-          status: lastFailure?.status ?? 500,
-          error: getErrorMessage(lastFailure?.data, lastFailure?.text ?? '', lastFailure?.status ?? 500),
-          data: lastFailure?.data ?? null,
-        });
       }
       case 'screenshot': {
         endpoint = `/api/screenshot?session=${sessionName}`;
