@@ -518,36 +518,50 @@ export default function MobileHome() {
             </button>
           </div>
           <div className="flex gap-3 px-5 overflow-x-auto m-no-scrollbar pb-2">
-            {tests.map((test, idx) => (
-              <button
-                key={test.id}
-                onClick={() => navigate(`/test/${test.id}`)}
-                className="shrink-0 w-[160px] rounded-[20px] p-4 text-left m-pressable"
-                style={{
-                  background: `hsl(${PASTEL_TINTS[(idx + 2) % PASTEL_TINTS.length]})`,
-                  minHeight: 140,
-                }}
-              >
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center mb-3"
-                  style={{ background: "hsl(var(--m-surface) / 0.7)" }}
+            {tests.map((test, idx) => {
+              const img = pickTestImage(test, idx);
+              return (
+                <button
+                  key={test.id}
+                  onClick={() => navigate(`/test/${test.id}`)}
+                  className="shrink-0 w-[170px] rounded-[22px] overflow-hidden text-left m-pressable flex flex-col"
+                  style={{
+                    background: "hsl(var(--m-surface))",
+                    boxShadow: "var(--m-shadow)",
+                  }}
                 >
-                  <Brain className="w-4 h-4" style={{ color: "hsl(var(--m-ink))" }} />
-                </div>
-                <p
-                  className="text-[13px] font-bold leading-tight line-clamp-3"
-                  style={{ color: "hsl(var(--m-text-primary))" }}
-                >
-                  {test.title}
-                </p>
-                {test.category && (
-                  <p className="text-[11px] mt-2" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                    {test.category}
-                  </p>
-                )}
-              </button>
-            ))}
+                  <div
+                    className="w-full h-[110px] overflow-hidden"
+                    style={{ background: `hsl(${PASTEL_TINTS[(idx + 2) % PASTEL_TINTS.length]})` }}
+                  >
+                    <img
+                      src={img}
+                      alt={test.title}
+                      loading="lazy"
+                      width={340}
+                      height={220}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-3 flex-1 flex flex-col">
+                    <p
+                      className="text-[13px] font-bold leading-tight line-clamp-2"
+                      style={{ color: "hsl(var(--m-text-primary))" }}
+                    >
+                      {test.title}
+                    </p>
+                    <span
+                      className="mt-2 inline-flex items-center justify-center text-[11px] font-semibold rounded-full px-3 py-1.5 self-start"
+                      style={{ background: "hsl(var(--m-surface-muted))", color: "hsl(var(--m-text-primary))" }}
+                    >
+                      Teste Başlayın
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
+
         </section>
       )}
 
