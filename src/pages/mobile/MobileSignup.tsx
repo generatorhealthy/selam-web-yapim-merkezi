@@ -63,6 +63,10 @@ export default function MobileSignup() {
   };
 
   const oauthSignup = async (provider: "google" | "apple") => {
+    if (!acceptedDisclosure) {
+      toast({ title: "Onay gerekli", description: "Aydınlatma metnini onaylamadan kayıt olamazsınız", variant: "destructive" });
+      return;
+    }
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
