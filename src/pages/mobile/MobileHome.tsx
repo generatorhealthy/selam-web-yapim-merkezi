@@ -13,6 +13,39 @@ import {
   ArrowRight,
   Mic,
 } from "lucide-react";
+import testAnxiety from "@/assets/test-anxiety.jpg";
+import testDepression from "@/assets/test-depression.jpg";
+import testGrief from "@/assets/test-grief.jpg";
+import testTrauma from "@/assets/test-trauma.jpg";
+import testSocial from "@/assets/test-social.jpg";
+import testAddiction from "@/assets/test-addiction.jpg";
+import testRelationship from "@/assets/test-relationship.jpg";
+import testSelfesteem from "@/assets/test-selfesteem.jpg";
+
+const TEST_IMAGES = [
+  testAnxiety,
+  testDepression,
+  testGrief,
+  testTrauma,
+  testSocial,
+  testAddiction,
+  testRelationship,
+  testSelfesteem,
+];
+
+const pickTestImage = (test: { title: string; category: string | null; image_url: string | null }, idx: number) => {
+  if (test.image_url) return test.image_url;
+  const text = `${test.title} ${test.category || ""}`.toLowerCase();
+  if (/(anksiyete|kayg[ıi]|panik|stres)/.test(text)) return testAnxiety;
+  if (/(depres|mutsuz|umutsuz)/.test(text)) return testDepression;
+  if (/(yas|kay[ıi]p|matem)/.test(text)) return testGrief;
+  if (/(travma|tssb|ptsd)/.test(text)) return testTrauma;
+  if (/(sosyal|fobi|utan)/.test(text)) return testSocial;
+  if (/(alkol|ba[ğg][ıi]ml|madde|sigara)/.test(text)) return testAddiction;
+  if (/(ili[şs]ki|evlilik|ç?ift|a[şs]k|ayr[ıi]l)/.test(text)) return testRelationship;
+  if (/(öz ?güven|özsayg|farkındal|mindful|motivasyon)/.test(text)) return testSelfesteem;
+  return TEST_IMAGES[idx % TEST_IMAGES.length];
+};
 
 interface Test {
   id: string;
