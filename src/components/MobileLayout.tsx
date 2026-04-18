@@ -2,6 +2,26 @@ import { Outlet, NavLink } from "react-router-dom";
 import { Home, Search, Calendar, User, LayoutDashboard, FileText } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 
+// Map each tab route to its lazy import so we can prefetch on touch/hover.
+// This makes tab switches feel INSTANT (chunk is already in cache).
+const ROUTE_PREFETCH: Record<string, () => Promise<unknown>> = {
+  "/mobile/home": () => import("@/pages/mobile/MobileHome"),
+  "/mobile/search": () => import("@/pages/mobile/MobileSearch"),
+  "/mobile/appointments": () => import("@/pages/mobile/MobileAppointments"),
+  "/mobile/profile": () => import("@/pages/mobile/MobileProfile"),
+  "/mobile/dashboard": () => import("@/pages/mobile/MobileDashboard"),
+  "/mobile/specialist-appointments": () => import("@/pages/mobile/MobileSpecialistAppointments"),
+  "/mobile/specialist-clients": () => import("@/pages/mobile/MobileSpecialistClients"),
+  "/mobile/specialist-profile": () => import("@/pages/mobile/MobileSpecialistProfile"),
+};
+
+const prefetched = new Set<string>();
+const prefetch = (to: string) => {
+  if (prefetched.has(to)) return;
+  prefetched.add(to);
+  ROUTE_PREFETCH[to]?.().catch(() => prefetched.delete(to));
+};
+
 export const MobileLayout = () => {
   const { userProfile } = useUserRole();
   const isSpecialist =
@@ -52,6 +72,9 @@ export const MobileLayout = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
+                onPointerEnter={() => prefetch(item.to)}
+                onTouchStart={() => prefetch(item.to)}
+                onFocus={() => prefetch(item.to)}
                 className={({ isActive }) =>
                   `relative flex items-center justify-center rounded-full m-pressable transition-all duration-200 ${
                     isActive
