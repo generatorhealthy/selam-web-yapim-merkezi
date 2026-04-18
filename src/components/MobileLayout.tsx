@@ -1,9 +1,7 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Home, Search, Calendar, User, LayoutDashboard, FileText } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 
 // Map each tab route to its lazy import so we can prefetch on touch/hover.
-// This makes tab switches feel INSTANT (chunk is already in cache).
 const ROUTE_PREFETCH: Record<string, () => Promise<unknown>> = {
   "/mobile/home": () => import("@/pages/mobile/MobileHome"),
   "/mobile/search": () => import("@/pages/mobile/MobileSearch"),
@@ -22,6 +20,53 @@ const prefetch = (to: string) => {
   ROUTE_PREFETCH[to]?.().catch(() => prefetched.delete(to));
 };
 
+// === Filled (solid) icons — premium iOS / referans görsel stili ===
+type IconProps = { active?: boolean; className?: string };
+
+const HomeFill = ({ className = "w-6 h-6" }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <path d="M11.3 2.6 3.5 8.7A2.5 2.5 0 0 0 2.5 10.7V19a2.5 2.5 0 0 0 2.5 2.5h3a1 1 0 0 0 1-1V16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4.5a1 1 0 0 0 1 1h3A2.5 2.5 0 0 0 21.5 19v-8.3a2.5 2.5 0 0 0-1-2L12.7 2.6a1.2 1.2 0 0 0-1.4 0Z" />
+  </svg>
+);
+
+const GridFill = ({ className = "w-6 h-6" }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <rect x="3" y="3" width="8" height="8" rx="2.2" />
+    <rect x="13" y="3" width="8" height="8" rx="2.2" />
+    <rect x="3" y="13" width="8" height="8" rx="2.2" />
+    <rect x="13" y="13" width="8" height="8" rx="2.2" />
+  </svg>
+);
+
+const CalendarFill = ({ className = "w-6 h-6" }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <path d="M7 2.5a1 1 0 0 1 1 1V5h8V3.5a1 1 0 1 1 2 0V5h.5A2.5 2.5 0 0 1 21 7.5V9H3V7.5A2.5 2.5 0 0 1 5.5 5H6V3.5a1 1 0 0 1 1-1Z" />
+    <path d="M3 10.5h18v8A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-8Z" />
+  </svg>
+);
+
+const UserFill = ({ className = "w-6 h-6" }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 20a8 8 0 0 1 16 0 1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z" />
+  </svg>
+);
+
+const FileFill = ({ className = "w-6 h-6" }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <path d="M6 2.5A2.5 2.5 0 0 0 3.5 5v14A2.5 2.5 0 0 0 6 21.5h12A2.5 2.5 0 0 0 20.5 19V9.4a1 1 0 0 0-.3-.7l-5.9-5.9a1 1 0 0 0-.7-.3H6Zm7 1.7 5.8 5.8H14a1 1 0 0 1-1-1V4.2Z" />
+  </svg>
+);
+
+const DashboardFill = ({ className = "w-6 h-6" }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <rect x="3" y="3" width="8" height="11" rx="2.2" />
+    <rect x="13" y="3" width="8" height="6" rx="2.2" />
+    <rect x="13" y="11" width="8" height="10" rx="2.2" />
+    <rect x="3" y="16" width="8" height="5" rx="2.2" />
+  </svg>
+);
+
 export const MobileLayout = () => {
   const { userProfile } = useUserRole();
   const isSpecialist =
@@ -30,17 +75,17 @@ export const MobileLayout = () => {
     userProfile?.role === "staff";
 
   const patientNavItems = [
-    { to: "/mobile/home", icon: Home, label: "Ana" },
-    { to: "/mobile/search", icon: Search, label: "Keşfet" },
-    { to: "/mobile/appointments", icon: Calendar, label: "Randevu" },
-    { to: "/mobile/profile", icon: User, label: "Profil" },
+    { to: "/mobile/home", Icon: HomeFill, label: "Ana" },
+    { to: "/mobile/search", Icon: GridFill, label: "Keşfet" },
+    { to: "/mobile/appointments", Icon: CalendarFill, label: "Randevu" },
+    { to: "/mobile/profile", Icon: UserFill, label: "Profil" },
   ];
 
   const specialistNavItems = [
-    { to: "/mobile/dashboard", icon: LayoutDashboard, label: "Panel" },
-    { to: "/mobile/specialist-appointments", icon: Calendar, label: "Randevu" },
-    { to: "/mobile/specialist-clients", icon: FileText, label: "Danışan" },
-    { to: "/mobile/specialist-profile", icon: User, label: "Profil" },
+    { to: "/mobile/dashboard", Icon: DashboardFill, label: "Panel" },
+    { to: "/mobile/specialist-appointments", Icon: CalendarFill, label: "Randevu" },
+    { to: "/mobile/specialist-clients", Icon: FileFill, label: "Danışan" },
+    { to: "/mobile/specialist-profile", Icon: UserFill, label: "Profil" },
   ];
 
   const navItems = isSpecialist ? specialistNavItems : patientNavItems;
@@ -54,20 +99,21 @@ export const MobileLayout = () => {
         <Outlet />
       </main>
 
-      {/* Floating black capsule tab bar — Zocdoc style */}
+      {/* Floating WHITE capsule tab bar — referans görsel stili */}
       <nav
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none"
         style={{ bottom: "calc(16px + var(--m-safe-bottom))" }}
       >
         <div
-          className="pointer-events-auto flex items-center gap-1 px-2 py-2 rounded-full"
+          className="pointer-events-auto flex items-center gap-2 px-3 py-2.5 rounded-full"
           style={{
-            background: "hsl(var(--m-ink))",
-            boxShadow: "0 16px 40px -12px hsl(220 30% 10% / 0.35), 0 4px 8px -2px hsl(220 30% 10% / 0.15)",
+            background: "hsl(var(--m-surface))",
+            boxShadow:
+              "0 18px 44px -14px hsl(220 30% 15% / 0.25), 0 4px 12px -2px hsl(220 30% 15% / 0.10)",
           }}
         >
           {navItems.map((item) => {
-            const Icon = item.icon;
+            const Icon = item.Icon;
             return (
               <NavLink
                 key={item.to}
@@ -75,20 +121,20 @@ export const MobileLayout = () => {
                 onPointerEnter={() => prefetch(item.to)}
                 onTouchStart={() => prefetch(item.to)}
                 onFocus={() => prefetch(item.to)}
-                className={({ isActive }) =>
-                  `relative flex items-center justify-center rounded-full m-pressable transition-all duration-200 ${
-                    isActive
-                      ? "w-14 h-12 px-4"
-                      : "w-12 h-12"
-                  }`
-                }
-                style={({ isActive }) => ({
-                  background: isActive ? "hsl(var(--m-bg))" : "transparent",
-                  color: isActive ? "hsl(var(--m-ink))" : "hsl(var(--m-bg) / 0.6)",
-                })}
                 aria-label={item.label}
+                className="relative flex items-center justify-center w-12 h-12 rounded-full m-pressable transition-colors"
+                style={({ isActive }) => ({
+                  color: isActive
+                    ? "hsl(var(--m-ink))"
+                    : "hsl(220 8% 65%)",
+                })}
               >
-                <Icon className="w-[22px] h-[22px]" strokeWidth={2.2} />
+                {({ isActive }) => (
+                  <Icon
+                    active={isActive}
+                    className={isActive ? "w-[26px] h-[26px]" : "w-[24px] h-[24px]"}
+                  />
+                )}
               </NavLink>
             );
           })}
