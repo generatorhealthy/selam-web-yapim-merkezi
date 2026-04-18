@@ -13,64 +13,109 @@ export default function MobileSpecialistSubscription() {
 
   useEffect(() => {
     (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) { navigate("/mobile/login"); return; }
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      const email = session.user.email || "";
+        if (!session?.user) {
+          navigate("/mobile/login");
+          return;
+        }
 
-      // Specialist name (web ile aynı: hem email hem isim eşleşmesi)
-      const { data: spec } = await supabase
-        .from("specialists")
-        .select("name, email")
-        .or(`user_id.eq.${session.user.id},email.eq.${email}`)
-        .maybeSingle();
-      const specName = spec?.name || "";
+        const sessionEmail = session.user.email?.trim() || "";
 
-      // Aktif abonelik — önce email, yoksa isim ile dene
-      let { data: autoOrder } = await supabase
-        .from("automatic_orders")
-        .select("*")
-        .eq("customer_email", email)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (!autoOrder && specName) {
-        const { data: byName } = await supabase
-          .from("automatic_orders")
-          .select("*")
-          .eq("customer_name", specName)
-          .eq("is_active", true)
+        // Önce user_id ile uzmanı bul; telefonla girişte session email boş olabiliyor.
+        let { data: spec } = await supabase
+          .from("specialists")
+          .select("id, name, email")
+          .eq("user_id", session.user.id)
           .maybeSingle();
-        autoOrder = byName;
-      }
-      setSub(autoOrder);
 
-      // Geçmiş ödemeler — email + isim birleşimi (tüm durumlar dahil: bekleyen, onaylı vs.)
-      const { data: paidByEmail } = await supabase
-        .from("orders")
-        .select("amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
-        .ilike("customer_email", email)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+        if (!spec && sessionEmail) {
+          const { data: specByEmail } = await supabase
+            .from("specialists")
+            .select("id, name, email")
+            .eq("email", sessionEmail)
+            .maybeSingle();
+          spec = specByEmail;
+        }
 
-      let allPaid: any[] = paidByEmail || [];
-      if (specName) {
-        const { data: paidByName } = await supabase
-          .from("orders")
-          .select("amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
-          .eq("customer_name", specName)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false });
+        const specialistEmail = spec?.email?.trim() || sessionEmail;
+        const specialistName = spec?.name?.trim() || "";
+        const emailCandidates = Array.from(new Set([sessionEmail, specialistEmail].filter(Boolean)));
+
+        const [autoByEmailRes, autoByNameRes, ordersByEmailRes, ordersByNameRes, edgeRes] = await Promise.all([
+          emailCandidates.length > 0
+            ? supabase
+                .from("automatic_orders")
+                .select("*")
+                .in("customer_email", emailCandidates)
+                .eq("is_active", true)
+                .order("updated_at", { ascending: false })
+                .limit(1)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+          specialistName
+            ? supabase
+                .from("automatic_orders")
+                .select("*")
+                .ilike("customer_name", `%${specialistName}%`)
+                .eq("is_active", true)
+                .order("updated_at", { ascending: false })
+                .limit(1)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+          emailCandidates.length > 0
+            ? supabase
+                .from("orders")
+                .select("id, amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
+                .in("customer_email", emailCandidates)
+                .is("deleted_at", null)
+                .order("created_at", { ascending: false })
+            : Promise.resolve({ data: [] }),
+          specialistName
+            ? supabase
+                .from("orders")
+                .select("id, amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
+                .ilike("customer_name", `%${specialistName}%`)
+                .is("deleted_at", null)
+                .order("created_at", { ascending: false })
+            : Promise.resolve({ data: [] }),
+          specialistEmail || specialistName
+            ? supabase.functions.invoke("get-specialist-contracts", {
+                body: {
+                  email: specialistEmail || null,
+                  name: specialistName || null,
+                },
+              })
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        setSub(autoByEmailRes.data || autoByNameRes.data || null);
+
         const merged = new Map<string, any>();
-        [...allPaid, ...(paidByName || [])].forEach((o: any) => {
-          const k = `${o.created_at}-${o.amount}-${o.subscription_month || ""}`;
-          if (!merged.has(k)) merged.set(k, o);
+        [
+          ...(ordersByEmailRes.data || []),
+          ...(ordersByNameRes.data || []),
+          ...(Array.isArray(edgeRes.data) ? edgeRes.data : []),
+        ].forEach((order: any) => {
+          const key = order.id || `${order.created_at}-${order.amount}-${order.package_name}-${order.subscription_month || ""}`;
+          if (!merged.has(key)) merged.set(key, order);
         });
-        allPaid = Array.from(merged.values()).sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+
+        setOrders(
+          Array.from(merged.values()).sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          ),
         );
+      } catch (error) {
+        console.error("MobileSpecialistSubscription error:", error);
+        setSub(null);
+        setOrders([]);
+      } finally {
+        setLoading(false);
       }
-      setOrders(allPaid);
-      setLoading(false);
     })();
   }, [navigate]);
 
