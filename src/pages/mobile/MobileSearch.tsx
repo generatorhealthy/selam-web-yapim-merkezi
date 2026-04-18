@@ -45,7 +45,10 @@ export default function MobileSearch() {
       try {
         const { data, error } = await supabase.rpc("get_public_specialists");
         if (error) throw error;
-        setSpecialists((data as any) || []);
+        const list = ((data as any) || []) as Specialist[];
+        // Shuffle so order changes on every visit
+        const shuffled = [...list].sort(() => Math.random() - 0.5);
+        setSpecialists(shuffled);
       } catch (e) {
         toast({ title: "Hata", description: "Uzmanlar yüklenemedi", variant: "destructive" });
       } finally {
@@ -162,16 +165,23 @@ export default function MobileSearch() {
                     <Heart className="w-4 h-4" style={{ color: "hsl(var(--m-text-primary))" }} />
                   </div>
 
-                  {/* Doctor image */}
-                  {s.profile_picture && (
-                    <div className="absolute bottom-0 right-0 w-[55%] h-[90%] flex items-end justify-end overflow-hidden">
+                  {/* Doctor image — uniform circular avatar so size differences don't break layout */}
+                  <div className="absolute bottom-4 right-4 z-0 w-[120px] h-[120px] rounded-full overflow-hidden flex items-center justify-center"
+                    style={{ background: "hsl(var(--m-surface) / 0.6)", boxShadow: "var(--m-shadow)" }}
+                  >
+                    {s.profile_picture ? (
                       <img
                         src={s.profile_picture}
                         alt={s.name}
-                        className="h-full w-auto object-cover object-top"
+                        loading="lazy"
+                        className="w-full h-full object-cover"
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <span className="text-[40px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                        {s.name?.charAt(0) || "?"}
+                      </span>
+                    )}
+                  </div>
 
                   {/* Text */}
                   <div className="relative p-5 max-w-[55%]">
