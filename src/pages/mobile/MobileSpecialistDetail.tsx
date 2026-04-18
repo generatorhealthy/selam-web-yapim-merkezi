@@ -4,9 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import {
   Star, MapPin, Video, Users, GraduationCap, Briefcase, Calendar,
-  Heart, Award, Clock, Building2, Phone, BookOpen, ChevronDown, ChevronRight
+  Heart, Award, Clock, Building2, Phone, BookOpen, ChevronDown, ChevronRight,
+  CheckCircle2, MessageCircle, PencilLine, Send,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Specialist {
   id: string;
