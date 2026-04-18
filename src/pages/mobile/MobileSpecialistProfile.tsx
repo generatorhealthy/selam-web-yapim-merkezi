@@ -14,7 +14,7 @@ export default function MobileSpecialistProfile() {
   const [saving, setSaving] = useState(false);
   const [spec, setSpec] = useState<any>(null);
   const [form, setForm] = useState({
-    name: "", phone: "", city: "", bio: "", consultation_fee: "",
+    name: "", phone: "", city: "", bio: "",
   });
 
   useEffect(() => {
