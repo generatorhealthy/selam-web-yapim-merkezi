@@ -303,9 +303,72 @@ export default function MobileSpecialistProfile() {
             </>
           )}
 
-          {section === "extra" && (
-            <Field icon={HelpCircle} label="Sıkça Sorulan Sorular" value={form.faq} onChange={(v: string) => setForm({ ...form, faq: v })} multiline rows={8} />
-          )}
+          {section === "extra" && (() => {
+            const faqs = parseFaq(form.faq);
+            const updateFaqs = (next: FaqItem[]) =>
+              setForm({ ...form, faq: JSON.stringify(next.filter((f) => f.question || f.answer)) });
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  <HelpCircle className="w-4 h-4" /> Sıkça Sorulan Sorular
+                </div>
+                {faqs.length === 0 && (
+                  <p className="text-[13px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    Henüz soru eklenmedi. Aşağıdan ekleyebilirsiniz.
+                  </p>
+                )}
+                {faqs.map((item, idx) => (
+                  <div key={idx} className="p-3 rounded-2xl space-y-2" style={{ background: "hsl(var(--m-bg))" }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[12px] font-semibold" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                        Soru {idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateFaqs(faqs.filter((_, i) => i !== idx))}
+                        className="p-1.5 rounded-lg m-pressable"
+                        style={{ background: "hsl(var(--m-danger-soft))", color: "hsl(var(--m-danger))" }}
+                        aria-label="Sil"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <input
+                      value={item.question}
+                      onChange={(e) => {
+                        const next = [...faqs];
+                        next[idx] = { ...next[idx], question: e.target.value };
+                        updateFaqs(next);
+                      }}
+                      placeholder="Soru"
+                      className="w-full h-11 px-3 rounded-xl text-[14px] outline-none"
+                      style={{ background: "hsl(var(--m-surface))", color: "hsl(var(--m-text-primary))" }}
+                    />
+                    <textarea
+                      value={item.answer}
+                      onChange={(e) => {
+                        const next = [...faqs];
+                        next[idx] = { ...next[idx], answer: e.target.value };
+                        updateFaqs(next);
+                      }}
+                      placeholder="Cevap"
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-xl text-[14px] outline-none resize-none"
+                      style={{ background: "hsl(var(--m-surface))", color: "hsl(var(--m-text-primary))" }}
+                    />
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => updateFaqs([...faqs, { question: "", answer: "" }])}
+                  className="w-full h-11 rounded-2xl flex items-center justify-center gap-2 text-[14px] font-semibold m-pressable"
+                  style={{ background: "hsl(var(--m-surface-muted))", color: "hsl(var(--m-text-primary))" }}
+                >
+                  <Plus className="w-4 h-4" /> Soru Ekle
+                </button>
+              </div>
+            );
+          })()}
 
           {section === "seo" && (
             <>
