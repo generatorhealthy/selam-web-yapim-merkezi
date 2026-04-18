@@ -431,6 +431,131 @@ const ClientCalendar = () => {
             </Card>
           </div>
 
+          {/* MANUAL URGENT NOTES PANEL */}
+          <Card className="mb-6 bg-slate-800 border-slate-700 overflow-hidden">
+            <CardHeader className="bg-slate-700 py-4 px-6 border-b border-slate-600">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-600 rounded-xl flex items-center justify-center">
+                  <StickyNote className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold text-white">
+                    📌 Manuel Notlar
+                  </CardTitle>
+                  <p className="text-slate-300 text-sm mt-1">
+                    Acil yönlendirme ile ilgili kısa notlarınızı buraya ekleyin
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+              {/* Add new note */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Textarea
+                  value={newUrgentNote}
+                  onChange={(e) => setNewUrgentNote(e.target.value)}
+                  placeholder="Yeni not yazın... (örn: Ahmet Bey'i Salı günü ara)"
+                  className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-[60px] resize-none focus-visible:ring-amber-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      addUrgentNote();
+                    }
+                  }}
+                />
+                <Button
+                  onClick={addUrgentNote}
+                  disabled={savingUrgent || !newUrgentNote.trim()}
+                  className="bg-amber-600 hover:bg-amber-700 text-white sm:self-stretch sm:px-6"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Not Ekle
+                </Button>
+              </div>
+
+              {/* Notes list */}
+              {urgentNotes.length === 0 ? (
+                <p className="text-slate-500 text-sm italic text-center py-4">
+                  Henüz not eklenmemiş.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {urgentNotes.map(note => (
+                    <div
+                      key={note.id}
+                      className="bg-slate-900 border border-slate-700 rounded-lg p-3 hover:border-amber-600/50 transition-colors"
+                    >
+                      {editingUrgentId === note.id ? (
+                        <div className="flex flex-col gap-2">
+                          <Textarea
+                            value={editingUrgentText}
+                            onChange={(e) => setEditingUrgentText(e.target.value)}
+                            className="bg-slate-800 border-slate-600 text-white min-h-[60px] resize-none focus-visible:ring-amber-500"
+                            autoFocus
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingUrgentId(null)}
+                              className="text-slate-400 hover:text-white h-8"
+                            >
+                              İptal
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => updateUrgentNote(note.id)}
+                              disabled={savingUrgent}
+                              className="bg-amber-600 hover:bg-amber-700 text-white h-8"
+                            >
+                              Kaydet
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm whitespace-pre-wrap break-words">
+                              {note.note}
+                            </p>
+                            <p className="text-slate-500 text-xs mt-1.5">
+                              {note.created_by_name && <span>{note.created_by_name} • </span>}
+                              {new Date(note.created_at).toLocaleString('tr-TR', {
+                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingUrgentId(note.id);
+                                setEditingUrgentText(note.note);
+                              }}
+                              className="text-slate-400 hover:text-white h-8 w-8"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => deleteUrgentNote(note.id)}
+                              className="text-slate-400 hover:text-red-400 h-8 w-8"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* URGENT SECTION */}
           {urgentSpecialists.length > 0 && (
             <Card className="mb-8 bg-red-950 border-red-800 overflow-hidden">
