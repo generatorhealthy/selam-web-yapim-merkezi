@@ -96,7 +96,22 @@ export default function PatientSignup() {
             <div><Label>Telefon (isteğe bağlı)</Label><Input type="tel" value={form.phone} onChange={set("phone")} /></div>
             <div><Label>Şifre</Label><Input type="password" value={form.password} onChange={set("password")} /></div>
 
-            <Button className="w-full" onClick={handleSignup} disabled={loading}>{loading ? "Lütfen bekleyin..." : "Hesap Oluştur"}</Button>
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedDisclosure}
+                onChange={(e) => setAcceptedDisclosure(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
+              />
+              <span className="text-muted-foreground">
+                <a href="/disclosure-text" target="_blank" rel="noopener noreferrer" className="text-primary underline font-medium">
+                  Aydınlatma Metni
+                </a>
+                'ni okudum, anladım ve kişisel verilerimin işlenmesine onay veriyorum.
+              </span>
+            </label>
+
+            <Button className="w-full" onClick={handleSignup} disabled={loading || !acceptedDisclosure}>{loading ? "Lütfen bekleyin..." : "Hesap Oluştur"}</Button>
             <p className="text-center text-sm text-muted-foreground">
               Zaten hesabınız var mı? <Link to="/giris-yap" className="text-primary font-semibold">Giriş yap</Link>
             </p>
