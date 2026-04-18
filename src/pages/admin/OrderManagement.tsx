@@ -653,6 +653,19 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const previousOrder = rawOrders.find((order) => order.id === id);
+
+      if (previousOrder) {
+        removeOrdersFromActiveCaches([id]);
+        upsertDeletedOrdersCache([{ ...previousOrder, deleted_at: new Date().toISOString() }]);
+        patchOrderStatsCache([{ previous: previousOrder }]);
+      }
+
+      return { snapshot };
+    },
     onSuccess: () => {
       toast({
         title: "Sipariş Silindi",
@@ -663,7 +676,8 @@ const OrderManagement = () => {
       queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
       setSelectedOrder(null);
     },
-    onError: (error) => {
+    onError: (error, _id, context) => {
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Sipariş silinirken hata oluştu",
@@ -683,6 +697,19 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const affectedOrders = rawOrders.filter((order) => ids.includes(order.id));
+
+      if (affectedOrders.length > 0) {
+        removeOrdersFromActiveCaches(ids);
+        upsertDeletedOrdersCache(affectedOrders.map((order) => ({ ...order, deleted_at: new Date().toISOString() })));
+        patchOrderStatsCache(affectedOrders.map((order) => ({ previous: order })));
+      }
+
+      return { snapshot };
+    },
     onSuccess: (_, ids) => {
       toast({
         title: "Siparişler Silindi",
@@ -694,7 +721,8 @@ const OrderManagement = () => {
       setSelectedOrderIds([]);
       setSelectAll(false);
     },
-    onError: (error) => {
+    onError: (error, _ids, context) => {
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Siparişler silinirken hata oluştu",
@@ -714,6 +742,20 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const previousOrder = (deletedOrders ?? []).find((order) => order.id === id);
+
+      if (previousOrder) {
+        const restoredOrder = { ...previousOrder, deleted_at: null } as Order;
+        removeDeletedOrdersFromCache([id]);
+        syncOrderInActiveCaches(restoredOrder);
+        patchOrderStatsCache([{ next: restoredOrder }]);
+      }
+
+      return { snapshot };
+    },
     onSuccess: () => {
       toast({
         title: "Sipariş Geri Getirildi",
@@ -723,7 +765,8 @@ const OrderManagement = () => {
       queryClient.invalidateQueries({ queryKey: ["order_stats"] });
       queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
     },
-    onError: (error) => {
+    onError: (error, _id, context) => {
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Sipariş geri getirilirken hata oluştu",
@@ -743,6 +786,19 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const affectedOrders = (deletedOrders ?? []).filter((order) => ids.includes(order.id));
+
+      if (affectedOrders.length > 0) {
+        removeDeletedOrdersFromCache(ids);
+        affectedOrders.forEach((order) => syncOrderInActiveCaches({ ...order, deleted_at: null } as Order));
+        patchOrderStatsCache(affectedOrders.map((order) => ({ next: { ...order, deleted_at: null } as Order })));
+      }
+
+      return { snapshot };
+    },
     onSuccess: (_, ids) => {
       toast({
         title: "Siparişler Geri Getirildi",
@@ -754,7 +810,8 @@ const OrderManagement = () => {
       setSelectedOrderIds([]);
       setSelectAll(false);
     },
-    onError: (error) => {
+    onError: (error, _ids, context) => {
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Siparişler geri getirilirken hata oluştu",
