@@ -150,6 +150,7 @@ export type Database = {
           patient_email: string
           patient_name: string
           patient_phone: string
+          patient_user_id: string | null
           specialist_id: string | null
           status: string
           updated_at: string | null
@@ -166,6 +167,7 @@ export type Database = {
           patient_email: string
           patient_name: string
           patient_phone: string
+          patient_user_id?: string | null
           specialist_id?: string | null
           status?: string
           updated_at?: string | null
@@ -182,6 +184,7 @@ export type Database = {
           patient_email?: string
           patient_name?: string
           patient_phone?: string
+          patient_user_id?: string | null
           specialist_id?: string | null
           status?: string
           updated_at?: string | null
@@ -3143,6 +3146,27 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_specialists: {
+        Row: {
+          created_at: string
+          id: string
+          specialist_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          specialist_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          specialist_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       form_contents: {
         Row: {
           content: string
@@ -3534,6 +3558,57 @@ export type Database = {
           popular?: boolean | null
           price?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      patient_profiles: {
+        Row: {
+          auth_provider: string | null
+          birth_date: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          full_name: string | null
+          gender: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          profile_picture: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth_provider?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          profile_picture?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth_provider?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          profile_picture?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -4290,6 +4365,7 @@ export type Database = {
           id: string
           patient_email: string
           patient_name: string
+          patient_user_id: string | null
           results: Json
           specialist_id: string
           specialty_area: string | null
@@ -4303,6 +4379,7 @@ export type Database = {
           id?: string
           patient_email: string
           patient_name: string
+          patient_user_id?: string | null
           results?: Json
           specialist_id: string
           specialty_area?: string | null
@@ -4316,6 +4393,7 @@ export type Database = {
           id?: string
           patient_email?: string
           patient_name?: string
+          patient_user_id?: string | null
           results?: Json
           specialist_id?: string
           specialty_area?: string | null
@@ -4853,8 +4931,17 @@ export type Database = {
           specialty: string
         }[]
       }
+      get_specialist_follower_count: {
+        Args: { p_specialist_id: string }
+        Returns: number
+      }
       is_admin_or_staff_user: { Args: never; Returns: boolean }
       is_admin_user: { Args: never; Returns: boolean }
+      is_following_specialist: {
+        Args: { p_specialist_id: string }
+        Returns: boolean
+      }
+      is_patient_user: { Args: { p_user_id: string }; Returns: boolean }
       is_specialist_owner: {
         Args: { _specialist_user_id: string }
         Returns: boolean
@@ -4912,6 +4999,7 @@ export type Database = {
         | "staff"
         | "legal"
         | "muhasebe"
+        | "patient"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5039,7 +5127,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["admin", "specialist", "user", "staff", "legal", "muhasebe"],
+      user_role: [
+        "admin",
+        "specialist",
+        "user",
+        "staff",
+        "legal",
+        "muhasebe",
+        "patient",
+      ],
     },
   },
 } as const
