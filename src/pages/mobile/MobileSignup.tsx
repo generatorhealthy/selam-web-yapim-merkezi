@@ -9,6 +9,7 @@ export default function MobileSignup() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [acceptedDisclosure, setAcceptedDisclosure] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
