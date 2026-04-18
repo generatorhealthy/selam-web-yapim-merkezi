@@ -3,7 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { LogOut, Save, User, Phone, MapPin, FileText, GraduationCap, Award, Building2, Clock, CalendarDays, HelpCircle, Search } from "lucide-react";
+import { LogOut, Save, User, Phone, MapPin, FileText, GraduationCap, Award, Building2, Clock, CalendarDays, HelpCircle, Search, Plus, Trash2 } from "lucide-react";
+
+type FaqItem = { question: string; answer: string };
+
+function parseFaq(raw: string): FaqItem[] {
+  if (!raw) return [];
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((p) => p && (p.question || p.answer))
+          .map((p) => ({ question: String(p.question || ""), answer: String(p.answer || "") }));
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+  // Fallback: legacy plain text — treat as single answer
+  return [{ question: "", answer: trimmed }];
+}
 
 const DAYS = [
   { key: "monday", label: "Pzt" },
