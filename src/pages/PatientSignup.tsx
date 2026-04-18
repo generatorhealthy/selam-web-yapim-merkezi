@@ -13,6 +13,7 @@ export default function PatientSignup() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
+  const [acceptedDisclosure, setAcceptedDisclosure] = useState(false);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((s) => ({ ...s, [k]: e.target.value }));
 
   const handleSignup = async () => {
