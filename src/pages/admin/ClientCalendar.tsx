@@ -7,9 +7,18 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote } from "lucide-react";
+import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote, Plus, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Helmet } from "react-helmet-async";
+
+interface UrgentNote {
+  id: string;
+  note: string;
+  created_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 interface Specialist {
   id: string;
