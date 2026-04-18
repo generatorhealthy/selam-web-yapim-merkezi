@@ -84,11 +84,7 @@ export default function MobileSpecialistSubscription() {
         <div className="px-5">
           <div className="m-card p-4 text-[14px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Yükleniyor…</div>
         </div>
-      ) : !sub ? (
-        <div className="px-5">
-          <MobileEmptyState icon={CreditCard} title="Aktif aboneliğiniz yok" />
-        </div>
-      ) : (
+      ) : !sub && orders.length === 0 ? (
         <>
           {/* Hero card */}
           <div className="px-5 mb-5">
