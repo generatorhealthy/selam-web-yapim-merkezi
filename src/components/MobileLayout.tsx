@@ -73,12 +73,20 @@ export const MobileLayout = () => {
     userProfile?.role === "specialist" ||
     userProfile?.role === "admin" ||
     userProfile?.role === "staff";
+  const isPatient = userProfile?.role === "patient";
 
-  const patientNavItems = [
+  const guestNavItems = [
     { to: "/mobile/home", Icon: HomeFill, label: "Ana" },
     { to: "/mobile/search", Icon: GridFill, label: "Keşfet" },
     { to: "/mobile/appointments", Icon: CalendarFill, label: "Randevu" },
     { to: "/mobile/profile", Icon: UserFill, label: "Profil" },
+  ];
+
+  const patientNavItems = [
+    { to: "/mobile/home", Icon: HomeFill, label: "Ana" },
+    { to: "/mobile/search", Icon: GridFill, label: "Keşfet" },
+    { to: "/mobile/patient-dashboard", Icon: DashboardFill, label: "Panelim" },
+    { to: "/mobile/patient-profile", Icon: UserFill, label: "Profil" },
   ];
 
   const specialistNavItems = [
@@ -88,7 +96,7 @@ export const MobileLayout = () => {
     { to: "/mobile/specialist-profile", Icon: UserFill, label: "Profil" },
   ];
 
-  const navItems = isSpecialist ? specialistNavItems : patientNavItems;
+  const navItems = isSpecialist ? specialistNavItems : isPatient ? patientNavItems : guestNavItems;
 
   return (
     <div

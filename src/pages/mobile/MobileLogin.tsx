@@ -56,19 +56,31 @@ export default function MobileLogin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handlePostLogin = async (userId: string, email: string) => {
+  // Returns the route to navigate to, or null if unauthorized
+  const resolvePostLoginRoute = async (userId: string, email: string): Promise<string | null> => {
+    // Check specialist first
     const { data: spec } = await supabase
       .from("specialists")
-      .select("id, is_active")
+      .select("id")
       .or(`user_id.eq.${userId},email.eq.${email}`)
       .maybeSingle();
+    if (spec) return "/mobile/dashboard";
 
-    if (!spec) {
-      await supabase.auth.signOut();
-      toast({ title: "Yetkisiz", description: "Bu hesap uzman olarak kayıtlı değil", variant: "destructive" });
-      return false;
-    }
-    return true;
+    // Check patient
+    const { data: patient } = await supabase
+      .from("patient_profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (patient) return "/mobile/patient-dashboard";
+
+    // Auto-create patient profile for new OAuth users / fallback
+    await supabase.from("patient_profiles").insert({
+      user_id: userId,
+      email,
+      auth_provider: "email",
+    });
+    return "/mobile/patient-dashboard";
   };
 
   const loginEmail = async (emailArg?: string, passwordArg?: string, fromBiometric = false) => {
@@ -87,8 +99,8 @@ export default function MobileLogin() {
       if (error) throw error;
       if (!data.user) throw new Error("Kullanıcı bulunamadı");
 
-      const ok = await handlePostLogin(data.user.id, e.trim());
-      if (!ok) return;
+      const route = await resolvePostLoginRoute(data.user.id, e.trim());
+      if (!route) return;
 
       // Persist email if Remember Me is on
       if (rememberMe) {
@@ -107,7 +119,7 @@ export default function MobileLogin() {
       }
 
       toast({ title: "Giriş başarılı" });
-      navigate("/mobile/dashboard");
+      navigate(route);
     } catch (e: any) {
       toast({ title: "Giriş başarısız", description: e.message || "Bilgileri kontrol edin", variant: "destructive" });
     } finally {
@@ -165,7 +177,7 @@ export default function MobileLogin() {
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 100 }}>
-      <MobileHeader showBack largeTitle="Uzman Girişi" subtitle="Hesabınıza erişin" />
+      <MobileHeader showBack largeTitle="Giriş Yap" subtitle="Uzman veya danışan olarak giriş yapın" />
 
       <div className="px-5 mt-4">
         {/* Mode tabs */}
@@ -291,7 +303,10 @@ export default function MobileLogin() {
         </div>
 
         <p className="text-center text-[13px] mt-6" style={{ color: "hsl(var(--m-text-secondary))" }}>
-          Sadece kayıtlı uzmanlar giriş yapabilir
+          Hesabınız yok mu?{" "}
+          <button onClick={() => navigate("/mobile/signup")} className="font-semibold" style={{ color: "hsl(var(--m-accent))" }}>
+            Üye ol
+          </button>
         </p>
       </div>
     </div>

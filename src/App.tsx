@@ -26,7 +26,12 @@ const MobileAppointments = lazy(() => import("./pages/mobile/MobileAppointments"
 const MobileTests = lazy(() => import("./pages/mobile/MobileTests"));
 const MobileTestTaker = lazy(() => import("./pages/mobile/MobileTestTaker"));
 const MobileLogin = lazy(() => import("./pages/mobile/MobileLogin"));
+const MobileSignup = lazy(() => import("./pages/mobile/MobileSignup"));
 const MobileDashboard = lazy(() => import("./pages/mobile/MobileDashboard"));
+const MobilePatientDashboard = lazy(() => import("./pages/mobile/MobilePatientDashboard"));
+const MobilePatientAppointments = lazy(() => import("./pages/mobile/MobilePatientAppointments"));
+const MobilePatientFavorites = lazy(() => import("./pages/mobile/MobilePatientFavorites"));
+const MobilePatientProfile = lazy(() => import("./pages/mobile/MobilePatientProfile"));
 const MobileSpecialistAppointments = lazy(() => import("./pages/mobile/MobileSpecialistAppointments"));
 const MobileSpecialistClients = lazy(() => import("./pages/mobile/MobileSpecialistClients"));
 const MobileSpecialistProfile = lazy(() => import("./pages/mobile/MobileSpecialistProfile"));
@@ -65,6 +70,8 @@ const TestInterface = lazy(() => import("./components/TestInterface"));
 const TestTaking = lazy(() => import("./components/TestTaking"));
 const TestResult = lazy(() => import("./pages/TestResult"));
 const SpecialistRegistration = lazy(() => import("./pages/SpecialistRegistration"));
+const PatientSignup = lazy(() => import("./pages/PatientSignup"));
+const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 // Admin pages - lazy loaded (never needed on initial visit)
@@ -185,6 +192,11 @@ const AppContent = () => {
               <Route path="specialist-portfolio" element={<MobileSpecialistPortfolio />} />
               <Route path="blog/:slug" element={<MobileBlogDetail />} />
               <Route path="register" element={<SpecialistRegistration />} />
+              <Route path="signup" element={<MobileSignup />} />
+              <Route path="patient-dashboard" element={<MobilePatientDashboard />} />
+              <Route path="patient-appointments" element={<MobilePatientAppointments />} />
+              <Route path="patient-favorites" element={<MobilePatientFavorites />} />
+              <Route path="patient-profile" element={<MobilePatientProfile />} />
             </Route>
           )}
 
@@ -237,6 +249,8 @@ const AppContent = () => {
               <Route path="/giris-yap" element={<LoginPage />} />
               <Route path="/sifre-sifirla" element={<ResetPassword />} />
               <Route path="/kayit-ol" element={<SpecialistRegistration />} />
+              <Route path="/uye-ol" element={<PatientSignup />} />
+              <Route path="/danisan-paneli" element={<PatientDashboard />} />
               
               {/* Admin Routes - MUST be before dynamic catch-all routes */}
               <Route path="/divan_paneli" element={<AdminAuth />} />
