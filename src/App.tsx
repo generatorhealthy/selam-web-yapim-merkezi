@@ -26,7 +26,12 @@ const MobileAppointments = lazy(() => import("./pages/mobile/MobileAppointments"
 const MobileTests = lazy(() => import("./pages/mobile/MobileTests"));
 const MobileTestTaker = lazy(() => import("./pages/mobile/MobileTestTaker"));
 const MobileLogin = lazy(() => import("./pages/mobile/MobileLogin"));
+const MobileSignup = lazy(() => import("./pages/mobile/MobileSignup"));
 const MobileDashboard = lazy(() => import("./pages/mobile/MobileDashboard"));
+const MobilePatientDashboard = lazy(() => import("./pages/mobile/MobilePatientDashboard"));
+const MobilePatientAppointments = lazy(() => import("./pages/mobile/MobilePatientAppointments"));
+const MobilePatientFavorites = lazy(() => import("./pages/mobile/MobilePatientFavorites"));
+const MobilePatientProfile = lazy(() => import("./pages/mobile/MobilePatientProfile"));
 const MobileSpecialistAppointments = lazy(() => import("./pages/mobile/MobileSpecialistAppointments"));
 const MobileSpecialistClients = lazy(() => import("./pages/mobile/MobileSpecialistClients"));
 const MobileSpecialistProfile = lazy(() => import("./pages/mobile/MobileSpecialistProfile"));
@@ -65,6 +70,8 @@ const TestInterface = lazy(() => import("./components/TestInterface"));
 const TestTaking = lazy(() => import("./components/TestTaking"));
 const TestResult = lazy(() => import("./pages/TestResult"));
 const SpecialistRegistration = lazy(() => import("./pages/SpecialistRegistration"));
+const PatientSignup = lazy(() => import("./pages/PatientSignup"));
+const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 // Admin pages - lazy loaded (never needed on initial visit)
