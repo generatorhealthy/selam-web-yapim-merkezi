@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
-import { FileSignature, FileText, Download } from "lucide-react";
+import { FileSignature, FileText, Download, X } from "lucide-react";
 
 export default function MobileSpecialistContracts() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [contracts, setContracts] = useState<any[]>([]);
+  const [viewer, setViewer] = useState<{ title: string; html: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -50,11 +51,14 @@ export default function MobileSpecialistContracts() {
   }, [navigate]);
 
   const openContract = (content: string | null, title: string) => {
-    if (!content) return;
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(`<html><head><title>${title}</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:-apple-system,sans-serif;padding:24px;line-height:1.6;color:#111;max-width:720px;margin:0 auto}</style></head><body>${content}</body></html>`);
-    w.document.close();
+    if (!content) {
+      setViewer({
+        title,
+        html: `<p style="color:#666;text-align:center;padding:24px">Bu sipariş için ${title.toLowerCase()} henüz oluşturulmamış.</p>`,
+      });
+      return;
+    }
+    setViewer({ title, html: content });
   };
 
   return (
@@ -108,6 +112,38 @@ export default function MobileSpecialistContracts() {
           ))
         )}
       </div>
+
+      {viewer && (
+        <div
+          className="fixed inset-0 z-[100] flex flex-col"
+          style={{ background: "hsl(var(--m-bg))" }}
+        >
+          <div
+            className="flex items-center justify-between px-4 py-3 border-b"
+            style={{
+              borderColor: "hsl(var(--m-border, var(--m-text-tertiary) / 0.2))",
+              paddingTop: "calc(12px + var(--m-safe-top, 0px))",
+            }}
+          >
+            <h2 className="font-bold text-[16px]" style={{ color: "hsl(var(--m-text-primary))" }}>
+              {viewer.title}
+            </h2>
+            <button
+              onClick={() => setViewer(null)}
+              className="w-10 h-10 rounded-full flex items-center justify-center m-pressable"
+              style={{ background: "hsl(var(--m-surface-muted))" }}
+              aria-label="Kapat"
+            >
+              <X className="w-5 h-5" style={{ color: "hsl(var(--m-text-primary))" }} />
+            </button>
+          </div>
+          <div
+            className="flex-1 overflow-y-auto px-5 py-4 text-[14px] leading-relaxed"
+            style={{ color: "hsl(var(--m-text-primary))", WebkitOverflowScrolling: "touch" }}
+            dangerouslySetInnerHTML={{ __html: viewer.html }}
+          />
+        </div>
+      )}
     </div>
   );
 }
