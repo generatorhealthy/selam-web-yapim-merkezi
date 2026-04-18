@@ -33,7 +33,6 @@ export default function MobileSpecialistProfile() {
         phone: data.phone || "",
         city: data.city || "",
         bio: data.bio || "",
-        consultation_fee: String(data.consultation_fee || ""),
       });
       setLoading(false);
     })();
