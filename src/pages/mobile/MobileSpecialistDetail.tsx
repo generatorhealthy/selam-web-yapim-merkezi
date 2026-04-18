@@ -455,18 +455,67 @@ export default function MobileSpecialistDetail() {
           background: "linear-gradient(to top, hsl(var(--m-bg)) 60%, hsl(var(--m-bg) / 0))",
         }}
       >
-        <button
-          onClick={() => navigate(`/mobile/booking/${specialist.id}`)}
-          className="w-full h-14 rounded-full font-bold text-[16px] flex items-center justify-center gap-2 m-pressable"
-          style={{
-            background: "hsl(var(--m-ink))",
-            color: "hsl(var(--m-bg))",
-            boxShadow: "0 12px 32px -8px hsl(220 30% 10% / 0.35)",
-          }}
-        >
-          <Calendar className="w-5 h-5" /> Randevu Al
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(`/mobile/booking/${specialist.id}`)}
+            className="flex-1 h-14 rounded-full font-bold text-[15px] flex items-center justify-center gap-2 m-pressable"
+            style={{
+              background: "hsl(var(--m-ink))",
+              color: "hsl(var(--m-bg))",
+              boxShadow: "0 12px 32px -8px hsl(220 30% 10% / 0.35)",
+            }}
+          >
+            <Calendar className="w-5 h-5" /> Randevu Al
+          </button>
+          <button
+            onClick={() => setReviewOpen(true)}
+            aria-label="Değerlendirme yaz"
+            className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
+            style={{
+              background: "hsl(var(--m-tint-peach))",
+              color: "hsl(var(--m-text-primary))",
+              boxShadow: "var(--m-shadow)",
+            }}
+          >
+            <PencilLine className="w-5 h-5" />
+          </button>
+          <a
+            href="https://wa.me/902162350650"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="WhatsApp"
+            className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
+            style={{
+              background: "hsl(var(--m-tint-mint))",
+              color: "hsl(var(--m-text-primary))",
+              boxShadow: "var(--m-shadow)",
+            }}
+          >
+            <MessageCircle className="w-5 h-5" />
+          </a>
+          <a
+            href={`tel:${specialist.phone || "02167060611"}`}
+            aria-label="Ara"
+            className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
+            style={{
+              background: "hsl(var(--m-tint-sky))",
+              color: "hsl(var(--m-text-primary))",
+              boxShadow: "var(--m-shadow)",
+            }}
+          >
+            <Phone className="w-5 h-5" />
+          </a>
+        </div>
       </div>
+
+      {/* Review Dialog */}
+      <ReviewDialog
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+        specialistId={specialist.id}
+        specialistName={specialist.name}
+        onSubmitted={() => loadReviews(specialist.id)}
+      />
     </div>
   );
 }
