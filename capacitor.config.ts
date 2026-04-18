@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.yenii',
-  appName: 'yenii',
+  appId: 'app.lovable.doktorumol',
+  appName: 'doktorumol',
   webDir: 'dist',
   plugins: {
     SplashScreen: {
