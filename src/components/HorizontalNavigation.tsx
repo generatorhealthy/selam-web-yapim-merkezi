@@ -377,43 +377,75 @@ export function HorizontalNavigation() {
                   onClick={handleProfileClick}
                 >
                   <Avatar className="w-9 h-9 border-2 border-blue-100">
-                    <AvatarImage 
-                      src={userProfile?.profile_picture || undefined} 
-                      alt="Profil"
-                    />
+                    <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
                     <AvatarFallback className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-sm">
-                    <p className="font-medium text-gray-900">
-                      {userProfile?.name || 'Dr. Uzman'}
-                    </p>
+                    <p className="font-medium text-gray-900">{userProfile?.name || 'Dr. Uzman'}</p>
                     <p className="text-xs text-gray-500">Uzman Paneli</p>
                   </div>
                 </div>
               )}
-              
-               {/* Kayıt ol ve Giriş butonları */}
-               {authInitialized && !isLoggedIn && (
-                 <div className="flex items-center gap-3">
-                   {currentPath !== '/bu-aya-ozel' && (
+
+              {/* Danışan profili */}
+              {authInitialized && !isLoading && isLoggedIn && userRole === 'patient' && (
+                <div 
+                  className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 rounded-full transition-all duration-200 border border-gray-100 hover:border-blue-200" 
+                  onClick={handleProfileClick}
+                >
+                  <Avatar className="w-9 h-9 border-2 border-blue-100">
+                    <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
+                    <AvatarFallback className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-sm">
+                    <p className="font-medium text-gray-900">{userProfile?.name || 'Danışan'}</p>
+                    <p className="text-xs text-gray-500">Danışan Paneli</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Kayıt ol ve Giriş butonları */}
+              {authInitialized && !isLoggedIn && (
+                <div className="flex items-center gap-3">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button 
                         variant="outline"
                         className="border-blue-200 text-blue-600 hover:bg-blue-50 rounded-full font-medium px-6 py-2"
-                        onClick={() => navigate('/kayit-ol')}
                       >
-                        Kayıt Olmak İstiyorum
+                        Üye Ol <ChevronDown className="ml-1 h-4 w-4" />
                       </Button>
-                   )}
-                   <Button 
-                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2"
-                     onClick={() => navigate('/giris-yap')}
-                   >
-                     Giriş
-                   </Button>
-                 </div>
-               )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 bg-white z-[60]">
+                      <DropdownMenuItem onClick={() => navigate('/uye-ol')}>
+                        <User className="mr-2 h-4 w-4" /> Danışan Üyeliği
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/kayit-ol')}>
+                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Kaydı
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2">
+                        Giriş <ChevronDown className="ml-1 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 bg-white z-[60]">
+                      <DropdownMenuItem onClick={() => navigate('/danisan-giris')}>
+                        <User className="mr-2 h-4 w-4" /> Danışan Girişi
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/giris-yap')}>
+                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Girişi
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
             </div>
           )}
         </div>
