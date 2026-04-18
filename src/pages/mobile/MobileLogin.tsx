@@ -177,7 +177,7 @@ export default function MobileLogin() {
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 100 }}>
-      <MobileHeader showBack largeTitle="Giriş Yap" subtitle="Uzman veya danışan olarak giriş yapın" />
+      <MobileHeader showBack largeTitle="Giriş Yap" subtitle="Uzman veya danışan hesabınızla giriş yapın" />
 
       <div className="px-5 mt-4">
         {/* Mode tabs */}
