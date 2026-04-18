@@ -317,25 +317,23 @@ const OrderManagement = () => {
   // Flatten pages into single array
   const rawOrders = useMemo(() => ordersData?.pages.flatMap(page => page.data) || [], [ordersData]);
   
-  // Sunucu tarafı text araması timeout ürettiği için arama burada yapılıyor
+  // Arama modunda DB tarafında filtreleme yapıldığı için sonuçları doğrudan kullan
   const orders = useMemo(() => {
-    const normalizedSearch = searchInput.trim().toLowerCase();
-
-    if (!normalizedSearch) {
-      return rawOrders;
-    }
-
-    return rawOrders.filter(order => 
+    if (!isSearchMode) return rawOrders;
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (!normalizedSearch) return rawOrders;
+    // Güvenlik için ek client-side filtre (cache yarış durumlarına karşı)
+    return rawOrders.filter(order =>
       order.customer_name?.toLowerCase().includes(normalizedSearch) ||
       order.customer_email?.toLowerCase().includes(normalizedSearch) ||
       order.package_name?.toLowerCase().includes(normalizedSearch) ||
       order.customer_phone?.toLowerCase().includes(normalizedSearch)
     );
-  }, [rawOrders, searchInput]);
+  }, [rawOrders, isSearchMode, searchTerm]);
 
   const totalOrders = orders.length;
   const hasLoadedActiveOrders = rawOrders.length > 0;
-  const isSearchLoadingAllResults = isSearchMode && !ordersError && (isOrdersFetching || isFetchingNextPage || hasNextPage);
+  const isSearchLoadingAllResults = isSearchMode && !ordersError && isOrdersFetching;
 
   const {
     data: deletedOrders,
