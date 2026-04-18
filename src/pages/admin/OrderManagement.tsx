@@ -74,7 +74,6 @@ const OrderManagement = () => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [activeTab, setActiveTab] = useState("orders");
   const [searchInput, setSearchInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -89,7 +88,6 @@ const OrderManagement = () => {
   const [addingNote, setAddingNote] = useState<string | null>(null);
   const [callingOrder, setCallingOrder] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleCallCustomer = async (order: Order) => {
     if (!order.customer_phone) {
@@ -120,32 +118,10 @@ const OrderManagement = () => {
     }
   };
 
-  // Debounced search - 300ms bekleyerek arama yap (daha hızlı)
-  useEffect(() => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    
-    // Eğer arama terimi boşsa hemen temizle
-    if (!searchInput) {
-      setSearchTerm("");
-      return;
-    }
-    
-    debounceTimeoutRef.current = setTimeout(() => {
-      setSearchTerm(searchInput);
-    }, 300);
-
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
-  }, [searchInput]);
-
   const BROWSE_PAGE_SIZE = 50;
   const SEARCH_PAGE_SIZE = 250;
-  const isSearchMode = searchTerm.trim().length > 0;
+  const isSearchMode = searchInput.trim().length > 0;
+  const normalizedSearchInput = searchInput.trim().toLowerCase();
   const ORDER_LIST_SELECT = "id, customer_name, customer_email, package_name, amount, status, created_at, customer_phone, customer_address, customer_city, customer_tc_no, company_name, company_tax_no, company_tax_office, package_type, payment_method, customer_type, contract_ip_address, is_first_order, subscription_month, deleted_at, contract_emails_sent, invoice_sent, invoice_number, invoice_date, payment_status, updated_at, approved_by, approved_at, parent_order_id, payment_transaction_id";
   const DELETED_ORDER_SELECT = "id, customer_name, customer_email, package_name, amount, deleted_at";
 
@@ -264,7 +240,7 @@ const OrderManagement = () => {
     isFetching: isOrdersFetching,
     error: ordersError,
   } = useInfiniteQuery<OrdersPage>({
-    queryKey: ["orders", statusFilter, isSearchMode ? `search:${searchTerm.trim().toLowerCase()}` : "browse"],
+    queryKey: ["orders", statusFilter],
     queryFn: async ({ pageParam }) => {
       const cursor = pageParam as string | null;
 
@@ -280,30 +256,19 @@ const OrderManagement = () => {
         query = query.eq("status", statusFilter);
       }
 
-      // Arama modunda: tüm eşleşmeleri tek seferde DB tarafında getir
-      if (isSearchMode) {
-        const term = searchTerm.trim().replace(/[%,]/g, " ");
-        const like = `%${term}%`;
-        query = query.or(
-          `customer_name.ilike.${like},customer_email.ilike.${like},package_name.ilike.${like},customer_phone.ilike.${like}`
-        );
-        const { data, error } = await query.limit(2000);
-        if (error) throw error;
-        return { data: (data ?? []) as Order[], hasMore: false, nextCursor: undefined };
-      }
-
       // Normal mod: cursor tabanlı sayfalama
       if (cursor) {
         query = query.lt("created_at", cursor);
       }
 
-      const { data, error } = await query.limit(BROWSE_PAGE_SIZE + 1);
+      const pageSize = isSearchMode ? SEARCH_PAGE_SIZE : BROWSE_PAGE_SIZE;
+      const { data, error } = await query.limit(pageSize + 1);
 
       if (error) throw error;
 
       const fetchedOrders = (data ?? []) as Order[];
-      const hasMore = fetchedOrders.length > BROWSE_PAGE_SIZE;
-      const pageData = hasMore ? fetchedOrders.slice(0, BROWSE_PAGE_SIZE) : fetchedOrders;
+      const hasMore = fetchedOrders.length > pageSize;
+      const pageData = hasMore ? fetchedOrders.slice(0, pageSize) : fetchedOrders;
       const nextCursor = hasMore ? pageData[pageData.length - 1]?.created_at : undefined;
 
       return { data: pageData, hasMore, nextCursor };
@@ -320,16 +285,15 @@ const OrderManagement = () => {
   // Arama modunda DB tarafında filtreleme yapıldığı için sonuçları doğrudan kullan
   const orders = useMemo(() => {
     if (!isSearchMode) return rawOrders;
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    if (!normalizedSearch) return rawOrders;
+    if (!normalizedSearchInput) return rawOrders;
     // Güvenlik için ek client-side filtre (cache yarış durumlarına karşı)
     return rawOrders.filter(order =>
-      order.customer_name?.toLowerCase().includes(normalizedSearch) ||
-      order.customer_email?.toLowerCase().includes(normalizedSearch) ||
-      order.package_name?.toLowerCase().includes(normalizedSearch) ||
-      order.customer_phone?.toLowerCase().includes(normalizedSearch)
+      order.customer_name?.toLowerCase().includes(normalizedSearchInput) ||
+      order.customer_email?.toLowerCase().includes(normalizedSearchInput) ||
+      order.package_name?.toLowerCase().includes(normalizedSearchInput) ||
+      order.customer_phone?.toLowerCase().includes(normalizedSearchInput)
     );
-  }, [rawOrders, isSearchMode, searchTerm]);
+  }, [rawOrders, isSearchMode, normalizedSearchInput]);
 
   const totalOrders = orders.length;
   const hasLoadedActiveOrders = rawOrders.length > 0;
@@ -1674,7 +1638,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                     onChange={(e) => setSearchInput(e.target.value)}
                     className="pl-12 h-12 border-0 bg-white/80 backdrop-blur-sm shadow-inner text-gray-700 placeholder:text-gray-500"
                   />
-                  {(searchInput !== searchTerm || isSearchLoadingAllResults) && (
+                  {isSearchLoadingAllResults && (
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
                     </div>
