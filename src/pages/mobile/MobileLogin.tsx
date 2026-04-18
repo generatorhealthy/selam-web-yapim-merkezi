@@ -99,8 +99,8 @@ export default function MobileLogin() {
       if (error) throw error;
       if (!data.user) throw new Error("Kullanıcı bulunamadı");
 
-      const ok = await handlePostLogin(data.user.id, e.trim());
-      if (!ok) return;
+      const route = await resolvePostLoginRoute(data.user.id, e.trim());
+      if (!route) return;
 
       // Persist email if Remember Me is on
       if (rememberMe) {
@@ -119,7 +119,7 @@ export default function MobileLogin() {
       }
 
       toast({ title: "Giriş başarılı" });
-      navigate("/mobile/dashboard");
+      navigate(route);
     } catch (e: any) {
       toast({ title: "Giriş başarısız", description: e.message || "Bilgileri kontrol edin", variant: "destructive" });
     } finally {
