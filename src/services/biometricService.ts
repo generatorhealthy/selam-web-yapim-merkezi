@@ -50,7 +50,10 @@ export const getBiometricCredentials = async (): Promise<{ username: string; pas
     await NativeBiometric.verifyIdentity({
       reason: "Hesabınıza giriş yapın",
       title: "Biyometrik Giriş",
-      subtitle: "Face ID veya parmak izinizi kullanın",
+      subtitle: "Face ID, parmak izi veya cihaz şifresini kullanın",
+      description: "Doğrulama başarısız olursa cihaz şifrenizi girebilirsiniz",
+      useFallback: true,
+      negativeButtonText: "İptal",
     });
     const creds = await NativeBiometric.getCredentials({ server: SERVER });
     return { username: creds.username, password: creds.password };

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { Mail, Phone, Lock, LogIn, Fingerprint } from "lucide-react";
+import { Mail, Phone, Lock, LogIn, Fingerprint, Check } from "lucide-react";
+import { Preferences } from "@capacitor/preferences";
 import {
   isBiometricAvailable,
   getBiometricType,
@@ -26,17 +27,33 @@ export default function MobileLogin() {
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioStored, setBioStored] = useState(false);
   const [bioLabel, setBioLabel] = useState("Face ID / Parmak İzi");
+  const [rememberMe, setRememberMe] = useState(true);
+  const autoPrompted = useRef(false);
 
   useEffect(() => {
     (async () => {
+      // Restore remembered email
+      try {
+        const { value } = await Preferences.get({ key: "doktorumol.remember.email" });
+        if (value) setIdentifier(value);
+      } catch {}
+
       const avail = await isBiometricAvailable();
       setBioAvailable(avail);
       if (avail) {
         const label = await getBiometricType();
         setBioLabel(label !== "none" ? `${label} ile Giriş` : "Biyometrik Giriş");
-        setBioStored(await hasBiometricCredentialsStored());
+        const stored = await hasBiometricCredentialsStored();
+        setBioStored(stored);
+
+        // Auto-prompt biometric on launch if credentials exist
+        if (stored && !autoPrompted.current) {
+          autoPrompted.current = true;
+          setTimeout(() => loginWithBiometric(), 400);
+        }
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePostLogin = async (userId: string, email: string) => {
@@ -73,9 +90,16 @@ export default function MobileLogin() {
       const ok = await handlePostLogin(data.user.id, e.trim());
       if (!ok) return;
 
-      // Offer to save biometric credentials on first successful password login
-      if (!fromBiometric && bioAvailable && !bioStored) {
-        const wantSave = window.confirm("Bir sonraki sefer biyometrik ile giriş yapmak ister misiniz?");
+      // Persist email if Remember Me is on
+      if (rememberMe) {
+        await Preferences.set({ key: "doktorumol.remember.email", value: e.trim() });
+      } else {
+        await Preferences.remove({ key: "doktorumol.remember.email" });
+      }
+
+      // Save biometric credentials when Remember Me + biometrics available
+      if (!fromBiometric && rememberMe && bioAvailable && !bioStored) {
+        const wantSave = window.confirm(`Bir sonraki giriş için ${bioLabel} kullanmak ister misiniz?`);
         if (wantSave) {
           await saveBiometricCredentials(e.trim(), p);
           setBioStored(true);
@@ -213,6 +237,28 @@ export default function MobileLogin() {
                 style={{ background: "hsl(var(--m-bg))", color: "hsl(var(--m-text-primary))" }}
               />
             </div>
+          )}
+
+          {/* Remember Me (email mode only) */}
+          {mode === "email" && (
+            <button
+              type="button"
+              onClick={() => setRememberMe(!rememberMe)}
+              className="flex items-center gap-2 m-pressable"
+            >
+              <span
+                className="w-5 h-5 rounded-md flex items-center justify-center"
+                style={{
+                  background: rememberMe ? "hsl(var(--m-accent))" : "transparent",
+                  border: `2px solid hsl(var(--m-accent))`,
+                }}
+              >
+                {rememberMe && <Check className="w-3 h-3" style={{ color: "white" }} strokeWidth={3} />}
+              </span>
+              <span className="text-[14px] font-medium" style={{ color: "hsl(var(--m-text-primary))" }}>
+                Beni hatırla
+              </span>
+            </button>
           )}
 
           {/* Submit */}
