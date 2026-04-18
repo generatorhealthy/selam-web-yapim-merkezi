@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, MapPin, Star, Video, Users, X, ArrowRight, Heart } from "lucide-react";
+import { Search, MapPin, Star, X, ArrowRight, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
@@ -69,7 +69,7 @@ export default function MobileSearch() {
         if (!cancelled) {
           setSpecialists(shuffleItems(list));
         }
-      } catch (e) {
+      } catch {
         if (!cached?.length && !cancelled) {
           toast({ title: "Hata", description: "Uzmanlar yüklenemedi", variant: "destructive" });
         }

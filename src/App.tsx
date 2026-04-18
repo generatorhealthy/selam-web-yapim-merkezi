@@ -49,7 +49,6 @@ const SpecialtyPage = lazy(() => import("./pages/SpecialtyPage"));
 const Packages = lazy(() => import("./pages/Packages"));
 const CampaignPackage = lazy(() => import("./pages/CampaignPackage"));
 const CampaignPremiumPackage = lazy(() => import("./pages/CampaignPremiumPackage"));
-const DiscountedPackage = lazy(() => import("./pages/DiscountedPackage"));
 const SpecialOffer = lazy(() => import("./pages/SpecialOffer"));
 const SpecialOfferNew = lazy(() => import("./pages/SpecialOfferNew"));
 const Checkout = lazy(() => import("./pages/Checkout"));

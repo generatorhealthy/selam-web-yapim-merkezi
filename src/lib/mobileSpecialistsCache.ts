@@ -17,7 +17,7 @@ export interface CachedPublicSpecialist {
   bio: string | null;
   online_consultation: boolean | null;
   face_to_face_consultation: boolean | null;
-  slug: string | null;
+  slug?: string | null;
   reviews_count?: number | null;
 }
 
