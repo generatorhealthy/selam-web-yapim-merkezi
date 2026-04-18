@@ -84,6 +84,54 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* === MOBILE APP DESIGN SYSTEM (Apple Health inspired) === */
+    /* Surfaces */
+    --m-bg: 220 20% 98%;
+    --m-surface: 0 0% 100%;
+    --m-surface-elevated: 0 0% 100%;
+    --m-surface-muted: 220 14% 96%;
+    --m-border: 220 13% 91%;
+    --m-divider: 220 13% 94%;
+
+    /* Text */
+    --m-text-primary: 222 24% 11%;
+    --m-text-secondary: 220 9% 46%;
+    --m-text-tertiary: 220 9% 65%;
+
+    /* Brand & semantic accents */
+    --m-accent: 214 88% 50%;          /* primary blue */
+    --m-accent-soft: 214 100% 96%;
+    --m-success: 142 71% 45%;
+    --m-success-soft: 142 76% 95%;
+    --m-warning: 38 92% 50%;
+    --m-warning-soft: 38 100% 95%;
+    --m-danger: 0 84% 60%;
+    --m-danger-soft: 0 86% 96%;
+    --m-info: 199 89% 48%;
+    --m-info-soft: 199 100% 95%;
+    --m-purple: 262 83% 58%;
+    --m-purple-soft: 262 100% 96%;
+    --m-pink: 340 82% 60%;
+    --m-pink-soft: 340 100% 96%;
+    --m-teal: 173 80% 40%;
+    --m-teal-soft: 173 76% 94%;
+
+    /* Elevation */
+    --m-shadow-sm: 0 1px 2px 0 hsl(220 30% 20% / 0.04);
+    --m-shadow: 0 1px 3px 0 hsl(220 30% 20% / 0.06), 0 1px 2px -1px hsl(220 30% 20% / 0.04);
+    --m-shadow-md: 0 4px 12px -2px hsl(220 30% 20% / 0.08), 0 2px 4px -2px hsl(220 30% 20% / 0.04);
+    --m-shadow-lg: 0 12px 32px -8px hsl(220 30% 20% / 0.12), 0 4px 8px -4px hsl(220 30% 20% / 0.06);
+
+    /* Radii */
+    --m-radius-sm: 10px;
+    --m-radius: 16px;
+    --m-radius-lg: 22px;
+    --m-radius-xl: 28px;
+
+    /* Safe areas (Capacitor / iOS notch) */
+    --m-safe-top: env(safe-area-inset-top, 0px);
+    --m-safe-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .dark {
