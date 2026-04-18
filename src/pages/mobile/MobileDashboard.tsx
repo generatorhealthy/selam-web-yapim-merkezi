@@ -5,7 +5,7 @@ import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileSection } from "@/components/mobile/MobileSection";
 import {
   Calendar, Clock, CheckCircle2, CheckCheck, FileSignature, ClipboardList,
-  MessageSquare, FileText, CreditCard, Users, User, ChevronRight,
+  MessageSquare, FileText, CreditCard, Users, User,
 } from "lucide-react";
 
 const StatTile = ({ icon: Icon, value, label, tone = "default" }: any) => {

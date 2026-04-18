@@ -46,7 +46,7 @@ export default function MobileSpecialistSubscription() {
         </div>
       ) : !sub ? (
         <div className="px-5">
-          <MobileEmptyState icon={CreditCard} title="Aktif aboneliğiniz yok" subtitle="Bilgileriniz hazır olduğunda burada görünecek" />
+          <MobileEmptyState icon={CreditCard} title="Aktif aboneliğiniz yok" />
         </div>
       ) : (
         <>

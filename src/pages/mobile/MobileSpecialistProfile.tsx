@@ -3,9 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { MobileSection } from "@/components/mobile/MobileSection";
-import { MobileListRow } from "@/components/mobile/MobileListRow";
-import { LogOut, Save, User, Phone, Mail, MapPin, Briefcase, FileText, Bell } from "lucide-react";
+import { LogOut, Save, User, Phone, MapPin, FileText, GraduationCap, Award, Building2, Clock, CalendarDays, HelpCircle, Search } from "lucide-react";
+
+const DAYS = [
+  { key: "monday", label: "Pzt" },
+  { key: "tuesday", label: "Sal" },
+  { key: "wednesday", label: "Çar" },
+  { key: "thursday", label: "Per" },
+  { key: "friday", label: "Cum" },
+  { key: "saturday", label: "Cmt" },
+  { key: "sunday", label: "Paz" },
+];
+
+type Section = "basic" | "professional" | "schedule" | "extra" | "seo";
 
 export default function MobileSpecialistProfile() {
   const navigate = useNavigate();
@@ -13,8 +23,16 @@ export default function MobileSpecialistProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [spec, setSpec] = useState<any>(null);
+  const [section, setSection] = useState<Section>("basic");
+
   const [form, setForm] = useState({
-    name: "", phone: "", city: "", bio: "",
+    name: "", phone: "", city: "", bio: "", address: "",
+    education: "", university: "", certifications: "", hospital: "", experience: "",
+    working_hours_start: "09:00", working_hours_end: "18:00",
+    available_days: [] as string[],
+    online_consultation: false, face_to_face_consultation: false,
+    faq: "",
+    seo_title: "", seo_description: "", seo_keywords: "",
   });
 
   useEffect(() => {
@@ -33,10 +51,34 @@ export default function MobileSpecialistProfile() {
         phone: data.phone || "",
         city: data.city || "",
         bio: data.bio || "",
+        address: data.address || "",
+        education: data.education || "",
+        university: data.university || "",
+        certifications: data.certifications || "",
+        hospital: data.hospital || "",
+        experience: String(data.experience || ""),
+        working_hours_start: data.working_hours_start || "09:00",
+        working_hours_end: data.working_hours_end || "18:00",
+        available_days: data.available_days || [],
+        online_consultation: !!data.online_consultation,
+        face_to_face_consultation: !!data.face_to_face_consultation,
+        faq: data.faq || "",
+        seo_title: data.seo_title || "",
+        seo_description: data.seo_description || "",
+        seo_keywords: data.seo_keywords || "",
       });
       setLoading(false);
     })();
   }, [navigate]);
+
+  const toggleDay = (key: string) => {
+    setForm((f) => ({
+      ...f,
+      available_days: f.available_days.includes(key)
+        ? f.available_days.filter((d) => d !== key)
+        : [...f.available_days, key],
+    }));
+  };
 
   const save = async () => {
     if (!spec) return;
@@ -48,6 +90,21 @@ export default function MobileSpecialistProfile() {
         phone: form.phone,
         city: form.city,
         bio: form.bio,
+        address: form.address,
+        education: form.education,
+        university: form.university,
+        certifications: form.certifications,
+        hospital: form.hospital,
+        experience: Number(form.experience) || null,
+        working_hours_start: form.working_hours_start,
+        working_hours_end: form.working_hours_end,
+        available_days: form.available_days,
+        online_consultation: form.online_consultation,
+        face_to_face_consultation: form.face_to_face_consultation,
+        faq: form.faq,
+        seo_title: form.seo_title,
+        seo_description: form.seo_description,
+        seo_keywords: form.seo_keywords,
       })
       .eq("id", spec.id);
     setSaving(false);
@@ -60,14 +117,13 @@ export default function MobileSpecialistProfile() {
 
   const logout = async () => {
     await supabase.auth.signOut();
-    toast({ title: "Çıkış yapıldı" });
     navigate("/mobile/login");
   };
 
   if (loading) {
     return (
       <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh" }}>
-        <MobileHeader largeTitle="Profil" />
+        <MobileHeader showBack largeTitle="Profil" />
         <div className="px-5"><div className="m-card p-4 text-[14px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Yükleniyor…</div></div>
       </div>
     );
@@ -75,17 +131,17 @@ export default function MobileSpecialistProfile() {
 
   const initial = (form.name || spec?.email || "?").charAt(0).toUpperCase();
 
-  const Field = ({ icon: Icon, label, value, onChange, type = "text", multiline = false }: any) => (
+  const Field = ({ icon: Icon, label, value, onChange, type = "text", multiline = false, rows = 4 }: any) => (
     <div>
-      <label className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>{label}</label>
-      <div className="mt-2 relative">
-        <Icon className="w-5 h-5 absolute left-3 top-3.5" style={{ color: "hsl(var(--m-text-secondary))" }} />
+      <label className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>{label}</label>
+      <div className="mt-1.5 relative">
+        {Icon && <Icon className="w-4 h-4 absolute left-3 top-3.5" style={{ color: "hsl(var(--m-text-secondary))" }} />}
         {multiline ? (
           <textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            rows={4}
-            className="w-full pl-11 pr-3 py-3 rounded-xl text-[15px] outline-none resize-none"
+            rows={rows}
+            className={`w-full pr-3 py-3 rounded-xl text-[14px] outline-none resize-none ${Icon ? "pl-10" : "pl-3"}`}
             style={{ background: "hsl(var(--m-bg))", color: "hsl(var(--m-text-primary))" }}
           />
         ) : (
@@ -93,7 +149,7 @@ export default function MobileSpecialistProfile() {
             type={type}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full h-12 pl-11 pr-3 rounded-xl text-[15px] outline-none"
+            className={`w-full h-11 pr-3 rounded-xl text-[14px] outline-none ${Icon ? "pl-10" : "pl-3"}`}
             style={{ background: "hsl(var(--m-bg))", color: "hsl(var(--m-text-primary))" }}
           />
         )}
@@ -101,12 +157,20 @@ export default function MobileSpecialistProfile() {
     </div>
   );
 
+  const tabs: { id: Section; label: string }[] = [
+    { id: "basic", label: "Temel" },
+    { id: "professional", label: "Mesleki" },
+    { id: "schedule", label: "Çalışma" },
+    { id: "extra", label: "SSS" },
+    { id: "seo", label: "SEO" },
+  ];
+
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 120 }}>
-      <MobileHeader largeTitle="Profil" subtitle={spec?.specialty} />
+      <MobileHeader showBack largeTitle="Profil" subtitle={spec?.specialty} />
 
       {/* Avatar */}
-      <div className="px-5 mb-6">
+      <div className="px-5 mb-4">
         <div className="m-card p-5 flex items-center gap-4">
           {spec?.profile_picture ? (
             <img src={spec.profile_picture} alt={form.name} className="w-16 h-16 rounded-full object-cover" />
@@ -118,37 +182,130 @@ export default function MobileSpecialistProfile() {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-[17px] truncate" style={{ color: "hsl(var(--m-text-primary))" }}>{form.name}</h2>
+            <h2 className="font-bold text-[17px] truncate" style={{ color: "hsl(var(--m-text-primary))" }}>{form.name}</h2>
             <p className="text-[13px] truncate" style={{ color: "hsl(var(--m-text-secondary))" }}>{spec?.email}</p>
           </div>
         </div>
       </div>
 
-      {/* Form */}
-      <div className="px-5 space-y-4 mb-6">
-        <div className="m-card p-5 space-y-4">
-          <Field icon={User} label="Ad Soyad" value={form.name} onChange={(v: string) => setForm({ ...form, name: v })} />
-          <Field icon={Phone} label="Telefon" value={form.phone} onChange={(v: string) => setForm({ ...form, phone: v })} type="tel" />
-          <Field icon={MapPin} label="Şehir" value={form.city} onChange={(v: string) => setForm({ ...form, city: v })} />
-          <Field icon={FileText} label="Hakkımda" value={form.bio} onChange={(v: string) => setForm({ ...form, bio: v })} multiline />
+      {/* Tabs */}
+      <div className="px-5 mb-4">
+        <div className="flex gap-1 p-1 rounded-2xl overflow-x-auto" style={{ background: "hsl(var(--m-surface))" }}>
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setSection(t.id)}
+              className="flex-shrink-0 px-3 h-9 rounded-xl text-[12px] font-semibold m-pressable"
+              style={{
+                background: section === t.id ? "hsl(var(--m-ink))" : "transparent",
+                color: section === t.id ? "hsl(var(--m-bg))" : "hsl(var(--m-text-secondary))",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
+      </div>
 
+      {/* Sections */}
+      <div className="px-5 mb-4">
+        <div className="m-card p-5 space-y-4">
+          {section === "basic" && (
+            <>
+              <Field icon={User} label="Ad Soyad" value={form.name} onChange={(v: string) => setForm({ ...form, name: v })} />
+              <Field icon={Phone} label="Telefon" value={form.phone} onChange={(v: string) => setForm({ ...form, phone: v })} type="tel" />
+              <Field icon={MapPin} label="Şehir" value={form.city} onChange={(v: string) => setForm({ ...form, city: v })} />
+              <Field icon={MapPin} label="Adres" value={form.address} onChange={(v: string) => setForm({ ...form, address: v })} multiline rows={2} />
+              <Field icon={FileText} label="Hakkımda" value={form.bio} onChange={(v: string) => setForm({ ...form, bio: v })} multiline rows={5} />
+            </>
+          )}
+
+          {section === "professional" && (
+            <>
+              <Field icon={GraduationCap} label="Eğitim" value={form.education} onChange={(v: string) => setForm({ ...form, education: v })} multiline />
+              <Field icon={GraduationCap} label="Üniversite" value={form.university} onChange={(v: string) => setForm({ ...form, university: v })} />
+              <Field icon={Award} label="Sertifikalar" value={form.certifications} onChange={(v: string) => setForm({ ...form, certifications: v })} multiline />
+              <Field icon={Building2} label="Hastane / Klinik" value={form.hospital} onChange={(v: string) => setForm({ ...form, hospital: v })} />
+              <Field label="Deneyim (yıl)" value={form.experience} onChange={(v: string) => setForm({ ...form, experience: v })} type="number" />
+            </>
+          )}
+
+          {section === "schedule" && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <Field icon={Clock} label="Başlangıç" value={form.working_hours_start} onChange={(v: string) => setForm({ ...form, working_hours_start: v })} type="time" />
+                <Field icon={Clock} label="Bitiş" value={form.working_hours_end} onChange={(v: string) => setForm({ ...form, working_hours_end: v })} type="time" />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  <CalendarDays className="w-3 h-3 inline mr-1" /> Müsait Günler
+                </label>
+                <div className="mt-2 grid grid-cols-7 gap-1.5">
+                  {DAYS.map((d) => {
+                    const active = form.available_days.includes(d.key);
+                    return (
+                      <button
+                        key={d.key}
+                        onClick={() => toggleDay(d.key)}
+                        className="h-10 rounded-xl text-[12px] font-bold m-pressable"
+                        style={{
+                          background: active ? "hsl(var(--m-ink))" : "hsl(var(--m-bg))",
+                          color: active ? "hsl(var(--m-bg))" : "hsl(var(--m-text-secondary))",
+                        }}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 p-3 rounded-xl cursor-pointer" style={{ background: "hsl(var(--m-bg))" }}>
+                  <input
+                    type="checkbox"
+                    checked={form.online_consultation}
+                    onChange={(e) => setForm({ ...form, online_consultation: e.target.checked })}
+                    className="w-5 h-5"
+                  />
+                  <span className="text-[14px] font-medium" style={{ color: "hsl(var(--m-text-primary))" }}>Online Görüşme</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 rounded-xl cursor-pointer" style={{ background: "hsl(var(--m-bg))" }}>
+                  <input
+                    type="checkbox"
+                    checked={form.face_to_face_consultation}
+                    onChange={(e) => setForm({ ...form, face_to_face_consultation: e.target.checked })}
+                    className="w-5 h-5"
+                  />
+                  <span className="text-[14px] font-medium" style={{ color: "hsl(var(--m-text-primary))" }}>Yüz Yüze Görüşme</span>
+                </label>
+              </div>
+            </>
+          )}
+
+          {section === "extra" && (
+            <Field icon={HelpCircle} label="Sıkça Sorulan Sorular" value={form.faq} onChange={(v: string) => setForm({ ...form, faq: v })} multiline rows={8} />
+          )}
+
+          {section === "seo" && (
+            <>
+              <Field icon={Search} label="SEO Başlığı" value={form.seo_title} onChange={(v: string) => setForm({ ...form, seo_title: v })} />
+              <Field label="SEO Açıklaması" value={form.seo_description} onChange={(v: string) => setForm({ ...form, seo_description: v })} multiline rows={3} />
+              <Field label="Anahtar Kelimeler" value={form.seo_keywords} onChange={(v: string) => setForm({ ...form, seo_keywords: v })} />
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="px-5 mb-4">
         <button
           onClick={save}
           disabled={saving}
           className="w-full h-12 rounded-2xl font-semibold flex items-center justify-center gap-2 m-pressable disabled:opacity-60"
           style={{ background: "hsl(var(--m-accent))", color: "white" }}
         >
-          <Save className="w-5 h-5" /> {saving ? "Kaydediliyor…" : "Kaydet"}
+          <Save className="w-5 h-5" /> {saving ? "Kaydediliyor…" : "Tüm Değişiklikleri Kaydet"}
         </button>
       </div>
-
-      <MobileSection label="Diğer" className="mb-6">
-        <div className="m-card overflow-hidden">
-          <MobileListRow icon={Bell} title="Bildirimler" onClick={() => toast({ title: "Yakında" })} />
-          <MobileListRow icon={Mail} title="E-posta tercihleri" onClick={() => toast({ title: "Yakında" })} />
-        </div>
-      </MobileSection>
 
       <div className="px-5">
         <button
