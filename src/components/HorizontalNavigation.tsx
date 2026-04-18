@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X } from "lucide-react";
+import { X, ChevronDown, User, Stethoscope } from "lucide-react";
 
 import { AdminTopBar } from "./AdminTopBar";
 import RegistrationForm from "./RegistrationForm";
@@ -310,18 +311,36 @@ export function HorizontalNavigation() {
             <div className="flex items-center gap-1.5 flex-nowrap">
               {authInitialized && !isLoggedIn && (
                 <>
-                  <Link
-                    to="/giris-yap"
-                    className="px-3 py-1.5 text-[11px] font-semibold text-blue-600 border border-blue-200 rounded-full hover:bg-blue-50 transition-all duration-300 whitespace-nowrap"
-                  >
-                    Giriş Yap
-                  </Link>
-                  <Link
-                    to="/kayit-ol"
-                    className="px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md whitespace-nowrap"
-                  >
-                    Kayıt Ol
-                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="px-3 py-1.5 text-[11px] font-semibold text-blue-600 border border-blue-200 rounded-full hover:bg-blue-50 transition-all duration-300 whitespace-nowrap inline-flex items-center gap-1">
+                        Giriş <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44 bg-white z-[60]">
+                      <DropdownMenuItem onClick={() => navigate('/danisan-giris')}>
+                        <User className="mr-2 h-4 w-4" /> Danışan Girişi
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/giris-yap')}>
+                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Girişi
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md whitespace-nowrap inline-flex items-center gap-1">
+                        Üye Ol <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44 bg-white z-[60]">
+                      <DropdownMenuItem onClick={() => navigate('/uye-ol')}>
+                        <User className="mr-2 h-4 w-4" /> Danışan Üyeliği
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/kayit-ol')}>
+                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Kaydı
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </>
               )}
               <button
