@@ -364,16 +364,7 @@ export default function MobileSpecialistDetail() {
       {/* SSS / FAQ */}
       {specialist.faq && (
         <Section title="Sıkça Sorulan Sorular">
-          <div
-            className="rounded-[20px] p-5 text-[15px] leading-relaxed whitespace-pre-line"
-            style={{
-              background: "hsl(var(--m-surface))",
-              boxShadow: "var(--m-shadow)",
-              color: "hsl(var(--m-text-secondary))",
-            }}
-          >
-            {specialist.faq}
-          </div>
+          <FaqList raw={specialist.faq} openIdx={openFaqIdx} setOpenIdx={setOpenFaqIdx} />
         </Section>
       )}
 
