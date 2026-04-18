@@ -35,6 +35,7 @@ const MobileSpecialistContracts = lazy(() => import("./pages/mobile/MobileSpecia
 const MobileSpecialistSupport = lazy(() => import("./pages/mobile/MobileSpecialistSupport"));
 const MobileSpecialistSubscription = lazy(() => import("./pages/mobile/MobileSpecialistSubscription"));
 const MobileSpecialistPortfolio = lazy(() => import("./pages/mobile/MobileSpecialistPortfolio"));
+const MobileBlogDetail = lazy(() => import("./pages/mobile/MobileBlogDetail"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -143,6 +144,11 @@ const LegacyBlogRedirect = () => {
   return <Navigate to={slug ? `/blog/${slug}` : "/blog"} replace />;
 };
 
+const MobileBlogDetailRedirect = () => {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={slug ? `/mobile/blog/${slug}` : "/mobile/home"} replace />;
+};
+
 const AppContent = () => {
   const { isNative } = usePlatform();
   useNetworkRecovery();
@@ -177,8 +183,14 @@ const AppContent = () => {
               <Route path="specialist-support" element={<MobileSpecialistSupport />} />
               <Route path="specialist-subscription" element={<MobileSpecialistSubscription />} />
               <Route path="specialist-portfolio" element={<MobileSpecialistPortfolio />} />
+              <Route path="blog/:slug" element={<MobileBlogDetail />} />
               <Route path="register" element={<SpecialistRegistration />} />
             </Route>
+          )}
+
+          {/* Native: blog detay için /blog/:slug → mobil detay rotasına yönlendir */}
+          {isNative && (
+            <Route path="/blog/:slug" element={<MobileBlogDetailRedirect />} />
           )}
 
           {/* Redirect root to mobile if native */}
