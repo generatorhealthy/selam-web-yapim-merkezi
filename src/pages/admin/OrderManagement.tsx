@@ -343,6 +343,130 @@ const OrderManagement = () => {
     enabled: activeTab === "trash",
   });
 
+  const snapshotOrderCaches = useCallback(() => ({
+    orders: queryClient.getQueriesData({ queryKey: ["orders"] }),
+    deletedOrders: queryClient.getQueryData(["deleted_orders"]),
+    orderStats: queryClient.getQueryData(["order_stats"]),
+  }), [queryClient]);
+
+  const restoreOrderCaches = useCallback((snapshot?: ReturnType<typeof snapshotOrderCaches>) => {
+    if (!snapshot) return;
+
+    snapshot.orders.forEach(([queryKey, data]) => {
+      queryClient.setQueryData(queryKey, data);
+    });
+
+    queryClient.setQueryData(["deleted_orders"], snapshot.deletedOrders);
+    queryClient.setQueryData(["order_stats"], snapshot.orderStats);
+  }, [queryClient]);
+
+  const syncOrderInActiveCaches = useCallback((nextOrder: Order) => {
+    queryClient.getQueriesData({ queryKey: ["orders"] }).forEach(([queryKey, cache]) => {
+      if (!cache || typeof cache !== "object" || !("pages" in cache)) return;
+
+      const [, cachedStatusFilter] = queryKey as [string, string, string];
+      const shouldAppear = !nextOrder.deleted_at && (cachedStatusFilter === "all" || cachedStatusFilter === nextOrder.status);
+      let found = false;
+      const typedCache = cache as { pages: OrdersPage[]; pageParams: unknown[] };
+      const pages = typedCache.pages.map((page) => ({
+        ...page,
+        data: page.data.flatMap((order) => {
+          if (order.id !== nextOrder.id) return [order];
+          found = true;
+          return shouldAppear ? [{ ...order, ...nextOrder }] : [];
+        }),
+      }));
+
+      if (!found || !shouldAppear || pages.length === 0) {
+        queryClient.setQueryData(queryKey, { ...typedCache, pages });
+        return;
+      }
+
+      const firstPage = pages[0];
+      const alreadyPresent = firstPage.data.some((order) => order.id === nextOrder.id);
+      queryClient.setQueryData(queryKey, {
+        ...typedCache,
+        pages: alreadyPresent
+          ? pages
+          : [
+              { ...firstPage, data: [nextOrder, ...firstPage.data] },
+              ...pages.slice(1),
+            ],
+      });
+    });
+  }, [queryClient]);
+
+  const removeOrdersFromActiveCaches = useCallback((orderIds: string[]) => {
+    queryClient.getQueriesData({ queryKey: ["orders"] }).forEach(([queryKey, cache]) => {
+      if (!cache || typeof cache !== "object" || !("pages" in cache)) return;
+
+      const typedCache = cache as { pages: OrdersPage[]; pageParams: unknown[] };
+      queryClient.setQueryData(queryKey, {
+        ...typedCache,
+        pages: typedCache.pages.map((page) => ({
+          ...page,
+          data: page.data.filter((order) => !orderIds.includes(order.id)),
+        })),
+      });
+    });
+  }, [queryClient]);
+
+  const upsertDeletedOrdersCache = useCallback((ordersToUpsert: Order[]) => {
+    queryClient.setQueryData(["deleted_orders"], (current: Order[] | undefined) => {
+      const next = [...(current ?? [])];
+
+      ordersToUpsert.forEach((order) => {
+        const deletedOrder = { ...order, deleted_at: order.deleted_at ?? new Date().toISOString() };
+        const withoutCurrent = next.filter((item) => item.id !== order.id);
+        next.splice(0, next.length, deletedOrder, ...withoutCurrent);
+      });
+
+      return next;
+    });
+  }, [queryClient]);
+
+  const removeDeletedOrdersFromCache = useCallback((orderIds: string[]) => {
+    queryClient.setQueryData(["deleted_orders"], (current: Order[] | undefined) =>
+      (current ?? []).filter((order) => !orderIds.includes(order.id))
+    );
+  }, [queryClient]);
+
+  const patchOrderStatsCache = useCallback((ordersToPatch: Array<{ previous?: Order; next?: Order }>) => {
+    queryClient.setQueryData(["order_stats"], (current: any) => {
+      if (!current) return current;
+
+      const nextStats = { ...current };
+
+      ordersToPatch.forEach(({ previous, next }) => {
+        if (previous && !next) {
+          nextStats.total_count = Math.max(0, (nextStats.total_count ?? 0) - 1);
+          nextStats.total_amount = Math.max(0, (nextStats.total_amount ?? 0) - Number(previous.amount || 0));
+          if (previous.status === "approved") nextStats.approved_count = Math.max(0, (nextStats.approved_count ?? 0) - 1);
+          if (previous.status === "pending") nextStats.pending_count = Math.max(0, (nextStats.pending_count ?? 0) - 1);
+        }
+
+        if (!previous && next) {
+          nextStats.total_count = (nextStats.total_count ?? 0) + 1;
+          nextStats.total_amount = (nextStats.total_amount ?? 0) + Number(next.amount || 0);
+          if (next.status === "approved") nextStats.approved_count = (nextStats.approved_count ?? 0) + 1;
+          if (next.status === "pending") nextStats.pending_count = (nextStats.pending_count ?? 0) + 1;
+        }
+
+        if (previous && next) {
+          nextStats.total_amount = (nextStats.total_amount ?? 0) - Number(previous.amount || 0) + Number(next.amount || 0);
+          if (previous.status !== next.status) {
+            if (previous.status === "approved") nextStats.approved_count = Math.max(0, (nextStats.approved_count ?? 0) - 1);
+            if (previous.status === "pending") nextStats.pending_count = Math.max(0, (nextStats.pending_count ?? 0) - 1);
+            if (next.status === "approved") nextStats.approved_count = (nextStats.approved_count ?? 0) + 1;
+            if (next.status === "pending") nextStats.pending_count = (nextStats.pending_count ?? 0) + 1;
+          }
+        }
+      });
+
+      return nextStats;
+    });
+  }, [queryClient]);
+
   // Order notes query
   const { data: orderNotes, refetch: refetchNotes } = useQuery({
     queryKey: ["order_notes"],
@@ -452,28 +576,17 @@ const OrderManagement = () => {
       return data;
     },
     onMutate: async (updatedOrder) => {
-      // Save previous status before optimistic update for onSuccess logic
-      const prevStatus = orders?.find(o => o.id === updatedOrder.id)?.status;
-      
-      // Optimistic update: immediately reflect changes in UI
-      const queryKey = ["orders", statusFilter, isSearchMode ? "search" : "browse"];
-      await queryClient.cancelQueries({ queryKey });
-      const previousData = queryClient.getQueryData(queryKey);
-      
-      queryClient.setQueryData(queryKey, (old: any) => {
-        if (!old?.pages) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page: OrdersPage) => ({
-            ...page,
-            data: page.data.map((o: Order) => 
-              o.id === updatedOrder.id ? { ...o, ...updatedOrder, updated_at: new Date().toISOString() } : o
-            ),
-          })),
-        };
-      });
-      
-      return { previousData, queryKey, prevStatus };
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const previousOrder = rawOrders.find((o) => o.id === updatedOrder.id);
+      const optimisticOrder = { ...previousOrder, ...updatedOrder, updated_at: new Date().toISOString() } as Order;
+
+      syncOrderInActiveCaches(optimisticOrder);
+      if (previousOrder) {
+        patchOrderStatsCache([{ previous: previousOrder, next: optimisticOrder }]);
+      }
+
+      return { snapshot, prevStatus: previousOrder?.status, optimisticOrder };
     },
     onSuccess: async (data, _vars, context) => {
       const prevStatus = context?.prevStatus;
@@ -506,18 +619,10 @@ const OrderManagement = () => {
         }
       }
       
-      // Update cache with server response
-      const queryKey = context?.queryKey || ["orders", statusFilter, isSearchMode ? "search" : "browse"];
-      queryClient.setQueryData(queryKey, (old: any) => {
-        if (!old?.pages) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page: OrdersPage) => ({
-            ...page,
-            data: page.data.map((o: Order) => o.id === data.id ? data as Order : o),
-          })),
-        };
-      });
+      syncOrderInActiveCaches(data as Order);
+      if (context?.optimisticOrder) {
+        patchOrderStatsCache([{ previous: context.optimisticOrder as Order, next: data as Order }]);
+      }
       
       toast({
         title: "Sipariş Güncellendi",
@@ -528,10 +633,7 @@ const OrderManagement = () => {
       setSelectedOrder(null);
     },
     onError: (error, _updatedOrder, context) => {
-      // Rollback optimistic update
-      if (context?.previousData && context?.queryKey) {
-        queryClient.setQueryData(context.queryKey, context.previousData);
-      }
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Sipariş güncellenirken hata oluştu",
@@ -551,6 +653,19 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const previousOrder = rawOrders.find((order) => order.id === id);
+
+      if (previousOrder) {
+        removeOrdersFromActiveCaches([id]);
+        upsertDeletedOrdersCache([{ ...previousOrder, deleted_at: new Date().toISOString() }]);
+        patchOrderStatsCache([{ previous: previousOrder }]);
+      }
+
+      return { snapshot };
+    },
     onSuccess: () => {
       toast({
         title: "Sipariş Silindi",
@@ -561,7 +676,8 @@ const OrderManagement = () => {
       queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
       setSelectedOrder(null);
     },
-    onError: (error) => {
+    onError: (error, _id, context) => {
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Sipariş silinirken hata oluştu",
@@ -581,6 +697,19 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const affectedOrders = rawOrders.filter((order) => ids.includes(order.id));
+
+      if (affectedOrders.length > 0) {
+        removeOrdersFromActiveCaches(ids);
+        upsertDeletedOrdersCache(affectedOrders.map((order) => ({ ...order, deleted_at: new Date().toISOString() })));
+        patchOrderStatsCache(affectedOrders.map((order) => ({ previous: order })));
+      }
+
+      return { snapshot };
+    },
     onSuccess: (_, ids) => {
       toast({
         title: "Siparişler Silindi",
@@ -592,7 +721,8 @@ const OrderManagement = () => {
       setSelectedOrderIds([]);
       setSelectAll(false);
     },
-    onError: (error) => {
+    onError: (error, _ids, context) => {
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Siparişler silinirken hata oluştu",
@@ -612,6 +742,20 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const previousOrder = (deletedOrders ?? []).find((order) => order.id === id);
+
+      if (previousOrder) {
+        const restoredOrder = { ...previousOrder, deleted_at: null } as Order;
+        removeDeletedOrdersFromCache([id]);
+        syncOrderInActiveCaches(restoredOrder);
+        patchOrderStatsCache([{ next: restoredOrder }]);
+      }
+
+      return { snapshot };
+    },
     onSuccess: () => {
       toast({
         title: "Sipariş Geri Getirildi",
@@ -621,7 +765,8 @@ const OrderManagement = () => {
       queryClient.invalidateQueries({ queryKey: ["order_stats"] });
       queryClient.invalidateQueries({ queryKey: ["deleted_orders"] });
     },
-    onError: (error) => {
+    onError: (error, _id, context) => {
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Sipariş geri getirilirken hata oluştu",
@@ -641,6 +786,19 @@ const OrderManagement = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const affectedOrders = (deletedOrders ?? []).filter((order) => ids.includes(order.id));
+
+      if (affectedOrders.length > 0) {
+        removeDeletedOrdersFromCache(ids);
+        affectedOrders.forEach((order) => syncOrderInActiveCaches({ ...order, deleted_at: null } as Order));
+        patchOrderStatsCache(affectedOrders.map((order) => ({ next: { ...order, deleted_at: null } as Order })));
+      }
+
+      return { snapshot };
+    },
     onSuccess: (_, ids) => {
       toast({
         title: "Siparişler Geri Getirildi",
@@ -652,7 +810,8 @@ const OrderManagement = () => {
       setSelectedOrderIds([]);
       setSelectAll(false);
     },
-    onError: (error) => {
+    onError: (error, _ids, context) => {
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Siparişler geri getirilirken hata oluştu",
