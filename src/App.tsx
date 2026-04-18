@@ -31,6 +31,10 @@ const MobileSpecialistAppointments = lazy(() => import("./pages/mobile/MobileSpe
 const MobileSpecialistClients = lazy(() => import("./pages/mobile/MobileSpecialistClients"));
 const MobileSpecialistProfile = lazy(() => import("./pages/mobile/MobileSpecialistProfile"));
 const MobileSpecialistBlog = lazy(() => import("./pages/mobile/MobileSpecialistBlog"));
+const MobileSpecialistContracts = lazy(() => import("./pages/mobile/MobileSpecialistContracts"));
+const MobileSpecialistSupport = lazy(() => import("./pages/mobile/MobileSpecialistSupport"));
+const MobileSpecialistSubscription = lazy(() => import("./pages/mobile/MobileSpecialistSubscription"));
+const MobileSpecialistPortfolio = lazy(() => import("./pages/mobile/MobileSpecialistPortfolio"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -169,6 +173,10 @@ const AppContent = () => {
               <Route path="specialist-clients" element={<MobileSpecialistClients />} />
               <Route path="specialist-profile" element={<MobileSpecialistProfile />} />
               <Route path="specialist-blog" element={<MobileSpecialistBlog />} />
+              <Route path="specialist-contracts" element={<MobileSpecialistContracts />} />
+              <Route path="specialist-support" element={<MobileSpecialistSupport />} />
+              <Route path="specialist-subscription" element={<MobileSpecialistSubscription />} />
+              <Route path="specialist-portfolio" element={<MobileSpecialistPortfolio />} />
             </Route>
           )}
 
