@@ -29,6 +29,7 @@ interface Specialist {
   online_consultation: boolean | null;
   face_to_face_consultation: boolean | null;
   address?: string | null;
+  phone?: string | null;
   working_hours_start?: string | null;
   working_hours_end?: string | null;
   available_days?: string[] | null;
@@ -70,6 +71,15 @@ export default function MobileSpecialistDetail() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [bioExpanded, setBioExpanded] = useState(false);
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+
+  const loadReviews = async (specId: string) => {
+    const { data: rev } = await supabase.rpc("get_public_reviews", {
+      p_limit: 20, p_specialist_id: specId,
+    });
+    if (rev) setReviews(rev as Review[]);
+  };
 
   useEffect(() => {
     let cancelled = false;
