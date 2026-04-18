@@ -119,7 +119,9 @@ const OrderManagement = () => {
   };
 
   const BROWSE_PAGE_SIZE = 50;
+  const SEARCH_PAGE_SIZE = 250;
   const isSearchMode = searchInput.trim().length > 0;
+  const normalizedSearchInput = searchInput.trim().toLowerCase();
   const ORDER_LIST_SELECT = "id, customer_name, customer_email, package_name, amount, status, created_at, customer_phone, customer_address, customer_city, customer_tc_no, company_name, company_tax_no, company_tax_office, package_type, payment_method, customer_type, contract_ip_address, is_first_order, subscription_month, deleted_at, contract_emails_sent, invoice_sent, invoice_number, invoice_date, payment_status, updated_at, approved_by, approved_at, parent_order_id, payment_transaction_id";
   const DELETED_ORDER_SELECT = "id, customer_name, customer_email, package_name, amount, deleted_at";
 
@@ -259,13 +261,14 @@ const OrderManagement = () => {
         query = query.lt("created_at", cursor);
       }
 
-      const { data, error } = await query.limit(BROWSE_PAGE_SIZE + 1);
+      const pageSize = isSearchMode ? SEARCH_PAGE_SIZE : BROWSE_PAGE_SIZE;
+      const { data, error } = await query.limit(pageSize + 1);
 
       if (error) throw error;
 
       const fetchedOrders = (data ?? []) as Order[];
-      const hasMore = fetchedOrders.length > BROWSE_PAGE_SIZE;
-      const pageData = hasMore ? fetchedOrders.slice(0, BROWSE_PAGE_SIZE) : fetchedOrders;
+      const hasMore = fetchedOrders.length > pageSize;
+      const pageData = hasMore ? fetchedOrders.slice(0, pageSize) : fetchedOrders;
       const nextCursor = hasMore ? pageData[pageData.length - 1]?.created_at : undefined;
 
       return { data: pageData, hasMore, nextCursor };
@@ -282,16 +285,15 @@ const OrderManagement = () => {
   // Arama modunda DB tarafında filtreleme yapıldığı için sonuçları doğrudan kullan
   const orders = useMemo(() => {
     if (!isSearchMode) return rawOrders;
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    if (!normalizedSearch) return rawOrders;
+    if (!normalizedSearchInput) return rawOrders;
     // Güvenlik için ek client-side filtre (cache yarış durumlarına karşı)
     return rawOrders.filter(order =>
-      order.customer_name?.toLowerCase().includes(normalizedSearch) ||
-      order.customer_email?.toLowerCase().includes(normalizedSearch) ||
-      order.package_name?.toLowerCase().includes(normalizedSearch) ||
-      order.customer_phone?.toLowerCase().includes(normalizedSearch)
+      order.customer_name?.toLowerCase().includes(normalizedSearchInput) ||
+      order.customer_email?.toLowerCase().includes(normalizedSearchInput) ||
+      order.package_name?.toLowerCase().includes(normalizedSearchInput) ||
+      order.customer_phone?.toLowerCase().includes(normalizedSearchInput)
     );
-  }, [rawOrders, isSearchMode, searchTerm]);
+  }, [rawOrders, isSearchMode, normalizedSearchInput]);
 
   const totalOrders = orders.length;
   const hasLoadedActiveOrders = rawOrders.length > 0;
