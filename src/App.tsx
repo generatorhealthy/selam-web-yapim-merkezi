@@ -24,6 +24,12 @@ const MobileBooking = lazy(() => import("./pages/mobile/MobileBooking"));
 const MobileAppointments = lazy(() => import("./pages/mobile/MobileAppointments"));
 const MobileTests = lazy(() => import("./pages/mobile/MobileTests"));
 const MobileTestTaker = lazy(() => import("./pages/mobile/MobileTestTaker"));
+const MobileLogin = lazy(() => import("./pages/mobile/MobileLogin"));
+const MobileDashboard = lazy(() => import("./pages/mobile/MobileDashboard"));
+const MobileSpecialistAppointments = lazy(() => import("./pages/mobile/MobileSpecialistAppointments"));
+const MobileSpecialistClients = lazy(() => import("./pages/mobile/MobileSpecialistClients"));
+const MobileSpecialistProfile = lazy(() => import("./pages/mobile/MobileSpecialistProfile"));
+const MobileSpecialistBlog = lazy(() => import("./pages/mobile/MobileSpecialistBlog"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -155,7 +161,12 @@ const AppContent = () => {
               <Route path="tests" element={<MobileTests />} />
               <Route path="tests/:testId" element={<MobileTestTaker />} />
               <Route path="profile" element={<MobileProfile />} />
-              <Route path="dashboard" element={<MobileHome />} />
+              <Route path="login" element={<MobileLogin />} />
+              <Route path="dashboard" element={<MobileDashboard />} />
+              <Route path="specialist-appointments" element={<MobileSpecialistAppointments />} />
+              <Route path="specialist-clients" element={<MobileSpecialistClients />} />
+              <Route path="specialist-profile" element={<MobileSpecialistProfile />} />
+              <Route path="specialist-blog" element={<MobileSpecialistBlog />} />
             </Route>
           )}
 
