@@ -56,19 +56,31 @@ export default function MobileLogin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handlePostLogin = async (userId: string, email: string) => {
+  // Returns the route to navigate to, or null if unauthorized
+  const resolvePostLoginRoute = async (userId: string, email: string): Promise<string | null> => {
+    // Check specialist first
     const { data: spec } = await supabase
       .from("specialists")
-      .select("id, is_active")
+      .select("id")
       .or(`user_id.eq.${userId},email.eq.${email}`)
       .maybeSingle();
+    if (spec) return "/mobile/dashboard";
 
-    if (!spec) {
-      await supabase.auth.signOut();
-      toast({ title: "Yetkisiz", description: "Bu hesap uzman olarak kayıtlı değil", variant: "destructive" });
-      return false;
-    }
-    return true;
+    // Check patient
+    const { data: patient } = await supabase
+      .from("patient_profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (patient) return "/mobile/patient-dashboard";
+
+    // Auto-create patient profile for new OAuth users / fallback
+    await supabase.from("patient_profiles").insert({
+      user_id: userId,
+      email,
+      auth_provider: "email",
+    });
+    return "/mobile/patient-dashboard";
   };
 
   const loginEmail = async (emailArg?: string, passwordArg?: string, fromBiometric = false) => {
