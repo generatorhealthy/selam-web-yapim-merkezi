@@ -62,8 +62,30 @@ export const useUserRole = () => {
           return;
         }
 
+        if (profile) {
+          lastLoadedUserIdRef.current = currentUser.id;
+          updateProfileState(profile);
+          return;
+        }
+
+        // No user_profile row → check if this is a patient
+        const { data: patient } = await supabase
+          .from("patient_profiles")
+          .select("id, full_name, email")
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+
         lastLoadedUserIdRef.current = currentUser.id;
-        updateProfileState(profile ?? FALLBACK_PROFILE);
+        if (patient) {
+          updateProfileState({
+            role: "patient" as UserRole,
+            is_approved: true,
+            name: patient.full_name ?? undefined,
+            email: patient.email ?? undefined,
+          });
+        } else {
+          updateProfileState(FALLBACK_PROFILE);
+        }
       } catch (error) {
         console.error("Error in loadUserProfile:", error);
         updateProfileState(FALLBACK_PROFILE);
