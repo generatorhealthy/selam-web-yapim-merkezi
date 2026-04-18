@@ -123,7 +123,7 @@ export default function MobileHome() {
         }
         if (specialistsRes.data) {
           const shuffled = [...specialistsRes.data].sort(() => Math.random() - 0.5);
-          setSpecialists(shuffled.slice(0, 8) as Specialist[]);
+          setSpecialists(shuffled.slice(0, 30) as Specialist[]);
         }
       } catch (err) {
         console.error("MobileHome data error:", err);
