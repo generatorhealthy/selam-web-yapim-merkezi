@@ -1638,7 +1638,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                     onChange={(e) => setSearchInput(e.target.value)}
                     className="pl-12 h-12 border-0 bg-white/80 backdrop-blur-sm shadow-inner text-gray-700 placeholder:text-gray-500"
                   />
-                  {(searchInput !== searchTerm || isSearchLoadingAllResults) && (
+                  {isSearchLoadingAllResults && (
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
                     </div>
