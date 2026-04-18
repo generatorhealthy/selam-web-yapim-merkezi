@@ -99,7 +99,7 @@ export default function MobileBooking() {
   };
 
   return (
-    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 120 }}>
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 200 }}>
       <MobileHeader
         showBack
         title="Randevu"
