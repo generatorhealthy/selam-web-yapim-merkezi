@@ -109,7 +109,7 @@ export default function MobileHome() {
             .select("id,name,specialty,profile_picture,rating,experience,city,reviews_count")
             .eq("is_active", true)
             .not("profile_picture", "is", null)
-            .limit(60),
+            .limit(100),
         ]);
 
         if (cancelled) return;
