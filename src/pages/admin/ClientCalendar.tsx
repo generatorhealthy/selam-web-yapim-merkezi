@@ -191,6 +191,71 @@ const ClientCalendar = () => {
       setSavingNote(false);
     }
   };
+  const fetchUrgentNotes = async () => {
+    const { data, error } = await supabase
+      .from('urgent_referral_notes')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && data) setUrgentNotes(data as UrgentNote[]);
+  };
+
+  const addUrgentNote = async () => {
+    const text = newUrgentNote.trim();
+    if (!text) return;
+    setSavingUrgent(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from('urgent_referral_notes')
+        .insert({
+          note: text,
+          created_by: user?.id || null,
+          created_by_name: userProfile?.name || user?.email || null,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      setUrgentNotes(prev => [data as UrgentNote, ...prev]);
+      setNewUrgentNote("");
+      toast({ title: "Not eklendi" });
+    } catch {
+      toast({ title: "Hata", description: "Not eklenemedi", variant: "destructive" });
+    } finally {
+      setSavingUrgent(false);
+    }
+  };
+
+  const updateUrgentNote = async (id: string) => {
+    const text = editingUrgentText.trim();
+    if (!text) return;
+    setSavingUrgent(true);
+    try {
+      const { error } = await supabase
+        .from('urgent_referral_notes')
+        .update({ note: text, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+      setUrgentNotes(prev => prev.map(n => n.id === id ? { ...n, note: text } : n));
+      setEditingUrgentId(null);
+      toast({ title: "Not güncellendi" });
+    } catch {
+      toast({ title: "Hata", description: "Not güncellenemedi", variant: "destructive" });
+    } finally {
+      setSavingUrgent(false);
+    }
+  };
+
+  const deleteUrgentNote = async (id: string) => {
+    if (!confirm("Bu notu silmek istediğinize emin misiniz?")) return;
+    try {
+      const { error } = await supabase.from('urgent_referral_notes').delete().eq('id', id);
+      if (error) throw error;
+      setUrgentNotes(prev => prev.filter(n => n.id !== id));
+      toast({ title: "Not silindi" });
+    } catch {
+      toast({ title: "Hata", description: "Not silinemedi", variant: "destructive" });
+    }
+  };
 
 
   useEffect(() => {
