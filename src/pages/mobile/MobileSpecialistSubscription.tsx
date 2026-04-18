@@ -44,12 +44,11 @@ export default function MobileSpecialistSubscription() {
       }
       setSub(autoOrder);
 
-      // Geçmiş ödemeler — email + isim birleşimi
+      // Geçmiş ödemeler — email + isim birleşimi (tüm durumlar dahil: bekleyen, onaylı vs.)
       const { data: paidByEmail } = await supabase
         .from("orders")
         .select("amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
         .ilike("customer_email", email)
-        .in("status", ["approved", "completed"])
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
@@ -59,7 +58,6 @@ export default function MobileSpecialistSubscription() {
           .from("orders")
           .select("amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
           .eq("customer_name", specName)
-          .in("status", ["approved", "completed"])
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
         const merged = new Map<string, any>();
