@@ -109,7 +109,7 @@ export default function MobileHome() {
             .select("id,name,specialty,profile_picture,rating,experience,city,reviews_count")
             .eq("is_active", true)
             .not("profile_picture", "is", null)
-            .limit(60),
+            .limit(100),
         ]);
 
         if (cancelled) return;
@@ -123,7 +123,7 @@ export default function MobileHome() {
         }
         if (specialistsRes.data) {
           const shuffled = [...specialistsRes.data].sort(() => Math.random() - 0.5);
-          setSpecialists(shuffled.slice(0, 8) as Specialist[]);
+          setSpecialists(shuffled.slice(0, 30) as Specialist[]);
         }
       } catch (err) {
         console.error("MobileHome data error:", err);
@@ -280,7 +280,7 @@ export default function MobileHome() {
       {specialists.length > 0 && (
         <section className="mb-7">
           <div className="flex items-end justify-between px-5 mb-4">
-            <h2 className="m-title">Branşları Keşfet</h2>
+            <h2 className="m-title">Uzmanları Keşfet</h2>
             <button
               onClick={() => navigate("/mobile/search")}
               className="text-[14px] font-semibold m-pressable"
@@ -290,17 +290,12 @@ export default function MobileHome() {
             </button>
           </div>
           <div className="flex gap-4 px-5 overflow-x-auto m-no-scrollbar pb-2">
-            {Array.from(
-              specialists.reduce((map, s) => {
-                if (!map.has(s.specialty)) map.set(s.specialty, s);
-                return map;
-              }, new Map<string, Specialist>()).values()
-            ).slice(0, 8).map((s, idx) => (
+            {specialists.slice(0, 30).map((s, idx) => (
               <button
-                key={s.specialty}
-                onClick={() => navigate(`/mobile/search?specialty=${encodeURIComponent(s.specialty)}`)}
+                key={s.id}
+                onClick={() => navigate(`/mobile/specialist/${s.id}`)}
                 className="shrink-0 flex flex-col items-center gap-2 m-pressable"
-                style={{ width: 84 }}
+                style={{ width: 92 }}
               >
                 <div
                   className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center"
@@ -310,16 +305,22 @@ export default function MobileHome() {
                   }}
                 >
                   {s.profile_picture ? (
-                    <img src={s.profile_picture} alt={s.specialty} className="w-full h-full object-cover" />
+                    <img src={s.profile_picture} alt={s.name} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-[28px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
-                      {s.specialty.charAt(0)}
+                      {s.name.charAt(0)}
                     </span>
                   )}
                 </div>
                 <span
                   className="text-[12px] font-semibold text-center leading-tight line-clamp-2"
                   style={{ color: "hsl(var(--m-text-primary))" }}
+                >
+                  {s.name}
+                </span>
+                <span
+                  className="text-[11px] text-center leading-tight line-clamp-1"
+                  style={{ color: "hsl(var(--m-text-secondary))" }}
                 >
                   {s.specialty}
                 </span>
