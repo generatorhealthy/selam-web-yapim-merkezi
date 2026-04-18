@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X } from "lucide-react";
+import { X, ChevronDown, User, Stethoscope } from "lucide-react";
 
 import { AdminTopBar } from "./AdminTopBar";
 import RegistrationForm from "./RegistrationForm";
@@ -41,7 +42,7 @@ export function HorizontalNavigation() {
     try {
       console.log('Fetching profile for user:', userId);
       
-      // Get user role
+      // Get user role from user_profiles
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('role')
@@ -50,8 +51,6 @@ export function HorizontalNavigation() {
         
       if (profileError) {
         console.log('Profile fetch error:', profileError);
-        setUserRole('user'); // Default fallback
-        return;
       }
         
       if (profile) {
@@ -60,57 +59,50 @@ export function HorizontalNavigation() {
         
         // If user is a specialist, get their profile picture and name
         if (profile.role === 'specialist') {
-          console.log('Fetching specialist profile for user:', userId);
-          const { data: specialistProfile, error: specialistError } = await supabase
+          const { data: specialistProfile } = await supabase
             .from('specialists')
             .select('profile_picture, name')
             .eq('user_id', userId)
             .maybeSingle();
           
-          if (specialistError) {
-            console.log('Specialist fetch error:', specialistError);
-            // Fallback: try to find by email
+          if (specialistProfile) {
+            setUserProfile(specialistProfile);
+          } else {
             const currentUser = await supabase.auth.getUser();
             if (currentUser.data.user?.email) {
-              console.log('Trying to find specialist by email:', currentUser.data.user.email);
               const { data: specialistByEmail } = await supabase
                 .from('specialists')
                 .select('profile_picture, name')
                 .eq('email', currentUser.data.user.email)
                 .maybeSingle();
-              
-              if (specialistByEmail) {
-                console.log('Found specialist by email:', specialistByEmail);
-                setUserProfile(specialistByEmail);
-              } else {
-                console.log('No specialist found by email');
-                setUserProfile(null);
-              }
+              setUserProfile(specialistByEmail || null);
             }
-            return;
-          }
-          
-          if (specialistProfile) {
-            console.log('Specialist profile found:', specialistProfile);
-            setUserProfile(specialistProfile);
-          } else {
-            console.log('No specialist profile found');
-            setUserProfile(null);
           }
         } else {
-          // Clear specialist profile if not a specialist
-          console.log('User is not a specialist, clearing profile');
           setUserProfile(null);
         }
+        return;
+      }
+      
+      // No user_profiles row → check patient_profiles
+      const { data: patient } = await supabase
+        .from('patient_profiles')
+        .select('full_name, profile_picture')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (patient) {
+        console.log('Patient profile found');
+        setUserRole('patient');
+        setUserProfile({ name: patient.full_name, profile_picture: patient.profile_picture });
       } else {
-        // No profile found, set defaults
-        console.log('No user profile found, setting defaults');
-        setUserRole('user');
+        console.log('No profile found, defaulting to patient');
+        setUserRole('patient');
         setUserProfile(null);
       }
     } catch (error) {
       console.log('Profile fetch error:', error);
-      setUserRole('user');
+      setUserRole('patient');
       setUserProfile(null);
     }
   };
@@ -225,13 +217,12 @@ export function HorizontalNavigation() {
     }
     
     if (isLoggedIn && userRole === 'specialist') {
-      console.log('Navigating to doctor panel...');
       navigate("/doktor-paneli");
     } else if (isLoggedIn && (userRole === 'admin' || userRole === 'staff')) {
-      console.log('Navigating to admin panel...');
       navigate("/admin");
+    } else if (isLoggedIn && userRole === 'patient') {
+      navigate("/danisan-paneli");
     } else {
-      console.log('Not logged in or no specific role, navigating to login...');
       navigate("/giris-yap");
     }
     setIsMobileMenuOpen(false);
@@ -320,18 +311,36 @@ export function HorizontalNavigation() {
             <div className="flex items-center gap-1.5 flex-nowrap">
               {authInitialized && !isLoggedIn && (
                 <>
-                  <Link
-                    to="/giris-yap"
-                    className="px-3 py-1.5 text-[11px] font-semibold text-blue-600 border border-blue-200 rounded-full hover:bg-blue-50 transition-all duration-300 whitespace-nowrap"
-                  >
-                    Giriş Yap
-                  </Link>
-                  <Link
-                    to="/kayit-ol"
-                    className="px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md whitespace-nowrap"
-                  >
-                    Kayıt Ol
-                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="px-3 py-1.5 text-[11px] font-semibold text-blue-600 border border-blue-200 rounded-full hover:bg-blue-50 transition-all duration-300 whitespace-nowrap inline-flex items-center gap-1">
+                        Giriş <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44 bg-white z-[60]">
+                      <DropdownMenuItem onClick={() => navigate('/danisan-giris')}>
+                        <User className="mr-2 h-4 w-4" /> Danışan Girişi
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/giris-yap')}>
+                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Girişi
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md whitespace-nowrap inline-flex items-center gap-1">
+                        Üye Ol <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44 bg-white z-[60]">
+                      <DropdownMenuItem onClick={() => navigate('/uye-ol')}>
+                        <User className="mr-2 h-4 w-4" /> Danışan Üyeliği
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/kayit-ol')}>
+                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Kaydı
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </>
               )}
               <button
@@ -368,43 +377,75 @@ export function HorizontalNavigation() {
                   onClick={handleProfileClick}
                 >
                   <Avatar className="w-9 h-9 border-2 border-blue-100">
-                    <AvatarImage 
-                      src={userProfile?.profile_picture || undefined} 
-                      alt="Profil"
-                    />
+                    <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
                     <AvatarFallback className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-sm">
-                    <p className="font-medium text-gray-900">
-                      {userProfile?.name || 'Dr. Uzman'}
-                    </p>
+                    <p className="font-medium text-gray-900">{userProfile?.name || 'Dr. Uzman'}</p>
                     <p className="text-xs text-gray-500">Uzman Paneli</p>
                   </div>
                 </div>
               )}
-              
-               {/* Kayıt ol ve Giriş butonları */}
-               {authInitialized && !isLoggedIn && (
-                 <div className="flex items-center gap-3">
-                   {currentPath !== '/bu-aya-ozel' && (
+
+              {/* Danışan profili */}
+              {authInitialized && !isLoading && isLoggedIn && userRole === 'patient' && (
+                <div 
+                  className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 rounded-full transition-all duration-200 border border-gray-100 hover:border-blue-200" 
+                  onClick={handleProfileClick}
+                >
+                  <Avatar className="w-9 h-9 border-2 border-blue-100">
+                    <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
+                    <AvatarFallback className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-sm">
+                    <p className="font-medium text-gray-900">{userProfile?.name || 'Danışan'}</p>
+                    <p className="text-xs text-gray-500">Danışan Paneli</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Kayıt ol ve Giriş butonları */}
+              {authInitialized && !isLoggedIn && (
+                <div className="flex items-center gap-3">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button 
                         variant="outline"
                         className="border-blue-200 text-blue-600 hover:bg-blue-50 rounded-full font-medium px-6 py-2"
-                        onClick={() => navigate('/kayit-ol')}
                       >
-                        Kayıt Olmak İstiyorum
+                        Üye Ol <ChevronDown className="ml-1 h-4 w-4" />
                       </Button>
-                   )}
-                   <Button 
-                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2"
-                     onClick={() => navigate('/giris-yap')}
-                   >
-                     Giriş
-                   </Button>
-                 </div>
-               )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 bg-white z-[60]">
+                      <DropdownMenuItem onClick={() => navigate('/uye-ol')}>
+                        <User className="mr-2 h-4 w-4" /> Danışan Üyeliği
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/kayit-ol')}>
+                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Kaydı
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2">
+                        Giriş <ChevronDown className="ml-1 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 bg-white z-[60]">
+                      <DropdownMenuItem onClick={() => navigate('/danisan-giris')}>
+                        <User className="mr-2 h-4 w-4" /> Danışan Girişi
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/giris-yap')}>
+                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Girişi
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
             </div>
           )}
         </div>
