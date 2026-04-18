@@ -261,6 +261,7 @@ const ClientCalendar = () => {
   useEffect(() => {
     if (canAccess) {
       fetchSpecialistsWithReferrals();
+      fetchUrgentNotes();
     }
   }, [canAccess, currentMonth, currentYear]);
 
