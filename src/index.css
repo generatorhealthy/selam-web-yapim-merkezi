@@ -133,11 +133,11 @@ All colors MUST be HSL.
     --m-shadow-md: 0 4px 12px -2px hsl(220 30% 20% / 0.08), 0 2px 4px -2px hsl(220 30% 20% / 0.04);
     --m-shadow-lg: 0 12px 32px -8px hsl(220 30% 20% / 0.12), 0 4px 8px -4px hsl(220 30% 20% / 0.06);
 
-    /* Radii */
-    --m-radius-sm: 10px;
-    --m-radius: 16px;
-    --m-radius-lg: 22px;
-    --m-radius-xl: 28px;
+    /* Radii — extra round, premium */
+    --m-radius-sm: 14px;
+    --m-radius: 22px;
+    --m-radius-lg: 28px;
+    --m-radius-xl: 36px;
 
     /* Safe areas (Capacitor / iOS notch) */
     --m-safe-top: env(safe-area-inset-top, 0px);
@@ -226,28 +226,50 @@ All colors MUST be HSL.
   }
 
   .m-headline {
-    font-size: 34px;
-    line-height: 1.1;
+    font-size: 38px;
+    line-height: 1.05;
     font-weight: 800;
-    letter-spacing: -0.022em;
+    letter-spacing: -0.03em;
     color: hsl(var(--m-text-primary));
   }
 
   .m-title {
-    font-size: 22px;
-    line-height: 1.2;
+    font-size: 24px;
+    line-height: 1.15;
     font-weight: 700;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
     color: hsl(var(--m-text-primary));
   }
 
   .m-section-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
     color: hsl(var(--m-text-secondary));
   }
+
+  /* Round chip pill — Zocdoc style */
+  .m-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: hsl(var(--m-surface));
+    box-shadow: var(--m-shadow);
+    font-size: 15px;
+    font-weight: 600;
+    color: hsl(var(--m-text-primary));
+    white-space: nowrap;
+  }
+  .m-chip--active {
+    background: hsl(var(--m-ink));
+    color: hsl(var(--m-bg));
+  }
+
+  .m-no-scrollbar::-webkit-scrollbar { display: none; }
+  .m-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 @layer base {
