@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { Mail, Phone, Lock, LogIn, Fingerprint } from "lucide-react";
+import {
+  isBiometricAvailable,
+  getBiometricType,
+  saveBiometricCredentials,
+  getBiometricCredentials,
+  hasBiometricCredentialsStored,
+} from "@/services/biometricService";
 
 type Mode = "email" | "phone";
 
@@ -16,32 +23,63 @@ export default function MobileLogin() {
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioStored, setBioStored] = useState(false);
+  const [bioLabel, setBioLabel] = useState("Face ID / Parmak İzi");
 
-  const loginEmail = async () => {
-    if (!identifier || !password) {
+  useEffect(() => {
+    (async () => {
+      const avail = await isBiometricAvailable();
+      setBioAvailable(avail);
+      if (avail) {
+        const label = await getBiometricType();
+        setBioLabel(label !== "none" ? `${label} ile Giriş` : "Biyometrik Giriş");
+        setBioStored(await hasBiometricCredentialsStored());
+      }
+    })();
+  }, []);
+
+  const handlePostLogin = async (userId: string, email: string) => {
+    const { data: spec } = await supabase
+      .from("specialists")
+      .select("id, is_active")
+      .or(`user_id.eq.${userId},email.eq.${email}`)
+      .maybeSingle();
+
+    if (!spec) {
+      await supabase.auth.signOut();
+      toast({ title: "Yetkisiz", description: "Bu hesap uzman olarak kayıtlı değil", variant: "destructive" });
+      return false;
+    }
+    return true;
+  };
+
+  const loginEmail = async (emailArg?: string, passwordArg?: string, fromBiometric = false) => {
+    const e = emailArg ?? identifier;
+    const p = passwordArg ?? password;
+    if (!e || !p) {
       toast({ title: "Eksik bilgi", description: "E-posta ve şifre gerekli", variant: "destructive" });
       return;
     }
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: identifier.trim(),
-        password,
+        email: e.trim(),
+        password: p,
       });
       if (error) throw error;
       if (!data.user) throw new Error("Kullanıcı bulunamadı");
 
-      // Uzman kontrolü
-      const { data: spec } = await supabase
-        .from("specialists")
-        .select("id, is_active")
-        .or(`user_id.eq.${data.user.id},email.eq.${identifier.trim()}`)
-        .maybeSingle();
+      const ok = await handlePostLogin(data.user.id, e.trim());
+      if (!ok) return;
 
-      if (!spec) {
-        await supabase.auth.signOut();
-        toast({ title: "Yetkisiz", description: "Bu hesap uzman olarak kayıtlı değil", variant: "destructive" });
-        return;
+      // Offer to save biometric credentials on first successful password login
+      if (!fromBiometric && bioAvailable && !bioStored) {
+        const wantSave = window.confirm("Bir sonraki sefer biyometrik ile giriş yapmak ister misiniz?");
+        if (wantSave) {
+          await saveBiometricCredentials(e.trim(), p);
+          setBioStored(true);
+        }
       }
 
       toast({ title: "Giriş başarılı" });
@@ -51,6 +89,15 @@ export default function MobileLogin() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loginWithBiometric = async () => {
+    const creds = await getBiometricCredentials();
+    if (!creds) {
+      toast({ title: "Doğrulanamadı", description: "Biyometrik doğrulama başarısız", variant: "destructive" });
+      return;
+    }
+    await loginEmail(creds.username, creds.password, true);
   };
 
   const sendOtp = async () => {
@@ -170,7 +217,7 @@ export default function MobileLogin() {
 
           {/* Submit */}
           <button
-            onClick={mode === "email" ? loginEmail : (otpSent ? verifyOtp : sendOtp)}
+            onClick={() => mode === "email" ? loginEmail() : (otpSent ? verifyOtp() : sendOtp())}
             disabled={loading}
             className="w-full h-12 rounded-2xl font-semibold flex items-center justify-center gap-2 m-pressable disabled:opacity-60"
             style={{ background: "hsl(var(--m-accent))", color: "white" }}
@@ -179,14 +226,22 @@ export default function MobileLogin() {
             {loading ? "Lütfen bekleyin..." : mode === "email" ? "Giriş Yap" : (otpSent ? "Doğrula" : "Kod Gönder")}
           </button>
 
-          {/* Biometric placeholder */}
-          <button
-            onClick={() => toast({ title: "Yakında", description: "Biyometrik giriş kurulum aşamasında" })}
-            className="w-full h-11 rounded-2xl font-semibold flex items-center justify-center gap-2 m-pressable"
-            style={{ background: "hsl(var(--m-accent-soft))", color: "hsl(var(--m-accent))" }}
-          >
-            <Fingerprint className="w-5 h-5" /> Face ID / Parmak İzi
-          </button>
+          {/* Biometric button - only show when available and credentials stored */}
+          {bioAvailable && bioStored && mode === "email" && (
+            <button
+              onClick={loginWithBiometric}
+              disabled={loading}
+              className="w-full h-11 rounded-2xl font-semibold flex items-center justify-center gap-2 m-pressable"
+              style={{ background: "hsl(var(--m-accent-soft))", color: "hsl(var(--m-accent))" }}
+            >
+              <Fingerprint className="w-5 h-5" /> {bioLabel}
+            </button>
+          )}
+          {bioAvailable && !bioStored && mode === "email" && (
+            <p className="text-[12px] text-center" style={{ color: "hsl(var(--m-text-secondary))" }}>
+              İlk giriş sonrası {bioLabel.toLowerCase()} aktif olacak
+            </p>
+          )}
         </div>
 
         <p className="text-center text-[13px] mt-6" style={{ color: "hsl(var(--m-text-secondary))" }}>
