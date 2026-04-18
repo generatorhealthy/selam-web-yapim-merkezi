@@ -7,7 +7,7 @@ import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileSection } from "@/components/mobile/MobileSection";
 import { MobileListRow } from "@/components/mobile/MobileListRow";
 import {
-  LogOut, User, Calendar, Brain, Bell, Shield, HelpCircle, FileText, ChevronRight, LogIn,
+  LogOut, Calendar, Brain, Bell, Shield, HelpCircle, FileText, LogIn,
 } from "lucide-react";
 
 export default function MobileProfile() {

@@ -93,7 +93,15 @@ export default function MobileAppointments() {
             icon={Calendar}
             title={tab === "upcoming" ? "Yaklaşan randevu yok" : "Geçmiş randevu yok"}
             description="Yeni bir randevu almak için Keşfet sekmesine gidin"
-            action={{ label: "Keşfet", onClick: () => navigate("/mobile/search") }}
+            action={
+              <button
+                onClick={() => navigate("/mobile/search")}
+                className="px-5 h-10 rounded-2xl font-semibold m-pressable"
+                style={{ background: "hsl(var(--m-accent))", color: "white" }}
+              >
+                Keşfet
+              </button>
+            }
           />
         ) : (
           filtered.map((a) => (

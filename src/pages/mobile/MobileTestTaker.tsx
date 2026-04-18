@@ -61,7 +61,8 @@ export default function MobileTestTaker() {
     }
     setSubmitting(true);
     const { error } = await supabase.from("test_results").insert([{
-      test_id: testId,
+      test_id: testId!,
+      specialist_id: test?.specialist_id || "00000000-0000-0000-0000-000000000000",
       patient_name: name,
       patient_email: email,
       answers,
