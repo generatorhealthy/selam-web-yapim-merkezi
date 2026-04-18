@@ -216,13 +216,12 @@ export function HorizontalNavigation() {
     }
     
     if (isLoggedIn && userRole === 'specialist') {
-      console.log('Navigating to doctor panel...');
       navigate("/doktor-paneli");
     } else if (isLoggedIn && (userRole === 'admin' || userRole === 'staff')) {
-      console.log('Navigating to admin panel...');
       navigate("/admin");
+    } else if (isLoggedIn && userRole === 'patient') {
+      navigate("/danisan-paneli");
     } else {
-      console.log('Not logged in or no specific role, navigating to login...');
       navigate("/giris-yap");
     }
     setIsMobileMenuOpen(false);
