@@ -391,7 +391,7 @@ export default function MobileHome() {
               return (
                 <button
                   key={test.id}
-                  onClick={() => navigate(`/test/${test.id}`)}
+                  onClick={() => navigate(`/mobile/tests/${test.id}`)}
                   className="shrink-0 w-[170px] rounded-[22px] overflow-hidden text-left m-pressable flex flex-col"
                   style={{
                     background: "hsl(var(--m-surface))",
