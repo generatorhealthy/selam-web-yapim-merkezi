@@ -41,7 +41,7 @@ export function HorizontalNavigation() {
     try {
       console.log('Fetching profile for user:', userId);
       
-      // Get user role
+      // Get user role from user_profiles
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('role')
@@ -50,8 +50,6 @@ export function HorizontalNavigation() {
         
       if (profileError) {
         console.log('Profile fetch error:', profileError);
-        setUserRole('user'); // Default fallback
-        return;
       }
         
       if (profile) {
@@ -60,57 +58,50 @@ export function HorizontalNavigation() {
         
         // If user is a specialist, get their profile picture and name
         if (profile.role === 'specialist') {
-          console.log('Fetching specialist profile for user:', userId);
-          const { data: specialistProfile, error: specialistError } = await supabase
+          const { data: specialistProfile } = await supabase
             .from('specialists')
             .select('profile_picture, name')
             .eq('user_id', userId)
             .maybeSingle();
           
-          if (specialistError) {
-            console.log('Specialist fetch error:', specialistError);
-            // Fallback: try to find by email
+          if (specialistProfile) {
+            setUserProfile(specialistProfile);
+          } else {
             const currentUser = await supabase.auth.getUser();
             if (currentUser.data.user?.email) {
-              console.log('Trying to find specialist by email:', currentUser.data.user.email);
               const { data: specialistByEmail } = await supabase
                 .from('specialists')
                 .select('profile_picture, name')
                 .eq('email', currentUser.data.user.email)
                 .maybeSingle();
-              
-              if (specialistByEmail) {
-                console.log('Found specialist by email:', specialistByEmail);
-                setUserProfile(specialistByEmail);
-              } else {
-                console.log('No specialist found by email');
-                setUserProfile(null);
-              }
+              setUserProfile(specialistByEmail || null);
             }
-            return;
-          }
-          
-          if (specialistProfile) {
-            console.log('Specialist profile found:', specialistProfile);
-            setUserProfile(specialistProfile);
-          } else {
-            console.log('No specialist profile found');
-            setUserProfile(null);
           }
         } else {
-          // Clear specialist profile if not a specialist
-          console.log('User is not a specialist, clearing profile');
           setUserProfile(null);
         }
+        return;
+      }
+      
+      // No user_profiles row → check patient_profiles
+      const { data: patient } = await supabase
+        .from('patient_profiles')
+        .select('full_name, avatar_url')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (patient) {
+        console.log('Patient profile found');
+        setUserRole('patient');
+        setUserProfile({ name: patient.full_name, profile_picture: patient.avatar_url });
       } else {
-        // No profile found, set defaults
-        console.log('No user profile found, setting defaults');
-        setUserRole('user');
+        console.log('No profile found, defaulting to patient');
+        setUserRole('patient');
         setUserProfile(null);
       }
     } catch (error) {
       console.log('Profile fetch error:', error);
-      setUserRole('user');
+      setUserRole('patient');
       setUserProfile(null);
     }
   };
