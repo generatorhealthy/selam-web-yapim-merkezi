@@ -69,22 +69,28 @@ export default function MobileHome() {
             .select("id,title,category,image_url")
             .eq("is_active", true)
             .eq("status", "approved")
-            .limit(6),
-          supabase.rpc("get_public_reviews", { p_limit: 3 }),
+            .limit(40),
+          supabase.rpc("get_public_reviews", { p_limit: 30 }),
           supabase
             .from("specialists")
             .select("id,name,specialty,profile_picture,rating,experience,city,reviews_count")
             .eq("is_active", true)
             .not("profile_picture", "is", null)
-            .limit(30),
+            .limit(60),
         ]);
 
         if (cancelled) return;
-        if (testsRes.data) setTests(testsRes.data as Test[]);
-        if (reviewsRes.data) setReviews(reviewsRes.data as Review[]);
+        if (testsRes.data) {
+          const shuffledTests = [...testsRes.data].sort(() => Math.random() - 0.5);
+          setTests(shuffledTests.slice(0, 6) as Test[]);
+        }
+        if (reviewsRes.data) {
+          const shuffledReviews = [...reviewsRes.data].sort(() => Math.random() - 0.5);
+          setReviews(shuffledReviews.slice(0, 5) as Review[]);
+        }
         if (specialistsRes.data) {
           const shuffled = [...specialistsRes.data].sort(() => Math.random() - 0.5);
-          setSpecialists(shuffled.slice(0, 6) as Specialist[]);
+          setSpecialists(shuffled.slice(0, 8) as Specialist[]);
         }
       } catch (err) {
         console.error("MobileHome data error:", err);
