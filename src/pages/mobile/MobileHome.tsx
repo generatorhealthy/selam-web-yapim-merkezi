@@ -358,7 +358,7 @@ export default function MobileHome() {
           </div>
         </button>
         <button
-          onClick={() => navigate("/packages")}
+          onClick={() => navigate("/mobile/register")}
           className="rounded-[22px] p-5 text-left m-pressable"
           style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
         >
