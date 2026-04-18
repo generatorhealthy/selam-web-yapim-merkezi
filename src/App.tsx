@@ -19,6 +19,11 @@ import Index from "./pages/Index";
 const MobileHome = lazy(() => import("./pages/mobile/MobileHome"));
 const MobileSearch = lazy(() => import("./pages/mobile/MobileSearch"));
 const MobileProfile = lazy(() => import("./pages/mobile/MobileProfile"));
+const MobileSpecialistDetail = lazy(() => import("./pages/mobile/MobileSpecialistDetail"));
+const MobileBooking = lazy(() => import("./pages/mobile/MobileBooking"));
+const MobileAppointments = lazy(() => import("./pages/mobile/MobileAppointments"));
+const MobileTests = lazy(() => import("./pages/mobile/MobileTests"));
+const MobileTestTaker = lazy(() => import("./pages/mobile/MobileTestTaker"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -144,7 +149,11 @@ const AppContent = () => {
               <Route index element={<Navigate to="/mobile/home" replace />} />
               <Route path="home" element={<MobileHome />} />
               <Route path="search" element={<MobileSearch />} />
-              <Route path="appointments" element={<MobileHome />} />
+              <Route path="specialist/:id" element={<MobileSpecialistDetail />} />
+              <Route path="booking/:specialistId" element={<MobileBooking />} />
+              <Route path="appointments" element={<MobileAppointments />} />
+              <Route path="tests" element={<MobileTests />} />
+              <Route path="tests/:testId" element={<MobileTestTaker />} />
               <Route path="profile" element={<MobileProfile />} />
               <Route path="dashboard" element={<MobileHome />} />
             </Route>
