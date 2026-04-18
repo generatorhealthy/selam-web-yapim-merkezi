@@ -84,6 +84,54 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* === MOBILE APP DESIGN SYSTEM (Apple Health inspired) === */
+    /* Surfaces */
+    --m-bg: 220 20% 98%;
+    --m-surface: 0 0% 100%;
+    --m-surface-elevated: 0 0% 100%;
+    --m-surface-muted: 220 14% 96%;
+    --m-border: 220 13% 91%;
+    --m-divider: 220 13% 94%;
+
+    /* Text */
+    --m-text-primary: 222 24% 11%;
+    --m-text-secondary: 220 9% 46%;
+    --m-text-tertiary: 220 9% 65%;
+
+    /* Brand & semantic accents */
+    --m-accent: 214 88% 50%;          /* primary blue */
+    --m-accent-soft: 214 100% 96%;
+    --m-success: 142 71% 45%;
+    --m-success-soft: 142 76% 95%;
+    --m-warning: 38 92% 50%;
+    --m-warning-soft: 38 100% 95%;
+    --m-danger: 0 84% 60%;
+    --m-danger-soft: 0 86% 96%;
+    --m-info: 199 89% 48%;
+    --m-info-soft: 199 100% 95%;
+    --m-purple: 262 83% 58%;
+    --m-purple-soft: 262 100% 96%;
+    --m-pink: 340 82% 60%;
+    --m-pink-soft: 340 100% 96%;
+    --m-teal: 173 80% 40%;
+    --m-teal-soft: 173 76% 94%;
+
+    /* Elevation */
+    --m-shadow-sm: 0 1px 2px 0 hsl(220 30% 20% / 0.04);
+    --m-shadow: 0 1px 3px 0 hsl(220 30% 20% / 0.06), 0 1px 2px -1px hsl(220 30% 20% / 0.04);
+    --m-shadow-md: 0 4px 12px -2px hsl(220 30% 20% / 0.08), 0 2px 4px -2px hsl(220 30% 20% / 0.04);
+    --m-shadow-lg: 0 12px 32px -8px hsl(220 30% 20% / 0.12), 0 4px 8px -4px hsl(220 30% 20% / 0.06);
+
+    /* Radii */
+    --m-radius-sm: 10px;
+    --m-radius: 16px;
+    --m-radius-lg: 22px;
+    --m-radius-xl: 28px;
+
+    /* Safe areas (Capacitor / iOS notch) */
+    --m-safe-top: env(safe-area-inset-top, 0px);
+    --m-safe-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .dark {
@@ -122,6 +170,73 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Mobile dark mode overrides */
+    --m-bg: 222 24% 6%;
+    --m-surface: 222 20% 10%;
+    --m-surface-elevated: 222 20% 13%;
+    --m-surface-muted: 222 18% 14%;
+    --m-border: 222 18% 18%;
+    --m-divider: 222 18% 16%;
+    --m-text-primary: 210 20% 98%;
+    --m-text-secondary: 220 9% 70%;
+    --m-text-tertiary: 220 9% 50%;
+  }
+}
+
+@layer utilities {
+  /* === Mobile App Utilities === */
+  .m-safe-top { padding-top: var(--m-safe-top); }
+  .m-safe-bottom { padding-bottom: var(--m-safe-bottom); }
+
+  .m-glass {
+    background: hsl(var(--m-surface) / 0.78);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .m-card {
+    background: hsl(var(--m-surface));
+    border-radius: var(--m-radius);
+    box-shadow: var(--m-shadow);
+  }
+
+  .m-card-flat {
+    background: hsl(var(--m-surface));
+    border-radius: var(--m-radius);
+    border: 1px solid hsl(var(--m-divider));
+  }
+
+  .m-pressable {
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  .m-pressable:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+
+  .m-headline {
+    font-size: 34px;
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -0.022em;
+    color: hsl(var(--m-text-primary));
+  }
+
+  .m-title {
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: hsl(var(--m-text-primary));
+  }
+
+  .m-section-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: hsl(var(--m-text-secondary));
   }
 }
 
