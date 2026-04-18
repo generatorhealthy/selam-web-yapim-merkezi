@@ -177,7 +177,7 @@ export default function MobileLogin() {
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 100 }}>
-      <MobileHeader showBack largeTitle="Uzman Girişi" subtitle="Hesabınıza erişin" />
+      <MobileHeader showBack largeTitle="Giriş Yap" subtitle="Uzman veya danışan olarak giriş yapın" />
 
       <div className="px-5 mt-4">
         {/* Mode tabs */}
@@ -303,7 +303,10 @@ export default function MobileLogin() {
         </div>
 
         <p className="text-center text-[13px] mt-6" style={{ color: "hsl(var(--m-text-secondary))" }}>
-          Sadece kayıtlı uzmanlar giriş yapabilir
+          Hesabınız yok mu?{" "}
+          <button onClick={() => navigate("/mobile/signup")} className="font-semibold" style={{ color: "hsl(var(--m-accent))" }}>
+            Üye ol
+          </button>
         </p>
       </div>
     </div>
