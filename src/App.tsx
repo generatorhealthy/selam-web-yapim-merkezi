@@ -177,6 +177,7 @@ const AppContent = () => {
               <Route path="specialist-support" element={<MobileSpecialistSupport />} />
               <Route path="specialist-subscription" element={<MobileSpecialistSubscription />} />
               <Route path="specialist-portfolio" element={<MobileSpecialistPortfolio />} />
+              <Route path="register" element={<SpecialistRegistration />} />
             </Route>
           )}
 
