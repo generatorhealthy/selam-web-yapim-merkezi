@@ -181,19 +181,8 @@ export default function MobileHome() {
         </button>
       </div>
 
-      {/* Hero greeting */}
-      <div className="px-5 pt-2 pb-6">
-        <p className="text-[15px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
-          {greeting}
-        </p>
-        <h1 className="m-headline mt-1">{firstName}</h1>
-        <p className="text-[15px] mt-2" style={{ color: "hsl(var(--m-text-secondary))" }}>
-          Bugün size nasıl yardımcı olabiliriz?
-        </p>
-      </div>
-
       {/* Search bar — Zocdoc style */}
-      <div className="px-5 mb-5">
+      <div className="px-5 mt-3 mb-5">
         <button
           onClick={() => navigate("/mobile/search")}
           className="w-full h-14 rounded-full flex items-center gap-3 px-5 m-pressable"
