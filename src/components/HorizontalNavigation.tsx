@@ -86,14 +86,14 @@ export function HorizontalNavigation() {
       // No user_profiles row → check patient_profiles
       const { data: patient } = await supabase
         .from('patient_profiles')
-        .select('full_name, avatar_url')
+        .select('full_name, profile_picture')
         .eq('user_id', userId)
         .maybeSingle();
       
       if (patient) {
         console.log('Patient profile found');
         setUserRole('patient');
-        setUserProfile({ name: patient.full_name, profile_picture: patient.avatar_url });
+        setUserProfile({ name: patient.full_name, profile_picture: patient.profile_picture });
       } else {
         console.log('No profile found, defaulting to patient');
         setUserRole('patient');
