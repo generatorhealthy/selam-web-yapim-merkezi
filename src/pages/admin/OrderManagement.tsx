@@ -264,9 +264,8 @@ const OrderManagement = () => {
     isFetching: isOrdersFetching,
     error: ordersError,
   } = useInfiniteQuery<OrdersPage>({
-    queryKey: ["orders", statusFilter, isSearchMode ? "search" : "browse"],
+    queryKey: ["orders", statusFilter, isSearchMode ? `search:${searchTerm.trim().toLowerCase()}` : "browse"],
     queryFn: async ({ pageParam }) => {
-      const pageSize = isSearchMode ? SEARCH_PAGE_SIZE : BROWSE_PAGE_SIZE;
       const cursor = pageParam as string | null;
 
       let query = supabase
@@ -281,17 +280,30 @@ const OrderManagement = () => {
         query = query.eq("status", statusFilter);
       }
 
+      // Arama modunda: tüm eşleşmeleri tek seferde DB tarafında getir
+      if (isSearchMode) {
+        const term = searchTerm.trim().replace(/[%,]/g, " ");
+        const like = `%${term}%`;
+        query = query.or(
+          `customer_name.ilike.${like},customer_email.ilike.${like},package_name.ilike.${like},customer_phone.ilike.${like}`
+        );
+        const { data, error } = await query.limit(2000);
+        if (error) throw error;
+        return { data: (data ?? []) as Order[], hasMore: false, nextCursor: undefined };
+      }
+
+      // Normal mod: cursor tabanlı sayfalama
       if (cursor) {
         query = query.lt("created_at", cursor);
       }
 
-      const { data, error } = await query.limit(pageSize + 1);
+      const { data, error } = await query.limit(BROWSE_PAGE_SIZE + 1);
 
       if (error) throw error;
 
       const fetchedOrders = (data ?? []) as Order[];
-      const hasMore = fetchedOrders.length > pageSize;
-      const pageData = hasMore ? fetchedOrders.slice(0, pageSize) : fetchedOrders;
+      const hasMore = fetchedOrders.length > BROWSE_PAGE_SIZE;
+      const pageData = hasMore ? fetchedOrders.slice(0, BROWSE_PAGE_SIZE) : fetchedOrders;
       const nextCursor = hasMore ? pageData[pageData.length - 1]?.created_at : undefined;
 
       return { data: pageData, hasMore, nextCursor };
@@ -305,25 +317,23 @@ const OrderManagement = () => {
   // Flatten pages into single array
   const rawOrders = useMemo(() => ordersData?.pages.flatMap(page => page.data) || [], [ordersData]);
   
-  // Sunucu tarafı text araması timeout ürettiği için arama burada yapılıyor
+  // Arama modunda DB tarafında filtreleme yapıldığı için sonuçları doğrudan kullan
   const orders = useMemo(() => {
-    const normalizedSearch = searchInput.trim().toLowerCase();
-
-    if (!normalizedSearch) {
-      return rawOrders;
-    }
-
-    return rawOrders.filter(order => 
+    if (!isSearchMode) return rawOrders;
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (!normalizedSearch) return rawOrders;
+    // Güvenlik için ek client-side filtre (cache yarış durumlarına karşı)
+    return rawOrders.filter(order =>
       order.customer_name?.toLowerCase().includes(normalizedSearch) ||
       order.customer_email?.toLowerCase().includes(normalizedSearch) ||
       order.package_name?.toLowerCase().includes(normalizedSearch) ||
       order.customer_phone?.toLowerCase().includes(normalizedSearch)
     );
-  }, [rawOrders, searchInput]);
+  }, [rawOrders, isSearchMode, searchTerm]);
 
   const totalOrders = orders.length;
   const hasLoadedActiveOrders = rawOrders.length > 0;
-  const isSearchLoadingAllResults = isSearchMode && !ordersError && (isOrdersFetching || isFetchingNextPage || hasNextPage);
+  const isSearchLoadingAllResults = isSearchMode && !ordersError && isOrdersFetching;
 
   const {
     data: deletedOrders,
