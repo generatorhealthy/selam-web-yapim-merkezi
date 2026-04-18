@@ -99,7 +99,7 @@ export default function MobileBooking() {
   };
 
   return (
-    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 120 }}>
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 200 }}>
       <MobileHeader
         showBack
         title="Randevu"
@@ -216,12 +216,13 @@ export default function MobileBooking() {
         )}
       </div>
 
-      {/* Footer CTA */}
+      {/* Footer CTA — sits above floating tab bar */}
       <div
-        className="fixed bottom-0 left-0 right-0 m-glass px-5 pt-3 flex gap-2"
+        className="fixed left-3 right-3 m-glass px-4 py-3 flex gap-2 rounded-3xl"
         style={{
-          paddingBottom: "calc(12px + var(--m-safe-bottom))",
-          borderTop: "1px solid hsl(var(--m-divider))",
+          bottom: "calc(88px + var(--m-safe-bottom))",
+          boxShadow: "0 12px 32px -8px hsl(220 30% 10% / 0.18)",
+          border: "1px solid hsl(var(--m-divider))",
         }}
       >
         {step > 1 && (
