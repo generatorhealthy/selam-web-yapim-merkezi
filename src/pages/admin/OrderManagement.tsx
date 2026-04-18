@@ -343,6 +343,130 @@ const OrderManagement = () => {
     enabled: activeTab === "trash",
   });
 
+  const snapshotOrderCaches = useCallback(() => ({
+    orders: queryClient.getQueriesData({ queryKey: ["orders"] }),
+    deletedOrders: queryClient.getQueryData(["deleted_orders"]),
+    orderStats: queryClient.getQueryData(["order_stats"]),
+  }), [queryClient]);
+
+  const restoreOrderCaches = useCallback((snapshot?: ReturnType<typeof snapshotOrderCaches>) => {
+    if (!snapshot) return;
+
+    snapshot.orders.forEach(([queryKey, data]) => {
+      queryClient.setQueryData(queryKey, data);
+    });
+
+    queryClient.setQueryData(["deleted_orders"], snapshot.deletedOrders);
+    queryClient.setQueryData(["order_stats"], snapshot.orderStats);
+  }, [queryClient, snapshotOrderCaches]);
+
+  const syncOrderInActiveCaches = useCallback((nextOrder: Order) => {
+    queryClient.getQueriesData({ queryKey: ["orders"] }).forEach(([queryKey, cache]) => {
+      if (!cache || typeof cache !== "object" || !("pages" in cache)) return;
+
+      const [, cachedStatusFilter] = queryKey as [string, string, string];
+      const shouldAppear = !nextOrder.deleted_at && (cachedStatusFilter === "all" || cachedStatusFilter === nextOrder.status);
+      let found = false;
+      const typedCache = cache as { pages: OrdersPage[]; pageParams: unknown[] };
+      const pages = typedCache.pages.map((page) => ({
+        ...page,
+        data: page.data.flatMap((order) => {
+          if (order.id !== nextOrder.id) return [order];
+          found = true;
+          return shouldAppear ? [{ ...order, ...nextOrder }] : [];
+        }),
+      }));
+
+      if (!found || !shouldAppear || pages.length === 0) {
+        queryClient.setQueryData(queryKey, { ...typedCache, pages });
+        return;
+      }
+
+      const firstPage = pages[0];
+      const alreadyPresent = firstPage.data.some((order) => order.id === nextOrder.id);
+      queryClient.setQueryData(queryKey, {
+        ...typedCache,
+        pages: alreadyPresent
+          ? pages
+          : [
+              { ...firstPage, data: [nextOrder, ...firstPage.data] },
+              ...pages.slice(1),
+            ],
+      });
+    });
+  }, [queryClient]);
+
+  const removeOrdersFromActiveCaches = useCallback((orderIds: string[]) => {
+    queryClient.getQueriesData({ queryKey: ["orders"] }).forEach(([queryKey, cache]) => {
+      if (!cache || typeof cache !== "object" || !("pages" in cache)) return;
+
+      const typedCache = cache as { pages: OrdersPage[]; pageParams: unknown[] };
+      queryClient.setQueryData(queryKey, {
+        ...typedCache,
+        pages: typedCache.pages.map((page) => ({
+          ...page,
+          data: page.data.filter((order) => !orderIds.includes(order.id)),
+        })),
+      });
+    });
+  }, [queryClient]);
+
+  const upsertDeletedOrdersCache = useCallback((ordersToUpsert: Order[]) => {
+    queryClient.setQueryData(["deleted_orders"], (current: Order[] | undefined) => {
+      const next = [...(current ?? [])];
+
+      ordersToUpsert.forEach((order) => {
+        const deletedOrder = { ...order, deleted_at: order.deleted_at ?? new Date().toISOString() };
+        const withoutCurrent = next.filter((item) => item.id !== order.id);
+        next.splice(0, next.length, deletedOrder, ...withoutCurrent);
+      });
+
+      return next;
+    });
+  }, [queryClient]);
+
+  const removeDeletedOrdersFromCache = useCallback((orderIds: string[]) => {
+    queryClient.setQueryData(["deleted_orders"], (current: Order[] | undefined) =>
+      (current ?? []).filter((order) => !orderIds.includes(order.id))
+    );
+  }, [queryClient]);
+
+  const patchOrderStatsCache = useCallback((ordersToPatch: Array<{ previous?: Order; next?: Order }>) => {
+    queryClient.setQueryData(["order_stats"], (current: any) => {
+      if (!current) return current;
+
+      const nextStats = { ...current };
+
+      ordersToPatch.forEach(({ previous, next }) => {
+        if (previous && !next) {
+          nextStats.total_count = Math.max(0, (nextStats.total_count ?? 0) - 1);
+          nextStats.total_amount = Math.max(0, (nextStats.total_amount ?? 0) - Number(previous.amount || 0));
+          if (previous.status === "approved") nextStats.approved_count = Math.max(0, (nextStats.approved_count ?? 0) - 1);
+          if (previous.status === "pending") nextStats.pending_count = Math.max(0, (nextStats.pending_count ?? 0) - 1);
+        }
+
+        if (!previous && next) {
+          nextStats.total_count = (nextStats.total_count ?? 0) + 1;
+          nextStats.total_amount = (nextStats.total_amount ?? 0) + Number(next.amount || 0);
+          if (next.status === "approved") nextStats.approved_count = (nextStats.approved_count ?? 0) + 1;
+          if (next.status === "pending") nextStats.pending_count = (nextStats.pending_count ?? 0) + 1;
+        }
+
+        if (previous && next) {
+          nextStats.total_amount = (nextStats.total_amount ?? 0) - Number(previous.amount || 0) + Number(next.amount || 0);
+          if (previous.status !== next.status) {
+            if (previous.status === "approved") nextStats.approved_count = Math.max(0, (nextStats.approved_count ?? 0) - 1);
+            if (previous.status === "pending") nextStats.pending_count = Math.max(0, (nextStats.pending_count ?? 0) - 1);
+            if (next.status === "approved") nextStats.approved_count = (nextStats.approved_count ?? 0) + 1;
+            if (next.status === "pending") nextStats.pending_count = (nextStats.pending_count ?? 0) + 1;
+          }
+        }
+      });
+
+      return nextStats;
+    });
+  }, [queryClient]);
+
   // Order notes query
   const { data: orderNotes, refetch: refetchNotes } = useQuery({
     queryKey: ["order_notes"],
