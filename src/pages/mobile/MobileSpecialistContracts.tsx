@@ -15,7 +15,13 @@ export default function MobileSpecialistContracts() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { navigate("/mobile/login"); return; }
 
-      // Get earliest order (only first contract per spec memory)
+      // Specialist adını da al (edge function ad bazlı eşleşme yapar)
+      const { data: spec } = await supabase
+        .from("specialists")
+        .select("name")
+        .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
+        .maybeSingle();
+
       const { data } = await supabase
         .from("orders")
         .select("*")
@@ -24,11 +30,11 @@ export default function MobileSpecialistContracts() {
         .is("deleted_at", null)
         .order("created_at", { ascending: true });
 
-      // Try edge function for richer results
-      let merged = data || [];
+      // Edge function — daha geniş eşleşme (email + name)
+      let merged: any[] = data || [];
       try {
         const { data: edgeData } = await supabase.functions.invoke("get-specialist-contracts", {
-          body: { email: session.user.email, name: null },
+          body: { email: session.user.email, name: spec?.name || null },
         });
         if (Array.isArray(edgeData)) {
           merged = Array.from(
@@ -37,7 +43,7 @@ export default function MobileSpecialistContracts() {
         }
       } catch {}
 
-      // Show only the very first contract (matches website behavior)
+      // Web ile aynı: sadece ilk (en eski) sözleşmeyi göster
       setContracts(merged.slice(0, 1));
       setLoading(false);
     })();
