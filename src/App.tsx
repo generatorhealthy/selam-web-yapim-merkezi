@@ -16,26 +16,40 @@ import { useNativeApp } from "@/hooks/useNativeApp";
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
 
+/**
+ * Helper: lazy load + expose the import function for prefetching.
+ * We trigger these prefetches during idle time so that when the user
+ * actually navigates, the chunk is already in the browser cache and
+ * the page opens INSTANTLY (no network wait, no white flash).
+ */
+const prefetchers: Array<() => Promise<unknown>> = [];
+function lazyPrefetch<T extends React.ComponentType<any>>(
+  loader: () => Promise<{ default: T }>
+) {
+  prefetchers.push(loader);
+  return lazy(loader);
+}
+
 // Lazy loaded pages - reduces initial bundle significantly
-const MobileHome = lazy(() => import("./pages/mobile/MobileHome"));
-const MobileSearch = lazy(() => import("./pages/mobile/MobileSearch"));
-const MobileProfile = lazy(() => import("./pages/mobile/MobileProfile"));
-const MobileSpecialistDetail = lazy(() => import("./pages/mobile/MobileSpecialistDetail"));
-const MobileBooking = lazy(() => import("./pages/mobile/MobileBooking"));
-const MobileAppointments = lazy(() => import("./pages/mobile/MobileAppointments"));
-const MobileTests = lazy(() => import("./pages/mobile/MobileTests"));
-const MobileTestTaker = lazy(() => import("./pages/mobile/MobileTestTaker"));
-const MobileLogin = lazy(() => import("./pages/mobile/MobileLogin"));
-const MobileDashboard = lazy(() => import("./pages/mobile/MobileDashboard"));
-const MobileSpecialistAppointments = lazy(() => import("./pages/mobile/MobileSpecialistAppointments"));
-const MobileSpecialistClients = lazy(() => import("./pages/mobile/MobileSpecialistClients"));
-const MobileSpecialistProfile = lazy(() => import("./pages/mobile/MobileSpecialistProfile"));
-const MobileSpecialistBlog = lazy(() => import("./pages/mobile/MobileSpecialistBlog"));
-const MobileSpecialistContracts = lazy(() => import("./pages/mobile/MobileSpecialistContracts"));
-const MobileSpecialistSupport = lazy(() => import("./pages/mobile/MobileSpecialistSupport"));
-const MobileSpecialistSubscription = lazy(() => import("./pages/mobile/MobileSpecialistSubscription"));
-const MobileSpecialistPortfolio = lazy(() => import("./pages/mobile/MobileSpecialistPortfolio"));
-const MobileBlogDetail = lazy(() => import("./pages/mobile/MobileBlogDetail"));
+const MobileHome = lazyPrefetch(() => import("./pages/mobile/MobileHome"));
+const MobileSearch = lazyPrefetch(() => import("./pages/mobile/MobileSearch"));
+const MobileProfile = lazyPrefetch(() => import("./pages/mobile/MobileProfile"));
+const MobileSpecialistDetail = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistDetail"));
+const MobileBooking = lazyPrefetch(() => import("./pages/mobile/MobileBooking"));
+const MobileAppointments = lazyPrefetch(() => import("./pages/mobile/MobileAppointments"));
+const MobileTests = lazyPrefetch(() => import("./pages/mobile/MobileTests"));
+const MobileTestTaker = lazyPrefetch(() => import("./pages/mobile/MobileTestTaker"));
+const MobileLogin = lazyPrefetch(() => import("./pages/mobile/MobileLogin"));
+const MobileDashboard = lazyPrefetch(() => import("./pages/mobile/MobileDashboard"));
+const MobileSpecialistAppointments = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistAppointments"));
+const MobileSpecialistClients = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistClients"));
+const MobileSpecialistProfile = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistProfile"));
+const MobileSpecialistBlog = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistBlog"));
+const MobileSpecialistContracts = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistContracts"));
+const MobileSpecialistSupport = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistSupport"));
+const MobileSpecialistSubscription = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistSubscription"));
+const MobileSpecialistPortfolio = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistPortfolio"));
+const MobileBlogDetail = lazyPrefetch(() => import("./pages/mobile/MobileBlogDetail"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -121,23 +135,43 @@ const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 // Doctor pages
 const DoctorDashboard = lazy(() => import("./pages/doctor/DoctorDashboard"));
 
-// Minimal loading fallback
-const PageLoader = () => (
-  <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1200px', margin: '0 auto' }}>
-    <div className="loading-skeleton" style={{ height: '60px', borderRadius: '12px' }}></div>
-    <div className="loading-skeleton" style={{ height: '180px', borderRadius: '12px', margin: '2rem 0' }}></div>
-  </div>
-);
+// Ultra-minimal loading fallback — empty div so navigation feels instant.
+// Real content paints immediately when the (already-prefetched) chunk resolves.
+const PageLoader = () => <div style={{ minHeight: '50vh' }} />;
 
-// Create QueryClient outside of component to prevent re-creation on renders
+// Create QueryClient outside of component to prevent re-creation on renders.
+// Aggressive caching = clicks return cached data instantly, refetch happens in background.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 3,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+      staleTime: 1000 * 60 * 5,        // 5 min: data considered fresh
+      gcTime: 1000 * 60 * 30,          // 30 min: keep in memory
+      refetchOnWindowFocus: false,     // don't refetch when tabbing back
+      refetchOnReconnect: false,
+      refetchOnMount: false,           // use cache instantly on remount
     },
   },
 });
+
+// Prefetch all lazy chunks during browser idle time so subsequent
+// navigations are INSTANT. Runs once after the initial paint.
+if (typeof window !== "undefined") {
+  const runPrefetch = () => {
+    prefetchers.forEach((load) => {
+      // Fire and forget — browser will cache the chunk
+      load().catch(() => {});
+    });
+  };
+  const ric = (window as any).requestIdleCallback as
+    | ((cb: () => void, opts?: { timeout: number }) => number)
+    | undefined;
+  if (ric) {
+    ric(runPrefetch, { timeout: 3000 });
+  } else {
+    setTimeout(runPrefetch, 1500);
+  }
+}
 
 const LegacyBlogRedirect = () => {
   const { slug } = useParams<{ slug: string }>();
