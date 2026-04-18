@@ -122,18 +122,27 @@ export const MobileLayout = () => {
                 onTouchStart={() => prefetch(item.to)}
                 onFocus={() => prefetch(item.to)}
                 aria-label={item.label}
-                className="relative flex items-center justify-center w-12 h-12 rounded-full m-pressable transition-colors"
+                className="relative flex items-center justify-center h-12 rounded-full m-pressable transition-all duration-300 ease-out overflow-hidden"
                 style={({ isActive }) => ({
-                  color: isActive
-                    ? "hsl(var(--m-ink))"
-                    : "hsl(220 8% 65%)",
+                  background: isActive ? "hsl(var(--m-ink))" : "transparent",
+                  color: isActive ? "hsl(var(--m-bg))" : "hsl(220 8% 65%)",
+                  paddingLeft: isActive ? 16 : 12,
+                  paddingRight: isActive ? 18 : 12,
+                  gap: isActive ? 8 : 0,
                 })}
               >
                 {({ isActive }) => (
-                  <Icon
-                    active={isActive}
-                    className={isActive ? "w-[26px] h-[26px]" : "w-[24px] h-[24px]"}
-                  />
+                  <>
+                    <Icon
+                      active={isActive}
+                      className={isActive ? "w-[22px] h-[22px] shrink-0" : "w-[24px] h-[24px] shrink-0"}
+                    />
+                    {isActive && (
+                      <span className="text-[14px] font-semibold whitespace-nowrap">
+                        {item.label}
+                      </span>
+                    )}
+                  </>
                 )}
               </NavLink>
             );
