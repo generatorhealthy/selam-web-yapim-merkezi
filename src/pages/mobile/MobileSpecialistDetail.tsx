@@ -232,9 +232,9 @@ export default function MobileSpecialistDetail() {
           label="yıl deneyim"
         />
         <StatPill
-          icon={Users}
-          value={specialist.reviews_count ? `${specialist.reviews_count}+` : "—"}
-          label="danışan"
+          icon={CheckCircle2}
+          value="✓"
+          label="Onaylı Profil"
         />
         <StatPill
           icon={Star}
