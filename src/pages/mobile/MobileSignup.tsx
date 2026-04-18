@@ -9,6 +9,7 @@ export default function MobileSignup() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [acceptedDisclosure, setAcceptedDisclosure] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -23,6 +24,10 @@ export default function MobileSignup() {
   const handleEmailSignup = async () => {
     if (!form.email || !form.password || !form.firstName) {
       toast({ title: "Eksik bilgi", description: "Ad, e-posta ve şifre gerekli", variant: "destructive" });
+      return;
+    }
+    if (!acceptedDisclosure) {
+      toast({ title: "Onay gerekli", description: "Aydınlatma metnini onaylamadan kayıt olamazsınız", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -58,6 +63,10 @@ export default function MobileSignup() {
   };
 
   const oauthSignup = async (provider: "google" | "apple") => {
+    if (!acceptedDisclosure) {
+      toast({ title: "Onay gerekli", description: "Aydınlatma metnini onaylamadan kayıt olamazsınız", variant: "destructive" });
+      return;
+    }
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -147,7 +156,23 @@ export default function MobileSignup() {
             </div>
           </div>
 
-          <button onClick={handleEmailSignup} disabled={loading}
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={acceptedDisclosure}
+              onChange={(e) => setAcceptedDisclosure(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded cursor-pointer"
+              style={{ accentColor: "hsl(var(--m-accent))" }}
+            />
+            <span className="text-[13px] leading-snug" style={{ color: "hsl(var(--m-text-secondary))" }}>
+              <a href="/disclosure-text" target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
+                Aydınlatma Metni
+              </a>
+              'ni okudum, anladım ve kişisel verilerimin işlenmesine onay veriyorum.
+            </span>
+          </label>
+
+          <button onClick={handleEmailSignup} disabled={loading || !acceptedDisclosure}
             className="w-full h-12 rounded-2xl font-semibold flex items-center justify-center gap-2 m-pressable disabled:opacity-60"
             style={{ background: "hsl(var(--m-accent))", color: "white" }}>
             <User className="w-5 h-5" />

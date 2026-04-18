@@ -13,11 +13,16 @@ export default function PatientSignup() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
+  const [acceptedDisclosure, setAcceptedDisclosure] = useState(false);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((s) => ({ ...s, [k]: e.target.value }));
 
   const handleSignup = async () => {
     if (!form.email || !form.password || !form.firstName) {
       toast({ title: "Eksik bilgi", description: "Ad, e-posta ve şifre gerekli", variant: "destructive" });
+      return;
+    }
+    if (!acceptedDisclosure) {
+      toast({ title: "Onay gerekli", description: "Aydınlatma metnini onaylamadan kayıt olamazsınız", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -53,6 +58,10 @@ export default function PatientSignup() {
   };
 
   const oauth = async (provider: "google" | "apple") => {
+    if (!acceptedDisclosure) {
+      toast({ title: "Onay gerekli", description: "Aydınlatma metnini onaylamadan kayıt olamazsınız", variant: "destructive" });
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}/danisan-paneli` },
@@ -87,7 +96,22 @@ export default function PatientSignup() {
             <div><Label>Telefon (isteğe bağlı)</Label><Input type="tel" value={form.phone} onChange={set("phone")} /></div>
             <div><Label>Şifre</Label><Input type="password" value={form.password} onChange={set("password")} /></div>
 
-            <Button className="w-full" onClick={handleSignup} disabled={loading}>{loading ? "Lütfen bekleyin..." : "Hesap Oluştur"}</Button>
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedDisclosure}
+                onChange={(e) => setAcceptedDisclosure(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
+              />
+              <span className="text-muted-foreground">
+                <a href="/disclosure-text" target="_blank" rel="noopener noreferrer" className="text-primary underline font-medium">
+                  Aydınlatma Metni
+                </a>
+                'ni okudum, anladım ve kişisel verilerimin işlenmesine onay veriyorum.
+              </span>
+            </label>
+
+            <Button className="w-full" onClick={handleSignup} disabled={loading || !acceptedDisclosure}>{loading ? "Lütfen bekleyin..." : "Hesap Oluştur"}</Button>
             <p className="text-center text-sm text-muted-foreground">
               Zaten hesabınız var mı? <Link to="/giris-yap" className="text-primary font-semibold">Giriş yap</Link>
             </p>
