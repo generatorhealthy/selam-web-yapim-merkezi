@@ -1,0 +1,198 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { MobileHeader } from "@/components/mobile/MobileHeader";
+import { Mail, Phone, Lock, LogIn, Fingerprint } from "lucide-react";
+
+type Mode = "email" | "phone";
+
+export default function MobileLogin() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [mode, setMode] = useState<Mode>("email");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const loginEmail = async () => {
+    if (!identifier || !password) {
+      toast({ title: "Eksik bilgi", description: "E-posta ve şifre gerekli", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: identifier.trim(),
+        password,
+      });
+      if (error) throw error;
+      if (!data.user) throw new Error("Kullanıcı bulunamadı");
+
+      // Uzman kontrolü
+      const { data: spec } = await supabase
+        .from("specialists")
+        .select("id, is_active")
+        .or(`user_id.eq.${data.user.id},email.eq.${identifier.trim()}`)
+        .maybeSingle();
+
+      if (!spec) {
+        await supabase.auth.signOut();
+        toast({ title: "Yetkisiz", description: "Bu hesap uzman olarak kayıtlı değil", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Giriş başarılı" });
+      navigate("/mobile/dashboard");
+    } catch (e: any) {
+      toast({ title: "Giriş başarısız", description: e.message || "Bilgileri kontrol edin", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendOtp = async () => {
+    if (!identifier) {
+      toast({ title: "Telefon gerekli", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke("specialist-otp", {
+        body: { action: "send", phone: identifier.trim() },
+      });
+      if (error) throw error;
+      setOtpSent(true);
+      toast({ title: "Kod gönderildi", description: "SMS ile kod alacaksınız" });
+    } catch (e: any) {
+      toast({ title: "Hata", description: e.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("specialist-otp", {
+        body: { action: "verify", phone: identifier.trim(), code: otp },
+      });
+      if (error) throw error;
+      if (data?.session) {
+        await supabase.auth.setSession(data.session);
+        toast({ title: "Giriş başarılı" });
+        navigate("/mobile/dashboard");
+      }
+    } catch (e: any) {
+      toast({ title: "Doğrulama başarısız", description: e.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 100 }}>
+      <MobileHeader showBack largeTitle="Uzman Girişi" subtitle="Hesabınıza erişin" />
+
+      <div className="px-5 mt-4">
+        {/* Mode tabs */}
+        <div className="m-card p-1 grid grid-cols-2 gap-1 mb-5">
+          {(["email", "phone"] as Mode[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => { setMode(m); setOtpSent(false); setIdentifier(""); }}
+              className="h-10 rounded-xl font-semibold text-[14px] m-pressable"
+              style={{
+                background: mode === m ? "hsl(var(--m-accent))" : "transparent",
+                color: mode === m ? "white" : "hsl(var(--m-text-secondary))",
+              }}
+            >
+              {m === "email" ? "E-posta" : "Telefon"}
+            </button>
+          ))}
+        </div>
+
+        <div className="m-card p-5 space-y-4">
+          {/* Identifier */}
+          <div>
+            <label className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>
+              {mode === "email" ? "E-posta" : "Telefon"}
+            </label>
+            <div className="mt-2 relative">
+              {mode === "email" ? <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--m-text-secondary))" }} />
+                : <Phone className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--m-text-secondary))" }} />}
+              <input
+                type={mode === "email" ? "email" : "tel"}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder={mode === "email" ? "uzman@email.com" : "05XX XXX XX XX"}
+                className="w-full h-12 pl-11 pr-3 rounded-xl text-[15px] outline-none"
+                style={{ background: "hsl(var(--m-bg))", color: "hsl(var(--m-text-primary))" }}
+              />
+            </div>
+          </div>
+
+          {/* Password (email only) */}
+          {mode === "email" && (
+            <div>
+              <label className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>Şifre</label>
+              <div className="mt-2 relative">
+                <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--m-text-secondary))" }} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full h-12 pl-11 pr-3 rounded-xl text-[15px] outline-none"
+                  style={{ background: "hsl(var(--m-bg))", color: "hsl(var(--m-text-primary))" }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* OTP input (phone only, after sent) */}
+          {mode === "phone" && otpSent && (
+            <div>
+              <label className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>Doğrulama Kodu</label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="6 haneli kod"
+                maxLength={6}
+                className="mt-2 w-full h-12 px-3 rounded-xl text-[18px] tracking-[0.5em] text-center outline-none"
+                style={{ background: "hsl(var(--m-bg))", color: "hsl(var(--m-text-primary))" }}
+              />
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            onClick={mode === "email" ? loginEmail : (otpSent ? verifyOtp : sendOtp)}
+            disabled={loading}
+            className="w-full h-12 rounded-2xl font-semibold flex items-center justify-center gap-2 m-pressable disabled:opacity-60"
+            style={{ background: "hsl(var(--m-accent))", color: "white" }}
+          >
+            <LogIn className="w-5 h-5" />
+            {loading ? "Lütfen bekleyin..." : mode === "email" ? "Giriş Yap" : (otpSent ? "Doğrula" : "Kod Gönder")}
+          </button>
+
+          {/* Biometric placeholder */}
+          <button
+            onClick={() => toast({ title: "Yakında", description: "Biyometrik giriş kurulum aşamasında" })}
+            className="w-full h-11 rounded-2xl font-semibold flex items-center justify-center gap-2 m-pressable"
+            style={{ background: "hsl(var(--m-accent-soft))", color: "hsl(var(--m-accent))" }}
+          >
+            <Fingerprint className="w-5 h-5" /> Face ID / Parmak İzi
+          </button>
+        </div>
+
+        <p className="text-center text-[13px] mt-6" style={{ color: "hsl(var(--m-text-secondary))" }}>
+          Sadece kayıtlı uzmanlar giriş yapabilir
+        </p>
+      </div>
+    </div>
+  );
+}
