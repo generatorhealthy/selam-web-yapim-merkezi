@@ -10,7 +10,7 @@ export const MobileLayout = () => {
     userProfile?.role === "staff";
 
   const patientNavItems = [
-    { to: "/mobile/home", icon: Home, label: "Özet" },
+    { to: "/mobile/home", icon: Home, label: "Ana" },
     { to: "/mobile/search", icon: Search, label: "Keşfet" },
     { to: "/mobile/appointments", icon: Calendar, label: "Randevu" },
     { to: "/mobile/profile", icon: User, label: "Profil" },
@@ -30,18 +30,21 @@ export const MobileLayout = () => {
       className="flex flex-col min-h-screen"
       style={{ background: "hsl(var(--m-bg))" }}
     >
-      <main className="flex-1 pb-[calc(72px+var(--m-safe-bottom))]">
+      <main className="flex-1 pb-[calc(96px+var(--m-safe-bottom))]">
         <Outlet />
       </main>
 
-      {/* Apple Health style glass tab bar */}
+      {/* Floating black capsule tab bar — Zocdoc style */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 m-glass"
-        style={{ borderTop: "1px solid hsl(var(--m-divider))" }}
+        className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none"
+        style={{ bottom: "calc(16px + var(--m-safe-bottom))" }}
       >
         <div
-          className="flex items-stretch justify-around px-2 pt-1.5"
-          style={{ paddingBottom: "calc(8px + var(--m-safe-bottom))" }}
+          className="pointer-events-auto flex items-center gap-1 px-2 py-2 rounded-full"
+          style={{
+            background: "hsl(var(--m-ink))",
+            boxShadow: "0 16px 40px -12px hsl(220 30% 10% / 0.35), 0 4px 8px -2px hsl(220 30% 10% / 0.15)",
+          }}
         >
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -50,20 +53,19 @@ export const MobileLayout = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex flex-col items-center justify-center flex-1 min-w-0 py-1 gap-0.5 m-pressable ${
-                    isActive ? "" : "opacity-60"
+                  `relative flex items-center justify-center rounded-full m-pressable transition-all duration-200 ${
+                    isActive
+                      ? "w-14 h-12 px-4"
+                      : "w-12 h-12"
                   }`
                 }
                 style={({ isActive }) => ({
-                  color: isActive
-                    ? "hsl(var(--m-accent))"
-                    : "hsl(var(--m-text-secondary))",
+                  background: isActive ? "hsl(var(--m-bg))" : "transparent",
+                  color: isActive ? "hsl(var(--m-ink))" : "hsl(var(--m-bg) / 0.6)",
                 })}
+                aria-label={item.label}
               >
                 <Icon className="w-[22px] h-[22px]" strokeWidth={2.2} />
-                <span className="text-[10px] font-semibold tracking-tight">
-                  {item.label}
-                </span>
               </NavLink>
             );
           })}

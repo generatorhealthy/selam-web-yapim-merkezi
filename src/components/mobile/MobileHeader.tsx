@@ -13,9 +13,9 @@ interface MobileHeaderProps {
 }
 
 /**
- * Apple Health-style mobile header.
- * - Tiny static title (when sticky)
- * - Big "largeTitle" inline below
+ * Premium Zocdoc-style mobile header.
+ * - Round circular back button on solid surface
+ * - Generous large title with tight tracking
  */
 export const MobileHeader = ({
   title,
@@ -30,25 +30,33 @@ export const MobileHeader = ({
 
   return (
     <header
-      className={`${sticky ? "sticky top-0 z-30 m-glass" : ""} m-safe-top`}
-      style={{ borderBottom: sticky ? "1px solid hsl(var(--m-divider))" : undefined }}
+      className={`${sticky ? "sticky top-0 z-30" : ""} m-safe-top`}
+      style={{ background: "hsl(var(--m-bg))" }}
     >
       {/* Top bar */}
-      <div className="h-11 px-4 flex items-center justify-between">
-        <div className="flex items-center gap-1 min-w-0">
+      <div className="h-14 px-5 flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
           {showBack && (
             <button
               onClick={() => (onBack ? onBack() : navigate(-1))}
-              className="-ml-2 p-2 rounded-full m-pressable"
+              className="w-10 h-10 rounded-full flex items-center justify-center m-pressable"
+              style={{
+                background: "hsl(var(--m-surface))",
+                boxShadow: "var(--m-shadow)",
+              }}
               aria-label="Geri"
             >
-              <ChevronLeft className="w-6 h-6" style={{ color: "hsl(var(--m-accent))" }} />
+              <ChevronLeft
+                className="w-5 h-5"
+                strokeWidth={2.4}
+                style={{ color: "hsl(var(--m-ink))" }}
+              />
             </button>
           )}
-          {title && (
+          {title && !largeTitle && (
             <span
-              className="text-[15px] font-semibold truncate"
-              style={{ color: "hsl(var(--m-text-primary))" }}
+              className="text-[17px] font-bold truncate"
+              style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.01em" }}
             >
               {title}
             </span>
@@ -59,11 +67,19 @@ export const MobileHeader = ({
 
       {/* Large title */}
       {largeTitle && (
-        <div className="px-5 pt-1 pb-3">
+        <div className="px-5 pt-2 pb-5">
+          {title && (
+            <div
+              className="text-[15px] font-medium mb-1"
+              style={{ color: "hsl(var(--m-text-secondary))" }}
+            >
+              {title}
+            </div>
+          )}
           <h1 className="m-headline">{largeTitle}</h1>
           {subtitle && (
             <p
-              className="mt-1 text-[15px]"
+              className="mt-2 text-[15px]"
               style={{ color: "hsl(var(--m-text-secondary))" }}
             >
               {subtitle}
