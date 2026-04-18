@@ -44,12 +44,11 @@ export default function MobileSpecialistSubscription() {
       }
       setSub(autoOrder);
 
-      // Geçmiş ödemeler — email + isim birleşimi
+      // Geçmiş ödemeler — email + isim birleşimi (tüm durumlar dahil: bekleyen, onaylı vs.)
       const { data: paidByEmail } = await supabase
         .from("orders")
         .select("amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
         .ilike("customer_email", email)
-        .in("status", ["approved", "completed"])
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
@@ -59,7 +58,6 @@ export default function MobileSpecialistSubscription() {
           .from("orders")
           .select("amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
           .eq("customer_name", specName)
-          .in("status", ["approved", "completed"])
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
         const merged = new Map<string, any>();
@@ -84,60 +82,81 @@ export default function MobileSpecialistSubscription() {
         <div className="px-5">
           <div className="m-card p-4 text-[14px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Yükleniyor…</div>
         </div>
-      ) : !sub ? (
+      ) : !sub && orders.length === 0 ? (
         <div className="px-5">
           <MobileEmptyState icon={CreditCard} title="Aktif aboneliğiniz yok" />
         </div>
       ) : (
         <>
           {/* Hero card */}
-          <div className="px-5 mb-5">
-            <div className="rounded-[28px] p-6" style={{ background: "hsl(var(--m-tint-lilac))" }}>
-              <div className="flex items-center gap-2 mb-3">
-                <Package className="w-4 h-4" style={{ color: "hsl(var(--m-text-secondary))" }} />
-                <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                  Aktif Paket
-                </span>
-              </div>
-              <div className="text-[22px] font-bold leading-tight mb-1" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
-                {sub.package_name}
-              </div>
-              <div className="text-[13px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                {Number(sub.amount).toLocaleString("tr-TR")}₺ · Her ayın {sub.monthly_payment_day}'i
+          {sub ? (
+            <div className="px-5 mb-5">
+              <div className="rounded-[28px] p-6" style={{ background: "hsl(var(--m-tint-lilac))" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Package className="w-4 h-4" style={{ color: "hsl(var(--m-text-secondary))" }} />
+                  <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    Aktif Paket
+                  </span>
+                </div>
+                <div className="text-[22px] font-bold leading-tight mb-1" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
+                  {sub.package_name}
+                </div>
+                <div className="text-[13px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  {Number(sub.amount).toLocaleString("tr-TR")}₺ · Her ayın {sub.monthly_payment_day}'i
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="px-5 mb-5">
+              <div className="rounded-[28px] p-6" style={{ background: "hsl(var(--m-tint-lilac))" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Package className="w-4 h-4" style={{ color: "hsl(var(--m-text-secondary))" }} />
+                  <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    Siparişlerim
+                  </span>
+                </div>
+                <div className="text-[22px] font-bold leading-tight mb-1" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
+                  {orders[0]?.package_name || "Paket"}
+                </div>
+                <div className="text-[13px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  Toplam {orders.length} ödeme kaydı
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Months grid */}
-          <div className="px-5 mb-6">
-            <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "hsl(var(--m-text-secondary))" }}>
-              Ödeme Takvimi
-            </div>
-            <div className="m-card p-4">
-              <div className="grid grid-cols-6 gap-2">
-                {Array.from({ length: sub.total_months || 24 }).map((_, i) => {
-                  const m = i + 1;
-                  const paid = (sub.paid_months || []).includes(m);
-                  return (
-                    <div
-                      key={m}
-                      className="aspect-square rounded-xl flex flex-col items-center justify-center text-[11px] font-bold"
-                      style={{
-                        background: paid ? "hsl(var(--m-tint-mint))" : "hsl(var(--m-bg))",
-                        color: "hsl(var(--m-text-primary))",
-                      }}
-                    >
-                      {paid && <CheckCircle2 className="w-3 h-3 mb-0.5" />}
-                      {m}
-                    </div>
-                  );
-                })}
+          {sub && (
+            <div className="px-5 mb-6">
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                Ödeme Takvimi
               </div>
-              <div className="mt-3 text-[12px] text-center" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                {(sub.paid_months || []).length} / {sub.total_months || 24} ay ödendi
+              <div className="m-card p-4">
+                <div className="grid grid-cols-6 gap-2">
+                  {Array.from({ length: sub.total_months || 24 }).map((_, i) => {
+                    const m = i + 1;
+                    const paid = (sub.paid_months || []).includes(m);
+                    return (
+                      <div
+                        key={m}
+                        className="aspect-square rounded-xl flex flex-col items-center justify-center text-[11px] font-bold"
+                        style={{
+                          background: paid ? "hsl(var(--m-tint-mint))" : "hsl(var(--m-bg))",
+                          color: "hsl(var(--m-text-primary))",
+                        }}
+                      >
+                        {paid && <CheckCircle2 className="w-3 h-3 mb-0.5" />}
+                        {m}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-3 text-[12px] text-center" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  {(sub.paid_months || []).length} / {sub.total_months || 24} ay ödendi
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* History */}
           <div className="px-5 mb-6">
@@ -148,7 +167,7 @@ export default function MobileSpecialistSubscription() {
               <MobileEmptyState icon={Calendar} title="Henüz ödeme kaydı yok" />
             ) : (
               <div className="m-card overflow-hidden">
-                {orders.slice(0, 12).map((o, i) => (
+                {orders.slice(0, 24).map((o, i) => (
                   <div
                     key={i}
                     className="flex items-center gap-3 px-4 py-3"
@@ -162,10 +181,11 @@ export default function MobileSpecialistSubscription() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[14px] font-semibold truncate" style={{ color: "hsl(var(--m-text-primary))" }}>
-                        {o.subscription_month ? `${o.subscription_month}. Ay` : "Ödeme"}
+                        {o.package_name || (o.subscription_month ? `${o.subscription_month}. Ay` : "Ödeme")}
                       </div>
                       <div className="text-[12px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
                         {new Date(o.created_at).toLocaleDateString("tr-TR")}
+                        {o.subscription_month ? ` · ${o.subscription_month}. Ay` : ""}
                       </div>
                     </div>
                     <div className="text-[14px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
