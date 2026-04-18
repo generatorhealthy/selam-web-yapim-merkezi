@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,40 +16,26 @@ import { useNativeApp } from "@/hooks/useNativeApp";
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
 
-/**
- * Helper: lazy load + expose the import function for prefetching.
- * We trigger these prefetches during idle time so that when the user
- * actually navigates, the chunk is already in the browser cache and
- * the page opens INSTANTLY (no network wait, no white flash).
- */
-const prefetchers: Array<() => Promise<unknown>> = [];
-function lazyPrefetch<T extends React.ComponentType<any>>(
-  loader: () => Promise<{ default: T }>
-) {
-  prefetchers.push(loader);
-  return lazy(loader);
-}
-
 // Lazy loaded pages - reduces initial bundle significantly
-const MobileHome = lazyPrefetch(() => import("./pages/mobile/MobileHome"));
-const MobileSearch = lazyPrefetch(() => import("./pages/mobile/MobileSearch"));
-const MobileProfile = lazyPrefetch(() => import("./pages/mobile/MobileProfile"));
-const MobileSpecialistDetail = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistDetail"));
-const MobileBooking = lazyPrefetch(() => import("./pages/mobile/MobileBooking"));
-const MobileAppointments = lazyPrefetch(() => import("./pages/mobile/MobileAppointments"));
-const MobileTests = lazyPrefetch(() => import("./pages/mobile/MobileTests"));
-const MobileTestTaker = lazyPrefetch(() => import("./pages/mobile/MobileTestTaker"));
-const MobileLogin = lazyPrefetch(() => import("./pages/mobile/MobileLogin"));
-const MobileDashboard = lazyPrefetch(() => import("./pages/mobile/MobileDashboard"));
-const MobileSpecialistAppointments = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistAppointments"));
-const MobileSpecialistClients = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistClients"));
-const MobileSpecialistProfile = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistProfile"));
-const MobileSpecialistBlog = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistBlog"));
-const MobileSpecialistContracts = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistContracts"));
-const MobileSpecialistSupport = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistSupport"));
-const MobileSpecialistSubscription = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistSubscription"));
-const MobileSpecialistPortfolio = lazyPrefetch(() => import("./pages/mobile/MobileSpecialistPortfolio"));
-const MobileBlogDetail = lazyPrefetch(() => import("./pages/mobile/MobileBlogDetail"));
+const MobileHome = lazy(() => import("./pages/mobile/MobileHome"));
+const MobileSearch = lazy(() => import("./pages/mobile/MobileSearch"));
+const MobileProfile = lazy(() => import("./pages/mobile/MobileProfile"));
+const MobileSpecialistDetail = lazy(() => import("./pages/mobile/MobileSpecialistDetail"));
+const MobileBooking = lazy(() => import("./pages/mobile/MobileBooking"));
+const MobileAppointments = lazy(() => import("./pages/mobile/MobileAppointments"));
+const MobileTests = lazy(() => import("./pages/mobile/MobileTests"));
+const MobileTestTaker = lazy(() => import("./pages/mobile/MobileTestTaker"));
+const MobileLogin = lazy(() => import("./pages/mobile/MobileLogin"));
+const MobileDashboard = lazy(() => import("./pages/mobile/MobileDashboard"));
+const MobileSpecialistAppointments = lazy(() => import("./pages/mobile/MobileSpecialistAppointments"));
+const MobileSpecialistClients = lazy(() => import("./pages/mobile/MobileSpecialistClients"));
+const MobileSpecialistProfile = lazy(() => import("./pages/mobile/MobileSpecialistProfile"));
+const MobileSpecialistBlog = lazy(() => import("./pages/mobile/MobileSpecialistBlog"));
+const MobileSpecialistContracts = lazy(() => import("./pages/mobile/MobileSpecialistContracts"));
+const MobileSpecialistSupport = lazy(() => import("./pages/mobile/MobileSpecialistSupport"));
+const MobileSpecialistSubscription = lazy(() => import("./pages/mobile/MobileSpecialistSubscription"));
+const MobileSpecialistPortfolio = lazy(() => import("./pages/mobile/MobileSpecialistPortfolio"));
+const MobileBlogDetail = lazy(() => import("./pages/mobile/MobileBlogDetail"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -63,7 +49,6 @@ const SpecialtyPage = lazy(() => import("./pages/SpecialtyPage"));
 const Packages = lazy(() => import("./pages/Packages"));
 const CampaignPackage = lazy(() => import("./pages/CampaignPackage"));
 const CampaignPremiumPackage = lazy(() => import("./pages/CampaignPremiumPackage"));
-const DiscountedPackage = lazy(() => import("./pages/DiscountedPackage"));
 const SpecialOffer = lazy(() => import("./pages/SpecialOffer"));
 const SpecialOfferNew = lazy(() => import("./pages/SpecialOfferNew"));
 const Checkout = lazy(() => import("./pages/Checkout"));
@@ -153,25 +138,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Prefetch all lazy chunks during browser idle time so subsequent
-// navigations are INSTANT. Runs once after the initial paint.
-if (typeof window !== "undefined") {
-  const runPrefetch = () => {
-    prefetchers.forEach((load) => {
-      // Fire and forget — browser will cache the chunk
-      load().catch(() => {});
-    });
-  };
-  const ric = (window as any).requestIdleCallback as
-    | ((cb: () => void, opts?: { timeout: number }) => number)
-    | undefined;
-  if (ric) {
-    ric(runPrefetch, { timeout: 3000 });
-  } else {
-    setTimeout(runPrefetch, 1500);
-  }
-}
 
 const LegacyBlogRedirect = () => {
   const { slug } = useParams<{ slug: string }>();

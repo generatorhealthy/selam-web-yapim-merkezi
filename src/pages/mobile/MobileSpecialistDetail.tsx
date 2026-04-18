@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { getCachedPublicSpecialists, setCachedPublicSpecialists } from "@/lib/mobileSpecialistsCache";
 
 interface Specialist {
   id: string;
@@ -83,35 +84,61 @@ export default function MobileSpecialistDetail() {
 
   useEffect(() => {
     let cancelled = false;
+    const cachedSummary = id
+      ? getCachedPublicSpecialists()?.find((item) => item.id === id) ?? null
+      : null;
+
+    if (cachedSummary) {
+      setSpecialist(cachedSummary as Specialist);
+      setLoading(false);
+    }
+
     (async () => {
       try {
-        setLoading(true);
-        // 1) Get specialist by id from public list
-        const { data: list, error } = await supabase.rpc("get_public_specialists");
-        if (error) throw error;
-        const summary = (list as any[])?.find((s) => s.id === id);
+        let summary = cachedSummary;
+
         if (!summary) {
-          if (!cancelled) setSpecialist(null);
+          setLoading(true);
+          const { data: list, error } = await supabase.rpc("get_public_specialists");
+          if (error) throw error;
+
+          const nextList = ((list as any[]) || []) as Specialist[];
+          setCachedPublicSpecialists(nextList);
+          summary = nextList.find((s) => s.id === id) ?? null;
+        }
+
+        if (!summary) {
+          if (!cancelled) {
+            setSpecialist(null);
+            setLoading(false);
+          }
           return;
         }
 
-        // 2) Get full record by slug for extra fields (university, certifications, faq, hours, days)
-        let full: any = summary;
-        if (summary.slug) {
-          const { data: bySlug } = await supabase.rpc("get_public_specialist_by_slug", { p_slug: summary.slug });
-          if (bySlug && (bySlug as any[]).length > 0) {
-            full = { ...summary, ...(bySlug as any[])[0] };
-          }
+        if (!cancelled) {
+          setSpecialist(summary as Specialist);
+          setLoading(false);
         }
-        if (!cancelled) setSpecialist(full as Specialist);
 
-        // 3) Reviews
-        const { data: rev } = await supabase.rpc("get_public_reviews", {
+        const reviewsPromise = supabase.rpc("get_public_reviews", {
           p_limit: 10, p_specialist_id: id,
         });
-        if (!cancelled && rev) setReviews(rev as Review[]);
+        const fullPromise = summary.slug
+          ? supabase.rpc("get_public_specialist_by_slug", { p_slug: summary.slug })
+          : Promise.resolve({ data: null });
 
-        // 4) Blog posts (if specialist authored any)
+        const [{ data: rev }, { data: bySlug }] = await Promise.all([reviewsPromise, fullPromise]);
+
+        let full: any = summary;
+        if (bySlug && (bySlug as any[]).length > 0) {
+          full = { ...summary, ...(bySlug as any[])[0] };
+        }
+
+        if (!cancelled) {
+          setSpecialist(full as Specialist);
+          if (rev) setReviews(rev as Review[]);
+        }
+
         if (full?.user_id || full?.id) {
           const { data: blog } = await supabase
             .from("blog_posts")
