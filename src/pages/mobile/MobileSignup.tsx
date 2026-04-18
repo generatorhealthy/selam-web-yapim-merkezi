@@ -26,6 +26,10 @@ export default function MobileSignup() {
       toast({ title: "Eksik bilgi", description: "Ad, e-posta ve şifre gerekli", variant: "destructive" });
       return;
     }
+    if (!acceptedDisclosure) {
+      toast({ title: "Onay gerekli", description: "Aydınlatma metnini onaylamadan kayıt olamazsınız", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
