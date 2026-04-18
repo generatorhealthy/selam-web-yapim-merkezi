@@ -99,10 +99,11 @@ All colors MUST be HSL.
     --m-text-secondary: 220 8% 40%;
     --m-text-tertiary: 220 8% 60%;
 
-    /* Brand: deep ink as primary aksan (Zocdoc style) */
-    --m-accent: 220 15% 10%;
-    --m-accent-soft: 40 20% 93%;
-    --m-ink: 220 15% 10%;
+    /* Brand: Doktorumol mavisi (web ile uyumlu) */
+    --m-accent: 214 88% 50%;
+    --m-accent-soft: 214 88% 95%;
+    --m-ink: 214 88% 50%;
+    --m-ink-deep: 214 88% 38%;
 
     /* Pastel tints for hero specialist cards */
     --m-tint-mint: 140 40% 88%;
