@@ -79,7 +79,7 @@ export default function MobileDashboard() {
 
       {/* Stats grid */}
       <div className="px-5 grid grid-cols-2 gap-3 mb-6">
-        <MobileStatCard label="Bugün Randevu" value={todayCount} icon={Calendar} accent />
+        <MobileStatCard label="Bugün Randevu" value={todayCount} icon={Calendar} tone="accent" />
         <MobileStatCard label="Toplam Danışan" value={clientCount} icon={Users} />
         <MobileStatCard
           label="Bu Ay Gelir"

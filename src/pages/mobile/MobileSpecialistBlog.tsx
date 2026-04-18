@@ -192,7 +192,7 @@ export default function MobileSpecialistBlog() {
           <MobileEmptyState
             icon={FileText}
             title="Henüz yazı yok"
-            subtitle="Yeni bir yazı oluşturmak için + butonuna basın"
+            description="Yeni bir yazı oluşturmak için + butonuna basın"
           />
         ) : (
           posts.map((p) => (

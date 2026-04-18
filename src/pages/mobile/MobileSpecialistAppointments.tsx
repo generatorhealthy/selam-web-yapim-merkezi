@@ -103,7 +103,7 @@ export default function MobileSpecialistAppointments() {
         {loading ? (
           <div className="m-card p-4 text-[14px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Yükleniyor…</div>
         ) : filtered.length === 0 ? (
-          <MobileEmptyState icon={Calendar} title="Randevu yok" subtitle="Bu sekmede gösterilecek kayıt yok" />
+          <MobileEmptyState icon={Calendar} title="Randevu yok" description="Bu sekmede gösterilecek kayıt yok" />
         ) : (
           filtered.map((a) => (
             <div key={a.id} className="m-card p-4">
