@@ -85,37 +85,47 @@ All colors MUST be HSL.
 
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* === MOBILE APP DESIGN SYSTEM (Apple Health inspired) === */
-    /* Surfaces */
-    --m-bg: 220 20% 98%;
+    /* === MOBILE APP DESIGN SYSTEM (Zocdoc-inspired premium) === */
+    /* Surfaces — warm cream background, pure white cards */
+    --m-bg: 40 25% 96%;
     --m-surface: 0 0% 100%;
     --m-surface-elevated: 0 0% 100%;
-    --m-surface-muted: 220 14% 96%;
-    --m-border: 220 13% 91%;
-    --m-divider: 220 13% 94%;
+    --m-surface-muted: 40 20% 93%;
+    --m-border: 40 15% 88%;
+    --m-divider: 40 15% 92%;
 
-    /* Text */
-    --m-text-primary: 222 24% 11%;
-    --m-text-secondary: 220 9% 46%;
-    --m-text-tertiary: 220 9% 65%;
+    /* Text — deep ink black for premium feel */
+    --m-text-primary: 220 15% 10%;
+    --m-text-secondary: 220 8% 40%;
+    --m-text-tertiary: 220 8% 60%;
 
-    /* Brand & semantic accents */
-    --m-accent: 214 88% 50%;          /* primary blue */
-    --m-accent-soft: 214 100% 96%;
-    --m-success: 142 71% 45%;
-    --m-success-soft: 142 76% 95%;
+    /* Brand: deep ink as primary aksan (Zocdoc style) */
+    --m-accent: 220 15% 10%;
+    --m-accent-soft: 40 20% 93%;
+    --m-ink: 220 15% 10%;
+
+    /* Pastel tints for hero specialist cards */
+    --m-tint-mint: 140 40% 88%;
+    --m-tint-lilac: 260 45% 92%;
+    --m-tint-sky: 210 60% 92%;
+    --m-tint-peach: 25 80% 92%;
+    --m-tint-sand: 40 50% 92%;
+
+    /* Semantic */
+    --m-success: 142 60% 38%;
+    --m-success-soft: 140 40% 92%;
     --m-warning: 38 92% 50%;
     --m-warning-soft: 38 100% 95%;
-    --m-danger: 0 84% 60%;
-    --m-danger-soft: 0 86% 96%;
-    --m-info: 199 89% 48%;
-    --m-info-soft: 199 100% 95%;
-    --m-purple: 262 83% 58%;
-    --m-purple-soft: 262 100% 96%;
-    --m-pink: 340 82% 60%;
-    --m-pink-soft: 340 100% 96%;
-    --m-teal: 173 80% 40%;
-    --m-teal-soft: 173 76% 94%;
+    --m-danger: 0 70% 50%;
+    --m-danger-soft: 0 70% 96%;
+    --m-info: 210 80% 45%;
+    --m-info-soft: 210 80% 95%;
+    --m-purple: 262 60% 50%;
+    --m-purple-soft: 262 50% 95%;
+    --m-pink: 340 70% 55%;
+    --m-pink-soft: 340 70% 96%;
+    --m-teal: 173 60% 35%;
+    --m-teal-soft: 173 50% 92%;
 
     /* Elevation */
     --m-shadow-sm: 0 1px 2px 0 hsl(220 30% 20% / 0.04);
@@ -123,11 +133,11 @@ All colors MUST be HSL.
     --m-shadow-md: 0 4px 12px -2px hsl(220 30% 20% / 0.08), 0 2px 4px -2px hsl(220 30% 20% / 0.04);
     --m-shadow-lg: 0 12px 32px -8px hsl(220 30% 20% / 0.12), 0 4px 8px -4px hsl(220 30% 20% / 0.06);
 
-    /* Radii */
-    --m-radius-sm: 10px;
-    --m-radius: 16px;
-    --m-radius-lg: 22px;
-    --m-radius-xl: 28px;
+    /* Radii — extra round, premium */
+    --m-radius-sm: 14px;
+    --m-radius: 22px;
+    --m-radius-lg: 28px;
+    --m-radius-xl: 36px;
 
     /* Safe areas (Capacitor / iOS notch) */
     --m-safe-top: env(safe-area-inset-top, 0px);
@@ -216,28 +226,50 @@ All colors MUST be HSL.
   }
 
   .m-headline {
-    font-size: 34px;
-    line-height: 1.1;
+    font-size: 38px;
+    line-height: 1.05;
     font-weight: 800;
-    letter-spacing: -0.022em;
+    letter-spacing: -0.03em;
     color: hsl(var(--m-text-primary));
   }
 
   .m-title {
-    font-size: 22px;
-    line-height: 1.2;
+    font-size: 24px;
+    line-height: 1.15;
     font-weight: 700;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
     color: hsl(var(--m-text-primary));
   }
 
   .m-section-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
     color: hsl(var(--m-text-secondary));
   }
+
+  /* Round chip pill — Zocdoc style */
+  .m-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: hsl(var(--m-surface));
+    box-shadow: var(--m-shadow);
+    font-size: 15px;
+    font-weight: 600;
+    color: hsl(var(--m-text-primary));
+    white-space: nowrap;
+  }
+  .m-chip--active {
+    background: hsl(var(--m-ink));
+    color: hsl(var(--m-bg));
+  }
+
+  .m-no-scrollbar::-webkit-scrollbar { display: none; }
+  .m-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 @layer base {

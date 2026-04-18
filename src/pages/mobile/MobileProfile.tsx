@@ -4,11 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { MobileSection } from "@/components/mobile/MobileSection";
-import { MobileListRow } from "@/components/mobile/MobileListRow";
-import {
-  LogOut, Calendar, Brain, Bell, Shield, HelpCircle, FileText, LogIn,
-} from "lucide-react";
+import { LogOut, Calendar, Brain, Bell, Shield, HelpCircle, FileText, LogIn, ChevronRight } from "lucide-react";
 
 export default function MobileProfile() {
   const navigate = useNavigate();
@@ -43,83 +39,113 @@ export default function MobileProfile() {
 
   const initial = (userProfile?.name || user?.email || "?").charAt(0).toUpperCase();
 
+  const menuItems = [
+    { icon: Calendar, label: "Randevularım", onClick: () => navigate("/mobile/appointments") },
+    { icon: Brain, label: "Testler", onClick: () => navigate("/mobile/tests") },
+    { icon: Bell, label: "Bildirimler", onClick: () => toast({ title: "Yakında" }) },
+    { icon: Shield, label: "Gizlilik", onClick: () => toast({ title: "Yakında" }) },
+    { icon: FileText, label: "Sözleşmeler", onClick: () => toast({ title: "Yakında" }) },
+    { icon: HelpCircle, label: "Yardım", onClick: () => toast({ title: "Yakında" }) },
+  ];
+
   return (
-    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 100 }}>
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 40 }}>
       <MobileHeader largeTitle="Profil" />
 
-      {/* Profile card */}
+      {/* Hero profile card */}
       <div className="px-5 mb-6">
-        <div className="m-card p-5 flex items-center gap-4">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center"
-            style={{ background: "hsl(var(--m-accent-soft))" }}
-          >
-            <span className="text-2xl font-bold" style={{ color: "hsl(var(--m-accent))" }}>{initial}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            {user ? (
-              <>
-                <h2 className="font-semibold text-[17px] truncate" style={{ color: "hsl(var(--m-text-primary))" }}>
-                  {userProfile?.name || "Kullanıcı"}
-                </h2>
-                <p className="text-[13px] truncate" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                  {user.email}
-                </p>
-              </>
-            ) : (
-              <>
-                <h2 className="font-semibold text-[17px]" style={{ color: "hsl(var(--m-text-primary))" }}>Misafir</h2>
-                <p className="text-[13px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Giriş yapmadınız</p>
-              </>
-            )}
+        <div
+          className="rounded-[28px] p-6"
+          style={{ background: "hsl(var(--m-tint-sand))" }}
+        >
+          <div className="flex items-center gap-4">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center"
+              style={{ background: "hsl(var(--m-surface))" }}
+            >
+              <span className="text-[32px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>{initial}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              {user ? (
+                <>
+                  <h2 className="font-bold text-[20px] truncate" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
+                    {userProfile?.name || "Kullanıcı"}
+                  </h2>
+                  <p className="text-[13px] truncate mt-0.5" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    {user.email}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="font-bold text-[20px]" style={{ color: "hsl(var(--m-text-primary))" }}>Misafir</h2>
+                  <p className="text-[13px] mt-0.5" style={{ color: "hsl(var(--m-text-secondary))" }}>Giriş yapmadınız</p>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stats */}
       {user && (
-        <div className="px-5 mb-6 grid grid-cols-2 gap-3">
-          <div className="m-card p-4">
-            <div className="text-[12px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Yaklaşan</div>
-            <div className="text-[28px] font-bold mt-1" style={{ color: "hsl(var(--m-accent))" }}>{stats.upcoming}</div>
+        <div className="px-5 mb-7 grid grid-cols-2 gap-3">
+          <div className="rounded-[22px] p-5" style={{ background: "hsl(var(--m-tint-mint))" }}>
+            <div className="text-[12px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>Yaklaşan</div>
+            <div className="text-[32px] font-bold mt-1" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
+              {stats.upcoming}
+            </div>
           </div>
-          <div className="m-card p-4">
-            <div className="text-[12px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Toplam Randevu</div>
-            <div className="text-[28px] font-bold mt-1" style={{ color: "hsl(var(--m-text-primary))" }}>{stats.total}</div>
+          <div className="rounded-[22px] p-5" style={{ background: "hsl(var(--m-tint-lilac))" }}>
+            <div className="text-[12px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>Toplam</div>
+            <div className="text-[32px] font-bold mt-1" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
+              {stats.total}
+            </div>
           </div>
         </div>
       )}
 
-      <MobileSection label="Aktivitelerim" className="mb-6">
-        <div className="m-card overflow-hidden">
-          <MobileListRow icon={Calendar} title="Randevularım" onClick={() => navigate("/mobile/appointments")} />
-          <MobileListRow icon={Brain} title="Testler" onClick={() => navigate("/mobile/tests")} />
+      {/* Menu */}
+      <div className="px-5 mb-6">
+        <div className="rounded-[22px] overflow-hidden" style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}>
+          {menuItems.map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                className="w-full flex items-center gap-4 px-5 py-4 m-pressable text-left"
+                style={{ borderTop: i > 0 ? "1px solid hsl(var(--m-divider))" : undefined }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: "hsl(var(--m-surface-muted))" }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: "hsl(var(--m-ink))" }} />
+                </div>
+                <span className="flex-1 text-[15px] font-semibold" style={{ color: "hsl(var(--m-text-primary))" }}>
+                  {item.label}
+                </span>
+                <ChevronRight className="w-5 h-5" style={{ color: "hsl(var(--m-text-tertiary))" }} />
+              </button>
+            );
+          })}
         </div>
-      </MobileSection>
-
-      <MobileSection label="Ayarlar" className="mb-6">
-        <div className="m-card overflow-hidden">
-          <MobileListRow icon={Bell} title="Bildirimler" onClick={() => toast({ title: "Yakında" })} />
-          <MobileListRow icon={Shield} title="Gizlilik" onClick={() => toast({ title: "Yakında" })} />
-          <MobileListRow icon={FileText} title="Sözleşmeler" onClick={() => toast({ title: "Yakında" })} />
-          <MobileListRow icon={HelpCircle} title="Yardım" onClick={() => toast({ title: "Yakında" })} />
-        </div>
-      </MobileSection>
+      </div>
 
       <div className="px-5">
         {user ? (
           <button
             onClick={logout}
-            className="w-full h-12 rounded-2xl font-semibold flex items-center justify-center gap-2 m-pressable"
+            className="w-full h-14 rounded-full font-bold flex items-center justify-center gap-2 m-pressable"
             style={{ background: "hsl(var(--m-danger-soft))", color: "hsl(var(--m-danger))" }}
           >
             <LogOut className="w-5 h-5" /> Çıkış Yap
           </button>
         ) : (
           <button
-            onClick={() => navigate("/giris-yap")}
-            className="w-full h-12 rounded-2xl font-semibold flex items-center justify-center gap-2 m-pressable"
-            style={{ background: "hsl(var(--m-accent))", color: "white" }}
+            onClick={() => navigate("/mobile/login")}
+            className="w-full h-14 rounded-full font-bold flex items-center justify-center gap-2 m-pressable"
+            style={{ background: "hsl(var(--m-ink))", color: "hsl(var(--m-bg))" }}
           >
             <LogIn className="w-5 h-5" /> Giriş Yap
           </button>
