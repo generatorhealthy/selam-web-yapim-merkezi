@@ -192,6 +192,11 @@ const AppContent = () => {
               <Route path="specialist-portfolio" element={<MobileSpecialistPortfolio />} />
               <Route path="blog/:slug" element={<MobileBlogDetail />} />
               <Route path="register" element={<SpecialistRegistration />} />
+              <Route path="signup" element={<MobileSignup />} />
+              <Route path="patient-dashboard" element={<MobilePatientDashboard />} />
+              <Route path="patient-appointments" element={<MobilePatientAppointments />} />
+              <Route path="patient-favorites" element={<MobilePatientFavorites />} />
+              <Route path="patient-profile" element={<MobilePatientProfile />} />
             </Route>
           )}
 
@@ -244,6 +249,8 @@ const AppContent = () => {
               <Route path="/giris-yap" element={<LoginPage />} />
               <Route path="/sifre-sifirla" element={<ResetPassword />} />
               <Route path="/kayit-ol" element={<SpecialistRegistration />} />
+              <Route path="/uye-ol" element={<PatientSignup />} />
+              <Route path="/danisan-paneli" element={<PatientDashboard />} />
               
               {/* Admin Routes - MUST be before dynamic catch-all routes */}
               <Route path="/divan_paneli" element={<AdminAuth />} />
