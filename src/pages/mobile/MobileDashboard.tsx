@@ -6,15 +6,16 @@ import { MobileSection } from "@/components/mobile/MobileSection";
 import { MobileStatCard } from "@/components/mobile/MobileStatCard";
 import { MobileListRow } from "@/components/mobile/MobileListRow";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
-import { Calendar, Users, Wallet, FileText, Brain, ChevronRight, TrendingUp } from "lucide-react";
+import { Calendar, Users, FileText, Brain, ChevronRight, ClipboardList, CalendarClock } from "lucide-react";
 
 export default function MobileDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [todayCount, setTodayCount] = useState(0);
+  const [weekCount, setWeekCount] = useState(0);
   const [clientCount, setClientCount] = useState(0);
-  const [monthRevenue, setMonthRevenue] = useState(0);
+  const [testCount, setTestCount] = useState(0);
   const [todayList, setTodayList] = useState<any[]>([]);
 
   useEffect(() => {
@@ -40,6 +41,10 @@ export default function MobileDashboard() {
         setName(spec.name?.split(" ")[0] || "Uzman");
 
         const today = new Date().toISOString().slice(0, 10);
+        const weekFromNow = new Date();
+        weekFromNow.setDate(weekFromNow.getDate() + 7);
+        const weekEnd = weekFromNow.toISOString().slice(0, 10);
+
         const { data: appts } = await supabase
           .from("appointments")
           .select("*")
@@ -50,23 +55,21 @@ export default function MobileDashboard() {
         setTodayCount(todays.length);
         setTodayList(todays.slice(0, 5));
 
-        // Unique clients
+        const upcoming = (appts || []).filter(
+          (a) => a.appointment_date >= today && a.appointment_date <= weekEnd && a.status !== "cancelled",
+        );
+        setWeekCount(upcoming.length);
+
+        // Unique clients (Danışanlar)
         const uniqueEmails = new Set((appts || []).map((a) => a.patient_email));
         setClientCount(uniqueEmails.size);
 
-        // Bu ay geliri (automatic_orders + appointments tahmin yok, basit hesap)
-        const { data: orders } = await supabase
-          .from("orders")
-          .select("amount, created_at, status")
-          .eq("customer_email", spec.email || "")
-          .in("status", ["approved", "completed"]);
-
-        const monthStart = new Date();
-        monthStart.setDate(1);
-        const total = (orders || [])
-          .filter((o) => new Date(o.created_at) >= monthStart)
-          .reduce((s, o) => s + Number(o.amount || 0), 0);
-        setMonthRevenue(total);
+        // Test cevapları sayısı
+        const { count } = await supabase
+          .from("test_results")
+          .select("*", { count: "exact", head: true })
+          .eq("specialist_id", spec.id);
+        setTestCount(count || 0);
       } finally {
         setLoading(false);
       }
@@ -79,14 +82,10 @@ export default function MobileDashboard() {
 
       {/* Stats grid */}
       <div className="px-5 grid grid-cols-2 gap-3 mb-6">
-        <MobileStatCard label="Bugün Randevu" value={todayCount} icon={Calendar} tone="accent" />
-        <MobileStatCard label="Toplam Danışan" value={clientCount} icon={Users} />
-        <MobileStatCard
-          label="Bu Ay Gelir"
-          value={`₺${monthRevenue.toLocaleString("tr-TR")}`}
-          icon={Wallet}
-        />
-        <MobileStatCard label="Trend" value="—" icon={TrendingUp} />
+        <MobileStatCard label="Bugün" value={todayCount} icon={Calendar} tone="accent" />
+        <MobileStatCard label="Bu Hafta" value={weekCount} icon={CalendarClock} />
+        <MobileStatCard label="Danışanlar" value={clientCount} icon={Users} />
+        <MobileStatCard label="Test Cevapları" value={testCount} icon={ClipboardList} />
       </div>
 
       {/* Bugünkü randevular */}
@@ -132,8 +131,8 @@ export default function MobileDashboard() {
       <MobileSection label="Yönetim" className="mb-6">
         <div className="m-card overflow-hidden">
           <MobileListRow icon={Calendar} title="Randevular" subtitle="Düzenle ve yönet" onClick={() => navigate("/mobile/specialist-appointments")} />
-          <MobileListRow icon={Users} title="Danışanlar" subtitle="Müşteri listesi" onClick={() => navigate("/mobile/specialist-clients")} />
-          <MobileListRow icon={Brain} title="Test Sonuçları" subtitle="Hasta cevapları" onClick={() => navigate("/mobile/tests")} />
+          <MobileListRow icon={Users} title="Danışanlar" subtitle="Danışan listesi" onClick={() => navigate("/mobile/specialist-clients")} />
+          <MobileListRow icon={Brain} title="Test Cevapları" subtitle="Danışan cevapları" onClick={() => navigate("/mobile/tests")} />
           <MobileListRow icon={FileText} title="Blog Yazıları" subtitle="Yeni yazı oluştur" onClick={() => navigate("/mobile/specialist-blog")} />
         </div>
       </MobileSection>
