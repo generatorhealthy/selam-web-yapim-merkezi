@@ -5,6 +5,12 @@ import { Search, MapPin, Star, Video, Users, X, ArrowRight, Heart } from "lucide
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
+import {
+  getCachedPublicSpecialists,
+  isPublicSpecialistsCacheStale,
+  setCachedPublicSpecialists,
+  shuffleItems,
+} from "@/lib/mobileSpecialistsCache";
 
 interface Specialist {
   id: string;
@@ -41,20 +47,42 @@ export default function MobileSearch() {
   const { toast } = useToast();
 
   useEffect(() => {
+    let cancelled = false;
+    const cached = getCachedPublicSpecialists();
+
+    if (cached?.length) {
+      setSpecialists(shuffleItems(cached as Specialist[]));
+      setLoading(false);
+    }
+
     (async () => {
+      if (cached?.length && !isPublicSpecialistsCacheStale()) {
+        return;
+      }
+
       try {
         const { data, error } = await supabase.rpc("get_public_specialists");
         if (error) throw error;
         const list = ((data as any) || []) as Specialist[];
-        // Shuffle so order changes on every visit
-        const shuffled = [...list].sort(() => Math.random() - 0.5);
-        setSpecialists(shuffled);
+        setCachedPublicSpecialists(list);
+
+        if (!cancelled) {
+          setSpecialists(shuffleItems(list));
+        }
       } catch (e) {
-        toast({ title: "Hata", description: "Uzmanlar yüklenemedi", variant: "destructive" });
+        if (!cached?.length && !cancelled) {
+          toast({ title: "Hata", description: "Uzmanlar yüklenemedi", variant: "destructive" });
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [toast]);
 
   useEffect(() => {
