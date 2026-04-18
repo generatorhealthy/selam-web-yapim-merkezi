@@ -1,45 +1,50 @@
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useUserRole } from "@/hooks/useUserRole";
-import { Search, Calendar, TestTube2, Star, Heart, Brain, Sparkles, Users, UserPlus, Quote, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
+import {
+  Search,
+  Calendar,
+  TestTube2,
+  Brain,
+  Heart,
+  Star,
+  UserPlus,
+  Sparkles,
+  ChevronRight,
+  Quote,
+} from "lucide-react";
+import { MobileHeader } from "@/components/mobile/MobileHeader";
+import { MobileSection } from "@/components/mobile/MobileSection";
+import { MobileCard } from "@/components/mobile/MobileCard";
+import { MobileListRow } from "@/components/mobile/MobileListRow";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 
 interface Test {
   id: string;
   title: string;
-  description: string;
-  category: string;
-  image_url: string;
-  specialty_area: string;
-}
-
-interface Review {
-  id: string;
-  reviewer_name?: string;
-  reviewer_display_name?: string;
-  comment: string;
-  rating: number;
-  created_at: string;
-  specialist_id: string;
-  specialists: {
-    name: string;
-    specialty: string;
-  };
+  category: string | null;
+  image_url: string | null;
 }
 
 interface Specialist {
   id: string;
   name: string;
   specialty: string;
-  profile_picture: string;
+  profile_picture: string | null;
+  rating: number | null;
+  experience: number | null;
+  city: string | null;
+}
+
+interface Review {
+  id: string;
+  reviewer_display_name?: string;
+  reviewer_name?: string;
+  comment: string;
   rating: number;
-  reviews_count: number;
-  experience: number;
-  city: string;
+  specialist_name?: string;
+  specialist_specialty?: string;
 }
 
 export default function MobileHome() {
@@ -51,358 +56,339 @@ export default function MobileHome() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
+    let cancelled = false;
+    (async () => {
+      try {
+        const [testsRes, reviewsRes, specialistsRes] = await Promise.all([
+          supabase
+            .from("tests")
+            .select("id,title,category,image_url")
+            .eq("is_active", true)
+            .eq("status", "approved")
+            .limit(4),
+          supabase.rpc("get_public_reviews", { p_limit: 3 }),
+          supabase
+            .from("specialists")
+            .select("id,name,specialty,profile_picture,rating,experience,city")
+            .eq("is_active", true)
+            .limit(20),
+        ]);
+
+        if (cancelled) return;
+        if (testsRes.data) setTests(testsRes.data as Test[]);
+        if (reviewsRes.data) setReviews(reviewsRes.data as Review[]);
+        if (specialistsRes.data) {
+          const shuffled = [...specialistsRes.data].sort(() => Math.random() - 0.5);
+          setSpecialists(shuffled.slice(0, 4) as Specialist[]);
+        }
+      } catch (err) {
+        console.error("MobileHome data error:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const fetchData = async () => {
-    try {
-      // Fetch tests
-      const { data: testsData } = await supabase
-        .from('tests')
-        .select('*')
-        .eq('is_active', true)
-        .eq('status', 'approved')
-        .limit(6);
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 6) return "İyi geceler";
+    if (h < 12) return "Günaydın";
+    if (h < 18) return "İyi günler";
+    return "İyi akşamlar";
+  })();
 
-      // Fetch reviews
-      const { data: reviewsData } = await supabase
-        .rpc('get_public_reviews', { p_limit: 5 });
+  const firstName = userProfile?.name?.split(" ")[0] || "Hoş geldiniz";
 
-      // Fetch specialists - randomize on every load
-      const { data: specialistsData } = await supabase
-        .from('specialists')
-        .select('*')
-        .eq('is_active', true)
-        .limit(20);
-
-      if (testsData) setTests(testsData);
-      if (reviewsData) setReviews(reviewsData as any);
-      if (specialistsData) {
-        // Randomize specialists
-        const shuffled = [...specialistsData].sort(() => Math.random() - 0.5);
-        setSpecialists(shuffled.slice(0, 6));
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const quickActions = [
-    {
-      title: "Uzman Ara",
-      icon: Search,
-      description: "Size en uygun uzmanı bulun",
-      action: () => navigate("/mobile/search"),
-      gradient: "from-blue-500 to-cyan-500"
-    },
-    {
-      title: "Randevu Al",
-      icon: Calendar,
-      description: "Hemen randevu oluşturun",
-      action: () => navigate("/mobile/search"),
-      gradient: "from-green-500 to-emerald-500"
-    },
-    {
-      title: "Test Yap",
-      icon: TestTube2,
-      description: "Psikolojik değerlendirme testleri",
-      action: () => navigate("/mobile/tests"),
-      gradient: "from-purple-500 to-pink-500"
-    }
-  ];
-
-  const popularCategories = [
-    { 
-      name: "Psikolog", 
-      icon: Brain, 
-      count: "45+ Uzman",
-      gradient: "from-blue-500 to-indigo-600"
-    },
-    { 
-      name: "Aile Danışmanı", 
-      icon: Heart, 
-      count: "30+ Uzman",
-      gradient: "from-pink-500 to-rose-600"
-    },
-    { 
-      name: "Psikolojik Danışman", 
-      icon: Star, 
-      count: "25+ Uzman",
-      gradient: "from-amber-500 to-orange-600"
-    },
+  const categories = [
+    { name: "Psikolog", icon: Brain, tone: "accent" as const },
+    { name: "Aile Danışmanı", icon: Heart, tone: "pink" as const },
+    { name: "Psikolojik Danışman", icon: Star, tone: "purple" as const },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      {/* Header with Gradient */}
-      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 rounded-b-[2rem] mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium text-primary">Hoş Geldiniz</span>
-        </div>
-        <h1 className="text-3xl font-bold mb-2">
-          Merhaba {userProfile?.name || 'Kullanıcı'}! 👋
-        </h1>
-        <p className="text-muted-foreground">Size nasıl yardımcı olabiliriz?</p>
-      </div>
+    <div style={{ background: "hsl(var(--m-bg))" }}>
+      <MobileHeader
+        title={greeting}
+        largeTitle={firstName}
+        subtitle="Bugün size nasıl yardımcı olabiliriz?"
+      />
 
-      <div className="px-4 pb-20 space-y-6">
-        {/* Uzman Olarak Kayıt Ol - Fixed Button */}
-        <Card 
-          className="cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-          onClick={() => navigate("/packages")}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-3 bg-white/20 rounded-2xl">
-              <UserPlus className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-lg text-white">Uzman Olarak Kayıt Ol</h3>
-              <p className="text-sm text-white/90">Platformumuza katılın</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-white" />
-          </CardContent>
-        </Card>
+      <div className="space-y-7 pb-8">
+        {/* Quick actions row — Apple Health "summary" feel */}
+        <MobileSection>
+          <div className="grid grid-cols-2 gap-3">
+            <MobileCard onClick={() => navigate("/mobile/search")} padding="md">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center mb-3"
+                style={{ background: "hsl(var(--m-accent-soft))" }}
+              >
+                <Search className="w-5 h-5" style={{ color: "hsl(var(--m-accent))" }} />
+              </div>
+              <div
+                className="text-[15px] font-semibold"
+                style={{ color: "hsl(var(--m-text-primary))" }}
+              >
+                Uzman Ara
+              </div>
+              <div
+                className="text-[13px] mt-0.5"
+                style={{ color: "hsl(var(--m-text-secondary))" }}
+              >
+                Size en uygun uzmanı bulun
+              </div>
+            </MobileCard>
 
-        {/* Psikolojik Testler */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Psikolojik Testler</h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-primary"
-              onClick={() => navigate("/mobile/search")}
-            >
-              Tümünü Gör
-            </Button>
+            <MobileCard onClick={() => navigate("/mobile/search")} padding="md">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center mb-3"
+                style={{ background: "hsl(var(--m-success-soft))" }}
+              >
+                <Calendar className="w-5 h-5" style={{ color: "hsl(var(--m-success))" }} />
+              </div>
+              <div
+                className="text-[15px] font-semibold"
+                style={{ color: "hsl(var(--m-text-primary))" }}
+              >
+                Randevu Al
+              </div>
+              <div
+                className="text-[13px] mt-0.5"
+                style={{ color: "hsl(var(--m-text-secondary))" }}
+              >
+                Hemen oluştur
+              </div>
+            </MobileCard>
           </div>
+        </MobileSection>
+
+        {/* Specialist registration banner */}
+        <MobileSection>
+          <MobileCard onClick={() => navigate("/packages")} padding="md" showChevron>
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: "hsl(var(--m-warning-soft))" }}
+              >
+                <UserPlus className="w-5 h-5" style={{ color: "hsl(var(--m-warning))" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div
+                  className="text-[15px] font-semibold"
+                  style={{ color: "hsl(var(--m-text-primary))" }}
+                >
+                  Uzman Olarak Kayıt Ol
+                </div>
+                <div
+                  className="text-[13px] mt-0.5"
+                  style={{ color: "hsl(var(--m-text-secondary))" }}
+                >
+                  Platformumuza katılın
+                </div>
+              </div>
+            </div>
+          </MobileCard>
+        </MobileSection>
+
+        {/* Featured tests */}
+        <MobileSection
+          label="Sağlığınız"
+          title="Psikolojik Testler"
+          action={{ label: "Tümü", onClick: () => navigate("/mobile/search") }}
+        >
           {loading ? (
             <div className="grid grid-cols-2 gap-3">
               {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="h-48 animate-pulse bg-muted" />
+                <div
+                  key={i}
+                  className="h-36 rounded-[16px] animate-pulse"
+                  style={{ background: "hsl(var(--m-surface-muted))" }}
+                />
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {tests.map((test) => (
-                <Card
+                <MobileCard
                   key={test.id}
-                  className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-0 shadow-md overflow-hidden"
                   onClick={() => navigate(`/test/${test.id}`)}
+                  padding="md"
                 >
-                  <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center mb-3"
+                    style={{ background: "hsl(var(--m-purple-soft))" }}
+                  >
                     {test.image_url ? (
-                      <img 
-                        src={test.image_url} 
-                        alt={test.title}
-                        className="w-20 h-20 object-contain"
-                      />
+                      <img src={test.image_url} alt="" className="w-6 h-6 object-contain" />
                     ) : (
-                      <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center">
-                        <TestTube2 className="w-10 h-10 text-primary" />
-                      </div>
+                      <TestTube2
+                        className="w-5 h-5"
+                        style={{ color: "hsl(var(--m-purple))" }}
+                      />
                     )}
-                    <div className="space-y-2 flex-1">
-                      <h3 className="font-bold text-sm line-clamp-2">{test.title}</h3>
-                      {test.category && (
-                        <Badge variant="secondary" className="text-xs">
-                          {test.category}
-                        </Badge>
-                      )}
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="w-full bg-white text-primary border border-primary hover:bg-primary hover:text-white"
+                  </div>
+                  <div
+                    className="text-[14px] font-semibold leading-tight line-clamp-2"
+                    style={{ color: "hsl(var(--m-text-primary))" }}
+                  >
+                    {test.title}
+                  </div>
+                  {test.category && (
+                    <div
+                      className="text-[12px] mt-1"
+                      style={{ color: "hsl(var(--m-text-secondary))" }}
                     >
-                      Teste Başlayın
-                    </Button>
-                  </CardContent>
-                </Card>
+                      {test.category}
+                    </div>
+                  )}
+                </MobileCard>
               ))}
             </div>
           )}
-        </div>
+        </MobileSection>
 
-        {/* Danışan Yorumları */}
-        {reviews.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Danışan Yorumları</h2>
-            </div>
-            <div className="space-y-3">
-              {reviews.map((review) => (
-                <Card key={review.id} className="shadow-md border-0">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Quote className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm">{review.reviewer_display_name || review.reviewer_name || 'Anonim'}</span>
-                          <div className="flex gap-0.5">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-3 h-3 ${
-                                  i < review.rating
-                                    ? "fill-amber-400 text-amber-400"
-                                    : "fill-gray-200 text-gray-200"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-3">
-                          {review.comment}
-                        </p>
-                        {(review as any).specialist_name && (
-                          <p className="text-xs text-primary font-medium">
-                            {(review as any).specialist_name} - {(review as any).specialist_specialty}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Uzmanlarımız */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Uzmanlarımız</h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-primary"
-              onClick={() => {
-                fetchData(); // Refresh to randomize
-              }}
-            >
-              Yenile
-            </Button>
-          </div>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="h-24 animate-pulse bg-muted" />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {specialists.map((specialist) => (
-                <Card
-                  key={specialist.id}
-                  className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-0 shadow-md"
-                  onClick={() => navigate(`/mobile/specialist/${specialist.id}`)}
-                >
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="relative">
-                      <Avatar className="w-14 h-14 border-2 border-primary/20">
-                        <AvatarImage src={specialist.profile_picture} alt={specialist.name} />
-                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-bold">
-                          {specialist.name.charAt(0)}
+        {/* Specialists */}
+        <MobileSection
+          label="Topluluk"
+          title="Uzmanlarımız"
+          action={{ label: "Tümü", onClick: () => navigate("/mobile/search") }}
+        >
+          <div className="m-card divide-y" style={{ borderColor: "hsl(var(--m-divider))" }}>
+            {loading
+              ? [1, 2, 3].map((i) => (
+                  <div key={i} className="h-16 animate-pulse" />
+                ))
+              : specialists.map((s) => (
+                  <MobileListRow
+                    key={s.id}
+                    leading={
+                      <Avatar className="w-11 h-11">
+                        <AvatarImage src={s.profile_picture || undefined} alt={s.name} />
+                        <AvatarFallback
+                          style={{
+                            background: "hsl(var(--m-accent-soft))",
+                            color: "hsl(var(--m-accent))",
+                          }}
+                          className="font-semibold"
+                        >
+                          {s.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold">{specialist.name}</h3>
-                      <p className="text-sm text-muted-foreground">{specialist.specialty}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                          <span className="text-xs font-medium">{specialist.rating}</span>
+                    }
+                    title={s.name}
+                    subtitle={`${s.specialty}${s.experience ? ` • ${s.experience} yıl` : ""}`}
+                    trailing={
+                      s.rating ? (
+                        <div
+                          className="flex items-center gap-1 text-[13px] font-semibold"
+                          style={{ color: "hsl(var(--m-text-secondary))" }}
+                        >
+                          <Star
+                            className="w-3.5 h-3.5"
+                            style={{ color: "hsl(var(--m-warning))", fill: "hsl(var(--m-warning))" }}
+                          />
+                          {Number(s.rating).toFixed(1)}
                         </div>
-                        <span className="text-xs text-muted-foreground">•</span>
-                        <span className="text-xs text-muted-foreground">
-                          {specialist.experience} yıl deneyim
-                        </span>
-                      </div>
+                      ) : undefined
+                    }
+                    onClick={() => navigate(`/mobile/specialist/${s.id}`)}
+                  />
+                ))}
+          </div>
+        </MobileSection>
+
+        {/* Categories */}
+        <MobileSection label="Keşfet" title="Popüler Kategoriler">
+          <div className="m-card divide-y" style={{ borderColor: "hsl(var(--m-divider))" }}>
+            {categories.map((c) => (
+              <MobileListRow
+                key={c.name}
+                icon={c.icon}
+                iconTone={c.tone}
+                title={c.name}
+                onClick={() =>
+                  navigate(`/mobile/search?specialty=${encodeURIComponent(c.name)}`)
+                }
+              />
+            ))}
+          </div>
+        </MobileSection>
+
+        {/* Reviews */}
+        {reviews.length > 0 && (
+          <MobileSection label="Geri bildirim" title="Danışan Yorumları">
+            <div className="space-y-3">
+              {reviews.map((r) => (
+                <MobileCard key={r.id} padding="md">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: "hsl(var(--m-info-soft))" }}
+                    >
+                      <Quote className="w-4 h-4" style={{ color: "hsl(var(--m-info))" }} />
                     </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                  </CardContent>
-                </Card>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-[14px] font-semibold"
+                          style={{ color: "hsl(var(--m-text-primary))" }}
+                        >
+                          {r.reviewer_display_name || r.reviewer_name || "Anonim"}
+                        </span>
+                        <div className="flex">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className="w-3 h-3"
+                              style={{
+                                color:
+                                  i < r.rating
+                                    ? "hsl(var(--m-warning))"
+                                    : "hsl(var(--m-divider))",
+                                fill:
+                                  i < r.rating
+                                    ? "hsl(var(--m-warning))"
+                                    : "hsl(var(--m-divider))",
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p
+                        className="text-[14px] mt-1.5 line-clamp-3"
+                        style={{ color: "hsl(var(--m-text-secondary))" }}
+                      >
+                        {r.comment}
+                      </p>
+                      {r.specialist_name && (
+                        <p
+                          className="text-[12px] mt-2 font-medium"
+                          style={{ color: "hsl(var(--m-accent))" }}
+                        >
+                          {r.specialist_name}
+                          {r.specialist_specialty ? ` · ${r.specialist_specialty}` : ""}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </MobileCard>
               ))}
             </div>
-          )}
-        </div>
+          </MobileSection>
+        )}
 
-        {/* Quick Actions - Moved to bottom */}
-        <div className="space-y-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Card
-                key={action.title}
-                className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-0 shadow-md overflow-hidden"
-                onClick={action.action}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-5`} />
-                <CardContent className="p-4 flex items-center gap-4 relative">
-                  <div className={`p-3 rounded-2xl bg-gradient-to-br ${action.gradient} shadow-lg`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg">{action.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {action.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Popular Categories */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Popüler Kategoriler</h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-primary"
-              onClick={() => navigate("/mobile/search")}
-            >
-              Tümü
-            </Button>
+        {/* Footer hint */}
+        <MobileSection>
+          <div
+            className="flex items-center justify-center gap-2 py-2 text-[12px]"
+            style={{ color: "hsl(var(--m-text-tertiary))" }}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            doktorumol.com.tr · Mobil
           </div>
-          <div className="space-y-3">
-            {popularCategories.map((category) => {
-              const Icon = category.icon;
-              return (
-                <Card
-                  key={category.name}
-                  className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-0 shadow-md overflow-hidden"
-                  onClick={() => navigate(`/mobile/search?specialty=${category.name}`)}
-                >
-                  <CardContent className="p-4 flex items-center justify-between relative">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-3 bg-gradient-to-br ${category.gradient} rounded-2xl shadow-lg`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold">{category.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {category.count}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={`px-4 py-1.5 rounded-full bg-gradient-to-r ${category.gradient} text-white text-sm font-medium`}>
-                      Gör
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
+        </MobileSection>
       </div>
     </div>
   );
