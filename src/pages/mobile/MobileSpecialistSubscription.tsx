@@ -16,22 +16,62 @@ export default function MobileSpecialistSubscription() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { navigate("/mobile/login"); return; }
 
-      const { data: autoOrder } = await supabase
+      const email = session.user.email || "";
+
+      // Specialist name (web ile aynı: hem email hem isim eşleşmesi)
+      const { data: spec } = await supabase
+        .from("specialists")
+        .select("name, email")
+        .or(`user_id.eq.${session.user.id},email.eq.${email}`)
+        .maybeSingle();
+      const specName = spec?.name || "";
+
+      // Aktif abonelik — önce email, yoksa isim ile dene
+      let { data: autoOrder } = await supabase
         .from("automatic_orders")
         .select("*")
-        .eq("customer_email", session.user.email || "")
+        .eq("customer_email", email)
         .eq("is_active", true)
         .maybeSingle();
+      if (!autoOrder && specName) {
+        const { data: byName } = await supabase
+          .from("automatic_orders")
+          .select("*")
+          .eq("customer_name", specName)
+          .eq("is_active", true)
+          .maybeSingle();
+        autoOrder = byName;
+      }
       setSub(autoOrder);
 
-      const { data: paid } = await supabase
+      // Geçmiş ödemeler — email + isim birleşimi
+      const { data: paidByEmail } = await supabase
         .from("orders")
-        .select("amount, created_at, status, package_name, subscription_month")
-        .ilike("customer_email", session.user.email || "")
+        .select("amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
+        .ilike("customer_email", email)
         .in("status", ["approved", "completed"])
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
-      setOrders(paid || []);
+
+      let allPaid: any[] = paidByEmail || [];
+      if (specName) {
+        const { data: paidByName } = await supabase
+          .from("orders")
+          .select("amount, created_at, status, package_name, subscription_month, customer_email, customer_name")
+          .eq("customer_name", specName)
+          .in("status", ["approved", "completed"])
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false });
+        const merged = new Map<string, any>();
+        [...allPaid, ...(paidByName || [])].forEach((o: any) => {
+          const k = `${o.created_at}-${o.amount}-${o.subscription_month || ""}`;
+          if (!merged.has(k)) merged.set(k, o);
+        });
+        allPaid = Array.from(merged.values()).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+      }
+      setOrders(allPaid);
       setLoading(false);
     })();
   }, [navigate]);
