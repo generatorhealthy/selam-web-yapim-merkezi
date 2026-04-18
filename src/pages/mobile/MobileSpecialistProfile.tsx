@@ -48,7 +48,6 @@ export default function MobileSpecialistProfile() {
         phone: form.phone,
         city: form.city,
         bio: form.bio,
-        consultation_fee: Number(form.consultation_fee) || null,
       })
       .eq("id", spec.id);
     setSaving(false);
