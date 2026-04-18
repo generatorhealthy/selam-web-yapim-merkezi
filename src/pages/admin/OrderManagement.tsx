@@ -358,7 +358,7 @@ const OrderManagement = () => {
 
     queryClient.setQueryData(["deleted_orders"], snapshot.deletedOrders);
     queryClient.setQueryData(["order_stats"], snapshot.orderStats);
-  }, [queryClient, snapshotOrderCaches]);
+  }, [queryClient]);
 
   const syncOrderInActiveCaches = useCallback((nextOrder: Order) => {
     queryClient.getQueriesData({ queryKey: ["orders"] }).forEach(([queryKey, cache]) => {
@@ -576,28 +576,17 @@ const OrderManagement = () => {
       return data;
     },
     onMutate: async (updatedOrder) => {
-      // Save previous status before optimistic update for onSuccess logic
-      const prevStatus = orders?.find(o => o.id === updatedOrder.id)?.status;
-      
-      // Optimistic update: immediately reflect changes in UI
-      const queryKey = ["orders", statusFilter, isSearchMode ? "search" : "browse"];
-      await queryClient.cancelQueries({ queryKey });
-      const previousData = queryClient.getQueryData(queryKey);
-      
-      queryClient.setQueryData(queryKey, (old: any) => {
-        if (!old?.pages) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page: OrdersPage) => ({
-            ...page,
-            data: page.data.map((o: Order) => 
-              o.id === updatedOrder.id ? { ...o, ...updatedOrder, updated_at: new Date().toISOString() } : o
-            ),
-          })),
-        };
-      });
-      
-      return { previousData, queryKey, prevStatus };
+      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      const snapshot = snapshotOrderCaches();
+      const previousOrder = rawOrders.find((o) => o.id === updatedOrder.id);
+      const optimisticOrder = { ...previousOrder, ...updatedOrder, updated_at: new Date().toISOString() } as Order;
+
+      syncOrderInActiveCaches(optimisticOrder);
+      if (previousOrder) {
+        patchOrderStatsCache([{ previous: previousOrder, next: optimisticOrder }]);
+      }
+
+      return { snapshot, prevStatus: previousOrder?.status, optimisticOrder };
     },
     onSuccess: async (data, _vars, context) => {
       const prevStatus = context?.prevStatus;
@@ -630,18 +619,10 @@ const OrderManagement = () => {
         }
       }
       
-      // Update cache with server response
-      const queryKey = context?.queryKey || ["orders", statusFilter, isSearchMode ? "search" : "browse"];
-      queryClient.setQueryData(queryKey, (old: any) => {
-        if (!old?.pages) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page: OrdersPage) => ({
-            ...page,
-            data: page.data.map((o: Order) => o.id === data.id ? data as Order : o),
-          })),
-        };
-      });
+      syncOrderInActiveCaches(data as Order);
+      if (context?.optimisticOrder) {
+        patchOrderStatsCache([{ previous: context.optimisticOrder as Order, next: data as Order }]);
+      }
       
       toast({
         title: "Sipariş Güncellendi",
@@ -652,10 +633,7 @@ const OrderManagement = () => {
       setSelectedOrder(null);
     },
     onError: (error, _updatedOrder, context) => {
-      // Rollback optimistic update
-      if (context?.previousData && context?.queryKey) {
-        queryClient.setQueryData(context.queryKey, context.previousData);
-      }
+      restoreOrderCaches(context?.snapshot);
       toast({
         title: "Hata",
         description: "Sipariş güncellenirken hata oluştu",
