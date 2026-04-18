@@ -566,3 +566,172 @@ const DetailRow = ({
     </div>
   </div>
 );
+
+// FAQ accordion — supports JSON array [{question,answer}] or plain text
+const FaqList = ({
+  raw, openIdx, setOpenIdx,
+}: { raw: string; openIdx: number | null; setOpenIdx: (i: number | null) => void }) => {
+  let items: { question: string; answer: string }[] = [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      items = parsed
+        .map((it: any) => ({
+          question: String(it?.question || it?.q || "").trim(),
+          answer: String(it?.answer || it?.a || "").trim(),
+        }))
+        .filter((it) => it.question && it.answer);
+    }
+  } catch {
+    // not JSON — try splitting "Q: ... A: ..." patterns or just show raw
+  }
+
+  if (items.length === 0) {
+    return (
+      <div
+        className="rounded-[20px] p-5 text-[15px] leading-relaxed whitespace-pre-line"
+        style={{
+          background: "hsl(var(--m-surface))",
+          boxShadow: "var(--m-shadow)",
+          color: "hsl(var(--m-text-secondary))",
+        }}
+      >
+        {raw}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {items.map((it, idx) => {
+        const open = openIdx === idx;
+        return (
+          <div
+            key={idx}
+            className="rounded-[18px] overflow-hidden"
+            style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+          >
+            <button
+              onClick={() => setOpenIdx(open ? null : idx)}
+              className="w-full flex items-center justify-between gap-3 p-4 text-left m-pressable"
+            >
+              <span
+                className="text-[14px] font-bold flex-1"
+                style={{ color: "hsl(var(--m-text-primary))" }}
+              >
+                {it.question}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`}
+                style={{ color: "hsl(var(--m-text-secondary))" }}
+              />
+            </button>
+            {open && (
+              <div
+                className="px-4 pb-4 text-[14px] leading-relaxed whitespace-pre-line"
+                style={{ color: "hsl(var(--m-text-secondary))" }}
+              >
+                {it.answer}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// Review submission dialog
+const ReviewDialog = ({
+  open, onOpenChange, specialistId, specialistName, onSubmitted,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  specialistId: string;
+  specialistName: string;
+  onSubmitted: () => void;
+}) => {
+  const { toast } = useToast();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (rating === 0) {
+      toast({ title: "Puan gerekli", description: "Lütfen 1-5 arası puan verin", variant: "destructive" });
+      return;
+    }
+    if (!name.trim() || !email.trim() || !comment.trim()) {
+      toast({ title: "Eksik bilgi", description: "Tüm alanları doldurun", variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("reviews").insert({
+        specialist_id: specialistId,
+        reviewer_name: name.trim(),
+        reviewer_email: email.trim(),
+        comment: comment.trim(),
+        rating,
+        status: "pending",
+      });
+      if (error) throw error;
+      toast({ title: "Teşekkürler", description: "Yorumunuz onaya gönderildi" });
+      setName(""); setEmail(""); setComment(""); setRating(0);
+      onOpenChange(false);
+      onSubmitted();
+    } catch (e: any) {
+      toast({ title: "Hata", description: e.message || "Gönderilemedi", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Değerlendirme Yaz</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground -mt-2">
+          {specialistName} için deneyiminizi paylaşın.
+        </p>
+        <div className="flex items-center gap-1 my-2">
+          {Array.from({ length: 5 }).map((_, i) => {
+            const v = i + 1;
+            return (
+              <button key={i} type="button" onClick={() => setRating(v)} aria-label={`${v} yıldız`}>
+                <Star
+                  className="w-8 h-8 transition-colors"
+                  style={{
+                    color: v <= rating ? "hsl(var(--m-warning))" : "hsl(var(--m-divider))",
+                    fill: v <= rating ? "hsl(var(--m-warning))" : "transparent",
+                  }}
+                />
+              </button>
+            );
+          })}
+        </div>
+        <Input placeholder="Ad Soyad" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input placeholder="E-posta" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Textarea
+          placeholder="Yorumunuz..."
+          rows={4}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+        <button
+          onClick={submit}
+          disabled={submitting}
+          className="w-full h-12 rounded-full font-bold flex items-center justify-center gap-2 mt-2"
+          style={{ background: "hsl(var(--m-ink))", color: "hsl(var(--m-bg))" }}
+        >
+          <Send className="w-4 h-4" />
+          {submitting ? "Gönderiliyor..." : "Gönder"}
+        </button>
+      </DialogContent>
+    </Dialog>
+  );
+};
