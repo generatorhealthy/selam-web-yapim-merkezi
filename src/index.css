@@ -170,6 +170,73 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Mobile dark mode overrides */
+    --m-bg: 222 24% 6%;
+    --m-surface: 222 20% 10%;
+    --m-surface-elevated: 222 20% 13%;
+    --m-surface-muted: 222 18% 14%;
+    --m-border: 222 18% 18%;
+    --m-divider: 222 18% 16%;
+    --m-text-primary: 210 20% 98%;
+    --m-text-secondary: 220 9% 70%;
+    --m-text-tertiary: 220 9% 50%;
+  }
+}
+
+@layer utilities {
+  /* === Mobile App Utilities === */
+  .m-safe-top { padding-top: var(--m-safe-top); }
+  .m-safe-bottom { padding-bottom: var(--m-safe-bottom); }
+
+  .m-glass {
+    background: hsl(var(--m-surface) / 0.78);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .m-card {
+    background: hsl(var(--m-surface));
+    border-radius: var(--m-radius);
+    box-shadow: var(--m-shadow);
+  }
+
+  .m-card-flat {
+    background: hsl(var(--m-surface));
+    border-radius: var(--m-radius);
+    border: 1px solid hsl(var(--m-divider));
+  }
+
+  .m-pressable {
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  .m-pressable:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+
+  .m-headline {
+    font-size: 34px;
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -0.022em;
+    color: hsl(var(--m-text-primary));
+  }
+
+  .m-title {
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: hsl(var(--m-text-primary));
+  }
+
+  .m-section-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: hsl(var(--m-text-secondary));
   }
 }
 
