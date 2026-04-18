@@ -14,7 +14,7 @@ export default function MobileSpecialistProfile() {
   const [saving, setSaving] = useState(false);
   const [spec, setSpec] = useState<any>(null);
   const [form, setForm] = useState({
-    name: "", phone: "", city: "", bio: "", consultation_fee: "",
+    name: "", phone: "", city: "", bio: "",
   });
 
   useEffect(() => {
@@ -33,7 +33,6 @@ export default function MobileSpecialistProfile() {
         phone: data.phone || "",
         city: data.city || "",
         bio: data.bio || "",
-        consultation_fee: String(data.consultation_fee || ""),
       });
       setLoading(false);
     })();
@@ -49,7 +48,6 @@ export default function MobileSpecialistProfile() {
         phone: form.phone,
         city: form.city,
         bio: form.bio,
-        consultation_fee: Number(form.consultation_fee) || null,
       })
       .eq("id", spec.id);
     setSaving(false);
@@ -132,7 +130,6 @@ export default function MobileSpecialistProfile() {
           <Field icon={User} label="Ad Soyad" value={form.name} onChange={(v: string) => setForm({ ...form, name: v })} />
           <Field icon={Phone} label="Telefon" value={form.phone} onChange={(v: string) => setForm({ ...form, phone: v })} type="tel" />
           <Field icon={MapPin} label="Şehir" value={form.city} onChange={(v: string) => setForm({ ...form, city: v })} />
-          <Field icon={Briefcase} label="Seans Ücreti (₺)" value={form.consultation_fee} onChange={(v: string) => setForm({ ...form, consultation_fee: v })} type="number" />
           <Field icon={FileText} label="Hakkımda" value={form.bio} onChange={(v: string) => setForm({ ...form, bio: v })} multiline />
         </div>
 
