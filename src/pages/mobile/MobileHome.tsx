@@ -384,7 +384,8 @@ export default function MobileHome() {
             </button>
           </div>
           <div className="flex gap-3 px-5 overflow-x-auto m-no-scrollbar pb-2">
-            {tests.map((test, idx) => {
+          {tests.map((test, idx) => {
+              const fallbackImg = TEST_IMAGES[idx % TEST_IMAGES.length];
               const img = pickTestImage(test, idx);
               return (
                 <button
@@ -407,6 +408,12 @@ export default function MobileHome() {
                       width={340}
                       height={220}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (target.src !== fallbackImg && !target.src.endsWith(fallbackImg)) {
+                          target.src = fallbackImg;
+                        }
+                      }}
                     />
                   </div>
                   <div className="p-3 flex-1 flex flex-col">
