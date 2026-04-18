@@ -18,9 +18,9 @@ export const MobileLayout = () => {
 
   const specialistNavItems = [
     { to: "/mobile/dashboard", icon: LayoutDashboard, label: "Panel" },
-    { to: "/mobile/appointments", icon: Calendar, label: "Randevu" },
-    { to: "/mobile/clients", icon: FileText, label: "Danışan" },
-    { to: "/mobile/profile", icon: User, label: "Profil" },
+    { to: "/mobile/specialist-appointments", icon: Calendar, label: "Randevu" },
+    { to: "/mobile/specialist-clients", icon: FileText, label: "Danışan" },
+    { to: "/mobile/specialist-profile", icon: User, label: "Profil" },
   ];
 
   const navItems = isSpecialist ? specialistNavItems : patientNavItems;
