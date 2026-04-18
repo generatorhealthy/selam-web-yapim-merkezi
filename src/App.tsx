@@ -71,6 +71,7 @@ const TestTaking = lazy(() => import("./components/TestTaking"));
 const TestResult = lazy(() => import("./pages/TestResult"));
 const SpecialistRegistration = lazy(() => import("./pages/SpecialistRegistration"));
 const PatientSignup = lazy(() => import("./pages/PatientSignup"));
+const PatientLogin = lazy(() => import("./pages/PatientLogin"));
 const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
@@ -250,6 +251,7 @@ const AppContent = () => {
               <Route path="/sifre-sifirla" element={<ResetPassword />} />
               <Route path="/kayit-ol" element={<SpecialistRegistration />} />
               <Route path="/uye-ol" element={<PatientSignup />} />
+              <Route path="/danisan-giris" element={<PatientLogin />} />
               <Route path="/danisan-paneli" element={<PatientDashboard />} />
               
               {/* Admin Routes - MUST be before dynamic catch-all routes */}

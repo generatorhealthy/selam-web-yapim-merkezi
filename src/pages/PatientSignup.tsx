@@ -89,7 +89,7 @@ export default function PatientSignup() {
 
             <Button className="w-full" onClick={handleSignup} disabled={loading}>{loading ? "Lütfen bekleyin..." : "Hesap Oluştur"}</Button>
             <p className="text-center text-sm text-muted-foreground">
-              Zaten hesabınız var mı? <Link to="/giris-yap" className="text-primary font-semibold">Giriş yap</Link>
+              Zaten hesabınız var mı? <Link to="/danisan-giris" className="text-primary font-semibold">Giriş yap</Link>
             </p>
             <p className="text-center text-xs text-muted-foreground">
               Uzman mısınız? <Link to="/kayit-ol" className="text-primary">Uzman olarak kayıt olun</Link>
