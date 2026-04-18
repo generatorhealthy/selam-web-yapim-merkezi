@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { Star, MapPin, Video, Users, GraduationCap, Briefcase, Calendar, Heart, Award } from "lucide-react";
+import {
+  Star, MapPin, Video, Users, GraduationCap, Briefcase, Calendar,
+  Heart, Award, Clock, Building2, Phone, BookOpen, ChevronDown, ChevronRight
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Specialist {
@@ -17,30 +20,102 @@ interface Specialist {
   experience: number | null;
   education: string | null;
   hospital: string | null;
+  university?: string | null;
+  certifications?: string | null;
   online_consultation: boolean | null;
   face_to_face_consultation: boolean | null;
+  address?: string | null;
+  working_hours_start?: string | null;
+  working_hours_end?: string | null;
+  available_days?: string[] | null;
+  faq?: string | null;
+  slug?: string | null;
 }
+
+interface Review {
+  id: string;
+  reviewer_display_name?: string;
+  reviewer_name?: string;
+  comment: string;
+  rating: number;
+  created_at: string;
+}
+
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string | null;
+  slug: string;
+  featured_image: string | null;
+  published_at: string | null;
+}
+
+const DAY_LABEL: Record<string, string> = {
+  monday: "Pzt", tuesday: "Sal", wednesday: "Çar", thursday: "Per",
+  friday: "Cum", saturday: "Cmt", sunday: "Paz",
+  pazartesi: "Pzt", sali: "Sal", carsamba: "Çar", persembe: "Per",
+  cuma: "Cum", cumartesi: "Cmt", pazar: "Paz",
+};
 
 export default function MobileSpecialistDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bioExpanded, setBioExpanded] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
-        const { data, error } = await supabase.rpc("get_public_specialists");
+        setLoading(true);
+        // 1) Get specialist by id from public list
+        const { data: list, error } = await supabase.rpc("get_public_specialists");
         if (error) throw error;
-        const found = (data as any[])?.find((s) => s.id === id);
-        setSpecialist(found || null);
+        const summary = (list as any[])?.find((s) => s.id === id);
+        if (!summary) {
+          if (!cancelled) setSpecialist(null);
+          return;
+        }
+
+        // 2) Get full record by slug for extra fields (university, certifications, faq, hours, days)
+        let full: any = summary;
+        if (summary.slug) {
+          const { data: bySlug } = await supabase.rpc("get_public_specialist_by_slug", { p_slug: summary.slug });
+          if (bySlug && (bySlug as any[]).length > 0) {
+            full = { ...summary, ...(bySlug as any[])[0] };
+          }
+        }
+        if (!cancelled) setSpecialist(full as Specialist);
+
+        // 3) Reviews
+        const { data: rev } = await supabase.rpc("get_public_reviews", {
+          p_limit: 10, p_specialist_id: id,
+        });
+        if (!cancelled && rev) setReviews(rev as Review[]);
+
+        // 4) Blog posts (if specialist authored any)
+        if (full?.user_id || full?.id) {
+          const { data: blog } = await supabase
+            .from("blog_posts")
+            .select("id,title,excerpt,slug,featured_image,published_at")
+            .eq("status", "published")
+            .or(`specialist_id.eq.${full.id}${full.user_id ? `,author_id.eq.${full.user_id}` : ""}`)
+            .order("published_at", { ascending: false })
+            .limit(3);
+          if (!cancelled && blog) setPosts(blog as BlogPost[]);
+        }
       } catch (e) {
-        toast({ title: "Hata", description: "Uzman bulunamadı", variant: "destructive" });
+        console.error(e);
+        toast({ title: "Hata", description: "Uzman bilgileri yüklenemedi", variant: "destructive" });
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => { cancelled = true; };
   }, [id, toast]);
 
   if (loading) {
@@ -65,8 +140,13 @@ export default function MobileSpecialistDetail() {
     );
   }
 
+  const avgRating = specialist.rating ? Number(specialist.rating).toFixed(1) : null;
+  const bioPreview = specialist.bio && specialist.bio.length > 220 && !bioExpanded
+    ? specialist.bio.slice(0, 220) + "…"
+    : specialist.bio;
+
   return (
-    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 120 }}>
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 140 }}>
       <MobileHeader
         showBack
         trailing={
@@ -80,7 +160,7 @@ export default function MobileSpecialistDetail() {
         }
       />
 
-      {/* Specialty label */}
+      {/* Specialty + name */}
       <div className="px-5 pt-2">
         <p className="text-[14px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
           {specialist.specialty}
@@ -90,13 +170,13 @@ export default function MobileSpecialistDetail() {
         </h1>
       </div>
 
-      {/* Hero card with image */}
+      {/* Hero image */}
       <div className="px-5 mt-5">
         <div
           className="relative rounded-[28px] overflow-hidden"
           style={{
             background: "hsl(var(--m-tint-sand))",
-            minHeight: 320,
+            minHeight: 340,
             boxShadow: "var(--m-shadow-md)",
           }}
         >
@@ -116,58 +196,41 @@ export default function MobileSpecialistDetail() {
             </div>
           )}
 
-          {/* Floating stat badges (Zocdoc style) */}
-          <div className="absolute bottom-4 left-4 flex gap-2">
-            {specialist.experience != null && (
-              <div
-                className="rounded-2xl px-3 py-2 backdrop-blur"
-                style={{ background: "hsl(0 0% 100% / 0.85)" }}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Briefcase className="w-3.5 h-3.5" style={{ color: "hsl(var(--m-text-secondary))" }} />
-                  <span className="text-[16px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
-                    {specialist.experience}+ yıl
-                  </span>
-                </div>
-                <div className="text-[10px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                  Deneyim
-                </div>
-              </div>
-            )}
-            {specialist.reviews_count ? (
-              <div
-                className="rounded-2xl px-3 py-2 backdrop-blur"
-                style={{ background: "hsl(0 0% 100% / 0.85)" }}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5" style={{ color: "hsl(var(--m-text-secondary))" }} />
-                  <span className="text-[16px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
-                    {specialist.reviews_count}+
-                  </span>
-                </div>
-                <div className="text-[10px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                  Danışan
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          {specialist.rating ? (
+          {avgRating && (
             <div
-              className="absolute top-4 right-4 rounded-full px-3 h-9 flex items-center gap-1.5 backdrop-blur"
+              className="absolute top-4 right-4 rounded-full px-3 h-9 flex items-center gap-1.5"
               style={{ background: "hsl(var(--m-ink))" }}
             >
               <Star className="w-4 h-4" style={{ color: "hsl(var(--m-warning))", fill: "hsl(var(--m-warning))" }} />
               <span className="text-[14px] font-bold" style={{ color: "hsl(var(--m-bg))" }}>
-                {Number(specialist.rating).toFixed(1)}
+                {avgRating}
               </span>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
 
+      {/* Quick stats row */}
+      <div className="px-5 mt-4 grid grid-cols-3 gap-2">
+        <StatPill
+          icon={Briefcase}
+          value={specialist.experience ? `${specialist.experience}+` : "—"}
+          label="yıl deneyim"
+        />
+        <StatPill
+          icon={Users}
+          value={specialist.reviews_count ? `${specialist.reviews_count}+` : "—"}
+          label="danışan"
+        />
+        <StatPill
+          icon={Star}
+          value={avgRating || "—"}
+          label="puan"
+        />
+      </div>
+
       {/* Consultation type pills */}
-      <div className="px-5 mt-5 flex gap-2">
+      <div className="px-5 mt-4 flex gap-2">
         {specialist.online_consultation && (
           <div
             className="flex-1 h-12 rounded-full flex items-center justify-center gap-2 text-[14px] font-bold"
@@ -186,31 +249,198 @@ export default function MobileSpecialistDetail() {
         )}
       </div>
 
-      {/* Bio */}
+      {/* Hakkında */}
       {specialist.bio && (
-        <div className="px-5 mt-7">
-          <h2 className="m-title mb-3" style={{ fontSize: 20 }}>Hakkında</h2>
+        <Section title="Hakkında">
           <p
             className="text-[15px] leading-relaxed whitespace-pre-line"
             style={{ color: "hsl(var(--m-text-secondary))" }}
           >
-            {specialist.bio}
+            {bioPreview}
           </p>
-        </div>
+          {specialist.bio.length > 220 && (
+            <button
+              onClick={() => setBioExpanded((v) => !v)}
+              className="mt-2 text-[14px] font-semibold flex items-center gap-1"
+              style={{ color: "hsl(var(--m-ink))" }}
+            >
+              {bioExpanded ? "Daha az göster" : "Devamını oku"}
+              <ChevronDown className={`w-4 h-4 transition-transform ${bioExpanded ? "rotate-180" : ""}`} />
+            </button>
+          )}
+        </Section>
       )}
 
-      {/* Details */}
-      <div className="px-5 mt-7 space-y-3">
-        {specialist.education && (
-          <DetailRow icon={GraduationCap} label="Eğitim" value={specialist.education} />
-        )}
-        {specialist.hospital && (
-          <DetailRow icon={Award} label="Çalıştığı Yer" value={specialist.hospital} />
-        )}
-        {specialist.city && (
-          <DetailRow icon={MapPin} label="Şehir" value={specialist.city} />
-        )}
-      </div>
+      {/* Eğitim & Mesleki Bilgiler */}
+      {(specialist.education || specialist.university || specialist.certifications) && (
+        <Section title="Eğitim & Sertifikalar">
+          <div className="space-y-3">
+            {specialist.university && (
+              <DetailRow icon={GraduationCap} label="Üniversite" value={specialist.university} />
+            )}
+            {specialist.education && (
+              <DetailRow icon={BookOpen} label="Eğitim" value={specialist.education} multiline />
+            )}
+            {specialist.certifications && (
+              <DetailRow icon={Award} label="Sertifikalar" value={specialist.certifications} multiline />
+            )}
+          </div>
+        </Section>
+      )}
+
+      {/* İletişim & Çalışma Yeri */}
+      {(specialist.hospital || specialist.address || specialist.city) && (
+        <Section title="İletişim & Konum">
+          <div className="space-y-3">
+            {specialist.hospital && (
+              <DetailRow icon={Building2} label="Çalıştığı Yer" value={specialist.hospital} />
+            )}
+            {specialist.address && (
+              <DetailRow icon={MapPin} label="Adres" value={specialist.address} multiline />
+            )}
+            {specialist.city && !specialist.address && (
+              <DetailRow icon={MapPin} label="Şehir" value={specialist.city} />
+            )}
+          </div>
+        </Section>
+      )}
+
+      {/* Çalışma Saatleri */}
+      {(specialist.working_hours_start || (specialist.available_days && specialist.available_days.length > 0)) && (
+        <Section title="Çalışma Saatleri">
+          <div
+            className="rounded-[20px] p-5"
+            style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+          >
+            {specialist.working_hours_start && specialist.working_hours_end && (
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b" style={{ borderColor: "hsl(var(--m-divider))" }}>
+                <div
+                  className="w-11 h-11 rounded-full flex items-center justify-center"
+                  style={{ background: "hsl(var(--m-tint-mint))" }}
+                >
+                  <Clock className="w-5 h-5" style={{ color: "hsl(var(--m-ink))" }} />
+                </div>
+                <div>
+                  <div className="text-[12px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    Saatler
+                  </div>
+                  <div className="text-[16px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
+                    {specialist.working_hours_start} – {specialist.working_hours_end}
+                  </div>
+                </div>
+              </div>
+            )}
+            {specialist.available_days && specialist.available_days.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {specialist.available_days.map((d) => (
+                  <span
+                    key={d}
+                    className="px-3 h-8 rounded-full inline-flex items-center text-[13px] font-semibold"
+                    style={{ background: "hsl(var(--m-tint-sky))", color: "hsl(var(--m-text-primary))" }}
+                  >
+                    {DAY_LABEL[String(d).toLowerCase()] || d}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
+
+      {/* SSS / FAQ */}
+      {specialist.faq && (
+        <Section title="Sıkça Sorulan Sorular">
+          <div
+            className="rounded-[20px] p-5 text-[15px] leading-relaxed whitespace-pre-line"
+            style={{
+              background: "hsl(var(--m-surface))",
+              boxShadow: "var(--m-shadow)",
+              color: "hsl(var(--m-text-secondary))",
+            }}
+          >
+            {specialist.faq}
+          </div>
+        </Section>
+      )}
+
+      {/* Blog Yazıları */}
+      {posts.length > 0 && (
+        <Section title="Blog Yazıları">
+          <div className="space-y-3">
+            {posts.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => navigate(`/blog/${p.slug}`)}
+                className="w-full flex items-center gap-3 p-3 rounded-[20px] text-left m-pressable"
+                style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+              >
+                {p.featured_image ? (
+                  <img
+                    src={p.featured_image}
+                    alt={p.title}
+                    className="w-16 h-16 rounded-2xl object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "hsl(var(--m-tint-lilac))" }}
+                  >
+                    <BookOpen className="w-6 h-6" style={{ color: "hsl(var(--m-ink))" }} />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-bold line-clamp-2" style={{ color: "hsl(var(--m-text-primary))" }}>
+                    {p.title}
+                  </div>
+                  {p.excerpt && (
+                    <div className="text-[12px] mt-1 line-clamp-1" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                      {p.excerpt}
+                    </div>
+                  )}
+                </div>
+                <ChevronRight className="w-5 h-5 flex-shrink-0" style={{ color: "hsl(var(--m-text-tertiary))" }} />
+              </button>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Danışan Yorumları */}
+      {reviews.length > 0 && (
+        <Section title={`Danışan Yorumları (${reviews.length})`}>
+          <div className="space-y-3">
+            {reviews.map((r) => (
+              <div
+                key={r.id}
+                className="rounded-[20px] p-5"
+                style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+              >
+                <div className="flex items-center gap-1 mb-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className="w-3.5 h-3.5"
+                      style={{
+                        color: i < r.rating ? "hsl(var(--m-warning))" : "hsl(var(--m-divider))",
+                        fill: i < r.rating ? "hsl(var(--m-warning))" : "hsl(var(--m-divider))",
+                      }}
+                    />
+                  ))}
+                </div>
+                <p
+                  className="text-[14px] leading-relaxed"
+                  style={{ color: "hsl(var(--m-text-primary))" }}
+                >
+                  {r.comment}
+                </p>
+                <div className="text-[12px] font-semibold mt-3" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  {r.reviewer_display_name || r.reviewer_name || "Anonim"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {/* Sticky CTA */}
       <div
@@ -236,9 +466,33 @@ export default function MobileSpecialistDetail() {
   );
 }
 
-const DetailRow = ({ icon: Icon, label, value }: { icon: any; label: string; value: string }) => (
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <section className="px-5 mt-7">
+    <h2 className="m-title mb-3" style={{ fontSize: 20 }}>{title}</h2>
+    {children}
+  </section>
+);
+
+const StatPill = ({ icon: Icon, value, label }: { icon: any; value: string; label: string }) => (
   <div
-    className="flex items-center gap-4 p-4 rounded-[20px]"
+    className="rounded-[18px] p-3 text-center"
+    style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+  >
+    <Icon className="w-4 h-4 mx-auto mb-1" style={{ color: "hsl(var(--m-text-secondary))" }} />
+    <div className="text-[16px] font-bold leading-none" style={{ color: "hsl(var(--m-text-primary))" }}>
+      {value}
+    </div>
+    <div className="text-[10px] mt-1 font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
+      {label}
+    </div>
+  </div>
+);
+
+const DetailRow = ({
+  icon: Icon, label, value, multiline,
+}: { icon: any; label: string; value: string; multiline?: boolean }) => (
+  <div
+    className="flex items-start gap-4 p-4 rounded-[20px]"
     style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
   >
     <div
@@ -249,7 +503,12 @@ const DetailRow = ({ icon: Icon, label, value }: { icon: any; label: string; val
     </div>
     <div className="flex-1 min-w-0">
       <div className="text-[12px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>{label}</div>
-      <div className="text-[14px] font-semibold mt-0.5" style={{ color: "hsl(var(--m-text-primary))" }}>{value}</div>
+      <div
+        className={`text-[14px] font-semibold mt-0.5 ${multiline ? "whitespace-pre-line" : ""}`}
+        style={{ color: "hsl(var(--m-text-primary))" }}
+      >
+        {value}
+      </div>
     </div>
   </div>
 );

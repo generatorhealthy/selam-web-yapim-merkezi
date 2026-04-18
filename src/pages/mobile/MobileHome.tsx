@@ -371,6 +371,100 @@ export default function MobileHome() {
         </button>
       </section>
 
+      {/* Branches with specialist photos */}
+      {specialists.length > 0 && (
+        <section className="mb-7">
+          <div className="flex items-end justify-between px-5 mb-4">
+            <h2 className="m-title">Branşları Keşfet</h2>
+            <button
+              onClick={() => navigate("/mobile/search")}
+              className="text-[14px] font-semibold m-pressable"
+              style={{ color: "hsl(var(--m-text-secondary))" }}
+            >
+              Tümü
+            </button>
+          </div>
+          <div className="flex gap-4 px-5 overflow-x-auto m-no-scrollbar pb-2">
+            {Array.from(
+              specialists.reduce((map, s) => {
+                if (!map.has(s.specialty)) map.set(s.specialty, s);
+                return map;
+              }, new Map<string, Specialist>()).values()
+            ).slice(0, 8).map((s, idx) => (
+              <button
+                key={s.specialty}
+                onClick={() => navigate(`/mobile/search?specialty=${encodeURIComponent(s.specialty)}`)}
+                className="shrink-0 flex flex-col items-center gap-2 m-pressable"
+                style={{ width: 84 }}
+              >
+                <div
+                  className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center"
+                  style={{
+                    background: `hsl(${PASTEL_TINTS[idx % PASTEL_TINTS.length]})`,
+                    boxShadow: "var(--m-shadow)",
+                  }}
+                >
+                  {s.profile_picture ? (
+                    <img src={s.profile_picture} alt={s.specialty} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[28px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                      {s.specialty.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <span
+                  className="text-[12px] font-semibold text-center leading-tight line-clamp-2"
+                  style={{ color: "hsl(var(--m-text-primary))" }}
+                >
+                  {s.specialty}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Visual feature banner */}
+      <section className="px-5 mb-7">
+        <button
+          onClick={() => navigate("/mobile/search")}
+          className="w-full relative overflow-hidden rounded-[24px] text-left m-pressable"
+          style={{
+            background: "linear-gradient(135deg, hsl(var(--m-tint-lilac)) 0%, hsl(var(--m-tint-sky)) 100%)",
+            minHeight: 160,
+          }}
+        >
+          <div className="relative p-6 max-w-[60%]">
+            <div className="inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-white/80 mb-3">
+              <Sparkles className="w-3.5 h-3.5" style={{ color: "hsl(var(--m-ink))" }} />
+              <span className="text-[11px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
+                Yeni
+              </span>
+            </div>
+            <h3 className="text-[20px] font-bold leading-tight" style={{ color: "hsl(var(--m-text-primary))" }}>
+              Online görüşme ile evinden destek al
+            </h3>
+            <p className="text-[12px] mt-2" style={{ color: "hsl(var(--m-text-secondary))" }}>
+              7/24 uzman desteği
+            </p>
+          </div>
+          {/* Stacked specialist avatars on right */}
+          <div className="absolute right-4 bottom-4 flex -space-x-3">
+            {specialists.slice(0, 4).map((s) => (
+              <div
+                key={s.id}
+                className="w-12 h-12 rounded-full overflow-hidden border-2"
+                style={{ borderColor: "hsl(var(--m-bg))", background: "hsl(var(--m-surface-muted))" }}
+              >
+                {s.profile_picture && (
+                  <img src={s.profile_picture} alt={s.name} className="w-full h-full object-cover" />
+                )}
+              </div>
+            ))}
+          </div>
+        </button>
+      </section>
+
       {/* Tests */}
       {tests.length > 0 && (
         <section className="mb-7">
