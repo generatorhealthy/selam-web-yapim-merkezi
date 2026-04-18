@@ -58,6 +58,10 @@ export default function PatientSignup() {
   };
 
   const oauth = async (provider: "google" | "apple") => {
+    if (!acceptedDisclosure) {
+      toast({ title: "Onay gerekli", description: "Aydınlatma metnini onaylamadan kayıt olamazsınız", variant: "destructive" });
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}/danisan-paneli` },
