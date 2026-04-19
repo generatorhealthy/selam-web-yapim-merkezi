@@ -31,6 +31,10 @@ function normalizePhone(raw: string): { wa: string; sms: string } | null {
   return null;
 }
 
+function getSessionNameForLineId(lineId: string) {
+  return `line_${lineId.replace(/-/g, "").slice(0, 16)}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
