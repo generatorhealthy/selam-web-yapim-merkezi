@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { useToast } from "@/hooks/use-toast";
-import { Video, Users, Check, ChevronRight } from "lucide-react";
+import { Video, Users, Check, ChevronRight, ChevronLeft } from "lucide-react";
 import { getAvailableSlotsForDate, formatDateKey } from "@/utils/availabilityUtils";
 
 type Step = 1 | 2 | 3 | 4;
@@ -24,16 +24,31 @@ export default function MobileBooking() {
   const [phone, setPhone] = useState("");
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [viewMonth, setViewMonth] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d;
+  });
 
-  // Generate next 14 days
-  const days = useMemo(() => {
-    const arr: Date[] = [];
-    for (let i = 0; i < 14; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      arr.push(d);
-    }
-    return arr;
+  // Generate calendar grid for current viewMonth (weeks starting Mon)
+  const calendarCells = useMemo(() => {
+    const year = viewMonth.getFullYear();
+    const month = viewMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    // Monday as first day: getDay() Sun=0..Sat=6 → shift
+    const startOffset = (firstDay.getDay() + 6) % 7;
+    const cells: (Date | null)[] = [];
+    for (let i = 0; i < startOffset; i++) cells.push(null);
+    for (let d = 1; d <= lastDay.getDate(); d++) cells.push(new Date(year, month, d));
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }, [viewMonth]);
+
+  const today = useMemo(() => {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return t;
   }, []);
 
   useEffect(() => {
@@ -148,61 +163,128 @@ export default function MobileBooking() {
         )}
 
         {step === 2 && (
-          <div className="grid grid-cols-4 gap-2">
-            {days.map((d) => {
-              const isSel = selectedDate && formatDateKey(d) === formatDateKey(selectedDate);
-              return (
+          <div className="space-y-5">
+            {/* Month header with arrows */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-[20px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
+                {viewMonth.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}
+              </h3>
+              <div className="flex gap-2">
                 <button
-                  key={d.toISOString()}
-                  onClick={() => setSelectedDate(d)}
-                  className="aspect-square rounded-2xl flex flex-col items-center justify-center m-pressable"
-                  style={{
-                    background: isSel ? "hsl(var(--m-accent))" : "hsl(var(--m-surface))",
-                    color: isSel ? "white" : "hsl(var(--m-text-primary))",
-                    boxShadow: isSel ? undefined : "var(--m-shadow)",
-                  }}
+                  onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1))}
+                  className="w-10 h-10 rounded-full flex items-center justify-center m-pressable"
+                  style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow-sm)" }}
+                  aria-label="Önceki ay"
                 >
-                  <span className="text-[11px] font-medium opacity-70">
-                    {d.toLocaleDateString("tr-TR", { weekday: "short" })}
-                  </span>
-                  <span className="text-[20px] font-bold">{d.getDate()}</span>
-                  <span className="text-[10px] opacity-70">
-                    {d.toLocaleDateString("tr-TR", { month: "short" })}
-                  </span>
+                  <ChevronLeft className="w-5 h-5" style={{ color: "hsl(var(--m-text-primary))" }} />
                 </button>
-              );
-            })}
+                <button
+                  onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1))}
+                  className="w-10 h-10 rounded-full flex items-center justify-center m-pressable"
+                  style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow-sm)" }}
+                  aria-label="Sonraki ay"
+                >
+                  <ChevronRight className="w-5 h-5" style={{ color: "hsl(var(--m-text-primary))" }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Weekday header */}
+            <div className="grid grid-cols-7 gap-2">
+              {["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map((w) => (
+                <div
+                  key={w}
+                  className="text-center text-[11px] font-semibold"
+                  style={{ color: "hsl(var(--m-text-tertiary))" }}
+                >
+                  {w}
+                </div>
+              ))}
+            </div>
+
+            {/* Days grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {calendarCells.map((d, i) => {
+                if (!d) return <div key={`e-${i}`} />;
+                const isPast = d < today;
+                const isSel = selectedDate && formatDateKey(d) === formatDateKey(selectedDate);
+                const isToday = formatDateKey(d) === formatDateKey(today);
+                return (
+                  <button
+                    key={d.toISOString()}
+                    disabled={isPast}
+                    onClick={() => setSelectedDate(d)}
+                    className="aspect-square rounded-2xl flex items-center justify-center m-pressable disabled:opacity-30"
+                    style={{
+                      background: isSel ? "hsl(var(--m-accent))" : "hsl(var(--m-surface))",
+                      color: isSel ? "white" : "hsl(var(--m-text-primary))",
+                      boxShadow: isSel ? "0 6px 16px -4px hsl(var(--m-accent) / 0.5)" : "var(--m-shadow-sm)",
+                      border: isToday && !isSel ? "1.5px solid hsl(var(--m-accent))" : undefined,
+                    }}
+                  >
+                    <span className="text-[16px] font-bold">{d.getDate()}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {step === 3 && (
-          <div className="grid grid-cols-3 gap-2">
-            {availableSlots.length === 0 ? (
-              <p className="col-span-3 text-center py-8" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                Bu güne uygun saat yok
-              </p>
-            ) : (
-              availableSlots.map((t) => {
-                const taken = bookedSlots.includes(t);
-                const sel = selectedTime === t;
-                return (
-                  <button
-                    key={t}
-                    disabled={taken}
-                    onClick={() => setSelectedTime(t)}
-                    className="h-12 rounded-xl text-[14px] font-semibold m-pressable disabled:opacity-30"
-                    style={{
-                      background: sel ? "hsl(var(--m-accent))" : "hsl(var(--m-surface))",
-                      color: sel ? "white" : "hsl(var(--m-text-primary))",
-                      textDecoration: taken ? "line-through" : undefined,
-                      boxShadow: sel ? undefined : "var(--m-shadow)",
-                    }}
-                  >
-                    {t}
-                  </button>
-                );
-              })
+          <div className="space-y-4">
+            {selectedDate && (
+              <div
+                className="rounded-2xl p-4 flex items-center justify-between"
+                style={{ background: "hsl(var(--m-accent-soft))" }}
+              >
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "hsl(var(--m-accent))" }}>
+                    Seçilen tarih
+                  </div>
+                  <div className="text-[16px] font-bold mt-0.5" style={{ color: "hsl(var(--m-text-primary))" }}>
+                    {selectedDate.toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setStep(2)}
+                  className="text-[12px] font-semibold m-pressable"
+                  style={{ color: "hsl(var(--m-accent))" }}
+                >
+                  Değiştir
+                </button>
+              </div>
             )}
+            <div className="text-[13px] font-semibold" style={{ color: "hsl(var(--m-text-secondary))" }}>
+              Uygun saatler
+            </div>
+            <div className="grid grid-cols-3 gap-2.5">
+              {availableSlots.length === 0 ? (
+                <p className="col-span-3 text-center py-8" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  Bu güne uygun saat yok
+                </p>
+              ) : (
+                availableSlots.map((t) => {
+                  const taken = bookedSlots.includes(t);
+                  const sel = selectedTime === t;
+                  return (
+                    <button
+                      key={t}
+                      disabled={taken}
+                      onClick={() => setSelectedTime(t)}
+                      className="h-12 rounded-full text-[14px] font-semibold m-pressable disabled:opacity-30"
+                      style={{
+                        background: sel ? "hsl(var(--m-accent))" : "hsl(var(--m-surface))",
+                        color: sel ? "white" : "hsl(var(--m-text-primary))",
+                        textDecoration: taken ? "line-through" : undefined,
+                        boxShadow: sel ? "0 6px 16px -4px hsl(var(--m-accent) / 0.5)" : "var(--m-shadow-sm)",
+                      }}
+                    >
+                      {t}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
 
