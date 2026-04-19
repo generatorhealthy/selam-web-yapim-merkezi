@@ -29,29 +29,17 @@ const TONE_PALETTE = [
 
 export default function MobileDashboard() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [spec, setSpec] = useState<any>(null);
   const [stats, setStats] = useState({ total: 0, pending: 0, confirmed: 0, completed: 0 });
   const [badges, setBadges] = useState({ appts: 0, blog: 0, support: 0 });
   const [upcoming, setUpcoming] = useState<UpcomingAppt[]>([]);
+  const [pendingReqs, setPendingReqs] = useState<UpcomingAppt[]>([]);
+  const [actingId, setActingId] = useState<string | null>(null);
   const [weekly, setWeekly] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) { navigate("/mobile/login"); return; }
-
-        const { data: s } = await supabase
-          .from("specialists")
-          .select("id, name, email, specialty, profile_picture, city, rating, reviews_count, experience")
-          .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
-          .maybeSingle();
-
-        if (!s) { navigate("/mobile/login"); return; }
-        setSpec(s);
-
-        const { data: appts } = await supabase
+  const refreshAppts = async (specialistId: string) => {
           .from("appointments")
           .select("id, patient_name, appointment_date, appointment_time, appointment_type, status")
           .eq("specialist_id", s.id);
