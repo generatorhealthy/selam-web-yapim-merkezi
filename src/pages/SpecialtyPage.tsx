@@ -312,6 +312,15 @@ const SpecialtyPage = () => {
           </div>
         )}
       </div>
+      {waDialog.specialist && (
+        <WhatsAppContactDialog
+          open={waDialog.open}
+          onOpenChange={(open) => setWaDialog((s) => ({ ...s, open }))}
+          specialistName={waDialog.specialist.name}
+          specialistSpecialty={waDialog.specialist.specialty}
+          specialistUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/${createSpecialtySlug(waDialog.specialist.specialty)}/${waDialog.specialist.slug}`}
+        />
+      )}
       <Footer />
     </div>
   );
