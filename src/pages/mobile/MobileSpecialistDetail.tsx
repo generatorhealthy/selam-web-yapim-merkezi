@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getCachedPublicSpecialists, setCachedPublicSpecialists } from "@/lib/mobileSpecialistsCache";
+import WhatsAppContactDialog from "@/components/WhatsAppContactDialog";
 
 interface Specialist {
   id: string;
@@ -74,6 +75,7 @@ export default function MobileSpecialistDetail() {
   const [bioExpanded, setBioExpanded] = useState(false);
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [waOpen, setWaOpen] = useState(false);
 
   const loadReviews = async (specId: string) => {
     const { data: rev } = await supabase.rpc("get_public_reviews", {
@@ -506,10 +508,9 @@ export default function MobileSpecialistDetail() {
           >
             <PencilLine className="w-5 h-5" />
           </button>
-          <a
-            href="https://wa.me/902162350650"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => setWaOpen(true)}
             aria-label="WhatsApp"
             className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
             style={{
@@ -519,7 +520,7 @@ export default function MobileSpecialistDetail() {
             }}
           >
             <MessageCircle className="w-5 h-5" />
-          </a>
+          </button>
           <a
             href={`tel:${specialist.phone || "02167060611"}`}
             aria-label="Ara"
@@ -542,6 +543,15 @@ export default function MobileSpecialistDetail() {
         specialistId={specialist.id}
         specialistName={specialist.name}
         onSubmitted={() => loadReviews(specialist.id)}
+      />
+
+      {/* WhatsApp Contact Dialog */}
+      <WhatsAppContactDialog
+        open={waOpen}
+        onOpenChange={setWaOpen}
+        specialistName={specialist.name}
+        specialistSpecialty={specialist.specialty}
+        specialistUrl={typeof window !== "undefined" ? window.location.href : ""}
       />
     </div>
   );
