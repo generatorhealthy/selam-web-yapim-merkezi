@@ -408,8 +408,6 @@ const LoginPage = () => {
                 <Shield className="w-7 h-7 text-white" />
               </div>
               <h2 className="text-4xl xl:text-5xl font-bold leading-tight mb-4">
-                Uzman Paneline
-                <br />
                 Hoş Geldiniz
               </h2>
               <p className="text-lg text-primary-foreground/80 leading-relaxed max-w-md">
@@ -465,7 +463,7 @@ const LoginPage = () => {
                  step === 'forgot-reset' ? "Yeni Şifre Belirle" :
                  step === 'otp' ? "Telefon Doğrulama" :
                  step === 'password' ? "Şifrenizi Girin" :
-                 "Uzman Girişi"}
+                 "Giriş Yap"}
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">
                 {step === 'forgot' ? "E-posta veya telefon numaranızı girin" :
