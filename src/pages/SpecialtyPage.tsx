@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
+import WhatsAppContactDialog from "@/components/WhatsAppContactDialog";
 
 interface Specialist {
   id: string;
@@ -34,6 +35,7 @@ const SpecialtyPage = () => {
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [loading, setLoading] = useState(true);
   const [specialtyName, setSpecialtyName] = useState("");
+  const [waDialog, setWaDialog] = useState<{ open: boolean; specialist: Specialist | null }>({ open: false, specialist: null });
 
   // Slug'dan specialty adını çözümle
   const getSpecialtyFromSlug = (slug: string) => {
@@ -151,10 +153,7 @@ const SpecialtyPage = () => {
   };
 
   const handleWhatsAppClick = (specialist: Specialist) => {
-    const message = `${specialist.name} Uzmanından bilgi almak istiyorum`;
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/902162350650?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+    setWaDialog({ open: true, specialist });
   };
 
   const handleCallClick = (phone?: string) => {
@@ -313,6 +312,15 @@ const SpecialtyPage = () => {
           </div>
         )}
       </div>
+      {waDialog.specialist && (
+        <WhatsAppContactDialog
+          open={waDialog.open}
+          onOpenChange={(open) => setWaDialog((s) => ({ ...s, open }))}
+          specialistName={waDialog.specialist.name}
+          specialistSpecialty={waDialog.specialist.specialty}
+          specialistUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/${createSpecialtySlug(waDialog.specialist.specialty)}/${waDialog.specialist.slug}`}
+        />
+      )}
       <Footer />
     </div>
   );

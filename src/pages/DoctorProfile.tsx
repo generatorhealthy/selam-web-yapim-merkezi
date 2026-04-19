@@ -15,6 +15,7 @@ import Footer from "@/components/Footer";
 import GoogleMap from "@/components/GoogleMap";
 import SpecialistTests from "@/components/SpecialistTests";
 import RecentlyViewedSpecialists, { addToRecentlyViewed } from "@/components/RecentlyViewedSpecialists";
+import WhatsAppContactDialog from "@/components/WhatsAppContactDialog";
 
 interface Specialist {
   id: string;
@@ -268,15 +269,10 @@ const DoctorProfile = () => {
     }
   };
 
+  const [waDialogOpen, setWaDialogOpen] = useState(false);
+
   const handleWhatsApp = () => {
-    if (specialist) {
-      const message = `${specialist.name} Uzmanından bilgi almak istiyorum`;
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappUrl = `https://wa.me/902162350650?text=${encodedMessage}`;
-      window.open(whatsappUrl, '_blank');
-    } else {
-      window.open('https://wa.me/902162350650', '_blank');
-    }
+    setWaDialogOpen(true);
   };
 
   const getAppointmentTypes = () => {
@@ -803,6 +799,15 @@ const DoctorProfile = () => {
           </Tabs>
         </div>
       </div>
+      {specialist && (
+        <WhatsAppContactDialog
+          open={waDialogOpen}
+          onOpenChange={setWaDialogOpen}
+          specialistName={specialist.name}
+          specialistSpecialty={specialist.specialty}
+          specialistUrl={typeof window !== "undefined" ? window.location.href : ""}
+        />
+      )}
       <Footer />
     </div>
   );
