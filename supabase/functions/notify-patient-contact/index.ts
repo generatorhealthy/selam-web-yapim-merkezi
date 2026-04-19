@@ -65,14 +65,16 @@ Deno.serve(async (req) => {
 
     const waMessage =
       `Merhaba ${firstName} 👋\n\n` +
-      `Doktorumol.com.tr'ye randevu talebiniz için teşekkür ederiz.\n\n` +
-      `${specialistName}${specialtyText} ile randevunuzu aşağıdaki linkten oluşturabilirsiniz:\n\n` +
-      `${specialistUrl}\n\n` +
-      `Yardıma ihtiyacınız olursa bu numaradan bize yazabilirsiniz.\n` +
-      `Doktorumol.com.tr`;
+      `Doktorumol.com.tr'ye hoş geldiniz! İlginiz için teşekkür ederiz.\n\n` +
+      `*${specialistName}*${specialtyText} ile randevunuzu aşağıdaki profil sayfasından kolayca oluşturabilirsiniz:\n\n` +
+      `🔗 ${specialistUrl}\n\n` +
+      `📅 Profil sayfasından uygun gün ve saati seçerek randevunuzu hemen ayırtabilirsiniz.\n\n` +
+      `Herhangi bir sorunuz olursa bu numara üzerinden bize yazabilirsiniz, size yardımcı olmaktan memnuniyet duyarız.\n\n` +
+      `Sağlıklı günler dileriz 🌿\n` +
+      `_Doktorumol.com.tr_`;
 
     const smsMessage =
-      `Doktorumol: Merhaba ${firstName}, ${specialistName} ile randevu icin: ${specialistUrl}`;
+      `Doktorumol: Merhaba ${firstName}, ${specialistName} profilinden uygun gun ve saati secerek randevunuzu olusturabilirsiniz: ${specialistUrl} Iyi gunler dileriz.`;
 
     const results: Record<string, unknown> = {};
 
