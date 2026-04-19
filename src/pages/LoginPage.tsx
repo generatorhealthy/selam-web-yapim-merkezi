@@ -109,7 +109,30 @@ const LoginPage = () => {
         setOtpSending(false);
       }
     } else {
-      setStep('password');
+      // Check if email exists in system before asking for password
+      const email = loginIdentifier.trim().toLowerCase();
+      setOtpSending(true);
+      try {
+        const { data: existingPatient } = await supabase
+          .from('patient_profiles').select('id').eq('email', email).maybeSingle();
+        const { data: existingSpecialist } = await supabase
+          .from('specialists').select('id').eq('email', email).maybeSingle();
+
+        if (!existingPatient && !existingSpecialist) {
+          toast({
+            title: "Hesap Bulunamadı",
+            description: "Bu e-posta ile kayıt yok. Üyelik sayfasına yönlendiriliyorsunuz...",
+          });
+          navigate(`/uye-ol?email=${encodeURIComponent(email)}`);
+          return;
+        }
+        setStep('password');
+      } catch {
+        // On error, fall back to password step
+        setStep('password');
+      } finally {
+        setOtpSending(false);
+      }
     }
   };
 
