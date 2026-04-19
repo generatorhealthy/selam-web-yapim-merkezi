@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { useToast } from "@/hooks/use-toast";
-import { Video, Users, Check, ChevronRight } from "lucide-react";
+import { Video, Users, Check, ChevronRight, ChevronLeft } from "lucide-react";
 import { getAvailableSlotsForDate, formatDateKey } from "@/utils/availabilityUtils";
 
 type Step = 1 | 2 | 3 | 4;
