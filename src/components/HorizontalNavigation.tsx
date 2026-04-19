@@ -317,21 +317,12 @@ export function HorizontalNavigation() {
                   >
                     Giriş Yap
                   </button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md whitespace-nowrap inline-flex items-center gap-1">
-                        Üye Ol <ChevronDown className="h-3 w-3" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44 bg-white z-[60]">
-                      <DropdownMenuItem onClick={() => navigate('/uye-ol')}>
-                        <User className="mr-2 h-4 w-4" /> Danışan Üyeliği
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/kayit-ol')}>
-                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Kaydı
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <button
+                    onClick={() => navigate('/kayit-ol')}
+                    className="px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md whitespace-nowrap"
+                  >
+                    Üye Ol
+                  </button>
                 </>
               )}
               <button
