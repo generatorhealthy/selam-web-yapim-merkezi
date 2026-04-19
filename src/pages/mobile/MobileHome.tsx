@@ -12,7 +12,11 @@ import {
   Stethoscope,
   ArrowRight,
   Mic,
+  Clock,
+  Send,
+  MessageCircle,
 } from "lucide-react";
+import { getRecentlyViewed, type RecentSpecialist } from "@/components/RecentlyViewedSpecialists";
 import testAnxiety from "@/assets/test-anxiety.jpg";
 import testDepression from "@/assets/test-depression.jpg";
 import testGrief from "@/assets/test-grief.jpg";
@@ -91,6 +95,63 @@ export default function MobileHome() {
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCat, setActiveCat] = useState("Hepsi");
+  const [authedUserId, setAuthedUserId] = useState<string | null>(null);
+  const [authedEmail, setAuthedEmail] = useState<string | null>(null);
+  const [upcoming, setUpcoming] = useState<any | null>(null);
+  const [recentSpecialist, setRecentSpecialist] = useState<RecentSpecialist | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setAuthedUserId(data.session?.user?.id ?? null);
+      setAuthedEmail(data.session?.user?.email ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setAuthedUserId(s?.user?.id ?? null);
+      setAuthedEmail(s?.user?.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const list = getRecentlyViewed();
+    if (list.length > 0) setRecentSpecialist(list[0]);
+  }, []);
+
+  useEffect(() => {
+    if (!authedUserId && !authedEmail) { setUpcoming(null); return; }
+    (async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const orFilter = [
+          authedUserId ? `patient_user_id.eq.${authedUserId}` : null,
+          authedEmail ? `patient_email.eq.${authedEmail}` : null,
+        ].filter(Boolean).join(",");
+        const { data } = await supabase
+          .from("appointments")
+          .select("id,appointment_date,appointment_time,appointment_type,status,specialist_id")
+          .or(orFilter)
+          .gte("appointment_date", today)
+          .in("status", ["pending", "confirmed"])
+          .order("appointment_date", { ascending: true })
+          .order("appointment_time", { ascending: true })
+          .limit(1);
+        const apt = data?.[0];
+        if (!apt) { setUpcoming(null); return; }
+        let spec: any = null;
+        if (apt.specialist_id) {
+          const { data: s } = await supabase
+            .from("public_specialists")
+            .select("id,name,specialty,profile_picture,slug")
+            .eq("id", apt.specialist_id)
+            .maybeSingle();
+          spec = s;
+        }
+        setUpcoming({ ...apt, specialist: spec });
+      } catch (e) {
+        console.error("Upcoming appointment fetch error", e);
+      }
+    })();
+  }, [authedUserId, authedEmail]);
 
   useEffect(() => {
     let cancelled = false;
@@ -200,6 +261,138 @@ export default function MobileHome() {
           </span>
         </button>
       </div>
+
+      {/* Patient hero card: upcoming appointment OR recently viewed specialist */}
+      {(upcoming || recentSpecialist) && (
+        <section className="px-5 mb-6">
+          {upcoming ? (
+            <div
+              className="rounded-[24px] p-5 relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(224 82% 54%) 100%)",
+                boxShadow: "0 12px 28px -8px hsl(217 91% 60% / 0.45)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[12px] font-bold uppercase tracking-wider text-white/85">
+                  Yaklaşan Randevunuz
+                </span>
+                <button
+                  onClick={() => navigate("/mobile/patient-appointments")}
+                  className="text-[12px] font-semibold text-white/90 m-pressable"
+                >
+                  Tümü
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 text-white mb-1.5">
+                <Calendar className="w-4 h-4" strokeWidth={2.4} />
+                <span className="text-[15px] font-bold">
+                  {new Date(upcoming.appointment_date).toLocaleDateString("tr-TR", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-white/90 mb-4">
+                <Clock className="w-4 h-4" strokeWidth={2.4} />
+                <span className="text-[14px] font-semibold">
+                  {String(upcoming.appointment_time).slice(0, 5)}
+                </span>
+              </div>
+
+              <button
+                onClick={() => upcoming.specialist?.id && navigate(`/mobile/specialist/${upcoming.specialist.id}`)}
+                className="w-full bg-white/95 rounded-[16px] p-3 flex items-center gap-3 m-pressable text-left"
+              >
+                {upcoming.specialist?.profile_picture ? (
+                  <img
+                    src={upcoming.specialist.profile_picture}
+                    alt={upcoming.specialist.name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                    style={{ background: "hsl(217 91% 60%)" }}
+                  >
+                    {upcoming.specialist?.name?.charAt(0) ?? "?"}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-bold truncate" style={{ color: "hsl(var(--m-text-primary))" }}>
+                    {upcoming.specialist?.name ?? "Uzman"}
+                  </div>
+                  <div className="text-[12px] truncate" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    {upcoming.specialist?.specialty ?? ""}
+                  </div>
+                </div>
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: "hsl(217 91% 60%)" }}
+                >
+                  <MessageCircle className="w-4 h-4 text-white" strokeWidth={2.4} />
+                </div>
+              </button>
+            </div>
+          ) : recentSpecialist ? (
+            <div
+              className="rounded-[24px] p-5 relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(224 82% 54%) 100%)",
+                boxShadow: "0 12px 28px -8px hsl(217 91% 60% / 0.45)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[12px] font-bold uppercase tracking-wider text-white/85">
+                  Son İncelediğiniz
+                </span>
+                <button
+                  onClick={() => navigate("/mobile/search")}
+                  className="text-[12px] font-semibold text-white/90 m-pressable"
+                >
+                  Tümü
+                </button>
+              </div>
+              <button
+                onClick={() => navigate(`/mobile/specialist/${recentSpecialist.id}`)}
+                className="w-full bg-white/95 rounded-[16px] p-3 flex items-center gap-3 m-pressable text-left"
+              >
+                {recentSpecialist.profile_picture ? (
+                  <img
+                    src={recentSpecialist.profile_picture}
+                    alt={recentSpecialist.name}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                    style={{ background: "hsl(217 91% 60%)" }}
+                  >
+                    {recentSpecialist.name.charAt(0)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-bold truncate" style={{ color: "hsl(var(--m-text-primary))" }}>
+                    {recentSpecialist.name}
+                  </div>
+                  <div className="text-[12px] truncate" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    {recentSpecialist.specialty}
+                  </div>
+                </div>
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: "hsl(217 91% 60%)" }}
+                >
+                  <Send className="w-4 h-4 text-white" strokeWidth={2.4} />
+                </div>
+              </button>
+            </div>
+          ) : null}
+        </section>
+      )}
 
       {/* Category pills + filter */}
       <div className="mb-7">
