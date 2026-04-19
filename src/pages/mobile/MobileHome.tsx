@@ -80,6 +80,16 @@ interface Review {
   specialist_specialty?: string;
 }
 
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  featured_image: string | null;
+  author_name: string | null;
+  published_at: string | null;
+}
+
 const PASTEL_TINTS = [
   "var(--m-tint-mint)",
   "var(--m-tint-lilac)",
@@ -94,6 +104,7 @@ export default function MobileHome() {
   const [tests, setTests] = useState<Test[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
+  const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCat, setActiveCat] = useState("Hepsi");
   const [authedUserId, setAuthedUserId] = useState<string | null>(null);
