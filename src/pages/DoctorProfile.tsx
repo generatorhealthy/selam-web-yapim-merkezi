@@ -799,6 +799,15 @@ const DoctorProfile = () => {
           </Tabs>
         </div>
       </div>
+      {specialist && (
+        <WhatsAppContactDialog
+          open={waDialogOpen}
+          onOpenChange={setWaDialogOpen}
+          specialistName={specialist.name}
+          specialistSpecialty={specialist.specialty}
+          specialistUrl={typeof window !== "undefined" ? window.location.href : ""}
+        />
+      )}
       <Footer />
     </div>
   );
