@@ -85,25 +85,31 @@ All colors MUST be HSL.
 
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* === MOBILE APP DESIGN SYSTEM (Zocdoc-inspired premium) === */
-    /* Surfaces — warm cream background, pure white cards */
-    --m-bg: 40 25% 96%;
+    /* === MOBILE APP DESIGN SYSTEM — 4-color palette ===
+       Palette:
+       - Ink:        #040415  (235 76% 5%)
+       - Blue:       #2F6BEB  (ererence accent — 220 84% 55%)
+       - Lavender:   #E6ECFB  (cool light surface — 222 67% 95%)
+       - Cream/White:#F4F5F8  (near-white bg — 222 18% 97%)
+    */
+    /* Surfaces */
+    --m-bg: 222 18% 97%;
     --m-surface: 0 0% 100%;
     --m-surface-elevated: 0 0% 100%;
-    --m-surface-muted: 40 20% 93%;
-    --m-border: 40 15% 88%;
-    --m-divider: 40 15% 92%;
+    --m-surface-muted: 222 67% 95%;
+    --m-border: 222 30% 88%;
+    --m-divider: 222 40% 93%;
 
-    /* Text — deep ink black for premium feel */
-    --m-text-primary: 220 15% 10%;
-    --m-text-secondary: 220 8% 40%;
-    --m-text-tertiary: 220 8% 60%;
+    /* Text — deep ink */
+    --m-text-primary: 235 76% 5%;
+    --m-text-secondary: 235 20% 35%;
+    --m-text-tertiary: 222 15% 55%;
 
-    /* Brand: Doktorumol mavisi (web ile uyumlu) */
-    --m-accent: 214 88% 50%;
-    --m-accent-soft: 214 88% 95%;
-    --m-ink: 214 88% 50%;
-    --m-ink-deep: 214 88% 38%;
+    /* Brand: vivid blue */
+    --m-accent: 220 84% 55%;
+    --m-accent-soft: 222 67% 95%;
+    --m-ink: 235 76% 5%;
+    --m-ink-deep: 235 76% 5%;
 
     /* Pastel tints for hero specialist cards */
     --m-tint-mint: 140 40% 88%;
