@@ -36,33 +36,66 @@ export default function PatientDashboard() {
 
   useEffect(() => {
     (async () => {
-      const { data: s } = await supabase.auth.getSession();
-      const user = s.session?.user;
-      if (!user) {
-        navigate("/giris-yap");
-        return;
+      try {
+        const { data: s } = await supabase.auth.getSession();
+        const user = s.session?.user;
+        if (!user) {
+          navigate("/danisan-giris");
+          return;
+        }
+
+        const safe = async <T,>(p: Promise<{ data: T | null }>): Promise<T | null> => {
+          try { const { data } = await p; return data; } catch (e) { console.error("Patient dashboard query failed:", e); return null; }
+        };
+
+        const [prof, apps, favs, tr] = await Promise.all([
+          safe(supabase.from("patient_profiles").select("*").eq("user_id", user.id).maybeSingle() as any),
+          safe(supabase.from("appointments")
+            .select("id,appointment_date,appointment_time,appointment_type,status,consultation_topic,specialist_id")
+            .or(`patient_user_id.eq.${user.id},patient_email.eq.${user.email}`)
+            .order("appointment_date", { ascending: false }) as any),
+          safe(supabase.from("favorite_specialists")
+            .select("id,specialist_id")
+            .eq("user_id", user.id) as any),
+          safe(supabase.from("test_results")
+            .select("id,created_at,status,test_id")
+            .or(`patient_user_id.eq.${user.id},patient_email.eq.${user.email}`)
+            .order("created_at", { ascending: false }) as any),
+        ]);
+
+        // Hydrate specialists for appointments + favorites
+        const specIds = Array.from(new Set([
+          ...((apps as any[] | null) ?? []).map((a) => a.specialist_id).filter(Boolean),
+          ...((favs as any[] | null) ?? []).map((f) => f.specialist_id).filter(Boolean),
+        ]));
+        let specMap: Record<string, any> = {};
+        if (specIds.length > 0) {
+          const specs = await safe(supabase.from("public_specialists")
+            .select("id,name,specialty,profile_picture,rating,city,slug")
+            .in("id", specIds) as any);
+          ((specs as any[] | null) ?? []).forEach((s: any) => { specMap[s.id] = s; });
+        }
+
+        // Hydrate test titles
+        const testIds = Array.from(new Set(((tr as any[] | null) ?? []).map((t) => t.test_id).filter(Boolean)));
+        let testMap: Record<string, any> = {};
+        if (testIds.length > 0) {
+          const tts = await safe(supabase.from("tests").select("id,title").in("id", testIds) as any);
+          ((tts as any[] | null) ?? []).forEach((t: any) => { testMap[t.id] = t; });
+        }
+
+        setProfile((prof as any) ?? { user_id: user.id, email: user.email ?? null } as any);
+        setAppointments(((apps as any[]) ?? []).map((a) => ({ ...a, specialists: specMap[a.specialist_id] })));
+        setFavorites(((favs as any[]) ?? []).map((f) => ({ ...f, specialists: specMap[f.specialist_id] })));
+        setTests(((tr as any[]) ?? []).map((t) => ({ ...t, tests: testMap[t.test_id] })));
+      } catch (e) {
+        console.error("Patient dashboard load error:", e);
+        toast({ title: "Yükleme hatası", description: "Panel yüklenirken bir sorun oluştu", variant: "destructive" });
+      } finally {
+        setLoading(false);
       }
-      const [{ data: prof }, { data: apps }, { data: favs }, { data: tr }] = await Promise.all([
-        supabase.from("patient_profiles").select("*").eq("user_id", user.id).maybeSingle(),
-        supabase.from("appointments")
-          .select("id,appointment_date,appointment_time,appointment_type,status,consultation_topic,specialists(name,specialty,profile_picture)")
-          .or(`patient_user_id.eq.${user.id},patient_email.eq.${user.email}`)
-          .order("appointment_date", { ascending: false }),
-        supabase.from("favorite_specialists")
-          .select("id,specialists(id,name,specialty,profile_picture,rating,city,slug)")
-          .eq("user_id", user.id),
-        supabase.from("test_results")
-          .select("id,created_at,status,tests(title)")
-          .or(`patient_user_id.eq.${user.id},patient_email.eq.${user.email}`)
-          .order("created_at", { ascending: false }),
-      ]);
-      setProfile(prof ?? { user_id: user.id, email: user.email ?? null } as any);
-      setAppointments(apps ?? []);
-      setFavorites(favs ?? []);
-      setTests(tr ?? []);
-      setLoading(false);
     })();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const updateField = (k: keyof PatientProfile, v: string) => setProfile((p) => p ? { ...p, [k]: v } : p);
 
