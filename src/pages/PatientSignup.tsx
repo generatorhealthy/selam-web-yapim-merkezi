@@ -54,6 +54,14 @@ export default function PatientSignup() {
           auth_provider: "email",
         });
       }
+      // Onaylanan Aydınlatma Metni'ni danışanın e-postasına gönder (kayıt akışını bloklamaz)
+      supabase.functions.invoke("send-disclosure-consent-email", {
+        body: {
+          email: form.email.trim(),
+          fullName: `${form.firstName} ${form.lastName}`.trim(),
+          consentedAt: new Date().toISOString(),
+        },
+      }).catch((err) => console.error("Disclosure email error:", err));
       toast({ title: "Kayıt başarılı" });
       navigate("/danisan-paneli");
     } catch (e: any) {
