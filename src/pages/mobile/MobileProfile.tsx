@@ -48,6 +48,53 @@ export default function MobileProfile() {
     { icon: HelpCircle, label: "Yardım", onClick: () => toast({ title: "Yakında" }) },
   ];
 
+  // Misafir → sadece giriş yap ekranı
+  if (!user) {
+    return (
+      <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh" }}>
+        <MobileHeader largeTitle="Profil" />
+        <div className="px-6 pt-8 flex flex-col items-center text-center">
+          <div
+            className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
+            style={{ background: "hsl(var(--m-tint-sand))" }}
+          >
+            <LogIn className="w-10 h-10" style={{ color: "hsl(var(--m-ink))" }} />
+          </div>
+          <h2
+            className="text-[24px] font-bold mb-2"
+            style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}
+          >
+            Hesabınıza giriş yapın
+          </h2>
+          <p
+            className="text-[14px] mb-8 max-w-[300px]"
+            style={{ color: "hsl(var(--m-text-secondary))" }}
+          >
+            Randevularınızı, testlerinizi ve favori uzmanlarınızı tek bir yerden yönetin.
+          </p>
+          <button
+            onClick={() => navigate("/mobile/login")}
+            className="w-full h-14 rounded-full font-bold flex items-center justify-center gap-2 m-pressable"
+            style={{ background: "hsl(var(--m-ink))", color: "hsl(var(--m-bg))" }}
+          >
+            <LogIn className="w-5 h-5" /> Giriş Yap
+          </button>
+          <button
+            onClick={() => navigate("/mobile/signup")}
+            className="w-full h-14 rounded-full font-semibold mt-3 m-pressable"
+            style={{
+              background: "hsl(var(--m-surface))",
+              color: "hsl(var(--m-text-primary))",
+              border: "1px solid hsl(var(--m-divider))",
+            }}
+          >
+            Hesap Oluştur
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 40 }}>
       <MobileHeader largeTitle="Profil" />
@@ -66,45 +113,32 @@ export default function MobileProfile() {
               <span className="text-[32px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>{initial}</span>
             </div>
             <div className="flex-1 min-w-0">
-              {user ? (
-                <>
-                  <h2 className="font-bold text-[20px] truncate" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
-                    {userProfile?.name || "Kullanıcı"}
-                  </h2>
-                  <p className="text-[13px] truncate mt-0.5" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                    {user.email}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2 className="font-bold text-[20px]" style={{ color: "hsl(var(--m-text-primary))" }}>Misafir</h2>
-                  <p className="text-[13px] mt-0.5" style={{ color: "hsl(var(--m-text-secondary))" }}>Giriş yapmadınız</p>
-                </>
-              )}
+              <h2 className="font-bold text-[20px] truncate" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
+                {userProfile?.name || "Kullanıcı"}
+              </h2>
+              <p className="text-[13px] truncate mt-0.5" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                {user.email}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Stats */}
-      {user && (
-        <div className="px-5 mb-7 grid grid-cols-2 gap-3">
-          <div className="rounded-[22px] p-5" style={{ background: "hsl(var(--m-tint-mint))" }}>
-            <div className="text-[12px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>Yaklaşan</div>
-            <div className="text-[32px] font-bold mt-1" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
-              {stats.upcoming}
-            </div>
-          </div>
-          <div className="rounded-[22px] p-5" style={{ background: "hsl(var(--m-tint-lilac))" }}>
-            <div className="text-[12px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>Toplam</div>
-            <div className="text-[32px] font-bold mt-1" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
-              {stats.total}
-            </div>
+      <div className="px-5 mb-7 grid grid-cols-2 gap-3">
+        <div className="rounded-[22px] p-5" style={{ background: "hsl(var(--m-tint-mint))" }}>
+          <div className="text-[12px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>Yaklaşan</div>
+          <div className="text-[32px] font-bold mt-1" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
+            {stats.upcoming}
           </div>
         </div>
-      )}
+        <div className="rounded-[22px] p-5" style={{ background: "hsl(var(--m-tint-lilac))" }}>
+          <div className="text-[12px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>Toplam</div>
+          <div className="text-[32px] font-bold mt-1" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
+            {stats.total}
+          </div>
+        </div>
+      </div>
 
-      {/* Menu */}
       <div className="px-5 mb-6">
         <div className="rounded-[22px] overflow-hidden" style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}>
           {menuItems.map((item, i) => {
@@ -133,23 +167,13 @@ export default function MobileProfile() {
       </div>
 
       <div className="px-5">
-        {user ? (
-          <button
-            onClick={logout}
-            className="w-full h-14 rounded-full font-bold flex items-center justify-center gap-2 m-pressable"
-            style={{ background: "hsl(var(--m-danger-soft))", color: "hsl(var(--m-danger))" }}
-          >
-            <LogOut className="w-5 h-5" /> Çıkış Yap
-          </button>
-        ) : (
-          <button
-            onClick={() => navigate("/mobile/login")}
-            className="w-full h-14 rounded-full font-bold flex items-center justify-center gap-2 m-pressable"
-            style={{ background: "hsl(var(--m-ink))", color: "hsl(var(--m-bg))" }}
-          >
-            <LogIn className="w-5 h-5" /> Giriş Yap
-          </button>
-        )}
+        <button
+          onClick={logout}
+          className="w-full h-14 rounded-full font-bold flex items-center justify-center gap-2 m-pressable"
+          style={{ background: "hsl(var(--m-danger-soft))", color: "hsl(var(--m-danger))" }}
+        >
+          <LogOut className="w-5 h-5" /> Çıkış Yap
+        </button>
       </div>
     </div>
   );
