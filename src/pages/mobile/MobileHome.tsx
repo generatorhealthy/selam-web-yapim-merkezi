@@ -178,9 +178,8 @@ export default function MobileHome() {
             .limit(40),
           supabase.rpc("get_public_reviews", { p_limit: 30 }),
           supabase
-            .from("specialists")
+            .from("public_specialists")
             .select("id,name,specialty,profile_picture,rating,experience,city,reviews_count")
-            .eq("is_active", true)
             .limit(500),
           supabase
             .from("blog_posts")
