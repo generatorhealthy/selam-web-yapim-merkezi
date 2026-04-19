@@ -95,6 +95,63 @@ export default function MobileHome() {
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCat, setActiveCat] = useState("Hepsi");
+  const [authedUserId, setAuthedUserId] = useState<string | null>(null);
+  const [authedEmail, setAuthedEmail] = useState<string | null>(null);
+  const [upcoming, setUpcoming] = useState<any | null>(null);
+  const [recentSpecialist, setRecentSpecialist] = useState<RecentSpecialist | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setAuthedUserId(data.session?.user?.id ?? null);
+      setAuthedEmail(data.session?.user?.email ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setAuthedUserId(s?.user?.id ?? null);
+      setAuthedEmail(s?.user?.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const list = getRecentlyViewed();
+    if (list.length > 0) setRecentSpecialist(list[0]);
+  }, []);
+
+  useEffect(() => {
+    if (!authedUserId && !authedEmail) { setUpcoming(null); return; }
+    (async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const orFilter = [
+          authedUserId ? `patient_user_id.eq.${authedUserId}` : null,
+          authedEmail ? `patient_email.eq.${authedEmail}` : null,
+        ].filter(Boolean).join(",");
+        const { data } = await supabase
+          .from("appointments")
+          .select("id,appointment_date,appointment_time,appointment_type,status,specialist_id")
+          .or(orFilter)
+          .gte("appointment_date", today)
+          .in("status", ["pending", "confirmed"])
+          .order("appointment_date", { ascending: true })
+          .order("appointment_time", { ascending: true })
+          .limit(1);
+        const apt = data?.[0];
+        if (!apt) { setUpcoming(null); return; }
+        let spec: any = null;
+        if (apt.specialist_id) {
+          const { data: s } = await supabase
+            .from("public_specialists")
+            .select("id,name,specialty,profile_picture,slug")
+            .eq("id", apt.specialist_id)
+            .maybeSingle();
+          spec = s;
+        }
+        setUpcoming({ ...apt, specialist: spec });
+      } catch (e) {
+        console.error("Upcoming appointment fetch error", e);
+      }
+    })();
+  }, [authedUserId, authedEmail]);
 
   useEffect(() => {
     let cancelled = false;
