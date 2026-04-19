@@ -166,23 +166,21 @@ export default function MobileSearch() {
           />
         ) : (
           <>
-            <p className="text-[13px] mb-3 font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
-              {filtered.length} uzman bulundu
-            </p>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {filtered.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => navigate(`/mobile/specialist/${s.id}`)}
-                  className="w-full text-left rounded-[20px] p-3 flex items-center gap-3 m-pressable"
+                  className="w-full text-left rounded-[22px] p-2.5 flex items-center gap-3 m-pressable"
                   style={{
-                    background: "hsl(var(--m-ink))",
-                    boxShadow: "var(--m-shadow)",
+                    background: "hsl(var(--m-surface))",
+                    border: "1px solid hsl(var(--m-text-primary) / 0.06)",
+                    boxShadow: "0 1px 2px hsl(var(--m-text-primary) / 0.04)",
                   }}
                 >
                   {/* Square avatar with pastel frame */}
                   <div
-                    className="shrink-0 w-[88px] h-[88px] rounded-[16px] overflow-hidden flex items-center justify-center"
+                    className="shrink-0 w-[64px] h-[64px] rounded-[14px] overflow-hidden flex items-center justify-center"
                     style={{ background: "hsl(var(--m-tint-mint))" }}
                   >
                     {s.profile_picture ? (
@@ -194,7 +192,7 @@ export default function MobileSearch() {
                       />
                     ) : (
                       <span
-                        className="text-[32px] font-bold"
+                        className="text-[24px] font-bold"
                         style={{ color: "hsl(var(--m-ink))" }}
                       >
                         {s.name?.charAt(0) || "?"}
@@ -205,13 +203,13 @@ export default function MobileSearch() {
                   {/* Right side text */}
                   <div className="flex-1 min-w-0">
                     <h3
-                      className="text-[16px] font-bold leading-tight truncate"
-                      style={{ color: "hsl(var(--m-bg))", letterSpacing: "-0.01em" }}
+                      className="text-[15px] font-bold leading-tight truncate"
+                      style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.01em" }}
                     >
                       {s.name}
                     </h3>
 
-                    <div className="flex items-center gap-3 mt-1.5 text-[12px]">
+                    <div className="flex items-center gap-3 mt-1 text-[11.5px]">
                       <span
                         className="flex items-center gap-1 truncate"
                         style={{ color: "hsl(var(--m-accent))" }}
@@ -222,22 +220,22 @@ export default function MobileSearch() {
                       {s.rating ? (
                         <span
                           className="flex items-center gap-1 shrink-0"
-                          style={{ color: "hsl(var(--m-accent))" }}
+                          style={{ color: "hsl(var(--m-text-secondary))" }}
                         >
                           <Star
                             className="w-3 h-3"
                             style={{ color: "hsl(var(--m-warning))", fill: "hsl(var(--m-warning))" }}
                           />
-                          <span style={{ color: "hsl(var(--m-bg) / 0.85)" }}>
-                            Rating {Number(s.rating).toFixed(1)}
+                          <span style={{ color: "hsl(var(--m-text-secondary))" }}>
+                            {Number(s.rating).toFixed(1)}
                           </span>
                         </span>
                       ) : null}
                     </div>
 
                     <p
-                      className="text-[12px] mt-2 line-clamp-2"
-                      style={{ color: "hsl(var(--m-bg) / 0.65)" }}
+                      className="text-[11.5px] mt-1 line-clamp-1"
+                      style={{ color: "hsl(var(--m-text-secondary))" }}
                     >
                       {s.bio
                         ? s.bio
@@ -247,7 +245,7 @@ export default function MobileSearch() {
 
                   <ArrowRight
                     className="w-4 h-4 shrink-0"
-                    style={{ color: "hsl(var(--m-bg) / 0.5)" }}
+                    style={{ color: "hsl(var(--m-text-tertiary))" }}
                   />
                 </button>
               ))}
