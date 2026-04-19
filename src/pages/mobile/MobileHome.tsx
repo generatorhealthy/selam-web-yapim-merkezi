@@ -500,39 +500,59 @@ export default function MobileHome() {
               Tümü
             </button>
           </div>
-          <div className="flex gap-3 px-5 overflow-x-auto m-no-scrollbar pb-2">
-            {specialists.map((s, idx) => (
-              <button
-                key={s.id}
-                onClick={() => navigate(`/mobile/specialist/${s.id}`)}
-                className="shrink-0 flex flex-col items-center gap-1.5 m-pressable"
-                style={{ width: 64 }}
-              >
-                <div
-                  className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center ring-2"
-                  style={{
-                    background: `hsl(${PASTEL_TINTS[idx % PASTEL_TINTS.length]})`,
-                    boxShadow: "var(--m-shadow-sm)",
-                    // @ts-ignore - CSS custom prop for ring color
-                    "--tw-ring-color": "hsl(var(--m-surface))",
-                  } as React.CSSProperties}
+          <div className="flex gap-4 px-5 overflow-x-auto m-no-scrollbar pb-2">
+            {specialists.map((s, idx) => {
+              // Title'ları temizle (Dr., Uzm., Prof., Doç., Dan.)
+              const cleanName = (s.name || "")
+                .replace(/(Prof\.?|Doç\.?|Dr\.?|Uzm\.?|Dan\.?|Op\.?)\s*/gi, "")
+                .replace(/\s+/g, " ")
+                .trim();
+              const parts = cleanName.split(" ");
+              const firstName = parts[0] || "";
+              const lastName = parts.length > 1 ? parts.slice(1).join(" ") : "";
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => navigate(`/mobile/specialist/${s.id}`)}
+                  className="shrink-0 flex flex-col items-center gap-2 m-pressable"
+                  style={{ width: 72 }}
                 >
-                  {s.profile_picture ? (
-                    <img src={s.profile_picture} alt={s.name} loading="lazy" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-[18px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
-                      {s.name.charAt(0)}
-                    </span>
-                  )}
-                </div>
-                <span
-                  className="text-[10.5px] font-semibold text-center leading-tight line-clamp-1 w-full"
-                  style={{ color: "hsl(var(--m-text-primary))" }}
-                >
-                  {s.name.split(" ").slice(-1)[0]}
-                </span>
-              </button>
-            ))}
+                  <div
+                    className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center ring-2"
+                    style={{
+                      background: `hsl(${PASTEL_TINTS[idx % PASTEL_TINTS.length]})`,
+                      boxShadow: "var(--m-shadow-sm)",
+                      // @ts-ignore - CSS custom prop for ring color
+                      "--tw-ring-color": "hsl(var(--m-surface))",
+                    } as React.CSSProperties}
+                  >
+                    {s.profile_picture ? (
+                      <img src={s.profile_picture} alt={s.name} loading="lazy" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[18px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                        {cleanName.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-full text-center leading-tight">
+                    <div
+                      className="text-[11px] font-semibold truncate"
+                      style={{ color: "hsl(var(--m-text-primary))" }}
+                    >
+                      {firstName}
+                    </div>
+                    {lastName && (
+                      <div
+                        className="text-[11px] font-semibold truncate"
+                        style={{ color: "hsl(var(--m-text-primary))" }}
+                      >
+                        {lastName}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </section>
       )}
