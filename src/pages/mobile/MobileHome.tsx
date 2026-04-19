@@ -652,7 +652,7 @@ export default function MobileHome() {
           <div className="flex items-end justify-between px-5 mb-4">
             <h2 className="m-title">Uzman Yazıları</h2>
             <button
-              onClick={() => navigate("/blog")}
+              onClick={() => navigate("/mobile/blog")}
               className="text-[14px] font-semibold m-pressable"
               style={{ color: "hsl(var(--m-text-secondary))" }}
             >

@@ -41,6 +41,7 @@ const MobileSpecialistSupport = lazy(() => import("./pages/mobile/MobileSpeciali
 const MobileSpecialistSubscription = lazy(() => import("./pages/mobile/MobileSpecialistSubscription"));
 const MobileSpecialistPortfolio = lazy(() => import("./pages/mobile/MobileSpecialistPortfolio"));
 const MobileBlogDetail = lazy(() => import("./pages/mobile/MobileBlogDetail"));
+const MobileBlog = lazy(() => import("./pages/mobile/MobileBlog"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -191,6 +192,7 @@ const AppContent = () => {
               <Route path="specialist-support" element={<MobileSpecialistSupport />} />
               <Route path="specialist-subscription" element={<MobileSpecialistSubscription />} />
               <Route path="specialist-portfolio" element={<MobileSpecialistPortfolio />} />
+              <Route path="blog" element={<MobileBlog />} />
               <Route path="blog/:slug" element={<MobileBlogDetail />} />
               <Route path="register" element={<SpecialistRegistration />} />
               <Route path="signup" element={<MobileSignup />} />
