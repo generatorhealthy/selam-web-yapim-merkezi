@@ -6,6 +6,7 @@ import {
   Calendar, Clock, CheckCircle2, CheckCheck, FileSignature, ClipboardList,
   MessageSquare, FileText, CreditCard, Users, User, Bell, Settings,
   TrendingUp, Star, ChevronRight, Stethoscope, MapPin, Video, X, Check, Eye,
+  Share2, Copy, MessageCircle,
 } from "lucide-react";
 
 interface UpcomingAppt {
@@ -90,7 +91,7 @@ export default function MobileDashboard() {
 
         const { data: s } = await supabase
           .from("specialists")
-          .select("id, name, email, specialty, profile_picture, city, rating, reviews_count, experience")
+          .select("id, name, email, specialty, profile_picture, city, rating, reviews_count, experience, slug")
           .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
           .maybeSingle();
 
@@ -262,7 +263,7 @@ export default function MobileDashboard() {
         </div>
       </div>
 
-      {/* === Stat chip cards (horizontal pastel cards) === */}
+      {/* === Stat cards — modern pastel === */}
       <div className="mb-6">
         <div className="flex items-center justify-between px-5 mb-3">
           <h3 className="text-[18px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>Randevular</h3>
@@ -274,39 +275,176 @@ export default function MobileDashboard() {
             Tümü
           </button>
         </div>
-        <div className="flex gap-3 overflow-x-auto px-5 m-no-scrollbar pb-1">
+        <div className="px-5 grid grid-cols-3 gap-2.5">
           {[
-            { value: stats.pending, ...TONE_PALETTE[0], icon: Clock },
-            { value: stats.confirmed, ...TONE_PALETTE[1], icon: CheckCircle2 },
-            { value: stats.completed, ...TONE_PALETTE[2], icon: CheckCheck },
-            { value: stats.total, ...TONE_PALETTE[3], icon: Calendar },
+            {
+              value: stats.pending,
+              label: "Bekleyen",
+              icon: Clock,
+              iconBg: "hsl(38 95% 92%)",
+              iconColor: "hsl(28 85% 45%)",
+            },
+            {
+              value: stats.confirmed,
+              label: "Onaylanan",
+              icon: CheckCircle2,
+              iconBg: "hsl(217 91% 95%)",
+              iconColor: "hsl(217 91% 50%)",
+            },
+            {
+              value: stats.completed,
+              label: "Tamamlanan",
+              icon: CheckCheck,
+              iconBg: "hsl(142 65% 92%)",
+              iconColor: "hsl(142 65% 35%)",
+            },
           ].map((it, idx) => {
             const Icon = it.icon;
             return (
-              <div
+              <button
                 key={idx}
-                className="shrink-0 rounded-[22px] p-4 flex flex-col justify-between"
-                style={{ background: `hsl(${it.bg})`, width: 138, height: 110 }}
+                onClick={() => navigate("/mobile/specialist-appointments")}
+                className="rounded-[20px] p-3.5 flex flex-col items-start gap-2.5 m-pressable text-left"
+                style={{
+                  background: "hsl(var(--m-surface))",
+                  boxShadow: "var(--m-shadow-sm)",
+                  border: "1px solid hsl(var(--m-text-primary) / 0.04)",
+                }}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                    {it.label}
-                  </span>
-                  <Icon className="w-4 h-4" style={{ color: "hsl(var(--m-text-primary))" }} />
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center"
+                  style={{ background: it.iconBg }}
+                >
+                  <Icon className="w-4 h-4" style={{ color: it.iconColor }} strokeWidth={2.4} />
                 </div>
-                <div>
-                  <div className="text-[28px] font-bold leading-none" style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}>
+                <div className="w-full">
+                  <div
+                    className="text-[24px] font-bold leading-none"
+                    style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.02em" }}
+                  >
                     {it.value}
                   </div>
-                  <div className="text-[11px] mt-1" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                    bu dönem
+                  <div
+                    className="text-[11.5px] font-semibold mt-1.5"
+                    style={{ color: "hsl(var(--m-text-secondary))" }}
+                  >
+                    {it.label}
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
       </div>
+
+      {/* === Yorum İste — paylaşım kartı === */}
+      {spec && (() => {
+        const profileUrl = `https://doktorumol.com.tr/${spec.slug || spec.id}`;
+        const message = `Merhaba, ${spec.name} ile yaptığınız görüşme hakkında değerli yorumunuzu bekliyorum. Aşağıdaki linkten profilime ulaşıp yorum bırakabilirsiniz:\n\n${profileUrl}\n\nTeşekkür ederim 🙏`;
+        const wa = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        const sms = `sms:?&body=${encodeURIComponent(message)}`;
+        const copyLink = async () => {
+          try {
+            await navigator.clipboard.writeText(profileUrl);
+            toast({ title: "Profil linki kopyalandı" });
+          } catch {
+            toast({ title: "Kopyalanamadı", variant: "destructive" });
+          }
+        };
+        const nativeShare = async () => {
+          if ((navigator as any).share) {
+            try {
+              await (navigator as any).share({
+                title: `${spec.name} — Yorum bırakın`,
+                text: message,
+                url: profileUrl,
+              });
+              return;
+            } catch {}
+          }
+          copyLink();
+        };
+        return (
+          <div className="px-5 mb-6">
+            <div
+              className="rounded-[24px] p-5 relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, hsl(263 70% 58%) 0%, hsl(217 91% 60%) 100%)",
+                boxShadow: "0 14px 32px -10px hsl(263 70% 50% / 0.5)",
+              }}
+            >
+              <div
+                className="absolute -top-6 -right-6 w-28 h-28 rounded-full"
+                style={{ background: "hsl(0 0% 100% / 0.08)" }}
+              />
+              <div
+                className="absolute -bottom-8 -left-4 w-20 h-20 rounded-full"
+                style={{ background: "hsl(0 0% 100% / 0.06)" }}
+              />
+
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-2">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: "hsl(0 0% 100% / 0.2)" }}
+                  >
+                    <Star className="w-4 h-4 text-white" fill="white" />
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/85">
+                    Danışan Yorumu Topla
+                  </span>
+                </div>
+                <h3 className="text-[18px] font-bold text-white leading-tight mb-1.5">
+                  Profilinizi danışanlarınızla paylaşın
+                </h3>
+                <p className="text-[12.5px] text-white/80 mb-4 leading-snug">
+                  Daha fazla yorum, daha fazla güven ve daha çok danışan demektir.
+                </p>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <a
+                    href={wa}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable"
+                    style={{ background: "white" }}
+                  >
+                    <MessageCircle className="w-4 h-4" style={{ color: "hsl(142 70% 35%)" }} strokeWidth={2.5} />
+                    <span className="text-[12px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
+                      WhatsApp
+                    </span>
+                  </a>
+                  <a
+                    href={sms}
+                    className="h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable"
+                    style={{ background: "hsl(0 0% 100% / 0.18)" }}
+                  >
+                    <MessageSquare className="w-4 h-4 text-white" strokeWidth={2.5} />
+                    <span className="text-[12px] font-bold text-white">SMS</span>
+                  </a>
+                  <button
+                    onClick={copyLink}
+                    className="h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable"
+                    style={{ background: "hsl(0 0% 100% / 0.18)" }}
+                  >
+                    <Copy className="w-4 h-4 text-white" strokeWidth={2.5} />
+                    <span className="text-[12px] font-bold text-white">Kopyala</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={nativeShare}
+                  className="w-full mt-2.5 h-10 rounded-full flex items-center justify-center gap-1.5 m-pressable"
+                  style={{ background: "hsl(0 0% 0% / 0.18)" }}
+                >
+                  <Share2 className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                  <span className="text-[12px] font-semibold text-white">Diğer uygulamalarla paylaş</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* === Activity (weekly bars) + Daily goal ring === */}
       <div className="px-5 mb-6 grid grid-cols-5 gap-3">
