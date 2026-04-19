@@ -91,7 +91,7 @@ export default function MobileDashboard() {
 
         const { data: s } = await supabase
           .from("specialists")
-          .select("id, name, email, specialty, profile_picture, city, rating, reviews_count, experience")
+          .select("id, name, email, specialty, profile_picture, city, rating, reviews_count, experience, slug")
           .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
           .maybeSingle();
 
