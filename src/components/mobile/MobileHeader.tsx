@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface MobileHeaderProps {
@@ -7,7 +7,9 @@ interface MobileHeaderProps {
   largeTitle?: string;
   subtitle?: string;
   showBack?: boolean;
+  showForward?: boolean;
   onBack?: () => void;
+  onForward?: () => void;
   trailing?: ReactNode;
   sticky?: boolean;
 }
