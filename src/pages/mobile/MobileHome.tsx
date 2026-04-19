@@ -108,8 +108,7 @@ export default function MobileHome() {
             .from("specialists")
             .select("id,name,specialty,profile_picture,rating,experience,city,reviews_count")
             .eq("is_active", true)
-            .not("profile_picture", "is", null)
-            .limit(100),
+            .limit(500),
         ]);
 
         if (cancelled) return;
@@ -122,8 +121,15 @@ export default function MobileHome() {
           setReviews(shuffledReviews.slice(0, 5) as Review[]);
         }
         if (specialistsRes.data) {
-          const shuffled = [...specialistsRes.data].sort(() => Math.random() - 0.5);
-          setSpecialists(shuffled.slice(0, 30) as Specialist[]);
+          // Tüm aktif uzmanları al, fotoğrafı olanları öne çıkar, her yenilemede karıştır
+          const all = [...specialistsRes.data] as Specialist[];
+          const withPhoto = all.filter((s) => s.profile_picture);
+          const withoutPhoto = all.filter((s) => !s.profile_picture);
+          const shuffled = [
+            ...withPhoto.sort(() => Math.random() - 0.5),
+            ...withoutPhoto.sort(() => Math.random() - 0.5),
+          ];
+          setSpecialists(shuffled);
         }
       } catch (err) {
         console.error("MobileHome data error:", err);
@@ -265,11 +271,11 @@ export default function MobileHome() {
         </button>
       </section>
 
-      {/* Branches with specialist photos */}
+      {/* Specialist bubbles — small round avatars, all active specialists */}
       {specialists.length > 0 && (
         <section className="mb-7">
           <div className="flex items-end justify-between px-5 mb-4">
-            <h2 className="m-title">Uzmanları Keşfet</h2>
+            <h2 className="m-title">Uzmanlarımız</h2>
             <button
               onClick={() => navigate("/mobile/search")}
               className="text-[14px] font-semibold m-pressable"
@@ -278,40 +284,36 @@ export default function MobileHome() {
               Tümü
             </button>
           </div>
-          <div className="flex gap-4 px-5 overflow-x-auto m-no-scrollbar pb-2">
-            {specialists.slice(0, 30).map((s, idx) => (
+          <div className="flex gap-3 px-5 overflow-x-auto m-no-scrollbar pb-2">
+            {specialists.map((s, idx) => (
               <button
                 key={s.id}
                 onClick={() => navigate(`/mobile/specialist/${s.id}`)}
-                className="shrink-0 flex flex-col items-center gap-2 m-pressable"
-                style={{ width: 92 }}
+                className="shrink-0 flex flex-col items-center gap-1.5 m-pressable"
+                style={{ width: 64 }}
               >
                 <div
-                  className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center"
+                  className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center ring-2"
                   style={{
                     background: `hsl(${PASTEL_TINTS[idx % PASTEL_TINTS.length]})`,
-                    boxShadow: "var(--m-shadow)",
-                  }}
+                    boxShadow: "var(--m-shadow-sm)",
+                    // @ts-ignore - CSS custom prop for ring color
+                    "--tw-ring-color": "hsl(var(--m-surface))",
+                  } as React.CSSProperties}
                 >
                   {s.profile_picture ? (
-                    <img src={s.profile_picture} alt={s.name} className="w-full h-full object-cover" />
+                    <img src={s.profile_picture} alt={s.name} loading="lazy" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-[28px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                    <span className="text-[18px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
                       {s.name.charAt(0)}
                     </span>
                   )}
                 </div>
                 <span
-                  className="text-[12px] font-semibold text-center leading-tight line-clamp-2"
+                  className="text-[10.5px] font-semibold text-center leading-tight line-clamp-1 w-full"
                   style={{ color: "hsl(var(--m-text-primary))" }}
                 >
-                  {s.name}
-                </span>
-                <span
-                  className="text-[11px] text-center leading-tight line-clamp-1"
-                  style={{ color: "hsl(var(--m-text-secondary))" }}
-                >
-                  {s.specialty}
+                  {s.name.split(" ").slice(-1)[0]}
                 </span>
               </button>
             ))}
