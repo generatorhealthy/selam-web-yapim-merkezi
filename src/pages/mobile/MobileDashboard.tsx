@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   Calendar, Clock, CheckCircle2, CheckCheck, FileSignature, ClipboardList,
   MessageSquare, FileText, CreditCard, Users, User, Bell, Settings,
-  TrendingUp, Star, ChevronRight, Stethoscope, MapPin,
+  TrendingUp, Star, ChevronRight, Stethoscope, MapPin, Video, X, Check,
 } from "lucide-react";
 
 interface UpcomingAppt {
   id: string;
   patient_name: string;
+  patient_phone?: string | null;
+  patient_email?: string | null;
   appointment_date: string;
   appointment_time: string;
   appointment_type: string;
   status: string;
+  consultation_topic?: string | null;
 }
 
 const TONE_PALETTE = [
@@ -25,12 +29,58 @@ const TONE_PALETTE = [
 
 export default function MobileDashboard() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [spec, setSpec] = useState<any>(null);
   const [stats, setStats] = useState({ total: 0, pending: 0, confirmed: 0, completed: 0 });
   const [badges, setBadges] = useState({ appts: 0, blog: 0, support: 0 });
   const [upcoming, setUpcoming] = useState<UpcomingAppt[]>([]);
+  const [pendingReqs, setPendingReqs] = useState<UpcomingAppt[]>([]);
+  const [actingId, setActingId] = useState<string | null>(null);
   const [weekly, setWeekly] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+
+  const refreshAppts = async (specialistId: string) => {
+    const { data: appts } = await supabase
+      .from("appointments")
+      .select("id, patient_name, patient_phone, patient_email, appointment_date, appointment_time, appointment_type, status, consultation_topic")
+      .eq("specialist_id", specialistId);
+
+    const list = appts || [];
+    const total = list.length;
+    const pending = list.filter((a) => a.status === "pending").length;
+    const confirmed = list.filter((a) => a.status === "confirmed").length;
+    const completed = list.filter((a) => a.status === "completed").length;
+    setStats({ total, pending, confirmed, completed });
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const sortKey = (a: any) => `${a.appointment_date}T${a.appointment_time}`;
+
+    // Pending requests (any date), newest opportunity first
+    const pendings = list
+      .filter((a) => a.status === "pending")
+      .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
+      .slice(0, 6);
+    setPendingReqs(pendings as UpcomingAppt[]);
+
+    // Upcoming confirmed only (today onwards)
+    const up = list
+      .filter((a) => a.appointment_date >= todayStr && (a.status === "confirmed" || a.status === "completed"))
+      .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
+      .slice(0, 6);
+    setUpcoming(up as UpcomingAppt[]);
+
+    // Weekly buckets (last 7 days incl today)
+    const buckets = new Array(7).fill(0) as number[];
+    const now = new Date();
+    list.forEach((a) => {
+      const d = new Date(a.appointment_date);
+      const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
+      if (diff >= 0 && diff < 7) buckets[6 - diff] += 1;
+    });
+    setWeekly(buckets);
+
+    return { pending };
+  };
 
   useEffect(() => {
     (async () => {
@@ -47,35 +97,7 @@ export default function MobileDashboard() {
         if (!s) { navigate("/mobile/login"); return; }
         setSpec(s);
 
-        const { data: appts } = await supabase
-          .from("appointments")
-          .select("id, patient_name, appointment_date, appointment_time, appointment_type, status")
-          .eq("specialist_id", s.id);
-
-        const list = appts || [];
-        const total = list.length;
-        const pending = list.filter((a) => a.status === "pending").length;
-        const confirmed = list.filter((a) => a.status === "confirmed").length;
-        const completed = list.filter((a) => a.status === "completed").length;
-        setStats({ total, pending, confirmed, completed });
-
-        // Upcoming (today onward, not cancelled), sorted asc
-        const todayStr = new Date().toISOString().slice(0, 10);
-        const up = list
-          .filter((a) => a.appointment_date >= todayStr && a.status !== "cancelled")
-          .sort((a, b) => (a.appointment_date + a.appointment_time).localeCompare(b.appointment_date + b.appointment_time))
-          .slice(0, 6);
-        setUpcoming(up as UpcomingAppt[]);
-
-        // Weekly buckets (last 7 days incl today)
-        const buckets = new Array(7).fill(0) as number[];
-        const now = new Date();
-        list.forEach((a) => {
-          const d = new Date(a.appointment_date);
-          const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
-          if (diff >= 0 && diff < 7) buckets[6 - diff] += 1;
-        });
-        setWeekly(buckets);
+        const result = await refreshAppts(s.id);
 
         const { count: openTickets } = await supabase
           .from("support_tickets" as any)
@@ -89,12 +111,32 @@ export default function MobileDashboard() {
           .eq("specialist_id", s.id)
           .eq("read", false);
 
-        setBadges({ appts: pending, blog: unreadBlog || 0, support: openTickets || 0 });
+        setBadges({ appts: result?.pending || 0, blog: unreadBlog || 0, support: openTickets || 0 });
       } finally {
         setLoading(false);
       }
     })();
   }, [navigate]);
+
+  const handleAct = async (id: string, action: "confirmed" | "cancelled") => {
+    if (actingId) return;
+    setActingId(id);
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status: action })
+        .eq("id", id);
+      if (error) throw error;
+      toast({
+        title: action === "confirmed" ? "Randevu onaylandı" : "Randevu reddedildi",
+      });
+      if (spec?.id) await refreshAppts(spec.id);
+    } catch (e: any) {
+      toast({ title: "Hata", description: e?.message || "İşlem yapılamadı", variant: "destructive" });
+    } finally {
+      setActingId(null);
+    }
+  };
 
   const initial = (spec?.name || "U").charAt(0).toUpperCase();
   const totalNotif = badges.appts + badges.blog + badges.support;
@@ -336,6 +378,109 @@ export default function MobileDashboard() {
           </div>
         </div>
       </div>
+
+      {/* === Upcoming appointments === */}
+      {/* === Pending Booking Requests === */}
+      {pendingReqs.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between px-5 mb-3">
+            <h3 className="text-[18px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
+              Randevu Talepleri
+            </h3>
+            <button
+              onClick={() => navigate("/mobile/specialist-appointments")}
+              className="text-[12px] font-semibold px-3 py-1.5 rounded-full m-pressable"
+              style={{ background: "hsl(var(--m-accent))", color: "hsl(var(--m-bg))" }}
+            >
+              Tümü
+            </button>
+          </div>
+
+          <div className="px-5 flex gap-3 overflow-x-auto m-no-scrollbar pb-1 snap-x snap-mandatory">
+            {pendingReqs.map((a) => {
+              const d = new Date(a.appointment_date);
+              const dateLabel = d.toLocaleDateString("tr-TR", { weekday: "short", day: "numeric", month: "short" });
+              const isOnline = a.appointment_type === "online";
+              const acting = actingId === a.id;
+              return (
+                <div
+                  key={a.id}
+                  className="snap-start shrink-0 w-[78%] rounded-[24px] p-3"
+                  style={{ background: "hsl(var(--m-ink))", boxShadow: "var(--m-shadow-md)" }}
+                >
+                  <div
+                    className="flex items-center gap-2 h-11 px-4 rounded-2xl"
+                    style={{ background: "hsl(var(--m-tint-mint))" }}
+                  >
+                    <Clock className="w-4 h-4" style={{ color: "hsl(var(--m-ink))" }} />
+                    <span className="text-[13.5px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                      {dateLabel}
+                    </span>
+                    <span style={{ color: "hsl(var(--m-accent))" }}>•</span>
+                    <span className="text-[13.5px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                      {a.appointment_time?.slice(0, 5)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 mt-3 px-1">
+                    <div
+                      className="relative w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: "hsl(var(--m-tint-lilac))" }}
+                    >
+                      <span className="text-[16px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                        {(a.patient_name || "?").charAt(0).toUpperCase()}
+                      </span>
+                      <div
+                        className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ background: "hsl(var(--m-tint-mint))", border: "2px solid hsl(var(--m-ink))" }}
+                      >
+                        {isOnline ? (
+                          <Video className="w-2.5 h-2.5" style={{ color: "hsl(var(--m-ink))" }} />
+                        ) : (
+                          <User className="w-2.5 h-2.5" style={{ color: "hsl(var(--m-ink))" }} />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[15px] font-bold truncate" style={{ color: "hsl(var(--m-bg))" }}>
+                        {a.patient_name}
+                      </div>
+                      <div className="text-[11.5px] truncate" style={{ color: "hsl(var(--m-bg) / 0.6)" }}>
+                        {a.consultation_topic || (isOnline ? "Online görüşme" : "Yüz yüze görüşme")}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      disabled={acting}
+                      onClick={() => handleAct(a.id, "cancelled")}
+                      className="flex-1 h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable disabled:opacity-50"
+                      style={{
+                        background: "transparent",
+                        border: "1px solid hsl(var(--m-bg) / 0.2)",
+                        color: "hsl(var(--m-bg))",
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                      <span className="text-[13px] font-semibold">Reddet</span>
+                    </button>
+                    <button
+                      disabled={acting}
+                      onClick={() => handleAct(a.id, "confirmed")}
+                      className="flex-1 h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable disabled:opacity-50"
+                      style={{ background: "hsl(var(--m-accent))", color: "hsl(var(--m-bg))" }}
+                    >
+                      <Check className="w-4 h-4" />
+                      <span className="text-[13px] font-semibold">Kabul Et</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* === Upcoming appointments === */}
       <div className="mb-6">
