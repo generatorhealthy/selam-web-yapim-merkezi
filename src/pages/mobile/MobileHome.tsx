@@ -210,6 +210,11 @@ export default function MobileHome() {
           ];
           setSpecialists(shuffled);
         }
+        if (blogsRes.data) {
+          // Her sayfa yenilemesinde rastgele 8 blog göster (farklı uzmanlardan)
+          const shuffledBlogs = [...blogsRes.data].sort(() => Math.random() - 0.5);
+          setBlogs(shuffledBlogs.slice(0, 8) as BlogPost[]);
+        }
       } catch (err) {
         console.error("MobileHome data error:", err);
       } finally {
