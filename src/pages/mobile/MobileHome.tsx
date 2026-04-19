@@ -15,6 +15,7 @@ import {
   Clock,
   Send,
   MessageCircle,
+  BookOpen,
 } from "lucide-react";
 import { getRecentlyViewed, type RecentSpecialist } from "@/components/RecentlyViewedSpecialists";
 import testAnxiety from "@/assets/test-anxiety.jpg";
