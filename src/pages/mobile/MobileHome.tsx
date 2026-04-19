@@ -189,6 +189,17 @@ export default function MobileHome() {
             .limit(60),
         ]);
 
+        let specialistRows = (specialistsRes.data || []) as Specialist[];
+
+        if (specialistsRes.error || specialistRows.length === 0) {
+          const { data: rpcSpecialists, error: rpcSpecialistsError } = await supabase.rpc("get_public_specialists");
+          if (rpcSpecialistsError) {
+            console.error("MobileHome specialists fallback error:", rpcSpecialistsError);
+          } else {
+            specialistRows = (rpcSpecialists || []) as Specialist[];
+          }
+        }
+
         if (cancelled) return;
         if (testsRes.data) {
           const shuffledTests = [...testsRes.data].sort(() => Math.random() - 0.5);
@@ -198,9 +209,9 @@ export default function MobileHome() {
           const shuffledReviews = [...reviewsRes.data].sort(() => Math.random() - 0.5);
           setReviews(shuffledReviews.slice(0, 5) as Review[]);
         }
-        if (specialistsRes.data) {
+        if (specialistRows.length > 0) {
           // Tüm aktif uzmanları al, fotoğrafı olanları öne çıkar, her yenilemede karıştır
-          const all = [...specialistsRes.data] as Specialist[];
+          const all = [...specialistRows] as Specialist[];
           const withPhoto = all.filter((s) => s.profile_picture);
           const withoutPhoto = all.filter((s) => !s.profile_picture);
           const shuffled = [
