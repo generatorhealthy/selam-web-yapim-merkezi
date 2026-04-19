@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,16 @@ import { Helmet } from "react-helmet-async";
 export default function PatientSignup() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
   const [acceptedDisclosure, setAcceptedDisclosure] = useState(false);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((s) => ({ ...s, [k]: e.target.value }));
+
+  useEffect(() => {
+    const prefilledEmail = searchParams.get("email");
+    if (prefilledEmail) setForm((s) => ({ ...s, email: prefilledEmail }));
+  }, [searchParams]);
 
   const handleSignup = async () => {
     if (!form.email || !form.password || !form.firstName) {
@@ -113,7 +119,7 @@ export default function PatientSignup() {
 
             <Button className="w-full" onClick={handleSignup} disabled={loading || !acceptedDisclosure}>{loading ? "Lütfen bekleyin..." : "Hesap Oluştur"}</Button>
             <p className="text-center text-sm text-muted-foreground">
-              Zaten hesabınız var mı? <Link to="/danisan-giris" className="text-primary font-semibold">Giriş yap</Link>
+              Zaten hesabınız var mı? <Link to="/giris-yap" className="text-primary font-semibold">Giriş yap</Link>
             </p>
             <p className="text-center text-xs text-muted-foreground">
               Uzman mısınız? <Link to="/kayit-ol" className="text-primary">Uzman olarak kayıt olun</Link>

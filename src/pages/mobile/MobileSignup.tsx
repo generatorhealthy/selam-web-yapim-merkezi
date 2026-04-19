@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
@@ -8,6 +8,7 @@ import { Mail, Lock, User, Phone } from "lucide-react";
 export default function MobileSignup() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [acceptedDisclosure, setAcceptedDisclosure] = useState(false);
   const [form, setForm] = useState({
@@ -17,6 +18,11 @@ export default function MobileSignup() {
     phone: "",
     password: "",
   });
+
+  useEffect(() => {
+    const prefilledEmail = searchParams.get("email");
+    if (prefilledEmail) setForm((s) => ({ ...s, email: prefilledEmail }));
+  }, [searchParams]);
 
   const setField = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((s) => ({ ...s, [k]: e.target.value }));

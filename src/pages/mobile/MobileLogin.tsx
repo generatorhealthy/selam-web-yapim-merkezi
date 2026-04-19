@@ -96,7 +96,19 @@ export default function MobileLogin() {
         email: e.trim(),
         password: p,
       });
-      if (error) throw error;
+      if (error) {
+        // If email not registered, send to mobile signup
+        const { data: existingPatient } = await supabase
+          .from("patient_profiles").select("id").eq("email", e.trim()).maybeSingle();
+        const { data: existingSpecialist } = await supabase
+          .from("specialists").select("id").eq("email", e.trim()).maybeSingle();
+        if (!existingPatient && !existingSpecialist) {
+          toast({ title: "Hesap Bulunamadı", description: "Üye olma sayfasına yönlendiriliyorsunuz..." });
+          navigate(`/mobile/signup?email=${encodeURIComponent(e.trim())}`);
+          return;
+        }
+        throw error;
+      }
       if (!data.user) throw new Error("Kullanıcı bulunamadı");
 
       const route = await resolvePostLoginRoute(data.user.id, e.trim());
