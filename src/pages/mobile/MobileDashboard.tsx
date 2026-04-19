@@ -40,34 +40,64 @@ export default function MobileDashboard() {
   const [weekly, setWeekly] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
 
   const refreshAppts = async (specialistId: string) => {
-          .from("appointments")
-          .select("id, patient_name, appointment_date, appointment_time, appointment_type, status")
-          .eq("specialist_id", s.id);
+    const { data: appts } = await supabase
+      .from("appointments")
+      .select("id, patient_name, patient_phone, patient_email, appointment_date, appointment_time, appointment_type, status, consultation_topic")
+      .eq("specialist_id", specialistId);
 
-        const list = appts || [];
-        const total = list.length;
-        const pending = list.filter((a) => a.status === "pending").length;
-        const confirmed = list.filter((a) => a.status === "confirmed").length;
-        const completed = list.filter((a) => a.status === "completed").length;
-        setStats({ total, pending, confirmed, completed });
+    const list = appts || [];
+    const total = list.length;
+    const pending = list.filter((a) => a.status === "pending").length;
+    const confirmed = list.filter((a) => a.status === "confirmed").length;
+    const completed = list.filter((a) => a.status === "completed").length;
+    setStats({ total, pending, confirmed, completed });
 
-        // Upcoming (today onward, not cancelled), sorted asc
-        const todayStr = new Date().toISOString().slice(0, 10);
-        const up = list
-          .filter((a) => a.appointment_date >= todayStr && a.status !== "cancelled")
-          .sort((a, b) => (a.appointment_date + a.appointment_time).localeCompare(b.appointment_date + b.appointment_time))
-          .slice(0, 6);
-        setUpcoming(up as UpcomingAppt[]);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const sortKey = (a: any) => `${a.appointment_date}T${a.appointment_time}`;
 
-        // Weekly buckets (last 7 days incl today)
-        const buckets = new Array(7).fill(0) as number[];
-        const now = new Date();
-        list.forEach((a) => {
-          const d = new Date(a.appointment_date);
-          const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
-          if (diff >= 0 && diff < 7) buckets[6 - diff] += 1;
-        });
-        setWeekly(buckets);
+    // Pending requests (any date), newest opportunity first
+    const pendings = list
+      .filter((a) => a.status === "pending")
+      .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
+      .slice(0, 6);
+    setPendingReqs(pendings as UpcomingAppt[]);
+
+    // Upcoming confirmed only (today onwards)
+    const up = list
+      .filter((a) => a.appointment_date >= todayStr && (a.status === "confirmed" || a.status === "completed"))
+      .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
+      .slice(0, 6);
+    setUpcoming(up as UpcomingAppt[]);
+
+    // Weekly buckets (last 7 days incl today)
+    const buckets = new Array(7).fill(0) as number[];
+    const now = new Date();
+    list.forEach((a) => {
+      const d = new Date(a.appointment_date);
+      const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
+      if (diff >= 0 && diff < 7) buckets[6 - diff] += 1;
+    });
+    setWeekly(buckets);
+
+    return { pending };
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) { navigate("/mobile/login"); return; }
+
+        const { data: s } = await supabase
+          .from("specialists")
+          .select("id, name, email, specialty, profile_picture, city, rating, reviews_count, experience")
+          .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
+          .maybeSingle();
+
+        if (!s) { navigate("/mobile/login"); return; }
+        setSpec(s);
+
+        const result = await refreshAppts(s.id);
 
         const { count: openTickets } = await supabase
           .from("support_tickets" as any)
@@ -81,12 +111,32 @@ export default function MobileDashboard() {
           .eq("specialist_id", s.id)
           .eq("read", false);
 
-        setBadges({ appts: pending, blog: unreadBlog || 0, support: openTickets || 0 });
+        setBadges({ appts: result?.pending || 0, blog: unreadBlog || 0, support: openTickets || 0 });
       } finally {
         setLoading(false);
       }
     })();
   }, [navigate]);
+
+  const handleAct = async (id: string, action: "confirmed" | "cancelled") => {
+    if (actingId) return;
+    setActingId(id);
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status: action })
+        .eq("id", id);
+      if (error) throw error;
+      toast({
+        title: action === "confirmed" ? "Randevu onaylandı" : "Randevu reddedildi",
+      });
+      if (spec?.id) await refreshAppts(spec.id);
+    } catch (e: any) {
+      toast({ title: "Hata", description: e?.message || "İşlem yapılamadı", variant: "destructive" });
+    } finally {
+      setActingId(null);
+    }
+  };
 
   const initial = (spec?.name || "U").charAt(0).toUpperCase();
   const totalNotif = badges.appts + badges.blog + badges.support;
