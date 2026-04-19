@@ -12,6 +12,7 @@ export default function MobileSpecialistSubscription() {
   const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         const {
@@ -45,7 +46,8 @@ export default function MobileSpecialistSubscription() {
         const specialistName = spec?.name?.trim() || "";
         const emailCandidates = Array.from(new Set([sessionEmail, specialistEmail].filter(Boolean)));
 
-        const [autoByEmailRes, autoByNameRes, ordersByEmailRes, ordersByNameRes, edgeRes] = await Promise.all([
+        // 1) HIZLI: Sadece DB sorguları paralel — edge function'u dahil etme
+        const [autoByEmailRes, autoByNameRes, ordersByEmailRes, ordersByNameRes] = await Promise.all([
           emailCandidates.length > 0
             ? supabase
                 .from("automatic_orders")
@@ -81,42 +83,58 @@ export default function MobileSpecialistSubscription() {
                 .ilike("customer_name", `%${specialistName}%`)
                 .is("deleted_at", null)
                 .order("created_at", { ascending: false })
-            : Promise.resolve({ data: [] }),
-          specialistEmail || specialistName
-            ? supabase.functions.invoke("get-specialist-contracts", {
-                body: {
-                  email: specialistEmail || null,
-                  name: specialistName || null,
-                },
-              })
             : Promise.resolve({ data: [] }),
         ]);
+
+        if (cancelled) return;
 
         setSub(autoByEmailRes.data || autoByNameRes.data || null);
 
         const merged = new Map<string, any>();
-        [
-          ...(ordersByEmailRes.data || []),
-          ...(ordersByNameRes.data || []),
-          ...(Array.isArray(edgeRes.data) ? edgeRes.data : []),
-        ].forEach((order: any) => {
-          const key = order.id || `${order.created_at}-${order.amount}-${order.package_name}-${order.subscription_month || ""}`;
-          if (!merged.has(key)) merged.set(key, order);
-        });
+        const mergeOrders = (list: any[]) => {
+          list.forEach((order: any) => {
+            const key = order.id || `${order.created_at}-${order.amount}-${order.package_name}-${order.subscription_month || ""}`;
+            if (!merged.has(key)) merged.set(key, order);
+          });
+        };
+        mergeOrders(ordersByEmailRes.data || []);
+        mergeOrders(ordersByNameRes.data || []);
 
         setOrders(
           Array.from(merged.values()).sort(
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
           ),
         );
+        setLoading(false);
+
+        // 2) ARKA PLANDA: Edge function ile ek kayıtları getir, varsa birleştir
+        if (specialistEmail || specialistName) {
+          try {
+            const { data: edgeData } = await supabase.functions.invoke("get-specialist-contracts", {
+              body: {
+                email: specialistEmail || null,
+                name: specialistName || null,
+              },
+            });
+            if (cancelled || !Array.isArray(edgeData) || edgeData.length === 0) return;
+            mergeOrders(edgeData);
+            setOrders(
+              Array.from(merged.values()).sort(
+                (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+              ),
+            );
+          } catch {}
+        }
       } catch (error) {
         console.error("MobileSpecialistSubscription error:", error);
-        setSub(null);
-        setOrders([]);
-      } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setSub(null);
+          setOrders([]);
+          setLoading(false);
+        }
       }
     })();
+    return () => { cancelled = true; };
   }, [navigate]);
 
   return (
