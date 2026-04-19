@@ -24,16 +24,31 @@ export default function MobileBooking() {
   const [phone, setPhone] = useState("");
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [viewMonth, setViewMonth] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d;
+  });
 
-  // Generate next 14 days
-  const days = useMemo(() => {
-    const arr: Date[] = [];
-    for (let i = 0; i < 14; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      arr.push(d);
-    }
-    return arr;
+  // Generate calendar grid for current viewMonth (weeks starting Mon)
+  const calendarCells = useMemo(() => {
+    const year = viewMonth.getFullYear();
+    const month = viewMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    // Monday as first day: getDay() Sun=0..Sat=6 → shift
+    const startOffset = (firstDay.getDay() + 6) % 7;
+    const cells: (Date | null)[] = [];
+    for (let i = 0; i < startOffset; i++) cells.push(null);
+    for (let d = 1; d <= lastDay.getDate(); d++) cells.push(new Date(year, month, d));
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }, [viewMonth]);
+
+  const today = useMemo(() => {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return t;
   }, []);
 
   useEffect(() => {
