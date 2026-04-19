@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Calendar, Clock, CheckCircle2, CheckCheck, FileSignature, ClipboardList,
   MessageSquare, FileText, CreditCard, Users, User, Bell, Settings,
-  TrendingUp, Star, ChevronRight, Stethoscope, MapPin, Video, X, Check,
+  TrendingUp, Star, ChevronRight, Stethoscope, MapPin, Video, X, Check, Eye,
 } from "lucide-react";
 
 interface UpcomingAppt {
@@ -573,6 +573,7 @@ export default function MobileDashboard() {
         <div className="grid grid-cols-4 gap-3">
           {[
             { icon: User, label: "Profil", to: "/mobile/specialist-profile" },
+            { icon: Eye, label: "Profilim", to: spec?.id ? `/mobile/specialist/${spec.id}` : "/mobile/specialist-profile" },
             { icon: FileSignature, label: "Sözleşme", to: "/mobile/specialist-contracts" },
             { icon: ClipboardList, label: "Testler", to: "/mobile/tests" },
             { icon: MessageSquare, label: "Destek", to: "/mobile/specialist-support", badge: badges.support },
