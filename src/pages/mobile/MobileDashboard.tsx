@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Calendar, Clock, CheckCircle2, CheckCheck, FileSignature, ClipboardList,
   MessageSquare, FileText, CreditCard, Users, User, Bell, Settings,
-  TrendingUp, Star, ChevronRight, Stethoscope, MapPin, Video, X, Check,
+  TrendingUp, Star, ChevronRight, Stethoscope, MapPin, Video, X, Check, Eye,
 } from "lucide-react";
 
 interface UpcomingAppt {
