@@ -12,17 +12,12 @@ export default function MobileSpecialistContracts() {
   const [viewer, setViewer] = useState<{ title: string; html: string } | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { navigate("/mobile/login"); return; }
 
-      // Specialist adını da al (edge function ad bazlı eşleşme yapar)
-      const { data: spec } = await supabase
-        .from("specialists")
-        .select("name")
-        .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
-        .maybeSingle();
-
+      // 1) HIZLI: Doğrudan DB sorgusu — anında göster
       const { data } = await supabase
         .from("orders")
         .select("*")
@@ -31,23 +26,31 @@ export default function MobileSpecialistContracts() {
         .is("deleted_at", null)
         .order("created_at", { ascending: true });
 
-      // Edge function — daha geniş eşleşme (email + name)
-      let merged: any[] = data || [];
+      if (cancelled) return;
+      const initial = (data || []).slice(0, 1);
+      setContracts(initial);
+      setLoading(false);
+
+      // 2) ARKA PLANDA: Edge function ile genişletilmiş eşleşme — gelirse birleştir
       try {
+        const { data: spec } = await supabase
+          .from("specialists")
+          .select("name")
+          .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
+          .maybeSingle();
+
         const { data: edgeData } = await supabase.functions.invoke("get-specialist-contracts", {
           body: { email: session.user.email, name: spec?.name || null },
         });
-        if (Array.isArray(edgeData)) {
-          merged = Array.from(
-            new Map([...(merged as any[]), ...(edgeData as any[])].map((o: any) => [o.id, o])).values(),
-          ).sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-        }
-      } catch {}
+        if (cancelled || !Array.isArray(edgeData) || edgeData.length === 0) return;
 
-      // Web ile aynı: sadece ilk (en eski) sözleşmeyi göster
-      setContracts(merged.slice(0, 1));
-      setLoading(false);
+        const merged = Array.from(
+          new Map([...(data || []), ...edgeData].map((o: any) => [o.id, o])).values(),
+        ).sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        setContracts(merged.slice(0, 1));
+      } catch {}
     })();
+    return () => { cancelled = true; };
   }, [navigate]);
 
   const openContract = (content: string | null, title: string) => {
