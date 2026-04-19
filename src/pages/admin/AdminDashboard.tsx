@@ -787,10 +787,10 @@ const AdminDashboard = () => {
           </div>
         </div>
         
-        {/* Floating Doki Bubble */}
+        {/* Floating Doki Bubble - hidden on mobile */}
         <div 
           onClick={() => window.open('/divan_paneli/ai-assistant', '_blank')}
-          className="fixed bottom-8 right-8 z-50 cursor-pointer group"
+          className="hidden md:block fixed bottom-8 right-8 z-50 cursor-pointer group"
         >
           <div className="relative">
             {/* Main bubble */}
