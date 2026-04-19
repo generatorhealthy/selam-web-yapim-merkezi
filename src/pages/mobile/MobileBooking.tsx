@@ -163,61 +163,128 @@ export default function MobileBooking() {
         )}
 
         {step === 2 && (
-          <div className="grid grid-cols-4 gap-2">
-            {days.map((d) => {
-              const isSel = selectedDate && formatDateKey(d) === formatDateKey(selectedDate);
-              return (
+          <div className="space-y-5">
+            {/* Month header with arrows */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-[20px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
+                {viewMonth.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}
+              </h3>
+              <div className="flex gap-2">
                 <button
-                  key={d.toISOString()}
-                  onClick={() => setSelectedDate(d)}
-                  className="aspect-square rounded-2xl flex flex-col items-center justify-center m-pressable"
-                  style={{
-                    background: isSel ? "hsl(var(--m-accent))" : "hsl(var(--m-surface))",
-                    color: isSel ? "white" : "hsl(var(--m-text-primary))",
-                    boxShadow: isSel ? undefined : "var(--m-shadow)",
-                  }}
+                  onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1))}
+                  className="w-10 h-10 rounded-full flex items-center justify-center m-pressable"
+                  style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow-sm)" }}
+                  aria-label="Önceki ay"
                 >
-                  <span className="text-[11px] font-medium opacity-70">
-                    {d.toLocaleDateString("tr-TR", { weekday: "short" })}
-                  </span>
-                  <span className="text-[20px] font-bold">{d.getDate()}</span>
-                  <span className="text-[10px] opacity-70">
-                    {d.toLocaleDateString("tr-TR", { month: "short" })}
-                  </span>
+                  <ChevronLeft className="w-5 h-5" style={{ color: "hsl(var(--m-text-primary))" }} />
                 </button>
-              );
-            })}
+                <button
+                  onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1))}
+                  className="w-10 h-10 rounded-full flex items-center justify-center m-pressable"
+                  style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow-sm)" }}
+                  aria-label="Sonraki ay"
+                >
+                  <ChevronRight className="w-5 h-5" style={{ color: "hsl(var(--m-text-primary))" }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Weekday header */}
+            <div className="grid grid-cols-7 gap-2">
+              {["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map((w) => (
+                <div
+                  key={w}
+                  className="text-center text-[11px] font-semibold"
+                  style={{ color: "hsl(var(--m-text-tertiary))" }}
+                >
+                  {w}
+                </div>
+              ))}
+            </div>
+
+            {/* Days grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {calendarCells.map((d, i) => {
+                if (!d) return <div key={`e-${i}`} />;
+                const isPast = d < today;
+                const isSel = selectedDate && formatDateKey(d) === formatDateKey(selectedDate);
+                const isToday = formatDateKey(d) === formatDateKey(today);
+                return (
+                  <button
+                    key={d.toISOString()}
+                    disabled={isPast}
+                    onClick={() => setSelectedDate(d)}
+                    className="aspect-square rounded-2xl flex items-center justify-center m-pressable disabled:opacity-30"
+                    style={{
+                      background: isSel ? "hsl(var(--m-accent))" : "hsl(var(--m-surface))",
+                      color: isSel ? "white" : "hsl(var(--m-text-primary))",
+                      boxShadow: isSel ? "0 6px 16px -4px hsl(var(--m-accent) / 0.5)" : "var(--m-shadow-sm)",
+                      border: isToday && !isSel ? "1.5px solid hsl(var(--m-accent))" : undefined,
+                    }}
+                  >
+                    <span className="text-[16px] font-bold">{d.getDate()}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {step === 3 && (
-          <div className="grid grid-cols-3 gap-2">
-            {availableSlots.length === 0 ? (
-              <p className="col-span-3 text-center py-8" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                Bu güne uygun saat yok
-              </p>
-            ) : (
-              availableSlots.map((t) => {
-                const taken = bookedSlots.includes(t);
-                const sel = selectedTime === t;
-                return (
-                  <button
-                    key={t}
-                    disabled={taken}
-                    onClick={() => setSelectedTime(t)}
-                    className="h-12 rounded-xl text-[14px] font-semibold m-pressable disabled:opacity-30"
-                    style={{
-                      background: sel ? "hsl(var(--m-accent))" : "hsl(var(--m-surface))",
-                      color: sel ? "white" : "hsl(var(--m-text-primary))",
-                      textDecoration: taken ? "line-through" : undefined,
-                      boxShadow: sel ? undefined : "var(--m-shadow)",
-                    }}
-                  >
-                    {t}
-                  </button>
-                );
-              })
+          <div className="space-y-4">
+            {selectedDate && (
+              <div
+                className="rounded-2xl p-4 flex items-center justify-between"
+                style={{ background: "hsl(var(--m-accent-soft))" }}
+              >
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "hsl(var(--m-accent))" }}>
+                    Seçilen tarih
+                  </div>
+                  <div className="text-[16px] font-bold mt-0.5" style={{ color: "hsl(var(--m-text-primary))" }}>
+                    {selectedDate.toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setStep(2)}
+                  className="text-[12px] font-semibold m-pressable"
+                  style={{ color: "hsl(var(--m-accent))" }}
+                >
+                  Değiştir
+                </button>
+              </div>
             )}
+            <div className="text-[13px] font-semibold" style={{ color: "hsl(var(--m-text-secondary))" }}>
+              Uygun saatler
+            </div>
+            <div className="grid grid-cols-3 gap-2.5">
+              {availableSlots.length === 0 ? (
+                <p className="col-span-3 text-center py-8" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  Bu güne uygun saat yok
+                </p>
+              ) : (
+                availableSlots.map((t) => {
+                  const taken = bookedSlots.includes(t);
+                  const sel = selectedTime === t;
+                  return (
+                    <button
+                      key={t}
+                      disabled={taken}
+                      onClick={() => setSelectedTime(t)}
+                      className="h-12 rounded-full text-[14px] font-semibold m-pressable disabled:opacity-30"
+                      style={{
+                        background: sel ? "hsl(var(--m-accent))" : "hsl(var(--m-surface))",
+                        color: sel ? "white" : "hsl(var(--m-text-primary))",
+                        textDecoration: taken ? "line-through" : undefined,
+                        boxShadow: sel ? "0 6px 16px -4px hsl(var(--m-accent) / 0.5)" : "var(--m-shadow-sm)",
+                      }}
+                    >
+                      {t}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
 
