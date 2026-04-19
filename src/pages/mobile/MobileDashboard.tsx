@@ -11,10 +11,13 @@ import {
 interface UpcomingAppt {
   id: string;
   patient_name: string;
+  patient_phone?: string | null;
+  patient_email?: string | null;
   appointment_date: string;
   appointment_time: string;
   appointment_type: string;
   status: string;
+  consultation_topic?: string | null;
 }
 
 const TONE_PALETTE = [
