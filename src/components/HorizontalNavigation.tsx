@@ -420,21 +420,12 @@ export function HorizontalNavigation() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2">
-                        Giriş <ChevronDown className="ml-1 h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 bg-white z-[60]">
-                      <DropdownMenuItem onClick={() => navigate('/danisan-giris')}>
-                        <User className="mr-2 h-4 w-4" /> Danışan Girişi
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/giris-yap')}>
-                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Girişi
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button 
+                    onClick={() => navigate('/giris-yap')}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2"
+                  >
+                    Giriş Yap
+                  </Button>
                 </div>
               )}
             </div>
