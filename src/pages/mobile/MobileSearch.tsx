@@ -29,13 +29,6 @@ interface Specialist {
 
 type FilterMode = "all" | "online" | "face";
 
-const PASTEL_TINTS = [
-  "var(--m-tint-mint)",
-  "var(--m-tint-lilac)",
-  "var(--m-tint-sky)",
-  "var(--m-tint-peach)",
-  "var(--m-tint-sand)",
-];
 
 export default function MobileSearch() {
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
