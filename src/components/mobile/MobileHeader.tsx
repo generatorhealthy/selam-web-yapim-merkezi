@@ -24,7 +24,9 @@ export const MobileHeader = ({
   largeTitle,
   subtitle,
   showBack = false,
+  showForward = true,
   onBack,
+  onForward,
   trailing,
   sticky = true,
 }: MobileHeaderProps) => {
@@ -37,7 +39,7 @@ export const MobileHeader = ({
     >
       {/* Top bar */}
       <div className="h-14 px-5 flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           {showBack && (
             <button
               onClick={() => (onBack ? onBack() : navigate(-1))}
@@ -55,9 +57,26 @@ export const MobileHeader = ({
               />
             </button>
           )}
+          {showBack && showForward && (
+            <button
+              onClick={() => (onForward ? onForward() : navigate(1))}
+              className="w-10 h-10 rounded-full flex items-center justify-center m-pressable"
+              style={{
+                background: "hsl(var(--m-surface))",
+                boxShadow: "var(--m-shadow)",
+              }}
+              aria-label="İleri"
+            >
+              <ChevronRight
+                className="w-5 h-5"
+                strokeWidth={2.4}
+                style={{ color: "hsl(var(--m-ink))" }}
+              />
+            </button>
+          )}
           {title && !largeTitle && (
             <span
-              className="text-[17px] font-bold truncate"
+              className="text-[17px] font-bold truncate ml-1"
               style={{ color: "hsl(var(--m-text-primary))", letterSpacing: "-0.01em" }}
             >
               {title}
