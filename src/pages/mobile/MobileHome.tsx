@@ -169,7 +169,7 @@ export default function MobileHome() {
     let cancelled = false;
     (async () => {
       try {
-        const [testsRes, reviewsRes, specialistsRes] = await Promise.all([
+        const [testsRes, reviewsRes, specialistsRes, blogsRes] = await Promise.all([
           supabase
             .from("tests")
             .select("id,title,category,image_url")
@@ -182,6 +182,12 @@ export default function MobileHome() {
             .select("id,name,specialty,profile_picture,rating,experience,city,reviews_count")
             .eq("is_active", true)
             .limit(500),
+          supabase
+            .from("blog_posts")
+            .select("id,title,slug,excerpt,featured_image,author_name,published_at")
+            .eq("status", "published")
+            .order("published_at", { ascending: false })
+            .limit(60),
         ]);
 
         if (cancelled) return;
