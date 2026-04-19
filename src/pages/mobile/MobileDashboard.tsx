@@ -380,6 +380,109 @@ export default function MobileDashboard() {
       </div>
 
       {/* === Upcoming appointments === */}
+      {/* === Pending Booking Requests === */}
+      {pendingReqs.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between px-5 mb-3">
+            <h3 className="text-[18px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
+              Randevu Talepleri
+            </h3>
+            <button
+              onClick={() => navigate("/mobile/specialist-appointments")}
+              className="text-[12px] font-semibold px-3 py-1.5 rounded-full m-pressable"
+              style={{ background: "hsl(var(--m-accent))", color: "hsl(var(--m-bg))" }}
+            >
+              Tümü
+            </button>
+          </div>
+
+          <div className="px-5 flex gap-3 overflow-x-auto m-no-scrollbar pb-1 snap-x snap-mandatory">
+            {pendingReqs.map((a) => {
+              const d = new Date(a.appointment_date);
+              const dateLabel = d.toLocaleDateString("tr-TR", { weekday: "short", day: "numeric", month: "short" });
+              const isOnline = a.appointment_type === "online";
+              const acting = actingId === a.id;
+              return (
+                <div
+                  key={a.id}
+                  className="snap-start shrink-0 w-[78%] rounded-[24px] p-3"
+                  style={{ background: "hsl(var(--m-ink))", boxShadow: "var(--m-shadow-md)" }}
+                >
+                  <div
+                    className="flex items-center gap-2 h-11 px-4 rounded-2xl"
+                    style={{ background: "hsl(var(--m-tint-mint))" }}
+                  >
+                    <Clock className="w-4 h-4" style={{ color: "hsl(var(--m-ink))" }} />
+                    <span className="text-[13.5px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                      {dateLabel}
+                    </span>
+                    <span style={{ color: "hsl(var(--m-accent))" }}>•</span>
+                    <span className="text-[13.5px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                      {a.appointment_time?.slice(0, 5)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 mt-3 px-1">
+                    <div
+                      className="relative w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: "hsl(var(--m-tint-lilac))" }}
+                    >
+                      <span className="text-[16px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                        {(a.patient_name || "?").charAt(0).toUpperCase()}
+                      </span>
+                      <div
+                        className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ background: "hsl(var(--m-tint-mint))", border: "2px solid hsl(var(--m-ink))" }}
+                      >
+                        {isOnline ? (
+                          <Video className="w-2.5 h-2.5" style={{ color: "hsl(var(--m-ink))" }} />
+                        ) : (
+                          <User className="w-2.5 h-2.5" style={{ color: "hsl(var(--m-ink))" }} />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[15px] font-bold truncate" style={{ color: "hsl(var(--m-bg))" }}>
+                        {a.patient_name}
+                      </div>
+                      <div className="text-[11.5px] truncate" style={{ color: "hsl(var(--m-bg) / 0.6)" }}>
+                        {a.consultation_topic || (isOnline ? "Online görüşme" : "Yüz yüze görüşme")}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      disabled={acting}
+                      onClick={() => handleAct(a.id, "cancelled")}
+                      className="flex-1 h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable disabled:opacity-50"
+                      style={{
+                        background: "transparent",
+                        border: "1px solid hsl(var(--m-bg) / 0.2)",
+                        color: "hsl(var(--m-bg))",
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                      <span className="text-[13px] font-semibold">Reddet</span>
+                    </button>
+                    <button
+                      disabled={acting}
+                      onClick={() => handleAct(a.id, "confirmed")}
+                      className="flex-1 h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable disabled:opacity-50"
+                      style={{ background: "hsl(var(--m-accent))", color: "hsl(var(--m-bg))" }}
+                    >
+                      <Check className="w-4 h-4" />
+                      <span className="text-[13px] font-semibold">Kabul Et</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* === Upcoming appointments === */}
       <div className="mb-6">
         <div className="flex items-center justify-between px-5 mb-3">
           <h3 className="text-[18px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>Yaklaşan Randevular</h3>
