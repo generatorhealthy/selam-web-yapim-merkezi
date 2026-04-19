@@ -12,7 +12,11 @@ import {
   Stethoscope,
   ArrowRight,
   Mic,
+  Clock,
+  Send,
+  MessageCircle,
 } from "lucide-react";
+import { getRecentlyViewed, type RecentSpecialist } from "@/components/RecentlyViewedSpecialists";
 import testAnxiety from "@/assets/test-anxiety.jpg";
 import testDepression from "@/assets/test-depression.jpg";
 import testGrief from "@/assets/test-grief.jpg";
