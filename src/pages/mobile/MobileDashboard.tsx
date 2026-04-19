@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   Calendar, Clock, CheckCircle2, CheckCheck, FileSignature, ClipboardList,
   MessageSquare, FileText, CreditCard, Users, User, Bell, Settings,
-  TrendingUp, Star, ChevronRight, Stethoscope, MapPin,
+  TrendingUp, Star, ChevronRight, Stethoscope, MapPin, Video, X, Check,
 } from "lucide-react";
 
 interface UpcomingAppt {
