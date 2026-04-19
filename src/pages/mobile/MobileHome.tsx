@@ -108,8 +108,7 @@ export default function MobileHome() {
             .from("specialists")
             .select("id,name,specialty,profile_picture,rating,experience,city,reviews_count")
             .eq("is_active", true)
-            .not("profile_picture", "is", null)
-            .limit(100),
+            .limit(500),
         ]);
 
         if (cancelled) return;
@@ -122,8 +121,15 @@ export default function MobileHome() {
           setReviews(shuffledReviews.slice(0, 5) as Review[]);
         }
         if (specialistsRes.data) {
-          const shuffled = [...specialistsRes.data].sort(() => Math.random() - 0.5);
-          setSpecialists(shuffled.slice(0, 30) as Specialist[]);
+          // Tüm aktif uzmanları al, fotoğrafı olanları öne çıkar, her yenilemede karıştır
+          const all = [...specialistsRes.data] as Specialist[];
+          const withPhoto = all.filter((s) => s.profile_picture);
+          const withoutPhoto = all.filter((s) => !s.profile_picture);
+          const shuffled = [
+            ...withPhoto.sort(() => Math.random() - 0.5),
+            ...withoutPhoto.sort(() => Math.random() - 0.5),
+          ];
+          setSpecialists(shuffled);
         }
       } catch (err) {
         console.error("MobileHome data error:", err);
