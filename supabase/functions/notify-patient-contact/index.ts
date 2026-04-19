@@ -31,6 +31,10 @@ function normalizePhone(raw: string): { wa: string; sms: string } | null {
   return null;
 }
 
+function getSessionNameForLineId(lineId: string) {
+  return `line_${lineId.replace(/-/g, "").slice(0, 16)}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -78,19 +82,44 @@ Deno.serve(async (req) => {
 
     const results: Record<string, unknown> = {};
 
+    const { data: activeLine, error: lineError } = await supabase
+      .from("whatsapp_lines")
+      .select("id, is_active, sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (lineError) {
+      console.error("Failed to fetch active WhatsApp line:", lineError);
+    }
+
+    const whatsappSessionName = activeLine?.id ? getSessionNameForLineId(activeLine.id) : null;
+    results.whatsappSession = whatsappSessionName;
+
     // 1) WhatsApp via waha-proxy
     try {
+      if (!whatsappSessionName) {
+        throw new Error("Aktif WhatsApp hattı bulunamadı");
+      }
+
       const waRes = await supabase.functions.invoke("waha-proxy", {
         body: {
           action: "sendText",
-          sessionName: "default",
+          sessionName: whatsappSessionName,
           payload: {
             chatId: `${phones.wa}@c.us`,
             text: waMessage,
           },
         },
       });
-      results.whatsapp = { ok: !waRes.error, data: waRes.data, error: waRes.error?.message };
+
+      const waSuccess = !waRes.error && (waRes.data as any)?.success !== false;
+      results.whatsapp = {
+        ok: waSuccess,
+        data: waRes.data,
+        error: waRes.error?.message || ((waRes.data as any)?.success === false ? (waRes.data as any)?.error : undefined),
+      };
     } catch (e) {
       results.whatsapp = { ok: false, error: (e as Error).message };
     }
@@ -105,7 +134,11 @@ Deno.serve(async (req) => {
           body: { phone: phones.sms, message: smsMessage },
         });
       }
-      results.sms = { ok: !smsRes.error, data: smsRes.data, error: smsRes.error?.message };
+      results.sms = {
+        ok: !smsRes.error && (smsRes.data as any)?.success !== false,
+        data: smsRes.data,
+        error: smsRes.error?.message || ((smsRes.data as any)?.success === false ? (smsRes.data as any)?.error : undefined),
+      };
     } catch (e) {
       results.sms = { ok: false, error: (e as Error).message };
     }
