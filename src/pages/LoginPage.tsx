@@ -47,23 +47,37 @@ const LoginPage = () => {
     }
   }, [otpCountdown]);
 
+  const resolvePostLoginRoute = async (userId: string, email: string): Promise<string> => {
+    const { data: specialists } = await supabase
+      .from('specialists')
+      .select('id')
+      .or(`user_id.eq.${userId},email.eq.${email}`)
+      .eq('is_active', true)
+      .limit(1);
+    if (specialists && specialists.length > 0) return '/doktor-paneli';
+
+    const { data: patient } = await supabase
+      .from('patient_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (patient) return '/danisan-paneli';
+
+    // Auto-create patient profile for new users
+    await supabase.from('patient_profiles').insert({
+      user_id: userId,
+      email,
+      auth_provider: 'email',
+    });
+    return '/danisan-paneli';
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: specialists } = await supabase
-          .from('specialists')
-          .select('id')
-          .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
-          .eq('is_active', true)
-          .limit(1);
-        
-        const specialist = specialists && specialists.length > 0 ? specialists[0] : null;
-        if (specialist) {
-          navigate('/doktor-paneli');
-        } else {
-          navigate('/');
-        }
+      if (session?.user) {
+        const route = await resolvePostLoginRoute(session.user.id, session.user.email || '');
+        navigate(route);
       }
     };
     checkAuth();
@@ -132,24 +146,10 @@ const LoginPage = () => {
         return;
       }
 
-      const { data: specialists } = await supabase
-        .from('specialists')
-        .select('id, name, email, is_active')
-        .or(`user_id.eq.${authData.user.id},email.eq.${email}`)
-        .eq('is_active', true)
-        .limit(1);
-      
-      const specialist = specialists && specialists.length > 0 ? specialists[0] : null;
-
-      if (!specialist) {
-        await supabase.auth.signOut();
-        toast({ title: "Yetkisiz Erişim", description: "Bu bilgiler ile kayıtlı bir uzman bulunamadı.", variant: "destructive" });
-        return;
-      }
-
+      const route = await resolvePostLoginRoute(authData.user.id, email);
       rateLimit.reset();
-      toast({ title: "Giriş Başarılı", description: "Doktor paneline yönlendiriliyorsunuz..." });
-      navigate('/doktor-paneli');
+      toast({ title: "Giriş Başarılı", description: "Yönlendiriliyorsunuz..." });
+      navigate(route);
 
     } catch (error) {
       console.error('Giriş hatası:', error);
@@ -408,8 +408,6 @@ const LoginPage = () => {
                 <Shield className="w-7 h-7 text-white" />
               </div>
               <h2 className="text-4xl xl:text-5xl font-bold leading-tight mb-4">
-                Uzman Paneline
-                <br />
                 Hoş Geldiniz
               </h2>
               <p className="text-lg text-primary-foreground/80 leading-relaxed max-w-md">
@@ -465,7 +463,7 @@ const LoginPage = () => {
                  step === 'forgot-reset' ? "Yeni Şifre Belirle" :
                  step === 'otp' ? "Telefon Doğrulama" :
                  step === 'password' ? "Şifrenizi Girin" :
-                 "Uzman Girişi"}
+                 "Giriş Yap"}
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">
                 {step === 'forgot' ? "E-posta veya telefon numaranızı girin" :

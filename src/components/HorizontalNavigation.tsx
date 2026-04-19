@@ -311,21 +311,12 @@ export function HorizontalNavigation() {
             <div className="flex items-center gap-1.5 flex-nowrap">
               {authInitialized && !isLoggedIn && (
                 <>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="px-3 py-1.5 text-[11px] font-semibold text-blue-600 border border-blue-200 rounded-full hover:bg-blue-50 transition-all duration-300 whitespace-nowrap inline-flex items-center gap-1">
-                        Giriş <ChevronDown className="h-3 w-3" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44 bg-white z-[60]">
-                      <DropdownMenuItem onClick={() => navigate('/danisan-giris')}>
-                        <User className="mr-2 h-4 w-4" /> Danışan Girişi
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/giris-yap')}>
-                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Girişi
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <button
+                    onClick={() => navigate('/giris-yap')}
+                    className="px-3 py-1.5 text-[11px] font-semibold text-blue-600 border border-blue-200 rounded-full hover:bg-blue-50 transition-all duration-300 whitespace-nowrap"
+                  >
+                    Giriş Yap
+                  </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="px-3 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md whitespace-nowrap inline-flex items-center gap-1">
@@ -429,21 +420,12 @@ export function HorizontalNavigation() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2">
-                        Giriş <ChevronDown className="ml-1 h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 bg-white z-[60]">
-                      <DropdownMenuItem onClick={() => navigate('/danisan-giris')}>
-                        <User className="mr-2 h-4 w-4" /> Danışan Girişi
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/giris-yap')}>
-                        <Stethoscope className="mr-2 h-4 w-4" /> Uzman Girişi
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button 
+                    onClick={() => navigate('/giris-yap')}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2"
+                  >
+                    Giriş Yap
+                  </Button>
                 </div>
               )}
             </div>
