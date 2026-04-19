@@ -15,6 +15,7 @@ import {
   Clock,
   Send,
   MessageCircle,
+  BookOpen,
 } from "lucide-react";
 import { getRecentlyViewed, type RecentSpecialist } from "@/components/RecentlyViewedSpecialists";
 import testAnxiety from "@/assets/test-anxiety.jpg";
@@ -79,6 +80,16 @@ interface Review {
   specialist_specialty?: string;
 }
 
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  featured_image: string | null;
+  author_name: string | null;
+  published_at: string | null;
+}
+
 const PASTEL_TINTS = [
   "var(--m-tint-mint)",
   "var(--m-tint-lilac)",
@@ -93,6 +104,7 @@ export default function MobileHome() {
   const [tests, setTests] = useState<Test[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
+  const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCat, setActiveCat] = useState("Hepsi");
   const [authedUserId, setAuthedUserId] = useState<string | null>(null);
@@ -157,7 +169,7 @@ export default function MobileHome() {
     let cancelled = false;
     (async () => {
       try {
-        const [testsRes, reviewsRes, specialistsRes] = await Promise.all([
+        const [testsRes, reviewsRes, specialistsRes, blogsRes] = await Promise.all([
           supabase
             .from("tests")
             .select("id,title,category,image_url")
@@ -170,6 +182,12 @@ export default function MobileHome() {
             .select("id,name,specialty,profile_picture,rating,experience,city,reviews_count")
             .eq("is_active", true)
             .limit(500),
+          supabase
+            .from("blog_posts")
+            .select("id,title,slug,excerpt,featured_image,author_name,published_at")
+            .eq("status", "published")
+            .order("published_at", { ascending: false })
+            .limit(60),
         ]);
 
         if (cancelled) return;
@@ -191,6 +209,11 @@ export default function MobileHome() {
             ...withoutPhoto.sort(() => Math.random() - 0.5),
           ];
           setSpecialists(shuffled);
+        }
+        if (blogsRes.data) {
+          // Her sayfa yenilemesinde rastgele 8 blog göster (farklı uzmanlardan)
+          const shuffledBlogs = [...blogsRes.data].sort(() => Math.random() - 0.5);
+          setBlogs(shuffledBlogs.slice(0, 8) as BlogPost[]);
         }
       } catch (err) {
         console.error("MobileHome data error:", err);
@@ -620,6 +643,97 @@ export default function MobileHome() {
             })}
           </div>
 
+        </section>
+      )}
+
+      {/* Blog Posts — Random uzman blogları, her yenilemede değişir */}
+      {blogs.length > 0 && (
+        <section className="mb-7">
+          <div className="flex items-end justify-between px-5 mb-4">
+            <h2 className="m-title">Uzman Yazıları</h2>
+            <button
+              onClick={() => navigate("/blog")}
+              className="text-[14px] font-semibold m-pressable"
+              style={{ color: "hsl(var(--m-text-secondary))" }}
+            >
+              Tümü
+            </button>
+          </div>
+          <div className="flex gap-3 px-5 overflow-x-auto m-no-scrollbar pb-2">
+            {blogs.map((post, idx) => (
+              <button
+                key={post.id}
+                onClick={() => navigate(`/mobile/blog/${post.slug}`)}
+                className="shrink-0 w-[260px] rounded-[22px] overflow-hidden text-left m-pressable flex flex-col"
+                style={{
+                  background: "hsl(var(--m-surface))",
+                  boxShadow: "var(--m-shadow)",
+                }}
+              >
+                <div
+                  className="w-full h-[140px] overflow-hidden relative"
+                  style={{ background: `hsl(${PASTEL_TINTS[idx % PASTEL_TINTS.length]})` }}
+                >
+                  {post.featured_image ? (
+                    <img
+                      src={post.featured_image}
+                      alt={post.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <BookOpen className="w-10 h-10" style={{ color: "hsl(var(--m-ink) / 0.3)" }} strokeWidth={1.5} />
+                    </div>
+                  )}
+                  <div
+                    className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 h-6 rounded-full"
+                    style={{ background: "hsl(var(--m-bg) / 0.92)" }}
+                  >
+                    <BookOpen className="w-3 h-3" style={{ color: "hsl(var(--m-ink))" }} strokeWidth={2.4} />
+                    <span className="text-[10px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
+                      Blog
+                    </span>
+                  </div>
+                </div>
+                <div className="p-3 flex-1 flex flex-col gap-2">
+                  <p
+                    className="text-[13.5px] font-bold leading-snug line-clamp-2"
+                    style={{ color: "hsl(var(--m-text-primary))" }}
+                  >
+                    {post.title}
+                  </p>
+                  {post.excerpt && (
+                    <p
+                      className="text-[11.5px] leading-relaxed line-clamp-2"
+                      style={{ color: "hsl(var(--m-text-secondary))" }}
+                    >
+                      {post.excerpt}
+                    </p>
+                  )}
+                  {post.author_name && (
+                    <div
+                      className="flex items-center gap-1.5 mt-auto pt-2 border-t"
+                      style={{ borderColor: "hsl(var(--m-divider))" }}
+                    >
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
+                        style={{ background: "hsl(var(--m-ink))", color: "hsl(var(--m-bg))" }}
+                      >
+                        {post.author_name.charAt(0).toUpperCase()}
+                      </div>
+                      <span
+                        className="text-[11px] font-semibold truncate"
+                        style={{ color: "hsl(var(--m-text-secondary))" }}
+                      >
+                        {post.author_name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
         </section>
       )}
 
