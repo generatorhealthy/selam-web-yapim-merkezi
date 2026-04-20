@@ -159,57 +159,8 @@ export default function MobileDashboard() {
   const weekDays = ["P", "S", "Ç", "P", "C", "C", "P"];
 
   return (
-    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 110 }}>
-      {/* === Top bar === */}
-      <div className="m-safe-top px-5 pt-4 pb-3 flex items-center justify-between">
-        <button
-          onClick={() => navigate("/mobile/specialist-profile")}
-          className="m-pressable"
-          aria-label="Profil"
-        >
-          {spec?.profile_picture ? (
-            <img
-              src={spec.profile_picture}
-              alt={spec?.name}
-              className="w-11 h-11 rounded-full object-cover"
-              style={{ boxShadow: "var(--m-shadow-sm)" }}
-            />
-          ) : (
-            <div
-              className="w-11 h-11 rounded-full flex items-center justify-center"
-              style={{ background: "hsl(var(--m-accent-soft))", boxShadow: "var(--m-shadow-sm)" }}
-            >
-              <span className="text-[15px] font-bold" style={{ color: "hsl(var(--m-accent))" }}>{initial}</span>
-            </div>
-          )}
-        </button>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate("/mobile/specialist-support")}
-            className="relative w-11 h-11 rounded-full flex items-center justify-center m-pressable"
-            style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow-sm)" }}
-            aria-label="Bildirimler"
-          >
-            <Bell className="w-5 h-5" style={{ color: "hsl(var(--m-text-primary))" }} />
-            {totalNotif > 0 && (
-              <span
-                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
-                style={{ background: "hsl(var(--m-danger))", color: "white" }}
-              >
-                {totalNotif}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => navigate("/mobile/specialist-profile")}
-            className="w-11 h-11 rounded-full flex items-center justify-center m-pressable"
-            style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow-sm)" }}
-            aria-label="Ayarlar"
-          >
-            <Settings className="w-5 h-5" style={{ color: "hsl(var(--m-text-primary))" }} />
-          </button>
-        </div>
-      </div>
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 110 }} className="w-full max-w-full overflow-x-hidden">
+      <div className="m-safe-top" />
 
       {/* === Profile hero card === */}
       <div className="px-5 mb-5">

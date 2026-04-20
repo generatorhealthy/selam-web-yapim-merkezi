@@ -76,14 +76,14 @@ export const MobileLayout = () => {
   const isPatient = userProfile?.role === "patient";
 
   const guestNavItems = [
-    { to: "/mobile/home", Icon: HomeFill, label: "Ana" },
+    { to: "/mobile/home", Icon: HomeFill, label: "Anasayfa" },
     { to: "/mobile/search", Icon: GridFill, label: "Keşfet" },
     { to: "/mobile/appointments", Icon: CalendarFill, label: "Randevu" },
     { to: "/mobile/profile", Icon: UserFill, label: "Profil" },
   ];
 
   const patientNavItems = [
-    { to: "/mobile/home", Icon: HomeFill, label: "Ana" },
+    { to: "/mobile/home", Icon: HomeFill, label: "Anasayfa" },
     { to: "/mobile/search", Icon: GridFill, label: "Keşfet" },
     { to: "/mobile/patient-dashboard", Icon: DashboardFill, label: "Panelim" },
     { to: "/mobile/patient-profile", Icon: UserFill, label: "Profil" },
@@ -100,10 +100,10 @@ export const MobileLayout = () => {
 
   return (
     <div
-      className="flex flex-col min-h-screen"
+      className="flex flex-col min-h-screen overflow-x-hidden w-full max-w-full"
       style={{ background: "hsl(var(--m-bg))" }}
     >
-      <main className="flex-1 pb-[calc(96px+var(--m-safe-bottom))]">
+      <main className="flex-1 pb-[calc(96px+var(--m-safe-bottom))] w-full max-w-full overflow-x-hidden">
         <Outlet />
       </main>
 

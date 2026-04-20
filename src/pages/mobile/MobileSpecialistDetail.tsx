@@ -189,7 +189,7 @@ export default function MobileSpecialistDetail() {
     : specialist.bio;
 
   return (
-    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 140 }}>
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 140 }} className="w-full max-w-full overflow-x-hidden">
       <MobileHeader
         showBack
         trailing={
@@ -205,32 +205,36 @@ export default function MobileSpecialistDetail() {
 
       {/* Specialty + name */}
       <div className="px-5 pt-2">
-        <p className="text-[14px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
+        <p className="text-[13px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
           {specialist.specialty}
         </p>
-        <h1 className="m-headline mt-1 leading-[1.05]" style={{ fontSize: 36 }}>
+        <h1
+          className="mt-1 font-extrabold leading-[1.15] break-words"
+          style={{
+            color: "hsl(var(--m-text-primary))",
+            fontSize: "clamp(20px, 6vw, 26px)",
+            letterSpacing: "-0.02em",
+          }}
+        >
           {specialist.name}
         </h1>
       </div>
 
-      {/* Hero image */}
-      <div className="px-5 mt-5">
+      {/* Hero image — image-only, no padding/background fill */}
+      <div className="px-5 mt-4">
         <div
-          className="relative rounded-[28px] overflow-hidden"
+          className="relative rounded-[24px] overflow-hidden w-full aspect-[4/5]"
           style={{
-            background: "hsl(var(--m-tint-sand))",
-            minHeight: 340,
+            background: "hsl(var(--m-surface-muted))",
             boxShadow: "var(--m-shadow-md)",
           }}
         >
           {specialist.profile_picture ? (
-            <div className="absolute inset-0 flex items-end justify-center overflow-hidden">
-              <img
-                src={specialist.profile_picture}
-                alt={specialist.name}
-                className="h-full w-auto object-cover object-top"
-              />
-            </div>
+            <img
+              src={specialist.profile_picture}
+              alt={specialist.name}
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-[120px] font-bold" style={{ color: "hsl(var(--m-text-tertiary))" }}>
@@ -241,11 +245,11 @@ export default function MobileSpecialistDetail() {
 
           {avgRating && (
             <div
-              className="absolute top-4 right-4 rounded-full px-3 h-9 flex items-center gap-1.5"
+              className="absolute top-3 right-3 rounded-full px-3 h-8 flex items-center gap-1.5"
               style={{ background: "hsl(var(--m-ink))" }}
             >
-              <Star className="w-4 h-4" style={{ color: "hsl(var(--m-warning))", fill: "hsl(var(--m-warning))" }} />
-              <span className="text-[14px] font-bold" style={{ color: "hsl(var(--m-bg))" }}>
+              <Star className="w-3.5 h-3.5" style={{ color: "hsl(var(--m-warning))", fill: "hsl(var(--m-warning))" }} />
+              <span className="text-[13px] font-bold" style={{ color: "hsl(var(--m-bg))" }}>
                 {avgRating}
               </span>
             </div>
@@ -487,51 +491,51 @@ export default function MobileSpecialistDetail() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/mobile/booking/${specialist.id}`)}
-            className="flex-1 h-14 rounded-full font-bold text-[15px] flex items-center justify-center gap-2 m-pressable"
+            className="flex-1 h-12 rounded-full font-bold text-[14px] flex items-center justify-center gap-2 m-pressable"
             style={{
               background: "hsl(var(--m-ink))",
               color: "hsl(var(--m-bg))",
-              boxShadow: "0 12px 32px -8px hsl(220 30% 10% / 0.35)",
+              boxShadow: "0 8px 24px -6px hsl(220 30% 10% / 0.35)",
             }}
           >
-            <Calendar className="w-5 h-5" /> Randevu Al
+            <Calendar className="w-4 h-4" /> Randevu Al
           </button>
           <button
             onClick={() => setReviewOpen(true)}
             aria-label="Değerlendirme yaz"
-            className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
+            className="w-12 h-12 rounded-full flex items-center justify-center m-pressable shrink-0"
             style={{
               background: "hsl(var(--m-tint-peach))",
               color: "hsl(var(--m-text-primary))",
               boxShadow: "var(--m-shadow)",
             }}
           >
-            <PencilLine className="w-5 h-5" />
+            <PencilLine className="w-4 h-4" />
           </button>
           <button
             type="button"
             onClick={() => setWaOpen(true)}
             aria-label="WhatsApp"
-            className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
+            className="w-12 h-12 rounded-full flex items-center justify-center m-pressable shrink-0"
             style={{
               background: "hsl(var(--m-tint-mint))",
               color: "hsl(var(--m-text-primary))",
               boxShadow: "var(--m-shadow)",
             }}
           >
-            <MessageCircle className="w-5 h-5" />
+            <MessageCircle className="w-4 h-4" />
           </button>
           <a
             href={`tel:${specialist.phone || "02167060611"}`}
             aria-label="Ara"
-            className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
+            className="w-12 h-12 rounded-full flex items-center justify-center m-pressable shrink-0"
             style={{
               background: "hsl(var(--m-tint-sky))",
               color: "hsl(var(--m-text-primary))",
               boxShadow: "var(--m-shadow)",
             }}
           >
-            <Phone className="w-5 h-5" />
+            <Phone className="w-4 h-4" />
           </a>
         </div>
       </div>
@@ -566,14 +570,23 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const StatPill = ({ icon: Icon, value, label }: { icon: any; value: string; label: string }) => (
   <div
-    className="rounded-[18px] p-3 text-center"
-    style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+    className="rounded-[20px] p-4 text-center flex flex-col items-center justify-center gap-1.5"
+    style={{
+      background: "hsl(var(--m-surface))",
+      boxShadow: "0 4px 16px -4px hsl(220 30% 15% / 0.08)",
+      border: "1px solid hsl(var(--m-text-primary) / 0.04)",
+    }}
   >
-    <Icon className="w-4 h-4 mx-auto mb-1" style={{ color: "hsl(var(--m-text-secondary))" }} />
-    <div className="text-[16px] font-bold leading-none" style={{ color: "hsl(var(--m-text-primary))" }}>
+    <div
+      className="w-9 h-9 rounded-full flex items-center justify-center"
+      style={{ background: "hsl(var(--m-surface-muted))" }}
+    >
+      <Icon className="w-4 h-4" style={{ color: "hsl(var(--m-ink))" }} strokeWidth={2.2} />
+    </div>
+    <div className="text-[18px] font-extrabold leading-none tracking-tight" style={{ color: "hsl(var(--m-text-primary))" }}>
       {value}
     </div>
-    <div className="text-[10px] mt-1 font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
+    <div className="text-[11px] font-semibold leading-tight" style={{ color: "hsl(var(--m-text-secondary))" }}>
       {label}
     </div>
   </div>
