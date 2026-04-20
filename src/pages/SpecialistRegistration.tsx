@@ -342,10 +342,13 @@ const SpecialistRegistration = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <div className="border-b border-border/40 bg-background sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div
+          className="border-b border-border/40 bg-background sticky top-0 z-50"
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
+          <div className="container mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
             <a href="/" className="flex items-center">
-              <img src="/logo.webp" alt="Doktorum Ol" className="h-8" />
+              <img src="/logo.webp" alt="Doktorum Ol" className="h-7 md:h-8" />
             </a>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Shield className="w-3.5 h-3.5" />
@@ -354,7 +357,10 @@ const SpecialistRegistration = () => {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8 md:py-12 max-w-lg">
+        <div
+          className="container mx-auto px-4 py-6 md:py-12 max-w-lg"
+          style={{ paddingBottom: "calc(120px + env(safe-area-inset-bottom, 0px))" }}
+        >
           {currentStep < 4 && (
             <div className="flex items-center justify-center gap-2 mb-10">
               {steps.map((step, index) => (
