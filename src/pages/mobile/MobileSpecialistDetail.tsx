@@ -491,51 +491,51 @@ export default function MobileSpecialistDetail() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/mobile/booking/${specialist.id}`)}
-            className="flex-1 h-14 rounded-full font-bold text-[15px] flex items-center justify-center gap-2 m-pressable"
+            className="flex-1 h-12 rounded-full font-bold text-[14px] flex items-center justify-center gap-2 m-pressable"
             style={{
               background: "hsl(var(--m-ink))",
               color: "hsl(var(--m-bg))",
-              boxShadow: "0 12px 32px -8px hsl(220 30% 10% / 0.35)",
+              boxShadow: "0 8px 24px -6px hsl(220 30% 10% / 0.35)",
             }}
           >
-            <Calendar className="w-5 h-5" /> Randevu Al
+            <Calendar className="w-4 h-4" /> Randevu Al
           </button>
           <button
             onClick={() => setReviewOpen(true)}
             aria-label="Değerlendirme yaz"
-            className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
+            className="w-12 h-12 rounded-full flex items-center justify-center m-pressable shrink-0"
             style={{
               background: "hsl(var(--m-tint-peach))",
               color: "hsl(var(--m-text-primary))",
               boxShadow: "var(--m-shadow)",
             }}
           >
-            <PencilLine className="w-5 h-5" />
+            <PencilLine className="w-4 h-4" />
           </button>
           <button
             type="button"
             onClick={() => setWaOpen(true)}
             aria-label="WhatsApp"
-            className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
+            className="w-12 h-12 rounded-full flex items-center justify-center m-pressable shrink-0"
             style={{
               background: "hsl(var(--m-tint-mint))",
               color: "hsl(var(--m-text-primary))",
               boxShadow: "var(--m-shadow)",
             }}
           >
-            <MessageCircle className="w-5 h-5" />
+            <MessageCircle className="w-4 h-4" />
           </button>
           <a
             href={`tel:${specialist.phone || "02167060611"}`}
             aria-label="Ara"
-            className="w-14 h-14 rounded-full flex items-center justify-center m-pressable"
+            className="w-12 h-12 rounded-full flex items-center justify-center m-pressable shrink-0"
             style={{
               background: "hsl(var(--m-tint-sky))",
               color: "hsl(var(--m-text-primary))",
               boxShadow: "var(--m-shadow)",
             }}
           >
-            <Phone className="w-5 h-5" />
+            <Phone className="w-4 h-4" />
           </a>
         </div>
       </div>
