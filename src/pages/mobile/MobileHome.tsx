@@ -261,10 +261,10 @@ export default function MobileHome() {
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh" }}>
       {/* Top safe area spacer */}
-      <div className="m-safe-top pt-2" />
+      <div className="m-safe-top" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 56px)" }} />
 
       {/* Search bar — Zocdoc style */}
-      <div className="px-5 mt-3 mb-5">
+      <div className="px-5 mt-2 mb-5">
         <button
           onClick={() => navigate("/mobile/search")}
           className="w-full h-14 rounded-full flex items-center gap-3 px-5 m-pressable"
