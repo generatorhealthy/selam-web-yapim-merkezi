@@ -570,14 +570,23 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const StatPill = ({ icon: Icon, value, label }: { icon: any; value: string; label: string }) => (
   <div
-    className="rounded-[18px] p-3 text-center"
-    style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+    className="rounded-[20px] p-4 text-center flex flex-col items-center justify-center gap-1.5"
+    style={{
+      background: "hsl(var(--m-surface))",
+      boxShadow: "0 4px 16px -4px hsl(220 30% 15% / 0.08)",
+      border: "1px solid hsl(var(--m-text-primary) / 0.04)",
+    }}
   >
-    <Icon className="w-4 h-4 mx-auto mb-1" style={{ color: "hsl(var(--m-text-secondary))" }} />
-    <div className="text-[16px] font-bold leading-none" style={{ color: "hsl(var(--m-text-primary))" }}>
+    <div
+      className="w-9 h-9 rounded-full flex items-center justify-center"
+      style={{ background: "hsl(var(--m-surface-muted))" }}
+    >
+      <Icon className="w-4 h-4" style={{ color: "hsl(var(--m-ink))" }} strokeWidth={2.2} />
+    </div>
+    <div className="text-[18px] font-extrabold leading-none tracking-tight" style={{ color: "hsl(var(--m-text-primary))" }}>
       {value}
     </div>
-    <div className="text-[10px] mt-1 font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
+    <div className="text-[11px] font-semibold leading-tight" style={{ color: "hsl(var(--m-text-secondary))" }}>
       {label}
     </div>
   </div>
