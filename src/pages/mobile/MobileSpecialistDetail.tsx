@@ -189,7 +189,7 @@ export default function MobileSpecialistDetail() {
     : specialist.bio;
 
   return (
-    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 140 }}>
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 140 }} className="w-full max-w-full overflow-x-hidden">
       <MobileHeader
         showBack
         trailing={
@@ -205,32 +205,36 @@ export default function MobileSpecialistDetail() {
 
       {/* Specialty + name */}
       <div className="px-5 pt-2">
-        <p className="text-[14px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
+        <p className="text-[13px] font-medium" style={{ color: "hsl(var(--m-text-secondary))" }}>
           {specialist.specialty}
         </p>
-        <h1 className="m-headline mt-1 leading-[1.05]" style={{ fontSize: 36 }}>
+        <h1
+          className="mt-1 font-extrabold leading-[1.15] break-words"
+          style={{
+            color: "hsl(var(--m-text-primary))",
+            fontSize: "clamp(20px, 6vw, 26px)",
+            letterSpacing: "-0.02em",
+          }}
+        >
           {specialist.name}
         </h1>
       </div>
 
-      {/* Hero image */}
-      <div className="px-5 mt-5">
+      {/* Hero image — image-only, no padding/background fill */}
+      <div className="px-5 mt-4">
         <div
-          className="relative rounded-[28px] overflow-hidden"
+          className="relative rounded-[24px] overflow-hidden w-full aspect-[4/5]"
           style={{
-            background: "hsl(var(--m-tint-sand))",
-            minHeight: 340,
+            background: "hsl(var(--m-surface-muted))",
             boxShadow: "var(--m-shadow-md)",
           }}
         >
           {specialist.profile_picture ? (
-            <div className="absolute inset-0 flex items-end justify-center overflow-hidden">
-              <img
-                src={specialist.profile_picture}
-                alt={specialist.name}
-                className="h-full w-auto object-cover object-top"
-              />
-            </div>
+            <img
+              src={specialist.profile_picture}
+              alt={specialist.name}
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-[120px] font-bold" style={{ color: "hsl(var(--m-text-tertiary))" }}>
@@ -241,11 +245,11 @@ export default function MobileSpecialistDetail() {
 
           {avgRating && (
             <div
-              className="absolute top-4 right-4 rounded-full px-3 h-9 flex items-center gap-1.5"
+              className="absolute top-3 right-3 rounded-full px-3 h-8 flex items-center gap-1.5"
               style={{ background: "hsl(var(--m-ink))" }}
             >
-              <Star className="w-4 h-4" style={{ color: "hsl(var(--m-warning))", fill: "hsl(var(--m-warning))" }} />
-              <span className="text-[14px] font-bold" style={{ color: "hsl(var(--m-bg))" }}>
+              <Star className="w-3.5 h-3.5" style={{ color: "hsl(var(--m-warning))", fill: "hsl(var(--m-warning))" }} />
+              <span className="text-[13px] font-bold" style={{ color: "hsl(var(--m-bg))" }}>
                 {avgRating}
               </span>
             </div>
