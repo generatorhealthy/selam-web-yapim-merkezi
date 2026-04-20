@@ -260,26 +260,8 @@ export default function MobileHome() {
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh" }}>
-      {/* Top greeting bar */}
-      <div className="m-safe-top px-5 pt-4 pb-2 flex items-center justify-between">
-        <button
-          onClick={() => navigate("/mobile/profile")}
-          className="w-11 h-11 rounded-full overflow-hidden m-pressable flex items-center justify-center"
-          style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
-        >
-          <span className="text-[15px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
-            {initial}
-          </span>
-        </button>
-        <button
-          onClick={() => navigate("/mobile/profile")}
-          className="w-11 h-11 rounded-full flex items-center justify-center m-pressable"
-          style={{ background: "hsl(var(--m-ink))" }}
-          aria-label="Sesli ara"
-        >
-          <Mic className="w-5 h-5" style={{ color: "hsl(var(--m-bg))" }} strokeWidth={2.2} />
-        </button>
-      </div>
+      {/* Top safe area spacer */}
+      <div className="m-safe-top pt-2" />
 
       {/* Search bar — Zocdoc style */}
       <div className="px-5 mt-3 mb-5">
@@ -588,7 +570,7 @@ export default function MobileHome() {
               Online görüşme ile evinden destek al
             </h3>
             <p className="text-[12px] mt-2" style={{ color: "hsl(var(--m-text-secondary))" }}>
-              7/24 uzman desteği
+              Uzman Desteği
             </p>
           </div>
           {/* Stacked specialist avatars on right */}
