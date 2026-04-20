@@ -7,6 +7,9 @@ const CookieConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    if (isMobile) return;
+
     // Çerez onayı verip verilmediğini kontrol et ve gösterimi LCP sonrası ertele
     const consent = localStorage.getItem('cookie-consent');
     if (consent) return;
