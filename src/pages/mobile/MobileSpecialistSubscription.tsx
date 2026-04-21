@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
-import { CreditCard, CheckCircle2, Calendar, Package } from "lucide-react";
+import { CreditCard, CheckCircle2, Calendar, Package, Gift } from "lucide-react";
 
 export default function MobileSpecialistSubscription() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [sub, setSub] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [referralSummary, setReferralSummary] = useState<{ total: number; qualified: number; bonusGranted: number; bonusMonths: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +108,22 @@ export default function MobileSpecialistSubscription() {
         );
         setLoading(false);
 
+        // Referans özeti (paralel, hata olursa sessizce geç)
+        if (spec?.id) {
+          try {
+            const { data: refs } = await supabase
+              .from("specialist_referrals")
+              .select("status")
+              .eq("referrer_specialist_id", spec.id);
+            if (!cancelled && refs) {
+              const total = refs.length;
+              const qualified = refs.filter((r: any) => r.status === "qualified" || r.status === "bonus_granted").length;
+              const bonusGranted = refs.filter((r: any) => r.status === "bonus_granted").length;
+              setReferralSummary({ total, qualified, bonusGranted, bonusMonths: bonusGranted * 2 });
+            }
+          } catch {}
+        }
+
         // 2) ARKA PLANDA: Edge function ile ek kayıtları getir, varsa birleştir
         if (specialistEmail || specialistName) {
           try {
@@ -183,6 +200,37 @@ export default function MobileSpecialistSubscription() {
                 </div>
                 <div className="text-[13px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
                   Toplam {orders.length} ödeme kaydı
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Referans bonus kartı */}
+          {referralSummary && referralSummary.total > 0 && (
+            <div className="px-5 mb-5">
+              <div className="rounded-[24px] p-5" style={{ background: "hsl(var(--m-tint-mint))" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Gift className="w-4 h-4" style={{ color: "hsl(var(--m-text-primary))" }} />
+                  <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    Davet Bonusları
+                  </span>
+                </div>
+                <div className="text-[18px] font-bold mb-3" style={{ color: "hsl(var(--m-text-primary))" }}>
+                  +{referralSummary.bonusMonths} ay ücretsiz üyelik
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <div className="text-[20px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>{referralSummary.total}</div>
+                    <div className="text-[11px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Davet</div>
+                  </div>
+                  <div>
+                    <div className="text-[20px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>{referralSummary.qualified}</div>
+                    <div className="text-[11px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Hak Eden</div>
+                  </div>
+                  <div>
+                    <div className="text-[20px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>{referralSummary.bonusGranted}</div>
+                    <div className="text-[11px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Tanımlandı</div>
+                  </div>
                 </div>
               </div>
             </div>
