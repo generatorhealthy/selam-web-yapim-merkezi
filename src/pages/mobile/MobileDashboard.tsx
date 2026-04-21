@@ -371,14 +371,14 @@ export default function MobileDashboard() {
                     <Star className="w-4 h-4 text-white" fill="white" />
                   </div>
                   <span className="text-[11px] font-bold uppercase tracking-wider text-white/85">
-                    Danışan Yorumu Topla
+                    Danışanlardan Yorum Al
                   </span>
                 </div>
                 <h3 className="text-[18px] font-bold text-white leading-tight mb-1.5">
                   Profilinizi danışanlarınızla paylaşın
                 </h3>
                 <p className="text-[12.5px] text-white/80 mb-4 leading-snug">
-                  Daha fazla yorum, daha fazla güven ve daha çok danışan demektir.
+                  Daha fazla yorum alarak öne çık!
                 </p>
 
                 <div className="grid grid-cols-3 gap-2">
