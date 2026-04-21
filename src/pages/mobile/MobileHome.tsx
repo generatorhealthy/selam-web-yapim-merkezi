@@ -206,8 +206,18 @@ export default function MobileHome() {
           setTests(shuffledTests.slice(0, 6) as Test[]);
         }
         if (reviewsRes.data) {
-          const shuffledReviews = [...reviewsRes.data].sort(() => Math.random() - 0.5);
-          setReviews(shuffledReviews.slice(0, 5) as Review[]);
+          // Her uzmandan yalnızca 1 yorum al, sonra karıştır
+          const seen = new Set<string>();
+          const uniquePerSpecialist: Review[] = [];
+          for (const r of reviewsRes.data as Review[]) {
+            const key = (r as any).specialist_id || r.id;
+            if (!seen.has(key)) {
+              seen.add(key);
+              uniquePerSpecialist.push(r);
+            }
+          }
+          const shuffledReviews = uniquePerSpecialist.sort(() => Math.random() - 0.5);
+          setReviews(shuffledReviews.slice(0, 5));
         }
         if (specialistRows.length > 0) {
           // Tüm aktif uzmanları al, fotoğrafı olanları öne çıkar, her yenilemede karıştır
