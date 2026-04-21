@@ -17,7 +17,6 @@ import SpecialistTests from "@/components/SpecialistTests";
 import RecentlyViewedSpecialists, { addToRecentlyViewed } from "@/components/RecentlyViewedSpecialists";
 import WhatsAppContactDialog from "@/components/WhatsAppContactDialog";
 import { InterestsDisplay } from "@/components/InterestsSelector";
-import { Heart } from "lucide-react";
 
 interface Specialist {
   id: string;
@@ -536,7 +535,17 @@ const DoctorProfile = () => {
                     ) : (
                       <p className="text-gray-500 italic">Henüz biyografi bilgisi eklenmemiş.</p>
                     )}
-                    
+
+                    {specialist.interests && specialist.interests.length > 0 && (
+                      <div className="border-t pt-4">
+                        <h3 className="font-semibold mb-3 flex items-center gap-2 text-foreground">
+                          <CheckCircle className="w-5 h-5 text-primary" />
+                          İlgi Alanları
+                        </h3>
+                        <InterestsDisplay items={specialist.interests} variant="primary" />
+                      </div>
+                    )}
+
                     {specialist.education && (
                       <div className="border-t pt-4">
                         <h3 className="font-semibold mb-2 flex items-center gap-2">
