@@ -433,6 +433,23 @@ const ClientCalendar = () => {
             </Card>
           </div>
 
+          {/* Yüz Yüze Danışmanlık Toggle */}
+          <div className="mb-6 flex justify-end">
+            <Button
+              onClick={() => setShowFaceToFace((v) => !v)}
+              className={`${
+                showFaceToFace
+                  ? "bg-blue-700 hover:bg-blue-800"
+                  : "bg-blue-600 hover:bg-blue-700"
+              } text-white`}
+            >
+              <UserCheck className="w-4 h-4 mr-2" />
+              {showFaceToFace ? "Yüz Yüze Panelini Kapat" : "Yüz Yüze Danışmanlık"}
+            </Button>
+          </div>
+
+          {showFaceToFace && <FaceToFaceReferralsPanel />}
+
           {/* MANUAL URGENT NOTES PANEL */}
           <Card className="mb-6 bg-slate-800 border-slate-700 overflow-hidden">
             <CardHeader className="bg-slate-700 py-4 px-6 border-b border-slate-600">
