@@ -5675,6 +5675,7 @@ export type Database = {
           faq: string
           hospital: string
           id: string
+          interests: string[]
           name: string
           online_consultation: boolean
           phone: string
