@@ -1,12 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useUserRole } from "@/hooks/useUserRole";
-import { Plus, Minus, MapPin, Search, Users, UserCheck, Save, Trash2 } from "lucide-react";
+import { MapPin, Search, Users, UserCheck, Calendar } from "lucide-react";
 
 interface F2FSpecialist {
   id: string;
@@ -14,10 +12,8 @@ interface F2FSpecialist {
   specialty: string;
   city: string | null;
   internal_number: string | null;
-  referral_count: number;
-  notes: string | null;
-  last_updated_by_name: string | null;
-  updated_at: string | null;
+  monthly_count: number;
+  last_referred_at: string | null;
 }
 
 const FaceToFaceReferralsPanel = () => {
