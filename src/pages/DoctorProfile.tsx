@@ -16,6 +16,8 @@ import GoogleMap from "@/components/GoogleMap";
 import SpecialistTests from "@/components/SpecialistTests";
 import RecentlyViewedSpecialists, { addToRecentlyViewed } from "@/components/RecentlyViewedSpecialists";
 import WhatsAppContactDialog from "@/components/WhatsAppContactDialog";
+import { InterestsDisplay } from "@/components/InterestsSelector";
+import { Heart } from "lucide-react";
 
 interface Specialist {
   id: string;
@@ -45,6 +47,7 @@ interface Specialist {
   seo_description?: string;
   seo_keywords?: string;
   slug?: string;
+  interests?: string[];
 }
 
 interface BlogPost {
