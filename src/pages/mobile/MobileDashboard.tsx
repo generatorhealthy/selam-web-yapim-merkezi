@@ -98,6 +98,24 @@ export default function MobileDashboard() {
 
         const result = await refreshAppts(s.id);
 
+        // Referral summary
+        try {
+          const { data: refSummary } = await supabase.rpc("get_my_referral_summary");
+          if (refSummary && refSummary.length > 0) {
+            const r = refSummary[0];
+            setReferral({
+              code: r.code ?? null,
+              total_referrals: r.total_referrals ?? 0,
+              qualified_referrals: r.qualified_referrals ?? 0,
+              granted_referrals: r.granted_referrals ?? 0,
+              total_bonus_months: r.total_bonus_months ?? 0,
+              pending_bonus_months: r.pending_bonus_months ?? 0,
+            });
+          }
+        } catch (e) {
+          console.warn("referral summary load failed", e);
+        }
+
         const { count: openTickets } = await supabase
           .from("support_tickets" as any)
           .select("*", { count: "exact", head: true })
