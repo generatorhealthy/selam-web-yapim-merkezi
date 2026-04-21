@@ -25,6 +25,45 @@ const FaceToFaceReferralsPanel = () => {
   const [items, setItems] = useState<F2FSpecialist[]>([]);
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState<string>("all");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAddress, setEditAddress] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const startEdit = (s: F2FSpecialist) => {
+    setEditingId(s.id);
+    setEditAddress(s.address || "");
+    setEditCity(s.city || "");
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditAddress("");
+    setEditCity("");
+  };
+
+  const saveEdit = async (id: string) => {
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from("specialists")
+        .update({ address: editAddress.trim() || null, city: editCity.trim() || null })
+        .eq("id", id);
+      if (error) throw error;
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === id ? { ...it, address: editAddress.trim() || null, city: editCity.trim() || null } : it
+        )
+      );
+      toast({ title: "Güncellendi", description: "Konum bilgisi kaydedildi" });
+      cancelEdit();
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: "Hata", description: e.message || "Kaydedilemedi", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const now = new Date();
   const currentYear = now.getFullYear();
