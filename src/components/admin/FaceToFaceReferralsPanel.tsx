@@ -11,6 +11,7 @@ interface F2FSpecialist {
   name: string;
   specialty: string;
   city: string | null;
+  address: string | null;
   internal_number: string | null;
   monthly_count: number;
   last_referred_at: string | null;
