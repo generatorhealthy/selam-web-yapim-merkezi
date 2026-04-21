@@ -683,6 +683,28 @@ const SpecialistRegistration = () => {
                   />
                 </div>
 
+                {hasSuggestedInterests(formData.specialty) && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm text-muted-foreground font-normal">İlgi Alanları</Label>
+                      <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20 rounded-full px-2">
+                        İsteğe bağlı
+                      </Badge>
+                    </div>
+                    <p className="text-[12px] text-muted-foreground/80">
+                      Profilinizde gösterilecek danışmanlık alanlarınızı seçebilirsiniz. İstediğiniz zaman değiştirebilirsiniz.
+                    </p>
+                    <div className="bg-muted/30 rounded-2xl p-4">
+                      <InterestsSelector
+                        specialty={formData.specialty}
+                        value={interests}
+                        onChange={setInterests}
+                        showHeader={false}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Label className="text-sm text-muted-foreground font-normal">Sık Sorulan Sorular</Label>
