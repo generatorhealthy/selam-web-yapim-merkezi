@@ -210,13 +210,17 @@ const FaceToFaceReferralsPanel = () => {
                       <Badge variant="outline" className="border-slate-600 text-slate-300 text-xs">
                         {s.specialty}
                       </Badge>
-                      <span className="text-slate-400 text-xs flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {s.city || "Şehir yok"}
-                      </span>
                       {s.internal_number && (
                         <span className="text-slate-500 text-xs">#{s.internal_number}</span>
                       )}
+                    </div>
+                    <div className="flex items-start gap-1 mt-1.5 text-xs text-slate-300">
+                      <MapPin className="w-3 h-3 mt-0.5 shrink-0 text-slate-400" />
+                      <span className="leading-relaxed">
+                        {s.address && s.address.trim().length > 0
+                          ? s.address
+                          : s.city || "Adres bilgisi yok"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-400">
                       <Calendar className="w-3 h-3" />
