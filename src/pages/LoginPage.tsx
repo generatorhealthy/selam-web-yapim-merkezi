@@ -113,12 +113,13 @@ const LoginPage = () => {
       const email = loginIdentifier.trim().toLowerCase();
       setOtpSending(true);
       try {
-        const { data: existingPatient } = await supabase
-          .from('patient_profiles').select('id').eq('email', email).maybeSingle();
-        const { data: existingSpecialist } = await supabase
-          .from('specialists').select('id').eq('email', email).maybeSingle();
+        const [{ data: existingPatient }, { data: existingSpecialist }, { data: existingProfile }] = await Promise.all([
+          supabase.from('patient_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
+          supabase.from('specialists').select('id').ilike('email', email).limit(1).maybeSingle(),
+          supabase.from('user_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
+        ]);
 
-        if (!existingPatient && !existingSpecialist) {
+        if (!existingPatient && !existingSpecialist && !existingProfile) {
           toast({
             title: "Hesap Bulunamadı",
             description: "Bu e-posta ile kayıt yok. Üyelik sayfasına yönlendiriliyorsunuz...",
@@ -161,12 +162,13 @@ const LoginPage = () => {
 
       if (authError) {
         // If email doesn't exist anywhere, route to patient signup
-        const { data: existingPatient } = await supabase
-          .from('patient_profiles').select('id').eq('email', email).maybeSingle();
-        const { data: existingSpecialist } = await supabase
-          .from('specialists').select('id').eq('email', email).maybeSingle();
+        const [{ data: existingPatient }, { data: existingSpecialist }, { data: existingProfile }] = await Promise.all([
+          supabase.from('patient_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
+          supabase.from('specialists').select('id').ilike('email', email).limit(1).maybeSingle(),
+          supabase.from('user_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
+        ]);
 
-        if (!existingPatient && !existingSpecialist) {
+        if (!existingPatient && !existingSpecialist && !existingProfile) {
           toast({
             title: "Hesap Bulunamadı",
             description: "Bu e-posta ile kayıt yok. Üyelik sayfasına yönlendiriliyorsunuz...",
