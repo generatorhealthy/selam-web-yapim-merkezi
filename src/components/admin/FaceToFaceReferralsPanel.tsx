@@ -11,6 +11,7 @@ interface F2FSpecialist {
   name: string;
   specialty: string;
   city: string | null;
+  address: string | null;
   internal_number: string | null;
   monthly_count: number;
   last_referred_at: string | null;
@@ -33,7 +34,7 @@ const FaceToFaceReferralsPanel = () => {
 
       const { data: specialists, error: sErr } = await supabase
         .from("specialists")
-        .select("id, name, specialty, city, internal_number")
+        .select("id, name, specialty, city, address, internal_number")
         .eq("is_active", true)
         .eq("face_to_face_consultation", true)
         .order("name", { ascending: true });
@@ -66,13 +67,14 @@ const FaceToFaceReferralsPanel = () => {
         refMap.set(r.specialist_id, { count: sumCount, last: latest });
       });
 
-      const merged: F2FSpecialist[] = (specialists || []).map((s) => {
+      const merged: F2FSpecialist[] = (specialists || []).map((s: any) => {
         const r = refMap.get(s.id);
         return {
           id: s.id,
           name: s.name,
           specialty: s.specialty,
           city: s.city,
+          address: s.address ?? null,
           internal_number: s.internal_number,
           monthly_count: r?.count ?? 0,
           last_referred_at: r?.last ?? null,
@@ -106,6 +108,7 @@ const FaceToFaceReferralsPanel = () => {
         !q ||
         i.name.toLowerCase().includes(q) ||
         (i.city || "").toLowerCase().includes(q) ||
+        (i.address || "").toLowerCase().includes(q) ||
         (i.specialty || "").toLowerCase().includes(q);
       const matchCity = cityFilter === "all" || i.city === cityFilter;
       return matchSearch && matchCity;
@@ -208,13 +211,17 @@ const FaceToFaceReferralsPanel = () => {
                       <Badge variant="outline" className="border-slate-600 text-slate-300 text-xs">
                         {s.specialty}
                       </Badge>
-                      <span className="text-slate-400 text-xs flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {s.city || "Şehir yok"}
-                      </span>
                       {s.internal_number && (
                         <span className="text-slate-500 text-xs">#{s.internal_number}</span>
                       )}
+                    </div>
+                    <div className="flex items-start gap-1 mt-1.5 text-xs text-slate-300">
+                      <MapPin className="w-3 h-3 mt-0.5 shrink-0 text-slate-400" />
+                      <span className="leading-relaxed">
+                        {s.address && s.address.trim().length > 0
+                          ? s.address
+                          : s.city || "Adres bilgisi yok"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-400">
                       <Calendar className="w-3 h-3" />
