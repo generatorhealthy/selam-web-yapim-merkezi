@@ -4845,6 +4845,7 @@ export type Database = {
           faq: string | null
           hospital: string | null
           id: string
+          interests: string[] | null
           internal_number: string | null
           is_active: boolean | null
           name: string
@@ -4884,6 +4885,7 @@ export type Database = {
           faq?: string | null
           hospital?: string | null
           id?: string
+          interests?: string[] | null
           internal_number?: string | null
           is_active?: boolean | null
           name: string
@@ -4923,6 +4925,7 @@ export type Database = {
           faq?: string | null
           hospital?: string | null
           id?: string
+          interests?: string[] | null
           internal_number?: string | null
           is_active?: boolean | null
           name?: string
