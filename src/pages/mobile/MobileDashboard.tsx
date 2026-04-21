@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   Calendar, Clock, CheckCircle2, CheckCheck, FileSignature, ClipboardList,
-  MessageSquare, FileText, CreditCard, Users, User, Bell, Settings,
-  TrendingUp, Star, ChevronRight, Stethoscope, MapPin, Video, X, Check, Eye,
-  Share2, Copy, MessageCircle,
+  MessageSquare, FileText, CreditCard, Users, User,
+  Star, ChevronRight, Stethoscope, MapPin, Video, X, Check, Eye,
+  Share2, Copy, MessageCircle, Gift,
 } from "lucide-react";
 
 interface UpcomingAppt {
@@ -21,12 +21,6 @@ interface UpcomingAppt {
   consultation_topic?: string | null;
 }
 
-const TONE_PALETTE = [
-  { bg: "var(--m-tint-peach)", label: "Bekleyen" },
-  { bg: "var(--m-tint-sand)",  label: "Onaylanan" },
-  { bg: "var(--m-tint-mint)",  label: "Tamamlanan" },
-  { bg: "var(--m-tint-lilac)", label: "Toplam" },
-];
 
 export default function MobileDashboard() {
   const navigate = useNavigate();
@@ -38,7 +32,14 @@ export default function MobileDashboard() {
   const [upcoming, setUpcoming] = useState<UpcomingAppt[]>([]);
   const [pendingReqs, setPendingReqs] = useState<UpcomingAppt[]>([]);
   const [actingId, setActingId] = useState<string | null>(null);
-  const [weekly, setWeekly] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+  const [referral, setReferral] = useState<{
+    code: string | null;
+    total_referrals: number;
+    qualified_referrals: number;
+    granted_referrals: number;
+    total_bonus_months: number;
+    pending_bonus_months: number;
+  }>({ code: null, total_referrals: 0, qualified_referrals: 0, granted_referrals: 0, total_bonus_months: 0, pending_bonus_months: 0 });
 
   const refreshAppts = async (specialistId: string) => {
     const { data: appts } = await supabase
@@ -70,16 +71,6 @@ export default function MobileDashboard() {
       .slice(0, 6);
     setUpcoming(up as UpcomingAppt[]);
 
-    // Weekly buckets (last 7 days incl today)
-    const buckets = new Array(7).fill(0) as number[];
-    const now = new Date();
-    list.forEach((a) => {
-      const d = new Date(a.appointment_date);
-      const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
-      if (diff >= 0 && diff < 7) buckets[6 - diff] += 1;
-    });
-    setWeekly(buckets);
-
     return { pending };
   };
 
@@ -99,6 +90,24 @@ export default function MobileDashboard() {
         setSpec(s);
 
         const result = await refreshAppts(s.id);
+
+        // Referral summary
+        try {
+          const { data: refSummary } = await supabase.rpc("get_my_referral_summary");
+          if (refSummary && refSummary.length > 0) {
+            const r = refSummary[0];
+            setReferral({
+              code: r.code ?? null,
+              total_referrals: r.total_referrals ?? 0,
+              qualified_referrals: r.qualified_referrals ?? 0,
+              granted_referrals: r.granted_referrals ?? 0,
+              total_bonus_months: r.total_bonus_months ?? 0,
+              pending_bonus_months: r.pending_bonus_months ?? 0,
+            });
+          }
+        } catch (e) {
+          console.warn("referral summary load failed", e);
+        }
 
         const { count: openTickets } = await supabase
           .from("support_tickets" as any)
@@ -140,27 +149,40 @@ export default function MobileDashboard() {
   };
 
   const initial = (spec?.name || "U").charAt(0).toUpperCase();
-  const totalNotif = badges.appts + badges.blog + badges.support;
 
-  // Goal — günlük randevu hedefi: 8
-  const dailyGoal = 8;
-  const todayCount = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return upcoming.filter((a) => a.appointment_date === today).length;
-  }, [upcoming]);
-  const goalPct = Math.min(100, Math.round((todayCount / dailyGoal) * 100));
-
-  // SVG ring
-  const ringR = 30;
-  const ringC = 2 * Math.PI * ringR;
-  const ringOffset = ringC - (goalPct / 100) * ringC;
-
-  const maxWeekly = Math.max(1, ...weekly);
-  const weekDays = ["P", "S", "Ç", "P", "C", "C", "P"];
+  const profileUrl = "https://doktorumol.com.tr";
+  const referralShareMessage = referral.code
+    ? `Merhaba 👋\n\nDoktorumol.com.tr platformunu sana öneriyorum. Aşağıdaki davet kodumu kullanarak kayıt olabilirsin:\n\n🎁 Davet kodum: ${referral.code}\n\nKayıt linki: ${profileUrl}/kayit-ol?ref=${referral.code}\n\nGörüşmek üzere!`
+    : "";
+  const refWa = referral.code ? `https://wa.me/?text=${encodeURIComponent(referralShareMessage)}` : "#";
+  const refSms = referral.code ? `sms:?&body=${encodeURIComponent(referralShareMessage)}` : "#";
+  const copyRefCode = async () => {
+    if (!referral.code) return;
+    try {
+      await navigator.clipboard.writeText(referral.code);
+      toast({ title: "Davet kodu kopyalandı", description: referral.code });
+    } catch {
+      toast({ title: "Kopyalanamadı", variant: "destructive" });
+    }
+  };
+  const nativeShareReferral = async () => {
+    if (!referral.code) return;
+    if ((navigator as any).share) {
+      try {
+        await (navigator as any).share({
+          title: "Doktorumol davet kodum",
+          text: referralShareMessage,
+          url: `${profileUrl}/kayit-ol?ref=${referral.code}`,
+        });
+        return;
+      } catch {}
+    }
+    copyRefCode();
+  };
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 110 }} className="w-full max-w-full overflow-x-hidden">
-      <div className="m-safe-top" />
+      <div className="m-safe-top" style={{ minHeight: 56 }} />
 
       {/* === Profile hero card === */}
       <div className="px-5 mb-5">
@@ -342,14 +364,14 @@ export default function MobileDashboard() {
                     <Star className="w-4 h-4 text-white" fill="white" />
                   </div>
                   <span className="text-[11px] font-bold uppercase tracking-wider text-white/85">
-                    Danışan Yorumu Topla
+                    Danışanlardan Yorum Al
                   </span>
                 </div>
                 <h3 className="text-[18px] font-bold text-white leading-tight mb-1.5">
                   Profilinizi danışanlarınızla paylaşın
                 </h3>
                 <p className="text-[12.5px] text-white/80 mb-4 leading-snug">
-                  Daha fazla yorum, daha fazla güven ve daha çok danışan demektir.
+                  Daha fazla yorum alarak öne çık!
                 </p>
 
                 <div className="grid grid-cols-3 gap-2">
@@ -397,73 +419,103 @@ export default function MobileDashboard() {
         );
       })()}
 
-      {/* === Activity (weekly bars) + Daily goal ring === */}
-      <div className="px-5 mb-6 grid grid-cols-5 gap-3">
-        {/* Weekly bars */}
+      {/* === Referans / Davet Kodu kartı === */}
+      <div className="px-5 mb-6">
         <div
-          className="col-span-3 rounded-[22px] p-4"
-          style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow-sm)" }}
+          className="rounded-[24px] p-5 relative overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, hsl(28 92% 58%) 0%, hsl(12 90% 55%) 100%)",
+            boxShadow: "0 14px 32px -10px hsl(20 90% 50% / 0.45)",
+          }}
         >
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-tertiary))" }}>
-                Haftalık
-              </div>
-              <div className="text-[15px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
-                Aktivite
-              </div>
-            </div>
-            <TrendingUp className="w-4 h-4" style={{ color: "hsl(var(--m-accent))" }} />
-          </div>
-          <div className="flex items-end justify-between h-20 gap-1.5">
-            {weekly.map((v, i) => {
-              const h = Math.max(8, (v / maxWeekly) * 70);
-              const isToday = i === 6;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                  <div
-                    className="w-full rounded-t-md rounded-b-md"
-                    style={{
-                      height: h,
-                      background: isToday ? "hsl(var(--m-accent))" : "hsl(var(--m-surface-muted))",
-                    }}
-                  />
-                  <span className="text-[10px] font-medium" style={{ color: "hsl(var(--m-text-tertiary))" }}>
-                    {weekDays[i]}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full" style={{ background: "hsl(0 0% 100% / 0.10)" }} />
+          <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full" style={{ background: "hsl(0 0% 100% / 0.07)" }} />
 
-        {/* Daily goal ring */}
-        <div
-          className="col-span-2 rounded-[22px] p-4 flex flex-col items-center justify-center"
-          style={{ background: "hsl(var(--m-ink))" }}
-        >
-          <div className="relative w-[80px] h-[80px]">
-            <svg width="80" height="80" viewBox="0 0 80 80" className="-rotate-90">
-              <circle cx="40" cy="40" r={ringR} fill="none" stroke="hsl(var(--m-bg) / 0.15)" strokeWidth="6" />
-              <circle
-                cx="40"
-                cy="40"
-                r={ringR}
-                fill="none"
-                stroke="hsl(var(--m-accent))"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeDasharray={ringC}
-                strokeDashoffset={ringOffset}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[18px] font-bold" style={{ color: "hsl(var(--m-bg))" }}>{todayCount}</span>
-              <span className="text-[9px]" style={{ color: "hsl(var(--m-bg) / 0.6)" }}>/ {dailyGoal}</span>
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-2">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: "hsl(0 0% 100% / 0.22)" }}
+              >
+                <Gift className="w-4 h-4 text-white" strokeWidth={2.4} />
+              </div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-white/85">
+                Meslektaşını Davet Et
+              </span>
             </div>
-          </div>
-          <div className="text-[11px] font-medium mt-2" style={{ color: "hsl(var(--m-bg) / 0.7)" }}>
-            Bugünkü hedef
+
+            <h3 className="text-[18px] font-bold text-white leading-tight mb-1.5">
+              Her başarılı davet için <span className="underline decoration-white/60">+2 ay ücretsiz</span>
+            </h3>
+            <p className="text-[12.5px] text-white/85 mb-3 leading-snug">
+              Davet kodunu paylaş. Davet ettiğin uzman kayıt olup ödeme yaptığında 12 aylık taahhüt sonunda aboneliğine 2 ay eklenir.
+            </p>
+
+            {/* Code box */}
+            <button
+              onClick={copyRefCode}
+              className="w-full flex items-center justify-between gap-2 mb-3 m-pressable rounded-2xl px-4 py-3"
+              style={{ background: "hsl(0 0% 100% / 0.18)", border: "1px dashed hsl(0 0% 100% / 0.45)" }}
+            >
+              <div className="text-left">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-white/70">Davet Kodun</div>
+                <div className="text-[20px] font-bold text-white tracking-[0.18em] leading-tight">
+                  {referral.code || "—"}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: "white" }}>
+                <Copy className="w-3.5 h-3.5" style={{ color: "hsl(20 85% 50%)" }} strokeWidth={2.6} />
+                <span className="text-[11px] font-bold" style={{ color: "hsl(20 85% 50%)" }}>Kopyala</span>
+              </div>
+            </button>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="rounded-xl px-2 py-2 text-center" style={{ background: "hsl(0 0% 100% / 0.14)" }}>
+                <div className="text-[16px] font-bold text-white leading-none">{referral.qualified_referrals}</div>
+                <div className="text-[10px] text-white/75 mt-1">Başarılı Davet</div>
+              </div>
+              <div className="rounded-xl px-2 py-2 text-center" style={{ background: "hsl(0 0% 100% / 0.14)" }}>
+                <div className="text-[16px] font-bold text-white leading-none">+{referral.total_bonus_months}</div>
+                <div className="text-[10px] text-white/75 mt-1">Ay Bonus</div>
+              </div>
+              <div className="rounded-xl px-2 py-2 text-center" style={{ background: "hsl(0 0% 100% / 0.14)" }}>
+                <div className="text-[16px] font-bold text-white leading-none">{referral.granted_referrals}</div>
+                <div className="text-[10px] text-white/75 mt-1">Tanımlanan</div>
+              </div>
+            </div>
+
+            {/* Share buttons */}
+            <div className="grid grid-cols-3 gap-2">
+              <a
+                href={refWa}
+                target="_blank"
+                rel="noreferrer"
+                className="h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable"
+                style={{ background: "white" }}
+                onClick={(e) => { if (!referral.code) { e.preventDefault(); } }}
+              >
+                <MessageCircle className="w-4 h-4" style={{ color: "hsl(142 70% 35%)" }} strokeWidth={2.5} />
+                <span className="text-[12px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>WhatsApp</span>
+              </a>
+              <a
+                href={refSms}
+                className="h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable"
+                style={{ background: "hsl(0 0% 100% / 0.18)" }}
+                onClick={(e) => { if (!referral.code) { e.preventDefault(); } }}
+              >
+                <MessageSquare className="w-4 h-4 text-white" strokeWidth={2.5} />
+                <span className="text-[12px] font-bold text-white">SMS</span>
+              </a>
+              <button
+                onClick={nativeShareReferral}
+                className="h-11 rounded-full flex items-center justify-center gap-1.5 m-pressable"
+                style={{ background: "hsl(0 0% 0% / 0.18)" }}
+              >
+                <Share2 className="w-4 h-4 text-white" strokeWidth={2.5} />
+                <span className="text-[12px] font-bold text-white">Paylaş</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
