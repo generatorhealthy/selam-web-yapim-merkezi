@@ -658,43 +658,74 @@ export default function MobileDashboard() {
 
       {/* === Quick Actions Grid === */}
       <div className="px-5 mb-2">
-        <h3 className="text-[18px] font-bold mb-3" style={{ color: "hsl(var(--m-text-primary))" }}>Hızlı Erişim</h3>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-[18px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>Hızlı Erişim</h3>
+          <span className="text-[11px] font-medium" style={{ color: "hsl(var(--m-text-tertiary))" }}>
+            Tüm araçlar
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
           {[
-            { icon: User, label: "Profil", to: "/mobile/specialist-profile" },
-            { icon: Eye, label: "Profilim", to: spec?.id ? `/mobile/specialist/${spec.id}` : "/mobile/specialist-profile" },
-            { icon: FileSignature, label: "Sözleşme", to: "/mobile/specialist-contracts" },
-            { icon: ClipboardList, label: "Testler", to: "/mobile/tests" },
-            { icon: MessageSquare, label: "Destek", to: "/mobile/specialist-support", badge: badges.support },
-            { icon: FileText, label: "Blog", to: "/mobile/specialist-blog", badge: badges.blog },
-            { icon: CreditCard, label: "Abonelik", to: "/mobile/specialist-subscription" },
-            { icon: Users, label: "Danışan", to: "/mobile/specialist-clients" },
-            { icon: Calendar, label: "Randevu", to: "/mobile/specialist-appointments", badge: badges.appts },
+            { icon: Calendar, label: "Randevu", desc: "Takvim", to: "/mobile/specialist-appointments", badge: badges.appts, hue: 220, gradFrom: "hsl(220 90% 60%)", gradTo: "hsl(232 88% 52%)" },
+            { icon: Users, label: "Danışan", desc: "Liste", to: "/mobile/specialist-clients", hue: 280, gradFrom: "hsl(280 75% 60%)", gradTo: "hsl(265 80% 55%)" },
+            { icon: MessageSquare, label: "Destek", desc: "Talepler", to: "/mobile/specialist-support", badge: badges.support, hue: 12, gradFrom: "hsl(12 90% 60%)", gradTo: "hsl(355 85% 55%)" },
+            { icon: FileText, label: "Blog", desc: "Yazılarım", to: "/mobile/specialist-blog", badge: badges.blog, hue: 35, gradFrom: "hsl(35 95% 58%)", gradTo: "hsl(20 92% 52%)" },
+            { icon: ClipboardList, label: "Testler", desc: "Yönet", to: "/mobile/tests", hue: 160, gradFrom: "hsl(160 70% 45%)", gradTo: "hsl(175 75% 40%)" },
+            { icon: FileSignature, label: "Sözleşme", desc: "Belgeler", to: "/mobile/specialist-contracts", hue: 200, gradFrom: "hsl(200 80% 55%)", gradTo: "hsl(212 85% 48%)" },
+            { icon: CreditCard, label: "Abonelik", desc: "Ödemeler", to: "/mobile/specialist-subscription", hue: 145, gradFrom: "hsl(145 65% 45%)", gradTo: "hsl(160 70% 40%)" },
+            { icon: Eye, label: "Profilim", desc: "Önizle", to: spec?.id ? `/mobile/specialist/${spec.id}` : "/mobile/specialist-profile", hue: 250, gradFrom: "hsl(250 80% 65%)", gradTo: "hsl(265 75% 58%)" },
+            { icon: User, label: "Profil", desc: "Düzenle", to: "/mobile/specialist-profile", hue: 320, gradFrom: "hsl(330 75% 60%)", gradTo: "hsl(310 70% 52%)" },
           ].map((it) => {
             const Icon = it.icon;
             return (
               <button
                 key={it.label}
                 onClick={() => navigate(it.to)}
-                className="flex flex-col items-center gap-1.5 m-pressable"
+                className="relative overflow-hidden rounded-[20px] p-3 flex flex-col items-start text-left m-pressable"
+                style={{
+                  background: "hsl(var(--m-surface))",
+                  boxShadow: "var(--m-shadow-sm)",
+                  minHeight: 96,
+                }}
               >
+                {/* decorative gradient blob */}
                 <div
-                  className="relative w-14 h-14 rounded-[18px] flex items-center justify-center"
-                  style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow-sm)" }}
+                  aria-hidden
+                  className="absolute -top-6 -right-6 w-20 h-20 rounded-full opacity-90"
+                  style={{ background: `linear-gradient(135deg, ${it.gradFrom}, ${it.gradTo})`, filter: "blur(0.5px)" }}
+                />
+                <div
+                  aria-hidden
+                  className="absolute -bottom-8 -left-8 w-16 h-16 rounded-full opacity-10"
+                  style={{ background: it.gradFrom }}
+                />
+
+                <div
+                  className="relative w-9 h-9 rounded-xl flex items-center justify-center mb-auto"
+                  style={{
+                    background: `linear-gradient(135deg, ${it.gradFrom}, ${it.gradTo})`,
+                    boxShadow: `0 6px 14px -4px ${it.gradFrom}`,
+                  }}
                 >
-                  <Icon className="w-5 h-5" style={{ color: "hsl(var(--m-accent))" }} />
+                  <Icon className="w-[18px] h-[18px]" style={{ color: "white" }} />
                   {!!it.badge && it.badge > 0 && (
                     <span
-                      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
-                      style={{ background: "hsl(var(--m-danger))", color: "white" }}
+                      className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
+                      style={{ background: "hsl(var(--m-danger))", color: "white", border: "2px solid hsl(var(--m-surface))" }}
                     >
                       {it.badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[10.5px] font-semibold text-center" style={{ color: "hsl(var(--m-text-primary))" }}>
-                  {it.label}
-                </span>
+
+                <div className="relative mt-2">
+                  <div className="text-[13px] font-bold leading-tight" style={{ color: "hsl(var(--m-text-primary))" }}>
+                    {it.label}
+                  </div>
+                  <div className="text-[10.5px] font-medium mt-0.5" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    {it.desc}
+                  </div>
+                </div>
               </button>
             );
           })}
