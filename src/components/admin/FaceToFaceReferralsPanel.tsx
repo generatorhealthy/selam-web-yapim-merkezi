@@ -2,9 +2,11 @@ import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Search, Users, UserCheck, Calendar } from "lucide-react";
+import { MapPin, Search, Users, UserCheck, Calendar, Pencil, Save, X } from "lucide-react";
 
 interface F2FSpecialist {
   id: string;
