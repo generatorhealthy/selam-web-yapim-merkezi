@@ -89,7 +89,7 @@ export default function MobileSpecialistProfile() {
         seo_title: data.seo_title || "",
         seo_description: data.seo_description || "",
         seo_keywords: data.seo_keywords || "",
-        interests: Array.isArray(data.interests) ? data.interests : [],
+        interests: Array.isArray((data as any).interests) ? (data as any).interests : [],
       });
       setLoading(false);
     })();
@@ -130,7 +130,7 @@ export default function MobileSpecialistProfile() {
         seo_description: form.seo_description,
         seo_keywords: form.seo_keywords,
         interests: form.interests,
-      })
+      } as any)
       .eq("id", spec.id);
     setSaving(false);
     if (error) {
