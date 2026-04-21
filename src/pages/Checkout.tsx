@@ -139,7 +139,8 @@ const Checkout = () => {
     zipCode: "34100",
     companyName: "",
     taxNumber: "",
-    taxOffice: ""
+    taxOffice: "",
+    referralCode: ""
   });
 
   const getSubscriptionReferenceCode = (packageType: string) => {
@@ -442,6 +443,16 @@ const handleCreditCardPayment = async () => {
         contract_ip_address: clientIP
       };
 
+      // Davet kodunu güvenli şekilde sakla — Iyzico'ya gönderilmez,
+      // SpecialistRegistration kayıt formunda otomatik doldurulur.
+      const referralCodeClean = formData.referralCode?.trim().toUpperCase() || "";
+      if (referralCodeClean) {
+        try {
+          localStorage.setItem('pending_referral_code', referralCodeClean);
+          localStorage.setItem('pending_referral_email', formData.email.toLowerCase());
+        } catch (e) { /* ignore */ }
+      }
+
       console.log('Mobile debug - Order data being saved:', orderData);
       console.log('Mobile debug - User agent:', navigator.userAgent);
       console.log('Mobile debug - Client IP:', clientIP);
@@ -732,6 +743,25 @@ const handleCreditCardPayment = async () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Davet Kodu (Opsiyonel) */}
+                  <div className="p-4 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5">
+                    <Label htmlFor="referralCode" className="text-sm font-semibold flex items-center gap-2">
+                      🎁 Davet Kodu (Opsiyonel)
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1 mb-2">
+                      Bir uzman sizi davet ettiyse kodunu girin. Kayıt sonrası bu kod otomatik bağlanır.
+                    </p>
+                    <Input
+                      id="referralCode"
+                      name="referralCode"
+                      value={formData.referralCode}
+                      onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value.toUpperCase() }))}
+                      placeholder="Örn: A1B2C3D4"
+                      maxLength={8}
+                      className="uppercase tracking-wider font-mono"
+                    />
+                  </div>
                 </CardContent>
               </Card>
 

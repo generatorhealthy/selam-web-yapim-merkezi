@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -91,6 +91,14 @@ const SpecialistRegistration = () => {
   const [bio, setBio] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
   const [referralCode, setReferralCode] = useState("");
+
+  // Checkout sırasında girilen davet kodunu otomatik doldur
+  useEffect(() => {
+    try {
+      const pending = localStorage.getItem('pending_referral_code');
+      if (pending) setReferralCode(pending);
+    } catch (e) { /* ignore */ }
+  }, []);
 
   const steps = [
     { num: 1, label: "Hesap", icon: User },
