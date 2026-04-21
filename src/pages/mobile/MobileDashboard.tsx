@@ -78,16 +78,6 @@ export default function MobileDashboard() {
       .slice(0, 6);
     setUpcoming(up as UpcomingAppt[]);
 
-    // Weekly buckets (last 7 days incl today)
-    const buckets = new Array(7).fill(0) as number[];
-    const now = new Date();
-    list.forEach((a) => {
-      const d = new Date(a.appointment_date);
-      const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
-      if (diff >= 0 && diff < 7) buckets[6 - diff] += 1;
-    });
-    setWeekly(buckets);
-
     return { pending };
   };
 
