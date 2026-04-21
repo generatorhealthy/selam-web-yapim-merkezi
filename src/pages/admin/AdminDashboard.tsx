@@ -787,26 +787,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         
-        {/* Floating Doki Bubble - hidden on mobile */}
-        <div 
-          onClick={() => window.open('/divan_paneli/ai-assistant', '_blank')}
-          className="hidden md:block fixed bottom-8 right-8 z-50 cursor-pointer group"
-        >
-          <div className="relative">
-            {/* Main bubble */}
-            <div className="relative w-24 h-24 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-              <DokiIcon className="w-24 h-24" />
-            </div>
-            
-            {/* Label tooltip */}
-            <div className="absolute bottom-full right-0 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
-              <div className="bg-slate-900 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-xl whitespace-nowrap">
-                Doki'ye Sor 🤖
-                <div className="absolute top-full right-6 w-3 h-3 bg-slate-900 transform rotate-45 -translate-y-1.5" />
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Floating Doki Bubble - gizlendi */}
         
         <Footer />
         
