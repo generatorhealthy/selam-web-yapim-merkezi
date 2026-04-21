@@ -7,10 +7,11 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote, Plus, Trash2, Pencil } from "lucide-react";
+import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote, Plus, Trash2, Pencil, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Helmet } from "react-helmet-async";
+import FaceToFaceReferralsPanel from "@/components/admin/FaceToFaceReferralsPanel";
 
 interface UrgentNote {
   id: string;
@@ -55,6 +56,7 @@ const ClientCalendar = () => {
   const [editingUrgentId, setEditingUrgentId] = useState<string | null>(null);
   const [editingUrgentText, setEditingUrgentText] = useState("");
   const [savingUrgent, setSavingUrgent] = useState(false);
+  const [showFaceToFace, setShowFaceToFace] = useState(false);
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   
@@ -430,6 +432,23 @@ const ClientCalendar = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Yüz Yüze Danışmanlık Toggle */}
+          <div className="mb-6 flex justify-end">
+            <Button
+              onClick={() => setShowFaceToFace((v) => !v)}
+              className={`${
+                showFaceToFace
+                  ? "bg-blue-700 hover:bg-blue-800"
+                  : "bg-blue-600 hover:bg-blue-700"
+              } text-white`}
+            >
+              <UserCheck className="w-4 h-4 mr-2" />
+              {showFaceToFace ? "Yüz Yüze Panelini Kapat" : "Yüz Yüze Danışmanlık"}
+            </Button>
+          </div>
+
+          {showFaceToFace && <FaceToFaceReferralsPanel />}
 
           {/* MANUAL URGENT NOTES PANEL */}
           <Card className="mb-6 bg-slate-800 border-slate-700 overflow-hidden">
