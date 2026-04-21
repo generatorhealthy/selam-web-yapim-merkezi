@@ -34,7 +34,7 @@ const FaceToFaceReferralsPanel = () => {
 
       const { data: specialists, error: sErr } = await supabase
         .from("specialists")
-        .select("id, name, specialty, city, internal_number")
+        .select("id, name, specialty, city, address, internal_number")
         .eq("is_active", true)
         .eq("face_to_face_consultation", true)
         .order("name", { ascending: true });
@@ -67,13 +67,14 @@ const FaceToFaceReferralsPanel = () => {
         refMap.set(r.specialist_id, { count: sumCount, last: latest });
       });
 
-      const merged: F2FSpecialist[] = (specialists || []).map((s) => {
+      const merged: F2FSpecialist[] = (specialists || []).map((s: any) => {
         const r = refMap.get(s.id);
         return {
           id: s.id,
           name: s.name,
           specialty: s.specialty,
           city: s.city,
+          address: s.address ?? null,
           internal_number: s.internal_number,
           monthly_count: r?.count ?? 0,
           last_referred_at: r?.last ?? null,
