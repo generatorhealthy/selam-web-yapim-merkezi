@@ -17,15 +17,39 @@ interface Test {
 export default function MobileTests() {
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSpecialist, setIsSpecialist] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      // Check if logged-in user is a specialist; if so, show only their own tests
+      const { data: { session } } = await supabase.auth.getSession();
+      let specialistId: string | null = null;
+
+      if (session?.user) {
+        const { data: spec } = await supabase
+          .from("specialists")
+          .select("id")
+          .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
+          .limit(1)
+          .maybeSingle();
+        if (spec?.id) {
+          specialistId = spec.id;
+          setIsSpecialist(true);
+        }
+      }
+
+      let query = supabase
         .from("tests")
         .select("id, title, description, category, image_url, specialty_area")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
+
+      if (specialistId) {
+        query = query.eq("specialist_id", specialistId);
+      }
+
+      const { data } = await query;
       setTests((data as Test[]) || []);
       setLoading(false);
     })();
@@ -33,7 +57,10 @@ export default function MobileTests() {
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh" }}>
-      <MobileHeader largeTitle="Testler" subtitle="Kendinizi tanıyın" />
+      <MobileHeader
+        largeTitle={isSpecialist ? "Testlerim" : "Testler"}
+        subtitle={isSpecialist ? "Oluşturduğunuz testler" : "Kendinizi tanıyın"}
+      />
 
       <div className="px-5 pb-8 space-y-2">
         {loading ? (
@@ -41,7 +68,11 @@ export default function MobileTests() {
             <div key={i} className="h-24 rounded-2xl animate-pulse" style={{ background: "hsl(var(--m-surface-muted))" }} />
           ))
         ) : tests.length === 0 ? (
-          <MobileEmptyState icon={Brain} title="Test yok" description="Yakında eklenecek" />
+          <MobileEmptyState
+            icon={Brain}
+            title={isSpecialist ? "Henüz test yok" : "Test yok"}
+            description={isSpecialist ? "Henüz test oluşturmadınız" : "Yakında eklenecek"}
+          />
         ) : (
           tests.map((t) => (
             <button
