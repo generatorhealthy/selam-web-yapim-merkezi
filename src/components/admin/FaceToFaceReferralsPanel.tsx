@@ -108,6 +108,7 @@ const FaceToFaceReferralsPanel = () => {
         !q ||
         i.name.toLowerCase().includes(q) ||
         (i.city || "").toLowerCase().includes(q) ||
+        (i.address || "").toLowerCase().includes(q) ||
         (i.specialty || "").toLowerCase().includes(q);
       const matchCity = cityFilter === "all" || i.city === cityFilter;
       return matchSearch && matchCity;
