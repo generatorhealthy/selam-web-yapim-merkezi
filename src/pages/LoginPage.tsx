@@ -109,31 +109,10 @@ const LoginPage = () => {
         setOtpSending(false);
       }
     } else {
-      // Check if email exists in system before asking for password
-      const email = loginIdentifier.trim().toLowerCase();
-      setOtpSending(true);
-      try {
-        const [{ data: existingPatient }, { data: existingSpecialist }, { data: existingProfile }] = await Promise.all([
-          supabase.from('patient_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
-          supabase.from('specialists').select('id').ilike('email', email).limit(1).maybeSingle(),
-          supabase.from('user_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
-        ]);
-
-        if (!existingPatient && !existingSpecialist && !existingProfile) {
-          toast({
-            title: "Hesap Bulunamadı",
-            description: "Bu e-posta ile kayıt yok. Üyelik sayfasına yönlendiriliyorsunuz...",
-          });
-          navigate(`/uye-ol?email=${encodeURIComponent(email)}`);
-          return;
-        }
-        setStep('password');
-      } catch {
-        // On error, fall back to password step
-        setStep('password');
-      } finally {
-        setOtpSending(false);
-      }
+      // Skip pre-check: Supabase Auth itself will validate credentials.
+      // This ensures specialists with valid auth accounts can always log in,
+      // even if their profile rows are missing from public tables.
+      setStep('password');
     }
   };
 
@@ -161,22 +140,6 @@ const LoginPage = () => {
       });
 
       if (authError) {
-        // If email doesn't exist anywhere, route to patient signup
-        const [{ data: existingPatient }, { data: existingSpecialist }, { data: existingProfile }] = await Promise.all([
-          supabase.from('patient_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
-          supabase.from('specialists').select('id').ilike('email', email).limit(1).maybeSingle(),
-          supabase.from('user_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
-        ]);
-
-        if (!existingPatient && !existingSpecialist && !existingProfile) {
-          toast({
-            title: "Hesap Bulunamadı",
-            description: "Bu e-posta ile kayıt yok. Üyelik sayfasına yönlendiriliyorsunuz...",
-          });
-          navigate(`/uye-ol?email=${encodeURIComponent(email)}`);
-          return;
-        }
-
         toast({ title: "Giriş Hatası", description: "E-posta veya şifre hatalı.", variant: "destructive" });
         return;
       }
