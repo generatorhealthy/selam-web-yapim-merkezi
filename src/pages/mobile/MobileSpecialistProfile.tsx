@@ -388,6 +388,43 @@ export default function MobileSpecialistProfile() {
             );
           })()}
 
+          {section === "interests" && showInterests && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                <Heart className="w-4 h-4" /> İlgi Alanları
+              </div>
+              <p className="text-[12px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                Profilinizde göstermek istediğiniz ilgi alanlarını seçin. İstediğiniz zaman ekleyip çıkarabilirsiniz.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {mergedInterests.map((item) => {
+                  const active = interestSet.has(item);
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggleInterest(item)}
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-full text-[12px] font-medium m-pressable transition-all"
+                      style={{
+                        background: active ? "hsl(var(--m-accent))" : "hsl(var(--m-bg))",
+                        color: active ? "white" : "hsl(var(--m-text-primary))",
+                        border: active ? "1px solid hsl(var(--m-accent))" : "1px solid hsl(220 13% 91%)",
+                      }}
+                    >
+                      {active ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3 opacity-60" />}
+                      <span>{item}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {form.interests.length > 0 && (
+                <p className="text-[12px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  {form.interests.length} ilgi alanı seçili
+                </p>
+              )}
+            </div>
+          )}
+
           {section === "seo" && (
             <>
               <Field icon={Search} label="SEO Başlığı" value={form.seo_title} onChange={(v: string) => setForm({ ...form, seo_title: v })} />
