@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { MobileHeader } from "@/components/mobile/MobileHeader";
 import {
   Calendar, Clock, CheckCircle2, CheckCheck, FileSignature, ClipboardList,
-  MessageSquare, FileText, CreditCard, Users, User, Bell, Settings,
-  TrendingUp, Star, ChevronRight, Stethoscope, MapPin, Video, X, Check, Eye,
-  Share2, Copy, MessageCircle, Gift, Sparkles,
+  MessageSquare, FileText, CreditCard, Users, User,
+  Star, ChevronRight, Stethoscope, MapPin, Video, X, Check, Eye,
+  Share2, Copy, MessageCircle, Gift,
 } from "lucide-react";
 
 interface UpcomingAppt {
