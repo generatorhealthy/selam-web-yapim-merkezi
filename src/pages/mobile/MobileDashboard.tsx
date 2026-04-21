@@ -21,12 +21,6 @@ interface UpcomingAppt {
   consultation_topic?: string | null;
 }
 
-const TONE_PALETTE = [
-  { bg: "var(--m-tint-peach)", label: "Bekleyen" },
-  { bg: "var(--m-tint-sand)",  label: "Onaylanan" },
-  { bg: "var(--m-tint-mint)",  label: "Tamamlanan" },
-  { bg: "var(--m-tint-lilac)", label: "Toplam" },
-];
 
 export default function MobileDashboard() {
   const navigate = useNavigate();
