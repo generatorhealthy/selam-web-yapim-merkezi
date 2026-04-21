@@ -90,6 +90,7 @@ const SpecialistRegistration = () => {
   const [seoKeywords, setSeoKeywords] = useState("");
   const [bio, setBio] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
+  const [referralCode, setReferralCode] = useState("");
 
   const steps = [
     { num: 1, label: "Hesap", icon: User },
@@ -288,6 +289,7 @@ const SpecialistRegistration = () => {
         seo_description: seoDescription || null,
         seo_keywords: seoKeywords || null,
         interests: interests.length > 0 ? interests : [],
+        referral_signup_code: referralCode.trim().toUpperCase() || null,
       } as any);
 
       if (error) {
@@ -461,6 +463,23 @@ const SpecialistRegistration = () => {
                     placeholder="Şifrenizi tekrar girin"
                     className={inputClass}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground font-normal">
+                    Davet Kodu <span className="text-xs opacity-60">(isteğe bağlı)</span>
+                  </Label>
+                  <Input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder="Örn: A1B2C3D4"
+                    maxLength={8}
+                    className={inputClass}
+                  />
+                  <p className="text-xs text-muted-foreground/70">
+                    Sizi davet eden uzmanın kodunu girerseniz, ilk yıl ödemeniz tamamlandığında o uzmana 2 ay hediye üyelik tanımlanır.
+                  </p>
                 </div>
 
                 <Button
