@@ -156,23 +156,36 @@ export default function MobileDashboard() {
   };
 
   const initial = (spec?.name || "U").charAt(0).toUpperCase();
-  const totalNotif = badges.appts + badges.blog + badges.support;
 
-  // Goal — günlük randevu hedefi: 8
-  const dailyGoal = 8;
-  const todayCount = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return upcoming.filter((a) => a.appointment_date === today).length;
-  }, [upcoming]);
-  const goalPct = Math.min(100, Math.round((todayCount / dailyGoal) * 100));
-
-  // SVG ring
-  const ringR = 30;
-  const ringC = 2 * Math.PI * ringR;
-  const ringOffset = ringC - (goalPct / 100) * ringC;
-
-  const maxWeekly = Math.max(1, ...weekly);
-  const weekDays = ["P", "S", "Ç", "P", "C", "C", "P"];
+  const profileUrl = "https://doktorumol.com.tr";
+  const referralShareMessage = referral.code
+    ? `Merhaba 👋\n\nDoktorumol.com.tr platformunu sana öneriyorum. Aşağıdaki davet kodumu kullanarak kayıt olabilirsin:\n\n🎁 Davet kodum: ${referral.code}\n\nKayıt linki: ${profileUrl}/kayit-ol?ref=${referral.code}\n\nGörüşmek üzere!`
+    : "";
+  const refWa = referral.code ? `https://wa.me/?text=${encodeURIComponent(referralShareMessage)}` : "#";
+  const refSms = referral.code ? `sms:?&body=${encodeURIComponent(referralShareMessage)}` : "#";
+  const copyRefCode = async () => {
+    if (!referral.code) return;
+    try {
+      await navigator.clipboard.writeText(referral.code);
+      toast({ title: "Davet kodu kopyalandı", description: referral.code });
+    } catch {
+      toast({ title: "Kopyalanamadı", variant: "destructive" });
+    }
+  };
+  const nativeShareReferral = async () => {
+    if (!referral.code) return;
+    if ((navigator as any).share) {
+      try {
+        await (navigator as any).share({
+          title: "Doktorumol davet kodum",
+          text: referralShareMessage,
+          url: `${profileUrl}/kayit-ol?ref=${referral.code}`,
+        });
+        return;
+      } catch {}
+    }
+    copyRefCode();
+  };
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 110 }} className="w-full max-w-full overflow-x-hidden">
