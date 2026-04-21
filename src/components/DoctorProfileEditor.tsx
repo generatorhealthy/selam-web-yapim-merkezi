@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, MapPin, Award, FileText, MessageSquare, Phone, ClipboardList, Save, Clock, Mail, GraduationCap, Building2, Briefcase, MapPinned } from "lucide-react";
 import FAQSection from "@/components/FAQSection";
 import TestManagement from "@/components/TestManagement";
+import InterestsSelector from "@/components/InterestsSelector";
+import { hasSuggestedInterests } from "@/lib/specialistInterests";
+import { Heart } from "lucide-react";
 
 interface FAQItem {
   question: string;
@@ -193,7 +196,8 @@ const DoctorProfileEditor = () => {
           faq: faqString,
           online_consultation: specialist.online_consultation,
           face_to_face_consultation: specialist.face_to_face_consultation,
-          available_time_slots: specialist.available_time_slots || []
+          available_time_slots: specialist.available_time_slots || [],
+          interests: specialist.interests || [],
         })
         .eq('id', specialist.id);
 
@@ -409,6 +413,28 @@ const DoctorProfileEditor = () => {
               </div>
             </CardContent>
           </Card>
+
+          {hasSuggestedInterests(specialist.specialty) && (
+            <Card className="border shadow-sm rounded-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-6 py-4 border-b">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-primary" />
+                  İlgi Alanları
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Profilinizde gösterilecek danışmanlık alanlarınızı seçin. İstediğiniz zaman ekleyip çıkarabilirsiniz.
+                </p>
+              </div>
+              <CardContent className="p-6">
+                <InterestsSelector
+                  specialty={specialist.specialty}
+                  value={specialist.interests || []}
+                  onChange={(next) => handleInputChange('interests', next)}
+                  showHeader={false}
+                />
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="certifications">

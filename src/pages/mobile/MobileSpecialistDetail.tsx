@@ -37,6 +37,7 @@ interface Specialist {
   available_days?: string[] | null;
   faq?: string | null;
   slug?: string | null;
+  interests?: string[] | null;
 }
 
 interface Review {
@@ -315,6 +316,26 @@ export default function MobileSpecialistDetail() {
               <ChevronDown className={`w-4 h-4 transition-transform ${bioExpanded ? "rotate-180" : ""}`} />
             </button>
           )}
+        </Section>
+      )}
+
+      {/* İlgi Alanları */}
+      {specialist.interests && specialist.interests.length > 0 && (
+        <Section title="İlgi Alanları">
+          <div className="flex flex-wrap gap-2">
+            {specialist.interests.map((item) => (
+              <span
+                key={item}
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-semibold"
+                style={{
+                  background: "hsl(var(--m-accent))",
+                  color: "hsl(var(--m-bg))",
+                }}
+              >
+                {item}
+              </span>
+            ))}
+          </div>
         </Section>
       )}
 
