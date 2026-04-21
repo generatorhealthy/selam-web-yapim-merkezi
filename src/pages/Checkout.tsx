@@ -139,7 +139,8 @@ const Checkout = () => {
     zipCode: "34100",
     companyName: "",
     taxNumber: "",
-    taxOffice: ""
+    taxOffice: "",
+    referralCode: ""
   });
 
   const getSubscriptionReferenceCode = (packageType: string) => {
