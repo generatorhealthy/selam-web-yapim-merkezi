@@ -92,6 +92,14 @@ const SpecialistRegistration = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [referralCode, setReferralCode] = useState("");
 
+  // Checkout sırasında girilen davet kodunu otomatik doldur
+  useEffect(() => {
+    try {
+      const pending = localStorage.getItem('pending_referral_code');
+      if (pending) setReferralCode(pending);
+    } catch (e) { /* ignore */ }
+  }, []);
+
   const steps = [
     { num: 1, label: "Hesap", icon: User },
     { num: 2, label: "Bilgiler", icon: Stethoscope },
