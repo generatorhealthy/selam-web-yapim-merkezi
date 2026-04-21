@@ -90,6 +90,7 @@ export const MobileLayout = () => {
   ];
 
   const specialistNavItems = [
+    { to: "/mobile/home", Icon: HomeFill, label: "Anasayfa" },
     { to: "/mobile/dashboard", Icon: DashboardFill, label: "Panel" },
     { to: "/mobile/specialist-appointments", Icon: CalendarFill, label: "Randevu" },
     { to: "/mobile/specialist-clients", Icon: FileFill, label: "Danışan" },
