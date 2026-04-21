@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { LogOut, Save, User, Phone, MapPin, FileText, GraduationCap, Award, Building2, Clock, CalendarDays, HelpCircle, Search, Plus, Trash2, Heart } from "lucide-react";
+import { LogOut, Save, User, Phone, MapPin, FileText, GraduationCap, Award, Building2, Clock, CalendarDays, HelpCircle, Search, Plus, Trash2, Heart, Check } from "lucide-react";
 import { getSuggestedInterests, hasSuggestedInterests } from "@/lib/specialistInterests";
 
 type FaqItem = { question: string; answer: string };
