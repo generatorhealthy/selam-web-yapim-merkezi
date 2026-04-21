@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import FileUpload from "@/components/FileUpload";
 import RegistrationAnalyticsTracker from "@/components/RegistrationAnalyticsTracker";
+import InterestsSelector from "@/components/InterestsSelector";
+import { hasSuggestedInterests } from "@/lib/specialistInterests";
 import { sendSms } from "@/services/smsService";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
@@ -87,6 +89,7 @@ const SpecialistRegistration = () => {
   const [seoDescription, setSeoDescription] = useState("");
   const [seoKeywords, setSeoKeywords] = useState("");
   const [bio, setBio] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
 
   const steps = [
     { num: 1, label: "Hesap", icon: User },
@@ -284,7 +287,8 @@ const SpecialistRegistration = () => {
         seo_title: seoTitle || null,
         seo_description: seoDescription || null,
         seo_keywords: seoKeywords || null,
-      });
+        interests: interests.length > 0 ? interests : [],
+      } as any);
 
       if (error) {
         console.error("Specialist creation error:", error);
