@@ -56,6 +56,7 @@ const ClientCalendar = () => {
   const [editingUrgentId, setEditingUrgentId] = useState<string | null>(null);
   const [editingUrgentText, setEditingUrgentText] = useState("");
   const [savingUrgent, setSavingUrgent] = useState(false);
+  const [showFaceToFace, setShowFaceToFace] = useState(false);
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   
