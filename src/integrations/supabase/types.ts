@@ -4775,6 +4775,119 @@ export type Database = {
         }
         Relationships: []
       }
+      specialist_referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          specialist_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          specialist_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          specialist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialist_referral_codes_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialist_referral_codes_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      specialist_referrals: {
+        Row: {
+          bonus_applied_at: string | null
+          bonus_apply_after: string | null
+          bonus_months: number
+          bonus_order_id: string | null
+          created_at: string
+          id: string
+          qualified_at: string | null
+          referral_code: string
+          referred_specialist_id: string
+          referrer_specialist_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bonus_applied_at?: string | null
+          bonus_apply_after?: string | null
+          bonus_months?: number
+          bonus_order_id?: string | null
+          created_at?: string
+          id?: string
+          qualified_at?: string | null
+          referral_code: string
+          referred_specialist_id: string
+          referrer_specialist_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bonus_applied_at?: string | null
+          bonus_apply_after?: string | null
+          bonus_months?: number
+          bonus_order_id?: string | null
+          created_at?: string
+          id?: string
+          qualified_at?: string | null
+          referral_code?: string
+          referred_specialist_id?: string
+          referrer_specialist_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialist_referrals_referred_specialist_id_fkey"
+            columns: ["referred_specialist_id"]
+            isOneToOne: true
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialist_referrals_referred_specialist_id_fkey"
+            columns: ["referred_specialist_id"]
+            isOneToOne: true
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialist_referrals_referrer_specialist_id_fkey"
+            columns: ["referrer_specialist_id"]
+            isOneToOne: false
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialist_referrals_referrer_specialist_id_fkey"
+            columns: ["referrer_specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       specialist_tests: {
         Row: {
           created_at: string | null
@@ -4855,6 +4968,7 @@ export type Database = {
           phone: string | null
           profile_picture: string | null
           rating: number | null
+          referral_signup_code: string | null
           registration_source: string | null
           reviews_count: number | null
           seo_description: string | null
@@ -4895,6 +5009,7 @@ export type Database = {
           phone?: string | null
           profile_picture?: string | null
           rating?: number | null
+          referral_signup_code?: string | null
           registration_source?: string | null
           reviews_count?: number | null
           seo_description?: string | null
@@ -4935,6 +5050,7 @@ export type Database = {
           phone?: string | null
           profile_picture?: string | null
           rating?: number | null
+          referral_signup_code?: string | null
           registration_source?: string | null
           reviews_count?: number | null
           seo_description?: string | null
@@ -5633,8 +5749,20 @@ export type Database = {
       }
       extract_first_int: { Args: { p_text: string }; Returns: number }
       generate_specialist_slug: { Args: { p_name: string }; Returns: string }
+      generate_unique_referral_code: { Args: never; Returns: string }
       get_current_user_role: { Args: never; Returns: string }
       get_default_time_slots: { Args: never; Returns: Json }
+      get_my_referral_summary: {
+        Args: never
+        Returns: {
+          code: string
+          granted_referrals: number
+          pending_bonus_months: number
+          qualified_referrals: number
+          total_bonus_months: number
+          total_referrals: number
+        }[]
+      }
       get_order_stats: {
         Args: never
         Returns: {
@@ -5716,6 +5844,14 @@ export type Database = {
           reviews_count: number
           slug: string
           specialty: string
+        }[]
+      }
+      get_referrer_by_code: {
+        Args: { p_code: string }
+        Returns: {
+          code: string
+          referrer_id: string
+          referrer_name: string
         }[]
       }
       get_specialist_follower_count: {
