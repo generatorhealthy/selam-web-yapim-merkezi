@@ -3881,6 +3881,54 @@ export type Database = {
         }
         Relationships: []
       }
+      face_to_face_referrals: {
+        Row: {
+          created_at: string
+          id: string
+          last_updated_by: string | null
+          last_updated_by_name: string | null
+          notes: string | null
+          referral_count: number
+          specialist_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_updated_by?: string | null
+          last_updated_by_name?: string | null
+          notes?: string | null
+          referral_count?: number
+          specialist_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_updated_by?: string | null
+          last_updated_by_name?: string | null
+          notes?: string | null
+          referral_count?: number
+          specialist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "face_to_face_referrals_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "face_to_face_referrals_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorite_specialists: {
         Row: {
           created_at: string
