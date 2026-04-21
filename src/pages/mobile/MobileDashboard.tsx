@@ -39,7 +39,14 @@ export default function MobileDashboard() {
   const [upcoming, setUpcoming] = useState<UpcomingAppt[]>([]);
   const [pendingReqs, setPendingReqs] = useState<UpcomingAppt[]>([]);
   const [actingId, setActingId] = useState<string | null>(null);
-  const [weekly, setWeekly] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+  const [referral, setReferral] = useState<{
+    code: string | null;
+    total_referrals: number;
+    qualified_referrals: number;
+    granted_referrals: number;
+    total_bonus_months: number;
+    pending_bonus_months: number;
+  }>({ code: null, total_referrals: 0, qualified_referrals: 0, granted_referrals: 0, total_bonus_months: 0, pending_bonus_months: 0 });
 
   const refreshAppts = async (specialistId: string) => {
     const { data: appts } = await supabase
