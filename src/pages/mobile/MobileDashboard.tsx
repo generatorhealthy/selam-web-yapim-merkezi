@@ -189,7 +189,7 @@ export default function MobileDashboard() {
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 110 }} className="w-full max-w-full overflow-x-hidden">
-      <div className="m-safe-top" />
+      <div className="m-safe-top" style={{ minHeight: 56 }} />
 
       {/* === Profile hero card === */}
       <div className="px-5 mb-5">
