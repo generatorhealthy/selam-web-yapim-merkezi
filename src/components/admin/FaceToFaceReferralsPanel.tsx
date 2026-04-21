@@ -256,14 +256,57 @@ const FaceToFaceReferralsPanel = () => {
                         <span className="text-slate-500 text-xs">#{s.internal_number}</span>
                       )}
                     </div>
-                    <div className="flex items-start gap-1 mt-1.5 text-xs text-slate-300">
-                      <MapPin className="w-3 h-3 mt-0.5 shrink-0 text-slate-400" />
-                      <span className="leading-relaxed">
-                        {s.address && s.address.trim().length > 0
-                          ? s.address
-                          : s.city || "Adres bilgisi yok"}
-                      </span>
-                    </div>
+                    {editingId === s.id ? (
+                      <div className="mt-2 space-y-2">
+                        <Input
+                          value={editCity}
+                          onChange={(e) => setEditCity(e.target.value)}
+                          placeholder="Şehir"
+                          className="bg-slate-800 border-slate-600 text-white text-xs h-8"
+                        />
+                        <Textarea
+                          value={editAddress}
+                          onChange={(e) => setEditAddress(e.target.value)}
+                          placeholder="Tam adres (mahalle, cadde, ilçe...)"
+                          className="bg-slate-800 border-slate-600 text-white text-xs min-h-[60px]"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => saveEdit(s.id)}
+                            disabled={saving}
+                            className="h-7 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                          >
+                            <Save className="w-3 h-3 mr-1" /> Kaydet
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={cancelEdit}
+                            disabled={saving}
+                            className="h-7 border-slate-600 text-slate-300 hover:bg-slate-800 text-xs"
+                          >
+                            <X className="w-3 h-3 mr-1" /> İptal
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-1 mt-1.5 text-xs text-slate-300 group">
+                        <MapPin className="w-3 h-3 mt-0.5 shrink-0 text-slate-400" />
+                        <span className="leading-relaxed flex-1">
+                          {s.address && s.address.trim().length > 0
+                            ? s.address
+                            : s.city || "Adres bilgisi yok"}
+                        </span>
+                        <button
+                          onClick={() => startEdit(s)}
+                          className="opacity-60 hover:opacity-100 text-blue-400 hover:text-blue-300 shrink-0"
+                          title="Konumu düzenle"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                     <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-400">
                       <Calendar className="w-3 h-3" />
                       {s.last_referred_at ? (
