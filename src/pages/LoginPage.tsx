@@ -140,22 +140,6 @@ const LoginPage = () => {
       });
 
       if (authError) {
-        // If email doesn't exist anywhere, route to patient signup
-        const [{ data: existingPatient }, { data: existingSpecialist }, { data: existingProfile }] = await Promise.all([
-          supabase.from('patient_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
-          supabase.from('specialists').select('id').ilike('email', email).limit(1).maybeSingle(),
-          supabase.from('user_profiles').select('id').ilike('email', email).limit(1).maybeSingle(),
-        ]);
-
-        if (!existingPatient && !existingSpecialist && !existingProfile) {
-          toast({
-            title: "Hesap Bulunamadı",
-            description: "Bu e-posta ile kayıt yok. Üyelik sayfasına yönlendiriliyorsunuz...",
-          });
-          navigate(`/uye-ol?email=${encodeURIComponent(email)}`);
-          return;
-        }
-
         toast({ title: "Giriş Hatası", description: "E-posta veya şifre hatalı.", variant: "destructive" });
         return;
       }
