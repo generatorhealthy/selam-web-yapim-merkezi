@@ -7,12 +7,11 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote, Plus, Trash2, Pencil, MapPin, Minus, UserCheck } from "lucide-react";
+import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote, Plus, Trash2, Pencil, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Helmet } from "react-helmet-async";
+import FaceToFaceReferralsPanel from "@/components/admin/FaceToFaceReferralsPanel";
 
 interface UrgentNote {
   id: string;
