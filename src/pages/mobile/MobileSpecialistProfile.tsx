@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { LogOut, Save, User, Phone, MapPin, FileText, GraduationCap, Award, Building2, Clock, CalendarDays, HelpCircle, Search, Plus, Trash2 } from "lucide-react";
+import { LogOut, Save, User, Phone, MapPin, FileText, GraduationCap, Award, Building2, Clock, CalendarDays, HelpCircle, Search, Plus, Trash2, Heart } from "lucide-react";
+import { getSuggestedInterests, hasSuggestedInterests } from "@/lib/specialistInterests";
 
 type FaqItem = { question: string; answer: string };
 
@@ -36,7 +37,7 @@ const DAYS = [
   { key: "sunday", label: "Paz" },
 ];
 
-type Section = "basic" | "professional" | "schedule" | "extra" | "seo";
+type Section = "basic" | "professional" | "interests" | "schedule" | "extra" | "seo";
 
 export default function MobileSpecialistProfile() {
   const navigate = useNavigate();
@@ -54,6 +55,7 @@ export default function MobileSpecialistProfile() {
     online_consultation: false, face_to_face_consultation: false,
     faq: "",
     seo_title: "", seo_description: "", seo_keywords: "",
+    interests: [] as string[],
   });
 
   useEffect(() => {
@@ -87,6 +89,7 @@ export default function MobileSpecialistProfile() {
         seo_title: data.seo_title || "",
         seo_description: data.seo_description || "",
         seo_keywords: data.seo_keywords || "",
+        interests: Array.isArray(data.interests) ? data.interests : [],
       });
       setLoading(false);
     })();
@@ -126,6 +129,7 @@ export default function MobileSpecialistProfile() {
         seo_title: form.seo_title,
         seo_description: form.seo_description,
         seo_keywords: form.seo_keywords,
+        interests: form.interests,
       })
       .eq("id", spec.id);
     setSaving(false);
