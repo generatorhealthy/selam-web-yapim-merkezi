@@ -205,6 +205,37 @@ export default function MobileSpecialistSubscription() {
             </div>
           )}
 
+          {/* Referans bonus kartı */}
+          {referralSummary && referralSummary.total > 0 && (
+            <div className="px-5 mb-5">
+              <div className="rounded-[24px] p-5" style={{ background: "hsl(var(--m-tint-mint))" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Gift className="w-4 h-4" style={{ color: "hsl(var(--m-text-primary))" }} />
+                  <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                    Davet Bonusları
+                  </span>
+                </div>
+                <div className="text-[18px] font-bold mb-3" style={{ color: "hsl(var(--m-text-primary))" }}>
+                  +{referralSummary.bonusMonths} ay ücretsiz üyelik
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <div className="text-[20px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>{referralSummary.total}</div>
+                    <div className="text-[11px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Davet</div>
+                  </div>
+                  <div>
+                    <div className="text-[20px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>{referralSummary.qualified}</div>
+                    <div className="text-[11px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Hak Eden</div>
+                  </div>
+                  <div>
+                    <div className="text-[20px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>{referralSummary.bonusGranted}</div>
+                    <div className="text-[11px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Tanımlandı</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Months grid */}
           {sub && (
             <div className="px-5 mb-6">
