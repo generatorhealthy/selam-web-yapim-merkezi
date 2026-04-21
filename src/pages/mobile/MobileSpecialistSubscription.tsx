@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
-import { CreditCard, CheckCircle2, Calendar, Package } from "lucide-react";
+import { CreditCard, CheckCircle2, Calendar, Package, Gift } from "lucide-react";
 
 export default function MobileSpecialistSubscription() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [sub, setSub] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [referralSummary, setReferralSummary] = useState<{ total: number; qualified: number; bonusGranted: number; bonusMonths: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,6 +107,22 @@ export default function MobileSpecialistSubscription() {
           ),
         );
         setLoading(false);
+
+        // Referans özeti (paralel, hata olursa sessizce geç)
+        if (spec?.id) {
+          try {
+            const { data: refs } = await supabase
+              .from("specialist_referrals")
+              .select("status")
+              .eq("referrer_specialist_id", spec.id);
+            if (!cancelled && refs) {
+              const total = refs.length;
+              const qualified = refs.filter((r: any) => r.status === "qualified" || r.status === "bonus_granted").length;
+              const bonusGranted = refs.filter((r: any) => r.status === "bonus_granted").length;
+              setReferralSummary({ total, qualified, bonusGranted, bonusMonths: bonusGranted * 2 });
+            }
+          } catch {}
+        }
 
         // 2) ARKA PLANDA: Edge function ile ek kayıtları getir, varsa birleştir
         if (specialistEmail || specialistName) {
