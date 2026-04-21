@@ -25,19 +25,36 @@ export default function MobileTests() {
       // Check if logged-in user is a specialist; if so, show only their own tests
       const { data: { session } } = await supabase.auth.getSession();
       let specialistId: string | null = null;
+      let isSpec = false;
 
       if (session?.user) {
-        const { data: spec } = await supabase
+        // Try by user_id first
+        const { data: byUserId } = await supabase
           .from("specialists")
           .select("id")
-          .or(`user_id.eq.${session.user.id},email.eq.${session.user.email}`)
+          .eq("user_id", session.user.id)
           .limit(1)
           .maybeSingle();
-        if (spec?.id) {
-          specialistId = spec.id;
-          setIsSpecialist(true);
+
+        if (byUserId?.id) {
+          specialistId = byUserId.id;
+          isSpec = true;
+        } else if (session.user.email) {
+          // Fallback: match by email (case-insensitive)
+          const { data: byEmail } = await supabase
+            .from("specialists")
+            .select("id")
+            .ilike("email", session.user.email)
+            .limit(1)
+            .maybeSingle();
+          if (byEmail?.id) {
+            specialistId = byEmail.id;
+            isSpec = true;
+          }
         }
       }
+
+      setIsSpecialist(isSpec);
 
       let query = supabase
         .from("tests")
@@ -45,7 +62,7 @@ export default function MobileTests() {
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
-      if (specialistId) {
+      if (isSpec && specialistId) {
         query = query.eq("specialist_id", specialistId);
       }
 
