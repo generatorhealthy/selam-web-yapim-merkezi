@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import FileUpload from "@/components/FileUpload";
 import RegistrationAnalyticsTracker from "@/components/RegistrationAnalyticsTracker";
+import InterestsSelector from "@/components/InterestsSelector";
+import { hasSuggestedInterests } from "@/lib/specialistInterests";
 import { sendSms } from "@/services/smsService";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
@@ -87,6 +89,7 @@ const SpecialistRegistration = () => {
   const [seoDescription, setSeoDescription] = useState("");
   const [seoKeywords, setSeoKeywords] = useState("");
   const [bio, setBio] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
 
   const steps = [
     { num: 1, label: "Hesap", icon: User },
@@ -284,7 +287,8 @@ const SpecialistRegistration = () => {
         seo_title: seoTitle || null,
         seo_description: seoDescription || null,
         seo_keywords: seoKeywords || null,
-      });
+        interests: interests.length > 0 ? interests : [],
+      } as any);
 
       if (error) {
         console.error("Specialist creation error:", error);
@@ -678,6 +682,28 @@ const SpecialistRegistration = () => {
                     className="rounded-2xl border-muted bg-muted/40 px-4 py-3 text-base placeholder:text-muted-foreground/60 focus:bg-background focus:border-primary/40 transition-all"
                   />
                 </div>
+
+                {hasSuggestedInterests(formData.specialty) && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm text-muted-foreground font-normal">İlgi Alanları</Label>
+                      <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20 rounded-full px-2">
+                        İsteğe bağlı
+                      </Badge>
+                    </div>
+                    <p className="text-[12px] text-muted-foreground/80">
+                      Profilinizde gösterilecek danışmanlık alanlarınızı seçebilirsiniz. İstediğiniz zaman değiştirebilirsiniz.
+                    </p>
+                    <div className="bg-muted/30 rounded-2xl p-4">
+                      <InterestsSelector
+                        specialty={formData.specialty}
+                        value={interests}
+                        onChange={setInterests}
+                        showHeader={false}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
