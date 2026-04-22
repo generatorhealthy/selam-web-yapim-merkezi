@@ -494,7 +494,39 @@ export default function MobileHome() {
             Hemen oluştur
           </div>
         </button>
-        {isPatientRole && recentSpecialist ? (
+        {mySpecialist ? (
+          <button
+            onClick={() => navigate("/mobile/dashboard")}
+            className="rounded-[22px] p-3 text-left m-pressable flex items-center gap-3"
+            style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+          >
+            {mySpecialist.profile_picture ? (
+              <img
+                src={mySpecialist.profile_picture}
+                alt={mySpecialist.name}
+                className="w-12 h-12 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0"
+                style={{ background: "hsl(var(--m-ink))" }}
+              >
+                {mySpecialist.name?.charAt(0) ?? "U"}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                Profilim
+              </div>
+              <div className="text-[14px] font-bold truncate" style={{ color: "hsl(var(--m-text-primary))" }}>
+                {mySpecialist.name}
+              </div>
+              <div className="text-[11px] truncate" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                {mySpecialist.specialty || "Uzman"}
+              </div>
+            </div>
+          </button>
+        ) : isPatientRole && recentSpecialist ? (
           <button
             onClick={() => navigate(`/mobile/specialist/${recentSpecialist.id}`)}
             className="rounded-[22px] p-3 text-left m-pressable flex items-center gap-3"
