@@ -35,7 +35,10 @@ export const MobileHeader = ({
   return (
     <header
       className={`${sticky ? "sticky top-0 z-30" : ""} m-safe-top`}
-      style={{ background: "hsl(var(--m-bg))" }}
+      style={{
+        background: "hsl(var(--m-bg))",
+        paddingTop: "max(env(safe-area-inset-top), 44px)",
+      }}
     >
       {/* Top bar */}
       <div className="min-h-14 py-2 px-4 flex items-center justify-between gap-2 w-full max-w-full">
