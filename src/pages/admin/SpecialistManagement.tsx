@@ -209,9 +209,11 @@ const SpecialistManagement = () => {
   // Filtering and sorting logic
   useEffect(() => {
     let filtered = specialists.filter(specialist => {
-      const matchesSearch = specialist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          specialist.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          specialist.city.toLowerCase().includes(searchTerm.toLowerCase());
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        (specialist.name ?? "").toLowerCase().includes(term) ||
+        (specialist.specialty ?? "").toLowerCase().includes(term) ||
+        (specialist.city ?? "").toLowerCase().includes(term);
       
       const matchesStatus = filterStatus === "all" || 
                           (filterStatus === "active" && specialist.is_active) ||
