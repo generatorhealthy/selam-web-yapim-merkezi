@@ -77,12 +77,11 @@ export default function MobileSpecialistAppointments() {
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 100 }}>
       <MobileHeader
-        showBack
         largeTitle="Randevular"
         subtitle="Tüm danışan randevularınız"
         trailing={
           <button
-            onClick={() => navigate("/doktor-paneli")}
+            onClick={() => navigate("/mobile/specialist-appointments/new")}
             className="w-10 h-10 rounded-full flex items-center justify-center m-pressable"
             style={{ background: "hsl(var(--m-accent))", color: "white" }}
             aria-label="Yeni randevu ekle"

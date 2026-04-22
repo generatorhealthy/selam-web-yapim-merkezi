@@ -35,6 +35,7 @@ const MobilePatientFavorites = lazy(() => import("./pages/mobile/MobilePatientFa
 const MobilePatientProfile = lazy(() => import("./pages/mobile/MobilePatientProfile"));
 const MobilePatientTests = lazy(() => import("./pages/mobile/MobilePatientTests"));
 const MobileSpecialistAppointments = lazy(() => import("./pages/mobile/MobileSpecialistAppointments"));
+const MobileSpecialistNewAppointment = lazy(() => import("./pages/mobile/MobileSpecialistNewAppointment"));
 const MobileSpecialistClients = lazy(() => import("./pages/mobile/MobileSpecialistClients"));
 const MobileSpecialistProfile = lazy(() => import("./pages/mobile/MobileSpecialistProfile"));
 const MobileSpecialistBlog = lazy(() => import("./pages/mobile/MobileSpecialistBlog"));
@@ -189,6 +190,7 @@ const AppContent = () => {
               <Route path="login" element={<MobileLogin />} />
               <Route path="dashboard" element={<MobileDashboard />} />
               <Route path="specialist-appointments" element={<MobileSpecialistAppointments />} />
+              <Route path="specialist-appointments/new" element={<MobileSpecialistNewAppointment />} />
               <Route path="specialist-clients" element={<MobileSpecialistClients />} />
               <Route path="specialist-profile" element={<MobileSpecialistProfile />} />
               <Route path="specialist-blog" element={<MobileSpecialistBlog />} />
