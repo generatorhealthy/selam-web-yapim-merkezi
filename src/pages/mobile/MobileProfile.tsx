@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { LogOut, Calendar, Brain, Bell, Shield, HelpCircle, FileText, LogIn, ChevronRight } from "lucide-react";
+import { LogOut, Calendar, Brain, Bell, LogIn, ChevronRight } from "lucide-react";
 
 export default function MobileProfile() {
   const navigate = useNavigate();
@@ -41,11 +41,8 @@ export default function MobileProfile() {
 
   const menuItems = [
     { icon: Calendar, label: "Randevularım", onClick: () => navigate("/mobile/appointments") },
-    { icon: Brain, label: "Testler", onClick: () => navigate("/mobile/tests") },
+    { icon: Brain, label: "Testler", onClick: () => navigate("/mobile/patient-tests") },
     { icon: Bell, label: "Bildirimler", onClick: () => toast({ title: "Yakında" }) },
-    { icon: Shield, label: "Gizlilik", onClick: () => toast({ title: "Yakında" }) },
-    { icon: FileText, label: "Sözleşmeler", onClick: () => toast({ title: "Yakında" }) },
-    { icon: HelpCircle, label: "Yardım", onClick: () => toast({ title: "Yakında" }) },
   ];
 
   // Misafir → sadece giriş yap ekranı
