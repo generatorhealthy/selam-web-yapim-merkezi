@@ -205,6 +205,7 @@ const AppContent = () => {
               <Route path="patient-appointments" element={<MobilePatientAppointments />} />
               <Route path="patient-favorites" element={<MobilePatientFavorites />} />
               <Route path="patient-profile" element={<MobilePatientProfile />} />
+              <Route path="patient-tests" element={<MobilePatientTests />} />
             </Route>
           )}
 
