@@ -130,6 +130,23 @@ export default function MobileHome() {
     if (list.length > 0) setRecentSpecialist(list[0]);
   }, []);
 
+  // Giriş yapan uzmanı (kendi kartını göstermek için) yükle
+  useEffect(() => {
+    if (!authedUserId && !authedEmail) { setMySpecialist(null); return; }
+    (async () => {
+      const orParts: string[] = [];
+      if (authedUserId) orParts.push(`user_id.eq.${authedUserId}`);
+      if (authedEmail) orParts.push(`email.eq.${authedEmail}`);
+      const { data } = await supabase
+        .from("specialists")
+        .select("id,name,specialty,profile_picture,slug")
+        .or(orParts.join(","))
+        .limit(1)
+        .maybeSingle();
+      setMySpecialist(data ?? null);
+    })();
+  }, [authedUserId, authedEmail]);
+
   useEffect(() => {
     if (!authedUserId && !authedEmail) { setUpcoming(null); return; }
     (async () => {
