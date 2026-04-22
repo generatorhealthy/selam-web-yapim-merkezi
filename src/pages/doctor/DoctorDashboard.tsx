@@ -15,9 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity, CreditCard, Package, Sparkles, Eye, PenLine, ClipboardList, Phone } from "lucide-react";
+import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity, CreditCard, Package, Sparkles, Eye, PenLine, ClipboardList, Phone, UserPlus } from "lucide-react";
 import ContractDialog from "@/components/ContractDialog";
 import { ClientPortfolio } from "@/components/ClientPortfolio";
+import SpecialistReferralsPanel from "@/components/SpecialistReferralsPanel";
 import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
 
 // Appointment Form Component
@@ -923,6 +924,7 @@ const DoctorDashboard = () => {
     { id: 'dashboard', label: 'Gösterge Paneli', icon: BarChart3 },
     { id: 'appointments', label: 'Randevular', icon: Calendar, badge: pendingAppointments },
     { id: 'contracts', label: 'Sözleşmeler', icon: FileSignature },
+    { id: 'referrals', label: 'Davetlerim', icon: UserPlus },
     { id: 'test-results', label: 'Test Cevapları', icon: ClipboardList },
     { id: 'support', label: 'Destek Talebi', icon: MessageSquare },
     { id: 'blog', label: 'Blog Yönetimi', icon: FileText, badge: unreadNotifications },
@@ -1506,6 +1508,19 @@ const DoctorDashboard = () => {
                         </div>
                       );
                     })()}
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Referrals */}
+              <TabsContent value="referrals" className="mt-0">
+                <div className="bg-background rounded-2xl border">
+                  <div className="p-6 border-b">
+                    <h2 className="text-xl font-bold text-foreground">Davetlerim</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Davet ettiğiniz uzmanlar ve referans kodunuz</p>
+                  </div>
+                  <div className="p-6">
+                    <SpecialistReferralsPanel variant="web" />
                   </div>
                 </div>
               </TabsContent>
