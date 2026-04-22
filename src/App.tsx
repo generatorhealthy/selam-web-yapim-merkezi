@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-
 import { HelmetProvider } from 'react-helmet-async';
 import { usePlatform } from "@/hooks/usePlatform";
 import { MobileLayout } from "@/components/MobileLayout";
+import ScrollToTop from "@/components/ScrollToTop";
 import CookieConsent from "@/components/CookieConsent";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
@@ -39,6 +40,7 @@ const MobileSpecialistBlog = lazy(() => import("./pages/mobile/MobileSpecialistB
 const MobileSpecialistContracts = lazy(() => import("./pages/mobile/MobileSpecialistContracts"));
 const MobileSpecialistSupport = lazy(() => import("./pages/mobile/MobileSpecialistSupport"));
 const MobileSpecialistSubscription = lazy(() => import("./pages/mobile/MobileSpecialistSubscription"));
+const MobileSpecialistReferrals = lazy(() => import("./pages/mobile/MobileSpecialistReferrals"));
 const MobileSpecialistPortfolio = lazy(() => import("./pages/mobile/MobileSpecialistPortfolio"));
 const MobileBlogDetail = lazy(() => import("./pages/mobile/MobileBlogDetail"));
 const MobileBlog = lazy(() => import("./pages/mobile/MobileBlog"));
@@ -165,6 +167,7 @@ const AppContent = () => {
 
   return (
     <>
+      <ScrollToTop />
       <AnalyticsTracker />
       <CookieConsent />
       <FloatingWhatsAppButton />
@@ -191,6 +194,7 @@ const AppContent = () => {
               <Route path="specialist-contracts" element={<MobileSpecialistContracts />} />
               <Route path="specialist-support" element={<MobileSpecialistSupport />} />
               <Route path="specialist-subscription" element={<MobileSpecialistSubscription />} />
+              <Route path="specialist-referrals" element={<MobileSpecialistReferrals />} />
               <Route path="specialist-portfolio" element={<MobileSpecialistPortfolio />} />
               <Route path="blog" element={<MobileBlog />} />
               <Route path="blog/:slug" element={<MobileBlogDetail />} />
