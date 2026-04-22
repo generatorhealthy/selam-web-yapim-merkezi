@@ -28,8 +28,6 @@ export const MobileHeader = ({
   trailing,
   sticky = true,
 }: MobileHeaderProps) => {
-  const navigate = useNavigate();
-
   return (
     <header
       className={`${sticky ? "sticky top-0 z-30" : ""} m-safe-top`}
@@ -41,42 +39,6 @@ export const MobileHeader = ({
       {/* Top bar */}
       <div className="min-h-14 py-2 px-4 flex items-center justify-between gap-2 w-full max-w-full">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          {showBack && (
-            <button
-              onClick={() => (onBack ? onBack() : navigate(-1))}
-              type="button"
-              className="w-11 h-11 rounded-full flex items-center justify-center m-pressable shrink-0 active:scale-95"
-              style={{
-                background: "hsl(var(--m-surface))",
-                boxShadow: "var(--m-shadow)",
-              }}
-              aria-label="Geri"
-            >
-              <ChevronLeft
-                className="w-5 h-5"
-                strokeWidth={2.4}
-                style={{ color: "hsl(var(--m-ink))" }}
-              />
-            </button>
-          )}
-          {showBack && showForward && (
-            <button
-              onClick={() => (onForward ? onForward() : navigate(1))}
-              type="button"
-              className="w-11 h-11 rounded-full flex items-center justify-center m-pressable shrink-0 active:scale-95"
-              style={{
-                background: "hsl(var(--m-surface))",
-                boxShadow: "var(--m-shadow)",
-              }}
-              aria-label="İleri"
-            >
-              <ChevronRight
-                className="w-5 h-5"
-                strokeWidth={2.4}
-                style={{ color: "hsl(var(--m-ink))" }}
-              />
-            </button>
-          )}
           {title && !largeTitle && (
             <span
               className="text-[17px] font-bold truncate ml-1"
