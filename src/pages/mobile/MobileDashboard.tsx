@@ -716,67 +716,46 @@ export default function MobileDashboard() {
             Tüm araçlar
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2.5">
           {[
-            { icon: Calendar, label: "Randevu", desc: "Takvim", to: "/mobile/specialist-appointments", badge: badges.appts, hue: 220, gradFrom: "hsl(220 90% 60%)", gradTo: "hsl(232 88% 52%)" },
-            { icon: Users, label: "Danışan", desc: "Liste", to: "/mobile/specialist-clients", hue: 280, gradFrom: "hsl(280 75% 60%)", gradTo: "hsl(265 80% 55%)" },
-            { icon: MessageSquare, label: "Destek", desc: "Talepler", to: "/mobile/specialist-support", badge: badges.support, hue: 12, gradFrom: "hsl(12 90% 60%)", gradTo: "hsl(355 85% 55%)" },
-            { icon: FileText, label: "Blog", desc: "Yazılarım", to: "/mobile/specialist-blog", badge: badges.blog, hue: 35, gradFrom: "hsl(35 95% 58%)", gradTo: "hsl(20 92% 52%)" },
-            { icon: ClipboardList, label: "Testler", desc: "Yönet", to: "/mobile/tests", hue: 160, gradFrom: "hsl(160 70% 45%)", gradTo: "hsl(175 75% 40%)" },
-            { icon: FileSignature, label: "Sözleşme", desc: "Belgeler", to: "/mobile/specialist-contracts", hue: 200, gradFrom: "hsl(200 80% 55%)", gradTo: "hsl(212 85% 48%)" },
-            { icon: CreditCard, label: "Abonelik", desc: "Ödemeler", to: "/mobile/specialist-subscription", hue: 145, gradFrom: "hsl(145 65% 45%)", gradTo: "hsl(160 70% 40%)" },
-            { icon: Eye, label: "Profilim", desc: "Önizle", to: spec?.id ? `/mobile/specialist/${spec.id}` : "/mobile/specialist-profile", hue: 250, gradFrom: "hsl(250 80% 65%)", gradTo: "hsl(265 75% 58%)" },
-            { icon: User, label: "Profil", desc: "Düzenle", to: "/mobile/specialist-profile", hue: 320, gradFrom: "hsl(330 75% 60%)", gradTo: "hsl(310 70% 52%)" },
+            { icon: Calendar, label: "Randevu", to: "/mobile/specialist-appointments", badge: badges.appts, color: "hsl(217 91% 55%)", bg: "hsl(217 91% 96%)" },
+            { icon: Users, label: "Danışan", to: "/mobile/specialist-clients", color: "hsl(265 75% 55%)", bg: "hsl(265 75% 96%)" },
+            { icon: MessageSquare, label: "Destek", to: "/mobile/specialist-support", badge: badges.support, color: "hsl(355 78% 55%)", bg: "hsl(355 78% 96%)" },
+            { icon: FileText, label: "Blog", to: "/mobile/specialist-blog", badge: badges.blog, color: "hsl(28 90% 52%)", bg: "hsl(28 90% 96%)" },
+            { icon: ClipboardList, label: "Testler", to: "/mobile/tests", color: "hsl(165 70% 40%)", bg: "hsl(165 70% 95%)" },
+            { icon: FileSignature, label: "Sözleşme", to: "/mobile/specialist-contracts", color: "hsl(200 80% 48%)", bg: "hsl(200 80% 96%)" },
+            { icon: CreditCard, label: "Abonelik", to: "/mobile/specialist-subscription", color: "hsl(145 60% 40%)", bg: "hsl(145 60% 95%)" },
+            { icon: Eye, label: "Profilim", to: spec?.id ? `/mobile/specialist/${spec.id}` : "/mobile/specialist-profile", color: "hsl(250 75% 60%)", bg: "hsl(250 75% 96%)" },
+            { icon: User, label: "Profil", to: "/mobile/specialist-profile", color: "hsl(320 70% 55%)", bg: "hsl(320 70% 96%)" },
           ].map((it) => {
             const Icon = it.icon;
             return (
               <button
                 key={it.label}
                 onClick={() => navigate(it.to)}
-                className="relative overflow-hidden rounded-[20px] p-3 flex flex-col items-start text-left m-pressable"
+                className="relative rounded-2xl p-3 flex flex-col items-center justify-center gap-2 m-pressable"
                 style={{
                   background: "hsl(var(--m-surface))",
-                  boxShadow: "var(--m-shadow-sm)",
-                  minHeight: 96,
+                  border: "1px solid hsl(var(--m-divider))",
+                  minHeight: 88,
                 }}
               >
-                {/* decorative gradient blob */}
                 <div
-                  aria-hidden
-                  className="absolute -top-6 -right-6 w-20 h-20 rounded-full opacity-90"
-                  style={{ background: `linear-gradient(135deg, ${it.gradFrom}, ${it.gradTo})`, filter: "blur(0.5px)" }}
-                />
-                <div
-                  aria-hidden
-                  className="absolute -bottom-8 -left-8 w-16 h-16 rounded-full opacity-10"
-                  style={{ background: it.gradFrom }}
-                />
-
-                <div
-                  className="relative w-9 h-9 rounded-xl flex items-center justify-center mb-auto"
-                  style={{
-                    background: `linear-gradient(135deg, ${it.gradFrom}, ${it.gradTo})`,
-                    boxShadow: `0 6px 14px -4px ${it.gradFrom}`,
-                  }}
+                  className="w-11 h-11 rounded-full flex items-center justify-center"
+                  style={{ background: it.bg }}
                 >
-                  <Icon className="w-[18px] h-[18px]" style={{ color: "white" }} />
+                  <Icon className="w-[22px] h-[22px]" style={{ color: it.color }} strokeWidth={2.2} />
                   {!!it.badge && it.badge > 0 && (
                     <span
-                      className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
+                      className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
                       style={{ background: "hsl(var(--m-danger))", color: "white", border: "2px solid hsl(var(--m-surface))" }}
                     >
                       {it.badge}
                     </span>
                   )}
                 </div>
-
-                <div className="relative mt-2">
-                  <div className="text-[13px] font-bold leading-tight" style={{ color: "hsl(var(--m-text-primary))" }}>
-                    {it.label}
-                  </div>
-                  <div className="text-[10.5px] font-medium mt-0.5" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                    {it.desc}
-                  </div>
+                <div className="text-[12px] font-semibold text-center leading-tight" style={{ color: "hsl(var(--m-text-primary))" }}>
+                  {it.label}
                 </div>
               </button>
             );
