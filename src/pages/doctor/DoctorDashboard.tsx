@@ -1520,7 +1520,7 @@ const DoctorDashboard = () => {
                     <p className="text-sm text-muted-foreground mt-1">Davet ettiğiniz uzmanlar ve referans kodunuz</p>
                   </div>
                   <div className="p-6">
-                    <SpecialistReferralsPanel variant="desktop" />
+                    <SpecialistReferralsPanel variant="web" />
                   </div>
                 </div>
               </TabsContent>
