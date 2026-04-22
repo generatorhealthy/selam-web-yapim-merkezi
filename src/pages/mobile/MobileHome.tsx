@@ -111,6 +111,7 @@ export default function MobileHome() {
   const [authedEmail, setAuthedEmail] = useState<string | null>(null);
   const [upcoming, setUpcoming] = useState<any | null>(null);
   const [recentSpecialist, setRecentSpecialist] = useState<RecentSpecialist | null>(null);
+  const [mySpecialist, setMySpecialist] = useState<{ id: string; name: string; specialty: string | null; profile_picture: string | null; slug: string | null } | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
