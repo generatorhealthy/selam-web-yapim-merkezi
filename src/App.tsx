@@ -33,6 +33,7 @@ const MobilePatientDashboard = lazy(() => import("./pages/mobile/MobilePatientDa
 const MobilePatientAppointments = lazy(() => import("./pages/mobile/MobilePatientAppointments"));
 const MobilePatientFavorites = lazy(() => import("./pages/mobile/MobilePatientFavorites"));
 const MobilePatientProfile = lazy(() => import("./pages/mobile/MobilePatientProfile"));
+const MobilePatientTests = lazy(() => import("./pages/mobile/MobilePatientTests"));
 const MobileSpecialistAppointments = lazy(() => import("./pages/mobile/MobileSpecialistAppointments"));
 const MobileSpecialistClients = lazy(() => import("./pages/mobile/MobileSpecialistClients"));
 const MobileSpecialistProfile = lazy(() => import("./pages/mobile/MobileSpecialistProfile"));
