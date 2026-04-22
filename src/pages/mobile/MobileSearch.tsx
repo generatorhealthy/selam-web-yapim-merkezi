@@ -30,11 +30,14 @@ interface Specialist {
 type FilterMode = "all" | "online" | "face";
 
 
+const PAGE_SIZE = 20;
+
 export default function MobileSearch() {
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterMode>("all");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -96,6 +99,28 @@ export default function MobileSearch() {
       );
     });
   }, [specialists, searchTerm, filter]);
+
+  // Filtre/arama değiştiğinde infinite scroll'u baştan başlat
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchTerm, filter]);
+
+  // Infinite scroll: sayfa sonuna geldiğinde 20 daha yükle
+  useEffect(() => {
+    const handler = () => {
+      if (visibleCount >= filtered.length) return;
+      const scrollPos = window.innerHeight + window.scrollY;
+      const threshold = document.documentElement.scrollHeight - 600;
+      if (scrollPos >= threshold) {
+        setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
+      }
+    };
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, [visibleCount, filtered.length]);
+
+  const visibleItems = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
 
   const chips: { id: FilterMode; label: string }[] = [
     { id: "all", label: "Tümü" },
