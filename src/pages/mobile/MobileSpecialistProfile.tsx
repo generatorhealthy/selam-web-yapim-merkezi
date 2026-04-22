@@ -148,7 +148,7 @@ export default function MobileSpecialistProfile() {
   if (loading) {
     return (
       <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh" }}>
-        <MobileHeader showBack largeTitle="Profil" />
+        <MobileHeader showBack largeTitle="Profil Düzenleme" />
         <div className="px-5"><div className="m-card p-4 text-[14px]" style={{ color: "hsl(var(--m-text-secondary))" }}>Yükleniyor…</div></div>
       </div>
     );
@@ -206,7 +206,7 @@ export default function MobileSpecialistProfile() {
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 120 }}>
-      <MobileHeader showBack largeTitle="Profil" subtitle={spec?.specialty} />
+      <MobileHeader showBack largeTitle="Profil Düzenleme" subtitle={spec?.specialty} />
 
       {/* Avatar */}
       <div className="px-5 mb-4">
@@ -227,14 +227,21 @@ export default function MobileSpecialistProfile() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - segmentli, yatay kaydırma yok, 2 sıra grid */}
       <div className="px-5 mb-4">
-        <div className="flex gap-1 p-1 rounded-2xl overflow-x-auto" style={{ background: "hsl(var(--m-surface))" }}>
+        <div
+          className="grid gap-1.5 p-1.5 rounded-2xl"
+          style={{
+            background: "hsl(var(--m-surface))",
+            gridTemplateColumns: `repeat(${tabs.length <= 4 ? tabs.length : Math.ceil(tabs.length / 2)}, minmax(0, 1fr))`,
+            boxShadow: "var(--m-shadow)",
+          }}
+        >
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setSection(t.id)}
-              className="flex-shrink-0 px-3 h-9 rounded-xl text-[12px] font-semibold m-pressable"
+              className="h-10 rounded-xl text-[12px] font-semibold m-pressable transition-all"
               style={{
                 background: section === t.id ? "hsl(var(--m-ink))" : "transparent",
                 color: section === t.id ? "hsl(var(--m-bg))" : "hsl(var(--m-text-secondary))",

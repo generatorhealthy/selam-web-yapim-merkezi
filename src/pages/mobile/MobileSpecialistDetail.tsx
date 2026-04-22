@@ -369,6 +369,36 @@ export default function MobileSpecialistDetail() {
             {specialist.city && !specialist.address && (
               <DetailRow icon={MapPin} label="Şehir" value={specialist.city} />
             )}
+
+            {/* Yüz yüze danışmanlık varsa harita ekle */}
+            {specialist.face_to_face_consultation && (specialist.address || specialist.city) && (() => {
+              const query = encodeURIComponent(
+                [specialist.address, specialist.city, specialist.hospital].filter(Boolean).join(", ")
+              );
+              const embedSrc = `https://www.google.com/maps?q=${query}&output=embed`;
+              const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
+              return (
+                <div className="mt-2 rounded-[20px] overflow-hidden" style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}>
+                  <iframe
+                    title="Konum haritası"
+                    src={embedSrc}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="w-full block"
+                    style={{ height: 220, border: 0 }}
+                  />
+                  <a
+                    href={directionsHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 h-12 text-[14px] font-semibold m-pressable"
+                    style={{ background: "hsl(var(--m-ink))", color: "hsl(var(--m-bg))" }}
+                  >
+                    <MapPin className="w-4 h-4" /> Yol Tarifi Al
+                  </a>
+                </div>
+              );
+            })()}
           </div>
         </Section>
       )}

@@ -257,13 +257,20 @@ export default function MobileHome() {
   const firstName = userProfile?.name?.split(" ")[0] || "Hoş geldiniz";
   const initial = (userProfile?.name || "?").charAt(0).toUpperCase();
 
-  const categories = [
-    "Hepsi",
-    "Psikolog",
-    "Aile Danışmanı",
-    "Psikolojik Danışman",
-    "Pedagog",
-  ];
+  // Sadece veritabanında uzmanı olan kategorileri (specialty) göster — şimdilik
+  // boş kategoriler (örn. Pedagog) listede görünmesin.
+  const availableSpecialties = (() => {
+    const set = new Set<string>();
+    specialists.forEach((s) => {
+      const sp = (s.specialty || "").trim();
+      if (sp) set.add(sp);
+    });
+    return Array.from(set);
+  })();
+  const categories = ["Hepsi", ...availableSpecialties];
+
+  // Danışan rolündeyse "Uzman Ol" kartı yerine son incelenen uzmanı göster.
+  const isPatientRole = userProfile?.role === "patient";
 
   const heroSpecialist = specialists[0];
   const otherSpecialists = specialists.slice(1, 4);
@@ -469,24 +476,58 @@ export default function MobileHome() {
             Hemen oluştur
           </div>
         </button>
-        <button
-          onClick={() => navigate("/mobile/register")}
-          className="rounded-[22px] p-5 text-left m-pressable"
-          style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
-        >
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center mb-4"
-            style={{ background: `hsl(${PASTEL_TINTS[3]})` }}
+        {isPatientRole && recentSpecialist ? (
+          <button
+            onClick={() => navigate(`/mobile/specialist/${recentSpecialist.id}`)}
+            className="rounded-[22px] p-3 text-left m-pressable flex items-center gap-3"
+            style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
           >
-            <Stethoscope className="w-5 h-5" style={{ color: "hsl(var(--m-ink))" }} />
-          </div>
-          <div className="text-[15px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
-            Uzman Ol
-          </div>
-          <div className="text-[12px] mt-1" style={{ color: "hsl(var(--m-text-secondary))" }}>
-            Platforma katıl
-          </div>
-        </button>
+            {recentSpecialist.profile_picture ? (
+              <img
+                src={recentSpecialist.profile_picture}
+                alt={recentSpecialist.name}
+                className="w-12 h-12 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0"
+                style={{ background: "hsl(var(--m-ink))" }}
+              >
+                {recentSpecialist.name.charAt(0)}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                Son İncelediğin
+              </div>
+              <div className="text-[14px] font-bold truncate" style={{ color: "hsl(var(--m-text-primary))" }}>
+                {recentSpecialist.name}
+              </div>
+              <div className="text-[11px] truncate" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                {recentSpecialist.specialty}
+              </div>
+            </div>
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate("/mobile/register")}
+            className="rounded-[22px] p-5 text-left m-pressable"
+            style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+          >
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center mb-4"
+              style={{ background: `hsl(${PASTEL_TINTS[3]})` }}
+            >
+              <Stethoscope className="w-5 h-5" style={{ color: "hsl(var(--m-ink))" }} />
+            </div>
+            <div className="text-[15px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
+              Uzman Olarak Kayıt Ol
+            </div>
+            <div className="text-[12px] mt-1" style={{ color: "hsl(var(--m-text-secondary))" }}>
+              Platforma katıl
+            </div>
+          </button>
+        )}
       </section>
 
       {/* Specialist bubbles — small round avatars, all active specialists */}

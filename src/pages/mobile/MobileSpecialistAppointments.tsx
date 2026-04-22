@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
-import { Calendar, Phone, Mail, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Calendar, Phone, Mail, CheckCircle2, XCircle, Clock, Plus } from "lucide-react";
 
 type Tab = "upcoming" | "past" | "all";
 
@@ -76,7 +76,22 @@ export default function MobileSpecialistAppointments() {
 
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 100 }}>
-      <MobileHeader showBack largeTitle="Randevular" subtitle="Tüm danışan randevularınız" />
+      <MobileHeader
+        showBack
+        largeTitle="Randevular"
+        subtitle="Tüm danışan randevularınız"
+        trailing={
+          <button
+            onClick={() => navigate("/doktor-paneli")}
+            className="w-10 h-10 rounded-full flex items-center justify-center m-pressable"
+            style={{ background: "hsl(var(--m-accent))", color: "white" }}
+            aria-label="Yeni randevu ekle"
+            title="Yeni randevu ekle"
+          >
+            <Plus className="w-5 h-5" strokeWidth={2.6} />
+          </button>
+        }
+      />
 
       {/* Tabs */}
       <div className="px-5 mb-4">

@@ -30,11 +30,14 @@ interface Specialist {
 type FilterMode = "all" | "online" | "face";
 
 
+const PAGE_SIZE = 20;
+
 export default function MobileSearch() {
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterMode>("all");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -96,6 +99,28 @@ export default function MobileSearch() {
       );
     });
   }, [specialists, searchTerm, filter]);
+
+  // Filtre/arama değiştiğinde infinite scroll'u baştan başlat
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchTerm, filter]);
+
+  // Infinite scroll: sayfa sonuna geldiğinde 20 daha yükle
+  useEffect(() => {
+    const handler = () => {
+      if (visibleCount >= filtered.length) return;
+      const scrollPos = window.innerHeight + window.scrollY;
+      const threshold = document.documentElement.scrollHeight - 600;
+      if (scrollPos >= threshold) {
+        setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
+      }
+    };
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, [visibleCount, filtered.length]);
+
+  const visibleItems = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
 
   const chips: { id: FilterMode; label: string }[] = [
     { id: "all", label: "Tümü" },
@@ -167,7 +192,7 @@ export default function MobileSearch() {
         ) : (
           <>
             <div className="space-y-2.5">
-              {filtered.map((s) => (
+              {visibleItems.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => navigate(`/mobile/specialist/${s.id}`)}
@@ -250,6 +275,24 @@ export default function MobileSearch() {
                 </button>
               ))}
             </div>
+
+            {hasMore && (
+              <div className="pt-4 pb-2 flex flex-col items-center gap-2">
+                <div
+                  className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
+                  style={{ borderColor: "hsl(var(--m-accent))", borderTopColor: "transparent" }}
+                />
+                <p className="text-[11.5px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  Daha fazla uzman yükleniyor…
+                </p>
+              </div>
+            )}
+
+            {!hasMore && filtered.length > PAGE_SIZE && (
+              <p className="text-center text-[11.5px] mt-4" style={{ color: "hsl(var(--m-text-tertiary))" }}>
+                Tüm uzmanlar gösterildi · {filtered.length} sonuç
+              </p>
+            )}
           </>
         )}
       </div>
