@@ -132,7 +132,7 @@ export default function MobileTests() {
       <MobileHeader
         largeTitle={isSpecialist ? "Testlerim" : "Testler"}
         subtitle={isSpecialist ? "Oluşturduğunuz testler" : "Kendinizi tanıyın"}
-        rightAction={
+        trailing={
           isSpecialist ? (
             <button
               onClick={handleNew}
