@@ -92,7 +92,7 @@ export default function MobileTestTaker() {
   }
 
   return (
-    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: 120 }}>
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: "calc(180px + var(--m-safe-bottom))" }}>
       <MobileHeader showBack title={test?.title || "Test"} />
 
       {/* Progress */}
@@ -179,11 +179,12 @@ export default function MobileTestTaker() {
         )}
       </div>
 
-      {/* Footer */}
+      {/* Footer — bottom-nav (96px) üstüne otururnaması için ek margin */}
       <div
-        className="fixed bottom-0 left-0 right-0 m-glass px-5 pt-3 flex gap-2"
+        className="fixed left-0 right-0 m-glass px-5 pt-3 flex gap-2"
         style={{
-          paddingBottom: "calc(12px + var(--m-safe-bottom))",
+          bottom: "calc(96px + var(--m-safe-bottom))",
+          paddingBottom: 12,
           borderTop: "1px solid hsl(var(--m-divider))",
         }}
       >
