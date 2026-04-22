@@ -1,0 +1,1 @@
+UPDATE public.orders SET invoice_date = created_at WHERE id = '5c61d212-ff6a-4361-83f2-979ecee84da1';
