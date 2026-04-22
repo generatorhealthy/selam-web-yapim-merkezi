@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { LogOut, Calendar, Brain, Bell, Shield, HelpCircle, FileText, LogIn, ChevronRight } from "lucide-react";
+import { LogOut, Calendar, Brain, Bell, LogIn, ChevronRight } from "lucide-react";
 
 export default function MobileProfile() {
   const navigate = useNavigate();
