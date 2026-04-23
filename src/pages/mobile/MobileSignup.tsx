@@ -3,7 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { Mail, Lock, User, Phone } from "lucide-react";
+import { Mail, Lock, User, Phone, X } from "lucide-react";
+
+type LegalDoc = "disclosure" | "consent" | null;
 
 export default function MobileSignup() {
   const navigate = useNavigate();
