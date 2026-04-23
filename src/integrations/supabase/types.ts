@@ -4709,6 +4709,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_consent_logs: {
+        Row: {
+          accepted: boolean
+          accepted_at: string
+          consent_type: string
+          consent_version: string
+          document_hash: string | null
+          email: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          source: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accepted: boolean
+          accepted_at?: string
+          consent_type: string
+          consent_version?: string
+          document_hash?: string | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          source?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accepted?: boolean
+          accepted_at?: string
+          consent_type?: string
+          consent_version?: string
+          document_hash?: string | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          source?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           created_at: string
