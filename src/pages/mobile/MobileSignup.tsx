@@ -10,7 +10,40 @@ export default function MobileSignup() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [acceptedDisclosure, setAcceptedDisclosure] = useState(false);
+  const [acceptedDisclosure, setAcceptedDisclosure] = useState(false); // KVKK m.10 - Aydınlatma (zorunlu)
+  const [explicitConsent, setExplicitConsent] = useState(false);       // KVKK m.5/6 - Açık rıza (opsiyonel)
+  const [marketingConsent, setMarketingConsent] = useState(false);     // ETK/İYS - Ticari ileti (opsiyonel)
+  const CONSENT_VERSION = "v2.0-2026-04-23";
+
+  // KVKK ispat için onay logu (IP + UA + versiyon)
+  const logConsent = async (params: {
+    userId?: string | null;
+    email: string;
+    type: "disclosure" | "explicit_consent" | "marketing_etk";
+    accepted: boolean;
+  }) => {
+    try {
+      let ip: string | null = null;
+      try {
+        const r = await fetch("https://api.ipify.org?format=json");
+        const j = await r.json();
+        ip = j?.ip ?? null;
+      } catch { /* ip best-effort */ }
+      await supabase.from("user_consent_logs").insert({
+        user_id: params.userId ?? null,
+        email: params.email,
+        consent_type: params.type,
+        consent_version: CONSENT_VERSION,
+        accepted: params.accepted,
+        ip_address: ip,
+        user_agent: navigator.userAgent,
+        source: "mobile_signup",
+      });
+    } catch (err) {
+      console.warn("consent log failed", err);
+    }
+  };
+
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -59,6 +92,13 @@ export default function MobileSignup() {
           auth_provider: "email",
         });
       }
+      // KVKK onay loglarını kaydet (her onay türü ayrı kayıt)
+      const emailLower = form.email.trim().toLowerCase();
+      await Promise.all([
+        logConsent({ userId, email: emailLower, type: "disclosure", accepted: true }),
+        logConsent({ userId, email: emailLower, type: "explicit_consent", accepted: explicitConsent }),
+        logConsent({ userId, email: emailLower, type: "marketing_etk", accepted: marketingConsent }),
+      ]);
       toast({ title: "Kayıt başarılı", description: "Hesabınız oluşturuldu" });
       navigate("/mobile/patient-dashboard");
     } catch (e: any) {
@@ -162,6 +202,7 @@ export default function MobileSignup() {
             </div>
           </div>
 
+          {/* KVKK m.10 — Aydınlatma (ZORUNLU) */}
           <label className="flex items-start gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -174,7 +215,38 @@ export default function MobileSignup() {
               <a href="/disclosure-text" target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
                 Aydınlatma Metni
               </a>
-              'ni okudum, anladım ve kişisel verilerimin işlenmesine onay veriyorum.
+              'ni okudum ve anladım. <span className="text-red-500">*</span>
+            </span>
+          </label>
+
+          {/* KVKK m.5/6 — Açık rıza (OPSİYONEL) — sağlık verisi + uzmana aktarım */}
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={explicitConsent}
+              onChange={(e) => setExplicitConsent(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded cursor-pointer"
+              style={{ accentColor: "hsl(var(--m-accent))" }}
+            />
+            <span className="text-[13px] leading-snug" style={{ color: "hsl(var(--m-text-secondary))" }}>
+              <a href="/acik-riza" target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
+                Açık Rıza Metni
+              </a>
+              'ni okudum; randevu oluşturduğum uzman ile sağlık dahil kişisel verilerimin paylaşılmasına açık rıza veriyorum. (Opsiyonel)
+            </span>
+          </label>
+
+          {/* ETK / İYS — Ticari elektronik ileti (OPSİYONEL) */}
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={marketingConsent}
+              onChange={(e) => setMarketingConsent(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded cursor-pointer"
+              style={{ accentColor: "hsl(var(--m-accent))" }}
+            />
+            <span className="text-[13px] leading-snug" style={{ color: "hsl(var(--m-text-secondary))" }}>
+              Kampanya, duyuru ve bilgilendirme amacıyla tarafıma SMS, e-posta ve arama yoluyla <strong>ticari elektronik ileti</strong> gönderilmesine onay veriyorum. (Opsiyonel — istediğim zaman İYS üzerinden iptal edebilirim.)
             </span>
           </label>
 
