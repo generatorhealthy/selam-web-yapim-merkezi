@@ -43,6 +43,7 @@ const parseRecipients = (raw: string): Recipient[] => {
 };
 
 const BulkEmail = () => {
+  const { userProfile, loading } = useUserRole();
   const [rawList, setRawList] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -51,6 +52,9 @@ const BulkEmail = () => {
   const [results, setResults] = useState<Array<{ email: string; status: string; error?: string }>>([]);
 
   const recipients = useMemo(() => parseRecipients(rawList), [rawList]);
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Yükleniyor...</div>;
+  if (!userProfile || userProfile.role !== 'admin') return <Navigate to="/divan_paneli/dashboard" replace />;
 
   const handleSend = async () => {
     if (recipients.length === 0) { toast.error("Geçerli alıcı bulunamadı"); return; }
