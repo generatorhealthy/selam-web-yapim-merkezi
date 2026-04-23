@@ -33,10 +33,19 @@ const Footer = () => {
         </div>
       </div>
 
+      {/* Medical Disclaimer (Apple guideline 1.4.1) */}
+      <div className="bg-amber-50 border-t border-amber-200">
+        <div className="container mx-auto px-4 py-3">
+          <p className="text-xs text-amber-900 text-center leading-relaxed">
+            ⚕️ <strong>Tıbbi Uyarı:</strong> Bu sitedeki bilgiler genel bilgilendirme amaçlıdır ve hekim tavsiyesi yerine geçmez.
+            Tanı, tedavi ve sağlığınızla ilgili her karar için mutlaka bir doktora danışın. Acil durumlarda 112'yi arayın.
+          </p>
+        </div>
+      </div>
+
       {/* Bottom Copyright */}
       <div className="border-t border-gray-200 bg-gray-50">
         <div className="container mx-auto px-4 py-2">
-          {/* Footer Keywords */}
           <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500 mb-2">
             <span>Doktorum Ol Yorumları</span>
             <span className="text-gray-400">|</span>
@@ -44,7 +53,6 @@ const Footer = () => {
             <span className="text-gray-400">|</span>
             <span>Doktorum Ol Şikayet</span>
           </div>
-          
           <div className="text-center text-sm text-gray-600 font-medium">
             Doktorumol.com.tr © Copyright 2025. Tüm Hakları saklıdır.
           </div>

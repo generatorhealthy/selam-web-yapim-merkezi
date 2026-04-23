@@ -118,9 +118,9 @@ export default function PatientSignup() {
                 className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
               />
               <span className="text-muted-foreground">
-                <a href="/disclosure-text" target="_blank" rel="noopener noreferrer" className="text-primary underline font-medium">
+                <Link to="/disclosure-text" className="text-primary underline font-medium">
                   Aydınlatma Metni
-                </a>
+                </Link>
                 'ni okudum, anladım ve kişisel verilerimin işlenmesine onay veriyorum.
               </span>
             </label>

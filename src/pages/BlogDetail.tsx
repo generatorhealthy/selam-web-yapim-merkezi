@@ -547,10 +547,50 @@ const BlogDetail = () => {
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-headings:scroll-mt-20"
             />
             
-            {/* Specialist Card - Show when blog has associated specialist */}
             {specialist && (
               <BlogSpecialistCard specialist={specialist} />
             )}
+
+            {/* Tıbbi Disclaimer (Apple guideline 1.4.1) */}
+            <div className="mt-8 p-4 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-900 leading-relaxed">
+                <strong>⚕️ Tıbbi Uyarı:</strong> Bu yazıdaki bilgiler genel bilgilendirme amaçlıdır ve profesyonel tıbbi tavsiye,
+                tanı veya tedavi yerine geçmez. Sağlığınızla ilgili herhangi bir karar almadan önce mutlaka uzman bir hekime
+                danışın. Acil durumlarda 112'yi arayın.
+              </p>
+            </div>
+
+            {/* Kaynaklar (Apple guideline 1.4.1 - citations) */}
+            <div className="mt-6 p-5 rounded-lg bg-blue-50 border border-blue-100">
+              <h3 className="font-semibold text-gray-900 mb-3 text-base">📚 Kaynaklar ve Referanslar</h3>
+              <ul className="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                <li>
+                  T.C. Sağlık Bakanlığı —{" "}
+                  <a href="https://www.saglik.gov.tr" target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 underline">
+                    saglik.gov.tr
+                  </a>
+                </li>
+                <li>
+                  Dünya Sağlık Örgütü (WHO) —{" "}
+                  <a href="https://www.who.int" target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 underline">
+                    who.int
+                  </a>
+                </li>
+                <li>
+                  PubMed / National Library of Medicine —{" "}
+                  <a href="https://pubmed.ncbi.nlm.nih.gov" target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 underline">
+                    pubmed.ncbi.nlm.nih.gov
+                  </a>
+                </li>
+                <li>
+                  Türkiye Psikiyatri Derneği —{" "}
+                  <a href="https://www.psikiyatri.org.tr" target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 underline">
+                    psikiyatri.org.tr
+                  </a>
+                </li>
+                <li>İçerik, ilgili branştaki uzman görüşleri ve güncel literatür taraması ile hazırlanmıştır.</li>
+              </ul>
+            </div>
           </CardContent>
         </Card>
 

@@ -212,9 +212,9 @@ export default function MobileSignup() {
               style={{ accentColor: "hsl(var(--m-accent))" }}
             />
             <span className="text-[13px] leading-snug" style={{ color: "hsl(var(--m-text-secondary))" }}>
-              <a href="/disclosure-text" target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
+              <button type="button" onClick={() => navigate("/disclosure-text")} className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
                 Aydınlatma Metni
-              </a>
+              </button>
               'ni okudum ve anladım. <span className="text-red-500">*</span>
             </span>
           </label>
@@ -229,9 +229,9 @@ export default function MobileSignup() {
               style={{ accentColor: "hsl(var(--m-accent))" }}
             />
             <span className="text-[13px] leading-snug" style={{ color: "hsl(var(--m-text-secondary))" }}>
-              <a href="/acik-riza" target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
+              <button type="button" onClick={() => navigate("/acik-riza")} className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
                 Açık Rıza Metni
-              </a>
+              </button>
               'ni okudum; randevu oluşturduğum uzman ile sağlık dahil kişisel verilerimin paylaşılmasına açık rıza veriyorum. (Opsiyonel)
             </span>
           </label>
