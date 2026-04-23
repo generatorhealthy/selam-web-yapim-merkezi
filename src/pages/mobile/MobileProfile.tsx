@@ -41,6 +41,22 @@ export default function MobileProfile() {
     navigate("/mobile/home");
   };
 
+  const deleteAccount = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { error } = await supabase.functions.invoke("delete-user-account", {
+        body: { user_id: session.user.id },
+      });
+      if (error) throw error;
+      await supabase.auth.signOut();
+      toast({ title: "Hesabınız silindi", description: "Tüm verileriniz kaldırıldı." });
+      navigate("/mobile/home");
+    } catch (e: any) {
+      toast({ title: "Hata", description: e?.message || "Hesap silinemedi", variant: "destructive" });
+    }
+  };
+
   const initial = (userProfile?.name || user?.email || "?").charAt(0).toUpperCase();
 
   const menuItems = [
@@ -167,7 +183,7 @@ export default function MobileProfile() {
         </div>
       </div>
 
-      <div className="px-5">
+      <div className="px-5 space-y-3">
         <button
           onClick={logout}
           className="w-full h-14 rounded-full font-bold flex items-center justify-center gap-2 m-pressable"
@@ -175,6 +191,35 @@ export default function MobileProfile() {
         >
           <LogOut className="w-5 h-5" /> Çıkış Yap
         </button>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              className="w-full h-12 rounded-full font-semibold flex items-center justify-center gap-2 m-pressable"
+              style={{ background: "transparent", color: "hsl(var(--m-danger))", border: "1px solid hsl(var(--m-danger) / 0.3)" }}
+            >
+              <Trash2 className="w-4 h-4" /> Hesabımı Sil
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Hesabınızı silmek istediğinize emin misiniz?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Bu işlem geri alınamaz. Hesabınız ve tüm verileriniz kalıcı olarak silinecektir.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+              <AlertDialogAction onClick={deleteAccount} className="bg-destructive text-destructive-foreground">
+                Evet, sil
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <p className="text-[11px] text-center mt-4 leading-relaxed" style={{ color: "hsl(var(--m-text-tertiary))" }}>
+          ⚕️ Bu uygulama tıbbi tavsiye yerine geçmez. Sağlığınızla ilgili kararlar için mutlaka doktorunuza danışın.
+        </p>
       </div>
     </div>
   );

@@ -256,6 +256,38 @@ export default function MobileBlogDetail() {
             </div>
           </div>
 
+          {/* Tıbbi Disclaimer (Apple guideline 1.4.1) */}
+          <div className="px-5 mt-6">
+            <div
+              className="rounded-2xl p-4"
+              style={{ background: "hsl(45 95% 95%)", border: "1px solid hsl(45 80% 80%)" }}
+            >
+              <p className="text-[12.5px] leading-relaxed" style={{ color: "hsl(35 60% 25%)" }}>
+                <strong>⚕️ Tıbbi Uyarı:</strong> Bu yazı genel bilgilendirme amaçlıdır ve hekim tavsiyesi yerine geçmez.
+                Sağlığınızla ilgili kararlar için mutlaka bir doktora danışın. Acil durumlarda 112'yi arayın.
+              </p>
+            </div>
+          </div>
+
+          {/* Kaynaklar (Apple guideline 1.4.1 - citations) */}
+          <div className="px-5 mt-3">
+            <div
+              className="rounded-2xl p-4"
+              style={{ background: "hsl(var(--m-surface))", boxShadow: "var(--m-shadow)" }}
+            >
+              <h3 className="font-bold text-[14px] mb-2" style={{ color: "hsl(var(--m-text-primary))" }}>
+                📚 Kaynaklar
+              </h3>
+              <ul className="text-[12.5px] space-y-1.5 list-disc list-inside" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                <li>T.C. Sağlık Bakanlığı — saglik.gov.tr</li>
+                <li>Dünya Sağlık Örgütü (WHO) — who.int</li>
+                <li>PubMed / NLM — pubmed.ncbi.nlm.nih.gov</li>
+                <li>Türkiye Psikiyatri Derneği — psikiyatri.org.tr</li>
+                <li>İlgili branştaki uzman görüşleri ve güncel literatür taraması.</li>
+              </ul>
+            </div>
+          </div>
+
           {/* İlgili yazılar */}
           {related.length > 0 && (
             <section className="mt-8">
