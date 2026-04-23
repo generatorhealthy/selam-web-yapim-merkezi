@@ -3,13 +3,16 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { Mail, Lock, User, Phone } from "lucide-react";
+import { Mail, Lock, User, Phone, X } from "lucide-react";
+
+type LegalDoc = "disclosure" | "consent" | null;
 
 export default function MobileSignup() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [openDoc, setOpenDoc] = useState<LegalDoc>(null);
   const [acceptedDisclosure, setAcceptedDisclosure] = useState(false); // KVKK m.10 - Aydınlatma (zorunlu)
   const [explicitConsent, setExplicitConsent] = useState(false);       // KVKK m.5/6 - Açık rıza (opsiyonel)
   const [marketingConsent, setMarketingConsent] = useState(false);     // ETK/İYS - Ticari ileti (opsiyonel)
@@ -212,7 +215,7 @@ export default function MobileSignup() {
               style={{ accentColor: "hsl(var(--m-accent))" }}
             />
             <span className="text-[13px] leading-snug" style={{ color: "hsl(var(--m-text-secondary))" }}>
-              <button type="button" onClick={() => navigate("/disclosure-text")} className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
+              <button type="button" onClick={() => setOpenDoc("disclosure")} className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
                 Aydınlatma Metni
               </button>
               'ni okudum ve anladım. <span className="text-red-500">*</span>
@@ -229,7 +232,7 @@ export default function MobileSignup() {
               style={{ accentColor: "hsl(var(--m-accent))" }}
             />
             <span className="text-[13px] leading-snug" style={{ color: "hsl(var(--m-text-secondary))" }}>
-              <button type="button" onClick={() => navigate("/acik-riza")} className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
+              <button type="button" onClick={() => setOpenDoc("consent")} className="font-semibold underline" style={{ color: "hsl(var(--m-accent))" }}>
                 Açık Rıza Metni
               </button>
               'ni okudum; randevu oluşturduğum uzman ile sağlık dahil kişisel verilerimin paylaşılmasına açık rıza veriyorum. (Opsiyonel)
@@ -265,6 +268,62 @@ export default function MobileSignup() {
           </button>
         </p>
       </div>
+
+      {/* Yasal metin modal'ı (Capacitor uyumlu — uygulama içinde kalır) */}
+      {openDoc && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={() => setOpenDoc(null)}
+        >
+          <div
+            className="mt-auto rounded-t-3xl flex flex-col"
+            style={{ background: "white", maxHeight: "90vh", paddingBottom: "env(safe-area-inset-bottom)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "hsl(220 13% 91%)" }}>
+              <h2 className="text-[17px] font-bold" style={{ color: "hsl(var(--m-text-primary))" }}>
+                {openDoc === "disclosure" ? "Aydınlatma Metni" : "Açık Rıza Metni"}
+              </h2>
+              <button onClick={() => setOpenDoc(null)} className="p-2 -mr-2" aria-label="Kapat">
+                <X className="w-5 h-5" style={{ color: "hsl(var(--m-text-secondary))" }} />
+              </button>
+            </div>
+            <div className="overflow-y-auto px-5 py-4 text-[14px] leading-relaxed" style={{ color: "hsl(var(--m-text-primary))" }}>
+              {openDoc === "disclosure" ? (
+                <div className="space-y-4">
+                  <p><strong>Veri Sorumlusu:</strong> Doktorumol.com.tr<br/>E-posta: info@doktorumol.com.tr</p>
+                  <p><strong>İşlenen Veriler:</strong> Ad-soyad, e-posta, telefon, randevu/sipariş kayıtları, IP ve cihaz bilgisi, rıza halinde pazarlama tercihleri.</p>
+                  <p><strong>İşleme Amacı:</strong> Hesap oluşturma, randevu yönetimi, müşteri hizmetleri, yasal yükümlülüklerin yerine getirilmesi, talep halinde uzmanlarla iletişim.</p>
+                  <p><strong>Hukuki Sebep:</strong> KVKK m.5/2 (sözleşmenin kurulması, hukuki yükümlülük, meşru menfaat) ve açık rıza alınması gereken hallerde KVKK m.5/1 - m.6.</p>
+                  <p><strong>Aktarım:</strong> Verileriniz; barındırma (Supabase), e-posta (Brevo), SMS, ödeme (Iyzico) hizmet sağlayıcılarımıza ve talebiniz halinde randevu aldığınız uzmana aktarılabilir.</p>
+                  <p><strong>Haklarınız (KVKK m.11):</strong> Verilerinize erişme, düzeltme, silme/yok etme, işlemeye itiraz ve zarar halinde tazminat hakkına sahipsiniz. Talepleriniz için: <strong>info@doktorumol.com.tr</strong></p>
+                  <p className="text-xs opacity-70">Tam metne web sitemizden erişebilirsiniz: doktorumol.com.tr/aydinlatma-metni</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p>İşbu Açık Rıza Metni ile, Doktorumol.com.tr üzerinden randevu oluşturduğum sağlık uzmanı ile aşağıdaki <strong>özel nitelikli kişisel verilerimin</strong> paylaşılmasına KVKK m.6 uyarınca <strong>açık rıza</strong> veriyorum:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Ad-soyad, iletişim bilgilerim</li>
+                    <li>Randevu konum/şikayetim ve sağlığıma ilişkin paylaştığım bilgiler</li>
+                    <li>Test/değerlendirme sonuçlarım (varsa)</li>
+                  </ul>
+                  <p>Açık rızam; randevu sürecinin yürütülmesi, sağlık hizmetinin sunulması ve uzmanın yasal kayıt yükümlülüğü amaçlarıyla sınırlıdır.</p>
+                  <p><strong>Rızanın geri alınması:</strong> Bu rızamı dilediğim zaman <strong>info@doktorumol.com.tr</strong> adresine bildirerek geri alabilirim. Geri alma, önceki işlemlerin hukuka uygunluğunu etkilemez.</p>
+                  <p className="text-xs opacity-70">Bu onay opsiyoneldir. Vermediğiniz takdirde uzmanla bağlantı gerektiren özel hizmetlerden yararlanamayabilirsiniz.</p>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setOpenDoc(null)}
+              className="mx-5 my-4 h-12 rounded-2xl font-semibold m-pressable"
+              style={{ background: "hsl(var(--m-accent))", color: "white" }}
+            >
+              Kapat
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
