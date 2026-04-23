@@ -14,6 +14,13 @@ interface Question {
   is_required: boolean;
 }
 
+// "hicbir_zaman" -> "Hicbir Zaman" gibi okunabilir hale getir
+const prettifyOption = (raw: string) => {
+  if (!raw) return raw;
+  const cleaned = raw.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+  return cleaned.charAt(0).toLocaleUpperCase("tr-TR") + cleaned.slice(1);
+};
+
 export default function MobileTestTaker() {
   const { testId } = useParams();
   const navigate = useNavigate();
@@ -22,8 +29,9 @@ export default function MobileTestTaker() {
   const [test, setTest] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [step, setStep] = useState(0); // 0 = info, 1..N = questions, N+1 = patient info
+  const [step, setStep] = useState(0); // 0..N-1 = questions, N = patient info
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -55,27 +63,80 @@ export default function MobileTestTaker() {
   };
 
   const submit = async () => {
-    if (!name || !email) {
-      toast({ title: "Bilgileriniz gerekli", variant: "destructive" });
+    if (!name || !phone) {
+      toast({ title: "Ad Soyad ve telefon gerekli", variant: "destructive" });
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("test_results").insert([{
-      test_id: testId!,
-      specialist_id: test?.specialist_id || "00000000-0000-0000-0000-000000000000",
-      patient_name: name,
-      patient_email: email,
-      answers,
-      specialty_area: test?.specialty_area,
-      status: "pending",
-    }]);
-    setSubmitting(false);
-    if (error) {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Test gönderildi", description: "Sonuçlar e-postanıza gelecek" });
-      navigate("/mobile/home");
+
+    // Specialist'i belirle
+    let finalSpecialistId = test?.specialist_id;
+    if (!finalSpecialistId) {
+      const { data: firstSpecialist } = await supabase
+        .from("specialists")
+        .select("id")
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      finalSpecialistId = firstSpecialist?.id;
     }
+
+    if (!finalSpecialistId) {
+      setSubmitting(false);
+      toast({ title: "Hata", description: "Uzman bulunamadı", variant: "destructive" });
+      return;
+    }
+
+    const { data: resultData, error } = await supabase
+      .from("test_results")
+      .insert([{
+        test_id: testId!,
+        specialist_id: finalSpecialistId,
+        patient_name: name,
+        // patient_email kolonu zorunlu — yoksa telefonu geçici e-posta formatına çevir
+        patient_email: email || `${phone.replace(/\D/g, "")}@test.com`,
+        answers,
+        results: {},
+        specialty_area: test?.specialty_area,
+        status: "pending",
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      setSubmitting(false);
+      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    // Uzmana e-posta bildirimi
+    try {
+      const { data: specialistData } = await supabase
+        .from("specialists")
+        .select("email")
+        .eq("id", finalSpecialistId)
+        .maybeSingle();
+
+      if (specialistData?.email) {
+        await supabase.functions.invoke("send-test-results-email", {
+          body: {
+            testResultId: resultData?.id,
+            specialistEmail: specialistData.email,
+            patientName: name,
+            patientPhone: phone,
+            testTitle: test?.title || "Test",
+            answers,
+            results: {},
+          },
+        });
+      }
+    } catch (e) {
+      console.error("[MobileTestTaker] notify error:", e);
+    }
+
+    setSubmitting(false);
+    toast({ title: "Test gönderildi", description: "Sonuçlar uzmanınıza iletildi" });
+    navigate("/mobile/home");
   };
 
   if (loading) {
@@ -120,12 +181,13 @@ export default function MobileTestTaker() {
             {Array.isArray(currentQ.options) && currentQ.options.length > 0 ? (
               <div className="space-y-2">
                 {currentQ.options.map((opt: any, i: number) => {
-                  const val = typeof opt === "string" ? opt : opt.text || opt.value || JSON.stringify(opt);
-                  const sel = answers[currentQ.id] === val;
+                  const rawVal = typeof opt === "string" ? opt : opt.text || opt.value || JSON.stringify(opt);
+                  const label = prettifyOption(rawVal);
+                  const sel = answers[currentQ.id] === rawVal;
                   return (
                     <button
                       key={i}
-                      onClick={() => setAnswer(currentQ.id, val)}
+                      onClick={() => setAnswer(currentQ.id, rawVal)}
                       className="w-full p-3 rounded-2xl text-left flex items-center justify-between m-pressable"
                       style={{
                         background: sel ? "hsl(var(--m-accent-soft))" : "hsl(var(--m-surface-muted))",
@@ -134,7 +196,7 @@ export default function MobileTestTaker() {
                         borderColor: sel ? "hsl(var(--m-accent))" : "transparent",
                       }}
                     >
-                      <span className="text-[14px]" style={{ color: "hsl(var(--m-text-primary))" }}>{val}</span>
+                      <span className="text-[14px]" style={{ color: "hsl(var(--m-text-primary))" }}>{label}</span>
                       {sel && <Check className="w-5 h-5" style={{ color: "hsl(var(--m-accent))" }} />}
                     </button>
                   );
@@ -168,10 +230,19 @@ export default function MobileTestTaker() {
               style={{ background: "hsl(var(--m-surface))", color: "hsl(var(--m-text-primary))", boxShadow: "var(--m-shadow)" }}
             />
             <input
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Telefon Numarası"
+              className="w-full h-12 px-4 rounded-2xl text-[15px] outline-none"
+              style={{ background: "hsl(var(--m-surface))", color: "hsl(var(--m-text-primary))", boxShadow: "var(--m-shadow)" }}
+            />
+            <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="E-posta"
+              placeholder="E-posta (opsiyonel)"
               className="w-full h-12 px-4 rounded-2xl text-[15px] outline-none"
               style={{ background: "hsl(var(--m-surface))", color: "hsl(var(--m-text-primary))", boxShadow: "var(--m-shadow)" }}
             />
