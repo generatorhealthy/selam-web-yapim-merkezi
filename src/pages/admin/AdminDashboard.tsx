@@ -519,6 +519,17 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
+      title: "KVKK Rıza Logları",
+      description: "Aydınlatma, açık rıza ve ticari ileti onaylarının hukuki delil kayıtları",
+      icon: ShieldCheck,
+      gradient: "from-emerald-500 via-teal-500 to-cyan-600",
+      bgGradient: "from-emerald-50 to-cyan-50",
+      shadowColor: "shadow-emerald-500/20",
+      route: "/divan_paneli/consent-logs",
+      buttonText: "Rıza Loglarını Görüntüle",
+      adminOnly: true
+    },
+    {
       title: "Doki",
       description: "Kurumsal mesaj ve metin oluşturmak için yapay zeka asistanı",
       icon: Sparkles,
