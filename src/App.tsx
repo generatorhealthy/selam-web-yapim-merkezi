@@ -128,6 +128,7 @@ const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
 const AdminAIAssistant = lazy(() => import("./pages/admin/AdminAIAssistant"));
 const EmailLogs = lazy(() => import("./pages/admin/EmailLogs"));
 const RegistrationAnalytics = lazy(() => import("./pages/admin/RegistrationAnalytics"));
+const ConsentLogs = lazy(() => import("./pages/admin/ConsentLogs"));
 
 const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 
@@ -314,6 +315,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/ai-assistant" element={<AdminAIAssistant />} />
               <Route path="/divan_paneli/email-logs" element={<EmailLogs />} />
               <Route path="/divan_paneli/registration-analytics" element={<RegistrationAnalytics />} />
+              <Route path="/divan_paneli/consent-logs" element={<ConsentLogs />} />
               
                 
               {/* Test Routes */}
