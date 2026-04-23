@@ -12,6 +12,7 @@ export default function MobileSignup() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [openDoc, setOpenDoc] = useState<LegalDoc>(null);
   const [acceptedDisclosure, setAcceptedDisclosure] = useState(false); // KVKK m.10 - Aydınlatma (zorunlu)
   const [explicitConsent, setExplicitConsent] = useState(false);       // KVKK m.5/6 - Açık rıza (opsiyonel)
   const [marketingConsent, setMarketingConsent] = useState(false);     // ETK/İYS - Ticari ileti (opsiyonel)
