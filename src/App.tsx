@@ -65,6 +65,7 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const DisclosureText = lazy(() => import("./pages/DisclosureText"));
+const ExplicitConsent = lazy(() => import("./pages/ExplicitConsent"));
 const DistanceSalesContract = lazy(() => import("./pages/DistanceSalesContract"));
 const VisitorConsultantAgreement = lazy(() => import("./pages/VisitorConsultantAgreement"));
 const CommentRules = lazy(() => import("./pages/CommentRules"));
@@ -251,6 +252,8 @@ const AppContent = () => {
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
               <Route path="/disclosure-text" element={<DisclosureText />} />
               <Route path="/aydinlatma-metni" element={<DisclosureText />} />
+              <Route path="/acik-riza" element={<ExplicitConsent />} />
+              <Route path="/explicit-consent" element={<ExplicitConsent />} />
               <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesContract />} />
               <Route path="/visitor-consultant-agreement" element={<VisitorConsultantAgreement />} />
               <Route path="/ziyaretci-danisan-sozlesmesi" element={<VisitorConsultantAgreement />} />
