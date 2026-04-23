@@ -554,6 +554,17 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
+      title: "Toplu E-posta Gönder",
+      description: "Birden çok kişiye ayrı ayrı kişiselleştirilmiş e-posta gönder (spam korumalı)",
+      icon: Mail,
+      gradient: "from-rose-500 via-pink-500 to-fuchsia-600",
+      bgGradient: "from-rose-50 to-fuchsia-50",
+      shadowColor: "shadow-rose-500/20",
+      route: "/divan_paneli/bulk-email",
+      buttonText: "Toplu E-posta Gönder",
+      adminOnly: true
+    },
+    {
       title: "Paket Analiz Sayfası",
       description: "Kayıt sayfası ziyaretçi davranışları ve reklam dönüşüm analizi",
       icon: BarChart3,
