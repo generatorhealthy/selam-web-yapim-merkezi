@@ -167,39 +167,41 @@
     <!-- Main app script loaded as module -->
     
     <!-- Google tag (gtag.js) - Google Analytics & Ads -->
+    <!-- Apple App Store guideline 5.1.2(i): native uygulamada (Capacitor) tracking yükleme -->
     <script type="text/javascript">
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      
-      function loadGtag() {
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.async = true;
-        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-0CVEMJ5TGM';
-        document.head.appendChild(script);
-        
-        script.onload = function() {
-          gtag('js', new Date());
-          
-          // Google Analytics 4
-          gtag('config', 'G-0CVEMJ5TGM');
-          
-          // Google Ads
-          gtag('config', 'AW-17512133573');
-          
-          gtag('event', 'conversion', {
-            'send_to': 'AW-17512133573/QD6ZCNvz4o4bEMXnt55B',
-            'value': 1.0,
-            'currency': 'TRY'
-          });
-        };
-      }
-      
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(function() { setTimeout(loadGtag, 5000); }, { timeout: 12000 });
-      } else {
-        setTimeout(loadGtag, 8000);
-      }
+      (function(){
+        var isNative = (window.location.protocol === 'capacitor:' || window.location.protocol === 'file:' || /(iPhone|iPad|iPod|Android).*Capacitor/i.test(navigator.userAgent || '') || !!(window).Capacitor);
+        if (isNative) { return; }
+
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+
+        function loadGtag() {
+          var script = document.createElement('script');
+          script.type = 'text/javascript';
+          script.async = true;
+          script.src = 'https://www.googletagmanager.com/gtag/js?id=G-0CVEMJ5TGM';
+          document.head.appendChild(script);
+
+          script.onload = function() {
+            gtag('js', new Date());
+            gtag('config', 'G-0CVEMJ5TGM');
+            gtag('config', 'AW-17512133573');
+            gtag('event', 'conversion', {
+              'send_to': 'AW-17512133573/QD6ZCNvz4o4bEMXnt55B',
+              'value': 1.0,
+              'currency': 'TRY'
+            });
+          };
+        }
+
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(function() { setTimeout(loadGtag, 5000); }, { timeout: 12000 });
+        } else {
+          setTimeout(loadGtag, 8000);
+        }
+      })();
     </script>
   </head>
 
