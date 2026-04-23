@@ -22,27 +22,73 @@ const DisclosureText = () => {
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Veri sorumlusunun ve varsa temsilcisinin kimliği</h2>
-                <p>Veri sorumlusu; doktorumol.com.tr'dir.</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">1. Veri Sorumlusunun Kimliği</h2>
+                <p>
+                  Veri Sorumlusu: <strong>Doktorumol.com.tr</strong> üzerinden faaliyet gösteren işletme.<br />
+                  E-posta: <strong>info@doktorumol.com.tr</strong><br />
+                  Web: <strong>https://doktorumol.com.tr</strong>
+                </p>
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Kişisel verilerin hangi amaçla işleneceği</h2>
-                <div className="space-y-4">
-                  <p>Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz genel ve özel nitelikli kategorilerdeki kişisel verileriniz, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim kurulması, onay vermeniz halinde tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda bu kişisel verilerinizin Doktorumol tarafından saklanması amacı ile işlenmektedir.</p>
-                  
-                  <p>Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet sayfası sunucusu tarafından sabit sürücünüze iletilen küçük metin dosyaları ("Çerezler") aracılığıyla elde edilen kullanılan tarayıcı, IP adresi, internet bağlantınız, site kullanımlarınız hakkındaki bilgiler, bilgisayarınızdaki işletim sistemi ve benzeri kategorilerdeki kişisel verileriniz, internet sitesinin düzgün bir şekilde çalışabilmesi, ziyaret edilebilmesi ve özelliklerinden faydalanılması, internet sitesinde sayfalar arasında bilgileri taşıyabilmek ve bilgileri tekrardan girmek zorunluluğunu ortadan kaldırmak amaçları ile işlenmektedir.</p>
-                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">2. İşlenen Kişisel Veri Kategorileri</h2>
+                <ul className="list-disc pl-6 space-y-1">
+                  <li><strong>Kimlik:</strong> Ad, soyad</li>
+                  <li><strong>İletişim:</strong> E-posta, telefon, adres</li>
+                  <li><strong>Müşteri işlem:</strong> Randevu, sipariş, ödeme kayıtları</li>
+                  <li><strong>İşlem güvenliği:</strong> IP, log, tarayıcı bilgisi</li>
+                  <li><strong>Pazarlama (rıza halinde):</strong> Tercihler, kampanya etkileşimleri</li>
+                  <li><strong>Özel nitelikli – Sağlık (yalnızca açık rıza ile):</strong> Uzmana ilettiğiniz şikayet, danışmanlık konusu, test sonucu</li>
+                </ul>
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Şirket tarafından işlenen kişisel verilerin kimlere ve hangi amaçla aktarılabileceği</h2>
-                <p>Kişisel verileriniz 2. maddede belirtilen amaçların yerine getirilebilmesi için Doktorumol hissedarları, iş ortakları, hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına aktarılabilecektir.</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">3. İşleme Amaçları</h2>
+                <ul className="list-disc pl-6 space-y-1">
+                  <li>Üyelik oluşturma ve hesap yönetimi</li>
+                  <li>Randevu, danışmanlık ve hizmet sunumu</li>
+                  <li>Müşteri ilişkileri ve talep/şikayet yönetimi</li>
+                  <li>Yasal yükümlülüklerin yerine getirilmesi (faturalama, mevzuat)</li>
+                  <li>Hizmet güvenliği ve dolandırıcılık önleme</li>
+                  <li>Açık rıza halinde: Pazarlama / ticari elektronik ileti gönderimi (ETK / İYS)</li>
+                </ul>
+                <p className="mt-3 text-sm text-gray-600">
+                  <strong>Sağlık verileri yalnızca ayrı bir Açık Rıza ile</strong> işlenir.
+                  Detay için <a href="/acik-riza" className="text-primary underline">Açık Rıza Metni</a>'ne bakınız.
+                </p>
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Kişisel veri toplamanın yöntemi ve hukuki sebebi</h2>
-                <p>Şirketimizin internet sitesi veya çağrı merkezi aracılığıyla, tamamen veya kısmen otomatik yollarla elde edilen kişisel verileriniz, kanunda açıkça öngörülmesi, Doktorumol ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel verilerinizin işlenmesinin gerekli olması, iletişim hakkının tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması ve açık rızanız hukuki sebepleri ile toplanmaktadır.</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">4. Aktarım Yapılan Üçüncü Kişiler (Kategori Bazlı)</h2>
+                <ul className="list-disc pl-6 space-y-1">
+                  <li><strong>Uzmanlar / Hekimler:</strong> Randevu aldığınız sağlık profesyoneli — hizmetin yerine getirilmesi için zorunlu (açık rıza ile)</li>
+                  <li><strong>Hosting / bulut sağlayıcı:</strong> Sunucu altyapısı (Supabase, Railway)</li>
+                  <li><strong>Ödeme kuruluşu:</strong> Iyzico</li>
+                  <li><strong>SMS sağlayıcı:</strong> Verimor</li>
+                  <li><strong>E-posta sağlayıcı:</strong> Brevo</li>
+                  <li><strong>Çağrı merkezi hizmet sağlayıcı</strong></li>
+                  <li><strong>Yetkili kamu kurumları:</strong> Yasal talep halinde</li>
+                </ul>
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">5. Toplama Yöntemi ve Hukuki Sebepler</h2>
+                <p>Verileriniz; web sitesi, mobil uygulama ve çağrı merkezi üzerinden tamamen veya kısmen otomatik yollarla toplanır. Hukuki sebepler:</p>
+                <ul className="list-disc pl-6 space-y-1">
+                  <li>KVKK m.5/2-c: Sözleşmenin kurulması/ifası için zorunlu olması (randevu, ödeme)</li>
+                  <li>KVKK m.5/2-ç: Hukuki yükümlülüğün yerine getirilmesi (faturalama, mevzuat)</li>
+                  <li>KVKK m.5/2-f: Meşru menfaat (hizmet kalitesi, dolandırıcılık önleme)</li>
+                  <li>KVKK m.5/1: Açık rıza (pazarlama, sağlık verisi, uzmana aktarım)</li>
+                </ul>
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">6. Saklama Süresi</h2>
+                <p>
+                  Verileriniz, hizmetin sona ermesinden itibaren <strong>10 yıl</strong> (TBK
+                  zamanaşımı) boyunca saklanır. Pazarlama verileri rızanın geri alınmasına kadar,
+                  log kayıtları 2 yıl, sağlık verileri ilgili sağlık mevzuatı süreleri kadar saklanır.
+                </p>
               </div>
 
               <div>
