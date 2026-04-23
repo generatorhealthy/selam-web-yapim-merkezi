@@ -97,8 +97,8 @@ const handler = async (req: Request): Promise<Response> => {
           .select('role')
           .eq('user_id', user.id)
           .maybeSingle();
-        if (!profile || !['admin', 'staff'].includes(profile.role)) {
-          return new Response(JSON.stringify({ error: 'Yetkisiz erişim' }), {
+        if (!profile || profile.role !== 'admin') {
+          return new Response(JSON.stringify({ error: 'Yalnızca admin erişebilir' }), {
             status: 403, headers: { "Content-Type": "application/json", ...corsHeaders }
           });
         }
