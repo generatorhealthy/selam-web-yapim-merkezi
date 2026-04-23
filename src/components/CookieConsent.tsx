@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 
 const CookieConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
+    // Apple App Store guideline 5.1.2(i): native uygulamada çerez/tracking bildirimi gösterme
+    if (Capacitor.isNativePlatform()) return;
+
     const isMobile = window.matchMedia("(max-width: 767px)").matches;
     if (isMobile) return;
 
