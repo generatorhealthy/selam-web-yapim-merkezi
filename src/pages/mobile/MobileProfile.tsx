@@ -4,7 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { LogOut, Calendar, Brain, Bell, LogIn, ChevronRight } from "lucide-react";
+import { LogOut, Calendar, Brain, Bell, LogIn, ChevronRight, Trash2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function MobileProfile() {
   const navigate = useNavigate();
