@@ -102,7 +102,106 @@ async function sendTweet(tweetText: string): Promise<any> {
   return JSON.parse(responseText);
 }
 
-async function saveShareResult(
+// ============= TUMBLR API =============
+function generateTumblrOAuthHeader(
+  method: string,
+  url: string,
+  bodyParams: Record<string, string> = {}
+): string {
+  const oauthParams: Record<string, string> = {
+    oauth_consumer_key: TUMBLR_CONSUMER_KEY!,
+    oauth_nonce: Math.random().toString(36).substring(2) + Date.now().toString(36),
+    oauth_signature_method: "HMAC-SHA1",
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_token: TUMBLR_TOKEN!,
+    oauth_version: "1.0",
+  };
+
+  const allParams = { ...oauthParams, ...bodyParams };
+  const signature = generateOAuthSignature(
+    method,
+    url,
+    allParams,
+    TUMBLR_CONSUMER_SECRET!,
+    TUMBLR_TOKEN_SECRET!
+  );
+
+  const signedOAuthParams: Record<string, string> = {
+    ...oauthParams,
+    oauth_signature: signature,
+  };
+
+  const entries = Object.entries(signedOAuthParams).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
+
+  return (
+    "OAuth " +
+    entries
+      .map(([k, v]) => `${encodeURIComponent(k)}="${encodeURIComponent(v)}"`)
+      .join(", ")
+  );
+}
+
+async function postToTumblr(
+  blogTitle: string,
+  blogUrl: string,
+  blogContent: string,
+  featuredImage: string | null,
+  tags: string[]
+): Promise<any> {
+  const blogName = TUMBLR_BLOG_NAME!.replace(/\.tumblr\.com$/i, '').replace(/^https?:\/\//, '');
+  const url = `https://api.tumblr.com/v2/blog/${blogName}.tumblr.com/post`;
+  const method = "POST";
+
+  const cleanContent = blogContent
+    ? blogContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500) + '...'
+    : blogTitle;
+
+  const captionHtml = `<p>${cleanContent}</p><p><a href="${blogUrl}">Devamını oku: ${blogTitle}</a></p>`;
+
+  const bodyParams: Record<string, string> = {
+    type: featuredImage ? 'photo' : 'text',
+    state: 'published',
+    tags: tags.join(','),
+  };
+
+  if (featuredImage) {
+    bodyParams.source = featuredImage;
+    bodyParams.caption = captionHtml;
+    bodyParams.link = blogUrl;
+  } else {
+    bodyParams.title = blogTitle;
+    bodyParams.body = captionHtml;
+  }
+
+  const oauthHeader = generateTumblrOAuthHeader(method, url, bodyParams);
+  console.log("Posting to Tumblr blog:", blogName);
+
+  const formBody = Object.entries(bodyParams)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+
+  const response = await fetch(url, {
+    method: method,
+    headers: {
+      Authorization: oauthHeader,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formBody,
+  });
+
+  const responseText = await response.text();
+  console.log("Tumblr Response:", responseText);
+
+  if (!response.ok) {
+    throw new Error(`Tumblr API error: ${response.status} - ${responseText}`);
+  }
+
+  return JSON.parse(responseText);
+}
+
+
   supabase: any,
   blogId: string,
   platform: string,
