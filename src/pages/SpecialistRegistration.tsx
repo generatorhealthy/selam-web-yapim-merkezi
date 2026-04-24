@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import FileUpload from "@/components/FileUpload";
 import RegistrationAnalyticsTracker from "@/components/RegistrationAnalyticsTracker";
 import InterestsSelector from "@/components/InterestsSelector";
-import { hasSuggestedInterests } from "@/lib/specialistInterests";
+import { hasSuggestedInterests, getSuggestedInterests } from "@/lib/specialistInterests";
 import { sendSms } from "@/services/smsService";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
@@ -99,6 +99,14 @@ const SpecialistRegistration = () => {
       if (pending) setReferralCode(pending);
     } catch (e) { /* ignore */ }
   }, []);
+
+  // Uzmanlık alanı seçildiğinde önerilen ilgi alanlarını otomatik seç
+  useEffect(() => {
+    if (!formData.specialty) return;
+    const suggested = getSuggestedInterests(formData.specialty);
+    if (suggested.length === 0) return;
+    setInterests(prev => (prev && prev.length > 0 ? prev : suggested));
+  }, [formData.specialty]);
 
   const steps = [
     { num: 1, label: "Hesap", icon: User },
