@@ -508,13 +508,17 @@ Deno.serve(async (req) => {
         console.log('LinkedIn person URN:', personUrn);
 
         const blogUrl = `https://doktorumol.com.tr/blog/${blogSlug}`;
-        const cleanContent = blogContent
-          ? blogContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 400)
-          : '';
+
+        // AI ile özgün LinkedIn postu üret
+        const rewritten = await generateSocialPost('linkedin', blogTitle, blogContent || '');
+        const postTitle = rewritten?.title || blogTitle;
+        const postBody = rewritten?.body
+          || (blogContent ? stripHtmlText(blogContent).substring(0, 400) + '...' : '');
+
         const hashtags = keywords
           ? keywords.split(',').slice(0, 3).map((k: string) => `#${k.trim().replace(/\s+/g, '')}`).join(' ')
           : '#doktorumol #sağlık #uzman';
-        const text = `📚 ${blogTitle}\n\n${cleanContent}${cleanContent ? '...' : ''}\n\n${hashtags}\n\n${blogUrl}`;
+        const text = `📚 ${postTitle}\n\n${postBody}\n\n${hashtags}\n\n${blogUrl}`;
 
         const payload = {
           author: personUrn,
