@@ -11,6 +11,14 @@ RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
 # ============================================
 RewriteRule ^sitemap\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/generate-sitemap?format=xml [R=302,L,NE]
 
+# ============================================
+# RSS FEED - For Pinterest, Google News, RSS readers
+# Redirects /feed/ and /feed to Supabase edge function
+# ============================================
+RewriteRule ^feed/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/generate-rss [R=302,L,NE]
+RewriteRule ^rss/?$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/generate-rss [R=302,L,NE]
+RewriteRule ^rss\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/generate-rss [R=302,L,NE]
+
 # Performance Optimizations - Google PageSpeed Fixes
 <IfModule mod_deflate.c>
     # Enable compression for text files
