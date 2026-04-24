@@ -310,11 +310,32 @@ function tumblrAuthHeader(method: string, url: string, body: Record<string, stri
     .map(([k, v]) => `${rfc3986(k)}="${rfc3986(v)}"`).join(", ");
 }
 
-async function postToTumblr(title: string, blogUrl: string, content: string, image: string | null, tags: string[]): Promise<any> {
+async function postToTumblr(
+  title: string,
+  blogUrl: string,
+  rewrittenHtml: string,
+  fallbackContent: string,
+  image: string | null,
+  tags: string[]
+): Promise<any> {
   const blogName = TUMBLR_BLOG_NAME!.replace(/\.tumblr\.com$/i, "").replace(/^https?:\/\//, "");
   const url = `https://api.tumblr.com/v2/blog/${blogName}.tumblr.com/post`;
-  const clean = content ? content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().substring(0, 500) + "..." : title;
-  const captionHtml = `<p>${clean}</p><p><a href="${blogUrl}">Devamını oku: ${title}</a></p>`;
+
+  // AI ürettiyse onu, üretmediyse fallback (kısa özet) kullan
+  let bodyHtml: string;
+  if (rewrittenHtml && rewrittenHtml.trim().length > 100) {
+    bodyHtml = rewrittenHtml;
+  } else {
+    const clean = fallbackContent
+      ? fallbackContent.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().substring(0, 500) + "..."
+      : title;
+    bodyHtml = `<p>${clean}</p>`;
+  }
+
+  // Her durumda sonuna canonical CTA ekle
+  const ctaHtml = `<hr><p><strong>📌 Bu yazının orijinal ve güncel sürümü için:</strong> <a href="${blogUrl}" rel="canonical">${blogUrl}</a></p><p>Daha fazla sağlık ve uzman içeriği için <a href="https://doktorumol.com.tr">Doktorum Ol</a> sitesini ziyaret edebilirsiniz.</p>`;
+  const fullBody = `${bodyHtml}${ctaHtml}`;
+
   const body: Record<string, string> = {
     type: image ? "photo" : "text",
     state: "published",
@@ -322,11 +343,11 @@ async function postToTumblr(title: string, blogUrl: string, content: string, ima
   };
   if (image) {
     body.source = image;
-    body.caption = captionHtml;
+    body.caption = fullBody;
     body.link = blogUrl;
   } else {
     body.title = title;
-    body.body = captionHtml;
+    body.body = fullBody;
   }
   const formBody = Object.entries(body).map(([k, v]) => `${rfc3986(k)}=${rfc3986(v)}`).join("&");
   const r = await fetch(url, {
