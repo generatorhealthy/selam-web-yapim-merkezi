@@ -201,7 +201,7 @@ async function postToTumblr(
   return JSON.parse(responseText);
 }
 
-
+async function saveShareResult(
   supabase: any,
   blogId: string,
   platform: string,
