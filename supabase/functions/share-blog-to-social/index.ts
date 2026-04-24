@@ -206,7 +206,7 @@ async function postToTumblr(
   console.log("Posting to Tumblr blog:", blogName);
 
   const formBody = Object.entries(bodyParams)
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .map(([k, v]) => `${rfc3986Encode(k)}=${rfc3986Encode(v)}`)
     .join('&');
 
   const response = await fetch(url, {
