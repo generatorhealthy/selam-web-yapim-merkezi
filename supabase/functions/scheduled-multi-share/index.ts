@@ -458,14 +458,42 @@ Deno.serve(async (req) => {
       .eq("blog_post_id", blog.id);
     const alreadySuccess = new Set((existingShares || []).filter((s: any) => s.status === "success").map((s: any) => s.platform));
 
+    // ============= AI ile platform varyasyonları üret (TEK çağrı) =============
+    let variations: PlatformVariations | null = null;
+    const needsAI = targetPlatforms.some((p) => !alreadySuccess.has(p));
+    if (needsAI) {
+      console.log(`Generating AI variations for blog: ${blog.title}`);
+      variations = await generatePlatformVariations(blog.title, blog.content || "", blog.excerpt, blog.specialists);
+      if (variations) {
+        console.log(`AI variations ready. LinkedIn title: "${variations.linkedinTitle}" | Tumblr title: "${variations.tumblrTitle}"`);
+      } else {
+        console.warn("AI variations failed, falling back to template texts");
+      }
+    }
+
     const tasks: Promise<void>[] = [];
 
     if (targetPlatforms.includes("twitter") && !alreadySuccess.has("twitter")) {
       tasks.push((async () => {
         try {
           if (!TW_KEY || !TW_SECRET || !TW_TOKEN || !TW_TOKEN_SECRET) throw new Error("Twitter creds eksik");
-          const text = buildTwitterText(blog.title, blogUrl, blog.keywords);
-          const r = await postToTwitter(text);
+          // AI metni varsa onu, yoksa template kullan; URL ve hashtag her zaman ekle
+          let tweet: string;
+          if (variations?.twitterText) {
+            const hashtag = blog.keywords
+              ? "#" + blog.keywords.split(",")[0].trim().replace(/\s+/g, "")
+              : "#sağlık";
+            const baseLen = variations.twitterText.length + blogUrl.length + hashtag.length + 6;
+            if (baseLen <= 275) {
+              tweet = `${variations.twitterText}\n\n${blogUrl}\n\n${hashtag}`;
+            } else {
+              const maxText = 280 - blogUrl.length - hashtag.length - 8;
+              tweet = `${variations.twitterText.substring(0, maxText - 3)}...\n\n${blogUrl}\n\n${hashtag}`;
+            }
+          } else {
+            tweet = buildTwitterText(blog.title, blogUrl, blog.keywords);
+          }
+          const r = await postToTwitter(tweet);
           await saveShareResult(supabase, blog.id, "twitter", "success");
           results.twitter = { ok: true, id: r?.data?.id };
         } catch (e: any) {
@@ -479,7 +507,18 @@ Deno.serve(async (req) => {
       tasks.push((async () => {
         try {
           if (!LINKEDIN_ACCESS_TOKEN) throw new Error("LinkedIn token eksik");
-          const text = buildLinkedInText(blog.title, blogUrl, blog.excerpt, blog.specialists);
+          let text: string;
+          if (variations?.linkedinBody) {
+            // AI: yeni başlık + yeni gövde + canonical CTA
+            text = `📚 ${variations.linkedinTitle}\n\n${variations.linkedinBody}`;
+            if (blog.specialists) {
+              text += `\n\n✍️ ${blog.specialists.name} - ${blog.specialists.specialty}`;
+            }
+            text += `\n\n👉 Devamı için orijinal yazımıza göz atın: ${blogUrl}`;
+            text += `\n\n#doktorumol #sağlık #uzman`;
+          } else {
+            text = buildLinkedInText(blog.title, blogUrl, blog.excerpt, blog.specialists);
+          }
           const r = await postToLinkedIn(text, blogUrl);
           await saveShareResult(supabase, blog.id, "linkedin", "success");
           results.linkedin = { ok: true, id: r?.id };
@@ -496,8 +535,9 @@ Deno.serve(async (req) => {
           if (!TUMBLR_CONSUMER_KEY || !TUMBLR_CONSUMER_SECRET || !TUMBLR_TOKEN || !TUMBLR_TOKEN_SECRET || !TUMBLR_BLOG_NAME) {
             throw new Error("Tumblr creds eksik");
           }
-          const titleVar = buildTumblrTitle(blog.title);
-          const r = await postToTumblr(titleVar, blogUrl, blog.content || "", blog.featured_image || null, tags);
+          const titleVar = variations?.tumblrTitle || buildTumblrTitle(blog.title);
+          const rewrittenHtml = variations?.tumblrBodyHtml || "";
+          const r = await postToTumblr(titleVar, blogUrl, rewrittenHtml, blog.content || "", blog.featured_image || null, tags);
           await saveShareResult(supabase, blog.id, "tumblr", "success");
           results.tumblr = { ok: true, id: r?.response?.id };
         } catch (e: any) {
