@@ -131,3 +131,6 @@ verify_jwt = false
 
 [functions.scheduled-multi-share]
 verify_jwt = false
+
+[functions.scheduled-devto-share]
+verify_jwt = false
