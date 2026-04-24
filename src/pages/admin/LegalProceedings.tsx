@@ -339,6 +339,26 @@ const LegalProceedings = () => {
           <Card className="border-0 shadow-sm bg-white">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{getObjectionCount()} adet</span>
+              </div>
+              <p className="text-xl font-bold text-amber-600">₺{formatCurrency(getObjectionAmount())}</p>
+              <p className="text-xs text-gray-500 mt-0.5">İtiraz Tutarı</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm bg-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Handshake className="w-5 h-5 text-yellow-500" />
+                <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full">{getMediationCount()} adet</span>
+              </div>
+              <p className="text-xl font-bold text-yellow-700">₺{formatCurrency(getMediationAmount())}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Arabuluculuk Tutarı</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm bg-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
                 <TrendingUp className="w-5 h-5 text-emerald-500" />
               </div>
               <p className="text-xl font-bold text-emerald-600">₺{formatCurrency(getPaidAmount())}</p>
