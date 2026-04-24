@@ -13,7 +13,7 @@ import { sendSms } from "@/services/smsService";
 import { useUserRole } from "@/hooks/useUserRole";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import AdminBackButton from "@/components/AdminBackButton";
-import { Plus, Gavel, Edit, Trash2, Check, FileText, Download, Search, X, TrendingUp, TrendingDown, Scale, CircleDollarSign, ShieldCheck } from "lucide-react";
+import { Plus, Gavel, Edit, Trash2, Check, FileText, Download, Search, X, TrendingUp, TrendingDown, Scale, CircleDollarSign, ShieldCheck, AlertTriangle, Handshake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/FileUpload";
 
