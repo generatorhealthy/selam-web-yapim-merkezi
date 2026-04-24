@@ -11,8 +11,6 @@ import { Helmet } from "react-helmet-async";
 import { 
   Twitter, 
   Linkedin, 
-  Pin as Pinterest,
-  Ghost,
   ExternalLink,
   Share2,
   CheckCircle2,
@@ -56,9 +54,6 @@ const SocialMediaManagement = () => {
   const platforms = [
     { name: 'Twitter/X', icon: Twitter, key: 'twitter', color: 'text-blue-500' },
     { name: 'LinkedIn', icon: Linkedin, key: 'linkedin', color: 'text-blue-700' },
-    { name: 'Pinterest', icon: Pinterest, key: 'pinterest', color: 'text-red-600' },
-    { name: 'Ghost', icon: Ghost, key: 'ghost', color: 'text-gray-700' },
-    { name: 'Kooplog', icon: ExternalLink, key: 'kooplog', color: 'text-green-600' },
     { name: 'Tumblr', icon: ExternalLink, key: 'tumblr', color: 'text-indigo-600' },
   ];
 
@@ -237,11 +232,12 @@ const SocialMediaManagement = () => {
                 <h4 className="font-semibold text-sm">Gerekli API Anahtarları:</h4>
                 <ul className="text-sm space-y-1 text-gray-600">
                   <li>• <strong>Twitter/X:</strong> API Key, API Secret, Access Token, Access Token Secret</li>
-                  <li>• <strong>LinkedIn:</strong> Client ID, Client Secret, Access Token</li>
-                  <li>• <strong>Pinterest:</strong> App ID, App Secret, Access Token</li>
-                  <li>• <strong>Ghost:</strong> Admin API Key, API URL</li>
+                  <li>• <strong>LinkedIn:</strong> Access Token (60 gün geçerli)</li>
                   <li>• <strong>Tumblr:</strong> OAuth Consumer Key, Consumer Secret, Token, Token Secret</li>
                 </ul>
+                <p className="text-xs text-gray-500 mt-3">
+                  ⏰ Otomatik paylaşım: Her saat başı 1 blog yazısı 3 platforma birden paylaşılır (TR 07:00 – 02:00 arası, günde ~20 paylaşım).
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -296,7 +292,7 @@ const SocialMediaManagement = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           {platforms.map((platform) => {
                             const Icon = platform.icon;
                             const shareStatus = getShareStatus(blog.id, platform.key);
