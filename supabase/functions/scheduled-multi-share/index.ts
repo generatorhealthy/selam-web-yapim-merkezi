@@ -12,6 +12,7 @@ const corsHeaders = {
 // ============= ENV =============
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")?.trim();
 
 // Twitter
 const TW_KEY = Deno.env.get("TWITTER_API_KEY")?.trim();
@@ -28,6 +29,131 @@ const TUMBLR_CONSUMER_SECRET = Deno.env.get("TUMBLR_CONSUMER_SECRET")?.trim();
 const TUMBLR_TOKEN = Deno.env.get("TUMBLR_TOKEN")?.trim();
 const TUMBLR_TOKEN_SECRET = Deno.env.get("TUMBLR_TOKEN_SECRET")?.trim();
 const TUMBLR_BLOG_NAME = Deno.env.get("TUMBLR_BLOG_NAME")?.trim();
+
+// ============= AI REWRITE (Lovable AI) =============
+function stripHtml(html: string): string {
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+interface PlatformVariations {
+  twitterText: string;       // <= 240 char (URL + tag için yer bırak)
+  linkedinTitle: string;     // benzer ama farklı başlık
+  linkedinBody: string;      // 600-900 karakter, 2-3 paragraf
+  tumblrTitle: string;       // benzer ama farklı başlık
+  tumblrBodyHtml: string;    // 400-700 kelime, HTML, alt başlıklarla
+}
+
+async function generatePlatformVariations(
+  title: string,
+  content: string,
+  excerpt: string | null,
+  specialist: { name: string; specialty: string } | null
+): Promise<PlatformVariations | null> {
+  if (!LOVABLE_API_KEY) {
+    console.warn("LOVABLE_API_KEY missing — fallback to non-AI text");
+    return null;
+  }
+
+  const cleanContent = stripHtml(content || excerpt || title).substring(0, 6000);
+  const specInfo = specialist ? `Yazar: ${specialist.name} (${specialist.specialty})` : "";
+
+  const systemPrompt = `Sen profesyonel bir sağlık içerik editörüsün. Türkçe yazıyorsun. Görevin: verilen blog yazısı için 3 farklı sosyal medya platformuna ÖZGÜN varyasyonlar üretmek. Her platform için farklı kelimeler/cümle yapıları kullan. Tıbbi doğruluğu koru. Asla link/URL/CTA ekleme — sistem otomatik ekler.`;
+
+  const userPrompt = `ORİJİNAL BAŞLIK: ${title}
+${specInfo}
+
+ORİJİNAL İÇERİK:
+${cleanContent}
+
+GÖREV: 3 platform için farklı varyasyonlar üret. Her platform birbirinden farklı kelimelerle yazılsın. Spam/duplicate olmasın.`;
+
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        tools: [{
+          type: "function",
+          function: {
+            name: "publish_variations",
+            description: "Üretilen platform varyasyonları",
+            parameters: {
+              type: "object",
+              properties: {
+                twitterText: {
+                  type: "string",
+                  description: "Twitter/X için merak uyandıran 1-2 cümlelik metin. MAKSİMUM 200 karakter (link ayrı eklenir). Emoji kullanabilir. Hashtag YOK.",
+                },
+                linkedinTitle: {
+                  type: "string",
+                  description: "LinkedIn için profesyonel, orijinal başlığa benzer ama farklı kelimelerle yeni başlık (max 100 karakter)",
+                },
+                linkedinBody: {
+                  type: "string",
+                  description: "LinkedIn paylaşım metni: 3-4 paragraf (600-900 karakter), profesyonel ton, sağlık konusunda farkındalık. Emoji uygun yerlerde. Hashtag YOK.",
+                },
+                tumblrTitle: {
+                  type: "string",
+                  description: "Tumblr için orijinale benzer ama farklı kelimelerle yeni başlık (max 120 karakter)",
+                },
+                tumblrBodyHtml: {
+                  type: "string",
+                  description: "Tumblr için HTML içerik: 400-700 kelime, <h2> alt başlıklar, <p> paragraflar, <ul><li> listeler. Orijinal içeriği TAMAMEN farklı cümle yapıları ve örneklerle yeniden anlat. Tıbbi doğruluğu koru.",
+                },
+              },
+              required: ["twitterText", "linkedinTitle", "linkedinBody", "tumblrTitle", "tumblrBodyHtml"],
+              additionalProperties: false,
+            },
+          },
+        }],
+        tool_choice: { type: "function", function: { name: "publish_variations" } },
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`AI rewrite failed [${response.status}]: ${errText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall) {
+      console.warn("AI did not return tool call");
+      return null;
+    }
+
+    const args = JSON.parse(toolCall.function.arguments);
+    return {
+      twitterText: String(args.twitterText || "").substring(0, 220),
+      linkedinTitle: String(args.linkedinTitle || title).substring(0, 100),
+      linkedinBody: String(args.linkedinBody || "").substring(0, 2500),
+      tumblrTitle: String(args.tumblrTitle || title).substring(0, 120),
+      tumblrBodyHtml: String(args.tumblrBodyHtml || ""),
+    };
+  } catch (e: any) {
+    console.error("AI rewrite exception:", e.message);
+    return null;
+  }
+}
 
 // ============= TITLE VARIATIONS =============
 const TWITTER_PREFIXES = ["📚", "💡", "🩺", "🧠", "✨", "📖", "🔍", "👉"];
