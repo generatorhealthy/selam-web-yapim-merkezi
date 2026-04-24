@@ -189,7 +189,7 @@ const LegalProceedings = () => {
   const getPaidAmount = () => proceedings.filter(p => p.status === "İCRA_TAMAMLANDI").reduce((sum, p) => sum + p.proceeding_amount, 0);
   const getUnpaidAmount = () => proceedings.filter(p => p.status !== "İCRA_TAMAMLANDI").reduce((sum, p) => sum + p.proceeding_amount, 0);
   const getActiveCount = () => proceedings.filter(p => p.status !== "İCRA_TAMAMLANDI").length;
-  const FINALIZED_STATUSES = ["KESİNLEŞTİ", "ÖDEME_BEKLENİYOR", "HACİZ_YAPILDI", "İCRA_TAMAMLANDI"];
+  const FINALIZED_STATUSES = ["KESİNLEŞTİ", "ÖDEME_BEKLENİYOR", "HACİZ_YAPILDI"];
   const OBJECTION_STATUSES = ["İTİRAZ_ETTİ", "İTİRAZ_DAVASI_AÇILDI"];
   const getFinalizedAmount = () => proceedings.filter(p => FINALIZED_STATUSES.includes(p.status)).reduce((sum, p) => sum + p.proceeding_amount, 0);
   const getFinalizedCount = () => proceedings.filter(p => FINALIZED_STATUSES.includes(p.status)).length;
