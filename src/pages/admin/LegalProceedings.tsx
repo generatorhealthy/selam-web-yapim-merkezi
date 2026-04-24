@@ -190,8 +190,13 @@ const LegalProceedings = () => {
   const getUnpaidAmount = () => proceedings.filter(p => p.status !== "İCRA_TAMAMLANDI").reduce((sum, p) => sum + p.proceeding_amount, 0);
   const getActiveCount = () => proceedings.filter(p => p.status !== "İCRA_TAMAMLANDI").length;
   const FINALIZED_STATUSES = ["KESİNLEŞTİ", "ÖDEME_BEKLENİYOR", "HACİZ_YAPILDI", "İCRA_TAMAMLANDI"];
+  const OBJECTION_STATUSES = ["İTİRAZ_ETTİ", "İTİRAZ_DAVASI_AÇILDI"];
   const getFinalizedAmount = () => proceedings.filter(p => FINALIZED_STATUSES.includes(p.status)).reduce((sum, p) => sum + p.proceeding_amount, 0);
   const getFinalizedCount = () => proceedings.filter(p => FINALIZED_STATUSES.includes(p.status)).length;
+  const getObjectionAmount = () => proceedings.filter(p => OBJECTION_STATUSES.includes(p.status)).reduce((sum, p) => sum + p.proceeding_amount, 0);
+  const getObjectionCount = () => proceedings.filter(p => OBJECTION_STATUSES.includes(p.status)).length;
+  const getMediationAmount = () => proceedings.filter(p => p.status === "ARABULUCULUK_SÜRECİNDE").reduce((sum, p) => sum + p.proceeding_amount, 0);
+  const getMediationCount = () => proceedings.filter(p => p.status === "ARABULUCULUK_SÜRECİNDE").length;
 
   const getStatusBadgeColor = (status: string) => {
     return statusOptions.find(opt => opt.value === status)?.color || "bg-gray-100 text-gray-800";
