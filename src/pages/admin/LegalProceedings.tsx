@@ -306,7 +306,7 @@ const LegalProceedings = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 mb-6">
           <Card className="border-0 shadow-sm bg-white">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
