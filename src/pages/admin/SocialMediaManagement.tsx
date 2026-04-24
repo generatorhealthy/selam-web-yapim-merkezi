@@ -12,6 +12,7 @@ import {
   Twitter, 
   Linkedin, 
   ExternalLink,
+  BookOpen,
   Share2,
   CheckCircle2,
   XCircle,
@@ -55,6 +56,7 @@ const SocialMediaManagement = () => {
     { name: 'Twitter/X', icon: Twitter, key: 'twitter', color: 'text-blue-500' },
     { name: 'LinkedIn', icon: Linkedin, key: 'linkedin', color: 'text-blue-700' },
     { name: 'Tumblr', icon: ExternalLink, key: 'tumblr', color: 'text-indigo-600' },
+    { name: 'Hashnode', icon: BookOpen, key: 'hashnode', color: 'text-blue-600' },
   ];
 
   useEffect(() => {
@@ -234,9 +236,11 @@ const SocialMediaManagement = () => {
                   <li>• <strong>Twitter/X:</strong> API Key, API Secret, Access Token, Access Token Secret</li>
                   <li>• <strong>LinkedIn:</strong> Access Token (60 gün geçerli)</li>
                   <li>• <strong>Tumblr:</strong> OAuth Consumer Key, Consumer Secret, Token, Token Secret</li>
+                  <li>• <strong>Hashnode:</strong> Personal Access Token + Publication ID (✅ AI ile içerik yeniden yazılır)</li>
                 </ul>
                 <p className="text-xs text-gray-500 mt-3">
-                  ⏰ Otomatik paylaşım: Her saat başı 1 blog yazısı 3 platforma birden paylaşılır (TR 07:00 – 02:00 arası, günde ~20 paylaşım).
+                  ⏰ Otomatik paylaşım: Her saat başı 1 blog yazısı tüm platformlarda paylaşılır (TR 07:00 – 02:00 arası, günde ~20 paylaşım). 
+                  Hashnode için yapay zeka içeriği yeniden yazar (özgün başlık + içerik) ve sonuna orijinal blog linkimizi ekler — duplicate content engellenir, SEO korunur.
                 </p>
               </div>
             </CardContent>
