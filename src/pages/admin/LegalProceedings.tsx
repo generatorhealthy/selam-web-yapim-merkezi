@@ -13,7 +13,7 @@ import { sendSms } from "@/services/smsService";
 import { useUserRole } from "@/hooks/useUserRole";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import AdminBackButton from "@/components/AdminBackButton";
-import { Plus, Gavel, Edit, Trash2, Check, FileText, Download, Search, X, TrendingUp, TrendingDown, Scale, CircleDollarSign, ShieldCheck } from "lucide-react";
+import { Plus, Gavel, Edit, Trash2, Check, FileText, Download, Search, X, TrendingUp, TrendingDown, Scale, CircleDollarSign, ShieldCheck, AlertTriangle, Handshake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/FileUpload";
 
@@ -190,8 +190,13 @@ const LegalProceedings = () => {
   const getUnpaidAmount = () => proceedings.filter(p => p.status !== "İCRA_TAMAMLANDI").reduce((sum, p) => sum + p.proceeding_amount, 0);
   const getActiveCount = () => proceedings.filter(p => p.status !== "İCRA_TAMAMLANDI").length;
   const FINALIZED_STATUSES = ["KESİNLEŞTİ", "ÖDEME_BEKLENİYOR", "HACİZ_YAPILDI", "İCRA_TAMAMLANDI"];
+  const OBJECTION_STATUSES = ["İTİRAZ_ETTİ", "İTİRAZ_DAVASI_AÇILDI"];
   const getFinalizedAmount = () => proceedings.filter(p => FINALIZED_STATUSES.includes(p.status)).reduce((sum, p) => sum + p.proceeding_amount, 0);
   const getFinalizedCount = () => proceedings.filter(p => FINALIZED_STATUSES.includes(p.status)).length;
+  const getObjectionAmount = () => proceedings.filter(p => OBJECTION_STATUSES.includes(p.status)).reduce((sum, p) => sum + p.proceeding_amount, 0);
+  const getObjectionCount = () => proceedings.filter(p => OBJECTION_STATUSES.includes(p.status)).length;
+  const getMediationAmount = () => proceedings.filter(p => p.status === "ARABULUCULUK_SÜRECİNDE").reduce((sum, p) => sum + p.proceeding_amount, 0);
+  const getMediationCount = () => proceedings.filter(p => p.status === "ARABULUCULUK_SÜRECİNDE").length;
 
   const getStatusBadgeColor = (status: string) => {
     return statusOptions.find(opt => opt.value === status)?.color || "bg-gray-100 text-gray-800";
@@ -301,7 +306,7 @@ const LegalProceedings = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 mb-6">
           <Card className="border-0 shadow-sm bg-white">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
@@ -329,6 +334,26 @@ const LegalProceedings = () => {
               </div>
               <p className="text-xl font-bold text-teal-600">₺{formatCurrency(getFinalizedAmount())}</p>
               <p className="text-xs text-gray-500 mt-0.5">Kesinleşen Tutar</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm bg-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{getObjectionCount()} adet</span>
+              </div>
+              <p className="text-xl font-bold text-amber-600">₺{formatCurrency(getObjectionAmount())}</p>
+              <p className="text-xs text-gray-500 mt-0.5">İtiraz Tutarı</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm bg-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Handshake className="w-5 h-5 text-yellow-500" />
+                <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full">{getMediationCount()} adet</span>
+              </div>
+              <p className="text-xl font-bold text-yellow-700">₺{formatCurrency(getMediationAmount())}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Arabuluculuk Tutarı</p>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-sm bg-white">
