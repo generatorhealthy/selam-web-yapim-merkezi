@@ -128,3 +128,6 @@ verify_jwt = false
 
 [functions.scheduled-hashnode-share]
 verify_jwt = false
+
+[functions.scheduled-multi-share]
+verify_jwt = false
