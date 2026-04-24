@@ -373,8 +373,81 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+    } else if (platform === 'linkedin') {
+      const LINKEDIN_ACCESS_TOKEN = Deno.env.get('LINKEDIN_ACCESS_TOKEN')?.trim();
+      if (!LINKEDIN_ACCESS_TOKEN) {
+        const error = 'LinkedIn access token not configured';
+        console.error(error);
+        await saveShareResult(supabase, blogId, platform, 'failed', error);
+        return new Response(JSON.stringify({ error }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      try {
+        // Get LinkedIn person URN
+        const meRes = await fetch('https://api.linkedin.com/v2/userinfo', {
+          headers: { Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}` },
+        });
+        const meText = await meRes.text();
+        if (!meRes.ok) {
+          throw new Error(`LinkedIn userinfo failed: ${meRes.status} - ${meText}`);
+        }
+        const me = JSON.parse(meText);
+        const personUrn = `urn:li:person:${me.sub}`;
+        console.log('LinkedIn person URN:', personUrn);
+
+        const blogUrl = `https://doktorumol.com.tr/blog/${blogSlug}`;
+        const cleanContent = blogContent
+          ? blogContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 400)
+          : '';
+        const hashtags = keywords
+          ? keywords.split(',').slice(0, 3).map((k: string) => `#${k.trim().replace(/\s+/g, '')}`).join(' ')
+          : '#doktorumol #sağlık #uzman';
+        const text = `📚 ${blogTitle}\n\n${cleanContent}${cleanContent ? '...' : ''}\n\n${hashtags}\n\n${blogUrl}`;
+
+        const payload = {
+          author: personUrn,
+          lifecycleState: 'PUBLISHED',
+          specificContent: {
+            'com.linkedin.ugc.ShareContent': {
+              shareCommentary: { text },
+              shareMediaCategory: 'ARTICLE',
+              media: [{ status: 'READY', originalUrl: blogUrl }],
+            },
+          },
+          visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
+        };
+
+        const liRes = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json',
+            'X-Restli-Protocol-Version': '2.0.0',
+          },
+          body: JSON.stringify(payload),
+        });
+        const liText = await liRes.text();
+        console.log('LinkedIn response:', liRes.status, liText);
+        if (!liRes.ok) {
+          throw new Error(`LinkedIn API error: ${liRes.status} - ${liText}`);
+        }
+
+        await saveShareResult(supabase, blogId, platform, 'success');
+        return new Response(JSON.stringify({ success: true, data: JSON.parse(liText) }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (liErr: any) {
+        console.error('LinkedIn error:', liErr);
+        await saveShareResult(supabase, blogId, platform, 'failed', liErr.message);
+        return new Response(JSON.stringify({ error: liErr.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     } else {
-      // Other platforms not implemented yet
       const message = `${platform} platformu henüz desteklenmiyor`;
       console.log(message);
       await saveShareResult(supabase, blogId, platform, 'failed', message);
