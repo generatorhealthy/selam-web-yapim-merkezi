@@ -13,7 +13,7 @@ import { sendSms } from "@/services/smsService";
 import { useUserRole } from "@/hooks/useUserRole";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import AdminBackButton from "@/components/AdminBackButton";
-import { Plus, Gavel, Edit, Trash2, Check, FileText, Download, Search, X, TrendingUp, TrendingDown, Scale, CircleDollarSign } from "lucide-react";
+import { Plus, Gavel, Edit, Trash2, Check, FileText, Download, Search, X, TrendingUp, TrendingDown, Scale, CircleDollarSign, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/FileUpload";
 
@@ -189,6 +189,9 @@ const LegalProceedings = () => {
   const getPaidAmount = () => proceedings.filter(p => p.status === "İCRA_TAMAMLANDI").reduce((sum, p) => sum + p.proceeding_amount, 0);
   const getUnpaidAmount = () => proceedings.filter(p => p.status !== "İCRA_TAMAMLANDI").reduce((sum, p) => sum + p.proceeding_amount, 0);
   const getActiveCount = () => proceedings.filter(p => p.status !== "İCRA_TAMAMLANDI").length;
+  const FINALIZED_STATUSES = ["KESİNLEŞTİ", "ÖDEME_BEKLENİYOR", "HACİZ_YAPILDI", "İCRA_TAMAMLANDI"];
+  const getFinalizedAmount = () => proceedings.filter(p => FINALIZED_STATUSES.includes(p.status)).reduce((sum, p) => sum + p.proceeding_amount, 0);
+  const getFinalizedCount = () => proceedings.filter(p => FINALIZED_STATUSES.includes(p.status)).length;
 
   const getStatusBadgeColor = (status: string) => {
     return statusOptions.find(opt => opt.value === status)?.color || "bg-gray-100 text-gray-800";
@@ -298,7 +301,7 @@ const LegalProceedings = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
           <Card className="border-0 shadow-sm bg-white">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
@@ -316,6 +319,16 @@ const LegalProceedings = () => {
               </div>
               <p className="text-xl font-bold text-gray-900">₺{formatCurrency(getTotalAmount())}</p>
               <p className="text-xs text-gray-500 mt-0.5">Toplam Tutar</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm bg-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <ShieldCheck className="w-5 h-5 text-teal-500" />
+                <span className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">{getFinalizedCount()} adet</span>
+              </div>
+              <p className="text-xl font-bold text-teal-600">₺{formatCurrency(getFinalizedAmount())}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Kesinleşen Tutar</p>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-sm bg-white">
