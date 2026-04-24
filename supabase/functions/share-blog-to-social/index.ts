@@ -12,6 +12,13 @@ const API_SECRET = Deno.env.get("TWITTER_API_SECRET")?.trim();
 const ACCESS_TOKEN = Deno.env.get("TWITTER_ACCESS_TOKEN")?.trim();
 const ACCESS_TOKEN_SECRET = Deno.env.get("TWITTER_ACCESS_TOKEN_SECRET")?.trim();
 
+// Tumblr API credentials
+const TUMBLR_CONSUMER_KEY = Deno.env.get("TUMBLR_CONSUMER_KEY")?.trim();
+const TUMBLR_CONSUMER_SECRET = Deno.env.get("TUMBLR_CONSUMER_SECRET")?.trim();
+const TUMBLR_TOKEN = Deno.env.get("TUMBLR_TOKEN")?.trim();
+const TUMBLR_TOKEN_SECRET = Deno.env.get("TUMBLR_TOKEN_SECRET")?.trim();
+const TUMBLR_BLOG_NAME = Deno.env.get("TUMBLR_BLOG_NAME")?.trim();
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
