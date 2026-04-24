@@ -281,10 +281,15 @@ async function postToTumblr(
   const method = "POST";
 
   const cleanContent = blogContent
-    ? blogContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500) + '...'
+    ? (blogContent.includes('<') 
+        ? blogContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+        : blogContent)
     : blogTitle;
+  const truncated = cleanContent.length > 1500 ? cleanContent.substring(0, 1500) + '...' : cleanContent;
 
-  const captionHtml = `<p>${cleanContent}</p><p><a href="${blogUrl}">Devamını oku: ${blogTitle}</a></p>`;
+  // Paragraflara böl
+  const paragraphs = truncated.split(/\n\n+/).map(p => `<p>${p.trim()}</p>`).join('');
+  const captionHtml = `${paragraphs}<p><a href="${blogUrl}">Devamını oku: ${blogTitle}</a></p>`;
 
   const bodyParams: Record<string, string> = {
     type: featuredImage ? 'photo' : 'text',
