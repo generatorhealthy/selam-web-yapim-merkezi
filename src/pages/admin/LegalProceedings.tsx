@@ -301,7 +301,7 @@ const LegalProceedings = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
           <Card className="border-0 shadow-sm bg-white">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
@@ -319,6 +319,16 @@ const LegalProceedings = () => {
               </div>
               <p className="text-xl font-bold text-gray-900">₺{formatCurrency(getTotalAmount())}</p>
               <p className="text-xs text-gray-500 mt-0.5">Toplam Tutar</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm bg-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <ShieldCheck className="w-5 h-5 text-teal-500" />
+                <span className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">{getFinalizedCount()} adet</span>
+              </div>
+              <p className="text-xl font-bold text-teal-600">₺{formatCurrency(getFinalizedAmount())}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Kesinleşen Tutar</p>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-sm bg-white">
