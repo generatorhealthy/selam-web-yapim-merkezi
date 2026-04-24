@@ -5933,6 +5933,7 @@ export type Database = {
         Args: { p_specialist_id: string }
         Returns: number
       }
+      invoke_twitter_share_after_may1: { Args: never; Returns: undefined }
       is_admin_or_staff_user: { Args: never; Returns: boolean }
       is_admin_user: { Args: never; Returns: boolean }
       is_following_specialist: {
