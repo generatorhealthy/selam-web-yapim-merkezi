@@ -103,6 +103,32 @@ async function sendTweet(tweetText: string): Promise<any> {
 }
 
 // ============= TUMBLR API =============
+// RFC3986 percent-encoding (stricter than encodeURIComponent)
+function rfc3986Encode(str: string): string {
+  return encodeURIComponent(str)
+    .replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+}
+
+function generateTumblrSignature(
+  method: string,
+  url: string,
+  params: Record<string, string>,
+  consumerSecret: string,
+  tokenSecret: string
+): string {
+  // Encode each key and value separately, then sort, then join
+  const encodedParams = Object.entries(params)
+    .map(([k, v]) => [rfc3986Encode(k), rfc3986Encode(v)] as [string, string])
+    .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : (a[1] < b[1] ? -1 : 1)))
+    .map(([k, v]) => `${k}=${v}`)
+    .join('&');
+
+  const signatureBaseString = `${method}&${rfc3986Encode(url)}&${rfc3986Encode(encodedParams)}`;
+  const signingKey = `${rfc3986Encode(consumerSecret)}&${rfc3986Encode(tokenSecret)}`;
+  const hmacSha1 = createHmac("sha1", signingKey);
+  return hmacSha1.update(signatureBaseString).digest("base64");
+}
+
 function generateTumblrOAuthHeader(
   method: string,
   url: string,
@@ -118,7 +144,7 @@ function generateTumblrOAuthHeader(
   };
 
   const allParams = { ...oauthParams, ...bodyParams };
-  const signature = generateOAuthSignature(
+  const signature = generateTumblrSignature(
     method,
     url,
     allParams,
@@ -131,6 +157,7 @@ function generateTumblrOAuthHeader(
     oauth_signature: signature,
   };
 
+  // Authorization header should only contain oauth_* params, sorted
   const entries = Object.entries(signedOAuthParams).sort((a, b) =>
     a[0].localeCompare(b[0])
   );
@@ -138,7 +165,7 @@ function generateTumblrOAuthHeader(
   return (
     "OAuth " +
     entries
-      .map(([k, v]) => `${encodeURIComponent(k)}="${encodeURIComponent(v)}"`)
+      .map(([k, v]) => `${rfc3986Encode(k)}="${rfc3986Encode(v)}"`)
       .join(", ")
   );
 }
@@ -179,7 +206,7 @@ async function postToTumblr(
   console.log("Posting to Tumblr blog:", blogName);
 
   const formBody = Object.entries(bodyParams)
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .map(([k, v]) => `${rfc3986Encode(k)}=${rfc3986Encode(v)}`)
     .join('&');
 
   const response = await fetch(url, {
