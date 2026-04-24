@@ -420,6 +420,16 @@ const BlogManagement = () => {
         }
       }
 
+      // Yeni blog onaylandığında 3 sosyal platforma anında paylaş (Twitter + LinkedIn + Tumblr)
+      try {
+        supabase.functions.invoke('scheduled-multi-share', {
+          body: { blogId: blogData.id, platforms: ['twitter', 'linkedin', 'tumblr'] }
+        });
+        console.log('Triggered social share for new blog:', blogData.id);
+      } catch (shareErr) {
+        console.error('Social share trigger error:', shareErr);
+      }
+
       toast({
         title: "Blog Onaylandı",
         description: "Blog yazısı yayınlandı ve uzmana bildirim gönderildi.",
