@@ -21,6 +21,105 @@ const TUMBLR_BLOG_NAME = Deno.env.get("TUMBLR_BLOG_NAME")?.trim();
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")?.trim();
+
+// HTML strip helper
+function stripHtmlText(html: string): string {
+  return (html || '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// AI ile sosyal medya post'u üret (LinkedIn / Tumblr için özgün, kısa içerik)
+async function generateSocialPost(
+  platform: 'linkedin' | 'tumblr',
+  title: string,
+  originalContent: string
+): Promise<{ title: string; body: string } | null> {
+  if (!LOVABLE_API_KEY) {
+    console.log('LOVABLE_API_KEY yok, AI rewrite atlanıyor');
+    return null;
+  }
+
+  const cleanContent = stripHtmlText(originalContent).substring(0, 5000);
+  const lengthHint = platform === 'linkedin'
+    ? '150-220 kelime arası, profesyonel LinkedIn tonu, 2-3 kısa paragraf, son satırda 3 hashtag'
+    : '250-400 kelime arası, samimi blog tonu, 3-4 paragraf, alt başlıklar olabilir (HTML değil düz metin)';
+
+  const systemPrompt = `Sen profesyonel bir sağlık ve psikoloji içerik editörüsün. Verilen blog yazısının ÖZGÜN bir versiyonunu üret. Amaç: aynı bilgiyi farklı kelimelerle anlatmak (duplicate content engelleme). Türkçe, doğru ve samimi yaz.`;
+
+  const userPrompt = `Platform: ${platform.toUpperCase()}
+Orijinal başlık: ${title}
+
+Orijinal içerik:
+${cleanContent}
+
+Görevler:
+1. Yeni başlık üret (orijinale benzer konuda ama farklı kelimelerle)
+2. Yeni gövde metni üret: ${lengthHint}
+3. ASLA link, URL veya "devamı için tıklayın" benzeri CTA ekleme — sistem otomatik ekleyecek.
+4. Markdown veya HTML kullanma, düz metin yaz.`;
+
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        tools: [{
+          type: "function",
+          function: {
+            name: "publish_social_post",
+            description: "Yeniden yazılmış sosyal medya postu",
+            parameters: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "Yeni başlık" },
+                body: { type: "string", description: "Yeni gövde metni (düz metin)" },
+              },
+              required: ["title", "body"],
+              additionalProperties: false,
+            },
+          },
+        }],
+        tool_choice: { type: "function", function: { name: "publish_social_post" } },
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`AI rewrite failed [${response.status}]: ${errText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall) {
+      console.error("AI did not return structured output");
+      return null;
+    }
+    const args = JSON.parse(toolCall.function.arguments);
+    return { title: args.title || title, body: args.body || '' };
+  } catch (e: any) {
+    console.error('AI rewrite error:', e.message);
+    return null;
+  }
+}
 
 function generateOAuthSignature(
   method: string,
@@ -182,10 +281,15 @@ async function postToTumblr(
   const method = "POST";
 
   const cleanContent = blogContent
-    ? blogContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500) + '...'
+    ? (blogContent.includes('<') 
+        ? blogContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+        : blogContent)
     : blogTitle;
+  const truncated = cleanContent.length > 1500 ? cleanContent.substring(0, 1500) + '...' : cleanContent;
 
-  const captionHtml = `<p>${cleanContent}</p><p><a href="${blogUrl}">Devamını oku: ${blogTitle}</a></p>`;
+  // Paragraflara böl
+  const paragraphs = truncated.split(/\n\n+/).map(p => `<p>${p.trim()}</p>`).join('');
+  const captionHtml = `${paragraphs}<p><a href="${blogUrl}">Devamını oku: ${blogTitle}</a></p>`;
 
   const bodyParams: Record<string, string> = {
     type: featuredImage ? 'photo' : 'text',
@@ -356,7 +460,12 @@ Deno.serve(async (req) => {
         : ['sağlık', 'doktor', 'doktorumol'];
 
       try {
-        const result = await postToTumblr(blogTitle, blogUrl, blogContent || '', featuredImage || null, tags);
+        // 1) AI ile özgün içerik üret
+        const rewritten = await generateSocialPost('tumblr', blogTitle, blogContent || '');
+        const finalTitle = rewritten?.title || blogTitle;
+        const finalBody = rewritten?.body || stripHtmlText(blogContent || '').substring(0, 500);
+
+        const result = await postToTumblr(finalTitle, blogUrl, finalBody, featuredImage || null, tags);
         console.log('Tumblr post sent successfully:', result);
 
         await saveShareResult(supabase, blogId, platform, 'success');
@@ -399,13 +508,17 @@ Deno.serve(async (req) => {
         console.log('LinkedIn person URN:', personUrn);
 
         const blogUrl = `https://doktorumol.com.tr/blog/${blogSlug}`;
-        const cleanContent = blogContent
-          ? blogContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 400)
-          : '';
+
+        // AI ile özgün LinkedIn postu üret
+        const rewritten = await generateSocialPost('linkedin', blogTitle, blogContent || '');
+        const postTitle = rewritten?.title || blogTitle;
+        const postBody = rewritten?.body
+          || (blogContent ? stripHtmlText(blogContent).substring(0, 400) + '...' : '');
+
         const hashtags = keywords
           ? keywords.split(',').slice(0, 3).map((k: string) => `#${k.trim().replace(/\s+/g, '')}`).join(' ')
           : '#doktorumol #sağlık #uzman';
-        const text = `📚 ${blogTitle}\n\n${cleanContent}${cleanContent ? '...' : ''}\n\n${hashtags}\n\n${blogUrl}`;
+        const text = `📚 ${postTitle}\n\n${postBody}\n\n${hashtags}\n\n${blogUrl}`;
 
         const payload = {
           author: personUrn,
