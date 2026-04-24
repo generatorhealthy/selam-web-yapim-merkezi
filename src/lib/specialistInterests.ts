@@ -58,9 +58,9 @@ export type InterestCategory = "psikolog" | "psikolojik_danisman" | "aile_danism
 export function detectCategory(specialty?: string | null): InterestCategory {
   const s = norm(specialty);
   if (!s) return null;
-  if (s.includes("aile danis")) return "aile_danismani";
-  if (s.includes("psikolojik danis")) return "psikolojik_danisman";
-  if (s.includes("klinik psikolog") || s.includes("psikolog")) return "psikolog";
+  if (s.includes("aile") || s.includes("iliski danis") || s.includes("cift danis") || s.includes("evlilik danis")) return "aile_danismani";
+  if (s.includes("psikolojik danis") || s.includes("pdr")) return "psikolojik_danisman";
+  if (s.includes("klinik psikolog") || s.includes("psikolog") || s.includes("psikoterapist") || s.includes("psikiyatr")) return "psikolog";
   return null;
 }
 
