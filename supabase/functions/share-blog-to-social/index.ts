@@ -12,6 +12,13 @@ const API_SECRET = Deno.env.get("TWITTER_API_SECRET")?.trim();
 const ACCESS_TOKEN = Deno.env.get("TWITTER_ACCESS_TOKEN")?.trim();
 const ACCESS_TOKEN_SECRET = Deno.env.get("TWITTER_ACCESS_TOKEN_SECRET")?.trim();
 
+// Tumblr API credentials
+const TUMBLR_CONSUMER_KEY = Deno.env.get("TUMBLR_CONSUMER_KEY")?.trim();
+const TUMBLR_CONSUMER_SECRET = Deno.env.get("TUMBLR_CONSUMER_SECRET")?.trim();
+const TUMBLR_TOKEN = Deno.env.get("TUMBLR_TOKEN")?.trim();
+const TUMBLR_TOKEN_SECRET = Deno.env.get("TUMBLR_TOKEN_SECRET")?.trim();
+const TUMBLR_BLOG_NAME = Deno.env.get("TUMBLR_BLOG_NAME")?.trim();
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -90,6 +97,105 @@ async function sendTweet(tweetText: string): Promise<any> {
 
   if (!response.ok) {
     throw new Error(`Twitter API error: ${response.status} - ${responseText}`);
+  }
+
+  return JSON.parse(responseText);
+}
+
+// ============= TUMBLR API =============
+function generateTumblrOAuthHeader(
+  method: string,
+  url: string,
+  bodyParams: Record<string, string> = {}
+): string {
+  const oauthParams: Record<string, string> = {
+    oauth_consumer_key: TUMBLR_CONSUMER_KEY!,
+    oauth_nonce: Math.random().toString(36).substring(2) + Date.now().toString(36),
+    oauth_signature_method: "HMAC-SHA1",
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_token: TUMBLR_TOKEN!,
+    oauth_version: "1.0",
+  };
+
+  const allParams = { ...oauthParams, ...bodyParams };
+  const signature = generateOAuthSignature(
+    method,
+    url,
+    allParams,
+    TUMBLR_CONSUMER_SECRET!,
+    TUMBLR_TOKEN_SECRET!
+  );
+
+  const signedOAuthParams: Record<string, string> = {
+    ...oauthParams,
+    oauth_signature: signature,
+  };
+
+  const entries = Object.entries(signedOAuthParams).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
+
+  return (
+    "OAuth " +
+    entries
+      .map(([k, v]) => `${encodeURIComponent(k)}="${encodeURIComponent(v)}"`)
+      .join(", ")
+  );
+}
+
+async function postToTumblr(
+  blogTitle: string,
+  blogUrl: string,
+  blogContent: string,
+  featuredImage: string | null,
+  tags: string[]
+): Promise<any> {
+  const blogName = TUMBLR_BLOG_NAME!.replace(/\.tumblr\.com$/i, '').replace(/^https?:\/\//, '');
+  const url = `https://api.tumblr.com/v2/blog/${blogName}.tumblr.com/post`;
+  const method = "POST";
+
+  const cleanContent = blogContent
+    ? blogContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500) + '...'
+    : blogTitle;
+
+  const captionHtml = `<p>${cleanContent}</p><p><a href="${blogUrl}">Devamını oku: ${blogTitle}</a></p>`;
+
+  const bodyParams: Record<string, string> = {
+    type: featuredImage ? 'photo' : 'text',
+    state: 'published',
+    tags: tags.join(','),
+  };
+
+  if (featuredImage) {
+    bodyParams.source = featuredImage;
+    bodyParams.caption = captionHtml;
+    bodyParams.link = blogUrl;
+  } else {
+    bodyParams.title = blogTitle;
+    bodyParams.body = captionHtml;
+  }
+
+  const oauthHeader = generateTumblrOAuthHeader(method, url, bodyParams);
+  console.log("Posting to Tumblr blog:", blogName);
+
+  const formBody = Object.entries(bodyParams)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+
+  const response = await fetch(url, {
+    method: method,
+    headers: {
+      Authorization: oauthHeader,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formBody,
+  });
+
+  const responseText = await response.text();
+  console.log("Tumblr Response:", responseText);
+
+  if (!response.ok) {
+    throw new Error(`Tumblr API error: ${response.status} - ${responseText}`);
   }
 
   return JSON.parse(responseText);
@@ -201,6 +307,41 @@ Deno.serve(async (req) => {
         await saveShareResult(supabase, blogId, platform, 'failed', twitterError.message);
         
         return new Response(JSON.stringify({ error: twitterError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } else if (platform === 'tumblr') {
+      // Validate Tumblr credentials
+      if (!TUMBLR_CONSUMER_KEY || !TUMBLR_CONSUMER_SECRET || !TUMBLR_TOKEN || !TUMBLR_TOKEN_SECRET || !TUMBLR_BLOG_NAME) {
+        const error = 'Tumblr API credentials not configured';
+        console.error(error);
+        await saveShareResult(supabase, blogId, platform, 'failed', error);
+        return new Response(JSON.stringify({ error }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const blogUrl = `https://doktorumol.com.tr/blog/${blogSlug}`;
+      const tags = keywords
+        ? keywords.split(',').map((k: string) => k.trim()).filter(Boolean).slice(0, 10)
+        : ['sağlık', 'doktor', 'doktorumol'];
+
+      try {
+        const result = await postToTumblr(blogTitle, blogUrl, blogContent || '', featuredImage || null, tags);
+        console.log('Tumblr post sent successfully:', result);
+
+        await saveShareResult(supabase, blogId, platform, 'success');
+
+        return new Response(JSON.stringify({ success: true, data: result }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (tumblrError: any) {
+        console.error('Tumblr error:', tumblrError);
+        await saveShareResult(supabase, blogId, platform, 'failed', tumblrError.message);
+
+        return new Response(JSON.stringify({ error: tumblrError.message }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
