@@ -455,7 +455,12 @@ Deno.serve(async (req) => {
         : ['sağlık', 'doktor', 'doktorumol'];
 
       try {
-        const result = await postToTumblr(blogTitle, blogUrl, blogContent || '', featuredImage || null, tags);
+        // 1) AI ile özgün içerik üret
+        const rewritten = await generateSocialPost('tumblr', blogTitle, blogContent || '');
+        const finalTitle = rewritten?.title || blogTitle;
+        const finalBody = rewritten?.body || stripHtmlText(blogContent || '').substring(0, 500);
+
+        const result = await postToTumblr(finalTitle, blogUrl, finalBody, featuredImage || null, tags);
         console.log('Tumblr post sent successfully:', result);
 
         await saveShareResult(supabase, blogId, platform, 'success');
