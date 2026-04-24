@@ -311,6 +311,41 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+    } else if (platform === 'tumblr') {
+      // Validate Tumblr credentials
+      if (!TUMBLR_CONSUMER_KEY || !TUMBLR_CONSUMER_SECRET || !TUMBLR_TOKEN || !TUMBLR_TOKEN_SECRET || !TUMBLR_BLOG_NAME) {
+        const error = 'Tumblr API credentials not configured';
+        console.error(error);
+        await saveShareResult(supabase, blogId, platform, 'failed', error);
+        return new Response(JSON.stringify({ error }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const blogUrl = `https://doktorumol.com.tr/blog/${blogSlug}`;
+      const tags = keywords
+        ? keywords.split(',').map((k: string) => k.trim()).filter(Boolean).slice(0, 10)
+        : ['sağlık', 'doktor', 'doktorumol'];
+
+      try {
+        const result = await postToTumblr(blogTitle, blogUrl, blogContent || '', featuredImage || null, tags);
+        console.log('Tumblr post sent successfully:', result);
+
+        await saveShareResult(supabase, blogId, platform, 'success');
+
+        return new Response(JSON.stringify({ success: true, data: result }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (tumblrError: any) {
+        console.error('Tumblr error:', tumblrError);
+        await saveShareResult(supabase, blogId, platform, 'failed', tumblrError.message);
+
+        return new Response(JSON.stringify({ error: tumblrError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     } else {
       // Other platforms not implemented yet
       const message = `${platform} platformu henüz desteklenmiyor`;
