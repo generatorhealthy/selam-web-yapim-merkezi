@@ -109,6 +109,15 @@ const SocialMediaManagement = () => {
       const blog = blogs.find(b => b.id === blogId);
       if (!blog) return;
 
+      // Hashnode için özel edge function (AI ile yeniden yazma)
+      if (platform === 'hashnode') {
+        const { error } = await supabase.functions.invoke('scheduled-hashnode-share', { body: {} });
+        if (error) throw error;
+        toast.success(`Hashnode için 1 yazı (AI ile yeniden yazılarak) paylaşıldı`);
+        fetchShares();
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('share-blog-to-social', {
         body: {
           blogId: blog.id,
