@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
       .eq('status', 'success');
 
     const sharedBlogIds = new Set((existingShares || []).map(s => s.blog_id));
-    const unsharedBlogs = blogs.filter((blog: BlogPost) => !sharedBlogIds.has(blog.id));
+    const unsharedBlogs = (blogs as any[]).filter((blog: any) => !sharedBlogIds.has(blog.id)) as BlogPost[];
 
     if (unsharedBlogs.length === 0) {
       console.log('All blogs have been shared to LinkedIn');
