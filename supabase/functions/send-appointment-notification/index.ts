@@ -35,7 +35,7 @@ const pickFirstUsablePhone = (values: Array<string | null | undefined>) => {
 };
 
 const resolveSpecialistPhone = async (
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   specialistEmail: string,
   specialistName: string,
   requestedPhone?: string,

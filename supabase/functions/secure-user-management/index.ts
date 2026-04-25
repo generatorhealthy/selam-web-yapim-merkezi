@@ -337,7 +337,7 @@ serve(async (req) => {
       } catch (err) {
         console.error('Unexpected error during user deletion:', err)
         return new Response(
-          JSON.stringify({ error: `Unexpected error during user deletion: ${err.message}` }),
+          JSON.stringify({ error: `Unexpected error during user deletion: ${err instanceof Error ? err.message : String(err)}` }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
