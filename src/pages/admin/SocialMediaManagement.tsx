@@ -259,6 +259,7 @@ const SocialMediaManagement = () => {
                   <li>• <strong>LinkedIn:</strong> Access Token (60 gün geçerli)</li>
                   <li>• <strong>Tumblr:</strong> OAuth Consumer Key, Consumer Secret, Token, Token Secret</li>
                   <li>• <strong>Hashnode:</strong> Personal Access Token + Publication ID (✅ AI ile içerik yeniden yazılır)</li>
+                  <li>• <strong>Mastodon:</strong> Access Token + Instance URL (✅ AI ile özgün kısa post üretilir, 500 karakter)</li>
                 </ul>
                 <p className="text-xs text-gray-500 mt-3">
                   ⏰ Otomatik paylaşım: Her saat başı 1 blog yazısı tüm platformlarda paylaşılır (TR 07:00 – 02:00 arası, günde ~20 paylaşım). 
