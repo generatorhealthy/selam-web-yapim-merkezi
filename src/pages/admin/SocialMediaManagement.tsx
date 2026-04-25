@@ -120,6 +120,17 @@ const SocialMediaManagement = () => {
         return;
       }
 
+      // Mastodon için özel edge function (AI ile özgün kısa post)
+      if (platform === 'mastodon') {
+        const { error } = await supabase.functions.invoke('scheduled-mastodon-share', {
+          body: { blog_post_id: blog.id }
+        });
+        if (error) throw error;
+        toast.success(`Mastodon için "${blog.title}" (AI ile özgün post) paylaşıldı`);
+        fetchShares();
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('share-blog-to-social', {
         body: {
           blogId: blog.id,
