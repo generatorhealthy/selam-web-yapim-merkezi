@@ -219,8 +219,8 @@ Deno.serve(async (req) => {
     console.log(`Sharing blog to LinkedIn: ${blog.title}`);
 
     try {
-      // Build blog URL
-      let blogUrl = 'https://doktorumol.com.tr/blog';
+      // Build blog URL - always include blog slug
+      let blogUrl = `https://doktorumol.com.tr/blog/${blog.slug}`;
       if (blog.specialists) {
         const specialtySlug = createSpecialtySlug(blog.specialists.specialty);
         const doctorSlug = createDoctorSlug(blog.specialists.name);
