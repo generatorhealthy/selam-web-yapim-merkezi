@@ -35,7 +35,7 @@ const pickFirstUsablePhone = (values: Array<string | null | undefined>) => {
 };
 
 const resolveSpecialistPhone = async (
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   specialistEmail: string,
   specialistName: string,
   requestedPhone?: string,
@@ -78,7 +78,7 @@ const resolveSpecialistPhone = async (
       console.error('Error reading specialist phone from orders by email:', error);
     }
 
-    const orderPhone = pickFirstUsablePhone((orderRows ?? []).map((row) => row.customer_phone));
+    const orderPhone = pickFirstUsablePhone((orderRows ?? []).map((row: any) => row.customer_phone));
     if (orderPhone) {
       return { phone: orderPhone, source: 'orders_email' };
     }
@@ -99,7 +99,7 @@ const resolveSpecialistPhone = async (
       console.error('Error reading specialist phone from orders by name:', error);
     }
 
-    const namedOrderPhone = pickFirstUsablePhone((namedOrderRows ?? []).map((row) => row.customer_phone));
+    const namedOrderPhone = pickFirstUsablePhone((namedOrderRows ?? []).map((row: any) => row.customer_phone));
     if (namedOrderPhone) {
       return { phone: namedOrderPhone, source: 'orders_name' };
     }

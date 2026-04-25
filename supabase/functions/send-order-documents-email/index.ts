@@ -91,7 +91,7 @@ const buildTextContent = (customerName: string, packageName: string, message: st
 };
 
 const getOrderContractContent = async (
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: any,
   options: {
     orderId?: string;
     orderCustomerEmail?: string;
@@ -345,7 +345,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error('Error in send-order-documents-email:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ error: (error instanceof Error ? error.message : String(error)) || 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

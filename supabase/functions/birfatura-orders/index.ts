@@ -207,7 +207,7 @@ serve(async (req) => {
     console.error('ERROR:', error);
     return new Response(JSON.stringify({ 
       success: true, // Always return success to prevent BirFatura errors
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       Orders: []
     }), {
       status: 200,

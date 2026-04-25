@@ -21,7 +21,7 @@ serve(async (req) => {
     const requestBody = await req.text();
     console.log('Update Request Body:', requestBody);
 
-    let updateData = {};
+    let updateData: any = {};
     try {
       updateData = JSON.parse(requestBody);
     } catch (e) {
@@ -103,7 +103,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true, 
       message: "Accepted",
-      error: error.message 
+      error: error instanceof Error ? error.message : String(error) 
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
