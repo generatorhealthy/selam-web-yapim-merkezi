@@ -58,6 +58,7 @@ const SocialMediaManagement = () => {
     { name: 'LinkedIn', icon: Linkedin, key: 'linkedin', color: 'text-blue-700' },
     { name: 'Tumblr', icon: ExternalLink, key: 'tumblr', color: 'text-indigo-600' },
     { name: 'Hashnode', icon: BookOpen, key: 'hashnode', color: 'text-blue-600' },
+    { name: 'Mastodon', icon: Globe, key: 'mastodon', color: 'text-purple-600' },
   ];
 
   useEffect(() => {
