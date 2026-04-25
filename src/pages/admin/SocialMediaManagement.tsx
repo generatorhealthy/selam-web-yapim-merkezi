@@ -18,7 +18,8 @@ import {
   XCircle,
   Clock,
   RefreshCw,
-  FileText
+  FileText,
+  Globe
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -57,6 +58,7 @@ const SocialMediaManagement = () => {
     { name: 'LinkedIn', icon: Linkedin, key: 'linkedin', color: 'text-blue-700' },
     { name: 'Tumblr', icon: ExternalLink, key: 'tumblr', color: 'text-indigo-600' },
     { name: 'Hashnode', icon: BookOpen, key: 'hashnode', color: 'text-blue-600' },
+    { name: 'Mastodon', icon: Globe, key: 'mastodon', color: 'text-purple-600' },
   ];
 
   useEffect(() => {
@@ -114,6 +116,17 @@ const SocialMediaManagement = () => {
         const { error } = await supabase.functions.invoke('scheduled-hashnode-share', { body: {} });
         if (error) throw error;
         toast.success(`Hashnode için 1 yazı (AI ile yeniden yazılarak) paylaşıldı`);
+        fetchShares();
+        return;
+      }
+
+      // Mastodon için özel edge function (AI ile özgün kısa post)
+      if (platform === 'mastodon') {
+        const { error } = await supabase.functions.invoke('scheduled-mastodon-share', {
+          body: { blog_post_id: blog.id }
+        });
+        if (error) throw error;
+        toast.success(`Mastodon için "${blog.title}" (AI ile özgün post) paylaşıldı`);
         fetchShares();
         return;
       }
@@ -246,6 +259,7 @@ const SocialMediaManagement = () => {
                   <li>• <strong>LinkedIn:</strong> Access Token (60 gün geçerli)</li>
                   <li>• <strong>Tumblr:</strong> OAuth Consumer Key, Consumer Secret, Token, Token Secret</li>
                   <li>• <strong>Hashnode:</strong> Personal Access Token + Publication ID (✅ AI ile içerik yeniden yazılır)</li>
+                  <li>• <strong>Mastodon:</strong> Access Token + Instance URL (✅ AI ile özgün kısa post üretilir, 500 karakter)</li>
                 </ul>
                 <p className="text-xs text-gray-500 mt-3">
                   ⏰ Otomatik paylaşım: Her saat başı 1 blog yazısı tüm platformlarda paylaşılır (TR 07:00 – 02:00 arası, günde ~20 paylaşım). 
