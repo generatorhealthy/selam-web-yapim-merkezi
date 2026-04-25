@@ -419,9 +419,23 @@ Deno.serve(async (req) => {
         .eq("status", "published")
         .order("created_at", { ascending: true });
 
-      const { data: shares } = await supabase
-        .from("social_shares")
-        .select("blog_post_id, platform, status");
+      // Tüm paylaşımları sayfalı çek (Supabase varsayılan 1000 satır limitini aş)
+      const shares: Array<{ blog_post_id: string; platform: string; status: string }> = [];
+      const pageSize = 1000;
+      let from = 0;
+      while (true) {
+        const { data: page, error: pageErr } = await supabase
+          .from("social_shares")
+          .select("blog_post_id, platform, status")
+          .eq("status", "success")
+          .range(from, from + pageSize - 1);
+        if (pageErr) { console.error("social_shares page error:", pageErr); break; }
+        if (!page || page.length === 0) break;
+        shares.push(...page);
+        if (page.length < pageSize) break;
+        from += pageSize;
+      }
+      console.log(`Loaded ${shares.length} successful share records`);
 
       const successByBlog = new Map<string, Set<string>>();
       for (const s of shares || []) {
