@@ -112,7 +112,7 @@ serve(async (req) => {
       // Return error if BirFatura fails
       return new Response(JSON.stringify({ 
         success: false, 
-        error: `BirFatura API error: ${error.message}` 
+        error: `BirFatura API error: ${error instanceof Error ? error.message : String(error)}` 
       }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -147,7 +147,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in create-birfatura-invoice function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -9,7 +9,7 @@ const corsHeaders = {
 // Extract URLs from user message
 function extractUrls(text: string): string[] {
   const urlRegex = /https?:\/\/[^\s,)}\]"'<>]+/gi;
-  const matches = text.match(urlRegex) || [];
+  const matches: string[] = text.match(urlRegex) || [];
   // Also try to match domain-like patterns without protocol
   const domainRegex = /(?:^|\s)((?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,})(?:\s|$|[,.])/gi;
   let domainMatch;
