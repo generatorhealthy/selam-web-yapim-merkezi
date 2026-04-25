@@ -284,7 +284,7 @@ ${specialists.map((specialist: SpecialistEntry) => {
     }
 
     // Ping Google about sitemap update
-    EdgeRuntime.waitUntil(
+    (globalThis as any).EdgeRuntime?.waitUntil(
       (async () => {
         try {
           const pingUrl = `https://www.google.com/ping?sitemap=https://doktorumol.com.tr/sitemap.xml`
@@ -315,7 +315,7 @@ ${specialists.map((specialist: SpecialistEntry) => {
   } catch (error) {
     console.error('Error generating sitemap:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500

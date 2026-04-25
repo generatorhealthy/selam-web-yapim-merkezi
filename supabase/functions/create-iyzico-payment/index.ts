@@ -28,7 +28,7 @@ serve(async (req) => {
     const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
     const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
 
-    const getPricingPlanByPackageType = (type, price) => {
+    const getPricingPlanByPackageType = (type: string, price: number): string => {
       // Özel fırsat 4000 TL için yeni plan
       if (type === 'ozel-firsat' || price === 4000) {
         return "e0d7e6b7-e665-4460-ab8f-6bb6e7a2c652"; // 4000 TL plan - Premium Paket 4000
@@ -39,7 +39,7 @@ serve(async (req) => {
         return "92feac6d-1181-4b78-b0c2-3b5d5742adff"; // 3600 TL plan
       }
       
-      const planMap = {
+      const planMap: Record<string, string> = {
         "campaign": "e01a059d-9392-4690-b030-0002064f9421",
         "basic": "205eb35c-e122-401f-aef7-618daf3732f8",
         "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff"
@@ -47,14 +47,14 @@ serve(async (req) => {
       return planMap[type] || "205eb35c-e122-401f-aef7-618daf3732f8";
     };
 
-    const validateTCNo = (tc) => {
+    const validateTCNo = (tc: string | null | undefined): string => {
       if (!tc) return "11111111111";
       const cleanTC = tc.replace(/\D/g, '');
       if (cleanTC.length === 11) return cleanTC;
       return "11111111111";
     };
 
-    const validatePhone = (phoneNumber) => {
+    const validatePhone = (phoneNumber: string | null | undefined): string => {
       if (!phoneNumber) return "+905000000000";
       let cleaned = phoneNumber.replace(/\D/g, '');
       if (cleaned.startsWith('90')) cleaned = cleaned.substring(2);
@@ -63,7 +63,7 @@ serve(async (req) => {
       return "+905000000000";
     };
 
-    const validateAddress = (addr) => {
+    const validateAddress = (addr: string | null | undefined): string => {
       if (!addr || addr.length < 5) return "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1";
       return addr;
     };
@@ -164,7 +164,7 @@ serve(async (req) => {
     console.error("Subscription API Hatası V4:", err);
     return new Response(JSON.stringify({
       error: "Sunucu hatası",
-      details: err.message
+      details: err instanceof Error ? err.message : String(err)
     }), {
       headers: {
         ...corsHeaders,

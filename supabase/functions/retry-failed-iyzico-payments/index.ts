@@ -440,7 +440,7 @@ serve(async (req) => {
     console.error("Hata:", error);
     return new Response(JSON.stringify({
       status: "error",
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500
