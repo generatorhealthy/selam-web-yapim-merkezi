@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { translateAuthError } from "@/utils/authErrors";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { Mail, Lock, User, Phone, X } from "lucide-react";
 
