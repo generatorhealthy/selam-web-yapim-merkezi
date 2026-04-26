@@ -156,44 +156,63 @@ const Checkout = () => {
   useEffect(() => {
     const initializeData = async () => {
       setLoading(true);
-      
-      // Ödeme sayfasına doğrudan erişimi engelle
-      // Sadece paket seçimi yapılmışsa (state veya referrer kontrolü) erişime izin ver
-      const packageData = location.state?.packageData;
-      const hasValidReferrer = document.referrer && 
-        (document.referrer.includes('/paketler') || document.referrer.includes('/packages'));
-      
-      if (!packageData && !hasValidReferrer) {
-        toast({
-          title: "Geçersiz Erişim",
-          description: "Ödeme sayfasına erişmek için önce bir paket seçmelisiniz.",
-          variant: "destructive"
-        });
-        navigate('/paketler');
-        return;
-      }
-      
-      if (packageData) {
-        const convertedPackage = {
-          name: packageData.name,
-          type: packageData.id,
-          price: packageData.price,
-          originalPrice: packageData.originalPrice,
-          features: packageData.features
-        };
-        setSelectedPackage(convertedPackage);
-      } else {
-        setSelectedPackage(packages.basic);
-      }
 
       try {
-        const ip = await getClientIP();
-        setClientIP(ip);
-      } catch (error) {
-        setClientIP('127.0.0.1');
-      }
+        // Ödeme sayfasına doğrudan erişimi engelle
+        // Sadece paket seçimi yapılmışsa (state veya referrer kontrolü) erişime izin ver
+        const packageData = location.state?.packageData;
+        const hasValidReferrer = typeof document !== 'undefined' && document.referrer &&
+          (document.referrer.includes('/paketler') ||
+            document.referrer.includes('/packages') ||
+            document.referrer.includes('/kayit-ol') ||
+            document.referrer.includes('/ozel-firsat') ||
+            document.referrer.includes('/bu-aya-ozel'));
 
-      setLoading(false);
+        // Mobil uygulamada (Capacitor) document.referrer her zaman boş olduğundan,
+        // packageType parametresi de varsa erişime izin ver
+        const hasPackageParam = !!packageId;
+
+        if (!packageData && !hasValidReferrer && !hasPackageParam) {
+          toast({
+            title: "Geçersiz Erişim",
+            description: "Ödeme sayfasına erişmek için önce bir paket seçmelisiniz.",
+            variant: "destructive"
+          });
+          navigate('/paketler');
+          return;
+        }
+
+        if (packageData) {
+          setSelectedPackage({
+            name: packageData.name,
+            type: packageData.id,
+            price: packageData.price,
+            originalPrice: packageData.originalPrice,
+            features: packageData.features
+          });
+        } else if (packageId && (packages as any)[packageId]) {
+          setSelectedPackage((packages as any)[packageId]);
+        } else {
+          setSelectedPackage(packages.basic);
+        }
+
+        // IP fetch — 3sn timeout, hata olursa fallback
+        try {
+          const ipPromise = getClientIP();
+          const timeoutPromise = new Promise<string>((resolve) =>
+            setTimeout(() => resolve('127.0.0.1'), 3000)
+          );
+          const ip = await Promise.race([ipPromise, timeoutPromise]);
+          setClientIP(ip || '127.0.0.1');
+        } catch {
+          setClientIP('127.0.0.1');
+        }
+      } catch (err) {
+        console.error('[Checkout] initializeData error:', err);
+        setClientIP('127.0.0.1');
+      } finally {
+        setLoading(false);
+      }
     };
 
     initializeData();
