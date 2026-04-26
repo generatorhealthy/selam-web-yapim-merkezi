@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { translateAuthError } from "@/utils/authErrors";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { Mail, Lock, User, Phone, X } from "lucide-react";
 
@@ -105,7 +106,7 @@ export default function MobileSignup() {
       toast({ title: "Kayıt başarılı", description: "Hesabınız oluşturuldu" });
       navigate("/mobile/patient-dashboard");
     } catch (e: any) {
-      toast({ title: "Kayıt başarısız", description: e.message, variant: "destructive" });
+      toast({ title: "Kayıt başarısız", description: translateAuthError(e?.message), variant: "destructive" });
     } finally {
       setLoading(false);
     }
