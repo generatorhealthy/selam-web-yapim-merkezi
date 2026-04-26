@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Helmet } from "react-helmet-async";
+import { translateAuthError } from "@/utils/authErrors";
 
 export default function PatientSignup() {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ export default function PatientSignup() {
       toast({ title: "Kayıt başarılı" });
       navigate("/danisan-paneli");
     } catch (e: any) {
-      toast({ title: "Kayıt başarısız", description: e.message, variant: "destructive" });
+      toast({ title: "Kayıt başarısız", description: translateAuthError(e?.message), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -80,7 +81,7 @@ export default function PatientSignup() {
       provider,
       options: { redirectTo: `${window.location.origin}/danisan-paneli` },
     });
-    if (error) toast({ title: "Hata", description: error.message, variant: "destructive" });
+    if (error) toast({ title: "Hata", description: translateAuthError(error.message), variant: "destructive" });
   };
 
   return (
