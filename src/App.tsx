@@ -247,8 +247,10 @@ const AppContent = () => {
               <Route path="/indirimli-paket" element={<Navigate to="/ozel-firsat" replace />} />
               <Route path="/bu-aya-ozel" element={<SpecialOffer />} />
               <Route path="/ozel-firsat" element={<SpecialOfferNew />} />
-              <Route path="/odeme/:packageType" element={<Checkout />} />
-              <Route path="/odeme-sayfasi" element={<Checkout />} />
+              <Route path="/odeme/:packageType" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
+              <Route path="/odeme-sayfasi" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
+              <Route path="/checkout" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
+              <Route path="/checkout/:packageType" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
