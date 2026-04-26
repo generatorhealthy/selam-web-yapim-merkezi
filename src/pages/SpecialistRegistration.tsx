@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -512,7 +512,7 @@ const SpecialistRegistration = () => {
                 </Button>
 
                 <p className="text-center text-xs text-muted-foreground/70">
-                  Kayıt olarak <a href="/gizlilik-politikasi" className="underline hover:text-foreground transition-colors">Gizlilik Politikası</a>'nı kabul etmiş olursunuz.
+                  Kayıt olarak <Link to="/gizlilik-politikasi" className="underline hover:text-foreground transition-colors">Gizlilik Politikası</Link>'nı kabul etmiş olursunuz.
                 </p>
               </div>
             </div>
