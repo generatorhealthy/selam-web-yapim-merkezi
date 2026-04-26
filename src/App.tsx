@@ -219,6 +219,29 @@ const AppContent = () => {
             <Route path="/blog/:slug" element={<MobileBlogDetailRedirect />} />
           )}
 
+          {/* Native: ödeme & yasal sayfalara erişim (kayıt akışı için gerekli) */}
+          {isNative && (
+            <>
+              <Route path="/odeme/:packageType" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
+              <Route path="/odeme-sayfasi" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
+              <Route path="/checkout" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
+              <Route path="/checkout/:packageType" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
+              <Route path="/odeme-basarili" element={<PaymentSuccess />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/gizlilik-politikasi" element={<Privacy />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/aydinlatma-metni" element={<DisclosureText />} />
+              <Route path="/disclosure-text" element={<DisclosureText />} />
+              <Route path="/acik-riza" element={<ExplicitConsent />} />
+              <Route path="/explicit-consent" element={<ExplicitConsent />} />
+              <Route path="/ziyaretci-danisman-sozlesmesi" element={<VisitorConsultantAgreement />} />
+              <Route path="/visitor-consultant-agreement" element={<VisitorConsultantAgreement />} />
+              <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesContract />} />
+              <Route path="/distance-sales-contract" element={<DistanceSalesContract />} />
+              <Route path="/kayit-ol" element={<SpecialistRegistration />} />
+            </>
+          )}
+
           {/* Redirect root to mobile if native */}
           {isNative ? (
             <Route path="/" element={<Navigate to="/mobile/home" replace />} />
