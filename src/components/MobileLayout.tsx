@@ -101,7 +101,7 @@ export const MobileLayout = () => {
 
   return (
     <div
-      className="flex flex-col overflow-x-hidden w-full max-w-full"
+      className="relative flex flex-col overflow-x-hidden w-full max-w-full"
       style={{
         background: "hsl(var(--m-bg))",
         height: "100dvh",
