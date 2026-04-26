@@ -101,16 +101,27 @@ export const MobileLayout = () => {
 
   return (
     <div
-      className="flex flex-col min-h-screen overflow-x-hidden w-full max-w-full"
-      style={{ background: "hsl(var(--m-bg))" }}
+      className="flex flex-col overflow-x-hidden w-full max-w-full"
+      style={{
+        background: "hsl(var(--m-bg))",
+        height: "100dvh",
+        maxHeight: "100dvh",
+      }}
     >
-      <main className="flex-1 pb-[calc(96px+var(--m-safe-bottom))] w-full max-w-full overflow-x-hidden">
+      {/* Scroll container — tab bar her zaman ekranın altında sabit kalır */}
+      <main
+        className="flex-1 min-h-0 w-full max-w-full overflow-y-auto overflow-x-hidden"
+        style={{
+          paddingBottom: "calc(96px + var(--m-safe-bottom))",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
         <Outlet />
       </main>
 
-      {/* Floating WHITE capsule tab bar — referans görsel stili */}
+      {/* Floating WHITE capsule tab bar — her zaman ekranın altında sabit */}
       <nav
-        className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none"
+        className="absolute left-0 right-0 z-40 flex justify-center pointer-events-none"
         style={{ bottom: "calc(16px + var(--m-safe-bottom))" }}
       >
         <div
