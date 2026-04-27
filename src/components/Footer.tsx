@@ -1,6 +1,8 @@
 
 import { Link } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 
+const isNativeApp = Capacitor.isNativePlatform();
 const Footer = () => {
   return (
     <footer className="bg-gray-100 text-gray-700">
@@ -33,15 +35,17 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Medical Disclaimer (Apple guideline 1.4.1) */}
-      <div className="bg-amber-50 border-t border-amber-200">
-        <div className="container mx-auto px-4 py-3">
-          <p className="text-xs text-amber-900 text-center leading-relaxed">
-            ⚕️ <strong>Tıbbi Uyarı:</strong> Bu sitedeki bilgiler genel bilgilendirme amaçlıdır ve hekim tavsiyesi yerine geçmez.
-            Tanı, tedavi ve sağlığınızla ilgili her karar için mutlaka bir doktora danışın. Acil durumlarda 112'yi arayın.
-          </p>
+      {/* Medical Disclaimer (Apple guideline 1.4.1) - sadece native app'de */}
+      {isNativeApp && (
+        <div className="bg-amber-50 border-t border-amber-200">
+          <div className="container mx-auto px-4 py-3">
+            <p className="text-xs text-amber-900 text-center leading-relaxed">
+              ⚕️ <strong>Tıbbi Uyarı:</strong> Bu sitedeki bilgiler genel bilgilendirme amaçlıdır ve hekim tavsiyesi yerine geçmez.
+              Tanı, tedavi ve sağlığınızla ilgili her karar için mutlaka bir doktora danışın. Acil durumlarda 112'yi arayın.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Bottom Copyright */}
       <div className="border-t border-gray-200 bg-gray-50">

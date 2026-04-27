@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { SafeHtmlContent } from "@/components/SafeHtmlContent";
 import { Clock, Eye, Share2, BookOpen } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+
+const isNativeApp = Capacitor.isNativePlatform();
 
 interface BlogPost {
   id: string;
@@ -256,7 +259,8 @@ export default function MobileBlogDetail() {
             </div>
           </div>
 
-          {/* Tıbbi Disclaimer (Apple guideline 1.4.1) */}
+          {/* Tıbbi Disclaimer (Apple guideline 1.4.1) - sadece native app'de */}
+          {isNativeApp && (<>
           <div className="px-5 mt-6">
             <div
               className="rounded-2xl p-4"
@@ -287,6 +291,7 @@ export default function MobileBlogDetail() {
               </ul>
             </div>
           </div>
+          </>)}
 
           {/* İlgili yazılar */}
           {related.length > 0 && (
