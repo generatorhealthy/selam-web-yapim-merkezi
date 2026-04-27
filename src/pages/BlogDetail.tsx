@@ -13,6 +13,9 @@ import Footer from "@/components/Footer";
 import BlogSpecialistCard from "@/components/BlogSpecialistCard";
 import { Helmet } from "react-helmet-async";
 import { SafeHtmlContent } from "@/components/SafeHtmlContent";
+import { Capacitor } from "@capacitor/core";
+
+const isNativeApp = Capacitor.isNativePlatform();
 
 interface BlogPost {
   id: string;
@@ -551,7 +554,8 @@ const BlogDetail = () => {
               <BlogSpecialistCard specialist={specialist} />
             )}
 
-            {/* Tıbbi Disclaimer (Apple guideline 1.4.1) */}
+            {/* Tıbbi Disclaimer (Apple guideline 1.4.1) - sadece native app'de göster */}
+            {isNativeApp && (<>
             <div className="mt-8 p-4 rounded-lg bg-amber-50 border border-amber-200">
               <p className="text-sm text-amber-900 leading-relaxed">
                 <strong>⚕️ Tıbbi Uyarı:</strong> Bu yazıdaki bilgiler genel bilgilendirme amaçlıdır ve profesyonel tıbbi tavsiye,
@@ -591,6 +595,7 @@ const BlogDetail = () => {
                 <li>İçerik, ilgili branştaki uzman görüşleri ve güncel literatür taraması ile hazırlanmıştır.</li>
               </ul>
             </div>
+            </>)}
           </CardContent>
         </Card>
 
