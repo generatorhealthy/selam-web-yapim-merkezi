@@ -50,15 +50,8 @@ const Footer = () => {
       {/* Bottom Copyright */}
       <div className="border-t border-gray-200 bg-gray-50">
         <div className="container mx-auto px-4 py-2">
-          <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500 mb-2">
-            <span>Doktorum Ol Yorumları</span>
-            <span className="text-gray-400">|</span>
-            <span>Doktorum Ol Güvenilir mi?</span>
-            <span className="text-gray-400">|</span>
-            <span>Doktorum Ol Şikayet</span>
-          </div>
           <div className="text-center text-sm text-gray-600 font-medium">
-            Doktorumol.com.tr © Copyright 2025. Tüm Hakları saklıdır.
+            Doktorumol.com.tr © Copyright 2026. Tüm Hakları saklıdır.
           </div>
         </div>
       </div>
