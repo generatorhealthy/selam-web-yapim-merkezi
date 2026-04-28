@@ -1,0 +1,1 @@
+UPDATE public.orders SET customer_email = 'gulsen@ekgdanismanlik.com' WHERE id = '8a4a820d-2d4c-4247-8605-0d22464cdfe6';
