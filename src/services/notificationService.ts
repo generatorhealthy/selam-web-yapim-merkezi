@@ -42,13 +42,11 @@ export const sendAppointmentNotification = async (
   patientPhone: string,
   appointmentDetails: any
 ) => {
-  const message = `Randevunuz alındı! 
+  const message = `Randevunuz alındı!
 Uzman: ${appointmentDetails.doctorName}
 Tarih: ${appointmentDetails.date}
 Saat: ${appointmentDetails.time}
-Randevu Türü: ${appointmentDetails.type}
-Uzman Telefon: ${appointmentDetails.doctorPhone || 'Belirtilmemiş'}
-Uzman E-posta: ${appointmentDetails.doctorEmail || 'Belirtilmemiş'}`;
+Randevu Türü: ${appointmentDetails.type}`;
   
   const results = [];
   
