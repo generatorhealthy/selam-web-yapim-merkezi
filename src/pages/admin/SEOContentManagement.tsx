@@ -183,7 +183,7 @@ const SEOContentManagement = () => {
               SEO İçerik Üretim Merkezi
             </h1>
             <p className="text-slate-600 mt-2 max-w-3xl">
-              Branşlara göre Google'da aranan anahtar kelimeleri planla, AI ile uzun-kuyruklu kelimeleri genişlet ve tek tıkla 700+ kelimelik SEO içerikleri otomatik blog'a yayınla.
+              Her branş kartındaki <strong>"AI ile 20 Kelime Üret"</strong> butonuna tıklayın → AI Türkiye'de en yüksek trafikli anahtar kelimeleri analiz edip ekler. Sonra branşa girip <strong>"Bekleyenleri Toplu Üret"</strong> ile 700+ kelimelik SEO içeriklerini otomatik blog'a yayınlayın.
             </p>
           </div>
           <div className="flex gap-2">
