@@ -52,6 +52,7 @@ const SEOContentManagement = () => {
   const [loading, setLoading] = useState(true);
   const [genLoading, setGenLoading] = useState<string | null>(null);
   const [batchRunning, setBatchRunning] = useState(false);
+  const [autoGenLoading, setAutoGenLoading] = useState<string | null>(null);
 
   // Add keywords dialog
   const [addOpen, setAddOpen] = useState(false);
