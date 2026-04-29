@@ -1,5 +1,6 @@
 // One-shot bulk SMS to all active specialists announcing the mobile app launch.
-// Verimor multi-recipient batch API used for efficiency.
+// Uses Verimor batch API via static IP relay or ScrapingBee proxy
+// (Supabase Edge IPs are not whitelisted in Verimor).
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -23,9 +24,46 @@ function normalizePhone(raw: string): string | null {
   let p = raw.replace(/\D/g, "");
   if (p.startsWith("0")) p = "90" + p.substring(1);
   else if (!p.startsWith("90")) p = "90" + p;
-  // Turkish mobile = 90 + 10 digits = 12 total, must start with 905
   if (p.length !== 12 || !p.startsWith("905")) return null;
   return p;
+}
+
+async function sendBatchViaProxy(payload: unknown): Promise<{ status: number; body: string; via: string }> {
+  const relayUrl = Deno.env.get("SMS_RELAY_URL");
+  const relayToken = Deno.env.get("SMS_RELAY_TOKEN");
+  const scrapingBeeApiKey = Deno.env.get("SCRAPINGBEE_API_KEY");
+
+  // Try relay first
+  if (relayUrl) {
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (relayToken) headers["Authorization"] = `Bearer ${relayToken}`;
+      const r = await fetch(relayUrl, { method: "POST", headers, body: JSON.stringify(payload) });
+      const text = await r.text();
+      if (r.ok && !text.toLowerCase().includes("izin")) {
+        return { status: r.status, body: text, via: "relay" };
+      }
+      console.log(`Relay failed (status=${r.status}), body=${text.slice(0, 200)}; trying ScrapingBee fallback`);
+    } catch (e) {
+      console.log("Relay threw:", e);
+    }
+  }
+
+  if (scrapingBeeApiKey) {
+    const sbUrl =
+      `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}` +
+      `&url=${encodeURIComponent("https://sms.verimor.com.tr/v2/send.json")}` +
+      `&render_js=false&premium_proxy=true&country_code=tr&method=POST&forward_headers=true`;
+    const r = await fetch(sbUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Spb-Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const text = await r.text();
+    return { status: r.status, body: text, via: "scrapingbee" };
+  }
+
+  throw new Error("No proxy configured: set SMS_RELAY_URL or SCRAPINGBEE_API_KEY");
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -66,8 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log(`Total active specialists: ${specialists?.length}`);
-    console.log(`Valid recipients: ${recipients.length}`);
-    console.log(`Skipped: ${skipped.length}`);
+    console.log(`Valid recipients: ${recipients.length}, Skipped: ${skipped.length}`);
 
     if (dryRun) {
       return new Response(
@@ -78,11 +115,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     const username = Deno.env.get("VERIMOR_USERNAME");
     const password = Deno.env.get("VERIMOR_PASSWORD");
+    const sender = (Deno.env.get("SMS_SENDER") || Deno.env.get("VERIMOR_SENDER") || "Doktorum Ol").trim();
     if (!username || !password) throw new Error("Verimor credentials not configured");
 
-    // Verimor batch: send in chunks of 200 recipients per request
+    // Verimor batch: chunks of 200 per request
     const CHUNK_SIZE = 200;
-    const verimorUrl = "https://sms.verimor.com.tr/v2/send.json";
     const results: any[] = [];
 
     for (let i = 0; i < recipients.length; i += CHUNK_SIZE) {
@@ -90,9 +127,8 @@ const handler = async (req: Request): Promise<Response> => {
       const payload = {
         username,
         password,
-        source_addr: "902167060611",
+        source_addr: sender,
         source_addr_type: "5",
-        msg_header: "Doktorum Ol",
         custom_id: `app-launch-${Date.now()}-${i}`,
         datacoding: "0",
         valid_for: "48:00",
@@ -101,14 +137,15 @@ const handler = async (req: Request): Promise<Response> => {
         messages: chunk.map((r) => ({ msg: MESSAGE, dest: r.phone })),
       };
 
-      const resp = await fetch(verimorUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const res = await sendBatchViaProxy(payload);
+      console.log(`Chunk ${i / CHUNK_SIZE + 1} (${chunk.length} msgs) via=${res.via} status=${res.status} body=${res.body.slice(0, 300)}`);
+      results.push({
+        chunk: i / CHUNK_SIZE + 1,
+        count: chunk.length,
+        via: res.via,
+        status: res.status,
+        body: res.body.slice(0, 500),
       });
-      const text = await resp.text();
-      console.log(`Chunk ${i / CHUNK_SIZE + 1} (${chunk.length} msgs) status=${resp.status} body=${text.slice(0, 300)}`);
-      results.push({ chunk: i / CHUNK_SIZE + 1, count: chunk.length, status: resp.status, body: text.slice(0, 500) });
     }
 
     return new Response(
