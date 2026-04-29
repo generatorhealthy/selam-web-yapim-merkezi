@@ -133,6 +133,7 @@ const ConsentLogs = lazy(() => import("./pages/admin/ConsentLogs"));
 const BulkEmail = lazy(() => import("./pages/admin/BulkEmail"));
 const Career = lazy(() => import("./pages/Career"));
 const CareerApplications = lazy(() => import("./pages/admin/CareerApplications"));
+const SEOContentManagement = lazy(() => import("./pages/admin/SEOContentManagement"));
 
 const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 
@@ -348,6 +349,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/consent-logs" element={<ConsentLogs />} />
               <Route path="/divan_paneli/bulk-email" element={<BulkEmail />} />
               <Route path="/divan_paneli/career-applications" element={<CareerApplications />} />
+              <Route path="/divan_paneli/seo-content" element={<SEOContentManagement />} />
               <Route path="/kariyer" element={<Career />} />
               
                 

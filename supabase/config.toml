@@ -137,3 +137,9 @@ verify_jwt = false
 
 [functions.send-app-launch-bulk-email]
 verify_jwt = false
+
+[functions.seo-expand-keywords]
+verify_jwt = false
+
+[functions.seo-generate-content]
+verify_jwt = false
