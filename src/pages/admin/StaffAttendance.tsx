@@ -137,10 +137,16 @@ const StaffAttendance = () => {
     return (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 60000;
   };
 
+  // İşten ayrılan personeller (listede gösterilmesin, geçmiş kayıtlar saklanır)
+  const HIDDEN_STAFF_IDS = new Set<string>([
+    'e0a7e484-acb5-4bca-aad3-9f944490224d', // Fatma Erol
+  ]);
+
   // Group by staff
   const staffGroups = useMemo(() => {
     const map = new Map<string, { name: string; userId: string; records: AttendanceRecord[] }>();
     records.forEach(r => {
+      if (HIDDEN_STAFF_IDS.has(r.user_id)) return;
       if (!map.has(r.user_id)) {
         map.set(r.user_id, { name: r.staff_name, userId: r.user_id, records: [] });
       }
