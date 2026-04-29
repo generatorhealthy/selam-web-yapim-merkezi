@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Briefcase, Mail, Phone, FileText, Upload, CheckCircle2, Building2, Users, TrendingUp, Heart } from "lucide-react";
-import HorizontalNavigation from "@/components/HorizontalNavigation";
+import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 
 const POSITIONS = ["Müşteri Temsilcisi"];
