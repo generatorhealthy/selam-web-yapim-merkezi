@@ -4151,6 +4151,69 @@ export type Database = {
         }
         Relationships: []
       }
+      mobile_activity_logs: {
+        Row: {
+          action_type: string
+          app_version: string | null
+          created_at: string
+          details: string | null
+          device_info: string | null
+          id: string
+          is_native: boolean | null
+          page_title: string | null
+          page_url: string | null
+          platform: string | null
+          session_end: string | null
+          session_id: string | null
+          session_start: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+          user_role: string | null
+        }
+        Insert: {
+          action_type?: string
+          app_version?: string | null
+          created_at?: string
+          details?: string | null
+          device_info?: string | null
+          id?: string
+          is_native?: boolean | null
+          page_title?: string | null
+          page_url?: string | null
+          platform?: string | null
+          session_end?: string | null
+          session_id?: string | null
+          session_start?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+          user_role?: string | null
+        }
+        Update: {
+          action_type?: string
+          app_version?: string | null
+          created_at?: string
+          details?: string | null
+          device_info?: string | null
+          id?: string
+          is_native?: boolean | null
+          page_title?: string | null
+          page_url?: string | null
+          platform?: string | null
+          session_end?: string | null
+          session_id?: string | null
+          session_start?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+          user_role?: string | null
+        }
+        Relationships: []
+      }
       order_notes: {
         Row: {
           created_at: string
