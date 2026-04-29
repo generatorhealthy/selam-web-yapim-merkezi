@@ -8,6 +8,7 @@ import { Smartphone, Apple, Globe, Search, Clock, User as UserIcon } from "lucid
 import { supabase } from "@/integrations/supabase/client";
 import AdminBackButton from "@/components/AdminBackButton";
 import { AdminTopBar } from "@/components/AdminTopBar";
+import { useUserRole } from "@/hooks/useUserRole";
 import { format, formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 
