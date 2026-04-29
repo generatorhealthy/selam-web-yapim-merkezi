@@ -235,7 +235,7 @@ const SEOContentManagement = () => {
                   return (
                     <Card key={b.id} className={`transition-all hover:shadow-lg ${activeBranch === b.id ? "ring-2 ring-purple-500" : ""}`}>
                       <CardContent className="p-4">
-                        <div onClick={() => setActiveBranch(b.id)} className="cursor-pointer">
+                        <div onClick={() => { setActiveBranch(b.id); setTimeout(() => document.getElementById("active-branch-table")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }} className="cursor-pointer">
                           <div className="font-semibold text-slate-800 text-sm mb-2 line-clamp-2 min-h-[2.5rem]">{b.name}</div>
                           <div className="flex items-center gap-2 text-xs text-slate-600">
                             <span className="font-mono">{s.published}/{s.total}</span>
