@@ -9,5 +9,6 @@ Disallow: /kayit-ol
 Disallow: /odeme/
 Disallow: /odeme-sayfasi
 Disallow: /odeme-basarili
+Disallow: /kariyer
 
 Sitemap: https://doktorumol.com.tr/sitemap.xml

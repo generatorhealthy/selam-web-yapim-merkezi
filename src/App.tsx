@@ -131,6 +131,8 @@ const EmailLogs = lazy(() => import("./pages/admin/EmailLogs"));
 const RegistrationAnalytics = lazy(() => import("./pages/admin/RegistrationAnalytics"));
 const ConsentLogs = lazy(() => import("./pages/admin/ConsentLogs"));
 const BulkEmail = lazy(() => import("./pages/admin/BulkEmail"));
+const Career = lazy(() => import("./pages/Career"));
+const CareerApplications = lazy(() => import("./pages/admin/CareerApplications"));
 
 const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 
@@ -345,6 +347,8 @@ const AppContent = () => {
               <Route path="/divan_paneli/registration-analytics" element={<RegistrationAnalytics />} />
               <Route path="/divan_paneli/consent-logs" element={<ConsentLogs />} />
               <Route path="/divan_paneli/bulk-email" element={<BulkEmail />} />
+              <Route path="/divan_paneli/career-applications" element={<CareerApplications />} />
+              <Route path="/kariyer" element={<Career />} />
               
                 
               {/* Test Routes */}

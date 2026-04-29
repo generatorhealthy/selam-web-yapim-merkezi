@@ -41,7 +41,8 @@ import {
   Gauge,
   Mail,
   ShieldCheck,
-  Smartphone
+  Smartphone,
+  Briefcase
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -529,6 +530,17 @@ const AdminDashboard = () => {
       shadowColor: "shadow-purple-500/20",
       route: "/divan_paneli/mobile-activity-logs",
       buttonText: "Mobil Logları Görüntüle",
+      adminOnly: true
+    },
+    {
+      title: "Kariyer Başvuruları",
+      description: "/kariyer sayfasından gelen iş başvurularını yönet, durum güncelle ve CV'leri incele",
+      icon: Briefcase,
+      gradient: "from-blue-500 via-indigo-500 to-purple-600",
+      bgGradient: "from-blue-50 to-indigo-50",
+      shadowColor: "shadow-blue-500/20",
+      route: "/divan_paneli/career-applications",
+      buttonText: "Başvuruları Görüntüle",
       adminOnly: true
     },
     {
