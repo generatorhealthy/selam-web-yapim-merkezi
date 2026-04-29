@@ -103,6 +103,25 @@ const SEOContentManagement = () => {
     }
   };
 
+  // AI ile otomatik 20 ana kelime + alt kelime üret
+  const handleAutoGenerate = async (branchId: string, branchName: string) => {
+    if (!confirm(`"${branchName}" branşı için AI 20 ana anahtar kelime + her birine 7-8 alt kelime üretecek (toplam ~150 kelime). Bu kelimeler en yüksek trafik potansiyeli olanlardan seçilecek. Devam edilsin mi?`)) return;
+    setAutoGenLoading(branchId);
+    try {
+      const { data, error } = await supabase.functions.invoke("seo-expand-keywords", {
+        body: { branchId, autoGenerate: true, count: 20 },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success(`✨ ${(data as any).count} anahtar kelime AI tarafından üretildi`);
+      await loadAll();
+    } catch (e: any) {
+      toast.error(e?.message || "AI üretim hatası");
+    } finally {
+      setAutoGenLoading(null);
+    }
+  };
+
   const generateOne = async (keywordId: string): Promise<boolean> => {
     setGenLoading(keywordId);
     try {
