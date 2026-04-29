@@ -339,6 +339,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/staff-attendance" element={<StaffAttendance />} />
               <Route path="/divan_paneli/cancellation-fees" element={<CancellationFees />} />
               <Route path="/divan_paneli/admin-activity-logs" element={<AdminActivityLogs />} />
+              <Route path="/divan_paneli/mobile-activity-logs" element={<MobileActivityLogs />} />
               <Route path="/divan_paneli/ai-assistant" element={<AdminAIAssistant />} />
               <Route path="/divan_paneli/email-logs" element={<EmailLogs />} />
               <Route path="/divan_paneli/registration-analytics" element={<RegistrationAnalytics />} />
