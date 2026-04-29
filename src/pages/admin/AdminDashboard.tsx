@@ -42,7 +42,8 @@ import {
   Mail,
   ShieldCheck,
   Smartphone,
-  Briefcase
+  Briefcase,
+  Sparkles
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -120,6 +121,17 @@ const AdminDashboard = () => {
   const isMuhasebe = userProfile?.role === 'muhasebe';
 
   const adminCards = [
+    {
+      title: "SEO Çalışmaları",
+      description: "Branş bazlı anahtar kelime planla, AI ile 700+ kelimelik içerikleri otomatik üret ve blog'a yayınla",
+      icon: Sparkles,
+      gradient: "from-purple-500 via-pink-500 to-rose-600",
+      bgGradient: "from-purple-50 to-pink-50",
+      shadowColor: "shadow-purple-500/30",
+      route: "/divan_paneli/seo-content",
+      buttonText: "SEO Merkezini Aç",
+      adminOnly: true
+    },
     {
       title: "Kullanıcı Yönetimi",
       description: "",
