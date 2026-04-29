@@ -125,6 +125,7 @@ const CancellationFees = lazy(() => import("./pages/admin/CancellationFees"));
 const SpecialistApplications = lazy(() => import("./pages/admin/SpecialistApplications"));
 const StaffAttendance = lazy(() => import("./pages/admin/StaffAttendance"));
 const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
+const MobileActivityLogs = lazy(() => import("./pages/admin/MobileActivityLogs"));
 const AdminAIAssistant = lazy(() => import("./pages/admin/AdminAIAssistant"));
 const EmailLogs = lazy(() => import("./pages/admin/EmailLogs"));
 const RegistrationAnalytics = lazy(() => import("./pages/admin/RegistrationAnalytics"));
