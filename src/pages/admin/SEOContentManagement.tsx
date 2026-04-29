@@ -196,30 +196,65 @@ const SEOContentManagement = () => {
           </div>
         </div>
 
-        {/* Branch summary cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
-          {branches.map(b => {
-            const s = stats(b.id);
-            const pct = s.total > 0 ? Math.round((s.published / s.total) * 100) : 0;
-            return (
-              <Card key={b.id} className={`cursor-pointer transition-all hover:shadow-lg ${activeBranch === b.id ? "ring-2 ring-purple-500" : ""}`}
-                onClick={() => setActiveBranch(b.id)}>
-                <CardContent className="p-4">
-                  <div className="font-semibold text-slate-800 text-sm mb-2">{b.name}</div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <span className="font-mono">{s.published}/{s.total}</span>
-                    <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500" style={{ width: `${pct}%` }} />
-                    </div>
-                    <span>{pct}%</span>
-                  </div>
-                  {s.pending > 0 && <div className="text-xs text-amber-600 mt-1">{s.pending} bekliyor</div>}
-                  {s.failed > 0 && <div className="text-xs text-red-600 mt-1">{s.failed} hata</div>}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        {/* Branch summary cards - grouped by category */}
+        {(() => {
+          const groups: Record<string, Branch[]> = {};
+          branches.forEach(b => {
+            const cat = b.category || "Diğer";
+            (groups[cat] = groups[cat] || []).push(b);
+          });
+          const categoryOrder = Object.keys(groups).sort((a, b) => {
+            const order = ["Psikoloji & Danışmanlık", "Danışmanlık", "Beslenme", "Fizik Tedavi", "Tıp Doktoru", "Çocuk Sağlığı", "Kadın Sağlığı", "Cilt & Estetik", "Kalp & Damar", "Beyin & Sinir", "Ortopedi", "Göz & KBB", "Sindirim & İç Organ", "Solunum", "Onkoloji", "Diş Hekimliği", "Diğer"];
+            const ai = order.indexOf(a); const bi = order.indexOf(b);
+            return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+          });
+          return categoryOrder.map(cat => (
+            <div key={cat} className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-1 w-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" />
+                <h2 className="font-bold text-slate-800">{cat}</h2>
+                <span className="text-xs text-slate-500">({groups[cat].length} branş)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {groups[cat].map(b => {
+                  const s = stats(b.id);
+                  const pct = s.total > 0 ? Math.round((s.published / s.total) * 100) : 0;
+                  const isAutoGen = autoGenLoading === b.id;
+                  return (
+                    <Card key={b.id} className={`transition-all hover:shadow-lg ${activeBranch === b.id ? "ring-2 ring-purple-500" : ""}`}>
+                      <CardContent className="p-4">
+                        <div onClick={() => setActiveBranch(b.id)} className="cursor-pointer">
+                          <div className="font-semibold text-slate-800 text-sm mb-2 line-clamp-2 min-h-[2.5rem]">{b.name}</div>
+                          <div className="flex items-center gap-2 text-xs text-slate-600">
+                            <span className="font-mono">{s.published}/{s.total}</span>
+                            <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span>{pct}%</span>
+                          </div>
+                          {s.pending > 0 && <div className="text-xs text-amber-600 mt-1">{s.pending} bekliyor</div>}
+                          {s.failed > 0 && <div className="text-xs text-red-600 mt-1">{s.failed} hata</div>}
+                        </div>
+                        {s.total === 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full mt-3 text-xs h-8 border-purple-300 text-purple-700 hover:bg-purple-50"
+                            disabled={isAutoGen}
+                            onClick={(e) => { e.stopPropagation(); handleAutoGenerate(b.id, b.name); }}
+                          >
+                            {isAutoGen ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                            AI ile 20 Kelime Üret
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          ));
+        })()}
 
         {/* Active branch keywords */}
         {activeBranch && (
