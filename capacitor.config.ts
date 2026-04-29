@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.doktorumol',
+  appId: 'com.tr.doktorumol',
   appName: 'Doktorum Ol',
   webDir: 'dist',
   plugins: {
