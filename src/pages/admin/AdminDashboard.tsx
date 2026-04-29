@@ -40,7 +40,8 @@ import {
   CreditCard,
   Gauge,
   Mail,
-  ShieldCheck
+  ShieldCheck,
+  Smartphone
 } from "lucide-react";
 
 const AdminDashboard = () => {
