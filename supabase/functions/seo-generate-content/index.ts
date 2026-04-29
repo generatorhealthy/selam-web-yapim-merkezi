@@ -149,50 +149,72 @@ Bu konuda Türkçe, SEO odaklı, MİNİMUM 800 kelimelik (hedef 1000-1300 kelime
     blog.seo_title = (blog.seo_title as string).replace(/terapi/gi, "danışmanlık");
     blog.seo_description = (blog.seo_description as string).replace(/terapi/gi, "danışmanlık");
 
-    // 2. Stok görsel seç (Lovable AI yerine Pexels stok görseli)
+    // 2. Stok görsel seç (Unsplash ücretsiz havuz - API key gerekmez)
     let featuredImage: string | null = null;
     try {
-      const PEXELS_API_KEY = Deno.env.get("PEXELS_API_KEY");
-      // Branş + konu bazlı İngilizce arama terimi
-      const queryMap: Record<string, string> = {
-        "psikolog": "calm therapy session",
-        "psikiyatrist": "mental health wellness",
-        "diyetisyen": "healthy food nutrition",
-        "fizyoterapist": "physiotherapy rehabilitation",
-        "doktor": "doctor medical office",
-        "diş hekimi": "dental clinic",
-        "çocuk doktoru": "pediatric care",
+      // Branş bazlı önceden seçilmiş ücretsiz Unsplash görsel havuzu
+      // Tüm görseller Unsplash License altında ücretsiz ticari kullanıma açık
+      const imagePool: Record<string, string[]> = {
+        "psikolog": [
+          "https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1499728603263-13726abce5fd?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1515894203077-9cd36032142f?w=1200&h=630&fit=crop",
+        ],
+        "psikiyatrist": [
+          "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=1200&h=630&fit=crop",
+        ],
+        "diyetisyen": [
+          "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200&h=630&fit=crop",
+        ],
+        "fizyoterapist": [
+          "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1552693673-1bf958298935?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&h=630&fit=crop",
+        ],
+        "doktor": [
+          "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1638202993928-7267aad84c31?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1666214280557-f1b5022eb634?w=1200&h=630&fit=crop",
+        ],
+        "diş hekimi": [
+          "https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1588776813677-77aaf5595b83?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=1200&h=630&fit=crop",
+        ],
+        "çocuk doktoru": [
+          "https://images.unsplash.com/photo-1584515933487-779824d29309?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?w=1200&h=630&fit=crop",
+          "https://images.unsplash.com/photo-1581056771107-24ca5f033842?w=1200&h=630&fit=crop",
+        ],
       };
+
+      // Genel sağlık/wellness varsayılan havuzu
+      const defaultPool = [
+        "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&h=630&fit=crop",
+        "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=1200&h=630&fit=crop",
+        "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&h=630&fit=crop",
+        "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=1200&h=630&fit=crop",
+        "https://images.unsplash.com/photo-1551076805-e1869033e561?w=1200&h=630&fit=crop",
+        "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=1200&h=630&fit=crop",
+        "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=1200&h=630&fit=crop",
+      ];
+
       const branchKey = (branchName || "").toLocaleLowerCase("tr");
-      const baseQuery = queryMap[branchKey] || "healthcare wellness professional";
-      const query = encodeURIComponent(baseQuery);
+      const pool = imagePool[branchKey] || defaultPool;
+      const stockUrl = pool[Math.floor(Math.random() * pool.length)];
 
-      let stockUrl: string | null = null;
-
-      if (PEXELS_API_KEY) {
-        // Pexels API - daha kaliteli, tutarlı sonuç
-        const page = Math.floor(Math.random() * 10) + 1;
-        const px = await fetch(`https://api.pexels.com/v1/search?query=${query}&per_page=15&page=${page}&orientation=landscape`, {
-          headers: { Authorization: PEXELS_API_KEY }
-        });
-        if (px.ok) {
-          const pxData = await px.json();
-          const photos = pxData.photos || [];
-          if (photos.length > 0) {
-            const pick = photos[Math.floor(Math.random() * photos.length)];
-            stockUrl = pick.src?.large || pick.src?.original || pick.src?.medium;
-          }
-        } else {
-          console.error("Pexels API failed:", px.status);
-        }
-      }
-
-      // Fallback: Unsplash Source (API key gerektirmez)
-      if (!stockUrl) {
-        stockUrl = `https://source.unsplash.com/1200x630/?${query}&sig=${Date.now()}`;
-      }
-
-      // Görseli indir ve bucket'a yükle (kalıcı olsun, kaynak değişse de bozulmasın)
+      // Görseli indir ve bucket'a yükle (kalıcı saklama)
       try {
         const dl = await fetch(stockUrl);
         if (dl.ok) {
@@ -208,7 +230,7 @@ Bu konuda Türkçe, SEO odaklı, MİNİMUM 800 kelimelik (hedef 1000-1300 kelime
             featuredImage = pub.publicUrl;
           } else {
             console.error("Stock upload error:", upErr);
-            featuredImage = stockUrl; // doğrudan kaynağı kullan
+            featuredImage = stockUrl;
           }
         } else {
           console.error("Stock download failed:", dl.status);
