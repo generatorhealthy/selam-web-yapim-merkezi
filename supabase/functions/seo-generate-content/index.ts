@@ -61,7 +61,17 @@ KESİN KURALLAR:
 9. HTML formatında: <h2>, <h3>, <p>, <ul>, <li>, <strong>.
 10. Anahtar kelimeleri DOĞAL biçimde içeriğe yedir, doldurma yapma.
 11. YAPI: Giriş paragrafı (min 100 kelime) + EN AZ 6 farklı <h2> alt başlık (her biri min 130 kelime) + içlerinde <h3> alt bölümler + en az 2 madde listesi (<ul>) + Sonuç paragrafı (min 100 kelime).
-12. Paragraflar 4-6 cümle olmalı. Detaylı, açıklayıcı, örnekli yaz. Asla kısa kesme.`;
+12. Paragraflar 4-6 cümle olmalı. Detaylı, açıklayıcı, örnekli yaz. Asla kısa kesme.
+
+🚫 BENZERSİZLİK & ORİJİNALLİK (EN ÖNEMLİ KURAL):
+- İçerik %100 ÖZGÜN olacak. Google'da, Wikipedia'da, başka blog/site/forumda bulunan hiçbir cümleyi, paragrafı veya yapıyı KOPYALAMA, paraphrase et değil — SIFIRDAN kendi sözcüklerinle yaz.
+- Klişe SEO kalıpları YASAK: "Günümüzde...", "Modern dünyada...", "Bilindiği üzere...", "Son yıllarda artan...", "Hayatımızın vazgeçilmez bir parçası..." gibi her yerde gördüğün giriş cümlelerini ASLA kullanma. Özgün, taze bir girişle başla.
+- Standart başlık şablonları YASAK: "X Nedir?", "X'in Belirtileri", "X'in Nedenleri", "X'in Tedavisi", "Sonuç" gibi her blogda olan kalıp başlıkları kullanma. Başlıkları konuya özel, merak uyandıran, özgün biçimde kur (örnek mantık: "Beynimiz Stresi Nasıl Yorumlar?", "Günlük Hayatta Fark Edilmeyen 7 İşaret" gibi).
+- AI tespit edilebilirliği DÜŞÜK olmalı: Cümle uzunluklarını çeşitlendir (kısa-uzun karışık), bağlaçları çeşitlendir, robotik geçişlerden ("Ayrıca, Bunun yanı sıra, Sonuç olarak") aşırı kullanımdan kaçın. İnsan gibi yaz.
+- Her yazıda ÖZGÜN katma değer: somut örnek senaryolar, gerçek hayattan vakalar (anonim, kurgusal), pratik mini ipuçları, sayısal veriler (genel kabul görmüş bilimsel istatistikler), karşılaştırmalar, mini check-listeler ekle.
+- Aynı konuda daha önce yazılmış başka yazılarla AYNI sıralamayı, aynı alt başlıkları, aynı örnekleri kullanma. Her yazı kendi açısından, kendi yapısından doğsun.
+- E-E-A-T sinyalleri kuvvetli olsun: deneyim hissi veren ifadeler, uzman bakış açısı, açıklayıcı analoji ve metaforlar kullan.
+- TEKRAR YOK: Aynı cümleyi/fikri farklı paragraflarda tekrarlama. Her paragraf yeni bir bilgi/perspektif sunmalı.`;
 
     const userPrompt = `Konu: "${kw.main_keyword}"
 Branş: ${branchName}
