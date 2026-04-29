@@ -3660,6 +3660,48 @@ export type Database = {
         }
         Relationships: []
       }
+      career_applications: {
+        Row: {
+          admin_notes: string | null
+          cover_letter: string | null
+          created_at: string
+          cv_filename: string | null
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          position: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          cv_filename?: string | null
+          email: string
+          full_name: string
+          id?: string
+          phone: string
+          position?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          cv_filename?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          position?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_referrals: {
         Row: {
           client_contact: string | null
