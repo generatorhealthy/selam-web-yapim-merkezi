@@ -143,12 +143,12 @@ async function callAI(apiKey: string, systemPrompt: string, userPrompt: string, 
             properties: {
               results: {
                 type: "array",
-                minItems,
+                description: `En az ${minItems} öğe içermeli`,
                 items: {
                   type: "object",
                   properties: {
                     main_keyword: { type: "string", description: "Ana anahtar kelime" },
-                    related_keywords: { type: "array", items: { type: "string" }, minItems: 7, maxItems: 8 },
+                    related_keywords: { type: "array", items: { type: "string" }, description: "7-8 long-tail alt kelime" },
                     search_intent: { type: "string", enum: ["informational", "commercial", "navigational"] },
                     difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
                   },
