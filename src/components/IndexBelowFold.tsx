@@ -49,6 +49,59 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
 
   return (
     <>
+      {/* Mobile App Download Banner - sadece mobilde görünür */}
+      <section className="md:hidden relative py-8 px-4 overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/40 to-purple-50/30">
+        <div className="max-w-md mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm text-blue-700 px-4 py-1.5 rounded-full text-xs font-semibold mb-3 shadow-sm">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+            Yeni • Mobil Uygulamamız Yayında!
+          </div>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2">
+            Doktorum Ol Mobilde
+          </h3>
+          <p className="text-sm text-gray-600 mb-5">
+            Uygulamamızı hemen indirin, randevularınızı cebinizden yönetin.
+          </p>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <a
+              href="https://play.google.com/store/apps/details?id=com.doktorumol"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.href = "https://doktorumol.com.tr";
+              }}
+              className="inline-flex items-center gap-2 bg-black text-white rounded-xl px-4 py-2.5 shadow-lg active:scale-95 transition-transform"
+              aria-label="Google Play'den indir"
+            >
+              <svg viewBox="0 0 24 24" className="w-7 h-7" aria-hidden="true">
+                <path fill="#EA4335" d="M3.6 1.7C3.2 2.1 3 2.7 3 3.5v17c0 .8.2 1.4.6 1.8l.1.1L13.3 12.7v-.2L3.7 1.7z"/>
+                <path fill="#FBBC04" d="M16.5 16l-3.2-3.3v-.2L16.5 9.2l.1.1 3.8 2.2c1.1.6 1.1 1.6 0 2.2L16.6 16z"/>
+                <path fill="#4285F4" d="M16.6 15.9L13.3 12.5 3.6 22.3c.4.4 1 .4 1.7.1l11.3-6.5"/>
+                <path fill="#34A853" d="M16.6 9.1L5.3 2.6c-.7-.4-1.3-.3-1.7.1l9.7 9.8 3.3-3.4z"/>
+              </svg>
+              <span className="text-left leading-tight">
+                <span className="block text-[9px] opacity-80">'DEN ALIN</span>
+                <span className="block text-base font-semibold">Google Play</span>
+              </span>
+            </a>
+            <a
+              href="https://apps.apple.com/tr/app/doktorum-ol/id6762599027?l=tr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-black text-white rounded-xl px-4 py-2.5 shadow-lg active:scale-95 transition-transform"
+              aria-label="App Store'dan indir"
+            >
+              <svg viewBox="0 0 24 24" className="w-7 h-7" fill="currentColor" aria-hidden="true">
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+              </svg>
+              <span className="text-left leading-tight">
+                <span className="block text-[9px] opacity-80">İndirin</span>
+                <span className="block text-base font-semibold">App Store'dan</span>
+              </span>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works Section */}
       <div className="relative py-16 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20"></div>
