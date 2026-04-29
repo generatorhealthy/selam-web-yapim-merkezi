@@ -39,6 +39,7 @@ const platformBadge = (p: string | null, isNative: boolean | null) => {
 };
 
 export default function MobileActivityLogs() {
+  const { userProfile } = useUserRole();
   const [logs, setLogs] = useState<MobileLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
