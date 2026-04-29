@@ -143,3 +143,6 @@ verify_jwt = false
 
 [functions.seo-generate-content]
 verify_jwt = false
+
+[functions.seo-auto-publish-batch]
+verify_jwt = false
