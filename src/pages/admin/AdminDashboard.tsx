@@ -533,6 +533,17 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
+      title: "Kariyer Başvuruları",
+      description: "/kariyer sayfasından gelen iş başvurularını yönet, durum güncelle ve CV'leri incele",
+      icon: Briefcase,
+      gradient: "from-blue-500 via-indigo-500 to-purple-600",
+      bgGradient: "from-blue-50 to-indigo-50",
+      shadowColor: "shadow-blue-500/20",
+      route: "/divan_paneli/career-applications",
+      buttonText: "Başvuruları Görüntüle",
+      adminOnly: true
+    },
+    {
       description: "Aydınlatma, açık rıza ve ticari ileti onaylarının hukuki delil kayıtları",
       icon: ShieldCheck,
       gradient: "from-emerald-500 via-teal-500 to-cyan-600",
