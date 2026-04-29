@@ -125,6 +125,7 @@ const CancellationFees = lazy(() => import("./pages/admin/CancellationFees"));
 const SpecialistApplications = lazy(() => import("./pages/admin/SpecialistApplications"));
 const StaffAttendance = lazy(() => import("./pages/admin/StaffAttendance"));
 const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
+const MobileActivityLogs = lazy(() => import("./pages/admin/MobileActivityLogs"));
 const AdminAIAssistant = lazy(() => import("./pages/admin/AdminAIAssistant"));
 const EmailLogs = lazy(() => import("./pages/admin/EmailLogs"));
 const RegistrationAnalytics = lazy(() => import("./pages/admin/RegistrationAnalytics"));
@@ -338,6 +339,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/staff-attendance" element={<StaffAttendance />} />
               <Route path="/divan_paneli/cancellation-fees" element={<CancellationFees />} />
               <Route path="/divan_paneli/admin-activity-logs" element={<AdminActivityLogs />} />
+              <Route path="/divan_paneli/mobile-activity-logs" element={<MobileActivityLogs />} />
               <Route path="/divan_paneli/ai-assistant" element={<AdminAIAssistant />} />
               <Route path="/divan_paneli/email-logs" element={<EmailLogs />} />
               <Route path="/divan_paneli/registration-analytics" element={<RegistrationAnalytics />} />

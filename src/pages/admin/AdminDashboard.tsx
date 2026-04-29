@@ -40,7 +40,8 @@ import {
   CreditCard,
   Gauge,
   Mail,
-  ShieldCheck
+  ShieldCheck,
+  Smartphone
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -520,7 +521,17 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
-      title: "KVKK Rıza Logları",
+      title: "Mobil Uygulama Logları",
+      description: "Mobil uygulamaya giriş yapan kullanıcıların hareketlerini ve sayfa ziyaretlerini takip et",
+      icon: Smartphone,
+      gradient: "from-purple-500 via-pink-500 to-rose-600",
+      bgGradient: "from-purple-50 to-rose-50",
+      shadowColor: "shadow-purple-500/20",
+      route: "/divan_paneli/mobile-activity-logs",
+      buttonText: "Mobil Logları Görüntüle",
+      adminOnly: true
+    },
+    {
       description: "Aydınlatma, açık rıza ve ticari ileti onaylarının hukuki delil kayıtları",
       icon: ShieldCheck,
       gradient: "from-emerald-500 via-teal-500 to-cyan-600",
