@@ -1,0 +1,1 @@
+DELETE FROM public.social_shares WHERE platform = 'hashnode';
