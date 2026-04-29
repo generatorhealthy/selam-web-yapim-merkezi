@@ -6,7 +6,8 @@ const corsHeaders = {
 };
 
 const HASHNODE_TOKEN = Deno.env.get("HASHNODE_TOKEN")?.trim();
-const HASHNODE_PUBLICATION_ID = Deno.env.get("HASHNODE_PUBLICATION_ID")?.trim();
+const HASHNODE_HOST = Deno.env.get("HASHNODE_HOST")?.trim() || "doktorumol.hashnode.dev";
+let HASHNODE_PUBLICATION_ID = Deno.env.get("HASHNODE_PUBLICATION_ID")?.trim();
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")?.trim();
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
