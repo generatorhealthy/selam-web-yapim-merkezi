@@ -131,3 +131,6 @@ verify_jwt = false
 
 [functions.scheduled-multi-share]
 verify_jwt = false
+
+[functions.send-app-launch-bulk-sms]
+verify_jwt = false
