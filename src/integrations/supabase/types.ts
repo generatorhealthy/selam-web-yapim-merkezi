@@ -4761,6 +4761,102 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_branches: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_keywords: {
+        Row: {
+          blog_post_id: string | null
+          branch_id: string
+          content_status: string
+          created_at: string
+          difficulty: string | null
+          error_message: string | null
+          generated_at: string | null
+          id: string
+          main_keyword: string
+          priority: number
+          related_keywords: string[]
+          search_intent: string | null
+          updated_at: string
+        }
+        Insert: {
+          blog_post_id?: string | null
+          branch_id: string
+          content_status?: string
+          created_at?: string
+          difficulty?: string | null
+          error_message?: string | null
+          generated_at?: string | null
+          id?: string
+          main_keyword: string
+          priority?: number
+          related_keywords?: string[]
+          search_intent?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blog_post_id?: string | null
+          branch_id?: string
+          content_status?: string
+          created_at?: string
+          difficulty?: string | null
+          error_message?: string | null
+          generated_at?: string | null
+          id?: string
+          main_keyword?: string
+          priority?: number
+          related_keywords?: string[]
+          search_intent?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_keywords_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_keywords_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "seo_branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sms_logs: {
         Row: {
           client_contact: string | null
