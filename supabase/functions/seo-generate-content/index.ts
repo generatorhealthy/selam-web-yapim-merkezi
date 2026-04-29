@@ -55,63 +55,89 @@ KESİN KURALLAR:
 3. "dolandırıcı", "sahte", "garantili sonuç", "kesin çözüm" YOK.
 4. Tıbbi teşhis veya ilaç önerisi YOK.
 5. Doktorum Ol markasını eleştirme.
-6. MİNİMUM 700 kelime, ideal 900-1100 kelime.
+6. ZORUNLU UZUNLUK: MİNİMUM 800 kelime, hedef 1000-1300 kelime. 800 kelimenin altında yazı KABUL EDİLMEZ.
 7. HTML formatında: <h2>, <h3>, <p>, <ul>, <li>, <strong>.
 8. Anahtar kelimeleri DOĞAL biçimde içeriğe yedir, doldurma yapma.
-9. Giriş paragrafı + 4-6 alt başlık + Sonuç paragrafı yapısı.`;
+9. YAPI: Giriş paragrafı (min 100 kelime) + EN AZ 6 farklı <h2> alt başlık (her biri min 130 kelime) + içlerinde <h3> alt bölümler + en az 2 madde listesi (<ul>) + Sonuç paragrafı (min 100 kelime).
+10. Paragraflar 4-6 cümle olmalı. Detaylı, açıklayıcı, örnekli yaz. Asla kısa kesme.`;
 
     const userPrompt = `Konu: "${kw.main_keyword}"
 Branş: ${branchName}
 İçerikte doğal şekilde geçirmen gereken anahtar kelimeler:
 ${allKeywords.map((k, i) => `${i + 1}. ${k}`).join("\n")}
 
-Bu konuda Türkçe, SEO odaklı, minimum 700 kelimelik profesyonel bir blog yazısı üret. Çıktıyı tool ile JSON formatında ver.`;
+Bu konuda Türkçe, SEO odaklı, MİNİMUM 800 kelimelik (hedef 1000-1300 kelime) profesyonel bir blog yazısı üret. En az 6 <h2> başlık, her bölüm min 130 kelime. Çıktıyı tool ile JSON formatında ver.`;
 
-    const txtResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "create_blog",
-            description: "SEO blog yazısı üret",
-            parameters: {
-              type: "object",
-              properties: {
-                title: { type: "string", description: "60 karakter altı SEO başlığı" },
-                slug_hint: { type: "string", description: "URL için kısa slug önerisi" },
-                excerpt: { type: "string", description: "150 karakter özet" },
-                content_html: { type: "string", description: "Min 700 kelime HTML içerik" },
-                seo_title: { type: "string", description: "Max 60 karakter" },
-                seo_description: { type: "string", description: "Max 160 karakter" },
-                image_prompt: { type: "string", description: "Konuya uygun, soyut/profesyonel ingilizce görsel prompt'u (insan yüzü değil, sembolik)" },
-              },
-              required: ["title", "slug_hint", "excerpt", "content_html", "seo_title", "seo_description", "image_prompt"],
-              additionalProperties: false,
+    const callContentAI = async (extra = "") => {
+      return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-pro",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt + (extra ? "\n\n" + extra : "") },
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "create_blog",
+              description: "SEO blog yazısı üret",
+              parameters: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "60 karakter altı SEO başlığı" },
+                  slug_hint: { type: "string", description: "URL için kısa slug önerisi" },
+                  excerpt: { type: "string", description: "150 karakter özet" },
+                  content_html: { type: "string", description: "MİNİMUM 800 kelime, hedef 1000-1300 kelime, en az 6 h2 başlıklı zengin HTML" },
+                  seo_title: { type: "string", description: "Max 60 karakter" },
+                  seo_description: { type: "string", description: "Max 160 karakter" },
+                  image_prompt: { type: "string", description: "Konuya uygun, soyut/profesyonel ingilizce görsel prompt'u (insan yüzü değil, sembolik)" },
+                },
+                required: ["title", "slug_hint", "excerpt", "content_html", "seo_title", "seo_description", "image_prompt"],
+                additionalProperties: false,
+              }
             }
-          }
-        }],
-        tool_choice: { type: "function", function: { name: "create_blog" } },
-      }),
-    });
+          }],
+          tool_choice: { type: "function", function: { name: "create_blog" } },
+        }),
+      });
+    };
+
+    const countWords = (h: string) => h.replace(/<[^>]+>/g, " ").trim().split(/\s+/).filter(Boolean).length;
+
+    const txtResp = await callContentAI();
 
     if (!txtResp.ok) {
       const t = await txtResp.text();
       console.error("Text gen failed:", txtResp.status, t);
       if (txtResp.status === 429) throw new Error("Rate limit aşıldı, biraz bekleyip tekrar deneyin");
       if (txtResp.status === 402) throw new Error("AI kredisi yetersiz");
-      throw new Error("İçerik üretimi başarısız");
+      throw new Error("İçerik üretimi başarısız: " + t.slice(0, 200));
     }
     const txtData = await txtResp.json();
     const tcall = txtData.choices?.[0]?.message?.tool_calls?.[0];
     if (!tcall) throw new Error("AI yanıtı boş");
-    const blog = JSON.parse(tcall.function.arguments);
+    let blog = JSON.parse(tcall.function.arguments);
+
+    // Length retry: if too short, ask AI to expand
+    let firstWc = countWords(blog.content_html);
+    console.log(`First pass word count: ${firstWc}`);
+    if (firstWc < 700) {
+      console.log("Content too short, retrying with stronger expansion prompt...");
+      const retryResp = await callContentAI(`UYARI: İlk üretim sadece ${firstWc} kelime oldu, bu YETERSİZ ve REDDEDİLDİ. Şimdi MUTLAKA EN AZ 1000 kelime, EN AZ 6 farklı <h2> başlık üret. Her <h2> başlık altında en az 2-3 detaylı paragraf, örnekler, sıkça sorulan sorular ve pratik tavsiyeler olsun. Yazıyı KESİNLİKLE uzat.`);
+      if (retryResp.ok) {
+        const retryData = await retryResp.json();
+        const rc = retryData.choices?.[0]?.message?.tool_calls?.[0];
+        if (rc) {
+          const rb = JSON.parse(rc.function.arguments);
+          if (countWords(rb.content_html) > firstWc) {
+            blog = rb;
+            console.log(`Retry word count: ${countWords(blog.content_html)}`);
+          }
+        }
+      }
+    }
 
     // Forbidden filter
     let html = blog.content_html as string;
