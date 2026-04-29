@@ -453,6 +453,16 @@ Deno.serve(async (req) => {
           caption: payload.caption,
         });
         break;
+      case 'sendFile':
+        endpoint = `/api/sendFile`;
+        method = 'POST';
+        body = JSON.stringify({
+          session: sessionName,
+          chatId: payload.chatId,
+          file: payload.file,
+          caption: payload.caption,
+        });
+        break;
       case 'chats.overview': {
         const safeLimit = Math.min(Math.max(Number(payload?.limit) || 100, 1), 200);
         const safeOffset = Number.isFinite(Number(payload?.offset)) && Number(payload?.offset) >= 0
