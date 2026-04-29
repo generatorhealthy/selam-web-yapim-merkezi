@@ -42,8 +42,7 @@ import {
   Mail,
   ShieldCheck,
   Smartphone,
-  Briefcase,
-  Sparkles
+  Briefcase
 } from "lucide-react";
 
 const AdminDashboard = () => {
