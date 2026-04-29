@@ -347,6 +347,8 @@ const AppContent = () => {
               <Route path="/divan_paneli/registration-analytics" element={<RegistrationAnalytics />} />
               <Route path="/divan_paneli/consent-logs" element={<ConsentLogs />} />
               <Route path="/divan_paneli/bulk-email" element={<BulkEmail />} />
+              <Route path="/divan_paneli/career-applications" element={<CareerApplications />} />
+              <Route path="/kariyer" element={<Career />} />
               
                 
               {/* Test Routes */}
