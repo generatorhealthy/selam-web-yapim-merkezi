@@ -54,12 +54,14 @@ KESİN KURALLAR:
 2. "fiyat", "ücret", "bedava", "ücretsiz" KESİNLİKLE YOK.
 3. "dolandırıcı", "sahte", "garantili sonuç", "kesin çözüm" YOK.
 4. Tıbbi teşhis veya ilaç önerisi YOK.
-5. Doktorum Ol markasını eleştirme.
-6. ZORUNLU UZUNLUK: MİNİMUM 800 kelime, hedef 1000-1300 kelime. 800 kelimenin altında yazı KABUL EDİLMEZ.
-7. HTML formatında: <h2>, <h3>, <p>, <ul>, <li>, <strong>.
-8. Anahtar kelimeleri DOĞAL biçimde içeriğe yedir, doldurma yapma.
-9. YAPI: Giriş paragrafı (min 100 kelime) + EN AZ 6 farklı <h2> alt başlık (her biri min 130 kelime) + içlerinde <h3> alt bölümler + en az 2 madde listesi (<ul>) + Sonuç paragrafı (min 100 kelime).
-10. Paragraflar 4-6 cümle olmalı. Detaylı, açıklayıcı, örnekli yaz. Asla kısa kesme.`;
+5. MARKA YASAĞI: Hiçbir marka, şirket, kurum, hastane, klinik, uygulama, web sitesi, ürün veya hizmet ismi GEÇMEYECEK. Ne öneri ne karşılaştırma ne eleştiri ne de örnek olarak bile marka adı yazma. "Doktorum Ol" dahil hiçbir marka adı geçmesin. Genel ifadeler kullan ("uzman", "danışman", "online platformlar", "uzman desteği").
+6. DİL TEMİZLİĞİ: Küfür, argo, hakaret, aşağılayıcı ifade, kaba dil KESİNLİKLE YASAK. Profesyonel, saygılı, akademik ton kullan.
+7. ELEŞTİRİ YASAĞI: Hiçbir kişi, kurum, meslek, yöntem, ürün veya marka eleştirilmeyecek; olumsuz yorum yapılmayacak. Yapıcı, bilgilendirici ve tarafsız ol.
+8. ZORUNLU UZUNLUK: MİNİMUM 800 kelime, hedef 1000-1300 kelime. 800 kelimenin altında yazı KABUL EDİLMEZ.
+9. HTML formatında: <h2>, <h3>, <p>, <ul>, <li>, <strong>.
+10. Anahtar kelimeleri DOĞAL biçimde içeriğe yedir, doldurma yapma.
+11. YAPI: Giriş paragrafı (min 100 kelime) + EN AZ 6 farklı <h2> alt başlık (her biri min 130 kelime) + içlerinde <h3> alt bölümler + en az 2 madde listesi (<ul>) + Sonuç paragrafı (min 100 kelime).
+12. Paragraflar 4-6 cümle olmalı. Detaylı, açıklayıcı, örnekli yaz. Asla kısa kesme.`;
 
     const userPrompt = `Konu: "${kw.main_keyword}"
 Branş: ${branchName}
