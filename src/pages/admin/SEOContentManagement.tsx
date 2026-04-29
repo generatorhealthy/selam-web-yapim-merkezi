@@ -383,11 +383,23 @@ const SEOContentManagement = () => {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={() => setAddOpen(false)} disabled={expanding}>İptal</Button>
+              <Button
+                variant="outline"
+                disabled={expanding || !addBranchId}
+                onClick={async () => {
+                  setAddOpen(false);
+                  const br = branches.find(b => b.id === addBranchId);
+                  if (br) await handleAutoGenerate(br.id, br.name);
+                }}
+                className="border-purple-400 text-purple-700 hover:bg-purple-50"
+              >
+                <Wand2 className="h-4 w-4 mr-2" /> AI Otomatik 20 Kelime Üret
+              </Button>
               <Button onClick={handleExpand} disabled={expanding} className="bg-gradient-to-r from-purple-600 to-pink-600">
                 {expanding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                AI ile Genişlet ve Kaydet
+                Manuel Listeyi Genişlet
               </Button>
             </DialogFooter>
           </DialogContent>
