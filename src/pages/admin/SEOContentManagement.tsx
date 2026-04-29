@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Sparkles, Loader2, ExternalLink, Wand2, Plus, RefreshCw, FileText, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { Sparkles, Loader2, ExternalLink, Wand2, Plus, RefreshCw, FileText, CheckCircle2, AlertCircle, Clock, CalendarDays } from "lucide-react";
 import AdminBackButton from "@/components/AdminBackButton";
 
 interface Branch {
@@ -198,7 +198,10 @@ const SEOContentManagement = () => {
               Her branş kartındaki <strong>"AI ile 20 Kelime Üret"</strong> butonuna tıklayın → AI Türkiye'de en yüksek trafikli anahtar kelimeleri analiz edip ekler. Sonra branşa girip <strong>"Bekleyenleri Toplu Üret"</strong> ile 700+ kelimelik SEO içeriklerini otomatik blog'a yayınlayın.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" onClick={() => navigate("/divan_paneli/seo-content/yayinlananlar")}>
+              <CalendarDays className="h-4 w-4 mr-2" /> Yayınlananlar (Tarih Tarih)
+            </Button>
             <Button variant="outline" onClick={loadAll} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Yenile
             </Button>
