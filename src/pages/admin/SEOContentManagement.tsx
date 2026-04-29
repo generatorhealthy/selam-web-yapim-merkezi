@@ -20,6 +20,7 @@ interface Branch {
   name: string;
   description: string | null;
   sort_order: number;
+  category: string | null;
 }
 
 interface Keyword {
