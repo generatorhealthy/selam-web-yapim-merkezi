@@ -70,6 +70,7 @@ const DashboardFill = ({ className = "w-6 h-6" }: IconProps) => (
 
 export const MobileLayout = () => {
   const { userProfile } = useUserRole();
+  useMobileActivityTracker();
   const isSpecialist =
     userProfile?.role === "specialist" ||
     userProfile?.role === "admin" ||
