@@ -1,5 +1,6 @@
 import { Outlet, NavLink } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useMobileActivityTracker } from "@/hooks/useMobileActivityTracker";
 
 // Map each tab route to its lazy import so we can prefetch on touch/hover.
 const ROUTE_PREFETCH: Record<string, () => Promise<unknown>> = {
