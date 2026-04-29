@@ -124,35 +124,6 @@ const Career = () => {
           </div>
         </section>
 
-        {/* Why Us */}
-        <section className="container mx-auto px-4 py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-800 mb-3">Neden Doktorum Ol?</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              Sağlık sektörünün dijital dönüşümünde rol almak ve binlerce insanın hayatına dokunmak için doğru yer.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {[
-              { icon: Building2, title: "Köklü Şirket", desc: "Sektörde güvenilir ve büyüyen bir marka." },
-              { icon: Users, title: "Güçlü Ekip", desc: "Profesyonel, samimi ve dayanışmacı bir çalışma ortamı." },
-              { icon: TrendingUp, title: "Kariyer Gelişimi", desc: "Yeteneklerinizi geliştirebileceğiniz fırsatlar." },
-              { icon: Heart, title: "Anlamlı İş", desc: "Yaptığınız iş insanların sağlığına dokunuyor." },
-            ].map((item, i) => (
-              <Card key={i} className="border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white/80 backdrop-blur">
-                <CardContent className="p-6 text-center">
-                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                    <item.icon className="w-7 h-7 text-white" />
-                  </div>
-                  <h3 className="font-bold text-slate-800 mb-2">{item.title}</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">{item.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
         {/* Open position */}
         <section className="container mx-auto px-4 pb-12">
           <Card className="max-w-4xl mx-auto border-0 shadow-xl bg-white">
