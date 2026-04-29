@@ -208,6 +208,45 @@ const SEOContentManagement = () => {
           </div>
         </div>
 
+        {/* Otomatik yayın bilgi kartı */}
+        <Card className="mb-6 border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50">
+          <CardContent className="p-5 flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-emerald-100 p-2"><Clock className="h-5 w-5 text-emerald-700" /></div>
+              <div>
+                <h3 className="font-semibold text-emerald-900">Otomatik Yayın Aktif – Günde 10 Blog</h3>
+                <p className="text-sm text-emerald-800 mt-1 max-w-2xl">
+                  Sistem her gün <strong>08:00, 10:00, 12:00, 14:00, 15:00, 16:00, 18:00, 20:00, 22:00, 23:00</strong> saatlerinde otomatik olarak sıradaki bekleyen anahtar kelimeyi blog yazısına dönüştürüp yayınlar. Branş sırasına göre ilerler — bir branş bittiğinde diğerine geçer.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  toast.loading("Sıradaki blog üretiliyor...", { id: "auto-1" });
+                  const { data, error } = await supabase.functions.invoke("seo-auto-publish-batch", { body: { count: 1 } });
+                  if (error) throw error;
+                  const r = data?.results?.[0];
+                  if (r?.success) {
+                    toast.success(`✓ ${r.branch}: ${r.keyword} (${r.word_count} kelime)`, { id: "auto-1" });
+                    loadAll();
+                  } else if (r?.skipped) {
+                    toast.info("Bekleyen kelime kalmadı 🎉", { id: "auto-1" });
+                  } else {
+                    toast.error(r?.error || "Üretim başarısız", { id: "auto-1" });
+                  }
+                } catch (e: any) {
+                  toast.error(e.message || "Hata", { id: "auto-1" });
+                }
+              }}
+            >
+              <Sparkles className="h-4 w-4 mr-2" /> Şimdi 1 Tane Üret
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Branch summary cards - grouped by category */}
         {(() => {
           const groups: Record<string, Branch[]> = {};
