@@ -62,18 +62,30 @@ const SEOContentManagement = () => {
 
   const loadAll = async () => {
     setLoading(true);
-    const { data: br } = await supabase.from("seo_branches").select("*").order("sort_order");
+    const { data: br, error: brErr } = await supabase
+      .from("seo_branches")
+      .select("*")
+      .order("sort_order")
+      .range(0, 4999);
+    if (brErr) console.error("seo_branches load error:", brErr);
     const list = (br || []) as Branch[];
     setBranches(list);
     if (list.length && !activeBranch) setActiveBranch(list[0].id);
 
-    const { data: kw } = await supabase.from("seo_keywords").select("*").order("priority").order("created_at");
+    const { data: kw, error: kwErr } = await supabase
+      .from("seo_keywords")
+      .select("*")
+      .order("priority")
+      .order("created_at")
+      .range(0, 9999);
+    if (kwErr) console.error("seo_keywords load error:", kwErr);
     const grouped: Record<string, Keyword[]> = {};
     (kw || []).forEach((k: any) => {
       grouped[k.branch_id] = grouped[k.branch_id] || [];
       grouped[k.branch_id].push(k as Keyword);
     });
     setKeywords(grouped);
+    console.log(`Loaded ${list.length} branches and ${(kw || []).length} keywords`);
     setLoading(false);
   };
 
@@ -223,7 +235,7 @@ const SEOContentManagement = () => {
                   return (
                     <Card key={b.id} className={`transition-all hover:shadow-lg ${activeBranch === b.id ? "ring-2 ring-purple-500" : ""}`}>
                       <CardContent className="p-4">
-                        <div onClick={() => setActiveBranch(b.id)} className="cursor-pointer">
+                        <div onClick={() => { setActiveBranch(b.id); setTimeout(() => document.getElementById("active-branch-table")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }} className="cursor-pointer">
                           <div className="font-semibold text-slate-800 text-sm mb-2 line-clamp-2 min-h-[2.5rem]">{b.name}</div>
                           <div className="flex items-center gap-2 text-xs text-slate-600">
                             <span className="font-mono">{s.published}/{s.total}</span>
@@ -258,10 +270,10 @@ const SEOContentManagement = () => {
 
         {/* Active branch keywords */}
         {activeBranch && (
-          <Card>
+          <Card id="active-branch-table">
             <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
               <div>
-                <CardTitle>{branches.find(b => b.id === activeBranch)?.name} - Anahtar Kelimeler</CardTitle>
+                <CardTitle>{branches.find(b => b.id === activeBranch)?.name} - Anahtar Kelimeler ({(keywords[activeBranch] || []).length})</CardTitle>
                 <CardDescription>Her satır bir ana kelime + 7-8 alt kelime grubudur. "İçerik Üret" butonu blog'a yayınlar.</CardDescription>
               </div>
               <Button
