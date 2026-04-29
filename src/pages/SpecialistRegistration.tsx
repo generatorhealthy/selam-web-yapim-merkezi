@@ -335,6 +335,14 @@ const SpecialistRegistration = () => {
         } catch (smsErr) {
           console.error('Welcome SMS error:', smsErr);
         }
+        try {
+          await supabase.functions.invoke('send-registration-whatsapp', {
+            body: { name: formData.name, phone }
+          });
+          console.log('Welcome WhatsApp sent to', phone);
+        } catch (waErr) {
+          console.error('Welcome WhatsApp error:', waErr);
+        }
       }
     } catch (err: any) {
       console.error(err);
