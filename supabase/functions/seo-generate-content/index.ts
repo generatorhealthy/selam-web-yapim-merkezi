@@ -73,12 +73,17 @@ KESİN KURALLAR:
 - E-E-A-T sinyalleri kuvvetli olsun: deneyim hissi veren ifadeler, uzman bakış açısı, açıklayıcı analoji ve metaforlar kullan.
 - TEKRAR YOK: Aynı cümleyi/fikri farklı paragraflarda tekrarlama. Her paragraf yeni bir bilgi/perspektif sunmalı.`;
 
+    const uniqueSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const userPrompt = `Konu: "${kw.main_keyword}"
 Branş: ${branchName}
 İçerikte doğal şekilde geçirmen gereken anahtar kelimeler:
 ${allKeywords.map((k, i) => `${i + 1}. ${k}`).join("\n")}
 
-Bu konuda Türkçe, SEO odaklı, MİNİMUM 800 kelimelik (hedef 1000-1300 kelime) profesyonel bir blog yazısı üret. En az 6 <h2> başlık, her bölüm min 130 kelime. Çıktıyı tool ile JSON formatında ver.`;
+Bu konuda Türkçe, SEO odaklı, MİNİMUM 800 kelimelik (hedef 1000-1300 kelime) profesyonel bir blog yazısı üret. En az 6 <h2> başlık, her bölüm min 130 kelime.
+
+⚠️ ÖZGÜNLÜK ZORUNLU: Bu yazı tamamen sıfırdan, kendi cümlelerinle, özgün bir bakış açısıyla yazılacak. İnternette aynı konuda dolaşan klişe yapıyı, klişe başlıkları ve klişe giriş cümlelerini KULLANMA. Konuya özgün bir açıdan yaklaş; örnekler, analojiler ve mini senaryolar ekle. Bu yazının imza/varyasyon kodu: ${uniqueSeed} (içerikte gösterme, sadece varyasyonu farklılaştırmak için kullan).
+
+Çıktıyı tool ile JSON formatında ver.`;
 
     const callContentAI = async (extra = "") => {
       return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
