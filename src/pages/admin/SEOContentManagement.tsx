@@ -62,18 +62,30 @@ const SEOContentManagement = () => {
 
   const loadAll = async () => {
     setLoading(true);
-    const { data: br } = await supabase.from("seo_branches").select("*").order("sort_order");
+    const { data: br, error: brErr } = await supabase
+      .from("seo_branches")
+      .select("*")
+      .order("sort_order")
+      .range(0, 4999);
+    if (brErr) console.error("seo_branches load error:", brErr);
     const list = (br || []) as Branch[];
     setBranches(list);
     if (list.length && !activeBranch) setActiveBranch(list[0].id);
 
-    const { data: kw } = await supabase.from("seo_keywords").select("*").order("priority").order("created_at");
+    const { data: kw, error: kwErr } = await supabase
+      .from("seo_keywords")
+      .select("*")
+      .order("priority")
+      .order("created_at")
+      .range(0, 9999);
+    if (kwErr) console.error("seo_keywords load error:", kwErr);
     const grouped: Record<string, Keyword[]> = {};
     (kw || []).forEach((k: any) => {
       grouped[k.branch_id] = grouped[k.branch_id] || [];
       grouped[k.branch_id].push(k as Keyword);
     });
     setKeywords(grouped);
+    console.log(`Loaded ${list.length} branches and ${(kw || []).length} keywords`);
     setLoading(false);
   };
 
