@@ -106,6 +106,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (error) throw error;
 
+    // Skip already-sent recipients (idempotent for resumable runs)
+    const { data: alreadySent } = await supabase
+      .from("brevo_email_logs")
+      .select("recipient_email")
+      .eq("template_name", "app-launch-2026")
+      .eq("status", "sent");
+    const alreadySentSet = new Set(
+      (alreadySent ?? []).map((r) => (r.recipient_email ?? "").trim().toLowerCase()),
+    );
+
     const recipients: { id: string; name: string; email: string }[] = [];
     const skipped: { id: string; name: string; email: string | null; reason: string }[] = [];
     const seen = new Set<string>();
@@ -114,6 +124,10 @@ const handler = async (req: Request): Promise<Response> => {
       const email = (s.email ?? "").trim().toLowerCase();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         skipped.push({ id: s.id, name: s.name, email: s.email, reason: "invalid_email" });
+        continue;
+      }
+      if (alreadySentSet.has(email)) {
+        skipped.push({ id: s.id, name: s.name, email: s.email, reason: "already_sent" });
         continue;
       }
       if (seen.has(email)) {
