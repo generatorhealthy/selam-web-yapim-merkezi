@@ -41,7 +41,8 @@ import {
   Gauge,
   Mail,
   ShieldCheck,
-  Smartphone
+  Smartphone,
+  Briefcase
 } from "lucide-react";
 
 const AdminDashboard = () => {
