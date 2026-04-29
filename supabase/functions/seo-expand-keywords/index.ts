@@ -167,9 +167,11 @@ async function callAI(apiKey: string, systemPrompt: string, userPrompt: string, 
   });
 
   if (!resp.ok) {
+    const errText = await resp.text().catch(() => "");
+    console.error("AI gateway error", resp.status, errText);
     if (resp.status === 429) throw new Error("Çok fazla istek, kısa bekleyip tekrar deneyin.");
     if (resp.status === 402) throw new Error("AI kredisi yetersiz.");
-    throw new Error("AI gateway error: " + resp.status);
+    throw new Error(`AI gateway error: ${resp.status} ${errText.slice(0, 200)}`);
   }
   return resp;
 }
