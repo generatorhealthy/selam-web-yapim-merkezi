@@ -149,48 +149,77 @@ Bu konuda Türkçe, SEO odaklı, MİNİMUM 800 kelimelik (hedef 1000-1300 kelime
     blog.seo_title = (blog.seo_title as string).replace(/terapi/gi, "danışmanlık");
     blog.seo_description = (blog.seo_description as string).replace(/terapi/gi, "danışmanlık");
 
-    // 2. Generate image
+    // 2. Stok görsel seç (Lovable AI yerine Pexels stok görseli)
     let featuredImage: string | null = null;
     try {
-      const imgResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-image",
-          messages: [{
-            role: "user",
-            content: `Professional blog header image, soft pastel colors, modern minimal style, abstract illustration, no text, no faces. Topic: ${blog.image_prompt}. Calm, trustworthy, healthcare aesthetic.`
-          }],
-          modalities: ["image", "text"],
-        }),
-      });
-      if (imgResp.ok) {
-        const imgData = await imgResp.json();
-        const dataUrl = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-        if (dataUrl && dataUrl.startsWith("data:image/")) {
-          // Convert to bytes and upload
-          const m = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
-          if (m) {
-            const mime = m[1];
-            const ext = mime.split("/")[1] || "png";
-            const bytes = Uint8Array.from(atob(m[2]), c => c.charCodeAt(0));
-            const fileName = `seo/${slugify(blog.slug_hint || blog.title)}-${Date.now()}.${ext}`;
-            const { error: upErr } = await supabase.storage.from("blog-images").upload(fileName, bytes, {
-              contentType: mime, upsert: false,
-            });
-            if (!upErr) {
-              const { data: pub } = supabase.storage.from("blog-images").getPublicUrl(fileName);
-              featuredImage = pub.publicUrl;
-            } else {
-              console.error("Upload error:", upErr);
-            }
+      const PEXELS_API_KEY = Deno.env.get("PEXELS_API_KEY");
+      // Branş + konu bazlı İngilizce arama terimi
+      const queryMap: Record<string, string> = {
+        "psikolog": "calm therapy session",
+        "psikiyatrist": "mental health wellness",
+        "diyetisyen": "healthy food nutrition",
+        "fizyoterapist": "physiotherapy rehabilitation",
+        "doktor": "doctor medical office",
+        "diş hekimi": "dental clinic",
+        "çocuk doktoru": "pediatric care",
+      };
+      const branchKey = (branchName || "").toLocaleLowerCase("tr");
+      const baseQuery = queryMap[branchKey] || "healthcare wellness professional";
+      const query = encodeURIComponent(baseQuery);
+
+      let stockUrl: string | null = null;
+
+      if (PEXELS_API_KEY) {
+        // Pexels API - daha kaliteli, tutarlı sonuç
+        const page = Math.floor(Math.random() * 10) + 1;
+        const px = await fetch(`https://api.pexels.com/v1/search?query=${query}&per_page=15&page=${page}&orientation=landscape`, {
+          headers: { Authorization: PEXELS_API_KEY }
+        });
+        if (px.ok) {
+          const pxData = await px.json();
+          const photos = pxData.photos || [];
+          if (photos.length > 0) {
+            const pick = photos[Math.floor(Math.random() * photos.length)];
+            stockUrl = pick.src?.large || pick.src?.original || pick.src?.medium;
           }
+        } else {
+          console.error("Pexels API failed:", px.status);
         }
-      } else {
-        console.error("Image gen failed:", imgResp.status);
+      }
+
+      // Fallback: Unsplash Source (API key gerektirmez)
+      if (!stockUrl) {
+        stockUrl = `https://source.unsplash.com/1200x630/?${query}&sig=${Date.now()}`;
+      }
+
+      // Görseli indir ve bucket'a yükle (kalıcı olsun, kaynak değişse de bozulmasın)
+      try {
+        const dl = await fetch(stockUrl);
+        if (dl.ok) {
+          const ct = dl.headers.get("content-type") || "image/jpeg";
+          const ext = ct.includes("png") ? "png" : "jpg";
+          const buf = new Uint8Array(await dl.arrayBuffer());
+          const fileName = `seo/${slugify(blog.slug_hint || blog.title)}-${Date.now()}.${ext}`;
+          const { error: upErr } = await supabase.storage.from("blog-images").upload(fileName, buf, {
+            contentType: ct, upsert: false,
+          });
+          if (!upErr) {
+            const { data: pub } = supabase.storage.from("blog-images").getPublicUrl(fileName);
+            featuredImage = pub.publicUrl;
+          } else {
+            console.error("Stock upload error:", upErr);
+            featuredImage = stockUrl; // doğrudan kaynağı kullan
+          }
+        } else {
+          console.error("Stock download failed:", dl.status);
+          featuredImage = stockUrl;
+        }
+      } catch (dlE) {
+        console.error("Stock download error:", dlE);
+        featuredImage = stockUrl;
       }
     } catch (imgE) {
-      console.error("Image step error:", imgE);
+      console.error("Stock image step error:", imgE);
     }
 
     // 3. Build unique slug
