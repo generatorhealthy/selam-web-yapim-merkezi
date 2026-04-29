@@ -270,10 +270,10 @@ const SEOContentManagement = () => {
 
         {/* Active branch keywords */}
         {activeBranch && (
-          <Card>
+          <Card id="active-branch-table">
             <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
               <div>
-                <CardTitle>{branches.find(b => b.id === activeBranch)?.name} - Anahtar Kelimeler</CardTitle>
+                <CardTitle>{branches.find(b => b.id === activeBranch)?.name} - Anahtar Kelimeler ({(keywords[activeBranch] || []).length})</CardTitle>
                 <CardDescription>Her satır bir ana kelime + 7-8 alt kelime grubudur. "İçerik Üret" butonu blog'a yayınlar.</CardDescription>
               </div>
               <Button
