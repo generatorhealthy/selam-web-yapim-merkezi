@@ -6,7 +6,8 @@ const corsHeaders = {
 };
 
 const HASHNODE_TOKEN = Deno.env.get("HASHNODE_TOKEN")?.trim();
-const HASHNODE_PUBLICATION_ID = Deno.env.get("HASHNODE_PUBLICATION_ID")?.trim();
+const HASHNODE_HOST = Deno.env.get("HASHNODE_HOST")?.trim() || "doktorumol.hashnode.dev";
+let HASHNODE_PUBLICATION_ID = Deno.env.get("HASHNODE_PUBLICATION_ID")?.trim();
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")?.trim();
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -178,11 +179,39 @@ Deno.serve(async (req) => {
   console.log('Scheduled Hashnode share started');
 
   try {
-    if (!HASHNODE_TOKEN || !HASHNODE_PUBLICATION_ID) {
-      return new Response(JSON.stringify({ error: 'Hashnode credentials not configured' }), {
+    if (!HASHNODE_TOKEN) {
+      return new Response(JSON.stringify({ error: 'HASHNODE_TOKEN not configured' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Her zaman host üzerinden doğru publication ID'yi çek (secret yanlış olsa bile)
+    try {
+      const pubResp = await fetch(HASHNODE_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `query($host: String!) { publication(host: $host) { id title url } }`,
+          variables: { host: HASHNODE_HOST },
+        }),
+      });
+      const pubJson = await pubResp.json();
+      const resolvedId = pubJson?.data?.publication?.id;
+      if (resolvedId) {
+        if (HASHNODE_PUBLICATION_ID && HASHNODE_PUBLICATION_ID !== resolvedId) {
+          console.warn(`HASHNODE_PUBLICATION_ID secret mismatch. Secret=${HASHNODE_PUBLICATION_ID}, Resolved=${resolvedId} for host ${HASHNODE_HOST}. Using resolved.`);
+        }
+        HASHNODE_PUBLICATION_ID = resolvedId;
+      } else if (!HASHNODE_PUBLICATION_ID) {
+        return new Response(JSON.stringify({ error: `Hashnode publication not found for host ${HASHNODE_HOST}` }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      console.log(`Using Hashnode publication: ${pubJson?.data?.publication?.title} (${HASHNODE_PUBLICATION_ID}) at ${pubJson?.data?.publication?.url}`);
+    } catch (e) {
+      console.error('Failed to resolve publication id from host:', e);
     }
 
     if (!LOVABLE_API_KEY) {
