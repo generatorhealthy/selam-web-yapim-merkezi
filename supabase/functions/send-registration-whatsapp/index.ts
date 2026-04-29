@@ -91,12 +91,40 @@ Deno.serve(async (req) => {
       );
     }
 
+    const chatId = `${waPhone}@c.us`;
+
+    // 1) Önce PDF (Özel Fırsat) gönder
+    let pdfRes: any = null;
+    try {
+      pdfRes = await supabase.functions.invoke("waha-proxy", {
+        body: {
+          action: "sendFile",
+          sessionName,
+          payload: {
+            chatId,
+            file: {
+              url: "https://doktorumol.com.tr/ozel-firsat.pdf",
+              filename: "ozel-firsat.pdf",
+              mimetype: "application/pdf",
+            },
+            caption: "📄 Özel Fırsat Bilgilendirme Dökümanı",
+          },
+        },
+      });
+    } catch (e) {
+      console.error("PDF send error:", e);
+    }
+
+    // Kısa bekleme: WhatsApp'ta dosya önce, sonra metin görünmeli
+    await new Promise((r) => setTimeout(r, 1500));
+
+    // 2) Hoş geldin metnini gönder
     const waRes = await supabase.functions.invoke("waha-proxy", {
       body: {
         action: "sendText",
         sessionName,
         payload: {
-          chatId: `${waPhone}@c.us`,
+          chatId,
           text: waMessage,
         },
       },
@@ -108,6 +136,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: ok,
         sessionName,
+        pdf: pdfRes?.data,
         data: waRes.data,
         error: waRes.error?.message || ((waRes.data as any)?.success === false ? (waRes.data as any)?.error : undefined),
       }),
