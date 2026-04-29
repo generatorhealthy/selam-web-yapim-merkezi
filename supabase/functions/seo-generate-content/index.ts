@@ -91,6 +91,8 @@ Bu konuda Türkçe, SEO odaklı, MİNİMUM 800 kelimelik (hedef 1000-1300 kelime
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "google/gemini-2.5-pro",
+          temperature: 1.0,
+          top_p: 0.95,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt + (extra ? "\n\n" + extra : "") },
