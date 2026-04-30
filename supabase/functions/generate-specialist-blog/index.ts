@@ -65,11 +65,14 @@ const DEFAULT_POOL = [
   "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=1200&h=630&fit=crop",
 ];
 
+// @ts-ignore
+declare const EdgeRuntime: { waitUntil: (p: Promise<unknown>) => void };
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { specialistId } = await req.json();
+    const { specialistId, background } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     if (!specialistId) throw new Error("specialistId zorunlu");
