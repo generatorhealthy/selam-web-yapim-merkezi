@@ -6,6 +6,44 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Telefonu WhatsApp chatId formatına normalize et (90XXXXXXXXXX)
+function normalizePhoneToWa(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const digits = String(raw).replace(/\D/g, "");
+  if (digits.startsWith("90") && digits.length === 12) return digits;
+  if (digits.startsWith("0") && digits.length === 11) return "9" + digits;
+  if (digits.length === 10) return "90" + digits;
+  return null;
+}
+
+function getSessionNameForLineId(lineId: string) {
+  return `line_${lineId.replace(/-/g, "").slice(0, 16)}`;
+}
+
+async function getWorkingSessionName(supabase: any): Promise<string | null> {
+  try {
+    const { data: activeLines } = await supabase
+      .from("whatsapp_lines")
+      .select("id, is_active, sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    const candidates = ((activeLines || []) as any[]).map((l) => getSessionNameForLineId(l.id));
+    if (candidates.length === 0) return null;
+
+    const sessionsRes = await supabase.functions.invoke("waha-proxy", {
+      body: { action: "sessions.list" },
+    });
+    const sessions = Array.isArray((sessionsRes.data as any)?.data) ? (sessionsRes.data as any).data : [];
+    return candidates.find((c) =>
+      sessions.some((s: any) => s?.name === c && String(s?.status || "").toUpperCase() === "WORKING")
+    ) || null;
+  } catch (e) {
+    console.error("getWorkingSessionName error:", e);
+    return null;
+  }
+}
+
 const slugify = (s: string) =>
   s.toLocaleLowerCase("tr")
     .replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g")
