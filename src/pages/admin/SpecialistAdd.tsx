@@ -323,6 +323,16 @@ const SpecialistAdd = () => {
 
       console.log('Uzman başarıyla eklendi:', data);
 
+      // Yeni uzman aktif olarak eklendiği için otomatik blog üretimini tetikle (arka planda)
+      if (data?.id) {
+        supabase.functions.invoke('generate-specialist-blog', {
+          body: { specialistId: data.id, background: true }
+        }).then(({ error: blogErr }) => {
+          if (blogErr) console.warn('Otomatik blog üretimi tetiklenemedi:', blogErr);
+          else console.log('Otomatik blog üretimi arka planda başlatıldı');
+        });
+      }
+
       // Oturum kontrolü - Eğer oturum değiştiyse eski oturuma geri dön
       const { data: { session: newSession } } = await supabase.auth.getSession();
       
