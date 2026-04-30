@@ -164,9 +164,47 @@ const SpecialistEdit = () => {
   }, [currentUser, id, navigate, toast]);
 
   const generateProfileLink = () => {
-    if (!specialist) return '';
-    const specialtySlug = createSpecialtySlug(specialist.specialty);
-    return `${window.location.origin}/${specialtySlug}/${specialist.slug || ''}`;
+    if (!lockedSlug || !lockedSpecialtySlug) return '';
+    return `${window.location.origin}/${lockedSpecialtySlug}/${lockedSlug}`;
+  };
+
+  const isAdmin = userProfile?.role === 'admin';
+
+  const openSlugDialog = () => {
+    setNewSlugInput(lockedSlug);
+    setNewSpecialtyInput(lockedSpecialtySlug);
+    setSlugDialogOpen(true);
+  };
+
+  const handleSlugSave = async () => {
+    if (!specialist) return;
+    const trimmed = (newSlugInput || '').trim();
+    if (trimmed.length < 3) {
+      toast({ title: "Geçersiz link", description: "En az 3 karakter olmalı.", variant: "destructive" });
+      return;
+    }
+    setSavingSlug(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_update_specialist_slug' as any, {
+        p_specialist_id: specialist.id,
+        p_new_slug: trimmed,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) {
+        toast({ title: "Hata", description: result?.error || "Slug güncellenemedi", variant: "destructive" });
+        return;
+      }
+      setLockedSlug(result.slug);
+      const cleanSpecialty = (newSpecialtyInput || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      if (cleanSpecialty) setLockedSpecialtySlug(cleanSpecialty);
+      toast({ title: "Başarılı", description: "Profil linki güncellendi." });
+      setSlugDialogOpen(false);
+    } catch (e: any) {
+      toast({ title: "Hata", description: e.message || "Bilinmeyen hata", variant: "destructive" });
+    } finally {
+      setSavingSlug(false);
+    }
   };
 
   const copyLinkToClipboard = async () => {
