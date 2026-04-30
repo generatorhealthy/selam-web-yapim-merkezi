@@ -631,11 +631,11 @@ const DoctorDashboard = () => {
       }
 
       // Önce RLS ile erişilebilen siparişleri getir (email filtresi ile)
+      // Not: deleted_at filtresi kaldırıldı — uzman kendi onaylı sözleşmesini her durumda görebilmeli
       const ordersQuery = supabase
         .from('orders')
         .select('*')
         .in('status', ['pending', 'approved', 'completed'])
-        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       // Email varsa filtre ekle
