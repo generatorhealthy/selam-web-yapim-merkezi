@@ -298,6 +298,45 @@ Başlık örneğin "${sp.name} ile ${consultationFocus} Sürecinde Nelere Dikkat
 
     if (postErr) throw postErr;
 
+    // 7. Doki'den uzmana WhatsApp bildirimi (WAHA üzerinden) — hata olursa sessizce geç
+    try {
+      const waPhone = normalizePhoneToWa(sp.phone);
+      if (waPhone) {
+        const sessionName = await getWorkingSessionName(supabase);
+        if (sessionName) {
+          const blogUrl = `https://doktorumol.com.tr/blog/${finalSlug}`;
+          const dokiText =
+            `Merhaba ${sp.name} 👋\n\n` +
+            `Ben *Doki* — Doktorum Ol platformunun yapay zeka asistanıyım.\n\n` +
+            `Sizin için harika bir haberim var: profilinize ve uzmanlık alanınıza (*${sp.specialty || "uzmanlık"}*) özel hazırladığım benzersiz bir blog yazısı platformda yayına alındı! ✨\n\n` +
+            `📝 *Yazı Başlığı:*\n${blog.title}\n\n` +
+            `🔗 *Yazınızı şu linkten okuyabilirsiniz:*\n${blogUrl}\n\n` +
+            `Bu içerik tamamen size özel olarak; eğitiminiz, deneyiminiz ve şehriniz dikkate alınarak yazıldı. Google aramalarında profilinizin daha görünür olmasına ve potansiyel danışanlarınızın size daha kolay ulaşmasına yardımcı olacak. 🚀\n\n` +
+            `📌 *Birkaç ipucu:*\n` +
+            `• Yazıyı sosyal medya hesaplarınızdan paylaşabilirsiniz\n` +
+            `• Profil sayfanızda otomatik olarak görünecek\n` +
+            `• Düzenli aralıklarla yeni içerikler hazırlanmaya devam edecek\n\n` +
+            `Herhangi bir sorunuz olursa bize WhatsApp üzerinden ulaşabilirsiniz. Başarılar dilerim! 💙\n\n` +
+            `— *Doki*\n_Doktorum Ol AI Asistanı_`;
+
+          await supabase.functions.invoke("waha-proxy", {
+            body: {
+              action: "sendText",
+              sessionName,
+              payload: { chatId: `${waPhone}@c.us`, text: dokiText },
+            },
+          });
+          console.log(`Doki WhatsApp mesajı gönderildi: ${sp.name} (${waPhone})`);
+        } else {
+          console.log("Doki WA: WORKING session bulunamadı, mesaj atlandı");
+        }
+      } else {
+        console.log("Doki WA: uzmanın telefonu yok/geçersiz, mesaj atlandı");
+      }
+    } catch (waErr) {
+      console.error("Doki WA mesaj hatası (sessizce geçiliyor):", waErr);
+    }
+
     return {
       success: true,
       blog_post_id: post.id,
