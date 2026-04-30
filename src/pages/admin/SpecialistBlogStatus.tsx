@@ -76,14 +76,16 @@ const SpecialistBlogStatus = () => {
     setGenId(id);
     try {
       const { data, error } = await supabase.functions.invoke("generate-specialist-blog", {
-        body: { specialistId: id },
+        body: { specialistId: id, background: true },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       if ((data as any)?.skipped) {
         toast.info(`${name}: zaten blogu var`);
+      } else if ((data as any)?.accepted) {
+        toast.success(`✓ ${name}: blog arka planda üretiliyor`);
       } else {
-        toast.success(`✓ ${name} (${(data as any).word_count} kelime)`);
+        toast.success(`✓ ${name}`);
       }
       return true;
     } catch (e: any) {

@@ -291,11 +291,11 @@ const SpecialistManagement = () => {
       // Aktif edildiyse blogu yoksa otomatik AI blog üret (arka planda)
       if (!currentStatus) {
         supabase.functions.invoke('generate-specialist-blog', {
-          body: { specialistId: id }
+          body: { specialistId: id, background: true }
         }).then(({ data, error: fnErr }) => {
           if (fnErr) { console.warn('specialist-blog auto error:', fnErr); return; }
-          if ((data as any)?.success) {
-            toast({ title: "AI Blog Üretildi", description: `Uzman için otomatik blog yayınlandı (${(data as any).word_count} kelime).` });
+          if ((data as any)?.accepted) {
+            toast({ title: "AI Blog Üretiliyor", description: "Uzman için otomatik blog arka planda hazırlanıyor." });
           }
         }).catch((e) => console.warn('specialist-blog auto exception:', e));
       }
