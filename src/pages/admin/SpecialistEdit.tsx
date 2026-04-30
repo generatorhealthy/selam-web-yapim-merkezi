@@ -688,6 +688,47 @@ const SpecialistEdit = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={slugDialogOpen} onOpenChange={setSlugDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Profil Linkini Düzenle</DialogTitle>
+            <DialogDescription>
+              Bu işlem yalnızca admin yetkisindedir. Mevcut link <strong>SEO açısından kritik</strong>tir; değiştirmeden önce yönlendirme yapılması gerekebileceğini unutmayın.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="mb-1 block">Uzmanlık Path'i</Label>
+              <Input
+                value={newSpecialtyInput}
+                onChange={(e) => setNewSpecialtyInput(e.target.value)}
+                placeholder="psikolojik-danismanlik"
+              />
+              <p className="text-xs text-muted-foreground mt-1">URL'nin ilk bölümü (sadece UI gösterim).</p>
+            </div>
+            <div>
+              <Label className="mb-1 block">Slug (URL ikinci bölüm)</Label>
+              <Input
+                value={newSlugInput}
+                onChange={(e) => setNewSlugInput(e.target.value)}
+                placeholder="psk-amina-zhumayeva"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Sadece a-z, 0-9 ve tire (-) kullanın.</p>
+            </div>
+            <div className="bg-muted/50 rounded-md p-3 text-sm break-all">
+              <span className="text-muted-foreground">Önizleme: </span>
+              {window.location.origin}/{(newSpecialtyInput || '').trim() || '...'}/{(newSlugInput || '').trim() || '...'}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSlugDialogOpen(false)} disabled={savingSlug}>İptal</Button>
+            <Button onClick={handleSlugSave} disabled={savingSlug}>
+              {savingSlug ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
