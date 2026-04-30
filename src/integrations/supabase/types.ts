@@ -3224,6 +3224,80 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_transfer_notifications: {
+        Row: {
+          amount: number | null
+          amount_diff: number | null
+          created_at: string
+          currency: string | null
+          id: string
+          match_candidates: Json | null
+          match_method: string | null
+          matched_at: string | null
+          matched_by: string | null
+          matched_order_id: string | null
+          notes: string | null
+          raw_body: string | null
+          raw_from: string | null
+          raw_subject: string | null
+          sender_name: string
+          sender_name_normalized: string
+          status: string
+          transfer_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          amount_diff?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          match_candidates?: Json | null
+          match_method?: string | null
+          matched_at?: string | null
+          matched_by?: string | null
+          matched_order_id?: string | null
+          notes?: string | null
+          raw_body?: string | null
+          raw_from?: string | null
+          raw_subject?: string | null
+          sender_name: string
+          sender_name_normalized: string
+          status?: string
+          transfer_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          amount_diff?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          match_candidates?: Json | null
+          match_method?: string | null
+          matched_at?: string | null
+          matched_by?: string | null
+          matched_order_id?: string | null
+          notes?: string | null
+          raw_body?: string | null
+          raw_from?: string | null
+          raw_subject?: string | null
+          sender_name?: string
+          sender_name_normalized?: string
+          status?: string
+          transfer_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transfer_notifications_matched_order_id_fkey"
+            columns: ["matched_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_categories: {
         Row: {
           created_at: string
