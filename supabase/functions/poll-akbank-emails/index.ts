@@ -250,7 +250,23 @@ Deno.serve(async (req) => {
 
         // Sadece Akbank içerikli mailleri işle (gönderen veya konu)
         const lc = `${from} ${subject}`.toLowerCase();
-        const isAkbank = lc.includes("akbank") || lc.includes("havale") || lc.includes("eft");
+        // Akbank'tan gelen TÜM para girişi bildirimlerini yakala:
+        // HAVALE, EFT, FAST, virman, gelen havale, hesabınıza, para transferi vb.
+        const isFromAkbank = lc.includes("akbank");
+        const hasMoneyKeyword =
+          lc.includes("havale") ||
+          lc.includes("eft") ||
+          lc.includes("fast") ||
+          lc.includes("virman") ||
+          lc.includes("transfer") ||
+          lc.includes("para giri") || // "para girişi"
+          lc.includes("hesabiniza") ||
+          lc.includes("hesabınıza") ||
+          lc.includes("alacak") ||
+          lc.includes("yatirildi") ||
+          lc.includes("yatırıldı") ||
+          lc.includes("gelen");
+        const isAkbank = isFromAkbank || hasMoneyKeyword;
         if (!isAkbank) {
           summary.skipped_non_akbank++;
           await imap.markSeen(uid); // tekrar görmemek için işaretle
