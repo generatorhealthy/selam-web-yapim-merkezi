@@ -4610,6 +4610,33 @@ export type Database = {
         }
         Relationships: []
       }
+      processed_emails: {
+        Row: {
+          from_address: string | null
+          id: string
+          message_id: string
+          processed_at: string
+          result: string | null
+          subject: string | null
+        }
+        Insert: {
+          from_address?: string | null
+          id?: string
+          message_id: string
+          processed_at?: string
+          result?: string | null
+          subject?: string | null
+        }
+        Update: {
+          from_address?: string | null
+          id?: string
+          message_id?: string
+          processed_at?: string
+          result?: string | null
+          subject?: string | null
+        }
+        Relationships: []
+      }
       prospective_registrations: {
         Row: {
           consultant_name: string
