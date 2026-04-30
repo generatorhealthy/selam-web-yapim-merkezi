@@ -155,3 +155,6 @@ verify_jwt = false
 
 [functions.poll-akbank-emails]
 verify_jwt = false
+
+[functions.imap-diagnose]
+verify_jwt = false
