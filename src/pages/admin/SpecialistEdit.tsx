@@ -424,7 +424,7 @@ const SpecialistEdit = () => {
                       className="bg-white border-blue-200"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       type="button"
                       variant="outline"
@@ -445,10 +445,21 @@ const SpecialistEdit = () => {
                         Görüntüle
                       </a>
                     </Button>
+                    {isAdmin && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={openSlugDialog}
+                        className="border-blue-300 text-blue-800 hover:bg-blue-100"
+                      >
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Linki Düzenle
+                      </Button>
+                    )}
                   </div>
                 </div>
                 <p className="text-sm text-blue-600 mt-2">
-                  Bu link, uzmanın profil sayfasına yönlendirir. Ad veya uzmanlık alanı değiştirildiğinde link otomatik olarak güncellenir.
+                  Bu link sabittir. Ad Soyad veya uzmanlık alanı değiştirildiğinde otomatik olarak değişmez. Yalnızca admin yetkisine sahip kullanıcılar "Linki Düzenle" butonuyla manuel olarak değiştirebilir.
                 </p>
               </div>
 
