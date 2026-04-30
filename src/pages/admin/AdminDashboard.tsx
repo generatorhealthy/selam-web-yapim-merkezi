@@ -318,6 +318,17 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
+      title: "Banka Havalesi Bildirimleri",
+      description: "Akbank otomatik havale eşleştirme",
+      icon: ShoppingCart,
+      gradient: "from-red-500 via-rose-500 to-pink-600",
+      bgGradient: "from-red-50 to-pink-50",
+      shadowColor: "shadow-red-500/20",
+      route: "/divan_paneli/banka-havalesi-bildirimleri",
+      buttonText: "Bildirimleri Görüntüle",
+      adminOnly: true
+    },
+    {
       title: "Başarı İstatistikleri",
       description: "Performans istatistiklerini görüntüle",
       icon: Trophy,
