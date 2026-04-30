@@ -135,6 +135,7 @@ const Career = lazy(() => import("./pages/Career"));
 const CareerApplications = lazy(() => import("./pages/admin/CareerApplications"));
 const SEOContentManagement = lazy(() => import("./pages/admin/SEOContentManagement"));
 const SEOPublishedHistory = lazy(() => import("./pages/admin/SEOPublishedHistory"));
+const SpecialistBlogStatus = lazy(() => import("./pages/admin/SpecialistBlogStatus"));
 
 const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 
@@ -352,6 +353,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/career-applications" element={<CareerApplications />} />
               <Route path="/divan_paneli/seo-content" element={<SEOContentManagement />} />
               <Route path="/divan_paneli/seo-content/yayinlananlar" element={<SEOPublishedHistory />} />
+              <Route path="/divan_paneli/seo-content/uzman-bloglari" element={<SpecialistBlogStatus />} />
               <Route path="/kariyer" element={<Career />} />
               
                 

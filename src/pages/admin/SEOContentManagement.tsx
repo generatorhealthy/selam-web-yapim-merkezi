@@ -202,6 +202,9 @@ const SEOContentManagement = () => {
             <Button variant="outline" onClick={() => navigate("/divan_paneli/seo-content/yayinlananlar")}>
               <CalendarDays className="h-4 w-4 mr-2" /> Yayınlananlar (Tarih Tarih)
             </Button>
+            <Button variant="outline" onClick={() => navigate("/divan_paneli/seo-content/uzman-bloglari")}>
+              <FileText className="h-4 w-4 mr-2" /> Uzman Blog Durumu
+            </Button>
             <Button variant="outline" onClick={loadAll} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Yenile
             </Button>

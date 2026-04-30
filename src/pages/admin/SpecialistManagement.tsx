@@ -288,6 +288,18 @@ const SpecialistManagement = () => {
         description: `Uzman ${!currentStatus ? 'aktif' : 'pasif'} edildi.`,
       });
 
+      // Aktif edildiyse blogu yoksa otomatik AI blog üret (arka planda)
+      if (!currentStatus) {
+        supabase.functions.invoke('generate-specialist-blog', {
+          body: { specialistId: id, background: true }
+        }).then(({ data, error: fnErr }) => {
+          if (fnErr) { console.warn('specialist-blog auto error:', fnErr); return; }
+          if ((data as any)?.accepted) {
+            toast({ title: "AI Blog Üretiliyor", description: "Uzman için otomatik blog arka planda hazırlanıyor." });
+          }
+        }).catch((e) => console.warn('specialist-blog auto exception:', e));
+      }
+
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
       toast({
