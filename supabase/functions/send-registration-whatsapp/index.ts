@@ -12,6 +12,12 @@ interface Payload {
   phone: string;
 }
 
+interface WhatsappLine {
+  id: string;
+  is_active: boolean;
+  sort_order: number | null;
+}
+
 // Normalize TR phone to 90XXXXXXXXXX (WhatsApp chatId format)
 function normalizePhoneToWa(raw: string): string | null {
   if (!raw) return null;
@@ -24,6 +30,45 @@ function normalizePhoneToWa(raw: string): string | null {
 
 function getSessionNameForLineId(lineId: string) {
   return `line_${lineId.replace(/-/g, "").slice(0, 16)}`;
+}
+
+async function getWorkingSessionName(supabase: ReturnType<typeof createClient>) {
+  const { data: activeLines, error: lineError } = await supabase
+    .from("whatsapp_lines")
+    .select("id, is_active, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (lineError) {
+    console.error("Failed to fetch active WhatsApp lines:", lineError);
+    return { sessionName: null, error: "Aktif WhatsApp hattı okunamadı" };
+  }
+
+  const sessionCandidates = ((activeLines || []) as WhatsappLine[]).map((line) => getSessionNameForLineId(line.id));
+  if (sessionCandidates.length === 0) {
+    return { sessionName: null, error: "Aktif WhatsApp hattı bulunamadı" };
+  }
+
+  const sessionsRes = await supabase.functions.invoke("waha-proxy", {
+    body: { action: "sessions.list" },
+  });
+
+  if (sessionsRes.error) {
+    console.error("WAHA sessions.list error:", sessionsRes.error);
+    return { sessionName: null, error: sessionsRes.error.message || "WAHA oturumları kontrol edilemedi" };
+  }
+
+  const sessions = Array.isArray((sessionsRes.data as any)?.data) ? (sessionsRes.data as any).data : [];
+  const workingSession = sessionCandidates.find((candidate) =>
+    sessions.some((session: any) => session?.name === candidate && String(session?.status || "").toUpperCase() === "WORKING")
+  );
+
+  if (!workingSession) {
+    console.error("No active WORKING WhatsApp session found", { sessionCandidates, sessions });
+    return { sessionName: null, error: "Bağlı/çalışan aktif WhatsApp hattı bulunamadı" };
+  }
+
+  return { sessionName: workingSession, error: null };
 }
 
 Deno.serve(async (req) => {
@@ -54,8 +99,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const firstName = name.trim().split(" ")[0];
-
     const waMessage =
       `🎉 *Doktorumol.com.tr'ye Hoş Geldiniz!*\n\n` +
       `Sayın *${name}*,\n\n` +
@@ -70,23 +113,10 @@ Deno.serve(async (req) => {
       `Saygılarımızla,\n` +
       `*Doktorumol.com.tr Ekibi* 👨‍⚕️👩‍⚕️`;
 
-    // Pick active WhatsApp line
-    const { data: activeLine, error: lineError } = await supabase
-      .from("whatsapp_lines")
-      .select("id, is_active, sort_order")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (lineError) {
-      console.error("Failed to fetch active WhatsApp line:", lineError);
-    }
-
-    const sessionName = activeLine?.id ? getSessionNameForLineId(activeLine.id) : null;
+    const { sessionName, error: sessionError } = await getWorkingSessionName(supabase);
     if (!sessionName) {
       return new Response(
-        JSON.stringify({ success: false, error: "Aktif WhatsApp hattı bulunamadı" }),
+        JSON.stringify({ success: false, error: sessionError || "Aktif WhatsApp hattı bulunamadı" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
