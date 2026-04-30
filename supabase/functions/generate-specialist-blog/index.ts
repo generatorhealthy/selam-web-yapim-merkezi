@@ -6,6 +6,44 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Telefonu WhatsApp chatId formatına normalize et (90XXXXXXXXXX)
+function normalizePhoneToWa(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const digits = String(raw).replace(/\D/g, "");
+  if (digits.startsWith("90") && digits.length === 12) return digits;
+  if (digits.startsWith("0") && digits.length === 11) return "9" + digits;
+  if (digits.length === 10) return "90" + digits;
+  return null;
+}
+
+function getSessionNameForLineId(lineId: string) {
+  return `line_${lineId.replace(/-/g, "").slice(0, 16)}`;
+}
+
+async function getWorkingSessionName(supabase: any): Promise<string | null> {
+  try {
+    const { data: activeLines } = await supabase
+      .from("whatsapp_lines")
+      .select("id, is_active, sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    const candidates = ((activeLines || []) as any[]).map((l) => getSessionNameForLineId(l.id));
+    if (candidates.length === 0) return null;
+
+    const sessionsRes = await supabase.functions.invoke("waha-proxy", {
+      body: { action: "sessions.list" },
+    });
+    const sessions = Array.isArray((sessionsRes.data as any)?.data) ? (sessionsRes.data as any).data : [];
+    return candidates.find((c) =>
+      sessions.some((s: any) => s?.name === c && String(s?.status || "").toUpperCase() === "WORKING")
+    ) || null;
+  } catch (e) {
+    console.error("getWorkingSessionName error:", e);
+    return null;
+  }
+}
+
 const slugify = (s: string) =>
   s.toLocaleLowerCase("tr")
     .replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g")
@@ -259,6 +297,45 @@ Başlık örneğin "${sp.name} ile ${consultationFocus} Sürecinde Nelere Dikkat
     }).select().single();
 
     if (postErr) throw postErr;
+
+    // 7. Doki'den uzmana WhatsApp bildirimi (WAHA üzerinden) — hata olursa sessizce geç
+    try {
+      const waPhone = normalizePhoneToWa(sp.phone);
+      if (waPhone) {
+        const sessionName = await getWorkingSessionName(supabase);
+        if (sessionName) {
+          const blogUrl = `https://doktorumol.com.tr/blog/${finalSlug}`;
+          const dokiText =
+            `Merhaba ${sp.name} 👋\n\n` +
+            `Ben *Doki* — Doktorum Ol platformunun yapay zeka asistanıyım.\n\n` +
+            `Sizin için harika bir haberim var: profilinize ve uzmanlık alanınıza (*${sp.specialty || "uzmanlık"}*) özel hazırladığım benzersiz bir blog yazısı platformda yayına alındı! ✨\n\n` +
+            `📝 *Yazı Başlığı:*\n${blog.title}\n\n` +
+            `🔗 *Yazınızı şu linkten okuyabilirsiniz:*\n${blogUrl}\n\n` +
+            `Bu içerik tamamen size özel olarak; eğitiminiz, deneyiminiz ve şehriniz dikkate alınarak yazıldı. Google aramalarında profilinizin daha görünür olmasına ve potansiyel danışanlarınızın size daha kolay ulaşmasına yardımcı olacak. 🚀\n\n` +
+            `📌 *Birkaç ipucu:*\n` +
+            `• Yazıyı sosyal medya hesaplarınızdan paylaşabilirsiniz\n` +
+            `• Profil sayfanızda otomatik olarak görünecek\n` +
+            `• Düzenli aralıklarla yeni içerikler hazırlanmaya devam edecek\n\n` +
+            `Herhangi bir sorunuz olursa bize WhatsApp üzerinden ulaşabilirsiniz. Başarılar dilerim! 💙\n\n` +
+            `— *Doki*\n_Doktorum Ol AI Asistanı_`;
+
+          await supabase.functions.invoke("waha-proxy", {
+            body: {
+              action: "sendText",
+              sessionName,
+              payload: { chatId: `${waPhone}@c.us`, text: dokiText },
+            },
+          });
+          console.log(`Doki WhatsApp mesajı gönderildi: ${sp.name} (${waPhone})`);
+        } else {
+          console.log("Doki WA: WORKING session bulunamadı, mesaj atlandı");
+        }
+      } else {
+        console.log("Doki WA: uzmanın telefonu yok/geçersiz, mesaj atlandı");
+      }
+    } catch (waErr) {
+      console.error("Doki WA mesaj hatası (sessizce geçiliyor):", waErr);
+    }
 
     return {
       success: true,
