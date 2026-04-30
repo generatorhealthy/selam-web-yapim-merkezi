@@ -184,6 +184,7 @@ const AppContent = () => {
       <FloatingWhatsAppButton />
       <Suspense fallback={<PageLoader />}>
         <Routes>
+          <Route path="/doki-logos" element={<DokiLogos />} />
           {/* Mobile Routes */}
           {isNative && (
             <Route path="/mobile" element={<MobileLayout />}>
