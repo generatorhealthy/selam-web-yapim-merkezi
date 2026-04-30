@@ -203,14 +203,36 @@ export default function BankTransferNotifications() {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <AdminBackButton />
 
-      <div className="flex items-center gap-3 mb-6">
-        <Banknote className="w-7 h-7 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Banka Havalesi Bildirimleri</h1>
-          <p className="text-sm text-muted-foreground">
-            Akbank'tan gelen havale bildirimleri ve otomatik sipariş eşleştirme
-          </p>
+      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Banknote className="w-7 h-7 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Banka Havalesi Bildirimleri</h1>
+            <p className="text-sm text-muted-foreground">
+              Akbank'tan gelen havale bildirimleri ve otomatik sipariş eşleştirme
+            </p>
+          </div>
         </div>
+        <Button
+          onClick={async () => {
+            const t = toast({ title: "Mailler taranıyor...", description: "info@ kutusu kontrol ediliyor" });
+            const { data, error } = await supabase.functions.invoke("poll-akbank-emails");
+            if (error) {
+              toast({ title: "Hata", description: error.message, variant: "destructive" });
+              return;
+            }
+            const s = data?.summary || {};
+            toast({
+              title: "Tarama tamamlandı",
+              description: `Bulunan: ${s.fetched ?? 0} • İşlenen: ${s.forwarded ?? 0} • Tekrar: ${s.skipped_duplicates ?? 0}`,
+            });
+            fetchNotifications();
+          }}
+          variant="outline"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Mailleri Şimdi Tara
+        </Button>
       </div>
 
       {/* İstatistik */}
