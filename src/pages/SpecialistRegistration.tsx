@@ -120,23 +120,6 @@ const SpecialistRegistration = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const queueRegistrationWhatsapp = () => {
-    if (!phone || !formData.name) return;
-    try {
-      localStorage.setItem(
-        'pending_registration_whatsapp',
-        JSON.stringify({
-          name: formData.name,
-          phone,
-          userId: createdUserId,
-          queuedAt: Date.now(),
-        })
-      );
-    } catch (storageError) {
-      console.warn('WhatsApp kuyruğu kaydedilemedi:', storageError);
-    }
-  };
-
   const handleCreateAccount = async () => {
     if (!email || !phone || !password || !passwordConfirm) {
       toast.error("Lütfen tüm alanları doldurun.");
