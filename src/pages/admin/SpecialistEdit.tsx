@@ -50,11 +50,19 @@ const SpecialistEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
+  const { userProfile } = useUserRole();
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [faqItems, setFaqItems] = useState<FAQItem[]>([{ question: "", answer: "" }]);
+  // Profil linki — fetch anında bir kez sabitlenir, ad/uzmanlık değişince güncellenmez
+  const [lockedSpecialtySlug, setLockedSpecialtySlug] = useState<string>("");
+  const [lockedSlug, setLockedSlug] = useState<string>("");
+  const [slugDialogOpen, setSlugDialogOpen] = useState(false);
+  const [newSlugInput, setNewSlugInput] = useState("");
+  const [newSpecialtyInput, setNewSpecialtyInput] = useState("");
+  const [savingSlug, setSavingSlug] = useState(false);
 
   // Kullanıcı yetki kontrolü
   useEffect(() => {
