@@ -86,14 +86,22 @@ function extractTransferInfo(text: string): {
     .replace(/\s+/g, " ")
     .trim();
 
-  // İsim: "... tarafından" anahtarına dayanır.
-  // Yakala: en fazla 4 büyük harfli kelime (Türkçe karakterli) + "tarafından"
-  const senderRegex =
-    /([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+taraf[ıi]ndan/i;
-  const senderMatch = plain.match(senderRegex);
+  // İsim: birden fazla kalıp dener (HAVALE/EFT/FAST mailleri farklı yapıda olabilir)
+  // 1) "... AHMET YILMAZ tarafından ... TL HAVALE/EFT/FAST ..."
+  // 2) "Gönderen: AHMET YILMAZ" / "Gonderen Adi: AHMET YILMAZ"
+  // 3) "AHMET YILMAZ adlı kişiden ..."
   let senderName: string | null = null;
-  if (senderMatch) {
-    senderName = senderMatch[1].trim().replace(/\s+/g, " ");
+  const senderPatterns: RegExp[] = [
+    /([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+taraf[ıi]ndan/i,
+    /g[öo]nderen(?:\s*ad[ıi])?\s*[:\-]?\s*([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)(?:\s{2,}|\r|\n|<|,|;|$)/i,
+    /([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+adl[ıi]\s+ki[şs]i/i,
+  ];
+  for (const re of senderPatterns) {
+    const m = plain.match(re);
+    if (m && m[1]) {
+      senderName = m[1].trim().replace(/\s+/g, " ");
+      break;
+    }
   }
 
   // Tutar: "250,00 TL" veya "1.250,50 TL" veya "250 TL"
@@ -180,10 +188,20 @@ serve(async (req) => {
 
       const fullText = [subject, text, html].filter(Boolean).join("\n");
 
-      // Sadece Akbank havale bildirimlerini işle
-      const isAkbankTransfer =
-        /HAVALE/i.test(fullText) &&
-        /(akbank|0721\s*Şube|hesab[ıi]n[ıi]za)/i.test(fullText);
+      // Akbank'tan gelen TÜM para girişi bildirimlerini işle:
+      // HAVALE, EFT, FAST, virman, gelen transfer vb.
+      const hasMoneyKeyword =
+        /HAVALE/i.test(fullText) ||
+        /\bEFT\b/i.test(fullText) ||
+        /\bFAST\b/i.test(fullText) ||
+        /virman/i.test(fullText) ||
+        /para\s*giri/i.test(fullText) ||
+        /yat[ıi]r[ıi]ld[ıi]/i.test(fullText) ||
+        /alacak\s*kayd/i.test(fullText);
+      const isFromAkbank =
+        /(akbank|0721\s*Şube|hesab[ıi]n[ıi]za|hesab[ıi]ma)/i.test(fullText);
+
+      const isAkbankTransfer = hasMoneyKeyword && isFromAkbank;
 
       if (!isAkbankTransfer) {
         results.push({
