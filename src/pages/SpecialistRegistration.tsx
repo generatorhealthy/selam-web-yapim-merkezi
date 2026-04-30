@@ -120,6 +120,23 @@ const SpecialistRegistration = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const queueRegistrationWhatsapp = () => {
+    if (!phone || !formData.name) return;
+    try {
+      localStorage.setItem(
+        'pending_registration_whatsapp',
+        JSON.stringify({
+          name: formData.name,
+          phone,
+          userId: createdUserId,
+          queuedAt: Date.now(),
+        })
+      );
+    } catch (storageError) {
+      console.warn('WhatsApp kuyruğu kaydedilemedi:', storageError);
+    }
+  };
+
   const handleCreateAccount = async () => {
     if (!email || !phone || !password || !passwordConfirm) {
       toast.error("Lütfen tüm alanları doldurun.");
@@ -316,9 +333,22 @@ const SpecialistRegistration = () => {
       }
 
       toast.success("Uzman profiliniz başarıyla oluşturuldu!");
+      queueRegistrationWhatsapp();
       setCurrentStep(4);
+      navigate('/ozel-firsat', {
+        state: {
+          fromRegistration: true,
+          packageData: {
+            id: 'ozel-firsat',
+            name: "Premium Paket - Özel Fırsat",
+            price: 4000,
+            originalPrice: 6500,
+            features: packageFeatures
+          }
+        }
+      });
 
-      // Kayıt tamamlandıktan sonra SMS ve e-posta gönder
+      // Kayıt tamamlandıktan sonra SMS ve e-posta arka planda gönder
       try {
         await supabase.functions.invoke('send-specialist-welcome-email', {
           body: { name: formData.name, email: createdUserEmail || email }
@@ -334,14 +364,6 @@ const SpecialistRegistration = () => {
           console.log('Welcome SMS sent to', phone);
         } catch (smsErr) {
           console.error('Welcome SMS error:', smsErr);
-        }
-        try {
-          await supabase.functions.invoke('send-registration-whatsapp', {
-            body: { name: formData.name, phone }
-          });
-          console.log('Welcome WhatsApp sent to', phone);
-        } catch (waErr) {
-          console.error('Welcome WhatsApp error:', waErr);
         }
       }
     } catch (err: any) {
