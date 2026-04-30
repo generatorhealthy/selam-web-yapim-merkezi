@@ -16,6 +16,7 @@ import { useNativeApp } from "@/hooks/useNativeApp";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
+const DokiLogos = lazy(() => import("./pages/DokiLogos"));
 
 // Lazy loaded pages - reduces initial bundle significantly
 const MobileHome = lazy(() => import("./pages/mobile/MobileHome"));
