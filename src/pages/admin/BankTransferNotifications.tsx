@@ -20,9 +20,11 @@ import { Input } from "@/components/ui/input";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Banknote, CheckCircle2, AlertCircle, Search, Link2, RefreshCw } from "lucide-react";
+import { Banknote, CheckCircle2, AlertCircle, Search, Link2, RefreshCw, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Navigate } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -57,6 +59,7 @@ const STATUS_LABEL: Record<string, { label: string; variant: any }> = {
 
 export default function BankTransferNotifications() {
   const { toast } = useToast();
+  const { userProfile, loading: roleLoading } = useUserRole();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -198,6 +201,29 @@ export default function BankTransferNotifications() {
     ).length,
     unmatched: notifications.filter((n) => n.status === "unmatched").length,
   };
+
+  // Sadece admin rolü erişebilir
+  if (roleLoading) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center text-muted-foreground">
+        Yükleniyor...
+      </div>
+    );
+  }
+
+  if (!userProfile || userProfile.role !== "admin") {
+    return (
+      <div className="container mx-auto px-4 py-16 max-w-md">
+        <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-8 text-center">
+          <ShieldAlert className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Erişim Reddedildi</h2>
+          <p className="text-sm text-muted-foreground">
+            Bu sayfayı yalnızca admin yetkisine sahip kullanıcılar görüntüleyebilir.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
