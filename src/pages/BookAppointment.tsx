@@ -161,38 +161,9 @@ const BookAppointment = () => {
 
       console.log('Appointment created successfully:', appointmentId);
 
-      // Uzmana otomatik e-posta bildirimi gönder
-      if (specialist.email) {
-        try {
-          console.log('Uzmana e-posta bildirimi gönderiliyor...');
-
-          const { error: emailError } = await supabase.functions.invoke('send-appointment-notification', {
-            body: {
-              appointmentId,
-              patientName: formData.patientName,
-              patientEmail: formData.patientEmail,
-              patientPhone: formData.patientPhone,
-              specialistEmail: specialist.email,
-              specialistName: specialist.name,
-              specialistPhone: specialist.phone || '',
-              appointmentDate: formData.appointmentDate,
-              appointmentTime: formData.appointmentTime,
-              appointmentType: formData.appointmentType,
-              notes: formData.notes
-            }
-          });
-
-          if (emailError) {
-            console.error('E-posta bildirimi hatası (kritik değil):', emailError);
-          } else {
-            console.log('✅ Uzmana e-posta bildirimi başarıyla gönderildi');
-          }
-        } catch (emailError) {
-          console.error('E-posta bildirimi gönderilirken hata (kritik değil):', emailError);
-        }
-      } else {
-        console.warn('Uzman e-posta adresi bulunamadı, bildirim gönderilemedi');
-      }
+      // Uzmana otomatik bildirim (e-posta + Doki WhatsApp) DB trigger
+      // (send_appointment_notification_email_trigger) tarafından gönderilir.
+      // Tekrar gönderilmemesi için frontend'den invoke kaldırıldı.
 
       // Hastaya bildirim gönder (mevcut sistem)
       try {
