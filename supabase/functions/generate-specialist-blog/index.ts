@@ -102,6 +102,8 @@ serve(async (req) => {
       });
     }
 
+    // Ana iş akışı (uzun sürebilir; arka planda çalışmak için waitUntil ile wrap edilebilir)
+    const doWork = async () => {
     // 3. AI prompt
     const systemPrompt = `Sen profesyonel bir Türkçe SEO içerik yazarısın. Sağlık alanında çalışan bir uzman için onun branşına ve profil bilgilerine özel, kullanıcıya değer katan blog yazıları üretirsin.
 
@@ -258,14 +260,31 @@ Başlık örneğin "${sp.name} ile ${consultationFocus} Sürecinde Nelere Dikkat
 
     if (postErr) throw postErr;
 
-    return new Response(JSON.stringify({
+    return {
       success: true,
       blog_post_id: post.id,
       slug: finalSlug,
       word_count: wordCount,
       featured_image: featuredImage,
       specialist: sp.name,
-    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    };
+    };
+
+    if (background) {
+      try {
+        // @ts-ignore
+        EdgeRuntime.waitUntil(doWork().catch((e) => console.error("bg specialist blog error:", e)));
+      } catch (_) {
+        // EdgeRuntime mevcut değilse de işi başlat ama bekleme
+        doWork().catch((e) => console.error("bg specialist blog error:", e));
+      }
+      return new Response(JSON.stringify({ accepted: true, specialist: sp.name }), {
+        status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    const result = await doWork();
+    return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("generate-specialist-blog error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Bilinmeyen hata" }), {
