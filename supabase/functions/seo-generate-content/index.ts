@@ -166,9 +166,64 @@ Bu konuda Türkçe, SEO odaklı, MİNİMUM 800 kelimelik (hedef 1000-1300 kelime
     blog.seo_title = (blog.seo_title as string).replace(/terapi/gi, "danışmanlık");
     blog.seo_description = (blog.seo_description as string).replace(/terapi/gi, "danışmanlık");
 
-    // 2. Stok görsel seç (Unsplash ücretsiz havuz - API key gerekmez)
+    // 2. Görsel: Önce AI ile benzersiz görsel üretmeyi dene, başarısızsa stock havuzuna düş
     let featuredImage: string | null = null;
+
+    // 2A. AI ile benzersiz görsel üretimi (Lovable AI Gateway - Nano Banana)
     try {
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (LOVABLE_API_KEY && blog.image_prompt) {
+        const aiPrompt = `Professional, high-quality editorial blog cover image. ${blog.image_prompt}. Clean modern aesthetic, soft natural lighting, symbolic and abstract composition (no human faces, no text, no watermarks, no logos). Wide 16:9 framing, premium magazine style, soft color palette suitable for a healthcare/wellness blog.`;
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-image",
+            messages: [{ role: "user", content: aiPrompt }],
+            modalities: ["image", "text"],
+          }),
+        });
+        if (aiRes.ok) {
+          const aiData = await aiRes.json();
+          const dataUrl: string | undefined =
+            aiData?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          if (dataUrl && dataUrl.startsWith("data:image/")) {
+            const match = dataUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+            if (match) {
+              const ct = match[1];
+              const ext = ct.includes("png") ? "png" : ct.includes("webp") ? "webp" : "jpg";
+              const b64 = match[2];
+              const bin = atob(b64);
+              const buf = new Uint8Array(bin.length);
+              for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+              const fileName = `seo/ai-${slugify(blog.slug_hint || blog.title)}-${Date.now()}.${ext}`;
+              const { error: upErr } = await supabase.storage
+                .from("blog-images")
+                .upload(fileName, buf, { contentType: ct, upsert: false });
+              if (!upErr) {
+                const { data: pub } = supabase.storage.from("blog-images").getPublicUrl(fileName);
+                featuredImage = pub.publicUrl;
+                console.log("AI image generated:", featuredImage);
+              } else {
+                console.error("AI image upload error:", upErr);
+              }
+            }
+          } else {
+            console.error("AI image: no data URL in response");
+          }
+        } else {
+          console.error("AI image generation failed:", aiRes.status, await aiRes.text());
+        }
+      }
+    } catch (aiImgE) {
+      console.error("AI image step error:", aiImgE);
+    }
+
+    // 2B. Yedek: Stok görsel havuzu (yalnızca AI başarısız olursa)
+    if (!featuredImage) try {
       // Branş bazlı önceden seçilmiş ücretsiz Unsplash görsel havuzu
       // Tüm görseller Unsplash License altında ücretsiz ticari kullanıma açık
       const imagePool: Record<string, string[]> = {
