@@ -39,12 +39,12 @@ serve(async (req) => {
     );
 
     // Helper to run the base query
+    // Not: deleted_at filtresi kaldırıldı — uzman kendi onaylı sözleşmesini her durumda görebilmeli
     const baseSelect = () =>
       supabaseAdmin
         .from('orders')
         .select('*')
         .in('status', ['pending', 'approved', 'completed'])
-        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
     let aggregated: any[] = [];
