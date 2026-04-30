@@ -133,6 +133,9 @@ const SpecialistEdit = () => {
         }
 
         setSpecialist(data);
+        // Profil linkini bir kez sabitle - ad/uzmanlık değişikliklerinden etkilenmesin
+        setLockedSpecialtySlug(createSpecialtySlug(data.specialty));
+        setLockedSlug(data.slug || '');
         
         // FAQ'ları yükle
         if (data.faq) {
