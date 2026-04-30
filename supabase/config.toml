@@ -149,3 +149,6 @@ verify_jwt = false
 
 [functions.doki-bank-transfer-notification]
 verify_jwt = false
+
+[functions.process-akbank-transfer-email]
+verify_jwt = false

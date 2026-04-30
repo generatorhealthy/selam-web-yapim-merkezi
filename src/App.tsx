@@ -97,6 +97,7 @@ const ReviewManagement = lazy(() => import("./pages/admin/ReviewManagement"));
 const PaymentManagement = lazy(() => import("./pages/admin/PaymentManagement"));
 const NewOrder = lazy(() => import("./pages/admin/NewOrder"));
 const OrderManagement = lazy(() => import("./pages/admin/OrderManagement"));
+const BankTransferNotifications = lazy(() => import("./pages/admin/BankTransferNotifications"));
 const Reports = lazy(() => import("./pages/admin/Reports"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const MapboxSettings = lazy(() => import("./pages/admin/MapboxSettings"));
@@ -322,6 +323,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/payments" element={<PaymentManagement />} />
               <Route path="/divan_paneli/orders/new" element={<NewOrder />} />
               <Route path="/divan_paneli/orders" element={<OrderManagement />} />
+              <Route path="/divan_paneli/banka-havalesi-bildirimleri" element={<BankTransferNotifications />} />
               <Route path="/divan_paneli/analytics" element={<Analytics />} />
               <Route path="/divan_paneli/reports" element={<Reports />} />
               <Route path="/divan_paneli/mapbox" element={<MapboxSettings />} />
