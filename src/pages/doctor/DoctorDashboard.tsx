@@ -1462,8 +1462,18 @@ const DoctorDashboard = () => {
                   </div>
                   <div className="p-6">
                     {(() => {
-                      // Sadece ilk sipariş sözleşmesini göster (is_first_order veya subscription_month === 1 veya en eski kayıt)
-                      const firstContract = contracts.find((c: any) => c.is_first_order === true || c.subscription_month === 1) || contracts[contracts.length - 1];
+                      // Önce ilk onaylı (approved/completed) sözleşmeyi tercih et;
+                      // yoksa is_first_order işaretli olanı; o da yoksa en eski kaydı göster.
+                      const sortedAsc = [...contracts].sort(
+                        (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                      );
+                      const firstApproved = sortedAsc.find(
+                        (c: any) => c.status === 'approved' || c.status === 'completed'
+                      );
+                      const firstFlagged = sortedAsc.find(
+                        (c: any) => c.is_first_order === true || c.subscription_month === 1
+                      );
+                      const firstContract = firstApproved || firstFlagged || sortedAsc[0];
                       
                       if (!firstContract) {
                         return (
