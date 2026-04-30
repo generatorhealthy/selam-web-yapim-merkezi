@@ -299,10 +299,12 @@ Başlık örneğin "${sp.name} ile ${consultationFocus} Sürecinde Nelere Dikkat
     if (postErr) throw postErr;
 
     // 7. Doki'den uzmana WhatsApp bildirimi (WAHA üzerinden) — hata olursa sessizce geç
+    console.log(`[Doki WA] Başlıyor: specialist=${sp.name}, phone=${sp.phone || "YOK"}`);
     try {
       const waPhone = normalizePhoneToWa(sp.phone);
       if (waPhone) {
         const sessionName = await getWorkingSessionName(supabase);
+        console.log(`[Doki WA] sessionName=${sessionName || "YOK"}, waPhone=${waPhone}`);
         if (sessionName) {
           const blogUrl = `https://doktorumol.com.tr/blog/${finalSlug}`;
           const dokiText =
@@ -319,22 +321,44 @@ Başlık örneğin "${sp.name} ile ${consultationFocus} Sürecinde Nelere Dikkat
             `Herhangi bir sorunuz olursa bize WhatsApp üzerinden ulaşabilirsiniz. Başarılar dilerim! 💙\n\n` +
             `— *Doki*\n_Doktorum Ol AI Asistanı_`;
 
-          await supabase.functions.invoke("waha-proxy", {
+          const waRes = await supabase.functions.invoke("waha-proxy", {
             body: {
               action: "sendText",
               sessionName,
               payload: { chatId: `${waPhone}@c.us`, text: dokiText },
             },
           });
-          console.log(`Doki WhatsApp mesajı gönderildi: ${sp.name} (${waPhone})`);
+          if (waRes.error) {
+            console.error(`[Doki WA] waha-proxy hatası:`, waRes.error);
+          } else {
+            console.log(`[Doki WA] ✅ Mesaj gönderildi: ${sp.name} (${waPhone})`);
+          }
         } else {
-          console.log("Doki WA: WORKING session bulunamadı, mesaj atlandı");
+          console.log("[Doki WA] ❌ WORKING session bulunamadı, mesaj atlandı");
         }
       } else {
-        console.log("Doki WA: uzmanın telefonu yok/geçersiz, mesaj atlandı");
+        console.log(`[Doki WA] ❌ Geçersiz telefon: "${sp.phone}", mesaj atlandı`);
       }
     } catch (waErr) {
-      console.error("Doki WA mesaj hatası (sessizce geçiliyor):", waErr);
+      console.error("[Doki WA] ❌ Beklenmeyen hata:", waErr);
+    }
+
+    // 8. Ek olarak send-blog-notification fonksiyonunu da çağır (SMS + WA + DB notification)
+    try {
+      if (sp.email) {
+        await supabase.functions.invoke("send-blog-notification", {
+          body: {
+            blogId: post.id,
+            specialistEmail: sp.email,
+            specialistName: sp.name,
+            blogTitle: blog.title,
+            blogSlug: finalSlug,
+          },
+        });
+        console.log("[send-blog-notification] çağrıldı");
+      }
+    } catch (notifErr) {
+      console.error("[send-blog-notification] hata:", notifErr);
     }
 
     return {
