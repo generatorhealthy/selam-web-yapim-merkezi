@@ -180,10 +180,20 @@ serve(async (req) => {
 
       const fullText = [subject, text, html].filter(Boolean).join("\n");
 
-      // Sadece Akbank havale bildirimlerini işle
-      const isAkbankTransfer =
-        /HAVALE/i.test(fullText) &&
-        /(akbank|0721\s*Şube|hesab[ıi]n[ıi]za)/i.test(fullText);
+      // Akbank'tan gelen TÜM para girişi bildirimlerini işle:
+      // HAVALE, EFT, FAST, virman, gelen transfer vb.
+      const hasMoneyKeyword =
+        /HAVALE/i.test(fullText) ||
+        /\bEFT\b/i.test(fullText) ||
+        /\bFAST\b/i.test(fullText) ||
+        /virman/i.test(fullText) ||
+        /para\s*giri/i.test(fullText) ||
+        /yat[ıi]r[ıi]ld[ıi]/i.test(fullText) ||
+        /alacak\s*kayd/i.test(fullText);
+      const isFromAkbank =
+        /(akbank|0721\s*Şube|hesab[ıi]n[ıi]za|hesab[ıi]ma)/i.test(fullText);
+
+      const isAkbankTransfer = hasMoneyKeyword && isFromAkbank;
 
       if (!isAkbankTransfer) {
         results.push({
