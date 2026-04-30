@@ -59,13 +59,10 @@ export default function SpecialistReferralsPanel({ variant = "web" }: Props) {
           setCode(refCode.code);
         }
 
-        // Bu kodu kullanarak kayıt olan uzmanları bul
+        // Bu kodu kullanarak kayıt olan uzmanları bul (güvenli RPC üzerinden)
         if (refCode?.code) {
           const { data: referredSpecs } = await supabase
-            .from("specialists")
-            .select("id, name, email, created_at, is_active")
-            .eq("referral_signup_code", refCode.code)
-            .order("created_at", { ascending: false });
+            .rpc("get_my_referred_specialists");
 
           // Onaylanmış sipariş var mı kontrolü (ödeme yaptılar mı?)
           const referred = (referredSpecs || []) as any[];

@@ -6153,6 +6153,16 @@ export type Database = {
           total_referrals: number
         }[]
       }
+      get_my_referred_specialists: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          name: string
+        }[]
+      }
       get_order_stats: {
         Args: never
         Returns: {
