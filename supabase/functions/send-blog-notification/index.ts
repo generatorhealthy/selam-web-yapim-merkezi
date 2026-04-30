@@ -39,7 +39,7 @@ serve(async (req) => {
       .from('specialists')
       .select('phone, email')
       .eq('email', specialistEmail)
-      .single();
+      .maybeSingle();
 
     if (specialistError) {
       console.error('Specialist not found:', specialistError);
@@ -68,6 +68,75 @@ serve(async (req) => {
         }
       } catch (smsError) {
         console.error('SMS send error:', smsError);
+      }
+
+      // WhatsApp (WAHA) gönder
+      try {
+        const normalizePhoneToWa = (raw: string): string | null => {
+          if (!raw) return null;
+          const digits = raw.replace(/\D/g, "");
+          if (digits.startsWith("90") && digits.length === 12) return digits;
+          if (digits.startsWith("0") && digits.length === 11) return "9" + digits;
+          if (digits.length === 10) return "90" + digits;
+          return null;
+        };
+
+        const waPhone = normalizePhoneToWa(specialist.phone);
+        if (!waPhone) {
+          console.error('Invalid phone for WhatsApp:', specialist.phone);
+        } else {
+          // Aktif WORKING WAHA session bul
+          const { data: activeLines } = await supabaseAdmin
+            .from('whatsapp_lines')
+            .select('id, is_active, sort_order')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+
+          const sessionCandidates = (activeLines || []).map(
+            (l: any) => `line_${String(l.id).replace(/-/g, '').slice(0, 16)}`
+          );
+
+          const sessionsRes = await supabaseAdmin.functions.invoke('waha-proxy', {
+            body: { action: 'sessions.list' },
+          });
+          const sessions = Array.isArray((sessionsRes.data as any)?.data)
+            ? (sessionsRes.data as any).data
+            : [];
+          const sessionName = sessionCandidates.find((c: string) =>
+            sessions.some(
+              (s: any) =>
+                s?.name === c && String(s?.status || '').toUpperCase() === 'WORKING'
+            )
+          );
+
+          if (!sessionName) {
+            console.error('No WORKING WhatsApp session found for blog notification');
+          } else {
+            const chatId = `${waPhone}@c.us`;
+            const waMessage =
+              `📝 *Blog Yazınız Yayınlandı!*\n\n` +
+              `Sayın *${specialistName}*,\n\n` +
+              `"${blogTitle}" başlıklı blog yazınız yayına alınmıştır. ✅\n\n` +
+              `🔗 Görüntülemek için:\n${blogUrl}\n\n` +
+              `Saygılarımızla,\n*Doktorumol.com.tr Ekibi*`;
+
+            const waRes = await supabaseAdmin.functions.invoke('waha-proxy', {
+              body: {
+                action: 'sendText',
+                sessionName,
+                payload: { chatId, text: waMessage },
+              },
+            });
+
+            if (waRes.error) {
+              console.error('WhatsApp send error:', waRes.error);
+            } else {
+              console.log('WhatsApp blog notification sent to', waPhone);
+            }
+          }
+        }
+      } catch (waError) {
+        console.error('WhatsApp blog notification error:', waError);
       }
     }
 
