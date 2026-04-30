@@ -8,11 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Save, ExternalLink, Copy } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, Copy, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import FileUpload from "@/components/FileUpload";
 import FAQSection from "@/components/FAQSection";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface Specialist {
   id: string;
@@ -48,11 +50,19 @@ const SpecialistEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
+  const { userProfile } = useUserRole();
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [faqItems, setFaqItems] = useState<FAQItem[]>([{ question: "", answer: "" }]);
+  // Profil linki — fetch anında bir kez sabitlenir, ad/uzmanlık değişince güncellenmez
+  const [lockedSpecialtySlug, setLockedSpecialtySlug] = useState<string>("");
+  const [lockedSlug, setLockedSlug] = useState<string>("");
+  const [slugDialogOpen, setSlugDialogOpen] = useState(false);
+  const [newSlugInput, setNewSlugInput] = useState("");
+  const [newSpecialtyInput, setNewSpecialtyInput] = useState("");
+  const [savingSlug, setSavingSlug] = useState(false);
 
   // Kullanıcı yetki kontrolü
   useEffect(() => {
@@ -123,6 +133,9 @@ const SpecialistEdit = () => {
         }
 
         setSpecialist(data);
+        // Profil linkini bir kez sabitle - ad/uzmanlık değişikliklerinden etkilenmesin
+        setLockedSpecialtySlug(createSpecialtySlug(data.specialty));
+        setLockedSlug(data.slug || '');
         
         // FAQ'ları yükle
         if (data.faq) {
@@ -151,9 +164,47 @@ const SpecialistEdit = () => {
   }, [currentUser, id, navigate, toast]);
 
   const generateProfileLink = () => {
-    if (!specialist) return '';
-    const specialtySlug = createSpecialtySlug(specialist.specialty);
-    return `${window.location.origin}/${specialtySlug}/${specialist.slug || ''}`;
+    if (!lockedSlug || !lockedSpecialtySlug) return '';
+    return `${window.location.origin}/${lockedSpecialtySlug}/${lockedSlug}`;
+  };
+
+  const isAdmin = userProfile?.role === 'admin';
+
+  const openSlugDialog = () => {
+    setNewSlugInput(lockedSlug);
+    setNewSpecialtyInput(lockedSpecialtySlug);
+    setSlugDialogOpen(true);
+  };
+
+  const handleSlugSave = async () => {
+    if (!specialist) return;
+    const trimmed = (newSlugInput || '').trim();
+    if (trimmed.length < 3) {
+      toast({ title: "Geçersiz link", description: "En az 3 karakter olmalı.", variant: "destructive" });
+      return;
+    }
+    setSavingSlug(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_update_specialist_slug' as any, {
+        p_specialist_id: specialist.id,
+        p_new_slug: trimmed,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) {
+        toast({ title: "Hata", description: result?.error || "Slug güncellenemedi", variant: "destructive" });
+        return;
+      }
+      setLockedSlug(result.slug);
+      const cleanSpecialty = (newSpecialtyInput || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      if (cleanSpecialty) setLockedSpecialtySlug(cleanSpecialty);
+      toast({ title: "Başarılı", description: "Profil linki güncellendi." });
+      setSlugDialogOpen(false);
+    } catch (e: any) {
+      toast({ title: "Hata", description: e.message || "Bilinmeyen hata", variant: "destructive" });
+    } finally {
+      setSavingSlug(false);
+    }
   };
 
   const copyLinkToClipboard = async () => {
@@ -373,7 +424,7 @@ const SpecialistEdit = () => {
                       className="bg-white border-blue-200"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       type="button"
                       variant="outline"
@@ -394,10 +445,21 @@ const SpecialistEdit = () => {
                         Görüntüle
                       </a>
                     </Button>
+                    {isAdmin && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={openSlugDialog}
+                        className="border-blue-300 text-blue-800 hover:bg-blue-100"
+                      >
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Linki Düzenle
+                      </Button>
+                    )}
                   </div>
                 </div>
                 <p className="text-sm text-blue-600 mt-2">
-                  Bu link, uzmanın profil sayfasına yönlendirir. Ad veya uzmanlık alanı değiştirildiğinde link otomatik olarak güncellenir.
+                  Bu link sabittir. Ad Soyad veya uzmanlık alanı değiştirildiğinde otomatik olarak değişmez. Yalnızca admin yetkisine sahip kullanıcılar "Linki Düzenle" butonuyla manuel olarak değiştirebilir.
                 </p>
               </div>
 
@@ -626,6 +688,47 @@ const SpecialistEdit = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={slugDialogOpen} onOpenChange={setSlugDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Profil Linkini Düzenle</DialogTitle>
+            <DialogDescription>
+              Bu işlem yalnızca admin yetkisindedir. Mevcut link <strong>SEO açısından kritik</strong>tir; değiştirmeden önce yönlendirme yapılması gerekebileceğini unutmayın.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="mb-1 block">Uzmanlık Path'i</Label>
+              <Input
+                value={newSpecialtyInput}
+                onChange={(e) => setNewSpecialtyInput(e.target.value)}
+                placeholder="psikolojik-danismanlik"
+              />
+              <p className="text-xs text-muted-foreground mt-1">URL'nin ilk bölümü (sadece UI gösterim).</p>
+            </div>
+            <div>
+              <Label className="mb-1 block">Slug (URL ikinci bölüm)</Label>
+              <Input
+                value={newSlugInput}
+                onChange={(e) => setNewSlugInput(e.target.value)}
+                placeholder="psk-amina-zhumayeva"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Sadece a-z, 0-9 ve tire (-) kullanın.</p>
+            </div>
+            <div className="bg-muted/50 rounded-md p-3 text-sm break-all">
+              <span className="text-muted-foreground">Önizleme: </span>
+              {window.location.origin}/{(newSpecialtyInput || '').trim() || '...'}/{(newSlugInput || '').trim() || '...'}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSlugDialogOpen(false)} disabled={savingSlug}>İptal</Button>
+            <Button onClick={handleSlugSave} disabled={savingSlug}>
+              {savingSlug ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

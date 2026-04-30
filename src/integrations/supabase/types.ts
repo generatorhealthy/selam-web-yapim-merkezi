@@ -6108,6 +6108,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_update_specialist_slug: {
+        Args: { p_new_slug: string; p_specialist_id: string }
+        Returns: Json
+      }
       backup_client_referrals: { Args: never; Returns: undefined }
       can_manage_users: { Args: { target_user_id?: string }; Returns: boolean }
       check_admin_login_block: {
