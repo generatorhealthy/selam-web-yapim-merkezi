@@ -146,3 +146,6 @@ verify_jwt = false
 
 [functions.seo-auto-publish-batch]
 verify_jwt = false
+
+[functions.doki-bank-transfer-notification]
+verify_jwt = false
