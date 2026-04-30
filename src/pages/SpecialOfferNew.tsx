@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -7,55 +6,8 @@ import { Check, Star, Users, Calendar, Headphones, Globe, Clock, Shield, Award, 
 import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { FeatureBox } from "@/components/FeatureBox";
-import { supabase } from "@/integrations/supabase/client";
 
 const SpecialOfferNew = () => {
-  useEffect(() => {
-    const pendingRaw = localStorage.getItem('pending_registration_whatsapp');
-    if (!pendingRaw) return;
-
-    let pending: { name?: string; phone?: string; userId?: string; queuedAt?: number } | null = null;
-    try {
-      pending = JSON.parse(pendingRaw);
-    } catch {
-      localStorage.removeItem('pending_registration_whatsapp');
-      return;
-    }
-
-    if (!pending?.name || !pending?.phone) {
-      localStorage.removeItem('pending_registration_whatsapp');
-      return;
-    }
-
-    const messageKey = `${pending.userId || pending.phone}-${pending.queuedAt || ''}`;
-    if (localStorage.getItem(`registration_whatsapp_sent_${messageKey}`)) {
-      localStorage.removeItem('pending_registration_whatsapp');
-      return;
-    }
-
-    const lockKey = 'pending_registration_whatsapp_lock';
-    const lockStartedAt = Number(localStorage.getItem(lockKey) || 0);
-    if (lockStartedAt && Date.now() - lockStartedAt < 60_000) return;
-
-    localStorage.setItem(lockKey, String(Date.now()));
-
-    supabase.functions.invoke('send-registration-whatsapp', {
-      body: { name: pending.name, phone: pending.phone }
-    }).then(({ data, error }) => {
-      if (error || (data as any)?.success === false) {
-        console.error('Registration WhatsApp send failed:', error || (data as any)?.error);
-        return;
-      }
-      localStorage.setItem(`registration_whatsapp_sent_${messageKey}`, String(Date.now()));
-      localStorage.removeItem('pending_registration_whatsapp');
-      console.log('Registration WhatsApp PDF and welcome message sent');
-    }).catch((error) => {
-      console.error('Registration WhatsApp send failed:', error);
-    }).finally(() => {
-      localStorage.removeItem(lockKey);
-    });
-  }, []);
-
   const handleWhatsAppContact = () => {
     const phoneNumber = "905308232275";
     const message = "Merhaba, Özel Fırsat Paket üzerinden Kayıt Olmak İstiyorum.";
