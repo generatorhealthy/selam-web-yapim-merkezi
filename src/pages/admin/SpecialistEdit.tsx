@@ -8,11 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Save, ExternalLink, Copy } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, Copy, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import FileUpload from "@/components/FileUpload";
 import FAQSection from "@/components/FAQSection";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface Specialist {
   id: string;
