@@ -59,6 +59,7 @@ const STATUS_LABEL: Record<string, { label: string; variant: any }> = {
 
 export default function BankTransferNotifications() {
   const { toast } = useToast();
+  const { userProfile, loading: roleLoading } = useUserRole();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
