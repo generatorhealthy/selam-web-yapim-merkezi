@@ -323,6 +323,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/payments" element={<PaymentManagement />} />
               <Route path="/divan_paneli/orders/new" element={<NewOrder />} />
               <Route path="/divan_paneli/orders" element={<OrderManagement />} />
+              <Route path="/divan_paneli/banka-havalesi-bildirimleri" element={<BankTransferNotifications />} />
               <Route path="/divan_paneli/analytics" element={<Analytics />} />
               <Route path="/divan_paneli/reports" element={<Reports />} />
               <Route path="/divan_paneli/mapbox" element={<MapboxSettings />} />
