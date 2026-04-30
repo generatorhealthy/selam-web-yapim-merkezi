@@ -152,3 +152,6 @@ verify_jwt = false
 
 [functions.process-akbank-transfer-email]
 verify_jwt = false
+
+[functions.poll-akbank-emails]
+verify_jwt = false
