@@ -11,6 +11,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/divan_paneli/specialists/add": "Uzman Ekle",
   "/divan_paneli/orders": "Sipariş Yönetimi",
   "/divan_paneli/orders/new": "Yeni Sipariş",
+  "/divan_paneli/banka-havalesi-bildirimleri": "Banka Havalesi Bildirimleri",
   "/divan_paneli/customers": "Müşteri Yönetimi",
   "/divan_paneli/appointments": "Randevu Yönetimi",
   "/divan_paneli/blog": "Blog Yönetimi",
