@@ -333,22 +333,9 @@ const SpecialistRegistration = () => {
       }
 
       toast.success("Uzman profiliniz başarıyla oluşturuldu!");
-      queueRegistrationWhatsapp();
       setCurrentStep(4);
-      navigate('/ozel-firsat', {
-        state: {
-          fromRegistration: true,
-          packageData: {
-            id: 'ozel-firsat',
-            name: "Premium Paket - Özel Fırsat",
-            price: 4000,
-            originalPrice: 6500,
-            features: packageFeatures
-          }
-        }
-      });
 
-      // Kayıt tamamlandıktan sonra SMS ve e-posta arka planda gönder
+      // E-posta gönder (arka planda)
       try {
         await supabase.functions.invoke('send-specialist-welcome-email', {
           body: { name: formData.name, email: createdUserEmail || email }
@@ -357,6 +344,8 @@ const SpecialistRegistration = () => {
       } catch (emailErr) {
         console.error('Welcome email error:', emailErr);
       }
+
+      // SMS gönder (arka planda)
       if (phone) {
         try {
           const smsMessage = `Sayın ${formData.name}, Doktorumol.com.tr profiliniz oluşturuldu. Profilinizin yayına alınması için ödemenizi tamamlayın: https://doktorumol.com.tr/ozel-firsat`;
@@ -364,6 +353,22 @@ const SpecialistRegistration = () => {
           console.log('Welcome SMS sent to', phone);
         } catch (smsErr) {
           console.error('Welcome SMS error:', smsErr);
+        }
+
+        // WhatsApp gönder (PDF + hoş geldin mesajı) — SMS ile aynı anda, doğrudan
+        try {
+          supabase.functions.invoke('send-registration-whatsapp', {
+            body: {
+              name: formData.name,
+              phone,
+              userId: createdUserId,
+            }
+          }).then(({ error: waErr }) => {
+            if (waErr) console.error('WhatsApp gönderim hatası:', waErr);
+            else console.log('WhatsApp registration messages dispatched to', phone);
+          });
+        } catch (waErr) {
+          console.error('WhatsApp invoke error:', waErr);
         }
       }
     } catch (err: any) {
