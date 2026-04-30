@@ -97,6 +97,7 @@ const ReviewManagement = lazy(() => import("./pages/admin/ReviewManagement"));
 const PaymentManagement = lazy(() => import("./pages/admin/PaymentManagement"));
 const NewOrder = lazy(() => import("./pages/admin/NewOrder"));
 const OrderManagement = lazy(() => import("./pages/admin/OrderManagement"));
+const BankTransferNotifications = lazy(() => import("./pages/admin/BankTransferNotifications"));
 const Reports = lazy(() => import("./pages/admin/Reports"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const MapboxSettings = lazy(() => import("./pages/admin/MapboxSettings"));
