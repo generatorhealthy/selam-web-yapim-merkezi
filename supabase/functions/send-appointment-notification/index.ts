@@ -336,11 +336,83 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('No usable specialist phone found in request, specialists or orders; skipping SMS');
     }
 
+    // Doki'den uzmana WhatsApp bildirimi (WAHA üzerinden) — hata olursa sessizce geç
+    let dokiWaResult: any = null;
+    try {
+      if (resolvedSpecialistPhone) {
+        const normalizePhoneToWa = (raw: string): string | null => {
+          const digits = (raw || '').replace(/\D/g, '');
+          if (digits.startsWith('90') && digits.length === 12) return digits;
+          if (digits.startsWith('0') && digits.length === 11) return '9' + digits;
+          if (digits.length === 10) return '90' + digits;
+          return null;
+        };
+        const getSessionNameForLineId = (lineId: string) =>
+          `line_${lineId.replace(/-/g, '').slice(0, 16)}`;
+
+        const waPhone = normalizePhoneToWa(resolvedSpecialistPhone);
+        if (waPhone) {
+          const { data: activeLines } = await supabase
+            .from('whatsapp_lines')
+            .select('id, is_active, sort_order')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+          const candidates = ((activeLines || []) as any[]).map((l) => getSessionNameForLineId(l.id));
+
+          if (candidates.length > 0) {
+            const sessionsRes = await supabase.functions.invoke('waha-proxy', {
+              body: { action: 'sessions.list' },
+            });
+            const sessions = Array.isArray((sessionsRes.data as any)?.data) ? (sessionsRes.data as any).data : [];
+            const sessionName = candidates.find((c) =>
+              sessions.some((s: any) => s?.name === c && String(s?.status || '').toUpperCase() === 'WORKING')
+            );
+
+            if (sessionName) {
+              const dokiText =
+                `Merhaba ${specialistName} 👋\n\n` +
+                `Ben *Doki* — Doktorum Ol platformunun yapay zeka asistanıyım.\n\n` +
+                `📅 *Yeni bir randevunuz var!*\n\n` +
+                `👤 *Danışan:* ${patientName}\n` +
+                `📆 *Tarih:* ${formattedDate}\n` +
+                `🕐 *Saat:* ${appointmentTime}\n` +
+                `💼 *Tür:* ${appointmentTypeText}\n` +
+                `📞 *Telefon:* ${patientPhone}` +
+                (notes ? `\n📝 *Not:* ${notes}` : '') +
+                `\n\n🔗 Randevu detaylarını web sitemizden veya mobil uygulamamızdan kontrol edebilirsiniz:\n` +
+                `https://doktorumol.com.tr\n\n` +
+                `Başarılı bir görüşme dilerim! 💙\n\n` +
+                `— *Doki*\n_Doktorum Ol AI Asistanı_`;
+
+              const waRes = await supabase.functions.invoke('waha-proxy', {
+                body: {
+                  action: 'sendText',
+                  sessionName,
+                  payload: { chatId: `${waPhone}@c.us`, text: dokiText },
+                },
+              });
+              dokiWaResult = waRes.data;
+              console.log('Doki WhatsApp randevu bildirimi gönderildi:', specialistName, waPhone);
+            } else {
+              console.log('Doki WA: WORKING session bulunamadı, atlandı');
+            }
+          } else {
+            console.log('Doki WA: aktif WhatsApp hattı yok, atlandı');
+          }
+        } else {
+          console.log('Doki WA: telefon WA formatına çevrilemedi, atlandı');
+        }
+      }
+    } catch (waErr) {
+      console.error('Doki WA randevu bildirim hatası (sessizce geçiliyor):', waErr);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         messageId: brevoResult.messageId,
         smsResult,
+        dokiWaResult,
         smsPhoneSource,
       }),
       {
