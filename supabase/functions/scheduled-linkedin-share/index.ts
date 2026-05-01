@@ -93,15 +93,14 @@ async function saveShareResult(
   const { error: dbError } = await supabase
     .from('social_shares')
     .upsert({
-      blog_id: blogId,
+      blog_post_id: blogId,
       platform: platform,
       status: success ? 'success' : 'failed',
       shared_at: success ? new Date().toISOString() : null,
-      post_id: postId || null,
       error_message: error || null,
       updated_at: new Date().toISOString(),
     }, {
-      onConflict: 'blog_id,platform',
+      onConflict: 'blog_post_id,platform',
     });
 
   if (dbError) {
@@ -164,8 +163,19 @@ Deno.serve(async (req) => {
     const personUrn = `urn:li:person:${profile.sub}`;
     console.log('LinkedIn person URN:', personUrn);
 
-    // Get 1 published blog post that hasn't been shared to LinkedIn yet
-    const { data: blogs, error: blogsError } = await supabase
+    // First: get all blog IDs that have ALREADY been shared to LinkedIn (any time, any status except null)
+    const { data: existingShares } = await supabase
+      .from('social_shares')
+      .select('blog_post_id')
+      .eq('platform', 'linkedin')
+      .in('status', ['success', 'failed']);
+
+    const sharedBlogIds = (existingShares || [])
+      .map((s: any) => s.blog_post_id)
+      .filter(Boolean);
+
+    // Get published blogs NOT in shared list, ordered by oldest first for fair rotation
+    let query = supabase
       .from('blog_posts')
       .select(`
         id,
@@ -179,30 +189,21 @@ Deno.serve(async (req) => {
         )
       `)
       .eq('status', 'published')
+      .order('created_at', { ascending: true })
       .limit(1);
+
+    if (sharedBlogIds.length > 0) {
+      query = query.not('id', 'in', `(${sharedBlogIds.join(',')})`);
+    }
+
+    const { data: blogs, error: blogsError } = await query;
 
     if (blogsError) {
       console.error('Error fetching blogs:', blogsError);
       throw blogsError;
     }
 
-    if (!blogs || blogs.length === 0) {
-      console.log('No published blogs found');
-      return new Response(
-        JSON.stringify({ message: 'No blogs to share' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Filter out blogs that have already been shared to LinkedIn
-    const { data: existingShares } = await supabase
-      .from('social_shares')
-      .select('blog_id')
-      .eq('platform', 'linkedin')
-      .eq('status', 'success');
-
-    const sharedBlogIds = new Set((existingShares || []).map(s => s.blog_id));
-    const unsharedBlogs = (blogs as any[]).filter((blog: any) => !sharedBlogIds.has(blog.id)) as BlogPost[];
+    const unsharedBlogs = (blogs as any[]) as BlogPost[];
 
     if (unsharedBlogs.length === 0) {
       console.log('All blogs have been shared to LinkedIn');
