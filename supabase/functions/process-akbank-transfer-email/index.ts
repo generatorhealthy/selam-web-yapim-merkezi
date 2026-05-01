@@ -273,8 +273,38 @@ serve(async (req) => {
         })),
       };
 
+      // Çoklu aday varsa: önce tutarı eşleşeni, sonra en eski (en küçük created_at) siparişi seç.
+      // Aynı kişi birden fazla bekleyen ay siparişine sahip olsa bile, tek ödeme = tek onay.
+      let selectedOrder: any = null;
+      let matchMethod: string = "auto_name_match";
       if (candidates.length === 1) {
-        const order = candidates[0];
+        selectedOrder = candidates[0];
+      } else if (candidates.length > 1) {
+        const sortedOldestFirst = [...candidates].sort(
+          (a: any, b: any) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        );
+        // 1) Tutarı tam eşleşen en eski sipariş
+        if (amount != null) {
+          const exact = sortedOldestFirst.find(
+            (o: any) =>
+              o.amount != null &&
+              Math.abs(Number(o.amount) - Number(amount)) < 0.5,
+          );
+          if (exact) {
+            selectedOrder = exact;
+            matchMethod = "auto_name_amount_oldest";
+          }
+        }
+        // 2) Tutar eşleşmesi yoksa en eski bekleyen siparişi onayla
+        if (!selectedOrder) {
+          selectedOrder = sortedOldestFirst[0];
+          matchMethod = "auto_name_oldest";
+        }
+      }
+
+      if (selectedOrder) {
+        const order = selectedOrder;
         const amountDiff =
           amount != null && order.amount != null
             ? Number(amount) - Number(order.amount)
