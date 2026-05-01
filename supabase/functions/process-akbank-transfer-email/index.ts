@@ -336,7 +336,7 @@ serve(async (req) => {
           status: "matched",
           matched_order_id: order.id,
           matched_at: new Date().toISOString(),
-          match_method: "auto_name_match",
+          match_method: matchMethod,
           amount_diff: amountDiff,
           notes:
             amountDiff != null && Math.abs(amountDiff) > 0.5
