@@ -73,18 +73,28 @@ const RegistrationAnalyticsTracker = ({ currentStep, completed = false }: Regist
   const updateAnalytics = useCallback(async () => {
     try {
       const timeOnPage = Math.round((Date.now() - startTime.current) / 1000);
-      await supabase
-        .from('registration_analytics')
-        .update({
+      const SUPABASE_URL = 'https://irnfwewabogveofwemvg.supabase.co';
+      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs';
+      await fetch(`${SUPABASE_URL}/rest/v1/registration_analytics?session_id=eq.${sessionId.current}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON,
+          Authorization: `Bearer ${SUPABASE_ANON}`,
+          'x-session-id': sessionId.current,
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
           current_step: currentStep,
           max_step_reached: currentStep,
           step_timestamps: stepTimestamps.current,
-          click_events: clickEvents.current.slice(-50), // Keep last 50
+          click_events: clickEvents.current.slice(-50),
           time_on_page: timeOnPage,
           last_activity_at: new Date().toISOString(),
           completed,
-        })
-        .eq('session_id', sessionId.current);
+        }),
+        keepalive: true,
+      });
     } catch {}
   }, [currentStep, completed]);
 
@@ -127,15 +137,26 @@ const RegistrationAnalyticsTracker = ({ currentStep, completed = false }: Regist
     // Track page leave
     const handleBeforeUnload = () => {
       const timeOnPage = Math.round((Date.now() - startTime.current) / 1000);
-      const blob = new Blob([JSON.stringify({
-        time_on_page: timeOnPage,
-        left_at: new Date().toISOString(),
-        click_events: clickEvents.current.slice(-50),
-      })], { type: 'application/json' });
-      navigator.sendBeacon(
-        `https://irnfwewabogveofwemvg.supabase.co/rest/v1/registration_analytics?session_id=eq.${sessionId.current}`,
-        blob
-      );
+      const SUPABASE_URL = 'https://irnfwewabogveofwemvg.supabase.co';
+      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs';
+      try {
+        fetch(`${SUPABASE_URL}/rest/v1/registration_analytics?session_id=eq.${sessionId.current}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE_ANON,
+            Authorization: `Bearer ${SUPABASE_ANON}`,
+            'x-session-id': sessionId.current,
+            Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({
+            time_on_page: timeOnPage,
+            left_at: new Date().toISOString(),
+            click_events: clickEvents.current.slice(-50),
+          }),
+          keepalive: true,
+        });
+      } catch {}
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
