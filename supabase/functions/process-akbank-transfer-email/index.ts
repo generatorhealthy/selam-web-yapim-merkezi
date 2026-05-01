@@ -394,14 +394,11 @@ serve(async (req) => {
           amountDiff,
         });
       } else {
-        // 0 veya çoklu eşleşme
+        // Sadece hiç aday bulunmadığında unmatched olur (isim eşleşmedi)
         await supabase.from("bank_transfer_notifications").insert({
           ...baseRow,
           status: "unmatched",
-          notes:
-            candidates.length === 0
-              ? "Bekleyen siparişler içinde isim eşleşmesi bulunamadı."
-              : `${candidates.length} aday eşleşme bulundu, manuel inceleme gerekli.`,
+          notes: "Bekleyen siparişler içinde isim eşleşmesi bulunamadı.",
         });
         results.push({
           status: "unmatched",
