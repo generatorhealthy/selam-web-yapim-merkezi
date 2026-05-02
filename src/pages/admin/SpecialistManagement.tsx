@@ -79,25 +79,38 @@ const SpecialistManagement = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [notesDialog, setNotesDialog] = useState<{ id: string; name: string } | null>(null);
   const [notesCounts, setNotesCounts] = useState<Record<string, number>>({});
+  const [latestNotes, setLatestNotes] = useState<Record<string, { note: string; created_by_name: string | null; created_at: string }>>({});
 
-  // Tüm uzmanların not sayılarını yükle
+  // Tüm uzmanların not sayılarını + son notlarını yükle
+  const loadNotesData = async () => {
+    if (specialists.length === 0) return;
+    const ids = specialists.map((s) => s.id);
+    const { data, error } = await supabase
+      .from("specialist_admin_notes")
+      .select("specialist_id, note, created_by_name, created_at")
+      .in("specialist_id", ids)
+      .order("created_at", { ascending: false });
+    if (!error && data) {
+      const counts: Record<string, number> = {};
+      const latest: Record<string, { note: string; created_by_name: string | null; created_at: string }> = {};
+      data.forEach((row: any) => {
+        counts[row.specialist_id] = (counts[row.specialist_id] || 0) + 1;
+        if (!latest[row.specialist_id]) {
+          latest[row.specialist_id] = {
+            note: row.note,
+            created_by_name: row.created_by_name,
+            created_at: row.created_at,
+          };
+        }
+      });
+      setNotesCounts(counts);
+      setLatestNotes(latest);
+    }
+  };
+
   useEffect(() => {
-    const loadNotesCounts = async () => {
-      if (specialists.length === 0) return;
-      const ids = specialists.map((s) => s.id);
-      const { data, error } = await supabase
-        .from("specialist_admin_notes")
-        .select("specialist_id")
-        .in("specialist_id", ids);
-      if (!error && data) {
-        const counts: Record<string, number> = {};
-        data.forEach((row: any) => {
-          counts[row.specialist_id] = (counts[row.specialist_id] || 0) + 1;
-        });
-        setNotesCounts(counts);
-      }
-    };
-    void loadNotesCounts();
+    void loadNotesData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specialists]);
 
   // Kullanıcı yetki kontrolü - basitleştirilmiş ve güvenilir
@@ -727,6 +740,31 @@ const SpecialistManagement = () => {
                         )}
                       </div>
 
+                      {/* Son Not Önizleme */}
+                      {latestNotes[specialist.id] && (
+                        <button
+                          type="button"
+                          onClick={() => setNotesDialog({ id: specialist.id, name: specialist.name })}
+                          className="w-full text-left bg-amber-50 border border-amber-200 rounded-lg p-3 hover:bg-amber-100 transition-colors"
+                          title="Tüm notları görüntüle"
+                        >
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <StickyNote className="w-3.5 h-3.5 text-amber-600" />
+                            <span className="text-xs font-semibold text-amber-700">
+                              Son Not {(notesCounts[specialist.id] || 0) > 1 && `(+${(notesCounts[specialist.id] || 0) - 1} daha)`}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-800 line-clamp-2 whitespace-pre-wrap">
+                            {latestNotes[specialist.id].note}
+                          </p>
+                          {latestNotes[specialist.id].created_by_name && (
+                            <p className="text-[11px] text-gray-500 mt-1">
+                              — {latestNotes[specialist.id].created_by_name}
+                            </p>
+                          )}
+                        </button>
+                      )}
+
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-4 border-t border-gray-100">
                         <Button
@@ -783,12 +821,13 @@ const SpecialistManagement = () => {
       {notesDialog && (
         <SpecialistNotesDialog
           open={!!notesDialog}
-          onOpenChange={(o) => { if (!o) setNotesDialog(null); }}
+          onOpenChange={(o) => { if (!o) { setNotesDialog(null); void loadNotesData(); } }}
           specialistId={notesDialog.id}
           specialistName={notesDialog.name}
-          onCountChange={(count) =>
-            setNotesCounts((prev) => ({ ...prev, [notesDialog.id]: count }))
-          }
+          onCountChange={(count) => {
+            setNotesCounts((prev) => ({ ...prev, [notesDialog.id]: count }));
+            void loadNotesData();
+          }}
         />
       )}
     </div>
