@@ -740,6 +740,31 @@ const SpecialistManagement = () => {
                         )}
                       </div>
 
+                      {/* Son Not Önizleme */}
+                      {latestNotes[specialist.id] && (
+                        <button
+                          type="button"
+                          onClick={() => setNotesDialog({ id: specialist.id, name: specialist.name })}
+                          className="w-full text-left bg-amber-50 border border-amber-200 rounded-lg p-3 hover:bg-amber-100 transition-colors"
+                          title="Tüm notları görüntüle"
+                        >
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <StickyNote className="w-3.5 h-3.5 text-amber-600" />
+                            <span className="text-xs font-semibold text-amber-700">
+                              Son Not {(notesCounts[specialist.id] || 0) > 1 && `(+${(notesCounts[specialist.id] || 0) - 1} daha)`}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-800 line-clamp-2 whitespace-pre-wrap">
+                            {latestNotes[specialist.id].note}
+                          </p>
+                          {latestNotes[specialist.id].created_by_name && (
+                            <p className="text-[11px] text-gray-500 mt-1">
+                              — {latestNotes[specialist.id].created_by_name}
+                            </p>
+                          )}
+                        </button>
+                      )}
+
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-4 border-t border-gray-100">
                         <Button
