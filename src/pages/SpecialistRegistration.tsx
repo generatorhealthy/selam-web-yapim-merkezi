@@ -279,6 +279,10 @@ const SpecialistRegistration = () => {
   };
 
   const handleComplete = async () => {
+    if (!profilePicture) {
+      toast.error("Lütfen profil fotoğrafınızı yükleyin. Profil fotoğrafı zorunludur.");
+      return;
+    }
     setIsLoading(true);
     try {
       const faqString = faqItems.length > 0 ? JSON.stringify(faqItems) : null;
