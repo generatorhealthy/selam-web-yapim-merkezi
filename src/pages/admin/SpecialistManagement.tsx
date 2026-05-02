@@ -779,6 +779,18 @@ const SpecialistManagement = () => {
           </CardContent>
         </Card>
       </div>
+
+      {notesDialog && (
+        <SpecialistNotesDialog
+          open={!!notesDialog}
+          onOpenChange={(o) => { if (!o) setNotesDialog(null); }}
+          specialistId={notesDialog.id}
+          specialistName={notesDialog.name}
+          onCountChange={(count) =>
+            setNotesCounts((prev) => ({ ...prev, [notesDialog.id]: count }))
+          }
+        />
+      )}
     </div>
   );
 };
