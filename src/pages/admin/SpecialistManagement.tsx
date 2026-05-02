@@ -739,6 +739,21 @@ const SpecialistManagement = () => {
                           Düzenle
                         </Button>
                         
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setNotesDialog({ id: specialist.id, name: specialist.name })}
+                          className="border-amber-200 text-amber-700 hover:bg-amber-50 relative"
+                          title="Notlar"
+                        >
+                          <StickyNote className="w-4 h-4" />
+                          {(notesCounts[specialist.id] || 0) > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                              {notesCounts[specialist.id]}
+                            </span>
+                          )}
+                        </Button>
+
                         {specialist.phone && (
                           <Button
                             variant="outline"
