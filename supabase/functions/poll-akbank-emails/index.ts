@@ -94,12 +94,13 @@ class ImapClient {
     await this.send(`SELECT "${mailbox}"`);
   }
 
-  /** UNSEEN ve son N gündeki maillerin UID listesini döndürür */
+  /** Son N gündeki TÜM maillerin UID listesini döndürür (okunmuş olsa bile).
+   *  Duplicate'ler processed_emails tablosu üzerinden filtreleniyor. */
   async searchRecentUnseen(daysBack: number): Promise<number[]> {
     const since = new Date(Date.now() - daysBack * 86400000);
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const sinceStr = `${since.getUTCDate()}-${months[since.getUTCMonth()]}-${since.getUTCFullYear()}`;
-    const resp = await this.send(`UID SEARCH UNSEEN SINCE ${sinceStr}`);
+    const resp = await this.send(`UID SEARCH SINCE ${sinceStr}`);
     // "* SEARCH 12 34 56" satırını bul
     const match = resp.match(/\* SEARCH([^\r\n]*)/);
     if (!match) return [];
