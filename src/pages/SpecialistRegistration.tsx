@@ -279,6 +279,10 @@ const SpecialistRegistration = () => {
   };
 
   const handleComplete = async () => {
+    if (!profilePicture) {
+      toast.error("Lütfen profil fotoğrafınızı yükleyin. Profil fotoğrafı zorunludur.");
+      return;
+    }
     setIsLoading(true);
     try {
       const faqString = faqItems.length > 0 ? JSON.stringify(faqItems) : null;
@@ -718,11 +722,13 @@ const SpecialistRegistration = () => {
               <div className="space-y-6">
                 <div className="space-y-3">
                   <Label className="text-sm text-muted-foreground font-normal flex items-center gap-2">
-                    <Camera className="w-4 h-4" /> Profil Resmi
+                    <Camera className="w-4 h-4" /> Profil Resmi <span className="text-destructive">*</span>
                   </Label>
                   <FileUpload accept="image/*" onUpload={(url) => setProfilePicture(url)} />
-                  {profilePicture && (
+                  {profilePicture ? (
                     <img src={profilePicture} alt="Profil" className="w-20 h-20 rounded-2xl object-cover border border-border" />
+                  ) : (
+                    <p className="text-xs text-destructive">Profil fotoğrafı zorunludur. Lütfen bir fotoğraf yükleyin.</p>
                   )}
                 </div>
 
