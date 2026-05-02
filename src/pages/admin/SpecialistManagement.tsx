@@ -821,12 +821,13 @@ const SpecialistManagement = () => {
       {notesDialog && (
         <SpecialistNotesDialog
           open={!!notesDialog}
-          onOpenChange={(o) => { if (!o) setNotesDialog(null); }}
+          onOpenChange={(o) => { if (!o) { setNotesDialog(null); void loadNotesData(); } }}
           specialistId={notesDialog.id}
           specialistName={notesDialog.name}
-          onCountChange={(count) =>
-            setNotesCounts((prev) => ({ ...prev, [notesDialog.id]: count }))
-          }
+          onCountChange={(count) => {
+            setNotesCounts((prev) => ({ ...prev, [notesDialog.id]: count }));
+            void loadNotesData();
+          }}
         />
       )}
     </div>
