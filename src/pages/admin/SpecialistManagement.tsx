@@ -77,6 +77,28 @@ const SpecialistManagement = () => {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [notesDialog, setNotesDialog] = useState<{ id: string; name: string } | null>(null);
+  const [notesCounts, setNotesCounts] = useState<Record<string, number>>({});
+
+  // Tüm uzmanların not sayılarını yükle
+  useEffect(() => {
+    const loadNotesCounts = async () => {
+      if (specialists.length === 0) return;
+      const ids = specialists.map((s) => s.id);
+      const { data, error } = await supabase
+        .from("specialist_admin_notes")
+        .select("specialist_id")
+        .in("specialist_id", ids);
+      if (!error && data) {
+        const counts: Record<string, number> = {};
+        data.forEach((row: any) => {
+          counts[row.specialist_id] = (counts[row.specialist_id] || 0) + 1;
+        });
+        setNotesCounts(counts);
+      }
+    };
+    void loadNotesCounts();
+  }, [specialists]);
 
   // Kullanıcı yetki kontrolü - basitleştirilmiş ve güvenilir
   useEffect(() => {
