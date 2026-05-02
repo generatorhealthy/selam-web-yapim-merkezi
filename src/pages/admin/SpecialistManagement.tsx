@@ -79,25 +79,38 @@ const SpecialistManagement = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [notesDialog, setNotesDialog] = useState<{ id: string; name: string } | null>(null);
   const [notesCounts, setNotesCounts] = useState<Record<string, number>>({});
+  const [latestNotes, setLatestNotes] = useState<Record<string, { note: string; created_by_name: string | null; created_at: string }>>({});
 
-  // Tüm uzmanların not sayılarını yükle
+  // Tüm uzmanların not sayılarını + son notlarını yükle
+  const loadNotesData = async () => {
+    if (specialists.length === 0) return;
+    const ids = specialists.map((s) => s.id);
+    const { data, error } = await supabase
+      .from("specialist_admin_notes")
+      .select("specialist_id, note, created_by_name, created_at")
+      .in("specialist_id", ids)
+      .order("created_at", { ascending: false });
+    if (!error && data) {
+      const counts: Record<string, number> = {};
+      const latest: Record<string, { note: string; created_by_name: string | null; created_at: string }> = {};
+      data.forEach((row: any) => {
+        counts[row.specialist_id] = (counts[row.specialist_id] || 0) + 1;
+        if (!latest[row.specialist_id]) {
+          latest[row.specialist_id] = {
+            note: row.note,
+            created_by_name: row.created_by_name,
+            created_at: row.created_at,
+          };
+        }
+      });
+      setNotesCounts(counts);
+      setLatestNotes(latest);
+    }
+  };
+
   useEffect(() => {
-    const loadNotesCounts = async () => {
-      if (specialists.length === 0) return;
-      const ids = specialists.map((s) => s.id);
-      const { data, error } = await supabase
-        .from("specialist_admin_notes")
-        .select("specialist_id")
-        .in("specialist_id", ids);
-      if (!error && data) {
-        const counts: Record<string, number> = {};
-        data.forEach((row: any) => {
-          counts[row.specialist_id] = (counts[row.specialist_id] || 0) + 1;
-        });
-        setNotesCounts(counts);
-      }
-    };
-    void loadNotesCounts();
+    void loadNotesData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specialists]);
 
   // Kullanıcı yetki kontrolü - basitleştirilmiş ve güvenilir
