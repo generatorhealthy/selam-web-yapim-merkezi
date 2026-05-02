@@ -87,11 +87,13 @@ function extractTransferInfo(text: string): {
     .trim();
 
   // İsim: birden fazla kalıp dener (HAVALE/EFT/FAST mailleri farklı yapıda olabilir)
-  // 1) "... AHMET YILMAZ tarafından ... TL HAVALE/EFT/FAST ..."
-  // 2) "Gönderen: AHMET YILMAZ" / "Gonderen Adi: AHMET YILMAZ"
-  // 3) "AHMET YILMAZ adlı kişiden ..."
+  // 1) "... hesabınıza AHMET YILMAZ tarafından ..." (Akbank nakit girişi şablonu)
+  // 2) "... AHMET YILMAZ tarafından ... TL HAVALE/EFT/FAST ..."
+  // 3) "Gönderen: AHMET YILMAZ" / "Gonderen Adi: AHMET YILMAZ"
+  // 4) "AHMET YILMAZ adlı kişiden ..."
   let senderName: string | null = null;
   const senderPatterns: RegExp[] = [
+    /hesab[ıi]n[ıi]za\s+([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+taraf[ıi]ndan/i,
     /([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+taraf[ıi]ndan/i,
     /g[öo]nderen(?:\s*ad[ıi])?\s*[:\-]?\s*([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)(?:\s{2,}|\r|\n|<|,|;|$)/i,
     /([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+adl[ıi]\s+ki[şs]i/i,
@@ -315,6 +317,7 @@ serve(async (req) => {
           .from("orders")
           .update({
             status: "approved",
+            approved_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })
           .eq("id", order.id);
