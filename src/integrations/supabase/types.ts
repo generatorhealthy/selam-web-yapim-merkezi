@@ -4318,6 +4318,51 @@ export type Database = {
           },
         ]
       }
+      specialist_admin_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          id: string
+          note: string
+          specialist_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          note: string
+          specialist_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          note?: string
+          specialist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialist_admin_notes_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialist_admin_notes_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       specialist_applications: {
         Row: {
           about: string | null

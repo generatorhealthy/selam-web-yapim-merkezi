@@ -26,8 +26,10 @@ import {
   SortAsc,
   MoreVertical,
   UserCheck,
-  MessageCircle
+  MessageCircle,
+  StickyNote
 } from "lucide-react";
+import { SpecialistNotesDialog } from "@/components/admin/SpecialistNotesDialog";
 import { Link } from "react-router-dom";
 import {
   DropdownMenu,
@@ -75,6 +77,28 @@ const SpecialistManagement = () => {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [notesDialog, setNotesDialog] = useState<{ id: string; name: string } | null>(null);
+  const [notesCounts, setNotesCounts] = useState<Record<string, number>>({});
+
+  // Tüm uzmanların not sayılarını yükle
+  useEffect(() => {
+    const loadNotesCounts = async () => {
+      if (specialists.length === 0) return;
+      const ids = specialists.map((s) => s.id);
+      const { data, error } = await supabase
+        .from("specialist_admin_notes")
+        .select("specialist_id")
+        .in("specialist_id", ids);
+      if (!error && data) {
+        const counts: Record<string, number> = {};
+        data.forEach((row: any) => {
+          counts[row.specialist_id] = (counts[row.specialist_id] || 0) + 1;
+        });
+        setNotesCounts(counts);
+      }
+    };
+    void loadNotesCounts();
+  }, [specialists]);
 
   // Kullanıcı yetki kontrolü - basitleştirilmiş ve güvenilir
   useEffect(() => {
@@ -715,6 +739,21 @@ const SpecialistManagement = () => {
                           Düzenle
                         </Button>
                         
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setNotesDialog({ id: specialist.id, name: specialist.name })}
+                          className="border-amber-200 text-amber-700 hover:bg-amber-50 relative"
+                          title="Notlar"
+                        >
+                          <StickyNote className="w-4 h-4" />
+                          {(notesCounts[specialist.id] || 0) > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                              {notesCounts[specialist.id]}
+                            </span>
+                          )}
+                        </Button>
+
                         {specialist.phone && (
                           <Button
                             variant="outline"
@@ -740,6 +779,18 @@ const SpecialistManagement = () => {
           </CardContent>
         </Card>
       </div>
+
+      {notesDialog && (
+        <SpecialistNotesDialog
+          open={!!notesDialog}
+          onOpenChange={(o) => { if (!o) setNotesDialog(null); }}
+          specialistId={notesDialog.id}
+          specialistName={notesDialog.name}
+          onCountChange={(count) =>
+            setNotesCounts((prev) => ({ ...prev, [notesDialog.id]: count }))
+          }
+        />
+      )}
     </div>
   );
 };
