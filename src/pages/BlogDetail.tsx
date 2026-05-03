@@ -31,6 +31,8 @@ interface BlogPost {
   word_count: number | null;
   specialist_id: string | null;
   keywords: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
   specialists?: {
     specialty: string;
   } | null;
