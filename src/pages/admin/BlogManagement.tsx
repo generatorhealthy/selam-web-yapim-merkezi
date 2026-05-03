@@ -971,10 +971,38 @@ const BlogManagement = () => {
                             className="w-16 h-12 object-cover rounded flex-shrink-0"
                           />
                         )}
-                        <div className="max-w-md">
+                        <div className="max-w-md min-w-0">
                           <p className="font-medium line-clamp-1">{blog.title}</p>
                           {blog.excerpt && (
                             <p className="text-sm text-muted-foreground line-clamp-1">{blog.excerpt}</p>
+                          )}
+                          {blog.slug && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <a
+                                href={`https://doktorumol.com.tr/blog/${blog.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:underline truncate max-w-[260px] inline-flex items-center gap-1"
+                                title={`https://doktorumol.com.tr/blog/${blog.slug}`}
+                              >
+                                <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                /blog/{blog.slug}
+                              </a>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(`https://doktorumol.com.tr/blog/${blog.slug}`);
+                                  toast({ title: "Link kopyalandı", description: "Blog linki panoya kopyalandı." });
+                                }}
+                                title="Linki kopyala"
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </div>
