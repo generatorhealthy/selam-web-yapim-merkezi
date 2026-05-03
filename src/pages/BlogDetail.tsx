@@ -182,6 +182,8 @@ const BlogDetail = () => {
             word_count: blogPostData.word_count,
             specialist_id: blogPostData.specialist_id,
             keywords: blogPostData.keywords || null,
+            seo_title: blogPostData.seo_title || null,
+            seo_description: blogPostData.seo_description || null,
             specialists: null,
           }
         : {
