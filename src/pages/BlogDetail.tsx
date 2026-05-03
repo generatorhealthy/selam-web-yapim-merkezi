@@ -340,7 +340,25 @@ const BlogDetail = () => {
   }
 
   const ogImage = blog.featured_image || 'https://doktorumol.com.tr/logo.png';
-  const ogDescription = blog.excerpt || blog.title;
+  const stripHtmlSnippet = (html: string, len = 155) => {
+    const text = (html || '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (text.length <= len) return text;
+    return text.slice(0, len).replace(/\s+\S*$/, '') + '…';
+  };
+  const ogDescription =
+    (blog.seo_description && blog.seo_description.trim()) ||
+    (blog.excerpt && blog.excerpt.trim()) ||
+    stripHtmlSnippet(blog.content) ||
+    blog.title;
 
   return (
     <div className="min-h-screen bg-gray-50">
