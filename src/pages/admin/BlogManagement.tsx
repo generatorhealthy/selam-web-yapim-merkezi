@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import FileUpload from "@/components/FileUpload";
 import AdminBackButton from "@/components/AdminBackButton";
-import { Eye, CheckCircle, XCircle, AlertCircle, MessageSquare, Plus, Edit, Trash2 } from "lucide-react";
+import { Eye, CheckCircle, XCircle, AlertCircle, MessageSquare, Plus, Edit, Trash2, Copy, ExternalLink } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
