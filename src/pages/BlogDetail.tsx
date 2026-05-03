@@ -200,6 +200,8 @@ const BlogDetail = () => {
             word_count: legacyBlogData.content ? String(legacyBlogData.content).split(/\s+/).filter(Boolean).length : null,
             specialist_id: null,
             keywords: legacyBlogData.tags ? (Array.isArray(legacyBlogData.tags) ? legacyBlogData.tags.join(', ') : legacyBlogData.tags) : null,
+            seo_title: null,
+            seo_description: null,
             specialists: null,
           };
 
