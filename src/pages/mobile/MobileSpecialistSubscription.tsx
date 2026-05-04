@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
 import { CreditCard, CheckCircle2, Calendar, Package, Gift } from "lucide-react";
+import { PaymentMethodChangeDialog } from "@/components/PaymentMethodChangeDialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function MobileSpecialistSubscription() {
   const navigate = useNavigate();
@@ -11,6 +13,21 @@ export default function MobileSpecialistSubscription() {
   const [sub, setSub] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [referralSummary, setReferralSummary] = useState<{ total: number; qualified: number; bonusGranted: number; bonusMonths: number } | null>(null);
+  const [isPaymentChangeOpen, setIsPaymentChangeOpen] = useState(false);
+  const { toast } = useToast();
+
+  // Iyzico kart değişikliği dönüşünü yakala
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const change = params.get("paymentChange");
+    if (change === "success") {
+      toast({ title: "Ödeme yöntemi güncellendi", description: "Yeni kartınız başarıyla kaydedildi." });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (change === "failed") {
+      toast({ title: "İşlem başarısız", description: "Kart değiştirme tamamlanamadı.", variant: "destructive" });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [toast]);
 
   useEffect(() => {
     let cancelled = false;
@@ -236,7 +253,32 @@ export default function MobileSpecialistSubscription() {
             </div>
           )}
 
-          {/* Months grid */}
+          {/* Ödeme Yöntemini Değiştir Butonu */}
+          {(sub || orders.length > 0) && (() => {
+            const currentMethod = sub?.payment_method || orders[0]?.payment_method;
+            const isBank = currentMethod === "bank_transfer" || currentMethod === "banka_havalesi";
+            return (
+              <div className="px-5 mb-5">
+                <button
+                  onClick={() => setIsPaymentChangeOpen(true)}
+                  className="w-full rounded-[20px] py-4 px-5 flex items-center justify-center gap-2 font-semibold text-[15px] active:scale-[0.98] transition-transform"
+                  style={{
+                    background: "hsl(var(--primary))",
+                    color: "hsl(var(--primary-foreground))",
+                  }}
+                >
+                  <CreditCard className="w-5 h-5" />
+                  {isBank ? "Kredi Kartına Geç" : "Ödeme Yöntemimi Değiştir"}
+                </button>
+                <p className="text-[12px] text-center mt-2" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                  {isBank
+                    ? "Banka havalesi yerine kredi kartı ile otomatik ödeme yapın"
+                    : "Yeni kart ekleyin, sonraki tahsilatlar yeni karttan alınsın"}
+                </p>
+              </div>
+            );
+          })()}
+
           {sub && (
             <div className="px-5 mb-6">
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "hsl(var(--m-text-secondary))" }}>
@@ -309,6 +351,13 @@ export default function MobileSpecialistSubscription() {
           </div>
         </>
       )}
+
+      <PaymentMethodChangeDialog
+        open={isPaymentChangeOpen}
+        onClose={() => setIsPaymentChangeOpen(false)}
+        currentPaymentMethod={sub?.payment_method || orders[0]?.payment_method}
+      />
     </div>
   );
 }
+
