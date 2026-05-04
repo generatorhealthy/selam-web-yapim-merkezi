@@ -253,7 +253,7 @@ ${specialists.map((specialist: any) => {
   }).join('\n')}
 
   <!-- Testler -->
-${(testsRes.data || []).map((t: any) => `  <url>
+${(testsData || []).map((t: any) => `  <url>
     <loc>https://doktorumol.com.tr/test/${t.id}</loc>
     <lastmod>${new Date(t.updated_at).toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
