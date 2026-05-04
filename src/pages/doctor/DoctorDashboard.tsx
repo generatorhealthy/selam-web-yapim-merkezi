@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity, CreditCard, Package, Sparkles, Eye, PenLine, ClipboardList, Phone, UserPlus } from "lucide-react";
 import ContractDialog from "@/components/ContractDialog";
+import { PaymentMethodChangeDialog } from "@/components/PaymentMethodChangeDialog";
 import { ClientPortfolio } from "@/components/ClientPortfolio";
 import SpecialistReferralsPanel from "@/components/SpecialistReferralsPanel";
 import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
@@ -408,6 +409,7 @@ const DoctorDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
   const [isContractDialogOpen, setIsContractDialogOpen] = useState(false);
+  const [isPaymentChangeOpen, setIsPaymentChangeOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [contractType, setContractType] = useState<'preInfo' | 'distanceSales'>('preInfo');
   const [newTicket, setNewTicket] = useState({
@@ -419,6 +421,27 @@ const DoctorDashboard = () => {
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Handle return from Iyzico card-change flow
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const change = params.get("paymentChange");
+    if (change === "success") {
+      toast({
+        title: "Ödeme yöntemi güncellendi",
+        description: "Yeni kartınız başarıyla kaydedildi. Sonraki tahsilatlar bu karttan yapılacaktır.",
+      });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (change === "failed") {
+      toast({
+        title: "İşlem başarısız",
+        description: "Kart değiştirme işlemi tamamlanamadı. Lütfen tekrar deneyin.",
+        variant: "destructive",
+      });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [toast]);
+
 
   useEffect(() => {
     let mounted = true;
@@ -1646,14 +1669,29 @@ const DoctorDashboard = () => {
               <TabsContent value="subscription" className="mt-0">
                 <div className="bg-background rounded-2xl border">
                   <div className="p-6 border-b">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <CreditCard className="w-5 h-5 text-primary" />
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <CreditCard className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-foreground">Aboneliğim</h2>
+                          <p className="text-sm text-muted-foreground mt-0.5">Aylık abonelik siparişlerinizi görüntüleyin</p>
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-foreground">Aboneliğim</h2>
-                        <p className="text-sm text-muted-foreground mt-0.5">Aylık abonelik siparişlerinizi görüntüleyin</p>
-                      </div>
+                      {contracts.length > 0 && (
+                        <Button
+                          onClick={() => setIsPaymentChangeOpen(true)}
+                          className="gap-2"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          {(() => {
+                            const latest = contracts[0];
+                            const isBank = latest?.payment_method === "bank_transfer" || latest?.payment_method === "banka_havalesi";
+                            return isBank ? "Kredi Kartına Geç" : "Ödeme Yöntemimi Değiştir";
+                          })()}
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="p-6">
@@ -1736,6 +1774,12 @@ const DoctorDashboard = () => {
           </div>
         </main>
       </div>
+
+      <PaymentMethodChangeDialog
+        open={isPaymentChangeOpen}
+        onClose={() => setIsPaymentChangeOpen(false)}
+        currentPaymentMethod={contracts[0]?.payment_method}
+      />
 
       {selectedContract && (
         <ContractDialog

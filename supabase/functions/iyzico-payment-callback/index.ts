@@ -175,8 +175,22 @@ serve(async (req) => {
                 approved_at: new Date().toISOString(),
                 payment_method: 'credit_card',
                 payment_transaction_id: body.subscriptionReferenceCode || body.paymentId || body.token || null,
+                subscription_reference_code: body.subscriptionReferenceCode || null,
+                iyzico_customer_reference_code: body.customerReferenceCode || null,
               })
               .eq('id', order.id);
+
+            // Also propagate sub ref to automatic_orders for future card-change lookups
+            if (body.subscriptionReferenceCode) {
+              await supabaseAdmin
+                .from('automatic_orders')
+                .update({
+                  subscription_reference_code: body.subscriptionReferenceCode,
+                  iyzico_customer_reference_code: body.customerReferenceCode || null,
+                })
+                .eq('customer_email', customerEmail)
+                .is('subscription_reference_code', null);
+            }
 
             if (updateError) {
               console.error("Sipariş onaylama hatası:", updateError);

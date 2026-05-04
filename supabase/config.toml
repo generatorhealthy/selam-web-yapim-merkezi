@@ -158,3 +158,7 @@ verify_jwt = false
 
 [functions.imap-diagnose]
 verify_jwt = false
+
+[functions.change-payment-method-callback]
+verify_jwt = false
+
