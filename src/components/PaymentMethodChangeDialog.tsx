@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,11 +20,74 @@ export const PaymentMethodChangeDialog = ({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [checkoutHtml, setCheckoutHtml] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const isBankTransfer = currentPaymentMethod === "bank_transfer" || currentPaymentMethod === "banka_havalesi";
   const titleText = isBankTransfer
     ? "Kredi Kartı ile Ödemeye Geç"
     : "Kredi Kartını Değiştir";
+
+  // Iyzico HTML içindeki <script> tag'leri React tarafından çalıştırılmaz.
+  // Manuel olarak parse edip DOM'a inject ediyoruz.
+  useEffect(() => {
+    if (!checkoutHtml || !containerRef.current) return;
+
+    const container = containerRef.current;
+    container.innerHTML = "";
+
+    // Iyzico'nun mount noktası
+    const mountDiv = document.createElement("div");
+    mountDiv.id = "iyzipay-checkout-form";
+    mountDiv.className = "responsive";
+    container.appendChild(mountDiv);
+
+    // HTML'i parse edip non-script node'ları ekle, script'leri ayrı çalıştır
+    const temp = document.createElement("div");
+    temp.innerHTML = checkoutHtml;
+
+    const scripts: HTMLScriptElement[] = [];
+    Array.from(temp.childNodes).forEach((node) => {
+      if (node.nodeName === "SCRIPT") {
+        scripts.push(node as HTMLScriptElement);
+      } else {
+        container.appendChild(node);
+      }
+    });
+
+    // Script'leri sırayla yeniden oluştur ve çalıştır
+    const addedScripts: HTMLScriptElement[] = [];
+    scripts.forEach((oldScript) => {
+      const newScript = document.createElement("script");
+      Array.from(oldScript.attributes).forEach((attr) => {
+        newScript.setAttribute(attr.name, attr.value);
+      });
+      if (oldScript.src) {
+        newScript.src = oldScript.src;
+      } else {
+        newScript.text = oldScript.textContent || "";
+      }
+      document.body.appendChild(newScript);
+      addedScripts.push(newScript);
+    });
+
+    return () => {
+      // Cleanup: eklenen script'leri ve global iyzi değişkenlerini temizle
+      addedScripts.forEach((s) => {
+        if (s.parentNode) s.parentNode.removeChild(s);
+      });
+      try {
+        // @ts-ignore
+        if (typeof window !== "undefined") {
+          // @ts-ignore
+          delete window.iyziInit;
+          // @ts-ignore
+          delete window.iyziUcsInit;
+          // @ts-ignore
+          delete window.iyziSubscriptionInit;
+        }
+      } catch {}
+    };
+  }, [checkoutHtml]);
 
   const handleStart = async () => {
     setLoading(true);
@@ -118,10 +181,7 @@ export const PaymentMethodChangeDialog = ({
                 Kart bilgilerinizi aşağıdaki güvenli formda girin. İşlem tamamlandığında otomatik yönlendirileceksiniz.
               </AlertDescription>
             </Alert>
-            <div
-              className="iyzico-checkout-container min-h-[500px]"
-              dangerouslySetInnerHTML={{ __html: checkoutHtml }}
-            />
+            <div ref={containerRef} className="iyzico-checkout-container min-h-[500px]" />
           </div>
         )}
       </DialogContent>
