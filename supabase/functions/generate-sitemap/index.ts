@@ -45,11 +45,18 @@ Deno.serve(async (req) => {
         .eq('status', 'published')
     ])
 
-    // Fetch active specialists
+    // Fetch active specialists (slug kolonu kullanılır — isim değişikliklerinden etkilenmez)
     const specialistsRes = await supabase
       .from('specialists')
-      .select('name, specialty, updated_at')
+      .select('name, specialty, slug, updated_at')
       .eq('is_active', true)
+
+    // Fetch active tests
+    const testsRes = await supabase
+      .from('tests')
+      .select('id, updated_at')
+      .eq('is_active', true)
+      .eq('status', 'published')
 
     if (blogsRes.error || blogPostsRes.error || specialistsRes.error) {
       console.error('Error fetching data:', {
@@ -212,9 +219,10 @@ ${blogs.map(blog => `  <url>
   </url>`).join('\n')}
 
   <!-- Uzman Profilleri -->
-${specialists.map((specialist: SpecialistEntry) => {
+${specialists.map((specialist: any) => {
     const specialtySlug = generateSlug(specialist.specialty)
-    const nameSlug = generateSlug(specialist.name)
+    // DB'deki slug kolonu öncelikli (isim değişse bile sabit)
+    const nameSlug = specialist.slug || generateSlug(specialist.name)
     
     return `  <url>
     <loc>https://doktorumol.com.tr/${specialtySlug}/${nameSlug}</loc>
@@ -223,6 +231,14 @@ ${specialists.map((specialist: SpecialistEntry) => {
     <priority>0.6</priority>
   </url>`
   }).join('\n')}
+
+  <!-- Testler -->
+${(testsRes.data || []).map((t: any) => `  <url>
+    <loc>https://doktorumol.com.tr/test/${t.id}</loc>
+    <lastmod>${new Date(t.updated_at).toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>`).join('\n')}
 
   <!-- Yasal Sayfalar -->
   <url>
@@ -260,12 +276,15 @@ ${specialists.map((specialist: SpecialistEntry) => {
     console.log('Generated sitemap with', blogs.length, 'blogs and', specialists.length, 'specialists')
 
     // If XML format requested, return XML directly (for crawlers)
+    // Cache yok — yeni içerik anında yansısın
     if (format === 'xml') {
       return new Response(sitemap, {
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/xml; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
         status: 200
       })
@@ -283,15 +302,21 @@ ${specialists.map((specialist: SpecialistEntry) => {
       console.error('Upload error:', uploadError)
     }
 
-    // Ping Google about sitemap update
-    (globalThis as any).EdgeRuntime?.waitUntil(
+    // IndexNow ile arama motorlarına haber ver (Google ping endpoint'i 2023'te kapatıldı,
+    // sitemap güncellenince Google Search Console üzerinden zaten yeniden taranır.)
+    ;(globalThis as any).EdgeRuntime?.waitUntil(
       (async () => {
         try {
-          const pingUrl = `https://www.google.com/ping?sitemap=https://doktorumol.com.tr/sitemap.xml`
-          const response = await fetch(pingUrl)
-          console.log('Google ping response:', response.status)
+          await fetch(`${supabaseUrl}/functions/v1/notify-search-engines`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${supabaseServiceKey}`,
+            },
+            body: JSON.stringify({ urls: ['https://doktorumol.com.tr/sitemap.xml'] }),
+          })
         } catch (error) {
-          console.error('Failed to ping Google:', error)
+          console.error('Failed to notify search engines:', error)
         }
       })()
     )
