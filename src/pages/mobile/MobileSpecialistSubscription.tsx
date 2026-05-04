@@ -351,6 +351,13 @@ export default function MobileSpecialistSubscription() {
           </div>
         </>
       )}
+
+      <PaymentMethodChangeDialog
+        open={isPaymentChangeOpen}
+        onClose={() => setIsPaymentChangeOpen(false)}
+        currentPaymentMethod={sub?.payment_method || orders[0]?.payment_method}
+      />
     </div>
   );
 }
+
