@@ -1669,14 +1669,29 @@ const DoctorDashboard = () => {
               <TabsContent value="subscription" className="mt-0">
                 <div className="bg-background rounded-2xl border">
                   <div className="p-6 border-b">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <CreditCard className="w-5 h-5 text-primary" />
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <CreditCard className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-foreground">Aboneliğim</h2>
+                          <p className="text-sm text-muted-foreground mt-0.5">Aylık abonelik siparişlerinizi görüntüleyin</p>
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-foreground">Aboneliğim</h2>
-                        <p className="text-sm text-muted-foreground mt-0.5">Aylık abonelik siparişlerinizi görüntüleyin</p>
-                      </div>
+                      {contracts.length > 0 && (
+                        <Button
+                          onClick={() => setIsPaymentChangeOpen(true)}
+                          className="gap-2"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          {(() => {
+                            const latest = contracts[0];
+                            const isBank = latest?.payment_method === "bank_transfer" || latest?.payment_method === "banka_havalesi";
+                            return isBank ? "Kredi Kartına Geç" : "Ödeme Yöntemimi Değiştir";
+                          })()}
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="p-6">
