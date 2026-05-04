@@ -679,6 +679,16 @@ const DoctorDashboard = () => {
         ordersQuery.ilike('customer_email', specialistEmail);
       }
 
+      // RLS, packages ve edge function'ı PARALEL başlat (cold start beklenmesin)
+      const edgePromise = (specialistEmail || specialistName)
+        ? supabase.functions.invoke('get-specialist-contracts', {
+            body: {
+              email: specialistEmail || null,
+              name: specialistName || null,
+            },
+          })
+        : Promise.resolve({ data: null, error: null } as any);
+
       const [ordersResponse, packagesResponse] = await Promise.all([
         ordersQuery,
         supabase
@@ -704,39 +714,37 @@ const DoctorDashboard = () => {
           return { ...order, package_features: pkg?.features || [] };
         });
 
-      // 1) RLS sonucunu hemen göster — bekletme yok
-      setContracts(buildWithFeatures(orders));
-      console.log('Sözleşmeler (RLS) yüklendi:', orders?.length || 0);
-
-      // 2) Edge function'ı arka planda çağır; eksik kayıt varsa birleştirip günceller
-      if (specialistEmail || specialistName) {
-        supabase.functions.invoke('get-specialist-contracts', {
-          body: {
-            email: specialistEmail || null,
-            name: specialistName || null,
-          },
-        }).then(({ data: edgeData, error: edgeError }) => {
-          if (edgeError) {
-            console.warn('Edge function sözleşme sorgusu hatası:', edgeError);
-            return;
-          }
-          if (!Array.isArray(edgeData) || edgeData.length === 0) return;
-
-          const merged = Array.from(
-            new Map([...(orders as any[]), ...(edgeData as any[])].map((o: any) => [o.id, o])).values()
-          ).sort(
-            (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
-
-          // Sadece gerçekten yeni kayıt varsa state'i güncelle (gereksiz re-render önle)
-          if (merged.length !== orders.length) {
-            setContracts(buildWithFeatures(merged));
-            console.log('Sözleşmeler (edge merge) güncellendi:', merged.length);
-          }
-        }).catch((edgeEx) => {
-          console.warn('Edge function çağrısı başarısız:', edgeEx);
-        });
+      // 1) RLS doluysa hemen göster ve cache'le
+      if (orders.length > 0) {
+        const built = buildWithFeatures(orders);
+        setContracts(built);
+        try { sessionStorage.setItem(cacheKey, JSON.stringify(built)); } catch (_) {}
+        console.log('Sözleşmeler (RLS) yüklendi:', orders.length);
       }
+
+      // 2) Edge function (paralel başlatıldı) — sonucu birleştir
+      edgePromise.then(({ data: edgeData, error: edgeError }: any) => {
+        if (edgeError) {
+          console.warn('Edge function sözleşme sorgusu hatası:', edgeError);
+          return;
+        }
+        if (!Array.isArray(edgeData) || edgeData.length === 0) return;
+
+        const merged = Array.from(
+          new Map([...(orders as any[]), ...(edgeData as any[])].map((o: any) => [o.id, o])).values()
+        ).sort(
+          (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        if (merged.length !== orders.length) {
+          const built = buildWithFeatures(merged);
+          setContracts(built);
+          try { sessionStorage.setItem(cacheKey, JSON.stringify(built)); } catch (_) {}
+          console.log('Sözleşmeler (edge merge) güncellendi:', merged.length);
+        }
+      }).catch((edgeEx: any) => {
+        console.warn('Edge function çağrısı başarısız:', edgeEx);
+      });
     } catch (error) {
       console.error('Sözleşmeler yüklenirken beklenmeyen hata:', error);
     }
