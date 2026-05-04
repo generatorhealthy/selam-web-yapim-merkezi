@@ -197,7 +197,12 @@ serve(async (req) => {
     const iyzicoResult = await iyzicoResponse.json();
     console.log("Iyzico checkout init result:", JSON.stringify(iyzicoResult));
 
-    if (iyzicoResult.status !== "success" || !iyzicoResult.data?.checkoutFormContent) {
+    // Iyzico v2 subscription API returns fields at top level (not under .data)
+    const checkoutFormContent = iyzicoResult.data?.checkoutFormContent ?? iyzicoResult.checkoutFormContent;
+    const token = iyzicoResult.data?.token ?? iyzicoResult.token;
+    const checkoutPageUrl = iyzicoResult.data?.checkoutPageUrl ?? iyzicoResult.checkoutPageUrl;
+
+    if (iyzicoResult.status !== "success" || !checkoutFormContent) {
       // Mark change record as failed
       if (changeRecord?.id) {
         await supabase
@@ -222,16 +227,16 @@ serve(async (req) => {
       await supabase
         .from("payment_method_changes")
         .update({
-          iyzico_token: iyzicoResult.data.token,
-          iyzico_checkout_url: iyzicoResult.data.checkoutFormContent ? null : iyzicoResult.data.checkoutPageUrl,
+          iyzico_token: token,
+          iyzico_checkout_url: checkoutPageUrl ?? null,
         })
         .eq("id", changeRecord.id);
     }
 
     return new Response(JSON.stringify({
       success: true,
-      checkoutFormContent: iyzicoResult.data.checkoutFormContent,
-      token: iyzicoResult.data.token,
+      checkoutFormContent: checkoutFormContent,
+      token: token,
       changeId: changeRecordId,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
