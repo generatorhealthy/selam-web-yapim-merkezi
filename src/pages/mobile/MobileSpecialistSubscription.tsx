@@ -31,6 +31,24 @@ export default function MobileSpecialistSubscription() {
 
   useEffect(() => {
     let cancelled = false;
+
+    // 0) Cache'ten anında doldur — kullanıcı bekletilmesin
+    try {
+      const cachedOrders = sessionStorage.getItem("mobile_sub_orders");
+      const cachedSub = sessionStorage.getItem("mobile_sub_auto");
+      if (cachedOrders) {
+        const parsed = JSON.parse(cachedOrders);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setOrders(parsed);
+          setLoading(false);
+        }
+      }
+      if (cachedSub) {
+        const parsedSub = JSON.parse(cachedSub);
+        if (parsedSub) setSub(parsedSub);
+      }
+    } catch (_) {}
+
     (async () => {
       try {
         const {
