@@ -302,15 +302,21 @@ ${(testsRes.data || []).map((t: any) => `  <url>
       console.error('Upload error:', uploadError)
     }
 
-    // Ping Google about sitemap update
-    (globalThis as any).EdgeRuntime?.waitUntil(
+    // IndexNow ile arama motorlarına haber ver (Google ping endpoint'i 2023'te kapatıldı,
+    // sitemap güncellenince Google Search Console üzerinden zaten yeniden taranır.)
+    ;(globalThis as any).EdgeRuntime?.waitUntil(
       (async () => {
         try {
-          const pingUrl = `https://www.google.com/ping?sitemap=https://doktorumol.com.tr/sitemap.xml`
-          const response = await fetch(pingUrl)
-          console.log('Google ping response:', response.status)
+          await fetch(`${supabaseUrl}/functions/v1/notify-search-engines`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${supabaseServiceKey}`,
+            },
+            body: JSON.stringify({ urls: ['https://doktorumol.com.tr/sitemap.xml'] }),
+          })
         } catch (error) {
-          console.error('Failed to ping Google:', error)
+          console.error('Failed to notify search engines:', error)
         }
       })()
     )
