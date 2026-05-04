@@ -219,9 +219,10 @@ ${blogs.map(blog => `  <url>
   </url>`).join('\n')}
 
   <!-- Uzman Profilleri -->
-${specialists.map((specialist: SpecialistEntry) => {
+${specialists.map((specialist: any) => {
     const specialtySlug = generateSlug(specialist.specialty)
-    const nameSlug = generateSlug(specialist.name)
+    // DB'deki slug kolonu öncelikli (isim değişse bile sabit)
+    const nameSlug = specialist.slug || generateSlug(specialist.name)
     
     return `  <url>
     <loc>https://doktorumol.com.tr/${specialtySlug}/${nameSlug}</loc>
@@ -230,6 +231,14 @@ ${specialists.map((specialist: SpecialistEntry) => {
     <priority>0.6</priority>
   </url>`
   }).join('\n')}
+
+  <!-- Testler -->
+${(testsRes.data || []).map((t: any) => `  <url>
+    <loc>https://doktorumol.com.tr/test/${t.id}</loc>
+    <lastmod>${new Date(t.updated_at).toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>`).join('\n')}
 
   <!-- Yasal Sayfalar -->
   <url>
