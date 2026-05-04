@@ -17,6 +17,43 @@ interface SpecialistEntry {
   updated_at: string;
 }
 
+const PAGE_SIZE = 1000
+
+async function fetchAllRows(
+  supabase: any,
+  table: string,
+  columns: string,
+  applyFilters: (query: any) => any,
+) {
+  const allRows: any[] = []
+  let from = 0
+
+  while (true) {
+    const query = applyFilters(
+      supabase
+        .from(table)
+        .select(columns)
+        .range(from, from + PAGE_SIZE - 1),
+    )
+
+    const { data, error } = await query
+
+    if (error) {
+      throw new Error(`Failed to fetch ${table}: ${error.message}`)
+    }
+
+    allRows.push(...(data || []))
+
+    if (!data || data.length < PAGE_SIZE) {
+      break
+    }
+
+    from += PAGE_SIZE
+  }
+
+  return allRows
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -33,44 +70,27 @@ Deno.serve(async (req) => {
 
     console.log('Starting sitemap generation...')
 
-    // Fetch published blogs from both tables
-    const [blogsRes, blogPostsRes] = await Promise.all([
-      supabase
-        .from('blogs')
-        .select('slug, updated_at, created_at')
-        .eq('status', 'published'),
-      supabase
-        .from('blog_posts')
-        .select('slug, published_at, created_at, updated_at')
-        .eq('status', 'published')
+    // Fetch published blogs from both tables. Supabase returns max 1000 rows by default,
+    // so paginate to keep sitemap complete as blog/test/specialist counts grow.
+    const [blogsData, blogPostsData, specialistsData, testsData] = await Promise.all([
+      fetchAllRows(supabase, 'blogs', 'slug, updated_at, created_at', (query) =>
+        query.eq('status', 'published')
+      ),
+      fetchAllRows(supabase, 'blog_posts', 'slug, published_at, created_at, updated_at', (query) =>
+        query.eq('status', 'published')
+      ),
+      fetchAllRows(supabase, 'specialists', 'name, specialty, slug, updated_at', (query) =>
+        query.eq('is_active', true)
+      ),
+      fetchAllRows(supabase, 'tests', 'id, updated_at', (query) =>
+        query.eq('is_active', true).eq('status', 'published')
+      ),
     ])
-
-    // Fetch active specialists (slug kolonu kullanılır — isim değişikliklerinden etkilenmez)
-    const specialistsRes = await supabase
-      .from('specialists')
-      .select('name, specialty, slug, updated_at')
-      .eq('is_active', true)
-
-    // Fetch active tests
-    const testsRes = await supabase
-      .from('tests')
-      .select('id, updated_at')
-      .eq('is_active', true)
-      .eq('status', 'published')
-
-    if (blogsRes.error || blogPostsRes.error || specialistsRes.error) {
-      console.error('Error fetching data:', {
-        blogsError: blogsRes.error,
-        blogPostsError: blogPostsRes.error,
-        specialistsError: specialistsRes.error
-      })
-      throw new Error('Failed to fetch data for sitemap')
-    }
 
     // Combine and deduplicate blog entries
     const blogEntries = new Map<string, BlogEntry>()
     
-    ;(blogsRes.data || []).forEach((blog: any) => {
+    ;(blogsData || []).forEach((blog: any) => {
       blogEntries.set(blog.slug, {
         slug: blog.slug,
         updated_at: blog.updated_at,
@@ -78,7 +98,7 @@ Deno.serve(async (req) => {
       })
     })
 
-    ;(blogPostsRes.data || []).forEach((post: any) => {
+    ;(blogPostsData || []).forEach((post: any) => {
       const existing = blogEntries.get(post.slug)
       if (!existing) {
         blogEntries.set(post.slug, {
@@ -94,7 +114,7 @@ Deno.serve(async (req) => {
       }
     })
 
-    const specialists = specialistsRes.data || []
+    const specialists = specialistsData || []
     const blogs = Array.from(blogEntries.values())
 
     console.log(`Found ${blogs.length} blog posts and ${specialists.length} specialists`)
@@ -233,7 +253,7 @@ ${specialists.map((specialist: any) => {
   }).join('\n')}
 
   <!-- Testler -->
-${(testsRes.data || []).map((t: any) => `  <url>
+${(testsData || []).map((t: any) => `  <url>
     <loc>https://doktorumol.com.tr/test/${t.id}</loc>
     <lastmod>${new Date(t.updated_at).toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
