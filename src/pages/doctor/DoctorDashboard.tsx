@@ -1775,6 +1775,12 @@ const DoctorDashboard = () => {
         </main>
       </div>
 
+      <PaymentMethodChangeDialog
+        open={isPaymentChangeOpen}
+        onClose={() => setIsPaymentChangeOpen(false)}
+        currentPaymentMethod={contracts[0]?.payment_method}
+      />
+
       {selectedContract && (
         <ContractDialog
           open={isContractDialogOpen}
