@@ -223,12 +223,15 @@ export type Database = {
           customer_type: string
           id: string
           is_active: boolean | null
+          iyzico_customer_reference_code: string | null
+          last_card_update_at: string | null
           monthly_payment_day: number
           package_name: string
           package_type: string
           paid_months: number[] | null
           payment_method: string
           registration_date: string
+          subscription_reference_code: string | null
           total_months: number
           updated_at: string
         }
@@ -248,12 +251,15 @@ export type Database = {
           customer_type?: string
           id?: string
           is_active?: boolean | null
+          iyzico_customer_reference_code?: string | null
+          last_card_update_at?: string | null
           monthly_payment_day: number
           package_name: string
           package_type: string
           paid_months?: number[] | null
           payment_method: string
           registration_date: string
+          subscription_reference_code?: string | null
           total_months?: number
           updated_at?: string
         }
@@ -273,12 +279,15 @@ export type Database = {
           customer_type?: string
           id?: string
           is_active?: boolean | null
+          iyzico_customer_reference_code?: string | null
+          last_card_update_at?: string | null
           monthly_payment_day?: number
           package_name?: string
           package_type?: string
           paid_months?: number[] | null
           payment_method?: string
           registration_date?: string
+          subscription_reference_code?: string | null
           total_months?: number
           updated_at?: string
         }
@@ -4388,6 +4397,7 @@ export type Database = {
           invoice_number: string | null
           invoice_sent: boolean
           is_first_order: boolean | null
+          iyzico_customer_reference_code: string | null
           package_name: string
           package_type: string
           parent_order_id: string | null
@@ -4397,6 +4407,7 @@ export type Database = {
           pre_info_pdf_content: string | null
           status: string
           subscription_month: number | null
+          subscription_reference_code: string | null
           updated_at: string
         }
         Insert: {
@@ -4424,6 +4435,7 @@ export type Database = {
           invoice_number?: string | null
           invoice_sent?: boolean
           is_first_order?: boolean | null
+          iyzico_customer_reference_code?: string | null
           package_name: string
           package_type: string
           parent_order_id?: string | null
@@ -4433,6 +4445,7 @@ export type Database = {
           pre_info_pdf_content?: string | null
           status?: string
           subscription_month?: number | null
+          subscription_reference_code?: string | null
           updated_at?: string
         }
         Update: {
@@ -4460,6 +4473,7 @@ export type Database = {
           invoice_number?: string | null
           invoice_sent?: boolean
           is_first_order?: boolean | null
+          iyzico_customer_reference_code?: string | null
           package_name?: string
           package_type?: string
           parent_order_id?: string | null
@@ -4469,6 +4483,7 @@ export type Database = {
           pre_info_pdf_content?: string | null
           status?: string
           subscription_month?: number | null
+          subscription_reference_code?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -4607,6 +4622,63 @@ export type Database = {
           profile_picture?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      payment_method_changes: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          initiated_by: string | null
+          iyzico_checkout_url: string | null
+          iyzico_token: string | null
+          new_payment_method: string
+          new_subscription_ref: string | null
+          notes: string | null
+          old_payment_method: string | null
+          old_subscription_ref: string | null
+          specialist_email: string
+          specialist_name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          initiated_by?: string | null
+          iyzico_checkout_url?: string | null
+          iyzico_token?: string | null
+          new_payment_method: string
+          new_subscription_ref?: string | null
+          notes?: string | null
+          old_payment_method?: string | null
+          old_subscription_ref?: string | null
+          specialist_email: string
+          specialist_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          initiated_by?: string | null
+          iyzico_checkout_url?: string | null
+          iyzico_token?: string | null
+          new_payment_method?: string
+          new_subscription_ref?: string | null
+          notes?: string | null
+          old_payment_method?: string | null
+          old_subscription_ref?: string | null
+          specialist_email?: string
+          specialist_name?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
