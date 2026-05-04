@@ -276,12 +276,15 @@ ${(testsRes.data || []).map((t: any) => `  <url>
     console.log('Generated sitemap with', blogs.length, 'blogs and', specialists.length, 'specialists')
 
     // If XML format requested, return XML directly (for crawlers)
+    // Cache yok — yeni içerik anında yansısın
     if (format === 'xml') {
       return new Response(sitemap, {
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/xml; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
         status: 200
       })
