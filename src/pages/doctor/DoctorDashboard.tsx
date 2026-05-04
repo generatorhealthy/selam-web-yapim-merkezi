@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Calendar, FileText, User, BarChart3, MessageSquare, Send, Plus, Clock, CheckCircle, FileSignature, Users, Bell, ChevronRight, TrendingUp, Activity, CreditCard, Package, Sparkles, Eye, PenLine, ClipboardList, Phone, UserPlus } from "lucide-react";
 import ContractDialog from "@/components/ContractDialog";
+import { PaymentMethodChangeDialog } from "@/components/PaymentMethodChangeDialog";
 import { ClientPortfolio } from "@/components/ClientPortfolio";
 import SpecialistReferralsPanel from "@/components/SpecialistReferralsPanel";
 import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
@@ -408,6 +409,7 @@ const DoctorDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
   const [isContractDialogOpen, setIsContractDialogOpen] = useState(false);
+  const [isPaymentChangeOpen, setIsPaymentChangeOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [contractType, setContractType] = useState<'preInfo' | 'distanceSales'>('preInfo');
   const [newTicket, setNewTicket] = useState({
