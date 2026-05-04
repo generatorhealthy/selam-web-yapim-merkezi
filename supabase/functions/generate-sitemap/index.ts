@@ -45,11 +45,18 @@ Deno.serve(async (req) => {
         .eq('status', 'published')
     ])
 
-    // Fetch active specialists
+    // Fetch active specialists (slug kolonu kullanılır — isim değişikliklerinden etkilenmez)
     const specialistsRes = await supabase
       .from('specialists')
-      .select('name, specialty, updated_at')
+      .select('name, specialty, slug, updated_at')
       .eq('is_active', true)
+
+    // Fetch active tests
+    const testsRes = await supabase
+      .from('tests')
+      .select('id, updated_at')
+      .eq('is_active', true)
+      .eq('status', 'published')
 
     if (blogsRes.error || blogPostsRes.error || specialistsRes.error) {
       console.error('Error fetching data:', {
