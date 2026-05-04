@@ -124,7 +124,9 @@ export default function MobileSpecialistSubscription() {
 
         if (cancelled) return;
 
-        setSub(autoByEmailRes.data || autoByNameRes.data || null);
+        const subValue = autoByEmailRes.data || autoByNameRes.data || null;
+        setSub(subValue);
+        try { sessionStorage.setItem("mobile_sub_auto", JSON.stringify(subValue)); } catch (_) {}
 
         const merged = new Map<string, any>();
         const mergeOrders = (list: any[]) => {
@@ -136,11 +138,11 @@ export default function MobileSpecialistSubscription() {
         mergeOrders(ordersByEmailRes.data || []);
         mergeOrders(ordersByNameRes.data || []);
 
-        setOrders(
-          Array.from(merged.values()).sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-          ),
+        const sortedOrders = Array.from(merged.values()).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         );
+        setOrders(sortedOrders);
+        try { sessionStorage.setItem("mobile_sub_orders", JSON.stringify(sortedOrders)); } catch (_) {}
         setLoading(false);
 
         // Referans özeti (paralel, hata olursa sessizce geç)
