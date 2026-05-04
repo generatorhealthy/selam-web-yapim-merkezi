@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
 import { CreditCard, CheckCircle2, Calendar, Package, Gift } from "lucide-react";
+import { PaymentMethodChangeDialog } from "@/components/PaymentMethodChangeDialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function MobileSpecialistSubscription() {
   const navigate = useNavigate();
@@ -11,6 +13,21 @@ export default function MobileSpecialistSubscription() {
   const [sub, setSub] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [referralSummary, setReferralSummary] = useState<{ total: number; qualified: number; bonusGranted: number; bonusMonths: number } | null>(null);
+  const [isPaymentChangeOpen, setIsPaymentChangeOpen] = useState(false);
+  const { toast } = useToast();
+
+  // Iyzico kart değişikliği dönüşünü yakala
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const change = params.get("paymentChange");
+    if (change === "success") {
+      toast({ title: "Ödeme yöntemi güncellendi", description: "Yeni kartınız başarıyla kaydedildi." });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (change === "failed") {
+      toast({ title: "İşlem başarısız", description: "Kart değiştirme tamamlanamadı.", variant: "destructive" });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [toast]);
 
   useEffect(() => {
     let cancelled = false;
