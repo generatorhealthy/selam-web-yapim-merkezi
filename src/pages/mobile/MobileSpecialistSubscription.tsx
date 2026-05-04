@@ -172,11 +172,11 @@ export default function MobileSpecialistSubscription() {
             });
             if (cancelled || !Array.isArray(edgeData) || edgeData.length === 0) return;
             mergeOrders(edgeData);
-            setOrders(
-              Array.from(merged.values()).sort(
-                (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-              ),
+            const mergedSorted = Array.from(merged.values()).sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
             );
+            setOrders(mergedSorted);
+            try { sessionStorage.setItem("mobile_sub_orders", JSON.stringify(mergedSorted)); } catch (_) {}
           } catch {}
         }
       } catch (error) {
