@@ -422,6 +422,27 @@ const DoctorDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Handle return from Iyzico card-change flow
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const change = params.get("paymentChange");
+    if (change === "success") {
+      toast({
+        title: "Ödeme yöntemi güncellendi",
+        description: "Yeni kartınız başarıyla kaydedildi. Sonraki tahsilatlar bu karttan yapılacaktır.",
+      });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (change === "failed") {
+      toast({
+        title: "İşlem başarısız",
+        description: "Kart değiştirme işlemi tamamlanamadı. Lütfen tekrar deneyin.",
+        variant: "destructive",
+      });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [toast]);
+
+
   useEffect(() => {
     let mounted = true;
     
