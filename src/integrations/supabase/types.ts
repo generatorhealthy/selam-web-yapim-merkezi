@@ -6424,6 +6424,10 @@ export type Database = {
         }[]
       }
       merge_duplicate_client_referrals: { Args: never; Returns: undefined }
+      notify_search_engines_async: {
+        Args: { _id?: string; _slug?: string; _type: string }
+        Returns: undefined
+      }
       record_failed_admin_login: {
         Args: { p_email: string; p_ip_address?: string }
         Returns: {
