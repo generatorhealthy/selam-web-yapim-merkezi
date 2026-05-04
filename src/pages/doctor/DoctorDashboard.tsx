@@ -684,39 +684,46 @@ const DoctorDashboard = () => {
       let orders = ordersResponse.data || [];
       console.log('RLS orders count:', orders?.length || 0);
 
-      // RLS bazı satırları gizleyebildiği için edge function sonucunu her zaman birleştir
-      if (specialistEmail || specialistName) {
-        try {
-          console.log('Invoking edge function get-specialist-contracts with', { email: specialistEmail, name: specialistName });
-          const { data: edgeData, error: edgeError } = await supabase.functions.invoke('get-specialist-contracts', {
-            body: {
-              email: specialistEmail || null,
-              name: specialistName || null,
-            },
-          });
+      const packagesData = packagesResponse.data || [];
+      const buildWithFeatures = (list: any[]) =>
+        list.map((order: any) => {
+          const pkg = packagesData.find((p: any) => p.name === order.package_name);
+          return { ...order, package_features: pkg?.features || [] };
+        });
 
+      // 1) RLS sonucunu hemen göster — bekletme yok
+      setContracts(buildWithFeatures(orders));
+      console.log('Sözleşmeler (RLS) yüklendi:', orders?.length || 0);
+
+      // 2) Edge function'ı arka planda çağır; eksik kayıt varsa birleştirip günceller
+      if (specialistEmail || specialistName) {
+        supabase.functions.invoke('get-specialist-contracts', {
+          body: {
+            email: specialistEmail || null,
+            name: specialistName || null,
+          },
+        }).then(({ data: edgeData, error: edgeError }) => {
           if (edgeError) {
             console.warn('Edge function sözleşme sorgusu hatası:', edgeError);
-          } else if (Array.isArray(edgeData)) {
-            console.log('Edge function result count:', edgeData.length);
-            orders = Array.from(
-              new Map([...(orders as any[]), ...(edgeData as any[])].map((order: any) => [order.id, order])).values()
-            ).sort(
-              (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            );
+            return;
           }
-        } catch (edgeEx) {
+          if (!Array.isArray(edgeData) || edgeData.length === 0) return;
+
+          const merged = Array.from(
+            new Map([...(orders as any[]), ...(edgeData as any[])].map((o: any) => [o.id, o])).values()
+          ).sort(
+            (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+
+          // Sadece gerçekten yeni kayıt varsa state'i güncelle (gereksiz re-render önle)
+          if (merged.length !== orders.length) {
+            setContracts(buildWithFeatures(merged));
+            console.log('Sözleşmeler (edge merge) güncellendi:', merged.length);
+          }
+        }).catch((edgeEx) => {
           console.warn('Edge function çağrısı başarısız:', edgeEx);
-        }
+        });
       }
-
-      const withFeatures = (orders || []).map((order: any) => {
-        const pkg = (packagesResponse.data || []).find((p: any) => p.name === order.package_name);
-        return { ...order, package_features: pkg?.features || [] };
-      });
-
-      setContracts(withFeatures);
-      console.log('Sözleşmeler yüklendi:', withFeatures?.length || 0);
     } catch (error) {
       console.error('Sözleşmeler yüklenirken beklenmeyen hata:', error);
     }
