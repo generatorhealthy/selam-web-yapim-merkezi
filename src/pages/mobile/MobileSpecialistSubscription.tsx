@@ -31,6 +31,24 @@ export default function MobileSpecialistSubscription() {
 
   useEffect(() => {
     let cancelled = false;
+
+    // 0) Cache'ten anında doldur — kullanıcı bekletilmesin
+    try {
+      const cachedOrders = sessionStorage.getItem("mobile_sub_orders");
+      const cachedSub = sessionStorage.getItem("mobile_sub_auto");
+      if (cachedOrders) {
+        const parsed = JSON.parse(cachedOrders);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setOrders(parsed);
+          setLoading(false);
+        }
+      }
+      if (cachedSub) {
+        const parsedSub = JSON.parse(cachedSub);
+        if (parsedSub) setSub(parsedSub);
+      }
+    } catch (_) {}
+
     (async () => {
       try {
         const {
@@ -106,7 +124,9 @@ export default function MobileSpecialistSubscription() {
 
         if (cancelled) return;
 
-        setSub(autoByEmailRes.data || autoByNameRes.data || null);
+        const subValue = autoByEmailRes.data || autoByNameRes.data || null;
+        setSub(subValue);
+        try { sessionStorage.setItem("mobile_sub_auto", JSON.stringify(subValue)); } catch (_) {}
 
         const merged = new Map<string, any>();
         const mergeOrders = (list: any[]) => {
@@ -118,11 +138,11 @@ export default function MobileSpecialistSubscription() {
         mergeOrders(ordersByEmailRes.data || []);
         mergeOrders(ordersByNameRes.data || []);
 
-        setOrders(
-          Array.from(merged.values()).sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-          ),
+        const sortedOrders = Array.from(merged.values()).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         );
+        setOrders(sortedOrders);
+        try { sessionStorage.setItem("mobile_sub_orders", JSON.stringify(sortedOrders)); } catch (_) {}
         setLoading(false);
 
         // Referans özeti (paralel, hata olursa sessizce geç)
@@ -152,11 +172,11 @@ export default function MobileSpecialistSubscription() {
             });
             if (cancelled || !Array.isArray(edgeData) || edgeData.length === 0) return;
             mergeOrders(edgeData);
-            setOrders(
-              Array.from(merged.values()).sort(
-                (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-              ),
+            const mergedSorted = Array.from(merged.values()).sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
             );
+            setOrders(mergedSorted);
+            try { sessionStorage.setItem("mobile_sub_orders", JSON.stringify(mergedSorted)); } catch (_) {}
           } catch {}
         }
       } catch (error) {

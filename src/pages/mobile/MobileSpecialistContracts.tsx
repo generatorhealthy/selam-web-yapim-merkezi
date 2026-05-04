@@ -13,6 +13,19 @@ export default function MobileSpecialistContracts() {
 
   useEffect(() => {
     let cancelled = false;
+
+    // 0) Cache'ten anında doldur
+    try {
+      const cached = sessionStorage.getItem("mobile_contracts");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setContracts(parsed);
+          setLoading(false);
+        }
+      }
+    } catch (_) {}
+
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { navigate("/mobile/login"); return; }
@@ -28,7 +41,10 @@ export default function MobileSpecialistContracts() {
 
       if (cancelled) return;
       const initial = (data || []).slice(0, 1);
-      setContracts(initial);
+      if (initial.length > 0) {
+        setContracts(initial);
+        try { sessionStorage.setItem("mobile_contracts", JSON.stringify(initial)); } catch (_) {}
+      }
       setLoading(false);
 
       // 2) ARKA PLANDA: Edge function ile genişletilmiş eşleşme — gelirse birleştir
@@ -47,7 +63,9 @@ export default function MobileSpecialistContracts() {
         const merged = Array.from(
           new Map([...(data || []), ...edgeData].map((o: any) => [o.id, o])).values(),
         ).sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-        setContracts(merged.slice(0, 1));
+        const finalList = merged.slice(0, 1);
+        setContracts(finalList);
+        try { sessionStorage.setItem("mobile_contracts", JSON.stringify(finalList)); } catch (_) {}
       } catch {}
     })();
     return () => { cancelled = true; };
