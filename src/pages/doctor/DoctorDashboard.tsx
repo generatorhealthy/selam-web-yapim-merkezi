@@ -653,6 +653,19 @@ const DoctorDashboard = () => {
         }
       }
 
+      // 0) Cache'ten anında göster — kullanıcı bekletilmesin
+      const cacheKey = `doctor_contracts_${specialistEmail || specialistName || 'anon'}`;
+      try {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setContracts(parsed);
+            console.log('Sözleşmeler (cache) yüklendi:', parsed.length);
+          }
+        }
+      } catch (_) {}
+
       // Önce RLS ile erişilebilen siparişleri getir (email filtresi ile)
       // Not: deleted_at filtresi kaldırıldı — uzman kendi onaylı sözleşmesini her durumda görebilmeli
       const ordersQuery = supabase
