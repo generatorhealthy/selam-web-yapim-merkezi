@@ -207,6 +207,29 @@ function decodeMime(s: string): string {
   });
 }
 
+function normalizeSearch(input: string): string {
+  return (input || "")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/=C4=B0/gi, "İ")
+    .replace(/=C4=B1/gi, "ı")
+    .replace(/=C5=9E/gi, "Ş")
+    .replace(/=C5=9F/gi, "ş")
+    .replace(/=C4=9E/gi, "Ğ")
+    .replace(/=C4=9F/gi, "ğ")
+    .replace(/=C3=9C/gi, "Ü")
+    .replace(/=C3=BC/gi, "ü")
+    .replace(/=C3=96/gi, "Ö")
+    .replace(/=C3=B6/gi, "ö")
+    .replace(/=C3=87/gi, "Ç")
+    .replace(/=C3=A7/gi, "ç")
+    .replace(/=([0-9A-F]{2})/gi, (_m, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -249,25 +272,26 @@ Deno.serve(async (req) => {
         const source = await imap.fetchSource(uid);
         const { subject, from, messageId } = parseHeaders(source);
 
-        // Sadece Akbank içerikli mailleri işle (gönderen veya konu)
-        const lc = `${from} ${subject}`.toLowerCase();
-        // Akbank'tan gelen TÜM para girişi bildirimlerini yakala:
-        // HAVALE, EFT, FAST, virman, gelen havale, hesabınıza, para transferi vb.
+        // Akbank havale mailleri bazen subject'te sadece "Hesap Hareketleri" görünüyor;
+        // bu yüzden gövdeyi de tarıyoruz.
+        const lc = normalizeSearch(`${from} ${subject} ${source.slice(0, 200000)}`);
         const isFromAkbank = lc.includes("akbank");
         const hasMoneyKeyword =
           lc.includes("havale") ||
           lc.includes("eft") ||
           lc.includes("fast") ||
+          lc.includes("nakit girisi") ||
+          lc.includes("nakit girişi") ||
           lc.includes("virman") ||
           lc.includes("transfer") ||
-          lc.includes("para giri") || // "para girişi"
+          lc.includes("para giri") ||
           lc.includes("hesabiniza") ||
           lc.includes("hesabınıza") ||
           lc.includes("alacak") ||
           lc.includes("yatirildi") ||
           lc.includes("yatırıldı") ||
           lc.includes("gelen");
-        const isAkbank = isFromAkbank || hasMoneyKeyword;
+        const isAkbank = isFromAkbank && hasMoneyKeyword;
         if (!isAkbank) {
           summary.skipped_non_akbank++;
           await imap.markSeen(uid); // tekrar görmemek için işaretle

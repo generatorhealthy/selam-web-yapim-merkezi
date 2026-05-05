@@ -40,6 +40,37 @@ function normalizeTr(input: string): string {
   return s;
 }
 
+function stripHtmlAndDecode(text: string): string {
+  return (text || "")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<br\s*\/?>(?=\s*)/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/=C4=B0/gi, "İ")
+    .replace(/=C4=B1/gi, "ı")
+    .replace(/=C5=9E/gi, "Ş")
+    .replace(/=C5=9F/gi, "ş")
+    .replace(/=C4=9E/gi, "Ğ")
+    .replace(/=C4=9F/gi, "ğ")
+    .replace(/=C3=9C/gi, "Ü")
+    .replace(/=C3=BC/gi, "ü")
+    .replace(/=C3=96/gi, "Ö")
+    .replace(/=C3=B6/gi, "ö")
+    .replace(/=C3=87/gi, "Ç")
+    .replace(/=C3=A7/gi, "ç")
+    .replace(/=([0-9A-F]{2})/gi, (_m, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function looseTokens(name: string): string[] {
+  return tokenize(name).filter((t) => t.length > 1);
+}
+
 // Unvanları (Dr., Uzm., Prof. vb.) kaldır
 function stripTitles(name: string): string {
   return name
@@ -60,10 +91,20 @@ function tokenize(name: string): string[] {
  * Tek isimli (1 token) durumlar eşleşemez.
  */
 function namesMatch(a: string, b: string): boolean {
-  const ta = tokenize(a);
-  const tb = tokenize(b);
+  const ta = looseTokens(a);
+  const tb = looseTokens(b);
   if (ta.length < 2 || tb.length < 2) return false;
-  return ta[0] === tb[0] && ta[ta.length - 1] === tb[tb.length - 1];
+  if (ta[0] === tb[0] && ta[ta.length - 1] === tb[tb.length - 1]) return true;
+
+  // Banka açıklamasına küçük ekler gelebiliyor veya isimde ikinci ad eksik/fazla olabiliyor.
+  // En az iki anlamlı token ortaksa ve ilk/son isimlerden biri tutuyorsa güvenli aday kabul et.
+  const common = ta.filter((t) => tb.includes(t));
+  return common.length >= 2 && (ta[0] === tb[0] || ta[ta.length - 1] === tb[tb.length - 1]);
+}
+
+function amountMatches(mailAmount: number | null, orderAmount: number | null): boolean {
+  if (mailAmount == null || orderAmount == null) return false;
+  return Math.abs(Number(mailAmount) - Number(orderAmount)) < 0.5;
 }
 
 /**
@@ -76,15 +117,8 @@ function extractTransferInfo(text: string): {
 } {
   if (!text) return { senderName: null, amount: null };
 
-  // HTML temizle
-  const plain = text
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/\s+/g, " ")
-    .trim();
+  // HTML/quoted-printable temizle
+  const plain = stripHtmlAndDecode(text);
 
   // İsim: birden fazla kalıp dener (HAVALE/EFT/FAST mailleri farklı yapıda olabilir)
   // 1) "... hesabınıza AHMET YILMAZ tarafından ..." (Akbank nakit girişi şablonu)
@@ -94,6 +128,8 @@ function extractTransferInfo(text: string): {
   let senderName: string | null = null;
   const senderPatterns: RegExp[] = [
     /hesab[ıi]n[ıi]za\s+([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+taraf[ıi]ndan/i,
+    /no\.?lu\s+hesab[ıi]n[ıi]za\s+([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+taraf[ıi]ndan/i,
+    /(?:hesap|hesab[ıi]n[ıi]za).*?([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+taraf[ıi]ndan/i,
     /([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+taraf[ıi]ndan/i,
     /g[öo]nderen(?:\s*ad[ıi])?\s*[:\-]?\s*([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)(?:\s{2,}|\r|\n|<|,|;|$)/i,
     /([A-ZÇĞİÖŞÜÂÎÛ][A-ZÇĞİÖŞÜÂÎÛ\.\s]{2,80}?)\s+adl[ıi]\s+ki[şs]i/i,
@@ -189,19 +225,22 @@ serve(async (req) => {
         "";
 
       const fullText = [subject, text, html].filter(Boolean).join("\n");
+      const searchableText = stripHtmlAndDecode(fullText);
 
       // Akbank'tan gelen TÜM para girişi bildirimlerini işle:
-      // HAVALE, EFT, FAST, virman, gelen transfer vb.
+      // HAVALE, EFT, FAST, nakit girişi, virman, gelen transfer vb.
       const hasMoneyKeyword =
-        /HAVALE/i.test(fullText) ||
-        /\bEFT\b/i.test(fullText) ||
-        /\bFAST\b/i.test(fullText) ||
-        /virman/i.test(fullText) ||
-        /para\s*giri/i.test(fullText) ||
-        /yat[ıi]r[ıi]ld[ıi]/i.test(fullText) ||
-        /alacak\s*kayd/i.test(fullText);
+        /HAVALE/i.test(searchableText) ||
+        /\bEFT\b/i.test(searchableText) ||
+        /\bFAST\b/i.test(searchableText) ||
+        /NAK[İI]T\s+G[İI]R[İI][ŞS][İI]/i.test(searchableText) ||
+        /para\s*giri/i.test(searchableText) ||
+        /virman/i.test(searchableText) ||
+        /transfer/i.test(searchableText) ||
+        /yat[ıi]r[ıi]ld[ıi]/i.test(searchableText) ||
+        /alacak\s*kayd/i.test(searchableText);
       const isFromAkbank =
-        /(akbank|0721\s*Şube|hesab[ıi]n[ıi]za|hesab[ıi]ma)/i.test(fullText);
+        /(akbank|0721\s*Şube|hesab[ıi]n[ıi]za|hesab[ıi]ma|akbankl[ıi])/i.test(searchableText);
 
       const isAkbankTransfer = hasMoneyKeyword && isFromAkbank;
 
@@ -214,7 +253,7 @@ serve(async (req) => {
         continue;
       }
 
-      const { senderName, amount } = extractTransferInfo(fullText);
+      const { senderName, amount } = extractTransferInfo(searchableText);
 
       if (!senderName) {
         // Bilgi çıkarılamadı — yine de kaydet
@@ -256,9 +295,17 @@ serve(async (req) => {
         continue;
       }
 
-      const candidates = (pendingOrders ?? []).filter((o: any) =>
+      const nameCandidates = (pendingOrders ?? []).filter((o: any) =>
         namesMatch(senderName, o.customer_name ?? ""),
       );
+      const amountCandidates = (pendingOrders ?? []).filter((o: any) =>
+        amountMatches(amount, o.amount),
+      );
+      const candidates = nameCandidates.length > 0
+        ? nameCandidates
+        : amountCandidates.length === 1
+        ? amountCandidates
+        : [];
 
       // Audit kaydı oluştur
       const baseRow: any = {
@@ -278,7 +325,7 @@ serve(async (req) => {
       // Çoklu aday varsa: önce tutarı eşleşeni, sonra en eski (en küçük created_at) siparişi seç.
       // Aynı kişi birden fazla bekleyen ay siparişine sahip olsa bile, tek ödeme = tek onay.
       let selectedOrder: any = null;
-      let matchMethod: string = "auto_name_match";
+      let matchMethod: string = nameCandidates.length > 0 ? "auto_name_match" : "auto_amount_match";
       if (candidates.length === 1) {
         selectedOrder = candidates[0];
       } else if (candidates.length > 1) {
@@ -290,18 +337,17 @@ serve(async (req) => {
         if (amount != null) {
           const exact = sortedOldestFirst.find(
             (o: any) =>
-              o.amount != null &&
-              Math.abs(Number(o.amount) - Number(amount)) < 0.5,
+              amountMatches(amount, o.amount),
           );
           if (exact) {
             selectedOrder = exact;
-            matchMethod = "auto_name_amount_oldest";
+            matchMethod = nameCandidates.length > 0 ? "auto_name_amount_oldest" : "auto_amount_oldest";
           }
         }
         // 2) Tutar eşleşmesi yoksa en eski bekleyen siparişi onayla
         if (!selectedOrder) {
           selectedOrder = sortedOldestFirst[0];
-          matchMethod = "auto_name_oldest";
+          matchMethod = nameCandidates.length > 0 ? "auto_name_oldest" : "auto_amount_oldest";
         }
       }
 
@@ -397,11 +443,13 @@ serve(async (req) => {
           amountDiff,
         });
       } else {
-        // Sadece hiç aday bulunmadığında unmatched olur (isim eşleşmedi)
+        // Sadece hiç güvenli aday bulunmadığında unmatched olur
         await supabase.from("bank_transfer_notifications").insert({
           ...baseRow,
           status: "unmatched",
-          notes: "Bekleyen siparişler içinde isim eşleşmesi bulunamadı.",
+          notes: amountCandidates.length > 1
+            ? "Aynı tutarda birden fazla bekleyen sipariş var; yanlış onaylamamak için manuel inceleme gerekli."
+            : "Bekleyen siparişler içinde isim veya tutar eşleşmesi bulunamadı.",
         });
         results.push({
           status: "unmatched",
