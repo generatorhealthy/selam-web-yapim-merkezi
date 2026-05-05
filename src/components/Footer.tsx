@@ -36,13 +36,7 @@ const Footer = () => {
             </Link>
           </div>
 
-        </div>
-      </div>
-
-      {/* Açıklama Metni */}
-      <div className="border-t border-gray-200 bg-white">
-        <div className="container mx-auto px-4 py-5">
-          <p className="text-xs md:text-sm text-gray-600 leading-relaxed text-left max-w-6xl mx-auto">
+          <p className="border-t border-gray-200 pt-3 text-left text-xs md:text-sm text-gray-600 leading-relaxed max-w-6xl mx-auto">
             Doktorumol.com.tr, sağlık profesyonelleri ile danışanlar arasında köprü kuran bağımsız bir dijital platformdur. Platformumuzda paylaşılan görüşler, ilgili uzmanların talebi veya ricası olmaksızın, kullanıcılar tarafından özgür iradeleriyle kaleme alınmaktadır. Amacımız, kamuoyunu sağlık konularında bilgilendirmek ve doktora ulaşım sürecini şeffaflaştırmaktır. Web sitemiz, herhangi bir sağlık kurumunu veya uzmanını referans göstermemekte; yalnızca bilgi sunumu ve erişim desteği sağlamaktadır.
           </p>
         </div>
