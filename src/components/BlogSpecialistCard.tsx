@@ -24,6 +24,7 @@ interface BlogSpecialistCardProps {
 
 const BlogSpecialistCard = ({ specialist }: BlogSpecialistCardProps) => {
   const specialtySlug = createSpecialtySlug(specialist.specialty);
+  const doctorSlug = specialist.slug || createDoctorSlug(specialist.name);
 
   return (
     <Card className="my-8 border-l-4 border-l-primary bg-gradient-to-r from-blue-50 to-white">
