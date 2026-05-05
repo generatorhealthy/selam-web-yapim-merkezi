@@ -70,6 +70,7 @@ const ExplicitConsent = lazy(() => import("./pages/ExplicitConsent"));
 const DistanceSalesContract = lazy(() => import("./pages/DistanceSalesContract"));
 const VisitorConsultantAgreement = lazy(() => import("./pages/VisitorConsultantAgreement"));
 const CommentRules = lazy(() => import("./pages/CommentRules"));
+const SSS = lazy(() => import("./pages/SSS"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Landing = lazy(() => import("./pages/Landing"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -296,6 +297,8 @@ const AppContent = () => {
               <Route path="/ziyaretci-danisan-sozlesmesi" element={<VisitorConsultantAgreement />} />
               <Route path="/comment-rules" element={<CommentRules />} />
               <Route path="/yorum-kurallari" element={<CommentRules />} />
+              <Route path="/sss" element={<SSS />} />
+              <Route path="/sikca-sorulan-sorular" element={<SSS />} />
               <Route path="/anasayfa" element={<Landing />} />
               <Route path="/giris-yap" element={<LoginPage />} />
               <Route path="/sifre-sifirla" element={<ResetPassword />} />
