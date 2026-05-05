@@ -99,12 +99,12 @@ const BlogSpecialistCard = ({ specialist }: BlogSpecialistCardProps) => {
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
               <Button asChild className="bg-primary hover:bg-primary/90">
-                <Link to={`/${specialtySlug}/${specialist.slug}`}>
+                <Link to={`/${specialtySlug}/${doctorSlug}`}>
                   Profili İncele
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to={`/randevu-al/${specialtySlug}/${specialist.slug}`}>
+                <Link to={`/randevu-al/${specialtySlug}/${doctorSlug}`}>
                   🗓 Randevu Al
                 </Link>
               </Button>
