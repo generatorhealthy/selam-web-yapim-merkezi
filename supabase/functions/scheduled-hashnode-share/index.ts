@@ -34,9 +34,9 @@ function stripHtml(html: string): string {
 async function rewriteWithAI(title: string, originalContent: string, blogUrl: string): Promise<{ title: string; markdown: string; subtitle: string }> {
   const cleanContent = stripHtml(originalContent).substring(0, 8000);
 
-  const systemPrompt = `Sen profesyonel bir sağlık içerik editörüsün. Görevin: verilen blog yazısını TAMAMEN ÖZGÜN şekilde yeniden yazmak. Amaç duplicate content'i önlemek ama aynı bilgiyi farklı kelimelerle aktarmak. Tıbbi/psikolojik doğruluğu koru, Türkçe yaz, profesyonel ve samimi bir ton kullan.`;
+  const systemPrompt = `Sen alanında uzman, gerçek bir sağlık yazarısın — yapay zekâ değil. Konuşur gibi, akıcı, samimi yazıyorsun. Klişelere ve robotik AI üslubuna karşı alerjin var. Türkçe, profesyonel ama insani bir tonun var.`;
 
-  const userPrompt = `Aşağıdaki blog yazısını yeniden yaz:
+  const userPrompt = `Aşağıdaki blog yazısını Hashnode için yeniden yaz:
 
 ORİJİNAL BAŞLIK: ${title}
 
@@ -44,11 +44,18 @@ ORİJİNAL İÇERİK:
 ${cleanContent}
 
 GÖREV:
-1. Yeni başlık üret: orijinale BENZER konuda ama farklı kelimelerle (örn: "Depresyon Belirtileri" → "Depresyonun İlk İşaretleri Nelerdir?")
-2. Kısa bir alt başlık (subtitle) yaz (max 150 karakter)
-3. İçeriği MARKDOWN formatında yeniden yaz: minimum 600 kelime, ## başlıklarla bölümlendirilmiş, paragraflar farklı yapıda olmalı
-4. Aynı bilgiyi içersin ama farklı cümle yapıları, farklı örnekler, farklı başlıklarla
-5. Sonuna ASLA link/CTA ekleme (sistem otomatik ekleyecek)`;
+1. Yeni başlık üret: orijinale benzer konuda ama farklı, merak uyandırıcı kelimelerle
+2. Kısa bir alt başlık (subtitle) yaz (max 150 karakter, klişesiz)
+3. İçeriği MARKDOWN formatında yeniden yaz: minimum 600 kelime
+
+YAZIM KURALLARI (zorunlu):
+- Kişisel bir gözlem, küçük bir hikaye veya gerçek bir örnekle BAŞLA (örn: "Geçen gün bir danışanım...", "Çoğumuz fark etmeyiz ama...")
+- Akıcı paragraflar yaz — madde işareti/numaralı liste KULLANMA
+- ## başlıklarla bölümlendirebilirsin ama başlıklar klişe değil, merak uyandıran sorular veya çarpıcı ifadeler olsun
+- Şu klişeleri ASLA kullanma: "Sonuç olarak", "Önemlidir ki", "Unutmayın ki", "Bilinmelidir ki", "Özetle", "Kısacası", "Şunu belirtmek gerekir ki", "Günümüz dünyasında", "Hayatımızın vazgeçilmez bir parçası"
+- Konuşma dili, kısa-uzun cümle ritmi, doğal akış
+- Sonu okuyucuya yöneltilmiş bir SORU ile bitir (etkileşim için — örn: "Sence bu durumda ilk yapılması gereken ne?", "Sen hiç böyle hissettin mi?")
+- Sonuna ASLA link/CTA ekleme (sistem otomatik ekleyecek)`;
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
