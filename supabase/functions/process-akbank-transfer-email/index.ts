@@ -42,6 +42,7 @@ function normalizeTr(input: string): string {
 
 function stripHtmlAndDecode(text: string): string {
   return (text || "")
+    .replace(/=\r?\n/g, "")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<br\s*\/?>(?=\s*)/gi, " ")
@@ -65,6 +66,40 @@ function stripHtmlAndDecode(text: string): string {
     .replace(/=([0-9A-F]{2})/gi, (_m, h) => String.fromCharCode(parseInt(h, 16)))
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function decodeBase64Utf8(input: string): string {
+  try {
+    const clean = input.replace(/[^A-Za-z0-9+/=]/g, "");
+    if (clean.length < 16) return "";
+    const bin = atob(clean);
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    return new TextDecoder("utf-8").decode(bytes);
+  } catch {
+    return "";
+  }
+}
+
+function extractMimeDecodedText(raw: string): string {
+  if (!raw) return "";
+  const parts: string[] = [];
+  const b64Re = /Content-Transfer-Encoding:\s*base64[\s\S]*?\r?\n\r?\n([A-Za-z0-9+/=\r\n]{24,})(?=\r?\n--|$)/gi;
+  let match: RegExpExecArray | null;
+  while ((match = b64Re.exec(raw)) !== null) {
+    const decoded = decodeBase64Utf8(match[1]);
+    if (decoded) parts.push(decoded);
+  }
+
+  const qpRe = /Content-Transfer-Encoding:\s*quoted-printable[\s\S]*?\r?\n\r?\n([\s\S]*?)(?=\r?\n--|$)/gi;
+  while ((match = qpRe.exec(raw)) !== null) {
+    parts.push(match[1]);
+  }
+
+  return parts.join("\n");
+}
+
+function buildSearchableMailText(raw: string): string {
+  return stripHtmlAndDecode([raw, extractMimeDecodedText(raw)].filter(Boolean).join("\n"));
 }
 
 function looseTokens(name: string): string[] {
