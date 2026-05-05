@@ -40,7 +40,7 @@ async function generateMastodonPost(
   const reservedForHashtags = 80;
   const maxTextChars = MASTODON_MAX_CHARS - linkLength - reservedForHashtags;
 
-  const systemPrompt = `Sen sağlık ve psikoloji alanında uzman bir sosyal medya editörüsün. Mastodon (Twitter benzeri) için kısa, özgün, dikkat çekici postlar yazıyorsun. Türkçe yaz, emoji kullan, samimi ama profesyonel bir ton kullan.`;
+  const systemPrompt = `Sen sağlık ve psikoloji alanında deneyimli, gerçek bir sosyal medya editörüsün — yapay zekâ değil. Konuşur gibi, samimi, doğal yazıyorsun. Klişelere ve yapay AI üslubuna karşısın. Türkçe yazıyorsun.`;
 
   const userPrompt = `Aşağıdaki blog yazısını Mastodon postu hâline getir:
 
@@ -50,12 +50,14 @@ BAŞLIK: ${title}
 ${cleanContent}
 
 KURALLAR:
-1. POST METNİ MAX ${maxTextChars} KARAKTER (boşluklar dahil — bu çok önemli!)
-2. Dikkat çekici bir başlangıç (soru, çarpıcı bilgi veya emoji ile)
-3. Konunun özünü 2-3 kısa cümleyle anlat
-4. SONUNA LİNK VEYA HASHTAG EKLEME (sistem otomatik ekleyecek)
-5. Sadece düz metin, markdown kullanma
-6. Özgün ol — başlığı aynen kopyalama, yeniden ifade et`;
+1. POST METNİ MAX ${maxTextChars} KARAKTER (boşluklar dahil — çok önemli!)
+2. Kişisel bir gözlem, küçük bir an veya merak uyandırıcı bir soru ile BAŞLA (klişe başlangıç YOK)
+3. Konuyu 2-3 doğal, akıcı cümleyle anlat — madde işareti veya liste YOK
+4. Şu klişeleri ASLA kullanma: "Sonuç olarak", "Önemlidir ki", "Unutmayın ki", "Özetle", "Kısacası", "Günümüz dünyasında"
+5. Sonu okuyucuya yöneltilmiş bir SORU ile bitir (etkileşim için)
+6. SONUNA LİNK VEYA HASHTAG EKLEME (sistem otomatik ekleyecek)
+7. Sadece düz metin, markdown KULLANMA
+8. Başlığı aynen kopyalama, yeniden ifade et`;
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
