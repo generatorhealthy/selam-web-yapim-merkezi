@@ -244,7 +244,7 @@ const BlogDetail = () => {
       if (normalizedBlog.specialist_id) {
         const { data: specialistData } = await supabase
           .from('specialists')
-          .select('id, name, specialty, city, experience, bio, profile_picture, online_consultation, face_to_face_consultation')
+          .select('id, name, specialty, city, experience, bio, profile_picture, online_consultation, face_to_face_consultation, slug')
           .eq('id', normalizedBlog.specialist_id)
           .maybeSingle();
 
