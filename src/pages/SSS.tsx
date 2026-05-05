@@ -64,6 +64,7 @@ const SSS = () => {
       </Helmet>
 
       <main className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
+        <HorizontalNavigation />
         {/* Hero */}
         <section className="relative overflow-hidden border-b">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 pointer-events-none" />
