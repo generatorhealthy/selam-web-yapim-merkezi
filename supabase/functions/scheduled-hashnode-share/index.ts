@@ -223,23 +223,61 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Henüz Hashnode'a paylaşılmamış 1 blog bul
-    const { data: allBlogs } = await supabase
-      .from('blog_posts')
-      .select('id, title, slug, content, keywords, featured_image')
-      .eq('status', 'published')
-      .order('created_at', { ascending: true });
+    // Belirli bir blog ID isteniyor mu? (anlık paylaşım için)
+    let specificBlogId: string | null = null;
+    if (req.method === 'POST') {
+      try {
+        const body = await req.json();
+        specificBlogId = body?.blog_post_id || null;
+      } catch (_) {}
+    }
 
-    const { data: sharedBlogIds } = await supabase
-      .from('social_shares')
-      .select('blog_post_id')
-      .eq('platform', 'hashnode')
-      .eq('status', 'success');
+    let blogsToShare: any[] = [];
 
-    const sharedIds = new Set(sharedBlogIds?.map(s => s.blog_post_id) || []);
-    const blogsToShare = (allBlogs || [])
-      .filter(blog => !sharedIds.has(blog.id))
-      .slice(0, 1);
+    if (specificBlogId) {
+      // Daha önce başarılı paylaşıldı mı kontrol et
+      const { data: alreadyShared } = await supabase
+        .from('social_shares')
+        .select('id')
+        .eq('blog_post_id', specificBlogId)
+        .eq('platform', 'hashnode')
+        .eq('status', 'success')
+        .limit(1);
+
+      if (alreadyShared && alreadyShared.length > 0) {
+        console.log(`Blog ${specificBlogId} already shared on Hashnode, skipping`);
+        return new Response(JSON.stringify({ message: 'Already shared', shared: 0 }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: targetBlog } = await supabase
+        .from('blog_posts')
+        .select('id, title, slug, content, keywords, featured_image')
+        .eq('id', specificBlogId)
+        .eq('status', 'published')
+        .maybeSingle();
+
+      if (targetBlog) blogsToShare = [targetBlog];
+    } else {
+      // Cron modu: henüz paylaşılmamış 1 blog bul
+      const { data: allBlogs } = await supabase
+        .from('blog_posts')
+        .select('id, title, slug, content, keywords, featured_image')
+        .eq('status', 'published')
+        .order('created_at', { ascending: true });
+
+      const { data: sharedBlogIds } = await supabase
+        .from('social_shares')
+        .select('blog_post_id')
+        .eq('platform', 'hashnode')
+        .eq('status', 'success');
+
+      const sharedIds = new Set(sharedBlogIds?.map(s => s.blog_post_id) || []);
+      blogsToShare = (allBlogs || [])
+        .filter(blog => !sharedIds.has(blog.id))
+        .slice(0, 1);
+    }
 
     if (blogsToShare.length === 0) {
       console.log('No unshared blogs found for Hashnode');
