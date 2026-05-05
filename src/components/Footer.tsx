@@ -27,6 +27,10 @@ const Footer = () => {
               Aydınlatma Metni
             </Link>
             <span className="text-gray-400">|</span>
+            <Link to="/sss" className="hover:text-blue-600 transition-colors">
+              Sıkça Sorulan Sorular
+            </Link>
+            <span className="text-gray-400">|</span>
             <Link to="/comment-rules" className="hover:text-blue-600 transition-colors">
               Yorum Yayınlanma Kuralları
             </Link>
