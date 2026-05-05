@@ -298,9 +298,14 @@ serve(async (req) => {
       const nameCandidates = (pendingOrders ?? []).filter((o: any) =>
         namesMatch(senderName, o.customer_name ?? ""),
       );
+      const amountCandidates = (pendingOrders ?? []).filter((o: any) =>
+        amountMatches(amount, o.amount),
+      );
       const candidates = nameCandidates.length > 0
         ? nameCandidates
-        : (pendingOrders ?? []).filter((o: any) => amountMatches(amount, o.amount));
+        : amountCandidates.length === 1
+        ? amountCandidates
+        : [];
 
       // Audit kaydı oluştur
       const baseRow: any = {
@@ -438,11 +443,13 @@ serve(async (req) => {
           amountDiff,
         });
       } else {
-        // Sadece hiç aday bulunmadığında unmatched olur (isim eşleşmedi)
+        // Sadece hiç güvenli aday bulunmadığında unmatched olur
         await supabase.from("bank_transfer_notifications").insert({
           ...baseRow,
           status: "unmatched",
-          notes: "Bekleyen siparişler içinde isim eşleşmesi bulunamadı.",
+          notes: amountCandidates.length > 1
+            ? "Aynı tutarda birden fazla bekleyen sipariş var; yanlış onaylamamak için manuel inceleme gerekli."
+            : "Bekleyen siparişler içinde isim veya tutar eşleşmesi bulunamadı.",
         });
         results.push({
           status: "unmatched",
