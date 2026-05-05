@@ -394,3 +394,12 @@ All colors MUST be HSL.
     [data-cookie-consent] { will-change: transform, opacity; }
   }
 }
+
+/* iOS — input focus zoom & viewport shift fix */
+@supports (-webkit-touch-callout: none) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
