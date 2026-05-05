@@ -260,7 +260,7 @@ serve(async (req) => {
         "";
 
       const fullText = [subject, text, html].filter(Boolean).join("\n");
-      const searchableText = stripHtmlAndDecode(fullText);
+      const searchableText = buildSearchableMailText(fullText);
 
       // Akbank'tan gelen TÜM para girişi bildirimlerini işle:
       // HAVALE, EFT, FAST, nakit girişi, virman, gelen transfer vb.
