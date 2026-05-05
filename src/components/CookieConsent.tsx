@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 
 const CookieConsent = () => {
@@ -14,12 +13,10 @@ const CookieConsent = () => {
     const isMobile = window.matchMedia("(max-width: 767px)").matches;
     if (isMobile) return;
 
-    // Çerez onayı verip verilmediğini kontrol et ve gösterimi LCP sonrası ertele
     const consent = localStorage.getItem('cookie-consent');
     if (consent) return;
 
     const show = () => setShowBanner(true);
-    // LCP'yi etkilememesi için idle anında veya kısa gecikme ile göster
     if (typeof (window as any).requestIdleCallback === 'function') {
       (window as any).requestIdleCallback(show, { timeout: 2000 });
     } else {
@@ -41,53 +38,72 @@ const CookieConsent = () => {
   if (!showBanner) return null;
 
   return (
-    <div
-      className="fixed bottom-20 right-2 left-2 md:bottom-4 md:right-4 md:left-auto z-[60] w-auto md:w-[min(92vw,420px)] rounded-lg border border-border bg-card shadow-lg p-3 md:p-4 animate-fade-in"
-      role="dialog"
-      aria-live="polite"
-      aria-label="Çerez bildirimi"
-      data-cookie-consent
-    >
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed flex-1">
-            Bu site düzgün çalışma için çerez kullanır.{" "}
+    <>
+      {/* Hafif arka plan overlay */}
+      <div
+        className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[59] animate-fade-in"
+        aria-hidden="true"
+      />
+
+      <div
+        className="fixed left-1/2 -translate-x-1/2 bottom-6 z-[60] w-[min(94vw,560px)] rounded-2xl border border-border bg-card shadow-2xl p-6 md:p-7 animate-fade-in"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cookie-consent-title"
+        aria-describedby="cookie-consent-description"
+        data-cookie-consent
+      >
+        <div className="flex flex-col gap-4">
+          <h2
+            id="cookie-consent-title"
+            className="text-lg md:text-xl font-bold text-foreground tracking-tight"
+          >
+            Gizliliğinize değer veriyoruz
+          </h2>
+
+          <p
+            id="cookie-consent-description"
+            className="text-sm text-muted-foreground leading-relaxed"
+          >
+            Tarama deneyiminizi geliştirmek, kişiselleştirilmiş içerikler sunmak ve
+            trafiğimizi analiz etmek için çerezleri kullanıyoruz. "Tümünü Kabul Et"e
+            tıklayarak çerez kullanımımıza izin vermiş olursunuz.{" "}
             <Link
               to="/gizlilik-politikasi"
-              className="text-primary underline hover:opacity-90"
+              className="text-primary underline-offset-2 hover:underline font-medium"
             >
               Aydınlatma metni
             </Link>
           </p>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleReject}
-            className="h-6 w-6 md:h-8 md:w-8 shrink-0"
-            aria-label="Çerez bildirimini kapat"
-          >
-            <X className="h-3 w-3 md:h-4 md:w-4" />
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleReject}
-            className="text-xs md:text-sm flex-1"
-          >
-            Reddet
-          </Button>
-          <Button
-            onClick={handleAccept}
-            size="sm"
-            className="text-xs md:text-sm flex-1"
-          >
-            Kabul Et
-          </Button>
+
+          <div className="flex flex-col sm:flex-row items-stretch gap-2 pt-1">
+            <Button
+              variant="outline"
+              size="default"
+              asChild
+              className="text-sm font-medium border-primary text-primary hover:bg-primary/5 sm:flex-1"
+            >
+              <Link to="/gizlilik-politikasi">Kişiselleştir</Link>
+            </Button>
+            <Button
+              variant="secondary"
+              size="default"
+              onClick={handleReject}
+              className="text-sm font-medium sm:flex-1"
+            >
+              Reddet
+            </Button>
+            <Button
+              onClick={handleAccept}
+              size="default"
+              className="text-sm font-semibold sm:flex-[1.4] shadow-md"
+            >
+              Tüm çerezleri kabul et
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
