@@ -51,10 +51,10 @@ async function generateSocialPost(
 
   const cleanContent = stripHtmlText(originalContent).substring(0, 5000);
   const lengthHint = platform === 'linkedin'
-    ? '150-220 kelime arası, profesyonel LinkedIn tonu, 2-3 kısa paragraf, son satırda 3 hashtag'
-    : '250-400 kelime arası, samimi blog tonu, 3-4 paragraf, alt başlıklar olabilir (HTML değil düz metin)';
+    ? '150-220 kelime arası, profesyonel ama insani LinkedIn tonu, 2-3 akıcı paragraf, son satırda 3 hashtag'
+    : '250-400 kelime arası, samimi blog tonu, 3-4 akıcı paragraf (alt başlık veya madde işareti YOK)';
 
-  const systemPrompt = `Sen profesyonel bir sağlık ve psikoloji içerik editörüsün. Verilen blog yazısının ÖZGÜN bir versiyonunu üret. Amaç: aynı bilgiyi farklı kelimelerle anlatmak (duplicate content engelleme). Türkçe, doğru ve samimi yaz.`;
+  const systemPrompt = `Sen alanında deneyimli bir sağlık/psikoloji yazarısın — robot değil, gerçek bir insan gibi yazıyorsun. Konuşur gibi, samimi, akıcı bir dilin var. Klişelerden ve yapay AI üslubundan nefret edersin. Türkçe yazıyorsun.`;
 
   const userPrompt = `Platform: ${platform.toUpperCase()}
 Orijinal başlık: ${title}
@@ -62,11 +62,18 @@ Orijinal başlık: ${title}
 Orijinal içerik:
 ${cleanContent}
 
-Görevler:
-1. Yeni başlık üret (orijinale benzer konuda ama farklı kelimelerle)
+GÖREV:
+1. Yeni bir başlık üret (orijinale benzer konuda ama farklı kelimelerle, merak uyandırıcı)
 2. Yeni gövde metni üret: ${lengthHint}
-3. ASLA link, URL veya "devamı için tıklayın" benzeri CTA ekleme — sistem otomatik ekleyecek.
-4. Markdown veya HTML kullanma, düz metin yaz.`;
+
+YAZIM KURALLARI (çok önemli — buna uymayan içerik reddedilir):
+- Kişisel bir gözlem, küçük bir hikaye veya gerçek hayattan bir örnekle BAŞLA (örn: "Geçen hafta bir danışanım...", "Çoğumuz farkında değiliz ama...", "Sabah uyandığında...")
+- Madde işareti, numaralı liste, alt başlık KULLANMA — sadece akıcı paragraflar
+- Şu klişeleri ASLA kullanma: "Sonuç olarak", "Önemlidir ki", "Unutmayın ki", "Bilinmelidir ki", "Özetle", "Kısacası", "Şunu belirtmek gerekir", "Hayatımızın vazgeçilmez bir parçası", "Günümüz dünyasında"
+- Konuşma dili kullan, kısa ve uzun cümleleri karıştır, ritim oluştur
+- Sonu okuyucuya yöneltilmiş bir SORU ile bitir (etkileşim için — örn: "Peki sen bu durumla nasıl başa çıkıyorsun?", "Sence en zor kısmı hangisi?")
+- Link, URL veya "devamı için tıklayın" CTA EKLEME — sistem otomatik ekleyecek
+- Markdown/HTML kullanma, düz metin yaz`;
 
   try {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
