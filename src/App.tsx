@@ -86,6 +86,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AdminAuth = lazy(() => import("./pages/AdminAuth"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const UserCreate = lazy(() => import("./pages/admin/UserCreate"));
+const QuickRegister = lazy(() => import("./pages/admin/QuickRegister"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
 const SpecialistAdd = lazy(() => import("./pages/admin/SpecialistAdd"));
 const SpecialistManagement = lazy(() => import("./pages/admin/SpecialistManagement"));
@@ -310,6 +311,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/packages" element={<PackageManagement />} />
               <Route path="/divan_paneli/pre-info-form" element={<PreInfoFormManagement />} />
               <Route path="/divan_paneli/users/create" element={<UserCreate />} />
+              <Route path="/divan_paneli/quick-register" element={<QuickRegister />} />
               <Route path="/divan_paneli/users" element={<UserManagement />} />
               <Route path="/divan_paneli/specialists/add" element={<SpecialistAdd />} />
               <Route path="/divan_paneli/specialists" element={<SpecialistManagement />} />

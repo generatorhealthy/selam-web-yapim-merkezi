@@ -155,6 +155,18 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "Hızlı Kayıt (AI)",
+      description: "Bilgileri yapıştır, AI hem kullanıcı hem uzman profili oluştursun",
+      icon: Zap,
+      gradient: "from-fuchsia-500 via-purple-500 to-indigo-600",
+      bgGradient: "from-fuchsia-50 to-indigo-50",
+      shadowColor: "shadow-fuchsia-500/30",
+      route: "/divan_paneli/quick-register",
+      buttonText: "Hızlı Kayıt Başlat",
+      adminOnly: false,
+      staffOnly: true
+    },
+    {
       title: "Test Yönetimi",
       description: "Uzman testlerini onayla, düzenle veya sil",
       icon: ClipboardCheck,
