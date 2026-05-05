@@ -69,10 +69,17 @@ const CookieConsent = () => {
             trafiğimizi analiz etmek için çerezleri kullanıyoruz. "Tümünü Kabul Et"e
             tıklayarak çerez kullanımımıza izin vermiş olursunuz.{" "}
             <Link
-              to="/gizlilik-politikasi"
+              to="/privacy"
               className="text-primary underline-offset-2 hover:underline font-medium"
             >
-              Aydınlatma metni
+              Gizlilik Politikası
+            </Link>
+            {" • "}
+            <Link
+              to="/disclosure-text"
+              className="text-primary underline-offset-2 hover:underline font-medium"
+            >
+              Aydınlatma Metni
             </Link>
           </p>
 
