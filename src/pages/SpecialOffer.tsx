@@ -25,11 +25,11 @@ const SpecialOffer = () => {
     "Danışan Görüşleri",
     "Uzman Sayfasına Özgün Seo Çalışması",
     "Online Randevu Takimi",
-    "Profesyonel Makale Yazıları",
+    "Yapay Zeka Destekli Blog Sayfası",
     "Sosyal Medya Paylaşımları",
     "Danışan Takibi",
     "Yapay Zeka Destekli Testler",
-    "Yapay Zeka Destekli Blog Sayfası",
+    "SMS Hatırlatıcısı",
     "Dahili Hat Tanımlama"
   ];
 
