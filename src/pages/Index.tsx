@@ -138,8 +138,11 @@ const Index = () => {
           <div className="max-w-6xl mx-auto">
             <header className="text-center mb-8 md:mb-12">
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white">
-                Doktorum Ol Randevu Sitesi
+                Online ve Yüz Yüze Uzman Randevu Platformu
               </h1>
+              <p className="mt-4 text-base md:text-lg text-white/90 max-w-2xl mx-auto">
+                Psikolog, aile danışmanı, diyetisyen ve birçok branşta güvenilir uzmanlarla kolayca randevu alın.
+              </p>
             </header>
             {/* Enhanced Search Form */}
             <div ref={searchContainerRef} className="bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0 border border-white/20">
