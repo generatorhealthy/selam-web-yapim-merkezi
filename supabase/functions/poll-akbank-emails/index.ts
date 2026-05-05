@@ -304,7 +304,8 @@ Deno.serve(async (req) => {
 
         // Akbank havale mailleri bazen subject'te sadece "Hesap Hareketleri" görünüyor;
         // bu yüzden gövdeyi de tarıyoruz.
-        const lc = normalizeSearch(`${from} ${subject} ${source.slice(0, 200000)}`);
+        const decodedSource = extractMimeDecodedText(source);
+        const lc = normalizeSearch(`${from} ${subject} ${source.slice(0, 200000)} ${decodedSource}`);
         const isFromAkbank = lc.includes("akbank");
         const hasMoneyKeyword =
           lc.includes("havale") ||
