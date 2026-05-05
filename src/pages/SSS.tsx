@@ -6,36 +6,36 @@ import Footer from "@/components/Footer";
 
 const faqs = [
   {
-    q: "Paket süreniz ve ödeme şekliniz nasıldır?",
-    a: "Paketimiz 12 ay taahhütlüdür. Uzmanlarımız aylık olarak ödeme sağlar ve toplamda 12 aylık taahhütlü pakete dahil olur. Yani ödeme aylık alınır ancak üyelik 12 ay süreyle taahhüt altına girer.",
+    q: "Üyelik paketinizin süresi ve ödeme koşulları nelerdir?",
+    a: "Platformumuzda sunulan üyelik paketi, 12 ay taahhütlü olarak yapılandırılmıştır. Uzmanlarımız ödemelerini aylık dönemler hâlinde gerçekleştirir; ancak üyelik, toplamda 12 aylık bir taahhüt sürecini kapsamaktadır. Bu yapı, uzmanlarımıza ödeme kolaylığı sağlarken, sürdürülebilir bir hizmet planlaması yapmamıza da olanak tanımaktadır.",
   },
   {
-    q: "Danışan yönlendirme garantiniz var mı? Kazanç garantisi veriyor musunuz?",
-    a: "Bizler danışan yönlendirme garantisi veriyoruz. Sosyal medya, Google ve diğer mecralardan bize ulaşan danışanları uzmanlarımıza yönlendiriyoruz. Ancak yönlendirdiğimiz danışanların sizden mutlaka danışmanlık alacağı veya bu yönlendirmelerden kazanç elde edeceğiniz konusunda herhangi bir garanti vermemekteyiz. Yani danışan yönlendirme garantimiz vardır, kazanç garantimiz yoktur.",
+    q: "Danışan yönlendirme ve kazanç konusunda garanti sunuyor musunuz?",
+    a: "Platformumuz, uzmanlarımıza danışan yönlendirme garantisi sunmaktadır. Sosyal medya, Google ve diğer dijital mecralar üzerinden bizlere ulaşan danışanlar, uzmanlık alanlarına uygun şekilde uzmanlarımıza yönlendirilmektedir. Ancak yönlendirilen danışanların mutlaka danışmanlık hizmeti satın alacağına veya bu yönlendirmelerden belirli bir gelir elde edileceğine dair herhangi bir kazanç garantisi tarafımızca verilmemektedir. Özetle: danışan yönlendirme garantisi tarafımızca sağlanmakta, kazanç garantisi ise verilmemektedir.",
   },
   {
-    q: "Profilime giriş yapamıyorum, ne yapmalıyım?",
-    a: "Profiline giriş yapamayan uzmanlarımız bize ulaşarak destek alabilir. Şifresini unutan uzmanlarımız ise giriş ekranındaki “Şifremi Unuttum” seçeneğini kullanarak yeni şifre oluşturup giriş yapabilir.",
+    q: "Profilime giriş yapamıyorum, nasıl bir yol izlemeliyim?",
+    a: "Profiline giriş yapmakta güçlük yaşayan uzmanlarımız, müşteri destek ekibimizle iletişime geçerek hızlı bir şekilde yardım alabilir. Şifresini unutan uzmanlarımız ise giriş ekranında yer alan “Şifremi Unuttum” seçeneği aracılığıyla e-posta adreslerine iletilen bağlantı üzerinden yeni bir şifre oluşturup hesaplarına güvenle erişim sağlayabilir.",
   },
   {
     q: "Doktorumol.com.tr bir sağlık kuruluşu mudur?",
-    a: "Hayır. Bizler herhangi bir sağlık kuruluşu değiliz; bir Reklam Şirketiyiz. Uzmanları ve danışanları tek bir çatı altında toplayarak uzmanlarımıza danışan yönlendirmesi sağlamaktayız.",
+    a: "Doktorumol.com.tr bir sağlık kuruluşu değildir. Platformumuz; uzmanları ve danışanları aynı çatı altında buluşturan, dijital tanıtım ve yönlendirme hizmeti sunan bir reklam ve aracılık platformudur. Sunulan tüm sağlık ve danışmanlık hizmetleri, ilgili uzmanların kendi mesleki sorumlulukları çerçevesinde verilmektedir.",
   },
   {
-    q: "Profil bilgilerimi nasıl silebilirim?",
-    a: "Profil bilgilerinizin silinmesi ve üyeliğinizin kapatılması için bize ulaşmanız yeterlidir. Talebinizin ardından üyeliğiniz kapatılarak profil bilgileriniz sistemimizden kaldırılır.",
+    q: "Profil bilgilerimi nasıl sildirebilirim?",
+    a: "Profil bilgilerinizin sistemimizden kaldırılması ve üyeliğinizin sonlandırılması için müşteri destek ekibimize yazılı olarak başvuruda bulunmanız yeterlidir. Talebinizin alınmasının ardından üyeliğiniz en kısa sürede kapatılarak kişisel verileriniz, KVKK kapsamındaki yükümlülüklerimiz çerçevesinde sistemimizden silinir.",
   },
   {
-    q: "Kampanyalı paket fiyatları neden değişiyor?",
-    a: "Kampanyalı paket fiyatları süreç içerisinde devamlı değişim göstermektedir. Geçmişte size daha düşük bir paket fiyatı iletilmiş olsa dahi, üyelik anında geçerli olan fiyat güncel fiyat olacaktır. Bu nedenle başvuru sırasında size iletilen güncel fiyat üzerinden işlem yapılmaktadır.",
+    q: "Kampanyalı paket fiyatları neden zaman zaman değişiklik gösteriyor?",
+    a: "Kampanyalı paket fiyatlarımız; dönemsel kampanyalar, pazar koşulları ve hizmet kapsamındaki güncellemeler doğrultusunda zaman zaman değişiklik gösterebilmektedir. Daha önceki bir görüşmede tarafınıza farklı bir fiyat iletilmiş olsa dahi, üyelik işleminin gerçekleştirildiği tarihte geçerli olan güncel fiyat esas alınmaktadır. Bu nedenle tüm üyelik işlemleri, başvuru anında size iletilen güncel fiyat üzerinden tamamlanmaktadır.",
   },
   {
-    q: "Aylık olarak kaç danışan yönlendiriyorsunuz?",
-    a: "Platformumuz uzmanlarımıza danışan yönlendirmesi sağlamaktadır. Ancak aylık süreçlerde “şu kadar danışan gelir, şu sayıda yönlendirme yapılır” gibi net bir sayı taahhüdümüz bulunmamaktadır. Yönlendirilen danışan sayıları aydan aya değişim gösterebilmektedir.",
+    q: "Aylık olarak kaç danışan yönlendirmesi yapılmaktadır?",
+    a: "Platformumuz, uzmanlarımıza düzenli olarak danışan yönlendirmesi sağlamaktadır. Ancak yönlendirilen danışan sayısı; sezonluk yoğunluk, uzmanlık alanı, hizmet bölgesi ve kampanya dönemleri gibi pek çok değişkene bağlı olarak aydan aya farklılık gösterebilmektedir. Bu nedenle her ay için sabit bir danışan sayısı taahhüt edilmemekte; yönlendirmeler, mevcut talep doğrultusunda en uygun şekilde planlanmaktadır.",
   },
   {
-    q: "Üyeliğimi ücretsiz iptal edebilir miyim?",
-    a: "Uzmanlarımıza aylık süreçlerde danışan yönlendirmesi sağlanmaktadır. Eğer ilgili ay içerisinde tarafınıza hiç danışan yönlendirmesi yapılmadıysa üyeliğiniz ücretsiz olarak iptal edilebilmektedir. Ancak danışan yönlendirilmiş ve danışan sizinle görüştükten sonra seans almaktan vazgeçtiyse ya da farklı bir sebep oluştuysa, bizler danışan yönlendirme yükümlülüğümüzü yerine getirmiş olduğumuzdan ücretsiz iptal sağlanamamaktadır.",
+    q: "Üyeliğimi ücretsiz olarak iptal edebilir miyim?",
+    a: "Üyelik iptal süreci, ilgili ay içerisinde tarafınıza danışan yönlendirmesi yapılıp yapılmadığına bağlı olarak değerlendirilmektedir. İlgili ay içerisinde herhangi bir danışan yönlendirmesi yapılmamış ise üyeliğiniz ücretsiz olarak iptal edilebilmektedir. Ancak tarafınıza danışan yönlendirmesi yapılmış ve danışan sizinle iletişime geçtikten sonra herhangi bir nedenle hizmet almaktan vazgeçmiş ise, platformumuz danışan yönlendirme yükümlülüğünü yerine getirmiş kabul edildiğinden ücretsiz iptal hakkı uygulanamamaktadır.",
   },
 ];
 
