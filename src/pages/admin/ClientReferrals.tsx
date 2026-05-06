@@ -1298,13 +1298,108 @@ const ClientReferrals = () => {
                   <TabsContent key={monthIndex + 1} value={(monthIndex + 1).toString()}>
                     <div className="space-y-6">
                       <div className="text-center mb-6">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                          {monthNames[monthIndex]} {currentYear}
-                        </h3>
+                        <div className="flex items-center justify-center gap-3 mb-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (monthIndex === 0) {
+                                setCurrentYear(currentYear - 1);
+                                setSelectedMonth(12);
+                              } else {
+                                setSelectedMonth(monthIndex);
+                              }
+                            }}
+                          >
+                            ← Önceki Ay
+                          </Button>
+                          <h3 className="text-2xl font-bold text-gray-800">
+                            {monthNames[monthIndex]} {currentYear}
+                          </h3>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (monthIndex === 11) {
+                                setCurrentYear(currentYear + 1);
+                                setSelectedMonth(1);
+                              } else {
+                                setSelectedMonth(monthIndex + 2);
+                              }
+                            }}
+                          >
+                            Sonraki Ay →
+                          </Button>
+                        </div>
                         <p className="text-gray-600">
                           Bu ay toplam {getMonthlyTotal(monthIndex + 1)} yönlendirme yapıldı
                         </p>
                       </div>
+
+                      {/* Günlük Yönlendirme Dökümü */}
+                      {(() => {
+                        // Tüm uzmanların bu aydaki danışan detaylarını birleştir
+                        const dailyCounts: Record<number, number> = {};
+                        Object.entries(clientReferralDetails).forEach(([key, details]) => {
+                          if (!key.endsWith(`-${currentMonth}`)) return;
+                          (details || []).forEach((d: any) => {
+                            if (!d.referred_at) return;
+                            const dt = new Date(d.referred_at);
+                            if (dt.getFullYear() !== currentYear || dt.getMonth() + 1 !== currentMonth) return;
+                            const day = dt.getDate();
+                            dailyCounts[day] = (dailyCounts[day] || 0) + 1;
+                          });
+                        });
+                        const totalDaily = Object.values(dailyCounts).reduce((a, b) => a + b, 0);
+
+                        return (
+                          <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50/60 to-indigo-50/40">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                <CardTitle className="text-base font-semibold text-slate-800 flex items-center gap-2">
+                                  <Calendar className="w-4 h-4 text-blue-600" />
+                                  Günlük Yönlendirme Dökümü
+                                </CardTitle>
+                                <Badge variant="secondary" className="bg-white/80">
+                                  {totalDaily} kayıtlı gün verisi
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-7 sm:grid-cols-10 md:grid-cols-14 lg:grid-cols-16 gap-2">
+                                {calendarDays.map((day) => {
+                                  const count = dailyCounts[day] || 0;
+                                  const isToday =
+                                    new Date().getFullYear() === currentYear &&
+                                    new Date().getMonth() + 1 === currentMonth &&
+                                    new Date().getDate() === day;
+                                  return (
+                                    <div
+                                      key={day}
+                                      className={`relative flex flex-col items-center justify-center rounded-lg border p-2 text-center transition-all ${
+                                        count > 0
+                                          ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
+                                          : 'bg-white/70 text-slate-500 border-slate-200'
+                                      } ${isToday ? 'ring-2 ring-orange-400' : ''}`}
+                                      title={`${day} ${monthNames[monthIndex]}: ${count} yönlendirme`}
+                                    >
+                                      <span className="text-[10px] opacity-80 leading-none">{day}</span>
+                                      <span className={`text-base font-bold leading-tight ${count > 0 ? 'text-white' : 'text-slate-400'}`}>
+                                        {count}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              {totalDaily === 0 && (
+                                <p className="text-xs text-slate-500 mt-3 text-center">
+                                  Bu ay için tarihli danışan kaydı bulunmuyor.
+                                </p>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })()}
                       
                     {/* Enhanced Search Section */}
                     <div className="relative mb-8">
