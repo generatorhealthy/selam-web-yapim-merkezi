@@ -275,9 +275,14 @@ serve(async (req) => {
         /yat[ıi]r[ıi]ld[ıi]/i.test(searchableText) ||
         /alacak\s*kayd/i.test(searchableText);
       const isFromAkbank =
+        /akbank/i.test(from) ||
         /(akbank|0721\s*Şube|hesab[ıi]n[ıi]za|hesab[ıi]ma|akbankl[ıi])/i.test(searchableText);
 
-      const isAkbankTransfer = hasMoneyKeyword && isFromAkbank;
+      // Akbank'tan gelen "Hesap Hareketleri" konulu mail her zaman havale bildirimidir.
+      const isAkbankStatementSubject =
+        /akbank/i.test(from) && /hesap\s*hareket/i.test(subject);
+
+      const isAkbankTransfer = (hasMoneyKeyword && isFromAkbank) || isAkbankStatementSubject;
 
       if (!isAkbankTransfer) {
         results.push({
