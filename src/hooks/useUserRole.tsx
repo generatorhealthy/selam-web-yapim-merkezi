@@ -18,6 +18,20 @@ const FALLBACK_PROFILE: UserProfile = {
   is_approved: false,
 };
 
+const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 18_000): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Oturum kontrolü zaman aşımına uğradı")), timeoutMs);
+  });
+  timeoutPromise.catch(() => {});
+
+  try {
+    return await Promise.race([Promise.resolve(promise), timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 export const useUserRole = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +56,7 @@ export const useUserRole = () => {
       updateLoadingState(true);
 
       try {
-        const currentUser = user ?? (await supabase.auth.getSession()).data.session?.user ?? null;
+        const currentUser = user ?? (await withTimeout(supabase.auth.getSession())).data.session?.user ?? null;
 
         if (!currentUser) {
           lastLoadedUserIdRef.current = null;
@@ -50,11 +64,13 @@ export const useUserRole = () => {
           return;
         }
 
-        const { data: profile, error } = await supabase
-          .from("user_profiles")
-          .select("role, is_approved, name, email")
-          .eq("user_id", currentUser.id)
-          .maybeSingle();
+        const { data: profile, error } = await withTimeout(
+          supabase
+            .from("user_profiles")
+            .select("role, is_approved, name, email")
+            .eq("user_id", currentUser.id)
+            .maybeSingle()
+        );
 
         if (error) {
           console.error("Error fetching user profile:", error);
@@ -69,11 +85,13 @@ export const useUserRole = () => {
         }
 
         // No user_profile row → check if this is a patient
-        const { data: patient } = await supabase
-          .from("patient_profiles")
-          .select("id, full_name, email")
-          .eq("user_id", currentUser.id)
-          .maybeSingle();
+        const { data: patient } = await withTimeout(
+          supabase
+            .from("patient_profiles")
+            .select("id, full_name, email")
+            .eq("user_id", currentUser.id)
+            .maybeSingle()
+        );
 
         lastLoadedUserIdRef.current = currentUser.id;
         if (patient) {
