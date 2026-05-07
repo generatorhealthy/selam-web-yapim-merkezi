@@ -25,17 +25,35 @@ const AdminAuth = () => {
 
   const withTimeout = async <T,>(operation: () => Promise<T>, timeoutMs: number, message: string): Promise<T> => {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let timeoutReject: ((reason?: unknown) => void) | undefined;
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutReject = reject;
+      timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+    });
+    // Safari: prevent unhandled rejection warnings if operation wins
+    timeoutPromise.catch(() => {});
 
     try {
-      return await Promise.race([
-        operation(),
-        new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
-        }),
-      ]);
+      return await Promise.race([operation(), timeoutPromise]);
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
+      if (timeoutReject) timeoutReject(new Error('cleanup'));
     }
+  };
+
+  // Retry helper for Safari flakiness (network/ITP intermittent failures)
+  const withRetry = async <T,>(fn: () => Promise<T>, retries = 2, delayMs = 500): Promise<T> => {
+    let lastError: unknown;
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await fn();
+      } catch (err) {
+        lastError = err;
+        if (i < retries) await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+      }
+    }
+    throw lastError;
   };
 
   // Check if user is blocked when email changes
