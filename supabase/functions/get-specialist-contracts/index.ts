@@ -15,7 +15,7 @@ interface RequestBody {
 // Strip professional titles/abbreviations to get the bare person name
 const stripTitles = (raw: string): string => {
   return raw
-    .replace(/\b(Prof\.?|Doç\.?|Dr\.?|Uzm\.?|Psk\.?|Psik\.?|Dan\.?|Av\.?|Op\.?|Yrd\.?|Doc\.?)\s*/gi, '')
+    .replace(/\b(Prof\.?|Doç\.?|Dr\.?|Uzm\.?|Psk\.?|Psik\.?|Dan\.?|Av\.?|Op\.?|Yrd\.?|Doc\.?|Aile|Klinik|Pedagog|Diyetisyen|Danışman[ıi]?|Hekim|Doktor)\s*/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 };
