@@ -123,13 +123,17 @@ const AdminAuth = () => {
     setIsLoading(true);
 
     try {
-      const { data: authData, error: authError } = await withTimeout(
-        async () => await supabase.auth.signInWithPassword({
-          email: loginData.email,
-          password: loginData.password,
-        }),
-        10000,
-        'Giriş isteği zaman aşımına uğradı'
+      const { data: authData, error: authError } = await withRetry(
+        () => withTimeout(
+          async () => await supabase.auth.signInWithPassword({
+            email: loginData.email,
+            password: loginData.password,
+          }),
+          20000,
+          'Giriş isteği zaman aşımına uğradı'
+        ),
+        2,
+        700
       );
 
       if (authError) {
@@ -141,7 +145,7 @@ const AdminAuth = () => {
               p_email: loginData.email,
               p_ip_address: null
             }),
-            5000,
+            8000,
             'Başarısız giriş kaydı zaman aşımına uğradı'
           );
         
@@ -196,17 +200,21 @@ const AdminAuth = () => {
         return;
       }
 
-      // Wait a moment for the session to be established
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Safari: brief wait for session cookie to settle (reduced from 1s to 300ms)
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-      const { data: profile, error: profileError } = await withTimeout(
-        async () => await supabase
-          .from('user_profiles')
-          .select('role, is_approved')
-          .eq('user_id', authData.user.id)
-          .maybeSingle(),
-        8000,
-        'Profil kontrolü zaman aşımına uğradı'
+      const { data: profile, error: profileError } = await withRetry(
+        () => withTimeout(
+          async () => await supabase
+            .from('user_profiles')
+            .select('role, is_approved')
+            .eq('user_id', authData.user.id)
+            .maybeSingle(),
+          15000,
+          'Profil kontrolü zaman aşımına uğradı'
+        ),
+        2,
+        500
       );
 
       if (profileError) {
