@@ -25,10 +25,8 @@ const AdminAuth = () => {
 
   const withTimeout = async <T,>(operation: () => Promise<T>, timeoutMs: number, message: string): Promise<T> => {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    let timeoutReject: ((reason?: unknown) => void) | undefined;
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutReject = reject;
       timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
     });
     // Safari: prevent unhandled rejection warnings if operation wins
@@ -38,7 +36,6 @@ const AdminAuth = () => {
       return await Promise.race([operation(), timeoutPromise]);
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
-      if (timeoutReject) timeoutReject(new Error('cleanup'));
     }
   };
 
