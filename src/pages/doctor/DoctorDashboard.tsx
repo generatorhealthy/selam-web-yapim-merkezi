@@ -1732,7 +1732,20 @@ const DoctorDashboard = () => {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {contracts.map((order: any) => {
+                        {(() => {
+                          // Aynı ay için onaylı/tamamlanmış sipariş varsa, o ayın bekleyen siparişlerini gizle
+                          const paidMonths = new Set(
+                            contracts
+                              .filter((o: any) => (o.status === 'approved' || o.status === 'completed') && o.subscription_month)
+                              .map((o: any) => o.subscription_month)
+                          );
+                          return contracts.filter((o: any) => {
+                            if (o.status === 'pending' && o.subscription_month && paidMonths.has(o.subscription_month)) {
+                              return false;
+                            }
+                            return true;
+                          });
+                        })().map((order: any) => {
                           const statusConfig: Record<string, { label: string; className: string }> = {
                             pending: { label: 'Bekleyen', className: 'bg-amber-100 text-amber-700 border-amber-200' },
                             approved: { label: 'Onaylandı', className: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
