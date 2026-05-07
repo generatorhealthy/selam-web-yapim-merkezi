@@ -18,7 +18,7 @@ const FALLBACK_PROFILE: UserProfile = {
   is_approved: false,
 };
 
-const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 18_000): Promise<T> => {
+const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 18_000): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error("Oturum kontrolü zaman aşımına uğradı")), timeoutMs);
@@ -26,7 +26,7 @@ const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 18_000): Promise
   timeoutPromise.catch(() => {});
 
   try {
-    return await Promise.race([promise, timeoutPromise]);
+    return await Promise.race([Promise.resolve(promise), timeoutPromise]);
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
   }
