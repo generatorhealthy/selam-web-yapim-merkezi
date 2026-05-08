@@ -64,7 +64,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <a
-              href="https://play.google.com/store/apps/details?id=com.doktorumol"
+              href="https://play.google.com/store/apps/details?id=app.lovable.doktorumol"
               onClick={(e) => {
                 e.preventDefault();
                 window.location.href = "https://doktorumol.com.tr";
