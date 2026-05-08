@@ -65,10 +65,8 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <a
               href="https://play.google.com/store/apps/details?id=app.lovable.doktorumol"
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.href = "https://doktorumol.com.tr";
-              }}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-black text-white rounded-xl px-4 py-2.5 shadow-lg active:scale-95 transition-transform"
               aria-label="Google Play'den indir"
             >
