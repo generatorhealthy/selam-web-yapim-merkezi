@@ -418,6 +418,7 @@ const AdminDashboard = () => {
       route: "/divan_paneli/whatsapp-bulk",
       buttonText: "Toplu Gönderime Git",
       adminOnly: true
+    },
     {
       title: "Santral Hizmeti",
       description: "Bulut santral sistemi ve dahili numara yönetimi",
