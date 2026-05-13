@@ -398,6 +398,28 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "WhatsApp Yönetimi",
+      description: "Hat bağla, QR okut ve sohbetleri yönet",
+      icon: MessageCircle,
+      gradient: "from-green-500 via-emerald-500 to-teal-600",
+      bgGradient: "from-green-50 to-emerald-50",
+      shadowColor: "shadow-green-500/20",
+      route: "/divan_paneli/whatsapp",
+      buttonText: "WhatsApp Panelini Aç",
+      adminOnly: true
+    },
+    {
+      title: "WhatsApp Toplu Gönderim",
+      description: "Numara listesine toplu WhatsApp mesajı gönder",
+      icon: MessageSquare,
+      gradient: "from-emerald-500 via-green-500 to-lime-600",
+      bgGradient: "from-emerald-50 to-lime-50",
+      shadowColor: "shadow-emerald-500/20",
+      route: "/divan_paneli/whatsapp-bulk",
+      buttonText: "Toplu Gönderime Git",
+      adminOnly: true
+    },
+    {
       title: "Santral Hizmeti",
       description: "Bulut santral sistemi ve dahili numara yönetimi",
       icon: Phone,
