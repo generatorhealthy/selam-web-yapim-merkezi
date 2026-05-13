@@ -140,6 +140,7 @@ const CareerApplications = lazy(() => import("./pages/admin/CareerApplications")
 const SEOContentManagement = lazy(() => import("./pages/admin/SEOContentManagement"));
 const SEOPublishedHistory = lazy(() => import("./pages/admin/SEOPublishedHistory"));
 const SpecialistBlogStatus = lazy(() => import("./pages/admin/SpecialistBlogStatus"));
+const WhatsappBulkSend = lazy(() => import("./pages/admin/WhatsappBulkSend"));
 
 const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 
