@@ -364,6 +364,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/seo-content" element={<SEOContentManagement />} />
               <Route path="/divan_paneli/seo-content/yayinlananlar" element={<SEOPublishedHistory />} />
               <Route path="/divan_paneli/seo-content/uzman-bloglari" element={<SpecialistBlogStatus />} />
+              <Route path="/divan_paneli/whatsapp-bulk" element={<WhatsappBulkSend />} />
               <Route path="/kariyer" element={<Career />} />
               
                 
