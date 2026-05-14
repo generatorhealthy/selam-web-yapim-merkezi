@@ -221,15 +221,55 @@ const fetchWahaResult = async (wahaUrl: string, endpoint: string, options: Reque
   };
 };
 
+const isCoreDefaultOnlyError = (data: unknown, text = '', status = 500) => {
+  if (status !== 422) return false;
+  const message = getErrorMessage(data, text, status).toLowerCase();
+  return message.includes("waha core support only 'default' session");
+};
+
+const replaceSessionName = (value: string, sessionName: unknown) => {
+  const session = String(sessionName ?? '');
+  if (!session || session === 'default') return value;
+  return value.replaceAll(encodeURIComponent(session), 'default').replaceAll(session, 'default');
+};
+
+const withDefaultSessionBody = (body: string | undefined, sessionName: unknown) => {
+  if (!body || String(sessionName ?? '') === 'default') return body;
+  try {
+    const parsed = JSON.parse(body);
+    if (parsed?.name === sessionName) parsed.name = 'default';
+    if (parsed?.session === sessionName) parsed.session = 'default';
+    return JSON.stringify(parsed);
+  } catch {
+    return replaceSessionName(body, sessionName);
+  }
+};
+
+const fetchWahaResultWithCoreFallback = async (wahaUrl: string, endpoint: string, options: RequestInit, sessionName: unknown) => {
+  const result = await fetchWahaResult(wahaUrl, endpoint, options);
+  if (!isCoreDefaultOnlyError(result.data, result.text, result.status) || String(sessionName ?? '') === 'default') {
+    return result;
+  }
+
+  return fetchWahaResult(wahaUrl, replaceSessionName(endpoint, sessionName), {
+    ...options,
+    body: withDefaultSessionBody(typeof options.body === 'string' ? options.body : undefined, sessionName),
+  });
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    let wahaUrl = Deno.env.get('WAHA_API_URL');
+    let wahaUrl = Deno.env.get('WAHA_BASE_URL') || Deno.env.get('WAHA_API_URL');
+    if (wahaUrl?.includes('/dashboard')) {
+      wahaUrl = wahaUrl.replace(/\/dashboard.*$/, '');
+    }
     if (wahaUrl && !wahaUrl.startsWith('http')) {
-      wahaUrl = 'https://' + wahaUrl;
+      const looksLikeLocalOrIp = /^(localhost|127\.0\.0\.1|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/|$)/.test(wahaUrl);
+      wahaUrl = `${looksLikeLocalOrIp ? 'http' : 'https'}://${wahaUrl}`;
     }
     if (wahaUrl) {
       wahaUrl = wahaUrl.replace(/\/+$/, '');
@@ -237,7 +277,7 @@ Deno.serve(async (req) => {
     const wahaApiKey = Deno.env.get('WAHA_API_KEY');
 
     if (!wahaUrl) {
-      return respond({ success: false, error: 'WAHA_API_URL not configured' });
+      return respond({ success: false, error: 'WAHA_BASE_URL or WAHA_API_URL not configured' });
     }
 
     const { action, sessionName, payload } = await req.json();
@@ -261,28 +301,28 @@ Deno.serve(async (req) => {
         const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
         const candidateRequests = [
           {
+            endpoint: '/api/sessions',
+            method: 'POST',
+            body: JSON.stringify({ name: sessionName, start: true }),
+          },
+          {
             endpoint: `/api/sessions/${encodedSessionName}/start`,
             method: 'POST',
           },
           {
-            endpoint: '/api/sessions',
-            method: 'POST',
-            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
-          },
-          {
             endpoint: '/api/sessions/start',
             method: 'POST',
-            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
+            body: JSON.stringify({ name: sessionName, start: true }),
+          },
+          {
+            endpoint: `/api/sessions/${encodedSessionName}`,
+            method: 'POST',
+            body: JSON.stringify({ name: sessionName, start: true }),
           },
           {
             endpoint: `/api/sessions/${encodedSessionName}`,
             method: 'PUT',
-            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
-          },
-          {
-            endpoint: `/api/sessions/${encodedSessionName}`,
-            method: 'POST',
-            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
+            body: JSON.stringify({ name: sessionName, start: true }),
           },
         ];
 
@@ -294,8 +334,16 @@ Deno.serve(async (req) => {
             fetchOptions.body = candidateRequest.body;
           }
 
-          const result = await fetchWahaResult(wahaUrl, candidateRequest.endpoint, fetchOptions);
-          if (result.ok) {
+          const result = await fetchWahaResultWithCoreFallback(wahaUrl, candidateRequest.endpoint, fetchOptions, sessionName);
+          const errorMessage = getErrorMessage(result.data, result.text ?? '', result.status).toLowerCase();
+          const canIgnoreExistingSession = [400, 409].includes(result.status) && (
+            errorMessage.includes('already') ||
+            errorMessage.includes('exist') ||
+            errorMessage.includes('started') ||
+            errorMessage.includes('session status')
+          );
+
+          if (result.ok || canIgnoreExistingSession) {
             return respond({ success: true, status: result.status, data: result.data, error: null });
           }
           lastFailure = result;
@@ -330,7 +378,7 @@ Deno.serve(async (req) => {
             fetchOptions.body = candidateRequest.body;
           }
 
-          const result = await fetchWahaResult(wahaUrl, candidateRequest.endpoint, fetchOptions);
+          const result = await fetchWahaResultWithCoreFallback(wahaUrl, candidateRequest.endpoint, fetchOptions, sessionName);
           if (result.ok) {
             return respond({ success: true, status: result.status, data: result.data, error: null });
           }
@@ -372,11 +420,24 @@ Deno.serve(async (req) => {
           const qrResults = await Promise.allSettled(
             qrEndpoints.map(async (ep) => {
               console.log(`WAHA Proxy QR: GET ${wahaUrl}${ep}`);
-              const res = await fetch(`${wahaUrl}${ep}`, {
+              let res = await fetch(`${wahaUrl}${ep}`, {
                 method: 'GET',
                 headers: qrHeaders,
                 signal: abortController.signal,
               });
+              if (res.status === 422 && String(sessionName ?? '') !== 'default') {
+                const clonedRes = res.clone();
+                const { qrData, qrErrorText } = await parseQrResponse(clonedRes);
+                if (isCoreDefaultOnlyError(qrData, qrErrorText ?? '', res.status)) {
+                  const fallbackEndpoint = replaceSessionName(ep, sessionName);
+                  console.log(`WAHA Proxy QR fallback: GET ${wahaUrl}${fallbackEndpoint}`);
+                  res = await fetch(`${wahaUrl}${fallbackEndpoint}`, {
+                    method: 'GET',
+                    headers: qrHeaders,
+                    signal: abortController.signal,
+                  });
+                }
+              }
               return { ep, res };
             })
           );
@@ -647,7 +708,7 @@ Deno.serve(async (req) => {
     const fetchOptions: RequestInit = { method, headers };
     if (body) fetchOptions.body = body;
 
-    const result = await fetchWahaResult(wahaUrl, endpoint, fetchOptions);
+    const result = await fetchWahaResultWithCoreFallback(wahaUrl, endpoint, fetchOptions, sessionName);
 
     return respond({
       success: result.ok,
