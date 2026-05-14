@@ -221,6 +221,42 @@ const fetchWahaResult = async (wahaUrl: string, endpoint: string, options: Reque
   };
 };
 
+const isCoreDefaultOnlyError = (data: unknown, text = '', status = 500) => {
+  if (status !== 422) return false;
+  const message = getErrorMessage(data, text, status).toLowerCase();
+  return message.includes("waha core support only 'default' session");
+};
+
+const replaceSessionName = (value: string, sessionName: unknown) => {
+  const session = String(sessionName ?? '');
+  if (!session || session === 'default') return value;
+  return value.replaceAll(encodeURIComponent(session), 'default').replaceAll(session, 'default');
+};
+
+const withDefaultSessionBody = (body: string | undefined, sessionName: unknown) => {
+  if (!body || String(sessionName ?? '') === 'default') return body;
+  try {
+    const parsed = JSON.parse(body);
+    if (parsed?.name === sessionName) parsed.name = 'default';
+    if (parsed?.session === sessionName) parsed.session = 'default';
+    return JSON.stringify(parsed);
+  } catch {
+    return replaceSessionName(body, sessionName);
+  }
+};
+
+const fetchWahaResultWithCoreFallback = async (wahaUrl: string, endpoint: string, options: RequestInit, sessionName: unknown) => {
+  const result = await fetchWahaResult(wahaUrl, endpoint, options);
+  if (!isCoreDefaultOnlyError(result.data, result.text, result.status) || String(sessionName ?? '') === 'default') {
+    return result;
+  }
+
+  return fetchWahaResult(wahaUrl, replaceSessionName(endpoint, sessionName), {
+    ...options,
+    body: withDefaultSessionBody(typeof options.body === 'string' ? options.body : undefined, sessionName),
+  });
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
