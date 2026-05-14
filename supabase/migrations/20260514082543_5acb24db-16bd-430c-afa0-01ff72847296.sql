@@ -1,0 +1,1 @@
+UPDATE public.whatsapp_lines SET is_active = false, updated_at = now() WHERE phone_number <> '902162350650';
