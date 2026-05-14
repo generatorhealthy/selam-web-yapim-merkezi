@@ -334,7 +334,7 @@ Deno.serve(async (req) => {
             fetchOptions.body = candidateRequest.body;
           }
 
-          const result = await fetchWahaResult(wahaUrl, candidateRequest.endpoint, fetchOptions);
+          const result = await fetchWahaResultWithCoreFallback(wahaUrl, candidateRequest.endpoint, fetchOptions, sessionName);
           const errorMessage = getErrorMessage(result.data, result.text ?? '', result.status).toLowerCase();
           const canIgnoreExistingSession = [400, 409].includes(result.status) && (
             errorMessage.includes('already') ||
@@ -378,7 +378,7 @@ Deno.serve(async (req) => {
             fetchOptions.body = candidateRequest.body;
           }
 
-          const result = await fetchWahaResult(wahaUrl, candidateRequest.endpoint, fetchOptions);
+          const result = await fetchWahaResultWithCoreFallback(wahaUrl, candidateRequest.endpoint, fetchOptions, sessionName);
           if (result.ok) {
             return respond({ success: true, status: result.status, data: result.data, error: null });
           }
@@ -420,11 +420,24 @@ Deno.serve(async (req) => {
           const qrResults = await Promise.allSettled(
             qrEndpoints.map(async (ep) => {
               console.log(`WAHA Proxy QR: GET ${wahaUrl}${ep}`);
-              const res = await fetch(`${wahaUrl}${ep}`, {
+              let res = await fetch(`${wahaUrl}${ep}`, {
                 method: 'GET',
                 headers: qrHeaders,
                 signal: abortController.signal,
               });
+              if (res.status === 422 && String(sessionName ?? '') !== 'default') {
+                const clonedRes = res.clone();
+                const { qrData, qrErrorText } = await parseQrResponse(clonedRes);
+                if (isCoreDefaultOnlyError(qrData, qrErrorText ?? '', res.status)) {
+                  const fallbackEndpoint = replaceSessionName(ep, sessionName);
+                  console.log(`WAHA Proxy QR fallback: GET ${wahaUrl}${fallbackEndpoint}`);
+                  res = await fetch(`${wahaUrl}${fallbackEndpoint}`, {
+                    method: 'GET',
+                    headers: qrHeaders,
+                    signal: abortController.signal,
+                  });
+                }
+              }
               return { ep, res };
             })
           );
