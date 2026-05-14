@@ -227,9 +227,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    let wahaUrl = Deno.env.get('WAHA_API_URL');
+    let wahaUrl = Deno.env.get('WAHA_BASE_URL') || Deno.env.get('WAHA_API_URL');
+    if (wahaUrl?.includes('/dashboard')) {
+      wahaUrl = wahaUrl.replace(/\/dashboard.*$/, '');
+    }
     if (wahaUrl && !wahaUrl.startsWith('http')) {
-      wahaUrl = 'https://' + wahaUrl;
+      const looksLikeLocalOrIp = /^(localhost|127\.0\.0\.1|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/|$)/.test(wahaUrl);
+      wahaUrl = `${looksLikeLocalOrIp ? 'http' : 'https'}://${wahaUrl}`;
     }
     if (wahaUrl) {
       wahaUrl = wahaUrl.replace(/\/+$/, '');
@@ -237,7 +241,7 @@ Deno.serve(async (req) => {
     const wahaApiKey = Deno.env.get('WAHA_API_KEY');
 
     if (!wahaUrl) {
-      return respond({ success: false, error: 'WAHA_API_URL not configured' });
+      return respond({ success: false, error: 'WAHA_BASE_URL or WAHA_API_URL not configured' });
     }
 
     const { action, sessionName, payload } = await req.json();
