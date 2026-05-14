@@ -82,19 +82,39 @@ Deno.serve(async (req) => {
 
     const results: Record<string, unknown> = {};
 
-    const { data: activeLine, error: lineError } = await supabase
+    const { data: activeLines, error: lineError } = await supabase
       .from("whatsapp_lines")
-      .select("id, is_active, sort_order")
+      .select("id, phone_number, is_active, sort_order")
       .eq("is_active", true)
-      .order("sort_order", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+      .order("sort_order", { ascending: true });
 
     if (lineError) {
-      console.error("Failed to fetch active WhatsApp line:", lineError);
+      console.error("Failed to fetch active WhatsApp lines:", lineError);
     }
 
-    const whatsappSessionName = activeLine?.id ? getSessionNameForLineId(activeLine.id) : null;
+    let whatsappSessionName: string | null = null;
+    const lines = (activeLines || []) as any[];
+    if (lines.length > 0) {
+      const candidates = lines.map((l) => getSessionNameForLineId(l.id));
+      const activePhones = new Set(lines.map((l) => String(l.phone_number || "").replace(/\D/g, "")).filter(Boolean));
+      try {
+        const sessionsRes = await supabase.functions.invoke("waha-proxy", { body: { action: "sessions.list" } });
+        const sessions = Array.isArray((sessionsRes.data as any)?.data) ? (sessionsRes.data as any).data : [];
+        whatsappSessionName = candidates.find((c) =>
+          sessions.some((s: any) => s?.name === c && String(s?.status || "").toUpperCase() === "WORKING")
+        ) || null;
+        if (!whatsappSessionName) {
+          const matched = sessions.find((s: any) => {
+            if (String(s?.status || "").toUpperCase() !== "WORKING") return false;
+            const mePhone = String(s?.me?.id || "").split("@")[0]?.replace(/\D/g, "") || "";
+            return mePhone && activePhones.has(mePhone);
+          });
+          if (matched) whatsappSessionName = matched.name;
+        }
+      } catch (e) {
+        console.error("WAHA sessions.list error:", e);
+      }
+    }
     results.whatsappSession = whatsappSessionName;
 
     // 1) WhatsApp via waha-proxy

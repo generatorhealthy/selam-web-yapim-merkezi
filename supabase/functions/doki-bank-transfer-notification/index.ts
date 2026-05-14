@@ -32,19 +32,29 @@ const getWorkingSessionName = async (supabase: any): Promise<string | null> => {
   try {
     const { data: activeLines } = await supabase
       .from("whatsapp_lines")
-      .select("id, is_active, sort_order")
+      .select("id, phone_number, is_active, sort_order")
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
-    const candidates = ((activeLines || []) as any[]).map((l: any) => getSessionNameForLineId(l.id));
-    if (candidates.length === 0) return null;
+    const lines = (activeLines || []) as any[];
+    if (lines.length === 0) return null;
+    const candidates = lines.map((l) => getSessionNameForLineId(l.id));
+    const activePhones = new Set(lines.map((l) => String(l.phone_number || "").replace(/\D/g, "")).filter(Boolean));
 
     const sessionsRes = await supabase.functions.invoke("waha-proxy", {
       body: { action: "sessions.list" },
     });
     const sessions = Array.isArray((sessionsRes.data as any)?.data) ? (sessionsRes.data as any).data : [];
-    const working = candidates.find((c) =>
+    let working: string | undefined = candidates.find((c) =>
       sessions.some((s: any) => s?.name === c && String(s?.status || "").toUpperCase() === "WORKING")
     );
+    if (!working) {
+      const matched = sessions.find((s: any) => {
+        if (String(s?.status || "").toUpperCase() !== "WORKING") return false;
+        const mePhone = String(s?.me?.id || "").split("@")[0]?.replace(/\D/g, "") || "";
+        return mePhone && activePhones.has(mePhone);
+      });
+      if (matched) working = matched.name;
+    }
     return working || null;
   } catch (e) {
     console.error("getWorkingSessionName error:", e);

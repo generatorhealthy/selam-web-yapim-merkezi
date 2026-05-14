@@ -88,13 +88,15 @@ serve(async (req) => {
           // Aktif WORKING WAHA session bul
           const { data: activeLines } = await supabaseAdmin
             .from('whatsapp_lines')
-            .select('id, is_active, sort_order')
+            .select('id, phone_number, is_active, sort_order')
             .eq('is_active', true)
             .order('sort_order', { ascending: true });
 
-          const sessionCandidates = (activeLines || []).map(
+          const lines = (activeLines || []) as any[];
+          const sessionCandidates = lines.map(
             (l: any) => `line_${String(l.id).replace(/-/g, '').slice(0, 16)}`
           );
+          const activePhones = new Set(lines.map((l: any) => String(l.phone_number || '').replace(/\D/g, '')).filter(Boolean));
 
           const sessionsRes = await supabaseAdmin.functions.invoke('waha-proxy', {
             body: { action: 'sessions.list' },
@@ -102,12 +104,20 @@ serve(async (req) => {
           const sessions = Array.isArray((sessionsRes.data as any)?.data)
             ? (sessionsRes.data as any).data
             : [];
-          const sessionName = sessionCandidates.find((c: string) =>
+          let sessionName: string | undefined = sessionCandidates.find((c: string) =>
             sessions.some(
               (s: any) =>
                 s?.name === c && String(s?.status || '').toUpperCase() === 'WORKING'
             )
           );
+          if (!sessionName) {
+            const matched = sessions.find((s: any) => {
+              if (String(s?.status || '').toUpperCase() !== 'WORKING') return false;
+              const mePhone = String(s?.me?.id || '').split('@')[0]?.replace(/\D/g, '') || '';
+              return mePhone && activePhones.has(mePhone);
+            });
+            if (matched) sessionName = matched.name;
+          }
 
           if (!sessionName) {
             console.error('No WORKING WhatsApp session found for blog notification');

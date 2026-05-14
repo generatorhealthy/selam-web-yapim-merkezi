@@ -354,19 +354,29 @@ const handler = async (req: Request): Promise<Response> => {
         if (waPhone) {
           const { data: activeLines } = await supabase
             .from('whatsapp_lines')
-            .select('id, is_active, sort_order')
+            .select('id, phone_number, is_active, sort_order')
             .eq('is_active', true)
             .order('sort_order', { ascending: true });
-          const candidates = ((activeLines || []) as any[]).map((l) => getSessionNameForLineId(l.id));
+          const lines = (activeLines || []) as any[];
+          const candidates = lines.map((l) => getSessionNameForLineId(l.id));
+          const activePhones = new Set(lines.map((l) => String(l.phone_number || '').replace(/\D/g, '')).filter(Boolean));
 
           if (candidates.length > 0) {
             const sessionsRes = await supabase.functions.invoke('waha-proxy', {
               body: { action: 'sessions.list' },
             });
             const sessions = Array.isArray((sessionsRes.data as any)?.data) ? (sessionsRes.data as any).data : [];
-            const sessionName = candidates.find((c) =>
+            let sessionName: string | undefined = candidates.find((c) =>
               sessions.some((s: any) => s?.name === c && String(s?.status || '').toUpperCase() === 'WORKING')
             );
+            if (!sessionName) {
+              const matched = sessions.find((s: any) => {
+                if (String(s?.status || '').toUpperCase() !== 'WORKING') return false;
+                const mePhone = String(s?.me?.id || '').split('@')[0]?.replace(/\D/g, '') || '';
+                return mePhone && activePhones.has(mePhone);
+              });
+              if (matched) sessionName = matched.name;
+            }
 
             if (sessionName) {
               const dokiText =
