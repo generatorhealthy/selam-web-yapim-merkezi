@@ -299,7 +299,15 @@ Deno.serve(async (req) => {
           }
 
           const result = await fetchWahaResult(wahaUrl, candidateRequest.endpoint, fetchOptions);
-          if (result.ok) {
+          const errorMessage = getErrorMessage(result.data, result.text ?? '', result.status).toLowerCase();
+          const canIgnoreExistingSession = [400, 409].includes(result.status) && (
+            errorMessage.includes('already') ||
+            errorMessage.includes('exist') ||
+            errorMessage.includes('started') ||
+            errorMessage.includes('session status')
+          );
+
+          if (result.ok || canIgnoreExistingSession) {
             return respond({ success: true, status: result.status, data: result.data, error: null });
           }
           lastFailure = result;
