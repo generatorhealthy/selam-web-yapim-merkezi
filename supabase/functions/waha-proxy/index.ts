@@ -265,28 +265,28 @@ Deno.serve(async (req) => {
         const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
         const candidateRequests = [
           {
+            endpoint: '/api/sessions',
+            method: 'POST',
+            body: JSON.stringify({ name: sessionName, start: true }),
+          },
+          {
             endpoint: `/api/sessions/${encodedSessionName}/start`,
             method: 'POST',
           },
           {
-            endpoint: '/api/sessions',
-            method: 'POST',
-            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
-          },
-          {
             endpoint: '/api/sessions/start',
             method: 'POST',
-            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
+            body: JSON.stringify({ name: sessionName, start: true }),
+          },
+          {
+            endpoint: `/api/sessions/${encodedSessionName}`,
+            method: 'POST',
+            body: JSON.stringify({ name: sessionName, start: true }),
           },
           {
             endpoint: `/api/sessions/${encodedSessionName}`,
             method: 'PUT',
-            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
-          },
-          {
-            endpoint: `/api/sessions/${encodedSessionName}`,
-            method: 'POST',
-            body: JSON.stringify({ name: sessionName, config: { webhooks: [] } }),
+            body: JSON.stringify({ name: sessionName, start: true }),
           },
         ];
 
