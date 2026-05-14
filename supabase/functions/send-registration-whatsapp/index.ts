@@ -14,6 +14,7 @@ interface Payload {
 
 interface WhatsappLine {
   id: string;
+  phone_number: string | null;
   is_active: boolean;
   sort_order: number | null;
 }
