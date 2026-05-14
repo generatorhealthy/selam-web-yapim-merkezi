@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -182,8 +183,21 @@ const SpecialtyPage = () => {
     );
   }
 
+  const pageTitle = `${specialtyName} Uzmanları - Online ve Yüz Yüze Randevu | Doktorum Ol`;
+  const pageDescription = `${specialtyName} alanında uzmanlaşmış doktor ve danışmanları keşfedin. Doktorum Ol ile online veya yüz yüze ${specialtyName.toLowerCase()} randevunuzu kolayca alın.`.slice(0, 158);
+  const canonicalUrl = `https://www.doktorumol.com.tr/uzmanlik/${specialtySlug}`;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <HorizontalNavigation />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
