@@ -36,7 +36,7 @@ function getSessionNameForLineId(lineId: string) {
 async function getWorkingSessionName(supabase: ReturnType<typeof createClient>) {
   const { data: activeLines, error: lineError } = await supabase
     .from("whatsapp_lines")
-    .select("id, is_active, sort_order")
+    .select("id, phone_number, is_active, sort_order")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
@@ -45,10 +45,17 @@ async function getWorkingSessionName(supabase: ReturnType<typeof createClient>) 
     return { sessionName: null, error: "Aktif WhatsApp hattı okunamadı" };
   }
 
-  const sessionCandidates = ((activeLines || []) as WhatsappLine[]).map((line) => getSessionNameForLineId(line.id));
-  if (sessionCandidates.length === 0) {
+  const lines = (activeLines || []) as WhatsappLine[];
+  if (lines.length === 0) {
     return { sessionName: null, error: "Aktif WhatsApp hattı bulunamadı" };
   }
+
+  const activePhones = new Set(
+    lines
+      .map((l) => (l.phone_number || "").replace(/\D/g, ""))
+      .filter((p) => p.length > 0)
+  );
+  const sessionCandidates = lines.map((line) => getSessionNameForLineId(line.id));
 
   const sessionsRes = await supabase.functions.invoke("waha-proxy", {
     body: { action: "sessions.list" },
@@ -60,12 +67,25 @@ async function getWorkingSessionName(supabase: ReturnType<typeof createClient>) 
   }
 
   const sessions = Array.isArray((sessionsRes.data as any)?.data) ? (sessionsRes.data as any).data : [];
-  const workingSession = sessionCandidates.find((candidate) =>
+
+  // 1) Try matching by line_<id> session name
+  let workingSession = sessionCandidates.find((candidate) =>
     sessions.some((session: any) => session?.name === candidate && String(session?.status || "").toUpperCase() === "WORKING")
   );
 
+  // 2) Fallback: any WORKING session whose me.id phone matches one of our active lines
   if (!workingSession) {
-    console.error("No active WORKING WhatsApp session found", { sessionCandidates, sessions });
+    const matched = sessions.find((session: any) => {
+      if (String(session?.status || "").toUpperCase() !== "WORKING") return false;
+      const meId: string = String(session?.me?.id || "");
+      const mePhone = meId.split("@")[0]?.replace(/\D/g, "") || "";
+      return mePhone && activePhones.has(mePhone);
+    });
+    if (matched) workingSession = matched.name;
+  }
+
+  if (!workingSession) {
+    console.error("No active WORKING WhatsApp session found", { sessionCandidates, activePhones: [...activePhones], sessions });
     return { sessionName: null, error: "Bağlı/çalışan aktif WhatsApp hattı bulunamadı" };
   }
 
