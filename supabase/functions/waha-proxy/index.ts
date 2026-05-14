@@ -708,7 +708,7 @@ Deno.serve(async (req) => {
     const fetchOptions: RequestInit = { method, headers };
     if (body) fetchOptions.body = body;
 
-    const result = await fetchWahaResult(wahaUrl, endpoint, fetchOptions);
+    const result = await fetchWahaResultWithCoreFallback(wahaUrl, endpoint, fetchOptions, sessionName);
 
     return respond({
       success: result.ok,
