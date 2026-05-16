@@ -723,6 +723,35 @@ const ClientReferrals = () => {
               description: `Yönlendirme kaydedildi ve ${phoneToUse} numarasına SMS gönderildi. (${usedFunction})`,
             });
           }
+
+          // Doki WhatsApp bildirimi (paralel kanal, SMS başarısından bağımsız)
+          try {
+            console.log('💬 [WA] Doki WhatsApp bildirimi gönderiliyor...');
+            const waInvoke = await supabase.functions.invoke('send-referral-whatsapp', {
+              body: {
+                specialistName: specName,
+                specialistPhone: phoneToUse,
+                clientName: clientData.client_name,
+                clientSurname: clientData.client_surname,
+                clientContact: clientData.client_contact,
+              },
+            });
+            console.log('💬 [WA] send-referral-whatsapp response:', waInvoke);
+            if (waInvoke.error || (waInvoke.data as any)?.success === false) {
+              toast({
+                title: 'WhatsApp uyarısı',
+                description: `WhatsApp gönderilemedi: ${waInvoke.error?.message || (waInvoke.data as any)?.error || 'bilinmeyen hata'}`,
+                variant: 'default',
+              });
+            } else {
+              toast({
+                title: 'WhatsApp gönderildi',
+                description: `Doki üzerinden ${phoneToUse} numarasına WhatsApp bildirimi iletildi.`,
+              });
+            }
+          } catch (waEx) {
+            console.error('❌ [WA] Exception:', waEx);
+          }
         } catch (smsEx) {
           console.error('❌ [SMS] Exception:', smsEx);
           toast({
