@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import DoctorProfileEditor from "@/components/DoctorProfileEditor";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import DoctorBlogManagement from "@/components/DoctorBlogManagement";
 import { TimeSlotManager } from "@/components/TimeSlotManager";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
