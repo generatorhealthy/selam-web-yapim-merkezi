@@ -27,6 +27,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) return <>{this.props.fallback}</>;
       return (
         <div className="min-h-screen grid place-items-center bg-gradient-to-br from-slate-50 via-violet-50/50 to-purple-50/30">
           <div className="rounded-xl border border-primary/10 bg-card shadow-lg p-6 max-w-md text-center">
