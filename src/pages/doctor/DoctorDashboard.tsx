@@ -1809,7 +1809,21 @@ const DoctorDashboard = () => {
               {/* Profile */}
               <TabsContent value="profile" className="mt-0">
                 <div className="bg-background rounded-2xl border">
-                  <ErrorBoundary>
+                  <ErrorBoundary
+                    fallback={
+                      <div className="p-8 text-center space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                          Profil düzenleyici yüklenirken bir sorun oluştu. Lütfen sayfayı yenileyin.
+                        </p>
+                        <button
+                          className="inline-flex items-center rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow hover:opacity-90"
+                          onClick={() => window.location.reload()}
+                        >
+                          Sayfayı Yenile
+                        </button>
+                      </div>
+                    }
+                  >
                     <DoctorProfileEditor />
                   </ErrorBoundary>
                 </div>
