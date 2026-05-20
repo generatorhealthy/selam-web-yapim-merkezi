@@ -1808,7 +1808,9 @@ const DoctorDashboard = () => {
               {/* Profile */}
               <TabsContent value="profile" className="mt-0">
                 <div className="bg-background rounded-2xl border">
-                  <DoctorProfileEditor />
+                  <ErrorBoundary>
+                    <DoctorProfileEditor />
+                  </ErrorBoundary>
                 </div>
               </TabsContent>
             </Tabs>
