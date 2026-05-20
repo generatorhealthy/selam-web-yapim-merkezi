@@ -83,7 +83,25 @@ const DoctorProfileEditor = () => {
       }
 
       console.log('Specialist profile loaded:', data);
-      setSpecialist(data);
+      // Defensive normalization for array fields that might be stored as JSON strings
+      const normalizeArray = (val: any): any[] => {
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string') {
+          try {
+            const parsed = JSON.parse(val);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        }
+        return [];
+      };
+      const normalized = {
+        ...data,
+        available_time_slots: normalizeArray((data as any).available_time_slots),
+        interests: normalizeArray((data as any).interests),
+      };
+      setSpecialist(normalized);
       
       if (data.faq) {
         try {
