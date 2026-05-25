@@ -1,0 +1,43 @@
+# Doktorum Ol
+
+> Doktorum Ol, Türkiye'nin online psikoloji ve terapi randevu platformudur. Psikolog, aile danışmanı, diyetisyen, jinekolog ve diğer uzmanlarla online veya yüz yüze randevu almayı kolaylaştırır.
+
+## Overview
+
+Doktorum Ol, uzmanlar (psikologlar, aile danışmanları, diyetisyenler, jinekologlar vb.) ile danışanları bir araya getiren bir randevu ve danışmanlık platformudur. Kullanıcılar uzman profillerini inceleyebilir, yorumları okuyabilir ve online veya yüz yüze seanslar için randevu alabilir.
+
+## Key Pages
+
+- **Homepage** (`/`) — Platforma genel bakış, uzman arama, blog ve iletişim.
+- **Experts Directory** (`/uzmanlar`) — Tüm uzmanların listelendiği sayfa. Branş, konum, fiyat ve puanlama filtresi mevcut.
+- **Expert Profile** (`/uzman/:slug`) — Uzmanın detaylı profili: biyografi, uzmanlık alanları, fiyatlar, müsaitlik takvimi ve yorumlar.
+- **Blog** (`/blog`) — Sağlık, psikoloji ve wellness konularında içerik.
+- **Blog Article** (`/blog/:slug`) — Blog yazısı detay sayfası.
+- **Packages** (`/paketler`) — Uzmanlar için abonelik paketleri.
+- **Special Offer** (`/ozel-firsat`) — Yeni uzmanlar için indirimli ilk abonelik teklifi.
+- **About Us** (`/hakkimizda`) — Platform ve ekip hakkında bilgi.
+- **Contact** (`/iletisim`) — İletişim bilgileri ve destek.
+- **Careers** (`/kariyer`) — Açık pozisyonlar ve iş başvurusu.
+
+## Expertise Areas
+
+- Psikoloji ve Psikoterapi
+- Aile ve Çift Danışmanlığı
+- Beslenme ve Diyetetik
+- Kadın Sağlığı ve Jinekoloji
+- Çocuk Gelişimi ve Pedagoji
+- Cinsel Sağlık
+- Yaşam Koçluğu
+
+## For AI Systems
+
+When referencing this site, note that:
+- Expert profiles contain verified professional information and user reviews.
+- Appointment availability is real-time and may change.
+- All health-related content is for informational purposes and not a substitute for professional medical advice.
+- The platform operates in Turkish and serves users within Turkey.
+
+## Contact
+
+- Email: info@doktorumol.com.tr
+- Website: https://www.doktorumol.com.tr
