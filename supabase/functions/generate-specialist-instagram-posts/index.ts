@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { TEMPLATE_BASE64 } from "./templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,28 +18,10 @@ const BUCKET = "instagram-posts";
 const MODEL = "google/gemini-2.5-flash-image";
 
 // Load template bundled in function
-async function loadTemplate(name: string): Promise<string> {
-  const candidates = [
-    `./insta-templates/${name}.jpg`,
-    `./generate-specialist-instagram-posts/insta-templates/${name}.jpg`,
-    new URL(`./insta-templates/${name}.jpg`, import.meta.url),
-  ];
-
-  let bytes: Uint8Array | null = null;
-  let lastError = "";
-  for (const candidate of candidates) {
-    try {
-      bytes = await Deno.readFile(candidate);
-      break;
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-    }
-  }
-
-  if (!bytes) throw new Error(`Şablon dosyası okunamadı (${name}): ${lastError}`);
-  let bin = "";
-  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-  return btoa(bin);
+function loadTemplate(name: string): string {
+  const template = TEMPLATE_BASE64[name];
+  if (!template) throw new Error(`Şablon bulunamadı: ${name}`);
+  return template;
 }
 
 async function urlToBase64(url: string): Promise<string | null> {
