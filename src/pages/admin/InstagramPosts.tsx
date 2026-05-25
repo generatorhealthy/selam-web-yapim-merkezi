@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2, RefreshCcw, Download, Search, Sparkles, ImageIcon, AlertCircle } from "lucide-react";
-import { AdminBackButton } from "@/components/AdminBackButton";
+import AdminBackButton from "@/components/AdminBackButton";
 
 type Status = "pending" | "processing" | "ready" | "failed";
 
