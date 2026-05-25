@@ -17,6 +17,15 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const BUCKET = "instagram-posts";
 const MODEL = "google/gemini-2.5-flash-image";
 
+class AiGatewayError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 // Load template bundled in function
 function loadTemplate(name: string): string {
   const template = TEMPLATE_BASE64[name];
@@ -61,7 +70,13 @@ async function generateImage(prompt: string, images: string[]): Promise<Uint8Arr
 
   if (!resp.ok) {
     const t = await resp.text();
-    throw new Error(`AI gateway ${resp.status}: ${t.slice(0, 400)}`);
+    if (resp.status === 402) {
+      throw new AiGatewayError(402, "Lovable AI kredisi yetersiz. Settings > Workspace > Usage alanından kredi eklenmeli.");
+    }
+    if (resp.status === 429) {
+      throw new AiGatewayError(429, "Lovable AI hız limiti aşıldı. Biraz bekleyip tekrar deneyin.");
+    }
+    throw new AiGatewayError(resp.status, `AI gateway ${resp.status}: ${t.slice(0, 400)}`);
   }
 
   const data = await resp.json();
@@ -238,8 +253,9 @@ serve(async (req) => {
           { onConflict: "specialist_id" },
         );
     }
+    const status = e instanceof AiGatewayError ? e.status : 500;
     return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
+      status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
