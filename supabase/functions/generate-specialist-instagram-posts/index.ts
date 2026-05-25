@@ -18,8 +18,24 @@ const MODEL = "google/gemini-2.5-flash-image";
 
 // Load template bundled in function
 async function loadTemplate(name: string): Promise<string> {
-  const url = new URL(`./insta-templates/${name}.jpg`, import.meta.url);
-  const bytes = await Deno.readFile(url);
+  const candidates = [
+    `./insta-templates/${name}.jpg`,
+    `./generate-specialist-instagram-posts/insta-templates/${name}.jpg`,
+    new URL(`./insta-templates/${name}.jpg`, import.meta.url),
+  ];
+
+  let bytes: Uint8Array | null = null;
+  let lastError = "";
+  for (const candidate of candidates) {
+    try {
+      bytes = await Deno.readFile(candidate);
+      break;
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  if (!bytes) throw new Error(`Şablon dosyası okunamadı (${name}): ${lastError}`);
   let bin = "";
   for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
   return btoa(bin);
