@@ -121,6 +121,17 @@ const AdminDashboard = () => {
 
   const adminCards = [
     {
+      title: "Instagram Paylaşımları",
+      description: "Aktif uzmanlar için otomatik üretilen 3 Instagram görselini görüntüle, indir, yeniden üret",
+      icon: Sparkles,
+      gradient: "from-pink-500 via-rose-500 to-fuchsia-600",
+      bgGradient: "from-pink-50 to-fuchsia-50",
+      shadowColor: "shadow-pink-500/30",
+      route: "/divan_paneli/instagram-posts",
+      buttonText: "Instagram Paylaşımlarını Aç",
+      adminOnly: true
+    },
+    {
       title: "SEO Çalışmaları",
       description: "Branş bazlı anahtar kelime planla, AI ile 700+ kelimelik içerikleri otomatik üret ve blog'a yayınla",
       icon: Sparkles,

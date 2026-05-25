@@ -86,6 +86,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 // Admin pages - lazy loaded (never needed on initial visit)
 const AdminAuth = lazy(() => import("./pages/AdminAuth"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const InstagramPosts = lazy(() => import("./pages/admin/InstagramPosts"));
 const UserCreate = lazy(() => import("./pages/admin/UserCreate"));
 const QuickRegister = lazy(() => import("./pages/admin/QuickRegister"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
@@ -353,6 +354,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/legal-evidence" element={<LegalEvidenceManagement />} />
               <Route path="/divan_paneli/specialist-applications" element={<SpecialistApplications />} />
               <Route path="/divan_paneli/staff-attendance" element={<StaffAttendance />} />
+              <Route path="/divan_paneli/instagram-posts" element={<Suspense fallback={<PageLoader />}><ErrorBoundary><InstagramPosts /></ErrorBoundary></Suspense>} />
               <Route path="/divan_paneli/cancellation-fees" element={<CancellationFees />} />
               <Route path="/divan_paneli/admin-activity-logs" element={<AdminActivityLogs />} />
               <Route path="/divan_paneli/mobile-activity-logs" element={<MobileActivityLogs />} />
