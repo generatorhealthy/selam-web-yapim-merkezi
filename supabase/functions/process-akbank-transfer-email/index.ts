@@ -178,16 +178,40 @@ function extractTransferInfo(text: string): {
   }
 
   // Tutar: "250,00 TL" veya "1.250,50 TL" veya "250 TL"
-  const amountRegex = /([0-9]{1,3}(?:[.\s][0-9]{3})*(?:,[0-9]{2})?)\s*(?:TL|TRY|₺)/i;
-  const amountMatch = plain.match(amountRegex);
+  // Mail içinde birden fazla TL ifadesi olabilir (bakiye, komisyon vb.).
+  // 1) Önce "tarafından ... X TL" / "X TL HAVALE" kalıbındaki gerçek transfer tutarını arar
+  // 2) Bulunamazsa mailde geçen TÜM TL tutarlarından en büyüğünü seçer
+  const parseTrAmount = (raw: string): number | null => {
+    const cleaned = raw.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? null : num;
+  };
+  const amountToken = `([0-9]{1,3}(?:[.\\s][0-9]{3})*(?:,[0-9]{2})?|[0-9]+(?:,[0-9]{2})?)`;
   let amount: number | null = null;
-  if (amountMatch) {
-    const raw = amountMatch[1]
-      .replace(/\s/g, "")
-      .replace(/\./g, "") // binlik ayracı
-      .replace(",", "."); // ondalık
-    const num = parseFloat(raw);
-    if (!isNaN(num)) amount = num;
+
+  const transferAmountPatterns: RegExp[] = [
+    new RegExp(`taraf[ıi]ndan[^0-9]{0,40}${amountToken}\\s*(?:TL|TRY|₺)`, "i"),
+    new RegExp(`${amountToken}\\s*(?:TL|TRY|₺)\\s*(?:HAVALE|EFT|FAST|nak[ıi]t\\s*giri[şs])`, "i"),
+    new RegExp(`(?:tutar|miktar)\\s*[:\\-]?\\s*${amountToken}\\s*(?:TL|TRY|₺)`, "i"),
+  ];
+  for (const re of transferAmountPatterns) {
+    const m = plain.match(re);
+    if (m && m[1]) {
+      const v = parseTrAmount(m[1]);
+      if (v != null && v > 0) { amount = v; break; }
+    }
+  }
+
+  // Fallback: mailde geçen tüm tutarlardan en büyüğünü al
+  if (amount == null) {
+    const allRe = new RegExp(`${amountToken}\\s*(?:TL|TRY|₺)`, "gi");
+    let m: RegExpExecArray | null;
+    let max = -1;
+    while ((m = allRe.exec(plain)) !== null) {
+      const v = parseTrAmount(m[1]);
+      if (v != null && v > max) max = v;
+    }
+    if (max >= 0) amount = max;
   }
 
   return { senderName, amount };
