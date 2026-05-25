@@ -293,7 +293,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_appointments: {
+      backup_1779465600_appointments: {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
@@ -347,7 +347,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_automatic_orders: {
+      backup_1779465600_automatic_orders: {
         Row: {
           amount: number | null
           company_name: string | null
@@ -434,7 +434,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_blog_posts: {
+      backup_1779465600_blog_posts: {
         Row: {
           admin_message: string | null
           author_id: string | null
@@ -503,7 +503,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_client_referrals: {
+      backup_1779465600_client_referrals: {
         Row: {
           client_contact: string | null
           client_name: string | null
@@ -554,7 +554,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_orders: {
+      backup_1779465600_orders: {
         Row: {
           amount: number | null
           approved_at: string | null
@@ -671,7 +671,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_packages: {
+      backup_1779465600_packages: {
         Row: {
           color: string | null
           created_at: string | null
@@ -719,7 +719,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_reviews: {
+      backup_1779465600_reviews: {
         Row: {
           comment: string | null
           created_at: string | null
@@ -755,7 +755,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_specialists: {
+      backup_1779465600_specialists: {
         Row: {
           address: string | null
           available_days: string[] | null
@@ -881,7 +881,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_test_questions: {
+      backup_1779465600_test_questions: {
         Row: {
           created_at: string | null
           id: string | null
@@ -917,7 +917,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_test_results: {
+      backup_1779465600_test_results: {
         Row: {
           answers: Json | null
           created_at: string | null
@@ -962,7 +962,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_tests: {
+      backup_1779465600_tests: {
         Row: {
           category: string | null
           content: string | null
@@ -1007,7 +1007,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1778947201_user_profiles: {
+      backup_1779465600_user_profiles: {
         Row: {
           created_at: string | null
           email: string | null
@@ -1043,7 +1043,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_appointments: {
+      backup_1779552000_appointments: {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
@@ -1097,7 +1097,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_automatic_orders: {
+      backup_1779552000_automatic_orders: {
         Row: {
           amount: number | null
           company_name: string | null
@@ -1184,7 +1184,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_blog_posts: {
+      backup_1779552000_blog_posts: {
         Row: {
           admin_message: string | null
           author_id: string | null
@@ -1253,7 +1253,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_client_referrals: {
+      backup_1779552000_client_referrals: {
         Row: {
           client_contact: string | null
           client_name: string | null
@@ -1304,7 +1304,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_orders: {
+      backup_1779552000_orders: {
         Row: {
           amount: number | null
           approved_at: string | null
@@ -1421,7 +1421,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_packages: {
+      backup_1779552000_packages: {
         Row: {
           color: string | null
           created_at: string | null
@@ -1469,7 +1469,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_reviews: {
+      backup_1779552000_reviews: {
         Row: {
           comment: string | null
           created_at: string | null
@@ -1505,7 +1505,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_specialists: {
+      backup_1779552000_specialists: {
         Row: {
           address: string | null
           available_days: string[] | null
@@ -1631,7 +1631,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_test_questions: {
+      backup_1779552000_test_questions: {
         Row: {
           created_at: string | null
           id: string | null
@@ -1667,7 +1667,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_test_results: {
+      backup_1779552000_test_results: {
         Row: {
           answers: Json | null
           created_at: string | null
@@ -1712,7 +1712,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_tests: {
+      backup_1779552000_tests: {
         Row: {
           category: string | null
           content: string | null
@@ -1757,7 +1757,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779033600_user_profiles: {
+      backup_1779552000_user_profiles: {
         Row: {
           created_at: string | null
           email: string | null
@@ -1793,7 +1793,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_appointments: {
+      backup_1779638400_appointments: {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
@@ -1847,7 +1847,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_automatic_orders: {
+      backup_1779638400_automatic_orders: {
         Row: {
           amount: number | null
           company_name: string | null
@@ -1934,7 +1934,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_blog_posts: {
+      backup_1779638400_blog_posts: {
         Row: {
           admin_message: string | null
           author_id: string | null
@@ -2003,7 +2003,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_client_referrals: {
+      backup_1779638400_client_referrals: {
         Row: {
           client_contact: string | null
           client_name: string | null
@@ -2054,7 +2054,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_orders: {
+      backup_1779638400_orders: {
         Row: {
           amount: number | null
           approved_at: string | null
@@ -2171,7 +2171,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_packages: {
+      backup_1779638400_packages: {
         Row: {
           color: string | null
           created_at: string | null
@@ -2219,7 +2219,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_reviews: {
+      backup_1779638400_reviews: {
         Row: {
           comment: string | null
           created_at: string | null
@@ -2255,7 +2255,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_specialists: {
+      backup_1779638400_specialists: {
         Row: {
           address: string | null
           available_days: string[] | null
@@ -2381,7 +2381,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_test_questions: {
+      backup_1779638400_test_questions: {
         Row: {
           created_at: string | null
           id: string | null
@@ -2417,7 +2417,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_test_results: {
+      backup_1779638400_test_results: {
         Row: {
           answers: Json | null
           created_at: string | null
@@ -2462,7 +2462,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_tests: {
+      backup_1779638400_tests: {
         Row: {
           category: string | null
           content: string | null
@@ -2507,757 +2507,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1779120000_user_profiles: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          id: string | null
-          is_approved: boolean | null
-          name: string | null
-          phone: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email?: string | null
-          id?: string | null
-          is_approved?: boolean | null
-          name?: string | null
-          phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string | null
-          id?: string | null
-          is_approved?: boolean | null
-          name?: string | null
-          phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_appointments: {
-        Row: {
-          appointment_date: string | null
-          appointment_time: string | null
-          appointment_type: string | null
-          consultation_topic: string | null
-          created_at: string | null
-          created_by_specialist: boolean | null
-          id: string | null
-          notes: string | null
-          patient_email: string | null
-          patient_name: string | null
-          patient_phone: string | null
-          patient_user_id: string | null
-          specialist_id: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          appointment_date?: string | null
-          appointment_time?: string | null
-          appointment_type?: string | null
-          consultation_topic?: string | null
-          created_at?: string | null
-          created_by_specialist?: boolean | null
-          id?: string | null
-          notes?: string | null
-          patient_email?: string | null
-          patient_name?: string | null
-          patient_phone?: string | null
-          patient_user_id?: string | null
-          specialist_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          appointment_date?: string | null
-          appointment_time?: string | null
-          appointment_type?: string | null
-          consultation_topic?: string | null
-          created_at?: string | null
-          created_by_specialist?: boolean | null
-          id?: string | null
-          notes?: string | null
-          patient_email?: string | null
-          patient_name?: string | null
-          patient_phone?: string | null
-          patient_user_id?: string | null
-          specialist_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_automatic_orders: {
-        Row: {
-          amount: number | null
-          company_name: string | null
-          company_tax_no: string | null
-          company_tax_office: string | null
-          created_at: string | null
-          current_month: number | null
-          customer_address: string | null
-          customer_city: string | null
-          customer_email: string | null
-          customer_name: string | null
-          customer_phone: string | null
-          customer_tc_no: string | null
-          customer_type: string | null
-          id: string | null
-          is_active: boolean | null
-          iyzico_customer_reference_code: string | null
-          last_card_update_at: string | null
-          monthly_payment_day: number | null
-          package_name: string | null
-          package_type: string | null
-          paid_months: number[] | null
-          payment_method: string | null
-          registration_date: string | null
-          subscription_reference_code: string | null
-          total_months: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          amount?: number | null
-          company_name?: string | null
-          company_tax_no?: string | null
-          company_tax_office?: string | null
-          created_at?: string | null
-          current_month?: number | null
-          customer_address?: string | null
-          customer_city?: string | null
-          customer_email?: string | null
-          customer_name?: string | null
-          customer_phone?: string | null
-          customer_tc_no?: string | null
-          customer_type?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          iyzico_customer_reference_code?: string | null
-          last_card_update_at?: string | null
-          monthly_payment_day?: number | null
-          package_name?: string | null
-          package_type?: string | null
-          paid_months?: number[] | null
-          payment_method?: string | null
-          registration_date?: string | null
-          subscription_reference_code?: string | null
-          total_months?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          amount?: number | null
-          company_name?: string | null
-          company_tax_no?: string | null
-          company_tax_office?: string | null
-          created_at?: string | null
-          current_month?: number | null
-          customer_address?: string | null
-          customer_city?: string | null
-          customer_email?: string | null
-          customer_name?: string | null
-          customer_phone?: string | null
-          customer_tc_no?: string | null
-          customer_type?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          iyzico_customer_reference_code?: string | null
-          last_card_update_at?: string | null
-          monthly_payment_day?: number | null
-          package_name?: string | null
-          package_type?: string | null
-          paid_months?: number[] | null
-          payment_method?: string | null
-          registration_date?: string | null
-          subscription_reference_code?: string | null
-          total_months?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_blog_posts: {
-        Row: {
-          admin_message: string | null
-          author_id: string | null
-          author_name: string | null
-          author_type: string | null
-          content: string | null
-          created_at: string | null
-          excerpt: string | null
-          featured_image: string | null
-          id: string | null
-          keywords: string | null
-          published_at: string | null
-          revision_count: number | null
-          seo_description: string | null
-          seo_title: string | null
-          slug: string | null
-          specialist_id: string | null
-          status: string | null
-          title: string | null
-          updated_at: string | null
-          word_count: number | null
-        }
-        Insert: {
-          admin_message?: string | null
-          author_id?: string | null
-          author_name?: string | null
-          author_type?: string | null
-          content?: string | null
-          created_at?: string | null
-          excerpt?: string | null
-          featured_image?: string | null
-          id?: string | null
-          keywords?: string | null
-          published_at?: string | null
-          revision_count?: number | null
-          seo_description?: string | null
-          seo_title?: string | null
-          slug?: string | null
-          specialist_id?: string | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-          word_count?: number | null
-        }
-        Update: {
-          admin_message?: string | null
-          author_id?: string | null
-          author_name?: string | null
-          author_type?: string | null
-          content?: string | null
-          created_at?: string | null
-          excerpt?: string | null
-          featured_image?: string | null
-          id?: string | null
-          keywords?: string | null
-          published_at?: string | null
-          revision_count?: number | null
-          seo_description?: string | null
-          seo_title?: string | null
-          slug?: string | null
-          specialist_id?: string | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-          word_count?: number | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_client_referrals: {
-        Row: {
-          client_contact: string | null
-          client_name: string | null
-          client_surname: string | null
-          created_at: string | null
-          id: string | null
-          is_referred: boolean | null
-          month: number | null
-          notes: string | null
-          referral_count: number | null
-          referred_at: string | null
-          referred_by: string | null
-          specialist_id: string | null
-          updated_at: string | null
-          year: number | null
-        }
-        Insert: {
-          client_contact?: string | null
-          client_name?: string | null
-          client_surname?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_referred?: boolean | null
-          month?: number | null
-          notes?: string | null
-          referral_count?: number | null
-          referred_at?: string | null
-          referred_by?: string | null
-          specialist_id?: string | null
-          updated_at?: string | null
-          year?: number | null
-        }
-        Update: {
-          client_contact?: string | null
-          client_name?: string | null
-          client_surname?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_referred?: boolean | null
-          month?: number | null
-          notes?: string | null
-          referral_count?: number | null
-          referred_at?: string | null
-          referred_by?: string | null
-          specialist_id?: string | null
-          updated_at?: string | null
-          year?: number | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_orders: {
-        Row: {
-          amount: number | null
-          approved_at: string | null
-          approved_by: string | null
-          company_name: string | null
-          company_tax_no: string | null
-          company_tax_office: string | null
-          contract_emails_sent: boolean | null
-          contract_generated_at: string | null
-          contract_ip_address: string | null
-          created_at: string | null
-          customer_address: string | null
-          customer_city: string | null
-          customer_email: string | null
-          customer_name: string | null
-          customer_phone: string | null
-          customer_tc_no: string | null
-          customer_type: string | null
-          deleted_at: string | null
-          distance_sales_pdf_content: string | null
-          id: string | null
-          invoice_date: string | null
-          invoice_number: string | null
-          invoice_sent: boolean | null
-          is_first_order: boolean | null
-          iyzico_customer_reference_code: string | null
-          package_name: string | null
-          package_type: string | null
-          parent_order_id: string | null
-          payment_method: string | null
-          payment_status: string | null
-          payment_transaction_id: string | null
-          pre_info_pdf_content: string | null
-          status: string | null
-          subscription_month: number | null
-          subscription_reference_code: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          amount?: number | null
-          approved_at?: string | null
-          approved_by?: string | null
-          company_name?: string | null
-          company_tax_no?: string | null
-          company_tax_office?: string | null
-          contract_emails_sent?: boolean | null
-          contract_generated_at?: string | null
-          contract_ip_address?: string | null
-          created_at?: string | null
-          customer_address?: string | null
-          customer_city?: string | null
-          customer_email?: string | null
-          customer_name?: string | null
-          customer_phone?: string | null
-          customer_tc_no?: string | null
-          customer_type?: string | null
-          deleted_at?: string | null
-          distance_sales_pdf_content?: string | null
-          id?: string | null
-          invoice_date?: string | null
-          invoice_number?: string | null
-          invoice_sent?: boolean | null
-          is_first_order?: boolean | null
-          iyzico_customer_reference_code?: string | null
-          package_name?: string | null
-          package_type?: string | null
-          parent_order_id?: string | null
-          payment_method?: string | null
-          payment_status?: string | null
-          payment_transaction_id?: string | null
-          pre_info_pdf_content?: string | null
-          status?: string | null
-          subscription_month?: number | null
-          subscription_reference_code?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          amount?: number | null
-          approved_at?: string | null
-          approved_by?: string | null
-          company_name?: string | null
-          company_tax_no?: string | null
-          company_tax_office?: string | null
-          contract_emails_sent?: boolean | null
-          contract_generated_at?: string | null
-          contract_ip_address?: string | null
-          created_at?: string | null
-          customer_address?: string | null
-          customer_city?: string | null
-          customer_email?: string | null
-          customer_name?: string | null
-          customer_phone?: string | null
-          customer_tc_no?: string | null
-          customer_type?: string | null
-          deleted_at?: string | null
-          distance_sales_pdf_content?: string | null
-          id?: string | null
-          invoice_date?: string | null
-          invoice_number?: string | null
-          invoice_sent?: boolean | null
-          is_first_order?: boolean | null
-          iyzico_customer_reference_code?: string | null
-          package_name?: string | null
-          package_type?: string | null
-          parent_order_id?: string | null
-          payment_method?: string | null
-          payment_status?: string | null
-          payment_transaction_id?: string | null
-          pre_info_pdf_content?: string | null
-          status?: string | null
-          subscription_month?: number | null
-          subscription_reference_code?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_packages: {
-        Row: {
-          color: string | null
-          created_at: string | null
-          features: string[] | null
-          icon: string | null
-          id: string | null
-          is_active: boolean | null
-          link: string | null
-          name: string | null
-          original_price: number | null
-          package_key: string | null
-          popular: boolean | null
-          price: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string | null
-          features?: string[] | null
-          icon?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          link?: string | null
-          name?: string | null
-          original_price?: number | null
-          package_key?: string | null
-          popular?: boolean | null
-          price?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          color?: string | null
-          created_at?: string | null
-          features?: string[] | null
-          icon?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          link?: string | null
-          name?: string | null
-          original_price?: number | null
-          package_key?: string | null
-          popular?: boolean | null
-          price?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_reviews: {
-        Row: {
-          comment: string | null
-          created_at: string | null
-          id: string | null
-          rating: number | null
-          reviewer_email: string | null
-          reviewer_name: string | null
-          specialist_id: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          comment?: string | null
-          created_at?: string | null
-          id?: string | null
-          rating?: number | null
-          reviewer_email?: string | null
-          reviewer_name?: string | null
-          specialist_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          comment?: string | null
-          created_at?: string | null
-          id?: string | null
-          rating?: number | null
-          reviewer_email?: string | null
-          reviewer_name?: string | null
-          specialist_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_specialists: {
-        Row: {
-          address: string | null
-          available_days: string[] | null
-          available_time_slots: Json | null
-          bio: string | null
-          certifications: string | null
-          city: string | null
-          consultation_fee: number | null
-          consultation_type: string | null
-          created_at: string | null
-          education: string | null
-          email: string | null
-          experience: number | null
-          face_to_face_consultation: boolean | null
-          faq: string | null
-          hospital: string | null
-          id: string | null
-          interests: string[] | null
-          internal_number: string | null
-          is_active: boolean | null
-          name: string | null
-          online_consultation: boolean | null
-          package_price: number | null
-          payment_day: number | null
-          phone: string | null
-          profile_picture: string | null
-          rating: number | null
-          referral_signup_code: string | null
-          registration_source: string | null
-          reviews_count: number | null
-          seo_description: string | null
-          seo_keywords: string | null
-          seo_title: string | null
-          slug: string | null
-          specialty: string | null
-          university: string | null
-          updated_at: string | null
-          user_id: string | null
-          working_hours_end: string | null
-          working_hours_start: string | null
-        }
-        Insert: {
-          address?: string | null
-          available_days?: string[] | null
-          available_time_slots?: Json | null
-          bio?: string | null
-          certifications?: string | null
-          city?: string | null
-          consultation_fee?: number | null
-          consultation_type?: string | null
-          created_at?: string | null
-          education?: string | null
-          email?: string | null
-          experience?: number | null
-          face_to_face_consultation?: boolean | null
-          faq?: string | null
-          hospital?: string | null
-          id?: string | null
-          interests?: string[] | null
-          internal_number?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          online_consultation?: boolean | null
-          package_price?: number | null
-          payment_day?: number | null
-          phone?: string | null
-          profile_picture?: string | null
-          rating?: number | null
-          referral_signup_code?: string | null
-          registration_source?: string | null
-          reviews_count?: number | null
-          seo_description?: string | null
-          seo_keywords?: string | null
-          seo_title?: string | null
-          slug?: string | null
-          specialty?: string | null
-          university?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          working_hours_end?: string | null
-          working_hours_start?: string | null
-        }
-        Update: {
-          address?: string | null
-          available_days?: string[] | null
-          available_time_slots?: Json | null
-          bio?: string | null
-          certifications?: string | null
-          city?: string | null
-          consultation_fee?: number | null
-          consultation_type?: string | null
-          created_at?: string | null
-          education?: string | null
-          email?: string | null
-          experience?: number | null
-          face_to_face_consultation?: boolean | null
-          faq?: string | null
-          hospital?: string | null
-          id?: string | null
-          interests?: string[] | null
-          internal_number?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          online_consultation?: boolean | null
-          package_price?: number | null
-          payment_day?: number | null
-          phone?: string | null
-          profile_picture?: string | null
-          rating?: number | null
-          referral_signup_code?: string | null
-          registration_source?: string | null
-          reviews_count?: number | null
-          seo_description?: string | null
-          seo_keywords?: string | null
-          seo_title?: string | null
-          slug?: string | null
-          specialty?: string | null
-          university?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          working_hours_end?: string | null
-          working_hours_start?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_test_questions: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          is_required: boolean | null
-          options: Json | null
-          question_text: string | null
-          question_type: string | null
-          step_number: number | null
-          test_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          is_required?: boolean | null
-          options?: Json | null
-          question_text?: string | null
-          question_type?: string | null
-          step_number?: number | null
-          test_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          is_required?: boolean | null
-          options?: Json | null
-          question_text?: string | null
-          question_type?: string | null
-          step_number?: number | null
-          test_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_test_results: {
-        Row: {
-          answers: Json | null
-          created_at: string | null
-          id: string | null
-          patient_email: string | null
-          patient_name: string | null
-          patient_user_id: string | null
-          results: Json | null
-          specialist_id: string | null
-          specialty_area: string | null
-          status: string | null
-          test_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          answers?: Json | null
-          created_at?: string | null
-          id?: string | null
-          patient_email?: string | null
-          patient_name?: string | null
-          patient_user_id?: string | null
-          results?: Json | null
-          specialist_id?: string | null
-          specialty_area?: string | null
-          status?: string | null
-          test_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          answers?: Json | null
-          created_at?: string | null
-          id?: string | null
-          patient_email?: string | null
-          patient_name?: string | null
-          patient_user_id?: string | null
-          results?: Json | null
-          specialist_id?: string | null
-          specialty_area?: string | null
-          status?: string | null
-          test_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_tests: {
-        Row: {
-          category: string | null
-          content: string | null
-          created_at: string | null
-          description: string | null
-          id: string | null
-          image_url: string | null
-          is_active: boolean | null
-          specialist_id: string | null
-          specialty_area: string | null
-          status: string | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          category?: string | null
-          content?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_active?: boolean | null
-          specialist_id?: string | null
-          specialty_area?: string | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          category?: string | null
-          content?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_active?: boolean | null
-          specialist_id?: string | null
-          specialty_area?: string | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_1779206400_user_profiles: {
+      backup_1779638400_user_profiles: {
         Row: {
           created_at: string | null
           email: string | null
