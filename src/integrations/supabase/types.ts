@@ -4543,6 +4543,60 @@ export type Database = {
         }
         Relationships: []
       }
+      specialist_instagram_posts: {
+        Row: {
+          about_url: string | null
+          cover_url: string | null
+          created_at: string
+          error_message: string | null
+          expertise_url: string | null
+          generated_at: string | null
+          id: string
+          specialist_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          about_url?: string | null
+          cover_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          expertise_url?: string | null
+          generated_at?: string | null
+          id?: string
+          specialist_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          about_url?: string | null
+          cover_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          expertise_url?: string | null
+          generated_at?: string | null
+          id?: string
+          specialist_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialist_instagram_posts_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialist_instagram_posts_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       specialist_referral_codes: {
         Row: {
           code: string
