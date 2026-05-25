@@ -181,11 +181,9 @@ serve(async (req) => {
       );
 
     // Load templates + photo
-    const [coverTpl, aboutTpl, expertiseTpl] = await Promise.all([
-      loadTemplate("cover"),
-      loadTemplate("about"),
-      loadTemplate("expertise"),
-    ]);
+    const coverTpl = loadTemplate("cover");
+    const aboutTpl = loadTemplate("about");
+    const expertiseTpl = loadTemplate("expertise");
 
     const photoB64 = spec.profile_picture ? await urlToBase64(spec.profile_picture) : null;
     if (!photoB64) {
@@ -198,12 +196,10 @@ serve(async (req) => {
       bio: spec.bio,
     });
 
-    // Generate all 3 in parallel
-    const [coverBytes, aboutBytes, expertiseBytes] = await Promise.all([
-      generateImage(prompts.cover, [coverTpl, photoB64]),
-      generateImage(prompts.about, [aboutTpl, photoB64]),
-      generateImage(prompts.expertise, [expertiseTpl]),
-    ]);
+    // Generate sequentially to stay under Edge Runtime memory limits.
+    const coverBytes = await generateImage(prompts.cover, [coverTpl, photoB64]);
+    const aboutBytes = await generateImage(prompts.about, [aboutTpl, photoB64]);
+    const expertiseBytes = await generateImage(prompts.expertise, [expertiseTpl]);
 
     // Upload
     const [coverUrl, aboutUrl, expertiseUrl] = await Promise.all([
