@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { TEMPLATE_BASE64 } from "./templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,9 +19,9 @@ const MODEL = "google/gemini-2.5-flash-image";
 
 // Load template bundled in function
 async function loadTemplate(name: string): Promise<string> {
-  const url = new URL(`../_shared/insta-templates/${name}.jpg`, import.meta.url);
-  const bytes = await Deno.readFile(url);
-  return btoa(String.fromCharCode(...new Uint8Array(bytes)));
+  const template = TEMPLATE_BASE64[name];
+  if (!template) throw new Error(`Şablon bulunamadı: ${name}`);
+  return template;
 }
 
 async function urlToBase64(url: string): Promise<string | null> {
