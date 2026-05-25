@@ -41,7 +41,7 @@ async function generateImage(prompt: string, images: string[]): Promise<Uint8Arr
   for (const b64 of images) {
     content.push({
       type: "image_url",
-      image_url: { url: `data:image/png;base64,${b64}` },
+      image_url: { url: `data:image/jpeg;base64,${b64}` },
     });
   }
 
