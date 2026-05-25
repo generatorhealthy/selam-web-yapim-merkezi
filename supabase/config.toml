@@ -33,6 +33,9 @@ port = 54325
 file_size_limit = "50MiB"
 buckets = []
 
+[functions.generate-specialist-instagram-posts]
+verify_jwt = false
+
 [functions.restore-deleted-user]
 verify_jwt = false
 
