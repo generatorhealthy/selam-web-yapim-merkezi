@@ -18,7 +18,7 @@ const MODEL = "google/gemini-2.5-flash-image";
 
 // Load template bundled in function
 async function loadTemplate(name: string): Promise<string> {
-  const url = new URL(`../_shared/insta-templates/${name}.png`, import.meta.url);
+  const url = new URL(`../_shared/insta-templates/${name}.jpg`, import.meta.url);
   const bytes = await Deno.readFile(url);
   return btoa(String.fromCharCode(...new Uint8Array(bytes)));
 }
