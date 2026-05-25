@@ -277,7 +277,7 @@ const AppContent = () => {
               <Route path="/randevu-al/:specialtySlug/:doctorName" element={<BookAppointment />} />
               <Route path="/randevu-sayfasi" element={<RandevuSayfasi />} />
               <Route path="/uzmanlik/:specialty" element={<SpecialtyPage />} />
-              <Route path="/paketler" element={<Packages />} />
+              <Route path="/paketler" element={<Navigate to="/ozel-firsat" replace />} />
               
               <Route path="/kampanyali-paket" element={<CampaignPackage />} />
               <Route path="/kampanyali-premium-paket" element={<CampaignPremiumPackage />} />
