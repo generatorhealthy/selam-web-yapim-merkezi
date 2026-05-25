@@ -3445,6 +3445,27 @@ export type Database = {
         }
         Relationships: []
       }
+      instagram_post_templates: {
+        Row: {
+          data_base64: string
+          key: string
+          mime_type: string
+          updated_at: string
+        }
+        Insert: {
+          data_base64: string
+          key: string
+          mime_type?: string
+          updated_at?: string
+        }
+        Update: {
+          data_base64?: string
+          key?: string
+          mime_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       iyzico_settings: {
         Row: {
           api_key: string

@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { TEMPLATE_BASE64 } from "./templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,13 +17,20 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const BUCKET = "instagram-posts";
 const MODEL = "google/gemini-2.5-flash-image";
 
+class AiGatewayError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 // Load template bundled in function
-async function loadTemplate(name: string): Promise<string> {
-  const url = new URL(`./insta-templates/${name}.jpg`, import.meta.url);
-  const bytes = await Deno.readFile(url);
-  let bin = "";
-  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-  return btoa(bin);
+function loadTemplate(name: string): string {
+  const template = TEMPLATE_BASE64[name];
+  if (!template) throw new Error(`Şablon bulunamadı: ${name}`);
+  return template;
 }
 
 async function urlToBase64(url: string): Promise<string | null> {
@@ -62,7 +70,13 @@ async function generateImage(prompt: string, images: string[]): Promise<Uint8Arr
 
   if (!resp.ok) {
     const t = await resp.text();
-    throw new Error(`AI gateway ${resp.status}: ${t.slice(0, 400)}`);
+    if (resp.status === 402) {
+      throw new AiGatewayError(402, "Lovable AI kredisi yetersiz. Settings > Workspace > Usage alanından kredi eklenmeli.");
+    }
+    if (resp.status === 429) {
+      throw new AiGatewayError(429, "Lovable AI hız limiti aşıldı. Biraz bekleyip tekrar deneyin.");
+    }
+    throw new AiGatewayError(resp.status, `AI gateway ${resp.status}: ${t.slice(0, 400)}`);
   }
 
   const data = await resp.json();
@@ -182,11 +196,9 @@ serve(async (req) => {
       );
 
     // Load templates + photo
-    const [coverTpl, aboutTpl, expertiseTpl] = await Promise.all([
-      loadTemplate("cover"),
-      loadTemplate("about"),
-      loadTemplate("expertise"),
-    ]);
+    const coverTpl = loadTemplate("cover");
+    const aboutTpl = loadTemplate("about");
+    const expertiseTpl = loadTemplate("expertise");
 
     const photoB64 = spec.profile_picture ? await urlToBase64(spec.profile_picture) : null;
     if (!photoB64) {
@@ -199,12 +211,10 @@ serve(async (req) => {
       bio: spec.bio,
     });
 
-    // Generate all 3 in parallel
-    const [coverBytes, aboutBytes, expertiseBytes] = await Promise.all([
-      generateImage(prompts.cover, [coverTpl, photoB64]),
-      generateImage(prompts.about, [aboutTpl, photoB64]),
-      generateImage(prompts.expertise, [expertiseTpl]),
-    ]);
+    // Generate sequentially to stay under Edge Runtime memory limits.
+    const coverBytes = await generateImage(prompts.cover, [coverTpl, photoB64]);
+    const aboutBytes = await generateImage(prompts.about, [aboutTpl, photoB64]);
+    const expertiseBytes = await generateImage(prompts.expertise, [expertiseTpl]);
 
     // Upload
     const [coverUrl, aboutUrl, expertiseUrl] = await Promise.all([
@@ -243,8 +253,9 @@ serve(async (req) => {
           { onConflict: "specialist_id" },
         );
     }
+    const status = e instanceof AiGatewayError ? e.status : 500;
     return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
+      status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
