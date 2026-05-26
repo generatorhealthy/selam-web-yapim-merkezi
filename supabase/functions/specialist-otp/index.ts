@@ -52,7 +52,34 @@ serve(async (req) => {
         }
       }
 
-      // If not found in specialists, try automatic_orders (customer phone)
+      // If not found in specialists, try user_profiles (phone stored there)
+      if (!specialistEmail) {
+        for (const variant of phoneVariants) {
+          const { data } = await supabase
+            .from('user_profiles')
+            .select('user_id, email, role')
+            .eq('phone', variant)
+            .limit(1);
+
+          if (data && data.length > 0 && data[0].email) {
+            // Verify this profile belongs to an active specialist
+            const { data: specData } = await supabase
+              .from('specialists')
+              .select('email, user_id')
+              .or(`user_id.eq.${data[0].user_id},email.eq.${data[0].email}`)
+              .eq('is_active', true)
+              .limit(1);
+
+            if (specData && specData.length > 0) {
+              specialistEmail = specData[0].email;
+              specialistUserId = specData[0].user_id || data[0].user_id;
+              break;
+            }
+          }
+        }
+      }
+
+      // If not found in user_profiles, try automatic_orders (customer phone)
       if (!specialistEmail) {
         for (const variant of phoneVariants) {
           const { data } = await supabase
