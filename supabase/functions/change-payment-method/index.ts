@@ -73,14 +73,28 @@ serve(async (req) => {
     console.log("Kart değiştirme talebi - Email:", userEmail);
 
     // Find the specialist's most recent active subscription order
-    const { data: latestOrder } = await supabase
+    const selectCols = "id, customer_name, customer_email, customer_phone, customer_tc_no, customer_address, customer_city, package_name, package_type, amount, payment_method, subscription_reference_code, iyzico_customer_reference_code, customer_type, company_name, company_tax_no, company_tax_office";
+
+    let { data: latestOrder } = await supabase
       .from("orders")
-      .select("id, customer_name, customer_email, customer_phone, customer_tc_no, customer_address, customer_city, package_name, package_type, amount, payment_method, subscription_reference_code, iyzico_customer_reference_code, customer_type, company_name, company_tax_no, company_tax_office")
+      .select(selectCols)
       .eq("customer_email", userEmail)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    // Fallback: aktif abonelik automatic_orders tablosunda olabilir
+    if (!latestOrder) {
+      const { data: autoOrder } = await supabase
+        .from("automatic_orders")
+        .select(selectCols)
+        .eq("customer_email", userEmail)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      latestOrder = autoOrder as any;
+    }
 
     if (!latestOrder) {
       return new Response(JSON.stringify({ error: "Aktif sipariş bulunamadı" }), {
