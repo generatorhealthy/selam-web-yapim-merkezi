@@ -221,6 +221,29 @@ serve(async (req) => {
         }
       }
 
+      // If not found, check user_profiles
+      if (!userEmail) {
+        for (const variant of phoneVariants2) {
+          const { data } = await supabase
+            .from('user_profiles')
+            .select('user_id, email')
+            .eq('phone', variant)
+            .limit(1);
+          if (data && data.length > 0 && data[0].email) {
+            const { data: specData } = await supabase
+              .from('specialists')
+              .select('email')
+              .or(`user_id.eq.${data[0].user_id},email.eq.${data[0].email}`)
+              .eq('is_active', true)
+              .limit(1);
+            if (specData && specData.length > 0) {
+              userEmail = specData[0].email;
+              break;
+            }
+          }
+        }
+      }
+
       // If not found, check automatic_orders
       if (!userEmail) {
         for (const variant of phoneVariants2) {
