@@ -63,6 +63,7 @@ interface ClientReferralDetail {
   referral_count: number;
   is_referred: boolean;
   sms_sent?: boolean;
+  consultation_type?: string | null;
 }
 
 // --- SMS phone resolution helpers (prefer orders/contracts phone) ---
@@ -464,7 +465,7 @@ const ClientReferrals = () => {
       
       const { data, error } = await supabase
         .from('client_referrals')
-        .select('id, client_name, client_surname, client_contact, referred_at, referral_count, is_referred')
+        .select('id, client_name, client_surname, client_contact, referred_at, referral_count, is_referred, consultation_type')
         .eq('specialist_id', specialistId)
         .eq('year', currentYear)
         .eq('month', month)
@@ -600,6 +601,7 @@ const ClientReferrals = () => {
             client_name: clientData.client_name,
             client_surname: clientData.client_surname,
             client_contact: clientData.client_contact,
+            consultation_type: clientData.consultation_type || 'online',
             is_referred: true,
             referred_at: new Date().toISOString(),
             referred_by: (await supabase.auth.getUser()).data.user?.id || null,
@@ -1767,10 +1769,19 @@ const ClientReferrals = () => {
                                                   <div className="font-semibold text-slate-900 text-sm mb-1">
                                                     {client.client_name} {client.client_surname}
                                                   </div>
-                                                  <div className="flex items-center gap-2">
+                                                  <div className="flex items-center gap-2 flex-wrap">
                                                     <Badge className="bg-blue-100 text-blue-700 border-0 text-xs px-2 py-1">
                                                       📞 {client.client_contact}
                                                     </Badge>
+                                                    {client.consultation_type === 'face_to_face' ? (
+                                                      <Badge className="bg-amber-100 text-amber-700 border-0 text-xs px-2 py-1">
+                                                        🏢 Yüz Yüze
+                                                      </Badge>
+                                                    ) : (
+                                                      <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs px-2 py-1">
+                                                        💻 Online
+                                                      </Badge>
+                                                    )}
                                                   </div>
                                                 </div>
                                               </div>

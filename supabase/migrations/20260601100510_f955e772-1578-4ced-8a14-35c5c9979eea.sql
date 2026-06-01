@@ -1,0 +1,1 @@
+ALTER TABLE public.client_referrals ADD COLUMN IF NOT EXISTS consultation_type text;
