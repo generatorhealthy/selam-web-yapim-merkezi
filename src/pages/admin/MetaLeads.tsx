@@ -303,6 +303,10 @@ const MetaLeads = () => {
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               Otomatik (15 dk)
             </span>
+            <Button onClick={runRoutingPlan} disabled={planLoading} variant="secondary" size="sm" className="shrink-0">
+              <PhoneForwarded className={`h-4 w-4 mr-2 ${planLoading ? "animate-pulse" : ""}`} />
+              {planLoading ? "Hesaplanıyor..." : "Test Yönlendirme Planı"}
+            </Button>
             <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
