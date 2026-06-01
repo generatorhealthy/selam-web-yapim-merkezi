@@ -39,20 +39,15 @@ const STATUS_OPTIONS = [
   { value: "transferred", label: "Aktarıldı", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
 ];
 
-const SHEET_URL_KEY = "meta_leads_sheet_url";
+
 
 const MetaLeads = () => {
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [sheetUrl, setSheetUrl] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  useEffect(() => {
-    setSheetUrl(localStorage.getItem(SHEET_URL_KEY) || "");
-  }, []);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -74,20 +69,15 @@ const MetaLeads = () => {
   }, [fetchLeads]);
 
   const handleSync = async () => {
-    if (!sheetUrl.trim()) {
-      toast({ title: "Bağlantı gerekli", description: "Lütfen Google Sheets bağlantısını girin.", variant: "destructive" });
-      return;
-    }
-    localStorage.setItem(SHEET_URL_KEY, sheetUrl.trim());
     setSyncing(true);
     try {
       const { data, error } = await supabase.functions.invoke("sync-meta-leads", {
-        body: { sheetUrl: sheetUrl.trim() },
+        body: {},
       });
       if (error) throw error;
       if (data?.success === false) throw new Error(data.error);
       toast({
-        title: "Çekim tamamlandı",
+        title: "Güncellendi",
         description: `${data.inserted} yeni danışan eklendi (toplam ${data.total} okundu).`,
       });
       await fetchLeads();
@@ -136,26 +126,20 @@ const MetaLeads = () => {
         </div>
 
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-base">Excel'den Otomatik Çekim</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Label htmlFor="sheet-url">Google Sheets Bağlantısı</Label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Input
-                id="sheet-url"
-                placeholder="https://docs.google.com/spreadsheets/d/..."
-                value={sheetUrl}
-                onChange={(e) => setSheetUrl(e.target.value)}
-              />
-              <Button onClick={handleSync} disabled={syncing} className="shrink-0">
-                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                {syncing ? "Çekiliyor..." : "Danışanları Çek"}
-              </Button>
+          <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2">
+              <RefreshCw className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
+              <div>
+                <div className="font-medium text-sm">Otomatik çekim aktif</div>
+                <p className="text-xs text-muted-foreground">
+                  "DANIŞAN" Excel sayfasındaki yeni başvurular her 15 dakikada bir otomatik eklenir. Mevcut kayıtların durumu korunur.
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Excel sayfanızın bağlantısını yapıştırın. Yeni başvurular otomatik eklenir, mevcutların durumu korunur.
-            </p>
+            <Button onClick={handleSync} disabled={syncing} variant="outline" className="shrink-0">
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
+            </Button>
           </CardContent>
         </Card>
 
