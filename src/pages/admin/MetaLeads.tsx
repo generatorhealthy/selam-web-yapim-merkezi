@@ -150,6 +150,20 @@ const MetaLeads = () => {
     fetchLeads();
   }, [fetchLeads]);
 
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copyContact = async (lead: Lead) => {
+    const text = `${lead.full_name} - ${lead.phone}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(lead.id);
+      setTimeout(() => setCopiedId((c) => (c === lead.id ? null : c)), 1500);
+      toast({ title: "Kopyalandı", description: text });
+    } catch {
+      toast({ title: "Kopyalanamadı", variant: "destructive" });
+    }
+  };
+
+
   const saveNote = async (id: string) => {
     const draft = noteDrafts[id];
     const lead = leads.find((l) => l.id === id);
