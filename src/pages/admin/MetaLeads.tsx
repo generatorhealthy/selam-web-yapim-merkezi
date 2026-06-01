@@ -324,6 +324,26 @@ const MetaLeads = () => {
                       {lead.phone}
                     </a>
 
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={lead.welcome_sent_at ? "outline" : "default"}
+                      disabled={sendingWa[lead.id]}
+                      onClick={() => sendWelcome(lead)}
+                      className={lead.welcome_sent_at
+                        ? "h-9 text-sm border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                        : "h-9 text-sm bg-emerald-600 hover:bg-emerald-700 text-white"}
+                    >
+                      {sendingWa[lead.id] ? (
+                        <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
+                      ) : lead.welcome_sent_at ? (
+                        <Check className="h-4 w-4 mr-1.5" />
+                      ) : (
+                        <MessageCircle className="h-4 w-4 mr-1.5" />
+                      )}
+                      {lead.welcome_sent_at ? "Hoş Geldin Gönderildi" : "WhatsApp Hoş Geldin"}
+                    </Button>
+
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
