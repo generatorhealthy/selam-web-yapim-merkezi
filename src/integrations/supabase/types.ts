@@ -3100,6 +3100,7 @@ export type Database = {
           client_contact: string | null
           client_name: string | null
           client_surname: string | null
+          consultation_type: string | null
           created_at: string
           id: string
           is_referred: boolean
@@ -3116,6 +3117,7 @@ export type Database = {
           client_contact?: string | null
           client_name?: string | null
           client_surname?: string | null
+          consultation_type?: string | null
           created_at?: string
           id?: string
           is_referred?: boolean
@@ -3132,6 +3134,7 @@ export type Database = {
           client_contact?: string | null
           client_name?: string | null
           client_surname?: string | null
+          consultation_type?: string | null
           created_at?: string
           id?: string
           is_referred?: boolean
@@ -5561,6 +5564,7 @@ export type Database = {
           client_contact: string | null
           client_name: string | null
           client_surname: string | null
+          consultation_type: string | null
           created_at: string
           id: string
           is_referred: boolean
@@ -5591,6 +5595,7 @@ export type Database = {
           client_contact: string | null
           client_name: string | null
           client_surname: string | null
+          consultation_type: string | null
           created_at: string
           id: string
           is_referred: boolean

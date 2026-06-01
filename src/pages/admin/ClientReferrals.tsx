@@ -63,6 +63,7 @@ interface ClientReferralDetail {
   referral_count: number;
   is_referred: boolean;
   sms_sent?: boolean;
+  consultation_type?: string | null;
 }
 
 // --- SMS phone resolution helpers (prefer orders/contracts phone) ---
