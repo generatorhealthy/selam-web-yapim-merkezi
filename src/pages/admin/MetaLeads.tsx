@@ -479,6 +479,63 @@ const MetaLeads = () => {
             })}
           </div>
         )}
+
+        <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Test Yönlendirme Planı</DialogTitle>
+              <DialogDescription>
+                Yeni gelen danışanların hangi uzmana yönlendirileceği. Bu bir testtir — hiçbir arama yapılmadı.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {plan.length === 0 && (
+                <p className="text-sm text-muted-foreground">Yeni gelen danışan bulunamadı.</p>
+              )}
+              {plan.map((p) => (
+                <div key={p.lead_id} className="rounded-lg border p-3 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold">{p.full_name}</span>
+                    <Badge variant="outline" className="gap-1">
+                      {p.consultation_type === "online" ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                      {p.consultation_type === "online" ? "Online" : "Yüz Yüze"}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {p.therapy_label} → {p.category}
+                  </div>
+                  {p.needs_city_prompt ? (
+                    <div className="mt-2 rounded bg-muted/50 p-2">
+                      <div className="text-xs font-medium">📍 Şehir sorulacak, ardından o şehirdeki yüz yüze uzmana aktarılacak.</div>
+                      <div className="mt-1 space-y-1">
+                        {Object.entries(p.candidates_by_city || {}).slice(0, 6).map(([city, list]: any) => (
+                          <div key={city} className="text-xs">
+                            <span className="font-medium">{city}:</span>{" "}
+                            {list[0] ? `${list[0].specialist_name} (dahili ${list[0].internal_number}, ${list[0].transfer_dial})` : "—"}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : p.target ? (
+                    <div className="mt-2 rounded bg-muted/50 p-2 space-y-1">
+                      <div className="text-xs">
+                        <span className="font-medium">Uzman:</span> {p.target.specialist_name}
+                        {p.target.urgent && <Badge variant="destructive" className="ml-2 text-[10px]">Acil</Badge>}
+                      </div>
+                      <div className="text-xs">
+                        <span className="font-medium">Aktarım:</span> {p.target.transfer_dial}
+                        <span className="text-muted-foreground"> · {p.target.total_referrals} yönlendirme · {p.target.days_since_last_referral ?? "hiç"} gün önce</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground italic">"{p.tts_text}"</div>
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-xs text-destructive">{p.note || "Uygun uzman bulunamadı"}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </div>
