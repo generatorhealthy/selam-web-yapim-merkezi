@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Search, Calendar, Bell } from "lucide-react";
-import appLogo from "@/assets/app-logo.jpeg.asset.json";
+
+const APP_LOGO_URL = "/app-icon.png";
 
 const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=app.lovable.doktorumol";
 const APP_STORE_URL = "https://apps.apple.com/tr/app/doktorum-ol/id6762599027?l=tr";
@@ -67,7 +68,7 @@ const AppDownloadSheet = () => {
         {/* App info */}
         <div className="flex items-center gap-4">
           <img
-            src={appLogo.url}
+            src={APP_LOGO_URL}
             alt="Doktorum Ol uygulama logosu"
             className="h-14 w-14 rounded-2xl shadow-lg"
           />
