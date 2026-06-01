@@ -264,48 +264,81 @@ const MetaLeads = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((lead) => {
               const statusMeta = STATUS_MAP[lead.status] || STATUS_OPTIONS[0];
               const isFaceToFace = lead.consultation_type === "face_to_face";
+              const draft = noteDrafts[lead.id] ?? lead.notes ?? "";
+              const dirty = draft !== (lead.notes ?? "");
               return (
-                <Card key={lead.id} className={`transition hover:shadow-md ${statusMeta.card}`}>
-                  <CardContent className="p-4 flex flex-col gap-3 h-full">
+                <Card key={lead.id} className={`transition hover:shadow-lg ${statusMeta.card}`}>
+                  <CardContent className="p-5 flex flex-col gap-4 h-full">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="font-semibold truncate leading-tight">{lead.full_name}</div>
+                        <div className="font-bold text-lg truncate leading-tight">{lead.full_name}</div>
                         {lead.therapy_type && (
-                          <div className="text-[11px] text-muted-foreground truncate">{lead.therapy_type}</div>
+                          <div className="mt-1 inline-block text-sm font-medium text-primary bg-primary/10 rounded-md px-2 py-0.5">
+                            {prettyTherapy(lead.therapy_type)}
+                          </div>
                         )}
                       </div>
                       <Badge
                         variant="outline"
-                        className={`shrink-0 text-[10px] px-1.5 ${isFaceToFace ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"}`}
+                        className={`shrink-0 text-xs px-2 py-1 ${isFaceToFace ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"}`}
                       >
-                        {isFaceToFace ? <MapPin className="h-3 w-3 mr-0.5" /> : <Video className="h-3 w-3 mr-0.5" />}
+                        {isFaceToFace ? <MapPin className="h-3.5 w-3.5 mr-1" /> : <Video className="h-3.5 w-3.5 mr-1" />}
                         {isFaceToFace ? "Yüz Yüze" : "Online"}
                       </Badge>
                     </div>
 
                     <a
                       href={`tel:${lead.phone}`}
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                      className="inline-flex items-center gap-2 text-base font-semibold text-primary hover:underline"
                     >
-                      <Phone className="h-3.5 w-3.5" />
+                      <Phone className="h-4 w-4" />
                       {lead.phone}
                     </a>
 
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                          <StickyNote className="h-3.5 w-3.5" />
+                          Not
+                        </span>
+                        {dirty && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs text-primary"
+                            disabled={savingNote[lead.id]}
+                            onClick={() => saveNote(lead.id)}
+                          >
+                            <Check className="h-3.5 w-3.5 mr-1" />
+                            Kaydet
+                          </Button>
+                        )}
+                      </div>
+                      <Textarea
+                        value={draft}
+                        placeholder="Bu danışan için not ekleyin..."
+                        rows={2}
+                        className="text-sm resize-none bg-background/70"
+                        onChange={(e) => setNoteDrafts((p) => ({ ...p, [lead.id]: e.target.value }))}
+                        onBlur={() => saveNote(lead.id)}
+                      />
+                    </div>
+
                     <div className="mt-auto">
-                      <Badge variant="outline" className={`mb-2 text-[10px] ${statusMeta.badge}`}>
+                      <Badge variant="outline" className={`mb-2 text-xs ${statusMeta.badge}`}>
                         {statusMeta.label}
                       </Badge>
                       <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
-                        <SelectTrigger className="h-8 text-xs">
+                        <SelectTrigger className="h-9 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {STATUS_OPTIONS.map((s) => (
-                            <SelectItem key={s.value} value={s.value} className="text-xs">
+                            <SelectItem key={s.value} value={s.value} className="text-sm">
                               <span className="inline-flex items-center gap-2">
                                 <span className={`h-2 w-2 rounded-full ${s.dot}`} />
                                 {s.label}
