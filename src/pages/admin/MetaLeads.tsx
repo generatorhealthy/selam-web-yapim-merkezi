@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -15,7 +16,7 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, Video, MapPin, UserCheck } from "lucide-react";
+import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -27,8 +28,33 @@ interface Lead {
   lead_date: string | null;
   status: string;
   call_attempts: number;
+  notes: string | null;
   created_at: string;
 }
+
+// Pretty labels for the raw therapy_type values coming from the sheet.
+const THERAPY_LABELS: Record<string, string> = {
+  bireysel_terapi: "Bireysel Terapi",
+  cift_terapisi: "Çift Terapisi",
+  "çift_terapisi": "Çift Terapisi",
+  aile_terapisi: "Aile Terapisi",
+  cocuk_terapisi: "Çocuk Terapisi",
+  "çocuk_terapisi": "Çocuk Terapisi",
+  ergen_terapisi: "Ergen Terapisi",
+};
+
+const prettyTherapy = (raw: string | null): string => {
+  if (!raw) return "";
+  const key = raw.trim().toLowerCase();
+  if (THERAPY_LABELS[key]) return THERAPY_LABELS[key];
+  return raw
+    .replace(/_/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1))
+    .join(" ");
+};
+
 
 // Status categories mirror the Excel color coding the team uses.
 const STATUS_OPTIONS = [
