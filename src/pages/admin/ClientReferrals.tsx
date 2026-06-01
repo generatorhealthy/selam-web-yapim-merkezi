@@ -601,6 +601,7 @@ const ClientReferrals = () => {
             client_name: clientData.client_name,
             client_surname: clientData.client_surname,
             client_contact: clientData.client_contact,
+            consultation_type: clientData.consultation_type || 'online',
             is_referred: true,
             referred_at: new Date().toISOString(),
             referred_by: (await supabase.auth.getUser()).data.user?.id || null,
