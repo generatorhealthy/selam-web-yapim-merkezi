@@ -220,7 +220,7 @@ serve(async (req: Request): Promise<Response> => {
       city: string | null,
     ): SpecialistMetric[] => {
       return allMetrics
-        .filter((m) => specialistMatchesCategory(m.specialty, family))
+        .filter((m) => specialistMatchesCategory(m.specialty, m.name, family))
         .filter((m) => (online ? m.online_consultation : m.face_to_face_consultation))
         .filter((m) => {
           if (online) return true;
