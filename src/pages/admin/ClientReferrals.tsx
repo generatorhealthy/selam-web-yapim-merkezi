@@ -655,7 +655,8 @@ const ClientReferrals = () => {
             clientContact: clientData.client_contact
           });
           
-          const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
+          const consultationLabel = clientData.consultation_type === 'face_to_face' ? 'Yüz Yüze Danışmanlık' : 'Online Danışmanlık';
+          const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\nDanışmanlık Türü: ${consultationLabel}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
           
           console.log('📱 [SMS] Message content:', message);
           console.log('📱 [SMS] Calling edge function send-sms-via-static-proxy...');
