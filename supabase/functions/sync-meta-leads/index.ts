@@ -63,14 +63,14 @@ function colorToStatus(bg: { red?: number; green?: number; blue?: number } | und
   const b = bg.blue ?? 0;
   // White / near-white => no marking => new
   if (r >= 0.9 && g >= 0.9 && b >= 0.9) return "new";
-  // Dark (black-ish) => yanlış ulaşanlar
+  // Dark (black-ish / gray) => yanlış ulaşanlar
   if (r < 0.5 && g < 0.5 && b < 0.5) return "wrong";
   // Yellow (r & g high, b low) => aktarıldı
   if (r >= 0.7 && g >= 0.7 && b < 0.5) return "transferred";
-  // Blue / purple (blue dominant, green low) => iletişim kuruldu
-  if (b >= 0.6 && g < 0.5) return "contacted";
-  // Red / pink / magenta (red high, green low) => daha sonra ara
-  if (r >= 0.7 && g < 0.5) return "callback";
+  // Magenta / pink (red & blue high, green low) => daha sonra ara
+  if (r >= 0.7 && b >= 0.6 && g < 0.5) return "callback";
+  // Pure red (red high, green & blue low) => açmayanlar
+  if (r >= 0.7 && g < 0.4 && b < 0.4) return "no_answer";
   return "new";
 }
 
