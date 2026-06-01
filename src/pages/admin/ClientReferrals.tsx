@@ -736,6 +736,7 @@ const ClientReferrals = () => {
                 clientName: clientData.client_name,
                 clientSurname: clientData.client_surname,
                 clientContact: clientData.client_contact,
+                consultationType: clientData.consultation_type === 'face_to_face' ? 'Yüz Yüze Danışmanlık' : 'Online Danışmanlık',
               },
             });
             console.log('💬 [WA] send-referral-whatsapp response:', waInvoke);
