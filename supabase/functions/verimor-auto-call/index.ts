@@ -89,7 +89,10 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const ANNOUNCEMENT_ID = "#131901";
+    const ANNOUNCEMENT_ID = requestBody.test_phrase ? String(requestBody.test_phrase) : "#131901";
+    // Transfer target used after the announcement (e.g. forward caller to a specialist extension).
+    // Verimor expects targets like "extension/1168" or "number/905xxxxxxxxx". Default: hangup.
+    const TRANSFER_TARGET = requestBody.test_transfer_target ? String(requestBody.test_transfer_target) : "hangup/hangup";
 
     // Office/default numbers to skip - these are not real customer phones
     const OFFICE_NUMBERS = ['02167060611', '2167060611'];
