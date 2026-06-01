@@ -109,9 +109,9 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (!elevenLabsKey) throw new Error('ELEVENLABS_API_KEY is not configured');
 
-      // 1) Generate speech with ElevenLabs in telephony format (8kHz u-law)
+      // 1) Generate speech with ElevenLabs as raw PCM (16-bit, 8kHz, mono) for telephony
       const ttsResp = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=ulaw_8000`,
+        `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=pcm_8000`,
         {
           method: 'POST',
           headers: { 'xi-api-key': elevenLabsKey, 'Content-Type': 'application/json' },
@@ -126,14 +126,38 @@ const handler = async (req: Request): Promise<Response> => {
         const errText = await ttsResp.text();
         throw new Error(`ElevenLabs TTS error (${ttsResp.status}): ${errText}`);
       }
-      const audioBuffer = await ttsResp.arrayBuffer();
+      const pcmBuffer = await ttsResp.arrayBuffer();
 
-      // base64 encode (chunked to avoid stack overflow)
-      const bytes = new Uint8Array(audioBuffer);
+      // Wrap raw PCM into a proper WAV container (PCM 16-bit, 8kHz, mono)
+      const sampleRate = 8000;
+      const numChannels = 1;
+      const bitsPerSample = 16;
+      const pcmBytes = new Uint8Array(pcmBuffer);
+      const blockAlign = numChannels * (bitsPerSample / 8);
+      const byteRate = sampleRate * blockAlign;
+      const wav = new Uint8Array(44 + pcmBytes.length);
+      const dv = new DataView(wav.buffer);
+      const writeStr = (off: number, s: string) => { for (let i = 0; i < s.length; i++) dv.setUint8(off + i, s.charCodeAt(i)); };
+      writeStr(0, 'RIFF');
+      dv.setUint32(4, 36 + pcmBytes.length, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      dv.setUint32(16, 16, true);
+      dv.setUint16(20, 1, true); // PCM
+      dv.setUint16(22, numChannels, true);
+      dv.setUint32(24, sampleRate, true);
+      dv.setUint32(28, byteRate, true);
+      dv.setUint16(32, blockAlign, true);
+      dv.setUint16(34, bitsPerSample, true);
+      writeStr(36, 'data');
+      dv.setUint32(40, pcmBytes.length, true);
+      wav.set(pcmBytes, 44);
+
+      // base64 encode the WAV (chunked to avoid stack overflow)
       let binary = '';
       const chunkSize = 0x8000;
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
+      for (let i = 0; i < wav.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, Array.from(wav.subarray(i, i + chunkSize)));
       }
       const base64Audio = btoa(binary);
 
