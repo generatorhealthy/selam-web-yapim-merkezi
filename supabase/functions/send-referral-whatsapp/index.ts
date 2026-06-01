@@ -13,6 +13,7 @@ interface Payload {
   clientName: string;
   clientSurname?: string;
   clientContact: string;
+  consultationType?: string;
 }
 
 function normalizePhoneToWa(raw: string): string | null {
