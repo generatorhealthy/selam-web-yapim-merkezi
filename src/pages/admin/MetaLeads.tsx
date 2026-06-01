@@ -365,7 +365,21 @@ const MetaLeads = () => {
                         <Clock className="h-3.5 w-3.5" />
                         {formatAppliedAt(lead)}
                       </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2.5 text-xs rounded-full ml-auto"
+                        onClick={() => copyContact(lead)}
+                      >
+                        {copiedId === lead.id ? (
+                          <><Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> Kopyalandı</>
+                        ) : (
+                          <><Copy className="h-3.5 w-3.5 mr-1" /> Ad & Telefon Kopyala</>
+                        )}
+                      </Button>
                     </div>
+
 
 
 
