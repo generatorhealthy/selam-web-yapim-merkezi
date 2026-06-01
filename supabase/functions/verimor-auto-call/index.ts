@@ -176,7 +176,7 @@ const handler = async (req: Request): Promise<Response> => {
         digit_target_1: TRANSFER_TARGET,
         timeout_target: TRANSFER_TARGET,
         invalid_target: TRANSFER_TARGET,
-        phone_list: [{ phone: customer.phone, phrase: ANNOUNCEMENT_ID }],
+        phone_list: [{ phone: customer.phone, phrase: buildPhrase(customer.customer_name) }],
         is_commercial: false,
         recording_enabled: true
       };
