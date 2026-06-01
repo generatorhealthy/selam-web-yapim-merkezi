@@ -271,6 +271,7 @@ const handler = async (req: Request): Promise<Response> => {
         digit_retries: 2,
         digit_timeout: 5,
         digit_target_1: digitPhraseTarget ?? TRANSFER_TARGET,
+        digit_target_2: digit2PhraseTarget ?? "hangup/hangup",
         timeout_target: "hangup/hangup",
         invalid_target: "hangup/hangup",
         phone_list: [{ phone: customer.phone, phrase }],
