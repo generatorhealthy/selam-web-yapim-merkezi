@@ -46,13 +46,8 @@ const MetaLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [sheetUrl, setSheetUrl] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  useEffect(() => {
-    setSheetUrl(localStorage.getItem(SHEET_URL_KEY) || "");
-  }, []);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
