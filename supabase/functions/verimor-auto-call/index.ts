@@ -171,15 +171,15 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     // Instruction appended to the main announcement asking the caller to press 1 or 2.
-    const PRESS_ONE_TEXT = " Uzmanımızla görüşmek istiyorsanız lütfen bir tuşuna, görüşmek istemiyorsanız iki tuşuna basınız.";
+    const PRESS_ONE_TEXT = " Uzmanımızla şimdi görüşmek istiyorsanız bir tuşuna, daha sonra görüşmek istiyorsanız iki tuşuna basınız.";
     // Message played after the caller presses 1, before being transferred.
     const DIGIT_TEXT = requestBody.digit_text
       ? String(requestBody.digit_text)
       : "Hatta bekleyiniz lütfen, sizleri uzmanımıza aktarıyoruz.";
-    // Message played after the caller presses 2 (does not want to talk), before hanging up.
+    // Message played after the caller presses 2 (wants to talk later), before hanging up.
     const DIGIT2_TEXT = requestBody.digit2_text
       ? String(requestBody.digit2_text)
-      : "Anladık, zaman ayırdığınız için teşekkür ederiz. İyi günler dileriz.";
+      : "Teşekkür ederiz, sizi daha sonra tekrar arayacağız. İyi günler dileriz.";
 
     const buildPhrase = async (customerName: string): Promise<string> => {
       if (ttsTemplate) {
