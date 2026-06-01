@@ -187,17 +187,11 @@ Deno.serve(async (req) => {
         inserted = toInsert.length;
       }
 
-      // Sync the colour-derived status onto existing rows when it changed.
-      for (const l of unique) {
-        const ex = existing.get(l.external_id);
-        if (ex && ex.status !== l.status) {
-          const { error } = await supabase
-            .from("danisan_basvurulari")
-            .update({ status: l.status })
-            .eq("id", ex.id);
-          if (!error) updated++;
-        }
-      }
+      // NOTE: The panel is now the source of truth. We only INSERT brand-new
+      // leads (with their initial colour-derived status). We never overwrite
+      // the status of existing rows from the sheet, so manual changes in the
+      // system are preserved.
+
     }
 
     return new Response(JSON.stringify({ success: true, total: unique.length, inserted, updated }), {
