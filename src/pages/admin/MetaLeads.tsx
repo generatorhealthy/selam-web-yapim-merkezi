@@ -118,7 +118,7 @@ const MetaLeads = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("danisan_basvurulari")
-      .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, created_at")
+      .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, welcome_sent_at, created_at")
       .order("created_at", { ascending: false })
       .limit(2000);
     if (error) {
