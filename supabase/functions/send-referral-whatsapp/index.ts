@@ -65,7 +65,9 @@ Deno.serve(async (req) => {
       `Tarafınıza yeni bir *danışan yönlendirmesi* yapılmıştır.\n\n` +
       `*Danışan Bilgileri*\n` +
       `👤 Ad Soyad: *${fullClientName}*\n` +
-      `📞 İletişim: *${clientContact}*\n\n` +
+      `📞 İletişim: *${clientContact}*\n` +
+      (consultationType ? `🩺 Danışmanlık Türü: *${consultationType}*\n` : "") +
+      `\n` +
       `Danışanla en kısa sürede iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\n` +
       `_Doktorumol.com.tr_`;
 
