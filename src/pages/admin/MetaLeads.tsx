@@ -39,7 +39,7 @@ const STATUS_OPTIONS = [
   { value: "transferred", label: "Aktarıldı", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
 ];
 
-const SHEET_URL_KEY = "meta_leads_sheet_url";
+
 
 const MetaLeads = () => {
   const { toast } = useToast();
