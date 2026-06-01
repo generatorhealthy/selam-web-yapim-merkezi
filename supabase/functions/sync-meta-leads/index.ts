@@ -181,9 +181,14 @@ Deno.serve(async (req) => {
       }
 
       const toInsert = unique.filter((l) => !existing.has(l.external_id));
+      let insertedRows: any[] = [];
       if (toInsert.length > 0) {
-        const { error } = await supabase.from("danisan_basvurulari").insert(toInsert);
+        const { data: insRows, error } = await supabase
+          .from("danisan_basvurulari")
+          .insert(toInsert)
+          .select("id, full_name, phone, therapy_type, status, welcome_sent_at");
         if (error) throw error;
+        insertedRows = insRows || [];
         inserted = toInsert.length;
       }
 
@@ -192,7 +197,26 @@ Deno.serve(async (req) => {
       // the status of existing rows from the sheet, so manual changes in the
       // system are preserved.
 
-    }
+      // Auto-send a WhatsApp welcome message to brand-new "Yeni Gelenler" leads.
+      // Only fires for freshly inserted rows that have not received a welcome yet.
+      const welcomeTargets = insertedRows.filter(
+        (r) => r.status === "new" && !r.welcome_sent_at && r.phone
+      );
+      for (const r of welcomeTargets) {
+        try {
+          await supabase.functions.invoke("send-lead-welcome-whatsapp", {
+            body: {
+              leadId: r.id,
+              name: r.full_name,
+              phone: r.phone,
+              therapyType: r.therapy_type,
+            },
+          });
+        } catch (waErr) {
+          console.error("Auto welcome WhatsApp failed for lead", r.id, waErr);
+        }
+      }
+
 
     return new Response(JSON.stringify({ success: true, total: unique.length, inserted, updated }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
