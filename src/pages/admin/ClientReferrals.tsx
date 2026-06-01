@@ -212,11 +212,11 @@ const ClientReferrals = () => {
     }
     
     // Validate client info
-    if (!clientInfo.client_name.trim() || !clientInfo.client_surname.trim() || !clientInfo.client_contact.trim()) {
+    if (!clientInfo.client_name.trim() || !clientInfo.client_contact.trim()) {
       console.warn('⚠️ [DIALOG] Danışan bilgileri eksik!', clientInfo);
       toast({
         title: "Hata",
-        description: "Lütfen danışanın ad, soyad ve telefon bilgilerini eksiksiz doldurun.",
+        description: "Lütfen danışanın ad soyad ve telefon bilgilerini eksiksiz doldurun.",
         variant: "destructive",
       });
       return;
