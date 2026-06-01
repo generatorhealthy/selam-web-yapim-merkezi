@@ -89,21 +89,85 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // TTS mode: build a per-customer spoken text using Verimor's TTS module.
-    // If `tts_text` is provided, "{name}" inside it is replaced with the customer name.
-    // Falls back to the static announcement ID otherwise.
+    // ===== ElevenLabs personalized announcement mode =====
+    // If `tts_text` is provided, we generate a per-customer voice with ElevenLabs,
+    // upload it to Verimor as an announcement, and use the returned announcement id.
+    // "{name}" inside tts_text is replaced with the customer name.
     const ttsTemplate: string | null = requestBody.tts_text ? String(requestBody.tts_text) : null;
-    const ANNOUNCEMENT_ID = ttsTemplate
-      ? null // resolved per-customer below
-      : (requestBody.test_phrase ? String(requestBody.test_phrase) : "#131901");
+    // Default voice: "George" (multilingual, natural). Can be overridden with `voice_id`.
+    const VOICE_ID: string = requestBody.voice_id ? String(requestBody.voice_id) : "JBFqnCBsd6RMkjVDRZzb";
+    const STATIC_ANNOUNCEMENT_ID = requestBody.test_phrase ? String(requestBody.test_phrase) : "#131901";
 
-    const buildPhrase = (customerName: string): string => {
-      if (ttsTemplate) {
-        const text = ttsTemplate.replace(/\{name\}/g, customerName || "");
-        // Verimor TTS module path; text must be URL-encoded
-        return `tts/tr-TR/${encodeURIComponent(text)}`;
+    const elevenLabsKey = Deno.env.get('ELEVENLABS_API_KEY');
+
+    // Cache so identical names don't get regenerated within one run
+    const announcementCache = new Map<string, string>();
+
+    const generateAndUploadAnnouncement = async (customerName: string): Promise<string> => {
+      const text = (ttsTemplate as string).replace(/\{name\}/g, customerName || "");
+      if (announcementCache.has(text)) return announcementCache.get(text)!;
+
+      if (!elevenLabsKey) throw new Error('ELEVENLABS_API_KEY is not configured');
+
+      // 1) Generate speech with ElevenLabs in telephony format (8kHz u-law)
+      const ttsResp = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=ulaw_8000`,
+        {
+          method: 'POST',
+          headers: { 'xi-api-key': elevenLabsKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: { stability: 0.6, similarity_boost: 0.75, use_speaker_boost: true },
+          }),
+        }
+      );
+      if (!ttsResp.ok) {
+        const errText = await ttsResp.text();
+        throw new Error(`ElevenLabs TTS error (${ttsResp.status}): ${errText}`);
       }
-      return ANNOUNCEMENT_ID as string;
+      const audioBuffer = await ttsResp.arrayBuffer();
+
+      // base64 encode (chunked to avoid stack overflow)
+      const bytes = new Uint8Array(audioBuffer);
+      let binary = '';
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
+      }
+      const base64Audio = btoa(binary);
+
+      // 2) Upload to Verimor as an announcement
+      const annName = `DO Anons ${customerName} ${Date.now()}`.slice(0, 60);
+      const uploadResp = await fetch(
+        `https://api.bulutsantralim.com/announcements.json?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: annName, data: base64Audio }),
+        }
+      );
+      const uploadText = await uploadResp.text();
+      console.log('Verimor announcement upload status:', uploadResp.status, 'body:', uploadText);
+      if (!uploadResp.ok) {
+        throw new Error(`Verimor announcement upload error (${uploadResp.status}): ${uploadText}`);
+      }
+
+      // Response is the announcement id (number or JSON)
+      let annId = uploadText.trim();
+      try {
+        const parsed = JSON.parse(uploadText);
+        annId = String(parsed.id ?? parsed.announcement_id ?? annId);
+      } catch { /* plain id */ }
+
+      const phrase = `#${annId}`;
+      announcementCache.set(text, phrase);
+      return phrase;
+    };
+
+    const buildPhrase = async (customerName: string): Promise<string> => {
+      if (ttsTemplate) return await generateAndUploadAnnouncement(customerName);
+      return STATIC_ANNOUNCEMENT_ID;
     };
     // Transfer target used after the announcement (e.g. forward caller to a specialist extension).
     // Verimor expects targets like "extension/1168" or "number/905xxxxxxxxx". Default: hangup.
