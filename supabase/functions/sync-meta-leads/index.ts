@@ -216,6 +216,9 @@ Deno.serve(async (req) => {
           console.error("Auto welcome WhatsApp failed for lead", r.id, waErr);
         }
       }
+    }
+
+
 
 
     return new Response(JSON.stringify({ success: true, total: unique.length, inserted, updated }), {
