@@ -16,7 +16,7 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check } from "lucide-react";
+import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, MessageCircle } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -29,6 +29,7 @@ interface Lead {
   status: string;
   call_attempts: number;
   notes: string | null;
+  welcome_sent_at: string | null;
   created_at: string;
 }
 
