@@ -16,7 +16,14 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy } from "lucide-react";
+import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy, PhoneForwarded } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface Lead {
   id: string;
