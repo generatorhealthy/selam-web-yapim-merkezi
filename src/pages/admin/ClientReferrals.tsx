@@ -535,7 +535,7 @@ const ClientReferrals = () => {
     specialistId: string, 
     month: number, 
     newCount: number,
-    clientData?: { client_name: string; client_surname: string; client_contact: string },
+    clientData?: { client_name: string; client_surname: string; client_contact: string; consultation_type?: 'online' | 'face_to_face' },
     specialistName?: string,
     specialistPhone?: string
   ) => {
