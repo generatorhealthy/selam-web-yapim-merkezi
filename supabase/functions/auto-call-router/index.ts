@@ -51,13 +51,24 @@ const isFamilyTherapy = (therapy: string | null) =>
   FAMILY_THERAPIES.includes(normalize(therapy));
 
 // Uzmanın uzmanlık alanı, başvuru kategorisine uygun mu?
-const specialistMatchesCategory = (specialty: string | null, family: boolean): boolean => {
-  const s = normalize(specialty);
-  const isFamilyCounselor = /aile danış/.test(s);
-  const isIndividual = /(psikolog|psikolojik danış|klinik)/.test(s);
+// NOT: Bazı uzmanların unvanı sadece isimlerinde kısaltma olarak geçer:
+//   "Psk." -> psikolog, "Kl./Kln. Psk." -> klinik psikolog,
+//   "Psk. Dan." -> psikolojik danışman, "Aile Dan." -> aile danışmanı
+// Bu yüzden hem specialty hem de name alanına bakarız.
+const specialistMatchesCategory = (
+  specialty: string | null,
+  name: string | null,
+  family: boolean,
+): boolean => {
+  const s = `${normalize(specialty)} ${normalize(name)}`;
+  // "aile dan" hem "aile danışmanı" hem de "aile dan." kısaltmasını yakalar
+  const isFamilyCounselor = /aile danış|aile dan\.?\b/.test(s);
+  // "psk", "psk.", "kl. psk", "kln. psk", "psikolog", "psikolojik danış", "klinik"
+  const isIndividual = /(psikolog|psikolojik danış|klinik|psk\.?|kl(n)?\.? ?psk|psk\.? ?dan)/.test(s);
   if (family) return isFamilyCounselor;
-  // Bireysel: psikolog / psikolojik danışman / klinik psikolog (aile danışmanı saf değilse)
-  return isIndividual;
+  // Bireysel: psikolog / psikolojik danışman / klinik psikolog
+  // (saf aile danışmanlarını dışla)
+  return isIndividual && !isFamilyCounselor;
 };
 
 const calculateDaysUntilPayment = (paymentDay: number): number => {
@@ -209,7 +220,7 @@ serve(async (req: Request): Promise<Response> => {
       city: string | null,
     ): SpecialistMetric[] => {
       return allMetrics
-        .filter((m) => specialistMatchesCategory(m.specialty, family))
+        .filter((m) => specialistMatchesCategory(m.specialty, m.name, family))
         .filter((m) => (online ? m.online_consultation : m.face_to_face_consultation))
         .filter((m) => {
           if (online) return true;
