@@ -89,7 +89,22 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const ANNOUNCEMENT_ID = requestBody.test_phrase ? String(requestBody.test_phrase) : "#131901";
+    // TTS mode: build a per-customer spoken text using Verimor's TTS module.
+    // If `tts_text` is provided, "{name}" inside it is replaced with the customer name.
+    // Falls back to the static announcement ID otherwise.
+    const ttsTemplate: string | null = requestBody.tts_text ? String(requestBody.tts_text) : null;
+    const ANNOUNCEMENT_ID = ttsTemplate
+      ? null // resolved per-customer below
+      : (requestBody.test_phrase ? String(requestBody.test_phrase) : "#131901");
+
+    const buildPhrase = (customerName: string): string => {
+      if (ttsTemplate) {
+        const text = ttsTemplate.replace(/\{name\}/g, customerName || "");
+        // Verimor TTS module path; text must be URL-encoded
+        return `tts/tr-TR/${encodeURIComponent(text)}`;
+      }
+      return ANNOUNCEMENT_ID as string;
+    };
     // Transfer target used after the announcement (e.g. forward caller to a specialist extension).
     // Verimor expects targets like "extension/1168" or "number/905xxxxxxxxx". Default: hangup.
     const TRANSFER_TARGET = requestBody.test_transfer_target ? String(requestBody.test_transfer_target) : "hangup/hangup";
@@ -161,7 +176,7 @@ const handler = async (req: Request): Promise<Response> => {
         digit_target_1: TRANSFER_TARGET,
         timeout_target: TRANSFER_TARGET,
         invalid_target: TRANSFER_TARGET,
-        phone_list: [{ phone: customer.phone, phrase: ANNOUNCEMENT_ID }],
+        phone_list: [{ phone: customer.phone, phrase: buildPhrase(customer.customer_name) }],
         is_commercial: false,
         recording_enabled: true
       };
