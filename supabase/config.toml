@@ -168,3 +168,7 @@ verify_jwt = false
 [functions.change-payment-method-callback]
 verify_jwt = false
 
+[functions.send-lead-welcome-whatsapp]
+verify_jwt = false
+
+
