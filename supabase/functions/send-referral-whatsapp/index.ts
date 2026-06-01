@@ -13,6 +13,7 @@ interface Payload {
   clientName: string;
   clientSurname?: string;
   clientContact: string;
+  consultationType?: string;
 }
 
 function normalizePhoneToWa(raw: string): string | null {
@@ -35,7 +36,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = (await req.json()) as Payload;
-    const { specialistName, specialistPhone, clientName, clientSurname, clientContact } = body;
+    const { specialistName, specialistPhone, clientName, clientSurname, clientContact, consultationType } = body;
 
     if (!specialistName || !specialistPhone || !clientName || !clientContact) {
       return new Response(
@@ -64,7 +65,9 @@ Deno.serve(async (req) => {
       `Tarafınıza yeni bir *danışan yönlendirmesi* yapılmıştır.\n\n` +
       `*Danışan Bilgileri*\n` +
       `👤 Ad Soyad: *${fullClientName}*\n` +
-      `📞 İletişim: *${clientContact}*\n\n` +
+      `📞 İletişim: *${clientContact}*\n` +
+      (consultationType ? `🩺 Danışmanlık Türü: *${consultationType}*\n` : "") +
+      `\n` +
       `Danışanla en kısa sürede iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\n` +
       `_Doktorumol.com.tr_`;
 

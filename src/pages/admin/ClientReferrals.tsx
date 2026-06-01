@@ -184,7 +184,8 @@ const ClientReferrals = () => {
   const [clientInfo, setClientInfo] = useState({
     client_name: '',
     client_surname: '',
-    client_contact: ''
+    client_contact: '',
+    consultation_type: 'online' as 'online' | 'face_to_face'
   });
 
   const requestConfirm = (
@@ -196,7 +197,7 @@ const ClientReferrals = () => {
   ) => {
     console.log('🔔 [DIALOG] requestConfirm çağrıldı:', { specialistName, specialistPhone, month, newCount });
     setPendingAction({ specialistId, specialistName, specialistPhone, month, newCount });
-    setClientInfo({ client_name: '', client_surname: '', client_contact: '' });
+    setClientInfo({ client_name: '', client_surname: '', client_contact: '', consultation_type: 'online' });
     setConfirmOpen(true);
   };
 
@@ -211,11 +212,11 @@ const ClientReferrals = () => {
     }
     
     // Validate client info
-    if (!clientInfo.client_name.trim() || !clientInfo.client_surname.trim() || !clientInfo.client_contact.trim()) {
+    if (!clientInfo.client_name.trim() || !clientInfo.client_contact.trim()) {
       console.warn('⚠️ [DIALOG] Danışan bilgileri eksik!', clientInfo);
       toast({
         title: "Hata",
-        description: "Lütfen danışanın ad, soyad ve telefon bilgilerini eksiksiz doldurun.",
+        description: "Lütfen danışanın ad soyad ve telefon bilgilerini eksiksiz doldurun.",
         variant: "destructive",
       });
       return;
@@ -250,7 +251,7 @@ const ClientReferrals = () => {
       
       setConfirmOpen(false);
       setPendingAction(null);
-      setClientInfo({ client_name: '', client_surname: '', client_contact: '' });
+      setClientInfo({ client_name: '', client_surname: '', client_contact: '', consultation_type: 'online' });
     } catch (error) {
       console.error('❌ [DIALOG] Danışan ekleme hatası:', error);
       toast({
@@ -534,7 +535,7 @@ const ClientReferrals = () => {
     specialistId: string, 
     month: number, 
     newCount: number,
-    clientData?: { client_name: string; client_surname: string; client_contact: string },
+    clientData?: { client_name: string; client_surname: string; client_contact: string; consultation_type?: 'online' | 'face_to_face' },
     specialistName?: string,
     specialistPhone?: string
   ) => {
@@ -654,7 +655,8 @@ const ClientReferrals = () => {
             clientContact: clientData.client_contact
           });
           
-          const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
+          const consultationLabel = clientData.consultation_type === 'face_to_face' ? 'Yüz Yüze Danışmanlık' : 'Online Danışmanlık';
+          const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\nDanışmanlık Türü: ${consultationLabel}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
           
           console.log('📱 [SMS] Message content:', message);
           console.log('📱 [SMS] Calling edge function send-sms-via-static-proxy...');
@@ -734,6 +736,7 @@ const ClientReferrals = () => {
                 clientName: clientData.client_name,
                 clientSurname: clientData.client_surname,
                 clientContact: clientData.client_contact,
+                consultationType: clientData.consultation_type === 'face_to_face' ? 'Yüz Yüze Danışmanlık' : 'Online Danışmanlık',
               },
             });
             console.log('💬 [WA] send-referral-whatsapp response:', waInvoke);
@@ -1846,25 +1849,34 @@ const ClientReferrals = () => {
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="client_name" className="text-sm font-medium">Danışan Adı *</Label>
+              <Label htmlFor="client_name" className="text-sm font-medium">Danışan Adı Soyadı *</Label>
               <Input
                 id="client_name"
                 value={clientInfo.client_name}
                 onChange={(e) => setClientInfo(prev => ({ ...prev, client_name: e.target.value }))}
-                placeholder="Danışanın adı"
+                placeholder="Danışanın adı soyadı"
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="client_surname" className="text-sm font-medium">Danışan Soyadı *</Label>
-              <Input
-                id="client_surname"
-                value={clientInfo.client_surname}
-                onChange={(e) => setClientInfo(prev => ({ ...prev, client_surname: e.target.value }))}
-                placeholder="Danışanın soyadı"
-                required
-              />
+              <Label className="text-sm font-medium">Danışmanlık Türü *</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setClientInfo(prev => ({ ...prev, consultation_type: 'online' }))}
+                  className={`rounded-lg border p-3 text-sm font-medium transition-colors ${clientInfo.consultation_type === 'online' ? 'border-primary bg-primary/10 text-primary' : 'border-input text-muted-foreground hover:bg-muted'}`}
+                >
+                  Online Danışmanlık
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClientInfo(prev => ({ ...prev, consultation_type: 'face_to_face' }))}
+                  className={`rounded-lg border p-3 text-sm font-medium transition-colors ${clientInfo.consultation_type === 'face_to_face' ? 'border-primary bg-primary/10 text-primary' : 'border-input text-muted-foreground hover:bg-muted'}`}
+                >
+                  Yüz Yüze Danışmanlık
+                </button>
+              </div>
             </div>
             
             <div className="space-y-2">
