@@ -233,12 +233,18 @@ const MetaLeads = () => {
     }
   };
 
-  const filtered = leads.filter((l) => {
-    const matchesStatus = statusFilter === "all" || l.status === statusFilter;
-    const q = search.trim().toLowerCase();
-    const matchesSearch = !q || l.full_name.toLowerCase().includes(q) || l.phone.includes(q);
-    return matchesStatus && matchesSearch;
-  });
+  const filtered = leads
+    .filter((l) => {
+      const matchesStatus = statusFilter === "all" || l.status === statusFilter;
+      const q = search.trim().toLowerCase();
+      const matchesSearch = !q || l.full_name.toLowerCase().includes(q) || l.phone.includes(q);
+      return matchesStatus && matchesSearch;
+    })
+    .sort((a, b) => {
+      const da = new Date(a.lead_date || a.created_at).getTime();
+      const db = new Date(b.lead_date || b.created_at).getTime();
+      return (isNaN(db) ? 0 : db) - (isNaN(da) ? 0 : da);
+    });
 
   const counts = STATUS_OPTIONS.reduce((acc, s) => {
     acc[s.value] = leads.filter((l) => l.status === s.value).length;
