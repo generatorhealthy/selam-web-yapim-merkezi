@@ -231,13 +231,15 @@ serve(async (req: Request): Promise<Response> => {
         .sort(priorityCompare);
     };
 
-    const buildTts = (clientName: string, therapy: string | null, specialistName: string) => {
-      const label = therapyLabel(therapy);
+    const buildTts = (clientName: string, family: boolean, online: boolean) => {
       const first = (clientName || "").trim().split(" ")[0] || "";
+      const title = family ? "Aile Danışmanı" : "Psikolog";
+      const mode = online ? "online" : "yüz yüze";
       return (
-        `Merhaba ${first}, Doktorum Ol'dan arıyoruz. ${label} talebiniz için sizi uzmanımız ` +
-        `${specialistName}'e yönlendirmek istiyoruz. Uzmanımızla şimdi görüşmek istiyorsanız bir tuşuna, ` +
-        `daha sonra görüşmek istiyorsanız iki tuşuna basınız.`
+        `Merhaba ${first}, Doktorum Ol'dan ulaşıyoruz size. ` +
+        `${title} ile ${mode} görüşme sağlamak için formunuz tarafımıza ulaştı. ` +
+        `Sizi uzman ile görüşmeniz için yönlendireceğiz. ` +
+        `Seans ücreti ve planlama detaylarını uzmanımızdan öğrenebilirsiniz.`
       );
     };
 
