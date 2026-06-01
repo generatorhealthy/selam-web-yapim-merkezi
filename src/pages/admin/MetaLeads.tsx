@@ -148,6 +148,29 @@ const MetaLeads = () => {
     }
   };
 
+  const sendWelcome = async (lead: Lead) => {
+    setSendingWa((p) => ({ ...p, [lead.id]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke("send-lead-welcome-whatsapp", {
+        body: {
+          leadId: lead.id,
+          name: lead.full_name,
+          phone: lead.phone,
+          therapyType: lead.therapy_type,
+        },
+      });
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data.error || "Mesaj gönderilemedi");
+      const sentAt = new Date().toISOString();
+      setLeads((p) => p.map((l) => (l.id === lead.id ? { ...l, welcome_sent_at: sentAt } : l)));
+      toast({ title: "WhatsApp gönderildi", description: `${lead.full_name} numarasına hoş geldiniz mesajı iletildi.` });
+    } catch (e: any) {
+      toast({ title: "Gönderilemedi", description: e.message || "Bilinmeyen hata", variant: "destructive" });
+    } finally {
+      setSendingWa((p) => ({ ...p, [lead.id]: false }));
+    }
+  };
+
   const handleSync = async () => {
     setSyncing(true);
     try {
