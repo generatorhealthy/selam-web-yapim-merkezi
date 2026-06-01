@@ -313,33 +313,46 @@ const MetaLeads = () => {
               const draft = noteDrafts[lead.id] ?? lead.notes ?? "";
               const dirty = draft !== (lead.notes ?? "");
               return (
-                <Card key={lead.id} className={`transition hover:shadow-lg ${statusMeta.card}`}>
-                  <CardContent className="p-5 flex flex-col gap-4 h-full">
+                <Card key={lead.id} className={`group relative overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 ${statusMeta.card}`}>
+                  <span className={`absolute left-0 top-0 h-full w-1.5 ${statusMeta.dot}`} />
+                  <CardContent className="p-5 pl-6 flex flex-col gap-4 h-full">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="font-bold text-lg truncate leading-tight">{lead.full_name}</div>
-                        {lead.therapy_type && (
-                          <div className="mt-1 inline-block text-sm font-medium text-primary bg-primary/10 rounded-md px-2 py-0.5">
-                            {prettyTherapy(lead.therapy_type)}
-                          </div>
-                        )}
+                      <div className="min-w-0 flex items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/90 to-primary text-base font-bold text-primary-foreground shadow-sm">
+                          {lead.full_name?.trim()?.charAt(0)?.toLocaleUpperCase("tr-TR") || "?"}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-lg truncate leading-tight">{lead.full_name}</div>
+                          {lead.therapy_type && (
+                            <div className="mt-1 inline-block text-xs font-semibold text-primary bg-primary/10 rounded-full px-2.5 py-0.5">
+                              {prettyTherapy(lead.therapy_type)}
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <Badge
                         variant="outline"
-                        className={`shrink-0 text-xs px-2 py-1 ${isFaceToFace ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"}`}
+                        className={`shrink-0 text-xs px-2 py-1 rounded-full ${isFaceToFace ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"}`}
                       >
                         {isFaceToFace ? <MapPin className="h-3.5 w-3.5 mr-1" /> : <Video className="h-3.5 w-3.5 mr-1" />}
                         {isFaceToFace ? "Yüz Yüze" : "Online"}
                       </Badge>
                     </div>
 
-                    <a
-                      href={`tel:${lead.phone}`}
-                      className="inline-flex items-center gap-2 text-base font-semibold text-primary hover:underline"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {lead.phone}
-                     </a>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <a
+                        href={`tel:${lead.phone}`}
+                        className="inline-flex items-center gap-2 text-base font-semibold text-primary hover:underline"
+                      >
+                        <Phone className="h-4 w-4" />
+                        {lead.phone}
+                      </a>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted/60 rounded-full px-2.5 py-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {formatAppliedAt(lead)}
+                      </span>
+                    </div>
+
 
 
                     <div className="space-y-1.5">
