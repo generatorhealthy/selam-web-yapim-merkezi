@@ -109,12 +109,14 @@ const MetaLeads = () => {
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [savingNote, setSavingNote] = useState<Record<string, boolean>>({});
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("danisan_basvurulari")
-      .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, created_at")
+      .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, created_at")
       .order("created_at", { ascending: false })
       .limit(2000);
     if (error) {
@@ -128,6 +130,21 @@ const MetaLeads = () => {
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
+
+  const saveNote = async (id: string) => {
+    const draft = noteDrafts[id];
+    const lead = leads.find((l) => l.id === id);
+    if (draft === undefined || (lead?.notes ?? "") === draft) return;
+    setSavingNote((p) => ({ ...p, [id]: true }));
+    const { error } = await supabase.from("danisan_basvurulari").update({ notes: draft }).eq("id", id);
+    setSavingNote((p) => ({ ...p, [id]: false }));
+    if (error) {
+      toast({ title: "Hata", description: "Not kaydedilemedi.", variant: "destructive" });
+    } else {
+      setLeads((p) => p.map((l) => (l.id === id ? { ...l, notes: draft } : l)));
+      toast({ title: "Not kaydedildi" });
+    }
+  };
 
   const handleSync = async () => {
     setSyncing(true);
@@ -148,6 +165,7 @@ const MetaLeads = () => {
       setSyncing(false);
     }
   };
+
 
   const updateStatus = async (id: string, status: string) => {
     const prev = leads;
