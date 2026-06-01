@@ -16,7 +16,14 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy } from "lucide-react";
+import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy, PhoneForwarded } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface Lead {
   id: string;
@@ -130,6 +137,30 @@ const MetaLeads = () => {
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [savingNote, setSavingNote] = useState<Record<string, boolean>>({});
   const [sendingWa, setSendingWa] = useState<Record<string, boolean>>({});
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [plan, setPlan] = useState<any[]>([]);
+
+  const runRoutingPlan = async () => {
+    setPlanLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-call-router", {
+        body: { dry_run: true, limit: 100 },
+      });
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data.error);
+      setPlan(data.plan || []);
+      setPlanOpen(true);
+      toast({
+        title: "Test planı hazır",
+        description: `${data.new_lead_count} yeni danışan için yönlendirme planı oluşturuldu (arama yapılmadı).`,
+      });
+    } catch (e: any) {
+      toast({ title: "Plan oluşturulamadı", description: e.message || "Bilinmeyen hata", variant: "destructive" });
+    } finally {
+      setPlanLoading(false);
+    }
+  };
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -272,6 +303,10 @@ const MetaLeads = () => {
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               Otomatik (15 dk)
             </span>
+            <Button onClick={runRoutingPlan} disabled={planLoading} variant="secondary" size="sm" className="shrink-0">
+              <PhoneForwarded className={`h-4 w-4 mr-2 ${planLoading ? "animate-pulse" : ""}`} />
+              {planLoading ? "Hesaplanıyor..." : "Test Yönlendirme Planı"}
+            </Button>
             <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
@@ -444,6 +479,63 @@ const MetaLeads = () => {
             })}
           </div>
         )}
+
+        <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Test Yönlendirme Planı</DialogTitle>
+              <DialogDescription>
+                Yeni gelen danışanların hangi uzmana yönlendirileceği. Bu bir testtir — hiçbir arama yapılmadı.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {plan.length === 0 && (
+                <p className="text-sm text-muted-foreground">Yeni gelen danışan bulunamadı.</p>
+              )}
+              {plan.map((p) => (
+                <div key={p.lead_id} className="rounded-lg border p-3 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold">{p.full_name}</span>
+                    <Badge variant="outline" className="gap-1">
+                      {p.consultation_type === "online" ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                      {p.consultation_type === "online" ? "Online" : "Yüz Yüze"}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {p.therapy_label} → {p.category}
+                  </div>
+                  {p.needs_city_prompt ? (
+                    <div className="mt-2 rounded bg-muted/50 p-2">
+                      <div className="text-xs font-medium">📍 Şehir sorulacak, ardından o şehirdeki yüz yüze uzmana aktarılacak.</div>
+                      <div className="mt-1 space-y-1">
+                        {Object.entries(p.candidates_by_city || {}).slice(0, 6).map(([city, list]: any) => (
+                          <div key={city} className="text-xs">
+                            <span className="font-medium">{city}:</span>{" "}
+                            {list[0] ? `${list[0].specialist_name} (dahili ${list[0].internal_number}, ${list[0].transfer_dial})` : "—"}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : p.target ? (
+                    <div className="mt-2 rounded bg-muted/50 p-2 space-y-1">
+                      <div className="text-xs">
+                        <span className="font-medium">Uzman:</span> {p.target.specialist_name}
+                        {p.target.urgent && <Badge variant="destructive" className="ml-2 text-[10px]">Acil</Badge>}
+                      </div>
+                      <div className="text-xs">
+                        <span className="font-medium">Aktarım:</span> {p.target.transfer_dial}
+                        <span className="text-muted-foreground"> · {p.target.total_referrals} yönlendirme · {p.target.days_since_last_referral ?? "hiç"} gün önce</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground italic">"{p.tts_text}"</div>
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-xs text-destructive">{p.note || "Uygun uzman bulunamadı"}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </div>
