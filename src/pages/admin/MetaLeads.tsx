@@ -16,7 +16,7 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check } from "lucide-react";
+import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, MessageCircle } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -29,6 +29,7 @@ interface Lead {
   status: string;
   call_attempts: number;
   notes: string | null;
+  welcome_sent_at: string | null;
   created_at: string;
 }
 
@@ -111,12 +112,13 @@ const MetaLeads = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [savingNote, setSavingNote] = useState<Record<string, boolean>>({});
+  const [sendingWa, setSendingWa] = useState<Record<string, boolean>>({});
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("danisan_basvurulari")
-      .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, created_at")
+      .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, welcome_sent_at, created_at")
       .order("created_at", { ascending: false })
       .limit(2000);
     if (error) {
@@ -143,6 +145,29 @@ const MetaLeads = () => {
     } else {
       setLeads((p) => p.map((l) => (l.id === id ? { ...l, notes: draft } : l)));
       toast({ title: "Not kaydedildi" });
+    }
+  };
+
+  const sendWelcome = async (lead: Lead) => {
+    setSendingWa((p) => ({ ...p, [lead.id]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke("send-lead-welcome-whatsapp", {
+        body: {
+          leadId: lead.id,
+          name: lead.full_name,
+          phone: lead.phone,
+          therapyType: lead.therapy_type,
+        },
+      });
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data.error || "Mesaj gönderilemedi");
+      const sentAt = new Date().toISOString();
+      setLeads((p) => p.map((l) => (l.id === lead.id ? { ...l, welcome_sent_at: sentAt } : l)));
+      toast({ title: "WhatsApp gönderildi", description: `${lead.full_name} numarasına hoş geldiniz mesajı iletildi.` });
+    } catch (e: any) {
+      toast({ title: "Gönderilemedi", description: e.message || "Bilinmeyen hata", variant: "destructive" });
+    } finally {
+      setSendingWa((p) => ({ ...p, [lead.id]: false }));
     }
   };
 
@@ -298,6 +323,26 @@ const MetaLeads = () => {
                       <Phone className="h-4 w-4" />
                       {lead.phone}
                     </a>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={lead.welcome_sent_at ? "outline" : "default"}
+                      disabled={sendingWa[lead.id]}
+                      onClick={() => sendWelcome(lead)}
+                      className={lead.welcome_sent_at
+                        ? "h-9 text-sm border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                        : "h-9 text-sm bg-emerald-600 hover:bg-emerald-700 text-white"}
+                    >
+                      {sendingWa[lead.id] ? (
+                        <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
+                      ) : lead.welcome_sent_at ? (
+                        <Check className="h-4 w-4 mr-1.5" />
+                      ) : (
+                        <MessageCircle className="h-4 w-4 mr-1.5" />
+                      )}
+                      {lead.welcome_sent_at ? "Hoş Geldin Gönderildi" : "WhatsApp Hoş Geldin"}
+                    </Button>
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">

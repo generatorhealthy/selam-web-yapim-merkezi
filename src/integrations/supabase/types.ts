@@ -3226,6 +3226,7 @@ export type Database = {
           status: string
           therapy_type: string | null
           updated_at: string
+          welcome_sent_at: string | null
         }
         Insert: {
           assigned_specialist_id?: string | null
@@ -3243,6 +3244,7 @@ export type Database = {
           status?: string
           therapy_type?: string | null
           updated_at?: string
+          welcome_sent_at?: string | null
         }
         Update: {
           assigned_specialist_id?: string | null
@@ -3260,6 +3262,7 @@ export type Database = {
           status?: string
           therapy_type?: string | null
           updated_at?: string
+          welcome_sent_at?: string | null
         }
         Relationships: []
       }
