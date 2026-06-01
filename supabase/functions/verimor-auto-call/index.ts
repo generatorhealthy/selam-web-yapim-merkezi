@@ -94,8 +94,8 @@ const handler = async (req: Request): Promise<Response> => {
     // upload it to Verimor as an announcement, and use the returned announcement id.
     // "{name}" inside tts_text is replaced with the customer name.
     const ttsTemplate: string | null = requestBody.tts_text ? String(requestBody.tts_text) : null;
-    // Default voice: "George" (multilingual, natural). Can be overridden with `voice_id`.
-    const VOICE_ID: string = requestBody.voice_id ? String(requestBody.voice_id) : "JBFqnCBsd6RMkjVDRZzb";
+    // Default voice: "Lily" (warm, natural Turkish). Can be overridden with `voice_id`.
+    const VOICE_ID: string = requestBody.voice_id ? String(requestBody.voice_id) : "pFZP5JQG7iQjIQuC4Bku";
     const STATIC_ANNOUNCEMENT_ID = requestBody.test_phrase ? String(requestBody.test_phrase) : "#131901";
 
     const elevenLabsKey = Deno.env.get('ELEVENLABS_API_KEY');
