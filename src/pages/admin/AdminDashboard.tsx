@@ -235,6 +235,18 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "Danışan Yönlendirme Sistemi",
+      description: "Meta reklamlarından gelen danışan başvuruları",
+      icon: UserCheck,
+      gradient: "from-rose-500 via-pink-500 to-fuchsia-600",
+      bgGradient: "from-rose-50 to-fuchsia-50",
+      shadowColor: "shadow-rose-500/20",
+      route: "/divan_paneli/meta-leads",
+      buttonText: "Başvuruları Görüntüle",
+      adminOnly: false,
+      staffOnly: true
+    },
+    {
       title: "Danışan Yönlendirme",
       description: "Aylık danışan yönlendirme takibi",
       icon: UserCheck,
