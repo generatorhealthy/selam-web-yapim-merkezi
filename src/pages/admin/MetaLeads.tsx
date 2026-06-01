@@ -56,6 +56,23 @@ const prettyTherapy = (raw: string | null): string => {
     .join(" ");
 };
 
+// Formats the application date/time in Turkish locale.
+const formatAppliedAt = (lead: { lead_date: string | null; created_at: string }): string => {
+  const raw = lead.lead_date || lead.created_at;
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+
+
 
 // Status categories mirror the Excel color coding the team uses.
 const STATUS_OPTIONS = [
