@@ -271,7 +271,7 @@ serve(async (req: Request): Promise<Response> => {
                 transfer_dial: `*1${target.internal_number || ""}`,
               }
             : null,
-          tts_text: target ? buildTts(lead.full_name, lead.therapy_type, target.name) : null,
+          tts_text: target ? buildTts(lead.full_name, family, true) : null,
           candidate_count: candidates.length,
           note: target ? null : "Uygun uzman bulunamadı",
         };
