@@ -41,12 +41,12 @@ const STATUS_OPTIONS = [
     dot: "bg-slate-400",
   },
   {
-    value: "contacted",
-    label: "İletişim Kuruldu",
-    hint: "Görüşme sağlandı",
-    badge: "bg-blue-100 text-blue-700 border-blue-300",
-    card: "border-blue-200 bg-blue-50/30",
-    dot: "bg-blue-500",
+    value: "no_answer",
+    label: "Açmayanlar",
+    hint: "Aranan ama açmayanlar (kırmızı)",
+    badge: "bg-red-100 text-red-700 border-red-300",
+    card: "border-red-200 bg-red-50/40",
+    dot: "bg-red-500",
   },
   {
     value: "callback",
