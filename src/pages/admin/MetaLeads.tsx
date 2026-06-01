@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -32,14 +30,51 @@ interface Lead {
   created_at: string;
 }
 
+// Status categories mirror the Excel color coding the team uses.
 const STATUS_OPTIONS = [
-  { value: "new", label: "Yeni", className: "bg-blue-100 text-blue-700 border-blue-200" },
-  { value: "unreachable", label: "Ulaşılamadı", className: "bg-red-100 text-red-700 border-red-200" },
-  { value: "contacted", label: "İletişim Kuruldu", className: "bg-amber-100 text-amber-700 border-amber-200" },
-  { value: "transferred", label: "Aktarıldı", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  {
+    value: "new",
+    label: "Yeni Gelenler",
+    hint: "Henüz arama yapılmadı (beyaz)",
+    badge: "bg-slate-100 text-slate-700 border-slate-300",
+    card: "border-slate-200",
+    dot: "bg-slate-400",
+  },
+  {
+    value: "contacted",
+    label: "İletişim Kuruldu",
+    hint: "Görüşme sağlandı",
+    badge: "bg-blue-100 text-blue-700 border-blue-300",
+    card: "border-blue-200 bg-blue-50/30",
+    dot: "bg-blue-500",
+  },
+  {
+    value: "callback",
+    label: "Daha Sonra Ara",
+    hint: "Görüşüldü, şu an müsait değil (pembe)",
+    badge: "bg-pink-100 text-pink-700 border-pink-300",
+    card: "border-pink-200 bg-pink-50/40",
+    dot: "bg-pink-500",
+  },
+  {
+    value: "wrong",
+    label: "Yanlış Ulaşanlar",
+    hint: "Yanlış numara / istemeyenler (siyah)",
+    badge: "bg-zinc-800 text-zinc-100 border-zinc-700",
+    card: "border-zinc-300 bg-zinc-100/60",
+    dot: "bg-zinc-800",
+  },
+  {
+    value: "transferred",
+    label: "Aktarıldı",
+    hint: "Uzmana aktarıldı (sarı)",
+    badge: "bg-yellow-200 text-yellow-900 border-yellow-400",
+    card: "border-yellow-300 bg-yellow-50/60",
+    dot: "bg-yellow-500",
+  },
 ];
 
-
+const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
 
 const MetaLeads = () => {
   const { toast } = useToast();
@@ -55,7 +90,7 @@ const MetaLeads = () => {
       .from("danisan_basvurulari")
       .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, created_at")
       .order("created_at", { ascending: false })
-      .limit(1000);
+      .limit(2000);
     if (error) {
       toast({ title: "Hata", description: "Danışanlar yüklenemedi.", variant: "destructive" });
     } else {
@@ -89,12 +124,13 @@ const MetaLeads = () => {
   };
 
   const updateStatus = async (id: string, status: string) => {
+    const prev = leads;
+    setLeads((p) => p.map((l) => (l.id === id ? { ...l, status } : l)));
     const { error } = await supabase.from("danisan_basvurulari").update({ status }).eq("id", id);
     if (error) {
+      setLeads(prev);
       toast({ title: "Hata", description: "Durum güncellenemedi.", variant: "destructive" });
-      return;
     }
-    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
   };
 
   const filtered = leads.filter((l) => {
@@ -112,108 +148,124 @@ const MetaLeads = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <HorizontalNavigation />
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
+      <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
         <AdminBackButton />
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white">
-            <UserCheck className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Danışan Yönlendirme Sistemi</h1>
-            <p className="text-sm text-muted-foreground">Meta reklamlarından gelen danışan başvuruları</p>
-          </div>
-        </div>
-
-        <Card className="mb-6">
-          <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-start gap-2">
-              <RefreshCw className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
-              <div>
-                <div className="font-medium text-sm">Otomatik çekim aktif</div>
-                <p className="text-xs text-muted-foreground">
-                  "DANIŞAN" Excel sayfasındaki yeni başvurular her 15 dakikada bir otomatik eklenir. Mevcut kayıtların durumu korunur.
-                </p>
-              </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white">
+              <UserCheck className="h-6 w-6" />
             </div>
-            <Button onClick={handleSync} disabled={syncing} variant="outline" className="shrink-0">
+            <div>
+              <h1 className="text-2xl font-bold">Danışan Yönlendirme Sistemi</h1>
+              <p className="text-sm text-muted-foreground">Meta reklamlarından gelen danışan başvuruları</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Otomatik (15 dk)
+            </span>
+            <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
             </Button>
-          </CardContent>
-        </Card>
-
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Ad veya telefon ara..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
           </div>
         </div>
 
-        <Tabs value={statusFilter} onValueChange={setStatusFilter} className="mb-4">
-          <TabsList className="flex-wrap h-auto">
-            <TabsTrigger value="all">Tümü ({leads.length})</TabsTrigger>
-            {STATUS_OPTIONS.map((s) => (
-              <TabsTrigger key={s.value} value={s.value}>
-                {s.label} ({counts[s.value] || 0})
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        {/* Status summary chips */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-5">
+          <button
+            onClick={() => setStatusFilter("all")}
+            className={`rounded-lg border p-3 text-left transition ${statusFilter === "all" ? "ring-2 ring-primary border-primary" : "hover:bg-muted/50"}`}
+          >
+            <div className="text-2xl font-bold">{leads.length}</div>
+            <div className="text-xs text-muted-foreground">Tümü</div>
+          </button>
+          {STATUS_OPTIONS.map((s) => (
+            <button
+              key={s.value}
+              onClick={() => setStatusFilter(s.value)}
+              className={`rounded-lg border p-3 text-left transition ${statusFilter === s.value ? "ring-2 ring-primary border-primary" : "hover:bg-muted/50"}`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />
+                <span className="text-2xl font-bold">{counts[s.value] || 0}</span>
+              </div>
+              <div className="text-xs text-muted-foreground truncate">{s.label}</div>
+            </button>
+          ))}
+        </div>
+
+        <div className="relative mb-5">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Ad veya telefon ara..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
 
         {loading ? (
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-32 rounded-lg bg-muted animate-pulse" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
-              Henüz danışan başvurusu yok. Yukarıdan Excel'den çekim yapabilirsiniz.
+              {search ? "Aramanızla eşleşen danışan yok." : "Henüz danışan başvurusu yok. Otomatik çekim her 15 dakikada bir çalışır."}
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {filtered.map((lead) => {
-              const statusMeta = STATUS_OPTIONS.find((s) => s.value === lead.status);
+              const statusMeta = STATUS_MAP[lead.status] || STATUS_OPTIONS[0];
               const isFaceToFace = lead.consultation_type === "face_to_face";
               return (
-                <Card key={lead.id} className={lead.status === "unreachable" ? "border-red-200 bg-red-50/40" : ""}>
-                  <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold truncate">{lead.full_name}</div>
-                      <a href={`tel:${lead.phone}`} className="text-sm text-primary flex items-center gap-1 mt-0.5">
-                        <Phone className="h-3.5 w-3.5" />
-                        {lead.phone}
-                      </a>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
+                <Card key={lead.id} className={`transition hover:shadow-md ${statusMeta.card}`}>
+                  <CardContent className="p-4 flex flex-col gap-3 h-full">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate leading-tight">{lead.full_name}</div>
+                        {lead.therapy_type && (
+                          <div className="text-[11px] text-muted-foreground truncate">{lead.therapy_type}</div>
+                        )}
+                      </div>
                       <Badge
                         variant="outline"
-                        className={isFaceToFace ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"}
+                        className={`shrink-0 text-[10px] px-1.5 ${isFaceToFace ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"}`}
                       >
-                        {isFaceToFace ? <MapPin className="h-3 w-3 mr-1" /> : <Video className="h-3 w-3 mr-1" />}
+                        {isFaceToFace ? <MapPin className="h-3 w-3 mr-0.5" /> : <Video className="h-3 w-3 mr-0.5" />}
                         {isFaceToFace ? "Yüz Yüze" : "Online"}
                       </Badge>
-                      {statusMeta && (
-                        <Badge variant="outline" className={statusMeta.className}>
-                          {statusMeta.label}
-                        </Badge>
-                      )}
+                    </div>
+
+                    <a
+                      href={`tel:${lead.phone}`}
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                      {lead.phone}
+                    </a>
+
+                    <div className="mt-auto">
+                      <Badge variant="outline" className={`mb-2 text-[10px] ${statusMeta.badge}`}>
+                        {statusMeta.label}
+                      </Badge>
                       <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
-                        <SelectTrigger className="w-[150px] h-9">
+                        <SelectTrigger className="h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {STATUS_OPTIONS.map((s) => (
-                            <SelectItem key={s.value} value={s.value}>
-                              {s.label}
+                            <SelectItem key={s.value} value={s.value} className="text-xs">
+                              <span className="inline-flex items-center gap-2">
+                                <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                                {s.label}
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectContent>
