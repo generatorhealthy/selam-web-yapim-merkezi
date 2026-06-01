@@ -231,13 +231,15 @@ serve(async (req: Request): Promise<Response> => {
         .sort(priorityCompare);
     };
 
-    const buildTts = (clientName: string, therapy: string | null, specialistName: string) => {
-      const label = therapyLabel(therapy);
+    const buildTts = (clientName: string, family: boolean, online: boolean) => {
       const first = (clientName || "").trim().split(" ")[0] || "";
+      const title = family ? "Aile Danışmanı" : "Psikolog";
+      const mode = online ? "online" : "yüz yüze";
       return (
-        `Merhaba ${first}, Doktorum Ol'dan arıyoruz. ${label} talebiniz için sizi uzmanımız ` +
-        `${specialistName}'e yönlendirmek istiyoruz. Uzmanımızla şimdi görüşmek istiyorsanız bir tuşuna, ` +
-        `daha sonra görüşmek istiyorsanız iki tuşuna basınız.`
+        `Merhaba ${first}, Doktorum Ol'dan ulaşıyoruz size. ` +
+        `${title} ile ${mode} görüşme sağlamak için formunuz tarafımıza ulaştı. ` +
+        `Sizi uzman ile görüşmeniz için yönlendireceğiz. ` +
+        `Seans ücreti ve planlama detaylarını uzmanımızdan öğrenebilirsiniz.`
       );
     };
 
@@ -269,7 +271,7 @@ serve(async (req: Request): Promise<Response> => {
                 transfer_dial: `*1${target.internal_number || ""}`,
               }
             : null,
-          tts_text: target ? buildTts(lead.full_name, lead.therapy_type, target.name) : null,
+          tts_text: target ? buildTts(lead.full_name, family, true) : null,
           candidate_count: candidates.length,
           note: target ? null : "Uygun uzman bulunamadı",
         };
@@ -311,6 +313,7 @@ serve(async (req: Request): Promise<Response> => {
         therapy_label: therapyLabel(lead.therapy_type),
         category: family ? "Aile Danışmanı" : "Psikolog / Psikolojik Danışman / Klinik Psikolog",
         needs_city_prompt: true,
+        intro_text: buildTts(lead.full_name, family, false),
         city_prompt_text:
           "Hangi şehirde yüz yüze danışmanlık almak istediğinizi söyler misiniz?",
         candidates_by_city: byCity,
