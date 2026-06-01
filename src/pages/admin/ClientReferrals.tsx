@@ -465,7 +465,7 @@ const ClientReferrals = () => {
       
       const { data, error } = await supabase
         .from('client_referrals')
-        .select('id, client_name, client_surname, client_contact, referred_at, referral_count, is_referred')
+        .select('id, client_name, client_surname, client_contact, referred_at, referral_count, is_referred, consultation_type')
         .eq('specialist_id', specialistId)
         .eq('year', currentYear)
         .eq('month', month)
