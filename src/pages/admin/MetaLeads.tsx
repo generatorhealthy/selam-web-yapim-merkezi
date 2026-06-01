@@ -137,6 +137,30 @@ const MetaLeads = () => {
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [savingNote, setSavingNote] = useState<Record<string, boolean>>({});
   const [sendingWa, setSendingWa] = useState<Record<string, boolean>>({});
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [plan, setPlan] = useState<any[]>([]);
+
+  const runRoutingPlan = async () => {
+    setPlanLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-call-router", {
+        body: { dry_run: true, limit: 100 },
+      });
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data.error);
+      setPlan(data.plan || []);
+      setPlanOpen(true);
+      toast({
+        title: "Test planı hazır",
+        description: `${data.new_lead_count} yeni danışan için yönlendirme planı oluşturuldu (arama yapılmadı).`,
+      });
+    } catch (e: any) {
+      toast({ title: "Plan oluşturulamadı", description: e.message || "Bilinmeyen hata", variant: "destructive" });
+    } finally {
+      setPlanLoading(false);
+    }
+  };
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
