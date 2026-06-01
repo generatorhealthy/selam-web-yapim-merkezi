@@ -103,8 +103,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Cache so identical names don't get regenerated within one run
     const announcementCache = new Map<string, string>();
 
-    const generateAndUploadAnnouncement = async (customerName: string): Promise<string> => {
-      const text = (ttsTemplate as string).replace(/\{name\}/g, customerName || "");
+    // Generate speech with ElevenLabs, upload to Verimor, return the raw announcement id.
+    const renderTts = async (text: string): Promise<string> => {
       if (announcementCache.has(text)) return announcementCache.get(text)!;
 
       if (!elevenLabsKey) throw new Error('ELEVENLABS_API_KEY is not configured');
@@ -138,7 +138,7 @@ const handler = async (req: Request): Promise<Response> => {
       const base64Audio = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_');
 
       // 2) Upload to Verimor as an announcement
-      const annName = `DO Anons ${customerName} ${Date.now()}`.slice(0, 60);
+      const annName = `DO Anons ${Date.now()}`.slice(0, 60);
       const soundFileName = encodeURIComponent(`${annName}.mp3`);
       const formBody = new URLSearchParams({
         key: apiKey,
@@ -166,15 +166,33 @@ const handler = async (req: Request): Promise<Response> => {
         annId = String(parsed.id ?? parsed.announcement_id ?? annId);
       } catch { /* plain id */ }
 
-      const phrase = `#${annId}`;
-      announcementCache.set(text, phrase);
-      return phrase;
+      announcementCache.set(text, annId);
+      return annId;
     };
 
+    // Instruction appended to the main announcement asking the caller to press 1.
+    const PRESS_ONE_TEXT = " Uzmanımızla görüşmek istiyorsanız lütfen bir tuşuna basınız.";
+    // Message played after the caller presses 1, before being transferred.
+    const DIGIT_TEXT = requestBody.digit_text
+      ? String(requestBody.digit_text)
+      : "Hatta bekleyiniz lütfen, sizleri uzmanımıza aktarıyoruz.";
+
     const buildPhrase = async (customerName: string): Promise<string> => {
-      if (ttsTemplate) return await generateAndUploadAnnouncement(customerName);
+      if (ttsTemplate) {
+        const text = (ttsTemplate as string).replace(/\{name\}/g, customerName || "") + PRESS_ONE_TEXT;
+        const annId = await renderTts(text);
+        return `#${annId}`;
+      }
       return STATIC_ANNOUNCEMENT_ID;
     };
+
+    // Build the "please wait, transferring you" announcement once and reuse it.
+    let digitPhraseTarget: string | null = null;
+    if (ttsTemplate) {
+      const digitAnnId = await renderTts(DIGIT_TEXT);
+      digitPhraseTarget = `announcement/${digitAnnId}`;
+    }
+
     // Transfer target used after the announcement (e.g. forward caller to a specialist extension).
     // Verimor expects targets like "extension/1168" or "number/905xxxxxxxxx". Default: hangup.
     const TRANSFER_TARGET = requestBody.test_transfer_target ? String(requestBody.test_transfer_target) : "hangup/hangup";
