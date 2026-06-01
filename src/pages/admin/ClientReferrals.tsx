@@ -1849,25 +1849,34 @@ const ClientReferrals = () => {
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="client_name" className="text-sm font-medium">Danışan Adı *</Label>
+              <Label htmlFor="client_name" className="text-sm font-medium">Danışan Adı Soyadı *</Label>
               <Input
                 id="client_name"
                 value={clientInfo.client_name}
                 onChange={(e) => setClientInfo(prev => ({ ...prev, client_name: e.target.value }))}
-                placeholder="Danışanın adı"
+                placeholder="Danışanın adı soyadı"
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="client_surname" className="text-sm font-medium">Danışan Soyadı *</Label>
-              <Input
-                id="client_surname"
-                value={clientInfo.client_surname}
-                onChange={(e) => setClientInfo(prev => ({ ...prev, client_surname: e.target.value }))}
-                placeholder="Danışanın soyadı"
-                required
-              />
+              <Label className="text-sm font-medium">Danışmanlık Türü *</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setClientInfo(prev => ({ ...prev, consultation_type: 'online' }))}
+                  className={`rounded-lg border p-3 text-sm font-medium transition-colors ${clientInfo.consultation_type === 'online' ? 'border-primary bg-primary/10 text-primary' : 'border-input text-muted-foreground hover:bg-muted'}`}
+                >
+                  Online Danışmanlık
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClientInfo(prev => ({ ...prev, consultation_type: 'face_to_face' }))}
+                  className={`rounded-lg border p-3 text-sm font-medium transition-colors ${clientInfo.consultation_type === 'face_to_face' ? 'border-primary bg-primary/10 text-primary' : 'border-input text-muted-foreground hover:bg-muted'}`}
+                >
+                  Yüz Yüze Danışmanlık
+                </button>
+              </div>
             </div>
             
             <div className="space-y-2">
