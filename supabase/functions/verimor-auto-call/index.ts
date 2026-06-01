@@ -202,7 +202,8 @@ const handler = async (req: Request): Promise<Response> => {
 
 
     // Transfer target used after the announcement (e.g. forward caller to a specialist extension).
-    // Verimor expects targets like "extension/1168" or "number/905xxxxxxxxx". Default: hangup.
+    // Verimor expects targets like "user/1168" (dahili), "external/05xxxxxxxxx" or
+    // "queue/201". Default: hangup.
     const TRANSFER_TARGET = requestBody.test_transfer_target ? String(requestBody.test_transfer_target) : "hangup/hangup";
 
     // Office/default numbers to skip - these are not real customer phones
