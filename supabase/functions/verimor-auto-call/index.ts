@@ -270,7 +270,12 @@ const handler = async (req: Request): Promise<Response> => {
         call_retries: isTestMode ? 0 : 2,
         digit_retries: 2,
         digit_timeout: 5,
-        digit_target_1: digitPhraseTarget ?? TRANSFER_TARGET,
+        // 1'e basınca: gerçek bir aktarım hedefi verildiyse (örn. extension/1168)
+        // doğrudan o hedefe aktar; yoksa "hatta bekleyiniz" anonsunu çal.
+        digit_target_1:
+          TRANSFER_TARGET && TRANSFER_TARGET !== "hangup/hangup"
+            ? TRANSFER_TARGET
+            : (digitPhraseTarget ?? "hangup/hangup"),
         digit_target_2: digit2PhraseTarget ?? "hangup/hangup",
         timeout_target: "hangup/hangup",
         invalid_target: "hangup/hangup",
