@@ -53,11 +53,32 @@ function mapConsultation(raw: string): string {
   return "online";
 }
 
+// Map an Excel cell background colour to one of our status categories.
+// Colours come back as { red, green, blue } floats (0..1); a missing channel = 0.
+// No background (white / empty) => "new".
+function colorToStatus(bg: { red?: number; green?: number; blue?: number } | undefined): string {
+  if (!bg) return "new";
+  const r = bg.red ?? 0;
+  const g = bg.green ?? 0;
+  const b = bg.blue ?? 0;
+  // White / near-white => no marking => new
+  if (r >= 0.9 && g >= 0.9 && b >= 0.9) return "new";
+  // Dark (black-ish) => yanlış ulaşanlar
+  if (r < 0.5 && g < 0.5 && b < 0.5) return "wrong";
+  // Yellow (r & g high, b low) => aktarıldı
+  if (r >= 0.7 && g >= 0.7 && b < 0.5) return "transferred";
+  // Blue / purple (blue dominant, green low) => iletişim kuruldu
+  if (b >= 0.6 && g < 0.5) return "contacted";
+  // Red / pink / magenta (red high, green low) => daha sonra ara
+  if (r >= 0.7 && g < 0.5) return "callback";
+  return "new";
+}
+
 const HEADER_VALUES = new Set(["full_name", "phone_number", "randevu_türü?", "created_time"]);
 
-function parseRow(row: string[]) {
-  const full_name = cleanCell(row[COL.full_name]);
-  const phoneRaw = cleanCell(row[COL.phone]);
+function parseRow(values: string[], status: string) {
+  const full_name = cleanCell(values[COL.full_name]);
+  const phoneRaw = cleanCell(values[COL.phone]);
   // skip empty / header rows
   if (!full_name || !phoneRaw) return null;
   if (HEADER_VALUES.has(full_name.toLowerCase()) || HEADER_VALUES.has(phoneRaw.toLowerCase())) return null;
@@ -65,17 +86,18 @@ function parseRow(row: string[]) {
   const phone = normalizePhone(phoneRaw);
   if (!phone || phone.replace(/\D/g, "").length < 11) return null;
 
-  const external_id = cleanCell(row[COL.external_id]).replace(/^l:?\s*/i, "") || `${phone}_${full_name}`;
-  const dm = cleanCell(row[COL.lead_date]).match(/\d{4}-\d{2}-\d{2}[T\s][\d:]+/);
+  const external_id = cleanCell(values[COL.external_id]).replace(/^l:?\s*/i, "") || `${phone}_${full_name}`;
+  const dm = cleanCell(values[COL.lead_date]).match(/\d{4}-\d{2}-\d{2}[T\s][\d:]+/);
 
   return {
     external_id,
     full_name,
     phone,
-    consultation_type: mapConsultation(row[COL.consultation]),
-    therapy_type: cleanCell(row[COL.therapy_type]) || null,
-    source: cleanCell(row[COL.platform]).toLowerCase() || null,
+    consultation_type: mapConsultation(values[COL.consultation]),
+    therapy_type: cleanCell(values[COL.therapy_type]) || null,
+    source: cleanCell(values[COL.platform]).toLowerCase() || null,
     lead_date: dm ? dm[0].replace(" ", "T") : null,
+    status,
   };
 }
 
@@ -95,14 +117,20 @@ Deno.serve(async (req) => {
 
     const spreadsheetId = extractSpreadsheetId(body.sheetUrl || "") || DEFAULT_SPREADSHEET_ID;
     const sheetName = body.sheetName || DEFAULT_SHEET_NAME;
-    const range = `${sheetName}!A1:Q5000`;
+    const range = encodeURIComponent(`${sheetName}!A1:Q5000`);
 
-    const gwRes = await fetch(`${GATEWAY_URL}/spreadsheets/${spreadsheetId}/values/${range}`, {
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": sheetsKey,
-      },
-    });
+    // Fetch BOTH the cell values and their background colours in one call.
+    // The status of each lead is encoded by the row's background colour in the sheet.
+    const fields = "sheets.data.rowData.values(formattedValue,effectiveFormat.backgroundColor)";
+    const gwRes = await fetch(
+      `${GATEWAY_URL}/spreadsheets/${spreadsheetId}?ranges=${range}&includeGridData=true&fields=${encodeURIComponent(fields)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": sheetsKey,
+        },
+      }
+    );
 
     if (!gwRes.ok) {
       const text = await gwRes.text();
@@ -112,7 +140,7 @@ Deno.serve(async (req) => {
     }
 
     const data = await gwRes.json();
-    const rows: string[][] = Array.isArray(data.values) ? data.values : [];
+    const rowData: any[] = data.sheets?.[0]?.data?.[0]?.rowData ?? [];
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -120,8 +148,13 @@ Deno.serve(async (req) => {
     );
 
     const leads = [];
-    for (const row of rows) {
-      const parsed = parseRow(row);
+    for (const rd of rowData) {
+      const cells: any[] = rd.values ?? [];
+      const values = cells.map((c) => c?.formattedValue ?? "");
+      // The full_name column (O) carries the status colour for the row.
+      const bg = cells[COL.full_name]?.effectiveFormat?.backgroundColor;
+      const status = colorToStatus(bg);
+      const parsed = parseRow(values, status);
       if (parsed) leads.push(parsed);
     }
 
@@ -134,26 +167,40 @@ Deno.serve(async (req) => {
     });
 
     let inserted = 0;
+    let updated = 0;
     if (unique.length > 0) {
       const ids = unique.map((l) => l.external_id);
-      // chunk the existence lookup to avoid overly long IN clauses
-      const existingIds = new Set<string>();
+      // Fetch existing rows (id + status) in chunks.
+      const existing = new Map<string, { id: string; status: string }>();
       for (let i = 0; i < ids.length; i += 500) {
-        const { data: existing } = await supabase
+        const { data: rows } = await supabase
           .from("danisan_basvurulari")
-          .select("external_id")
+          .select("id, external_id, status")
           .in("external_id", ids.slice(i, i + 500));
-        (existing || []).forEach((e: any) => existingIds.add(e.external_id));
+        (rows || []).forEach((e: any) => existing.set(e.external_id, { id: e.id, status: e.status }));
       }
-      const toInsert = unique.filter((l) => !existingIds.has(l.external_id));
+
+      const toInsert = unique.filter((l) => !existing.has(l.external_id));
       if (toInsert.length > 0) {
         const { error } = await supabase.from("danisan_basvurulari").insert(toInsert);
         if (error) throw error;
         inserted = toInsert.length;
       }
+
+      // Sync the colour-derived status onto existing rows when it changed.
+      for (const l of unique) {
+        const ex = existing.get(l.external_id);
+        if (ex && ex.status !== l.status) {
+          const { error } = await supabase
+            .from("danisan_basvurulari")
+            .update({ status: l.status })
+            .eq("id", ex.id);
+          if (!error) updated++;
+        }
+      }
     }
 
-    return new Response(JSON.stringify({ success: true, total: unique.length, inserted }), {
+    return new Response(JSON.stringify({ success: true, total: unique.length, inserted, updated }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
