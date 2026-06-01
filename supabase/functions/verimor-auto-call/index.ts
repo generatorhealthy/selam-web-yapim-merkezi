@@ -202,7 +202,8 @@ const handler = async (req: Request): Promise<Response> => {
 
 
     // Transfer target used after the announcement (e.g. forward caller to a specialist extension).
-    // Verimor expects targets like "extension/1168" or "number/905xxxxxxxxx". Default: hangup.
+    // Verimor expects targets like "user/1168" (dahili), "external/05xxxxxxxxx" or
+    // "queue/201". Default: hangup.
     const TRANSFER_TARGET = requestBody.test_transfer_target ? String(requestBody.test_transfer_target) : "hangup/hangup";
 
     // Office/default numbers to skip - these are not real customer phones
@@ -270,7 +271,12 @@ const handler = async (req: Request): Promise<Response> => {
         call_retries: isTestMode ? 0 : 2,
         digit_retries: 2,
         digit_timeout: 5,
-        digit_target_1: digitPhraseTarget ?? TRANSFER_TARGET,
+        // 1'e basınca: gerçek bir aktarım hedefi verildiyse (örn. extension/1168)
+        // doğrudan o hedefe aktar; yoksa "hatta bekleyiniz" anonsunu çal.
+        digit_target_1:
+          TRANSFER_TARGET && TRANSFER_TARGET !== "hangup/hangup"
+            ? TRANSFER_TARGET
+            : (digitPhraseTarget ?? "hangup/hangup"),
         digit_target_2: digit2PhraseTarget ?? "hangup/hangup",
         timeout_target: "hangup/hangup",
         invalid_target: "hangup/hangup",

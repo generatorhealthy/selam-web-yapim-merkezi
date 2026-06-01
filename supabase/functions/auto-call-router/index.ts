@@ -290,6 +290,19 @@ serve(async (req: Request): Promise<Response> => {
           transfer_dial: `*1${c.internal_number || ""}`,
         });
       }
+
+      // ŞEHİRDE YÜZ YÜZE UZMAN YOKSA: online danışmanlık teklif edilir.
+      // Danışan "evet" (1) derse online danışmanlık veren öncelikli uzmana
+      // aktarılır; "hayır" (2) derse teşekkür edilip telefon kapatılır.
+      const onlineCandidates = candidatesFor(family, true, null);
+      const onlineTarget = onlineCandidates[0] || null;
+      const noCityFallbackText =
+        "Maalesef bu şehirde şu an yüz yüze danışmanlık veren bir uzmanımız bulunmuyor. " +
+        "Ancak uzmanlarımızdan online olarak da danışmanlık alabilirsiniz; üstelik bu sizin için " +
+        "hem çok daha konforlu hem de çok daha pratik olacaktır. " +
+        "Online danışmanlık için sizi bir uzmanımıza aktarmamızı ister misiniz? " +
+        "Evet için bir tuşuna, hayır için iki tuşuna basınız.";
+
       return {
         lead_id: lead.id,
         full_name: lead.full_name,
@@ -302,7 +315,23 @@ serve(async (req: Request): Promise<Response> => {
           "Hangi şehirde yüz yüze danışmanlık almak istediğinizi söyler misiniz?",
         candidates_by_city: byCity,
         candidate_count: f2fCandidates.length,
-        note: "Yüz yüze: arama sırasında şehir sorulur, söylenen şehre göre öncelikli uzmana *1 + dahili ile aktarılır.",
+        // Söylenen şehirde uygun uzman yoksa kullanılacak online geçiş akışı:
+        no_city_fallback: {
+          tts_text: noCityFallbackText,
+          // 1 = evet -> online uzmana aktar, 2 = hayır -> teşekkür + kapat
+          digit2_text: "Anlayışınız için teşekkür ederiz, iyi günler dileriz.",
+          online_target: onlineTarget
+            ? {
+                specialist_id: onlineTarget.id,
+                specialist_name: onlineTarget.name,
+                specialty: onlineTarget.specialty,
+                internal_number: onlineTarget.internal_number,
+                transfer_dial: `*1${onlineTarget.internal_number || ""}`,
+              }
+            : null,
+          online_candidate_count: onlineCandidates.length,
+        },
+        note: "Yüz yüze: arama sırasında şehir sorulur, söylenen şehre göre öncelikli uzmana *1 + dahili ile aktarılır. O şehirde uzman yoksa online danışmanlık teklif edilir; danışan kabul ederse online uzmana aktarılır.",
       };
     });
 
