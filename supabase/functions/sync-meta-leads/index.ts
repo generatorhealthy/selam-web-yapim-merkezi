@@ -7,11 +7,26 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_sheets/v4";
 
+// Default source: the "DANIŞAN" tab of the Meta leads spreadsheet.
+const DEFAULT_SPREADSHEET_ID = "13mdb8ycsMx64ltSxkG8udULxUG97SuJVPrkvjEqBq8A";
+const DEFAULT_SHEET_NAME = "DANIŞAN";
+
+// Fixed column layout of the DANIŞAN sheet (0-indexed):
+// A external_id | B created_time | L platform | M therapy | N randevu_türü | O full_name | P phone | Q status
+const COL = {
+  external_id: 0,
+  lead_date: 1,
+  platform: 11,
+  therapy_type: 12,
+  consultation: 13,
+  full_name: 14,
+  phone: 15,
+};
+
 function extractSpreadsheetId(input: string): string | null {
   if (!input) return null;
   const m = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   if (m) return m[1];
-  // If it's already just an ID
   if (/^[a-zA-Z0-9-_]{20,}$/.test(input.trim())) return input.trim();
   return null;
 }
@@ -20,64 +35,48 @@ function cleanCell(v: unknown): string {
   return String(v ?? "").trim();
 }
 
-function detectRow(row: string[]) {
-  let external_id = "";
-  let phone = "";
-  let phoneIdx = -1;
-  let consultation_type = "";
-  let therapy_type = "";
-  let source = "";
-  let lead_date = "";
+function normalizePhone(raw: string): string {
+  let p = cleanCell(raw).replace(/^p:\s*/i, "").replace(/[\s()-]/g, "");
+  const hadPlus = p.startsWith("+");
+  p = p.replace(/\D/g, "");
+  if (!p) return "";
+  if (p.startsWith("90") && p.length >= 12) return "+" + p;
+  if (p.startsWith("0")) p = p.slice(1);
+  if (p.length === 10) return "+90" + p;
+  return (hadPlus ? "+" : "+") + p;
+}
 
-  for (let i = 0; i < row.length; i++) {
-    const cell = cleanCell(row[i]);
-    const lower = cell.toLowerCase();
-    if (!cell) continue;
+function mapConsultation(raw: string): string {
+  const lower = cleanCell(raw).toLowerCase();
+  if (lower.includes("yüz") || lower.includes("yuz")) return "face_to_face";
+  if (lower.includes("online")) return "online";
+  return "online";
+}
 
-    // external lead id (e.g. "l:12097885378")
-    if (!external_id && /^l:?\s*\d{6,}$/i.test(cell)) {
-      external_id = cell.replace(/^l:?\s*/i, "");
-    }
+const HEADER_VALUES = new Set(["full_name", "phone_number", "randevu_türü?", "created_time"]);
 
-    // phone (e.g. "p:+905061971061" or "+905...")
-    if (!phone) {
-      const pm = cell.match(/\+?\d[\d\s]{9,}\d/);
-      if (pm && (lower.startsWith("p:") || cell.startsWith("+") || /^\d/.test(cell))) {
-        phone = pm[0].replace(/\s/g, "");
-        if (!phone.startsWith("+") && phone.length >= 11) phone = "+" + phone;
-        phoneIdx = i;
-      }
-    }
+function parseRow(row: string[]) {
+  const full_name = cleanCell(row[COL.full_name]);
+  const phoneRaw = cleanCell(row[COL.phone]);
+  // skip empty / header rows
+  if (!full_name || !phoneRaw) return null;
+  if (HEADER_VALUES.has(full_name.toLowerCase()) || HEADER_VALUES.has(phoneRaw.toLowerCase())) return null;
 
-    // consultation type
-    if (!consultation_type) {
-      if (lower.includes("yüz") || lower.includes("yuz")) consultation_type = "face_to_face";
-      else if (lower.includes("online")) consultation_type = "online";
-    }
+  const phone = normalizePhone(phoneRaw);
+  if (!phone || phone.replace(/\D/g, "").length < 11) return null;
 
-    // therapy type
-    if (!therapy_type && lower.includes("terapi")) therapy_type = cell;
+  const external_id = cleanCell(row[COL.external_id]).replace(/^l:?\s*/i, "") || `${phone}_${full_name}`;
+  const dm = cleanCell(row[COL.lead_date]).match(/\d{4}-\d{2}-\d{2}[T\s][\d:]+/);
 
-    // source
-    if (!source && (lower === "fb" || lower === "ig")) source = lower;
-
-    // date
-    if (!lead_date) {
-      const dm = cell.match(/\d{4}-\d{2}-\d{2}[T\s][\d:]+/);
-      if (dm) lead_date = dm[0].replace(" ", "T");
-    }
-  }
-
-  // name: cell immediately before phone column that isn't a keyword/number
-  let full_name = "";
-  if (phoneIdx > 0) {
-    const candidate = cleanCell(row[phoneIdx - 1]);
-    if (candidate && !/terapi|danışman|online|yüz|yuz|^l:|^f:|^p:|false|true|^fb$|^ig$/i.test(candidate) && !/^\d+$/.test(candidate)) {
-      full_name = candidate;
-    }
-  }
-
-  return { external_id, full_name, phone, consultation_type: consultation_type || "online", therapy_type, source, lead_date };
+  return {
+    external_id,
+    full_name,
+    phone,
+    consultation_type: mapConsultation(row[COL.consultation]),
+    therapy_type: cleanCell(row[COL.therapy_type]) || null,
+    source: cleanCell(row[COL.platform]).toLowerCase() || null,
+    lead_date: dm ? dm[0].replace(" ", "T") : null,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -91,16 +90,14 @@ Deno.serve(async (req) => {
     if (!lovableKey) throw new Error("LOVABLE_API_KEY bulunamadı");
     if (!sheetsKey) throw new Error("GOOGLE_SHEETS_API_KEY bulunamadı");
 
-    const { sheetUrl, range } = await req.json();
-    const spreadsheetId = extractSpreadsheetId(sheetUrl || "");
-    if (!spreadsheetId) {
-      return new Response(JSON.stringify({ success: false, error: "Geçerli bir Google Sheets bağlantısı girin." }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    let body: any = {};
+    try { body = await req.json(); } catch { /* cron calls without body */ }
 
-    const useRange = (range && String(range).trim()) || "A1:Z5000";
-    const gwRes = await fetch(`${GATEWAY_URL}/spreadsheets/${spreadsheetId}/values/${useRange}`, {
+    const spreadsheetId = extractSpreadsheetId(body.sheetUrl || "") || DEFAULT_SPREADSHEET_ID;
+    const sheetName = body.sheetName || DEFAULT_SHEET_NAME;
+    const range = `${sheetName}!A1:Q5000`;
+
+    const gwRes = await fetch(`${GATEWAY_URL}/spreadsheets/${spreadsheetId}/values/${range}`, {
       headers: {
         Authorization: `Bearer ${lovableKey}`,
         "X-Connection-Api-Key": sheetsKey,
@@ -108,8 +105,8 @@ Deno.serve(async (req) => {
     });
 
     if (!gwRes.ok) {
-      const body = await gwRes.text();
-      return new Response(JSON.stringify({ success: false, error: `Google Sheets erişim hatası (${gwRes.status}): ${body.slice(0, 300)}` }), {
+      const text = await gwRes.text();
+      return new Response(JSON.stringify({ success: false, error: `Google Sheets erişim hatası (${gwRes.status}): ${text.slice(0, 300)}` }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -124,17 +121,8 @@ Deno.serve(async (req) => {
 
     const leads = [];
     for (const row of rows) {
-      const parsed = detectRow(row);
-      if (!parsed.phone || !parsed.full_name) continue;
-      leads.push({
-        external_id: parsed.external_id || `${parsed.phone}_${parsed.full_name}`,
-        full_name: parsed.full_name,
-        phone: parsed.phone,
-        consultation_type: parsed.consultation_type,
-        therapy_type: parsed.therapy_type || null,
-        source: parsed.source || null,
-        lead_date: parsed.lead_date || null,
-      });
+      const parsed = parseRow(row);
+      if (parsed) leads.push(parsed);
     }
 
     // dedupe by external_id within this batch
@@ -147,15 +135,17 @@ Deno.serve(async (req) => {
 
     let inserted = 0;
     if (unique.length > 0) {
-      // Only insert leads not already present (preserve existing status)
       const ids = unique.map((l) => l.external_id);
-      const { data: existing } = await supabase
-        .from("danisan_basvurulari")
-        .select("external_id")
-        .in("external_id", ids);
-      const existingIds = new Set((existing || []).map((e: any) => e.external_id));
+      // chunk the existence lookup to avoid overly long IN clauses
+      const existingIds = new Set<string>();
+      for (let i = 0; i < ids.length; i += 500) {
+        const { data: existing } = await supabase
+          .from("danisan_basvurulari")
+          .select("external_id")
+          .in("external_id", ids.slice(i, i + 500));
+        (existing || []).forEach((e: any) => existingIds.add(e.external_id));
+      }
       const toInsert = unique.filter((l) => !existingIds.has(l.external_id));
-
       if (toInsert.length > 0) {
         const { error } = await supabase.from("danisan_basvurulari").insert(toInsert);
         if (error) throw error;
