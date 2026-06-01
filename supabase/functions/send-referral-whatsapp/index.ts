@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = (await req.json()) as Payload;
-    const { specialistName, specialistPhone, clientName, clientSurname, clientContact } = body;
+    const { specialistName, specialistPhone, clientName, clientSurname, clientContact, consultationType } = body;
 
     if (!specialistName || !specialistPhone || !clientName || !clientContact) {
       return new Response(
