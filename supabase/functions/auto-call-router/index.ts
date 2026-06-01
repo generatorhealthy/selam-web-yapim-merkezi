@@ -313,6 +313,7 @@ serve(async (req: Request): Promise<Response> => {
         therapy_label: therapyLabel(lead.therapy_type),
         category: family ? "Aile Danışmanı" : "Psikolog / Psikolojik Danışman / Klinik Psikolog",
         needs_city_prompt: true,
+        intro_text: buildTts(lead.full_name, family, false),
         city_prompt_text:
           "Hangi şehirde yüz yüze danışmanlık almak istediğinizi söyler misiniz?",
         candidates_by_city: byCity,
