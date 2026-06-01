@@ -151,7 +151,7 @@ const handler = async (req: Request): Promise<Response> => {
         active_days: isTestMode ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5],
         max_thread_count: 1,
         ring_timeout: 30,
-        cli: "902167060611",
+        cli: requestBody.test_cli ? String(requestBody.test_cli).replace(/\D/g, '').replace(/^0/, '90') : "902167060611",
         call_retries: isTestMode ? 0 : 2,
         digit_retries: 0,
         digit_timeout: 1,
