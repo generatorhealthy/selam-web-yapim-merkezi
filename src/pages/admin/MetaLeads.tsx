@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -15,7 +16,7 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, Video, MapPin, UserCheck } from "lucide-react";
+import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -27,8 +28,33 @@ interface Lead {
   lead_date: string | null;
   status: string;
   call_attempts: number;
+  notes: string | null;
   created_at: string;
 }
+
+// Pretty labels for the raw therapy_type values coming from the sheet.
+const THERAPY_LABELS: Record<string, string> = {
+  bireysel_terapi: "Bireysel Terapi",
+  cift_terapisi: "Çift Terapisi",
+  "çift_terapisi": "Çift Terapisi",
+  aile_terapisi: "Aile Terapisi",
+  cocuk_terapisi: "Çocuk Terapisi",
+  "çocuk_terapisi": "Çocuk Terapisi",
+  ergen_terapisi: "Ergen Terapisi",
+};
+
+const prettyTherapy = (raw: string | null): string => {
+  if (!raw) return "";
+  const key = raw.trim().toLowerCase();
+  if (THERAPY_LABELS[key]) return THERAPY_LABELS[key];
+  return raw
+    .replace(/_/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1))
+    .join(" ");
+};
+
 
 // Status categories mirror the Excel color coding the team uses.
 const STATUS_OPTIONS = [
@@ -83,12 +109,14 @@ const MetaLeads = () => {
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [savingNote, setSavingNote] = useState<Record<string, boolean>>({});
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("danisan_basvurulari")
-      .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, created_at")
+      .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, created_at")
       .order("created_at", { ascending: false })
       .limit(2000);
     if (error) {
@@ -102,6 +130,21 @@ const MetaLeads = () => {
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
+
+  const saveNote = async (id: string) => {
+    const draft = noteDrafts[id];
+    const lead = leads.find((l) => l.id === id);
+    if (draft === undefined || (lead?.notes ?? "") === draft) return;
+    setSavingNote((p) => ({ ...p, [id]: true }));
+    const { error } = await supabase.from("danisan_basvurulari").update({ notes: draft }).eq("id", id);
+    setSavingNote((p) => ({ ...p, [id]: false }));
+    if (error) {
+      toast({ title: "Hata", description: "Not kaydedilemedi.", variant: "destructive" });
+    } else {
+      setLeads((p) => p.map((l) => (l.id === id ? { ...l, notes: draft } : l)));
+      toast({ title: "Not kaydedildi" });
+    }
+  };
 
   const handleSync = async () => {
     setSyncing(true);
@@ -122,6 +165,7 @@ const MetaLeads = () => {
       setSyncing(false);
     }
   };
+
 
   const updateStatus = async (id: string, status: string) => {
     const prev = leads;
@@ -208,8 +252,8 @@ const MetaLeads = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {[...Array(8)].map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[...Array(6)].map((_, i) => (
               <div key={i} className="h-32 rounded-lg bg-muted animate-pulse" />
             ))}
           </div>
@@ -220,48 +264,81 @@ const MetaLeads = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((lead) => {
               const statusMeta = STATUS_MAP[lead.status] || STATUS_OPTIONS[0];
               const isFaceToFace = lead.consultation_type === "face_to_face";
+              const draft = noteDrafts[lead.id] ?? lead.notes ?? "";
+              const dirty = draft !== (lead.notes ?? "");
               return (
-                <Card key={lead.id} className={`transition hover:shadow-md ${statusMeta.card}`}>
-                  <CardContent className="p-4 flex flex-col gap-3 h-full">
+                <Card key={lead.id} className={`transition hover:shadow-lg ${statusMeta.card}`}>
+                  <CardContent className="p-5 flex flex-col gap-4 h-full">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="font-semibold truncate leading-tight">{lead.full_name}</div>
+                        <div className="font-bold text-lg truncate leading-tight">{lead.full_name}</div>
                         {lead.therapy_type && (
-                          <div className="text-[11px] text-muted-foreground truncate">{lead.therapy_type}</div>
+                          <div className="mt-1 inline-block text-sm font-medium text-primary bg-primary/10 rounded-md px-2 py-0.5">
+                            {prettyTherapy(lead.therapy_type)}
+                          </div>
                         )}
                       </div>
                       <Badge
                         variant="outline"
-                        className={`shrink-0 text-[10px] px-1.5 ${isFaceToFace ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"}`}
+                        className={`shrink-0 text-xs px-2 py-1 ${isFaceToFace ? "border-amber-300 text-amber-700 bg-amber-50" : "border-emerald-300 text-emerald-700 bg-emerald-50"}`}
                       >
-                        {isFaceToFace ? <MapPin className="h-3 w-3 mr-0.5" /> : <Video className="h-3 w-3 mr-0.5" />}
+                        {isFaceToFace ? <MapPin className="h-3.5 w-3.5 mr-1" /> : <Video className="h-3.5 w-3.5 mr-1" />}
                         {isFaceToFace ? "Yüz Yüze" : "Online"}
                       </Badge>
                     </div>
 
                     <a
                       href={`tel:${lead.phone}`}
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                      className="inline-flex items-center gap-2 text-base font-semibold text-primary hover:underline"
                     >
-                      <Phone className="h-3.5 w-3.5" />
+                      <Phone className="h-4 w-4" />
                       {lead.phone}
                     </a>
 
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                          <StickyNote className="h-3.5 w-3.5" />
+                          Not
+                        </span>
+                        {dirty && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs text-primary"
+                            disabled={savingNote[lead.id]}
+                            onClick={() => saveNote(lead.id)}
+                          >
+                            <Check className="h-3.5 w-3.5 mr-1" />
+                            Kaydet
+                          </Button>
+                        )}
+                      </div>
+                      <Textarea
+                        value={draft}
+                        placeholder="Bu danışan için not ekleyin..."
+                        rows={2}
+                        className="text-sm resize-none bg-background/70"
+                        onChange={(e) => setNoteDrafts((p) => ({ ...p, [lead.id]: e.target.value }))}
+                        onBlur={() => saveNote(lead.id)}
+                      />
+                    </div>
+
                     <div className="mt-auto">
-                      <Badge variant="outline" className={`mb-2 text-[10px] ${statusMeta.badge}`}>
+                      <Badge variant="outline" className={`mb-2 text-xs ${statusMeta.badge}`}>
                         {statusMeta.label}
                       </Badge>
                       <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
-                        <SelectTrigger className="h-8 text-xs">
+                        <SelectTrigger className="h-9 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {STATUS_OPTIONS.map((s) => (
-                            <SelectItem key={s.value} value={s.value} className="text-xs">
+                            <SelectItem key={s.value} value={s.value} className="text-sm">
                               <span className="inline-flex items-center gap-2">
                                 <span className={`h-2 w-2 rounded-full ${s.dot}`} />
                                 {s.label}
