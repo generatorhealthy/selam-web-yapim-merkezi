@@ -3209,6 +3209,60 @@ export type Database = {
         }
         Relationships: []
       }
+      danisan_basvurulari: {
+        Row: {
+          assigned_specialist_id: string | null
+          call_attempts: number
+          consultation_type: string
+          created_at: string
+          external_id: string | null
+          full_name: string
+          id: string
+          last_called_at: string | null
+          lead_date: string | null
+          notes: string | null
+          phone: string
+          source: string | null
+          status: string
+          therapy_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_specialist_id?: string | null
+          call_attempts?: number
+          consultation_type?: string
+          created_at?: string
+          external_id?: string | null
+          full_name: string
+          id?: string
+          last_called_at?: string | null
+          lead_date?: string | null
+          notes?: string | null
+          phone: string
+          source?: string | null
+          status?: string
+          therapy_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_specialist_id?: string | null
+          call_attempts?: number
+          consultation_type?: string
+          created_at?: string
+          external_id?: string | null
+          full_name?: string
+          id?: string
+          last_called_at?: string | null
+          lead_date?: string | null
+          notes?: string | null
+          phone?: string
+          source?: string | null
+          status?: string
+          therapy_type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       database_backups: {
         Row: {
           backup_status: string
