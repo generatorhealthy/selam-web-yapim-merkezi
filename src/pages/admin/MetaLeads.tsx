@@ -16,7 +16,7 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock } from "lucide-react";
+import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -149,6 +149,20 @@ const MetaLeads = () => {
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
+
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copyContact = async (lead: Lead) => {
+    const text = `${lead.full_name} - ${lead.phone}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(lead.id);
+      setTimeout(() => setCopiedId((c) => (c === lead.id ? null : c)), 1500);
+      toast({ title: "Kopyalandı", description: text });
+    } catch {
+      toast({ title: "Kopyalanamadı", variant: "destructive" });
+    }
+  };
+
 
   const saveNote = async (id: string) => {
     const draft = noteDrafts[id];
@@ -351,7 +365,21 @@ const MetaLeads = () => {
                         <Clock className="h-3.5 w-3.5" />
                         {formatAppliedAt(lead)}
                       </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2.5 text-xs rounded-full ml-auto"
+                        onClick={() => copyContact(lead)}
+                      >
+                        {copiedId === lead.id ? (
+                          <><Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> Kopyalandı</>
+                        ) : (
+                          <><Copy className="h-3.5 w-3.5 mr-1" /> Ad & Telefon Kopyala</>
+                        )}
+                      </Button>
                     </div>
+
 
 
 
