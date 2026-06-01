@@ -69,20 +69,15 @@ const MetaLeads = () => {
   }, [fetchLeads]);
 
   const handleSync = async () => {
-    if (!sheetUrl.trim()) {
-      toast({ title: "Bağlantı gerekli", description: "Lütfen Google Sheets bağlantısını girin.", variant: "destructive" });
-      return;
-    }
-    localStorage.setItem(SHEET_URL_KEY, sheetUrl.trim());
     setSyncing(true);
     try {
       const { data, error } = await supabase.functions.invoke("sync-meta-leads", {
-        body: { sheetUrl: sheetUrl.trim() },
+        body: {},
       });
       if (error) throw error;
       if (data?.success === false) throw new Error(data.error);
       toast({
-        title: "Çekim tamamlandı",
+        title: "Güncellendi",
         description: `${data.inserted} yeni danışan eklendi (toplam ${data.total} okundu).`,
       });
       await fetchLeads();
