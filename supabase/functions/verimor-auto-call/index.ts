@@ -170,12 +170,16 @@ const handler = async (req: Request): Promise<Response> => {
       return annId;
     };
 
-    // Instruction appended to the main announcement asking the caller to press 1.
-    const PRESS_ONE_TEXT = " Uzmanımızla görüşmek istiyorsanız lütfen bir tuşuna basınız.";
+    // Instruction appended to the main announcement asking the caller to press 1 or 2.
+    const PRESS_ONE_TEXT = " Uzmanımızla görüşmek istiyorsanız lütfen bir tuşuna, görüşmek istemiyorsanız iki tuşuna basınız.";
     // Message played after the caller presses 1, before being transferred.
     const DIGIT_TEXT = requestBody.digit_text
       ? String(requestBody.digit_text)
       : "Hatta bekleyiniz lütfen, sizleri uzmanımıza aktarıyoruz.";
+    // Message played after the caller presses 2 (does not want to talk), before hanging up.
+    const DIGIT2_TEXT = requestBody.digit2_text
+      ? String(requestBody.digit2_text)
+      : "Anladık, zaman ayırdığınız için teşekkür ederiz. İyi günler dileriz.";
 
     const buildPhrase = async (customerName: string): Promise<string> => {
       if (ttsTemplate) {
@@ -186,12 +190,16 @@ const handler = async (req: Request): Promise<Response> => {
       return STATIC_ANNOUNCEMENT_ID;
     };
 
-    // Build the "please wait, transferring you" announcement once and reuse it.
+    // Build the digit-response announcements once and reuse them.
     let digitPhraseTarget: string | null = null;
+    let digit2PhraseTarget: string | null = null;
     if (ttsTemplate) {
       const digitAnnId = await renderTts(DIGIT_TEXT);
       digitPhraseTarget = `announcement/${digitAnnId}`;
+      const digit2AnnId = await renderTts(DIGIT2_TEXT);
+      digit2PhraseTarget = `announcement/${digit2AnnId}`;
     }
+
 
     // Transfer target used after the announcement (e.g. forward caller to a specialist extension).
     // Verimor expects targets like "extension/1168" or "number/905xxxxxxxxx". Default: hangup.
