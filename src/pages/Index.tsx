@@ -11,6 +11,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { supabase } from "@/integrations/supabase/client";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
 import AppointmentWizard from "@/components/AppointmentWizard";
+import AppDownloadSheet from "@/components/AppDownloadSheet";
 
 // Lazy load below-fold content (reviews, how it works, specialists, footer)
 const IndexBelowFold = lazy(() => import("@/components/IndexBelowFold"));
@@ -363,6 +364,8 @@ const Index = () => {
         onOpenChange={setWizardOpen} 
         initialCity={selectedCity}
       />
+
+      <AppDownloadSheet />
     </div>
   );
 };
