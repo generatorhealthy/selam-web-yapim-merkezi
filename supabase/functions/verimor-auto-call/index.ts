@@ -109,9 +109,10 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (!elevenLabsKey) throw new Error('ELEVENLABS_API_KEY is not configured');
 
-      // 1) Generate speech with ElevenLabs as raw PCM (16-bit, 8kHz, mono) for telephony
+      // 1) Generate speech with ElevenLabs as MP3. Verimor's upload API expects
+      // a Data URL (sounddata), not raw base64 bytes.
       const ttsResp = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=pcm_8000`,
+        `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`,
         {
           method: 'POST',
           headers: { 'xi-api-key': elevenLabsKey, 'Content-Type': 'application/json' },
@@ -126,49 +127,30 @@ const handler = async (req: Request): Promise<Response> => {
         const errText = await ttsResp.text();
         throw new Error(`ElevenLabs TTS error (${ttsResp.status}): ${errText}`);
       }
-      const pcmBuffer = await ttsResp.arrayBuffer();
+      const mp3Bytes = new Uint8Array(await ttsResp.arrayBuffer());
 
-      // Wrap raw PCM into a proper WAV container (PCM 16-bit, 8kHz, mono)
-      const sampleRate = 8000;
-      const numChannels = 1;
-      const bitsPerSample = 16;
-      const pcmBytes = new Uint8Array(pcmBuffer);
-      const blockAlign = numChannels * (bitsPerSample / 8);
-      const byteRate = sampleRate * blockAlign;
-      const wav = new Uint8Array(44 + pcmBytes.length);
-      const dv = new DataView(wav.buffer);
-      const writeStr = (off: number, s: string) => { for (let i = 0; i < s.length; i++) dv.setUint8(off + i, s.charCodeAt(i)); };
-      writeStr(0, 'RIFF');
-      dv.setUint32(4, 36 + pcmBytes.length, true);
-      writeStr(8, 'WAVE');
-      writeStr(12, 'fmt ');
-      dv.setUint32(16, 16, true);
-      dv.setUint16(20, 1, true); // PCM
-      dv.setUint16(22, numChannels, true);
-      dv.setUint32(24, sampleRate, true);
-      dv.setUint32(28, byteRate, true);
-      dv.setUint16(32, blockAlign, true);
-      dv.setUint16(34, bitsPerSample, true);
-      writeStr(36, 'data');
-      dv.setUint32(40, pcmBytes.length, true);
-      wav.set(pcmBytes, 44);
-
-      // base64 encode the WAV (chunked to avoid stack overflow)
+      // Base64url encode the MP3 (Verimor explicitly rejects + and / in sounddata)
       let binary = '';
       const chunkSize = 0x8000;
-      for (let i = 0; i < wav.length; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, Array.from(wav.subarray(i, i + chunkSize)));
+      for (let i = 0; i < mp3Bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, Array.from(mp3Bytes.subarray(i, i + chunkSize)));
       }
-      const base64Audio = btoa(binary);
+      const base64Audio = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_');
 
       // 2) Upload to Verimor as an announcement
       const annName = `DO Anons ${customerName} ${Date.now()}`.slice(0, 60);
+      const soundFileName = encodeURIComponent(`${annName}.mp3`);
+      const formBody = new URLSearchParams({
+        key: apiKey,
+        name: annName,
+        sounddata: `data:audio/mp3;name:${soundFileName};base64,${base64Audio}`,
+      });
       const uploadResp = await fetch(
-        `https://api.bulutsantralim.com/announcements.json?key=${apiKey}`,
+        `https://api.bulutsantralim.com/announcements`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: annName, data: base64Audio }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formBody.toString(),
         }
       );
       const uploadText = await uploadResp.text();
