@@ -123,8 +123,13 @@ const ClientCalendar = () => {
         }
       });
 
+      // "Faydalı Bilgiler" test üyeliğini (internal_number #0000) listeden gizle
+      const visibleSpecialists = (specialistsData || []).filter(
+        (s) => s.name?.trim() !== "Faydalı Bilgiler" && String(s.internal_number || "").trim() !== "0000"
+      );
+
       // Her uzman için döngü içinde yönlendirme var mı kontrol et
-      const specialistsWithReferrals: SpecialistWithReferral[] = (specialistsData || []).map(specialist => {
+      const specialistsWithReferrals: SpecialistWithReferral[] = visibleSpecialists.map(specialist => {
         const paymentDay = specialist.payment_day || 1;
         const today = new Date();
         
