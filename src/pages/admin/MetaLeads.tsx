@@ -112,6 +112,7 @@ const MetaLeads = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [savingNote, setSavingNote] = useState<Record<string, boolean>>({});
+  const [sendingWa, setSendingWa] = useState<Record<string, boolean>>({});
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
