@@ -184,7 +184,8 @@ const ClientReferrals = () => {
   const [clientInfo, setClientInfo] = useState({
     client_name: '',
     client_surname: '',
-    client_contact: ''
+    client_contact: '',
+    consultation_type: 'online' as 'online' | 'face_to_face'
   });
 
   const requestConfirm = (
