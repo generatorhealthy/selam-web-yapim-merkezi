@@ -1769,10 +1769,19 @@ const ClientReferrals = () => {
                                                   <div className="font-semibold text-slate-900 text-sm mb-1">
                                                     {client.client_name} {client.client_surname}
                                                   </div>
-                                                  <div className="flex items-center gap-2">
+                                                  <div className="flex items-center gap-2 flex-wrap">
                                                     <Badge className="bg-blue-100 text-blue-700 border-0 text-xs px-2 py-1">
                                                       📞 {client.client_contact}
                                                     </Badge>
+                                                    {client.consultation_type === 'face_to_face' ? (
+                                                      <Badge className="bg-amber-100 text-amber-700 border-0 text-xs px-2 py-1">
+                                                        🏢 Yüz Yüze
+                                                      </Badge>
+                                                    ) : (
+                                                      <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs px-2 py-1">
+                                                        💻 Online
+                                                      </Badge>
+                                                    )}
                                                   </div>
                                                 </div>
                                               </div>
