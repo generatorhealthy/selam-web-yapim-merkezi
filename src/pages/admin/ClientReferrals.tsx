@@ -197,7 +197,7 @@ const ClientReferrals = () => {
   ) => {
     console.log('🔔 [DIALOG] requestConfirm çağrıldı:', { specialistName, specialistPhone, month, newCount });
     setPendingAction({ specialistId, specialistName, specialistPhone, month, newCount });
-    setClientInfo({ client_name: '', client_surname: '', client_contact: '' });
+    setClientInfo({ client_name: '', client_surname: '', client_contact: '', consultation_type: 'online' });
     setConfirmOpen(true);
   };
 
@@ -251,7 +251,7 @@ const ClientReferrals = () => {
       
       setConfirmOpen(false);
       setPendingAction(null);
-      setClientInfo({ client_name: '', client_surname: '', client_contact: '' });
+      setClientInfo({ client_name: '', client_surname: '', client_contact: '', consultation_type: 'online' });
     } catch (error) {
       console.error('❌ [DIALOG] Danışan ekleme hatası:', error);
       toast({
