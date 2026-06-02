@@ -335,7 +335,7 @@ export default function MobileBlogDetail() {
                       </p>
                       {r.author_name && (
                         <p className="text-[11px] mt-1.5 truncate" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                          {r.author_name}
+                          {r.author_name === 'Admin' || r.author_name === 'admin' ? 'Sağlık İçerik Editörü' : r.author_name}
                         </p>
                       )}
                     </div>
