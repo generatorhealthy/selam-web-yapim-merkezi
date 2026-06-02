@@ -159,9 +159,9 @@ export default function MobileBlog() {
                       {featured.author_name && (
                         <div className="flex items-center gap-1.5">
                           <div className="w-5 h-5 rounded-full bg-white/95 flex items-center justify-center text-[9px] font-bold" style={{ color: "hsl(var(--m-ink))" }}>
-                            {featured.author_name.charAt(0).toUpperCase()}
+                            {(featured.author_name === 'Admin' || featured.author_name === 'admin' ? 'Sağlık İçerik Editörü' : featured.author_name).charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-semibold">{featured.author_name}</span>
+                          <span className="font-semibold">{featured.author_name === 'Admin' || featured.author_name === 'admin' ? 'Sağlık İçerik Editörü' : featured.author_name}</span>
                         </div>
                       )}
                       {featured.word_count ? (
@@ -210,7 +210,7 @@ export default function MobileBlog() {
                     </p>
                   )}
                   <div className="flex items-center gap-2 mt-auto pt-2 text-[10.5px]" style={{ color: "hsl(var(--m-text-tertiary))" }}>
-                    {p.author_name && <span className="font-semibold truncate">{p.author_name}</span>}
+                    {p.author_name && <span className="font-semibold truncate">{p.author_name === 'Admin' || p.author_name === 'admin' ? 'Sağlık İçerik Editörü' : p.author_name}</span>}
                     {p.word_count ? (
                       <span className="inline-flex items-center gap-1">
                         · <Clock className="w-2.5 h-2.5" /> {Math.max(1, Math.round(p.word_count / 200))} dk
