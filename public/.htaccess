@@ -168,18 +168,18 @@ RewriteRule ^blog/(ozel-firsat|bu-aya-ozel)/?$ /$1 [R=301,L]
 # Blog listing page - /blog must stay as /blog (not redirect)
 # Blog posts use /blog/slug format - no redirect needed
 
-# Internal rewrite for blog posts - rewrite clean URLs to /blog/* internally
+# 301 redirect old clean blog URLs to canonical /blog/* (SEO: consolidate duplicate URLs)
 RewriteCond %{REQUEST_URI} !^/blog/?$
 RewriteCond %{REQUEST_URI} !^/blog/
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/assets/
-RewriteCond %{REQUEST_URI} !^/(about|hakkimizda|iletisim|uzmanlar|uzmanlik|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|psikolog-paketi|diyetisyen-paketi|fizyoterapist-paketi|aile-danismani-paketi|odeme|odeme-sayfasi|odeme-basarili|privacy|gizlilik-politikasi|disclosure-text|aydinlatma-metni|mesafeli-satis-sozlesmesi|visitor-consultant-agreement|ziyaretci-danisan-sozlesmesi|comment-rules|yorum-kurallari|anasayfa|giris-yap|test|test-al|test-sonuc|divan_paneli|doktor-paneli|bu-aya-ozel|ozel-firsat|kayit-ol)
+RewriteCond %{REQUEST_URI} !^/(about|hakkimizda|iletisim|uzmanlar|uzmanlik|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|psikolog-paketi|diyetisyen-paketi|fizyoterapist-paketi|aile-danismani-paketi|odeme|odeme-sayfasi|odeme-basarili|privacy|gizlilik-politikasi|disclosure-text|aydinlatma-metni|mesafeli-satis-sozlesmesi|visitor-consultant-agreement|ziyaretci-danisan-sozlesmesi|comment-rules|yorum-kurallari|anasayfa|giris-yap|sifre-sifirla|kayit-ol|test|test-al|test-sonuc|divan_paneli|doktor-paneli|bu-aya-ozel|ozel-firsat|randevu-sayfasi|randevu-al)
 RewriteCond %{REQUEST_URI} !^/randevu-al/
 RewriteCond %{REQUEST_URI} !^/yazilar/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|webp)$
-RewriteRule ^([^/]+)/?$ /blog/$1 [L]
+RewriteRule ^([^/]+)/?$ /blog/$1 [R=301,L]
 
 # BirFatura API proxy routes (with token passthrough)
 # Try proxy first
