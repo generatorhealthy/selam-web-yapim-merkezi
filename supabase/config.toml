@@ -172,3 +172,6 @@ verify_jwt = false
 verify_jwt = false
 
 
+
+[functions.bulk-update-seo-titles]
+verify_jwt = false
