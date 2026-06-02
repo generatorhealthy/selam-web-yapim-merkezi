@@ -429,10 +429,13 @@ const BlogDetail = () => {
             "datePublished": blog.published_at,
             "dateModified": blog.updated_at,
             "wordCount": blog.word_count || undefined,
-            "author": {
-              "@type": "Person",
-              "name": blog.author_name
-            },
+            "author": reviewer
+              ? {
+                  "@type": "Person",
+                  "name": reviewer.name,
+                  ...(reviewer.type === 'specialist' ? { "jobTitle": reviewer.title } : {}),
+                }
+              : { "@type": "Person", "name": blog.author_name },
             "publisher": {
               "@type": "Organization",
               "name": "Doktorum Ol",
@@ -447,6 +450,40 @@ const BlogDetail = () => {
             }
           })}
         </script>
+
+        {/* JSON-LD MedicalWebPage - E-E-A-T: yazar + uzman inceleme sinyali */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "MedicalWebPage",
+            "name": blog.title,
+            "description": ogDescription,
+            "url": `https://doktorumol.com.tr/blog/${blog.slug}`,
+            "datePublished": blog.published_at,
+            "dateModified": blog.updated_at,
+            "lastReviewed": reviewedDate || blog.updated_at,
+            "inLanguage": "tr-TR",
+            "author": reviewer
+              ? {
+                  "@type": "Person",
+                  "name": reviewer.name,
+                  ...(reviewer.type === 'specialist' ? { "jobTitle": reviewer.title } : {}),
+                }
+              : { "@type": "Person", "name": blog.author_name },
+            "reviewedBy": reviewer && reviewer.type === 'specialist'
+              ? { "@type": "Person", "name": reviewer.name, "jobTitle": reviewer.title }
+              : { "@type": "Organization", "name": "Doktorum Ol Sağlık İçerik Editörleri" },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Doktorum Ol",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://doktorumol.com.tr/logo.png"
+              }
+            }
+          })}
+        </script>
+
         
         {/* JSON-LD BreadcrumbList */}
         <script type="application/ld+json">
