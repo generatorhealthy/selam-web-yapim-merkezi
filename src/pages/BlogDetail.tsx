@@ -275,6 +275,29 @@ const BlogDetail = () => {
   const faqItems = useMemo(() => blog ? extractFaqFromContent(blog.content) : [], [blog]);
   const processedContent = useMemo(() => blog ? addHeadingIds(blog.content.replace(/\n/g, '<br>')) : '', [blog]);
 
+  // E-E-A-T: Gerçek yazar / uzman inceleme bilgisi
+  const reviewer = useMemo(() => {
+    if (!blog) return null;
+    const specialtyLabel = specialist?.specialty || blog.specialists?.specialty || 'Uzman';
+    const specialistName = specialist?.name || (blog.author_type === 'specialist' ? blog.author_name : null);
+    if (specialistName) {
+      return {
+        name: specialistName,
+        title: specialtyLabel,
+        displayName: `${specialtyLabel} ${specialistName}`,
+        type: 'specialist' as const,
+      };
+    }
+    return {
+      name: 'Doktorum Ol Sağlık İçerik Editörleri',
+      title: 'Sağlık İçerik Editörleri',
+      displayName: 'Doktorum Ol Sağlık İçerik Editörleri',
+      type: 'editorial' as const,
+    };
+  }, [blog, specialist]);
+
+  const reviewedDate = blog?.updated_at || blog?.published_at || '';
+
   const shareUrl = typeof window !== 'undefined' ? `https://doktorumol.com.tr/blog/${blog?.slug || ''}` : '';
   const shareTitle = blog?.title || "";
   const shareDescription = blog?.excerpt || "";
