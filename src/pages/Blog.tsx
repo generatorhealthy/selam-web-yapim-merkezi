@@ -282,15 +282,16 @@ const Blog = () => {
   const getAuthorTypeText = (blog: BlogPost) => {
     // Check if it's admin content
     if (blog.author_name === 'Admin' || blog.author_name === 'admin') {
-      return "İçerik";
+      return "Sağlık İçerik Editörü";
     }
     
     // If the author_name is not a standard editor name, it's likely a specialist
     if (blog.author_name && !['Editör', 'Staff Editörü', 'Doktorum Ol', 'Admin', 'admin'].includes(blog.author_name)) {
       return blog.author_name;
     }
-    return "Editör";
+    return "Sağlık İçerik Editörü";
   };
+
 
   if (loading) {
     return (
@@ -411,7 +412,7 @@ const Blog = () => {
                       
                       <div className="p-5">
                         <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                          <span className="font-medium">{blog.author_name}</span>
+                          <span className="font-medium">{getAuthorTypeText(blog)}</span>
                           <span>•</span>
                           <span>5 dakika okuma</span>
                         </div>
@@ -453,7 +454,7 @@ const Blog = () => {
                       
                       <div className="p-8">
                         <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                          <span className="font-medium">{filteredBlogs[0].author_name}</span>
+                          <span className="font-medium">{getAuthorTypeText(filteredBlogs[0])}</span>
                           <span>•</span>
                           <span>5 dakika okuma</span>
                         </div>
@@ -500,7 +501,7 @@ const Blog = () => {
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
-                              <span className="font-medium">{blog.author_name}</span>
+                              <span className="font-medium">{getAuthorTypeText(blog)}</span>
                               <span>•</span>
                               <span>5 dakika okuma</span>
                             </div>
@@ -561,7 +562,7 @@ const Blog = () => {
                       
                       <div className="p-5">
                         <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                          <span className="font-medium">{blog.author_name}</span>
+                          <span className="font-medium">{getAuthorTypeText(blog)}</span>
                           <span>•</span>
                           <span>5 dakika okuma</span>
                         </div>
