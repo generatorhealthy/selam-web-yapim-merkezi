@@ -633,6 +633,32 @@ const BlogDetail = () => {
               content={processedContent}
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-headings:scroll-mt-20"
             />
+
+            {/* E-E-A-T: Uzman inceleme rozeti + tarih */}
+            {reviewer && (
+              <div className="mt-8 flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                <ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
+                <div className="text-sm leading-relaxed text-emerald-900">
+                  <p>
+                    Bu içerik{" "}
+                    <span className="font-semibold">{reviewer.displayName}</span>{" "}
+                    tarafından incelenmiştir.
+                  </p>
+                  {reviewedDate && (
+                    <p className="mt-0.5 text-emerald-700">
+                      Son güncelleme / inceleme:{" "}
+                      {new Date(reviewedDate).toLocaleDateString('tr-TR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            
+
             
             {specialist && (
               <BlogSpecialistCard specialist={specialist} />
