@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Clock, User, Share2, Facebook, Twitter, Linkedin, MessageCircle, List } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, Share2, Facebook, Twitter, Linkedin, MessageCircle, List, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -275,6 +275,29 @@ const BlogDetail = () => {
   const faqItems = useMemo(() => blog ? extractFaqFromContent(blog.content) : [], [blog]);
   const processedContent = useMemo(() => blog ? addHeadingIds(blog.content.replace(/\n/g, '<br>')) : '', [blog]);
 
+  // E-E-A-T: Gerçek yazar / uzman inceleme bilgisi
+  const reviewer = useMemo(() => {
+    if (!blog) return null;
+    const specialtyLabel = specialist?.specialty || blog.specialists?.specialty || 'Uzman';
+    const specialistName = specialist?.name || (blog.author_type === 'specialist' ? blog.author_name : null);
+    if (specialistName) {
+      return {
+        name: specialistName,
+        title: specialtyLabel,
+        displayName: `${specialtyLabel} ${specialistName}`,
+        type: 'specialist' as const,
+      };
+    }
+    return {
+      name: 'Doktorum Ol Sağlık İçerik Editörleri',
+      title: 'Sağlık İçerik Editörleri',
+      displayName: 'Doktorum Ol Sağlık İçerik Editörleri',
+      type: 'editorial' as const,
+    };
+  }, [blog, specialist]);
+
+  const reviewedDate = blog?.updated_at || blog?.published_at || '';
+
   const shareUrl = typeof window !== 'undefined' ? `https://doktorumol.com.tr/blog/${blog?.slug || ''}` : '';
   const shareTitle = blog?.title || "";
   const shareDescription = blog?.excerpt || "";
@@ -406,10 +429,13 @@ const BlogDetail = () => {
             "datePublished": blog.published_at,
             "dateModified": blog.updated_at,
             "wordCount": blog.word_count || undefined,
-            "author": {
-              "@type": "Person",
-              "name": blog.author_name
-            },
+            "author": reviewer
+              ? {
+                  "@type": "Person",
+                  "name": reviewer.name,
+                  ...(reviewer.type === 'specialist' ? { "jobTitle": reviewer.title } : {}),
+                }
+              : { "@type": "Person", "name": blog.author_name },
             "publisher": {
               "@type": "Organization",
               "name": "Doktorum Ol",
@@ -424,6 +450,40 @@ const BlogDetail = () => {
             }
           })}
         </script>
+
+        {/* JSON-LD MedicalWebPage - E-E-A-T: yazar + uzman inceleme sinyali */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "MedicalWebPage",
+            "name": blog.title,
+            "description": ogDescription,
+            "url": `https://doktorumol.com.tr/blog/${blog.slug}`,
+            "datePublished": blog.published_at,
+            "dateModified": blog.updated_at,
+            "lastReviewed": reviewedDate || blog.updated_at,
+            "inLanguage": "tr-TR",
+            "author": reviewer
+              ? {
+                  "@type": "Person",
+                  "name": reviewer.name,
+                  ...(reviewer.type === 'specialist' ? { "jobTitle": reviewer.title } : {}),
+                }
+              : { "@type": "Person", "name": blog.author_name },
+            "reviewedBy": reviewer && reviewer.type === 'specialist'
+              ? { "@type": "Person", "name": reviewer.name, "jobTitle": reviewer.title }
+              : { "@type": "Organization", "name": "Doktorum Ol Sağlık İçerik Editörleri" },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Doktorum Ol",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://doktorumol.com.tr/logo.png"
+              }
+            }
+          })}
+        </script>
+
         
         {/* JSON-LD BreadcrumbList */}
         <script type="application/ld+json">
@@ -573,6 +633,32 @@ const BlogDetail = () => {
               content={processedContent}
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-headings:scroll-mt-20"
             />
+
+            {/* E-E-A-T: Uzman inceleme rozeti + tarih */}
+            {reviewer && (
+              <div className="mt-8 flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                <ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
+                <div className="text-sm leading-relaxed text-emerald-900">
+                  <p>
+                    Bu içerik{" "}
+                    <span className="font-semibold">{reviewer.displayName}</span>{" "}
+                    tarafından incelenmiştir.
+                  </p>
+                  {reviewedDate && (
+                    <p className="mt-0.5 text-emerald-700">
+                      Son güncelleme / inceleme:{" "}
+                      {new Date(reviewedDate).toLocaleDateString('tr-TR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            
+
             
             {specialist && (
               <BlogSpecialistCard specialist={specialist} />
