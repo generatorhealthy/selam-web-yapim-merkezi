@@ -155,6 +155,9 @@ Options -Indexes
 # Specific URL redirects
 RewriteRule ^premium-paket-33-3/?$ /paketler [R=301,L]
 
+# Explicit duplicate-content consolidation (SEO: keep only /blog/* canonical)
+RewriteRule ^uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/?$ /blog/uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur [R=301,L,NE]
+
 # Redirect old doctor URLs to new format
 # /uzmanlik-alanlari/doktor/doctor-name -> /specialty/doctor-name
 RewriteRule ^uzmanlik-alanlari/doktor/([^/]+)/?$ /$1 [R=301,L]
