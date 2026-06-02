@@ -382,11 +382,14 @@ const BlogDetail = () => {
     (blog.excerpt && blog.excerpt.trim()) ||
     stripHtmlSnippet(blog.content) ||
     blog.title;
+  const pageTitle =
+    (blog.seo_title && blog.seo_title.trim()) ||
+    `${blog.title} | Doktorum Ol Blog`;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Helmet>
-        <title>{blog.title} | Doktorum Ol Blog</title>
+        <title>{pageTitle}</title>
         <meta name="description" content={ogDescription} />
         
         {/* Open Graph / Facebook */}
