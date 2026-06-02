@@ -551,9 +551,9 @@ const BlogDetail = () => {
                   <User className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">
                     {blog.author_name === 'Admin' || blog.author_name === 'admin' 
-                      ? 'İçerik'
+                      ? 'Sağlık İçerik Editörü'
                       : blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                        ? 'Editör' 
+                        ? 'Sağlık İçerik Editörü' 
                         : blog.author_type === 'specialist' && blog.specialists?.specialty
                           ? blog.specialists.specialty
                           : blog.author_name}
@@ -717,11 +717,11 @@ const BlogDetail = () => {
               <div>
                 <h3 className="font-semibold text-lg mb-2">
                   {blog.author_name === 'Admin' || blog.author_name === 'admin' 
-                    ? 'İçerik'
+                    ? 'Doktorum Ol Sağlık İçerik Editörleri'
                     : blog.author_type === 'specialist' 
                       ? blog.author_name
                       : (blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                        ? 'Editör' 
+                        ? 'Doktorum Ol Sağlık İçerik Editörleri' 
                         : blog.author_name)}
                 </h3>
               </div>
