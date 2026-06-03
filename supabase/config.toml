@@ -175,3 +175,6 @@ verify_jwt = false
 
 [functions.bulk-update-seo-titles]
 verify_jwt = false
+
+[functions.seo-gen-desc-batch]
+verify_jwt = false
