@@ -8,7 +8,8 @@ const corsHeaders = {
 
 interface TestResultEmailRequest {
   testResultId: string;
-  specialistEmail: string;
+  specialistId?: string;
+  specialistEmail?: string;
   patientName: string;
   patientPhone: string;
   testTitle: string;
