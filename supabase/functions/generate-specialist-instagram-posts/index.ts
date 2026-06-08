@@ -15,7 +15,7 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const BUCKET = "instagram-posts";
-const MODEL = "google/gemini-2.5-flash-image";
+const MODEL = "google/gemini-3-pro-image-preview";
 
 class AiGatewayError extends Error {
   status: number;
