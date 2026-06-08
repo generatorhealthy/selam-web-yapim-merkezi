@@ -107,6 +107,15 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const auth = await verifyAdminOrCron(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+
   try {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     const sheetsKey = Deno.env.get("GOOGLE_SHEETS_API_KEY");
