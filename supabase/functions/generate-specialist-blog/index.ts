@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
+import { verifyAuthenticated } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -120,7 +120,7 @@ declare const EdgeRuntime: { waitUntil: (p: Promise<unknown>) => void };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const __auth = await verifyAdminOrCron(req);
+  const __auth = await verifyAuthenticated(req);
   if (!__auth.ok) return new Response(JSON.stringify({ error: __auth.error }), { status: __auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   try {
