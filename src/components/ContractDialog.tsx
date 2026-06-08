@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
+import { sanitizeRichHtml } from "@/utils/sanitize";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ContractDialogProps {
@@ -261,7 +262,7 @@ IP Adresi: ${clientIP}`;
             <div 
               className="text-base leading-relaxed font-sans text-foreground"
               dangerouslySetInnerHTML={{ 
-                __html: contractType === "preInfo" ? contractContent : getDistanceSalesContent().replace(/\n/g, '<br>')
+                __html: sanitizeRichHtml(contractType === "preInfo" ? contractContent : getDistanceSalesContent().replace(/\n/g, '<br>'))
               }}
             />
           )}

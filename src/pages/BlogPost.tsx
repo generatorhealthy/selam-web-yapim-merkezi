@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Clock, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { findDoctorBySlug, createDoctorSlug } from "@/utils/doctorUtils";
+import { sanitizeRichHtml } from "@/utils/sanitize";
 
 const BlogPost = () => {
   const { doctorName, blogSlug } = useParams();
@@ -173,7 +174,7 @@ const BlogPost = () => {
             <CardContent className="p-8">
               <div 
                 className="prose prose-lg max-w-none"
-                dangerouslySetInnerHTML={{ __html: blog.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(blog.content) }}
               />
             </CardContent>
           </Card>

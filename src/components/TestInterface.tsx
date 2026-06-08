@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Play, FileText, User } from 'lucide-react';
+import { sanitizeRichHtml } from '@/utils/sanitize';
 
 interface Test {
   id: string;
