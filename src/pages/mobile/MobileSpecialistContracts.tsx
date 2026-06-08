@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { MobileEmptyState } from "@/components/mobile/MobileEmptyState";
 import { FileSignature, FileText, Download, X } from "lucide-react";
+import { sanitizeRichHtml } from "@/utils/sanitize";
 
 export default function MobileSpecialistContracts() {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ export default function MobileSpecialistContracts() {
       });
       return;
     }
-    setViewer({ title, html: content });
+    setViewer({ title, html: sanitizeRichHtml(content) });
   };
 
   return (
