@@ -7,16 +7,23 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
 export async function verifyAdminOrCron(
   req: Request,
 ): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const CRON_SECRET = Deno.env.get("CRON_SECRET");
+
+  // Trusted scheduled (pg_cron) invocation via shared secret header.
+  const cronHeader = req.headers.get("x-cron-secret");
+  if (CRON_SECRET && cronHeader && cronHeader === CRON_SECRET) {
+    return { ok: true };
+  }
+
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
 
   if (!token) {
     return { ok: false, status: 401, error: "Yetkilendirme gerekli" };
   }
-
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
   // Trusted server-to-server / cron invocation.
   if (token === SERVICE_ROLE_KEY) {
