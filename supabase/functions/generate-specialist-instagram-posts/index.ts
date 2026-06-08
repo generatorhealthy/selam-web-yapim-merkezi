@@ -202,52 +202,70 @@ serve(async (req) => {
         { onConflict: "specialist_id" },
       );
 
-    // Load templates + photo
-    const coverTpl = loadTemplate("cover");
-    const aboutTpl = loadTemplate("about");
-    const expertiseTpl = loadTemplate("expertise");
+    const sid = specialistId;
 
-    const photoB64 = spec.profile_picture ? await urlToBase64(spec.profile_picture) : null;
-    if (!photoB64) {
-      throw new Error("Uzman profil fotoğrafı bulunamadı veya indirilemedi");
-    }
+    // Heavy work runs in the background so the client doesn't time out waiting
+    // for 3 sequential image generations. The UI follows status via realtime.
+    const work = (async () => {
+      try {
+        const coverTpl = loadTemplate("cover");
+        const aboutTpl = loadTemplate("about");
+        const expertiseTpl = loadTemplate("expertise");
 
-    const prompts = buildPrompts({
-      name: spec.name,
-      specialty: spec.specialty ?? "",
-      bio: spec.bio,
-    });
+        const photoB64 = spec.profile_picture ? await urlToBase64(spec.profile_picture) : null;
+        if (!photoB64) {
+          throw new Error("Uzman profil fotoğrafı bulunamadı veya indirilemedi");
+        }
 
-    // Generate sequentially to stay under Edge Runtime memory limits.
-    const coverBytes = await generateImage(prompts.cover, [coverTpl, photoB64]);
-    const aboutBytes = await generateImage(prompts.about, [aboutTpl, photoB64]);
-    const expertiseBytes = await generateImage(prompts.expertise, [expertiseTpl]);
+        const prompts = buildPrompts({
+          name: spec.name,
+          specialty: spec.specialty ?? "",
+          bio: spec.bio,
+        });
 
-    // Upload
-    const [coverUrl, aboutUrl, expertiseUrl] = await Promise.all([
-      uploadImage(supabase, specialistId, "cover", coverBytes),
-      uploadImage(supabase, specialistId, "about", aboutBytes),
-      uploadImage(supabase, specialistId, "expertise", expertiseBytes),
-    ]);
+        // Generate sequentially to stay under Edge Runtime memory limits.
+        const coverBytes = await generateImage(prompts.cover, [coverTpl, photoB64]);
+        const aboutBytes = await generateImage(prompts.about, [aboutTpl, photoB64]);
+        const expertiseBytes = await generateImage(prompts.expertise, [expertiseTpl]);
 
-    await supabase
-      .from("specialist_instagram_posts")
-      .upsert(
-        {
-          specialist_id: specialistId,
-          cover_url: coverUrl,
-          about_url: aboutUrl,
-          expertise_url: expertiseUrl,
-          status: "ready",
-          error_message: null,
-          generated_at: new Date().toISOString(),
-        },
-        { onConflict: "specialist_id" },
-      );
+        const [coverUrl, aboutUrl, expertiseUrl] = await Promise.all([
+          uploadImage(supabase, sid, "cover", coverBytes),
+          uploadImage(supabase, sid, "about", aboutBytes),
+          uploadImage(supabase, sid, "expertise", expertiseBytes),
+        ]);
+
+        await supabase
+          .from("specialist_instagram_posts")
+          .upsert(
+            {
+              specialist_id: sid,
+              cover_url: coverUrl,
+              about_url: aboutUrl,
+              expertise_url: expertiseUrl,
+              status: "ready",
+              error_message: null,
+              generated_at: new Date().toISOString(),
+            },
+            { onConflict: "specialist_id" },
+          );
+      } catch (e) {
+        console.error("generate-specialist-instagram-posts bg error:", e);
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        await supabase
+          .from("specialist_instagram_posts")
+          .upsert(
+            { specialist_id: sid, status: "failed", error_message: msg },
+            { onConflict: "specialist_id" },
+          );
+      }
+    })();
+
+    // Keep the function alive until background work completes.
+    (globalThis as any).EdgeRuntime?.waitUntil?.(work);
 
     return new Response(
-      JSON.stringify({ success: true, coverUrl, aboutUrl, expertiseUrl }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({ started: true }),
+      { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
     console.error("generate-specialist-instagram-posts error:", e);
