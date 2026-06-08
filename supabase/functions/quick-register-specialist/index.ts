@@ -157,6 +157,14 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Only authenticated admin/staff (or trusted server) may create accounts.
+  const auth = await verifyAdminOrCron(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const body = await req.json();
     const { rawText, profile_picture, mode } = body;
