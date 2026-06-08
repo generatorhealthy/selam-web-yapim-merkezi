@@ -154,7 +154,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Log email to database
     try {
-      const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
       await supabaseAdmin.from('brevo_email_logs').insert({
         recipient_email: specialistEmail,
         recipient_name: 'Uzman Doktor',
