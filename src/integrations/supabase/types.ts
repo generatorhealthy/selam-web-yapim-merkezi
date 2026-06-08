@@ -4290,34 +4290,28 @@ export type Database = {
       }
       iyzico_settings: {
         Row: {
-          api_key: string
           created_at: string
           description: string | null
           id: string
           sandbox_mode: boolean | null
-          secret_key: string
           subscription_reference_code: string | null
           updated_at: string
           webhook_url: string | null
         }
         Insert: {
-          api_key: string
           created_at?: string
           description?: string | null
           id?: string
           sandbox_mode?: boolean | null
-          secret_key: string
           subscription_reference_code?: string | null
           updated_at?: string
           webhook_url?: string | null
         }
         Update: {
-          api_key?: string
           created_at?: string
           description?: string | null
           id?: string
           sandbox_mode?: boolean | null
-          secret_key?: string
           subscription_reference_code?: string | null
           updated_at?: string
           webhook_url?: string | null
