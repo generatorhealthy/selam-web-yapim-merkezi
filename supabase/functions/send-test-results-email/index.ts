@@ -39,13 +39,42 @@ const handler = async (req: Request): Promise<Response> => {
 
     const {
       testResultId,
-      specialistEmail,
+      specialistId,
+      specialistEmail: specialistEmailFromBody,
       patientName,
       patientPhone,
       testTitle,
       answers,
       results
     }: TestResultEmailRequest = await req.json();
+
+    // Resolve specialist email server-side (do not trust client). Prefer DB lookup by specialistId.
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    let specialistEmail = '';
+    if (specialistId && specialistId !== 'genel') {
+      const { data: spec } = await supabaseAdmin
+        .from('specialists')
+        .select('email')
+        .eq('id', specialistId)
+        .maybeSingle();
+      specialistEmail = spec?.email ?? '';
+    }
+    // Fallback to body value only if lookup yielded nothing (backwards compat)
+    if (!specialistEmail && specialistEmailFromBody) {
+      specialistEmail = specialistEmailFromBody;
+    }
+
+    if (!specialistEmail) {
+      console.error('No specialist email resolved');
+      return new Response(
+        JSON.stringify({ error: 'Specialist email not found' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     console.log('Test result email request received:', {
       testResultId,
