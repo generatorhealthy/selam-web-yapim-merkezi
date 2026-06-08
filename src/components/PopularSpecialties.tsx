@@ -29,10 +29,7 @@ const PopularSpecialties = () => {
 
   const fetchSpecialtyCounts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('specialists')
-        .select('specialty')
-        .eq('is_active', true);
+      const { data, error } = await supabase.rpc('get_specialist_basic_info');
 
       if (error) {
         console.error('Uzman sayıları çekilirken hata:', error);

@@ -33,10 +33,10 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
           const shuffled = [...reviewsData].sort(() => 0.5 - Math.random());
           const selectedReviews = shuffled.slice(0, 4);
           const specialistIds = [...new Set(selectedReviews.map(r => r.specialist_id))];
-          const { data: specialistsData } = await supabase
-            .from('specialists')
-            .select('id, name, profile_picture')
-            .in('id', specialistIds);
+          const { data: allSpecialists } = await supabase.rpc('get_specialist_basic_info');
+          const specialistsData = (allSpecialists || [])
+            .filter((s: any) => specialistIds.includes(s.id))
+            .map((s: any) => ({ id: s.id, name: s.name, profile_picture: s.profile_picture }));
           setReviews(selectedReviews);
           setSpecialists(specialistsData || []);
         }

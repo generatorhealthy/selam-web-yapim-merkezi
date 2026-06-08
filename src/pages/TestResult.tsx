@@ -49,12 +49,9 @@ const TestResult = () => {
         .eq('id', testId)
         .single();
 
-      // Uzman bilgisini al
-      const { data: specialistData } = await supabase
-        .from('specialists')
-        .select('name')
-        .eq('id', specialistId)
-        .single();
+      // Uzman bilgisini al (güvenli RPC üzerinden)
+      const { data: specialistList } = await supabase.rpc('get_specialist_basic_info');
+      const specialistData = (specialistList || []).find((s: any) => s.id === specialistId);
 
       if (testData) setTestTitle(testData.title);
       if (specialistData) setSpecialistName(specialistData.name);

@@ -205,13 +205,12 @@ const BlogDetail = () => {
             specialists: null,
           };
 
-      // Uzman tarafından yazılmış bloglarda uzmanlık bilgisini tamamla
+      // Uzman tarafından yazılmış bloglarda uzmanlık bilgisini tamamla (güvenli RPC)
       if (blogPostData?.author_type === 'specialist' && blogPostData.author_id) {
-        const { data: specialistData } = await supabase
-          .from('specialists')
-          .select('specialty')
-          .eq('user_id', blogPostData.author_id)
-          .maybeSingle();
+        const { data: specialistList } = await supabase.rpc('get_specialist_basic_info');
+        const specialistData = (specialistList || []).find(
+          (s: any) => s.user_id === blogPostData.author_id
+        );
 
         normalizedBlog.specialists = specialistData ? { specialty: specialistData.specialty } : null;
       }
@@ -240,13 +239,12 @@ const BlogDetail = () => {
         })));
       }
 
-      // specialist_id varsa uzman kartını göster
+      // specialist_id varsa uzman kartını göster (güvenli RPC)
       if (normalizedBlog.specialist_id) {
-        const { data: specialistData } = await supabase
-          .from('specialists')
-          .select('id, name, specialty, city, experience, bio, profile_picture, online_consultation, face_to_face_consultation, slug')
-          .eq('id', normalizedBlog.specialist_id)
-          .maybeSingle();
+        const { data: specialistList } = await supabase.rpc('get_specialist_basic_info');
+        const specialistData = (specialistList || []).find(
+          (s: any) => s.id === normalizedBlog.specialist_id
+        );
 
         if (specialistData) {
           setSpecialist(specialistData);
