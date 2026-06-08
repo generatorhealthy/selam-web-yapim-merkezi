@@ -15,7 +15,7 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const BUCKET = "instagram-posts";
-const MODEL = "google/gemini-2.5-flash-image";
+const MODEL = "google/gemini-3-pro-image-preview";
 
 class AiGatewayError extends Error {
   status: number;
@@ -110,34 +110,41 @@ function buildPrompts(s: {
   specialty: string;
   bio: string | null;
 }) {
-  const bioShort = (s.bio ?? "").replace(/\s+/g, " ").trim().slice(0, 380);
+  const bioShort = (s.bio ?? "").replace(/\s+/g, " ").trim().slice(0, 300);
+
+  const TR_RULES = `
+CRITICAL TEXT RULES — read carefully:
+- This is TURKISH text. Render every letter EXACTLY as written, character by character, preserving all Turkish diacritics: ç Ç ğ Ğ ı I i İ ö Ö ş Ş ü Ü.
+- Do NOT invent, translate, misspell, duplicate, or hallucinate words. Do NOT add gibberish or fake Latin-looking words. If you cannot render a word perfectly, render less text rather than wrong text.
+- Keep text crisp, perfectly legible, vector-clean, no blur, no warping, correct kerning.
+QUALITY: Output at maximum resolution, ultra sharp, photo-real portrait, vivid but natural colors, professional studio quality, no JPEG artifacts, no smudging.`;
 
   const cover = `
 You are editing the FIRST attached image (Instagram cover template).
-KEEP the exact layout, fonts, colors, background pattern, "doktorum ol" logo position at top-left, the blue specialty pill, the quote text style, the two icon boxes at the bottom-left (brain + people icons), the rounded white bottom card with the icon+URL.
-REPLACE ONLY:
-  - The portrait on the right side: use the person in the SECOND attached image. Match the original lighting and crop style (chest-up portrait, soft background blend on the left edge).
-  - The big dark-navy name "Tuğba Yılmaz" -> "${s.name}" (split first name / last name on two lines, same font weight & size).
-  - The specialty pill text "Psikolog" -> "${s.specialty}".
-DO NOT change: doktorumol logo, icon glyphs, "Bilimsel Yaklaşım / Güvenilir Destek / Ruh Sağlığınız / Bizimle Güvende" labels, footer URL "doktorumol.com.tr/uzmanlar", quote text "Ruhsal iyi oluş halinizi artırmak için yanınızdayız.".
-Square 1:1, ultra sharp, vivid colors, professional.`.trim();
+KEEP the exact layout, fonts, colors, background pattern, "doktorum ol" logo at top-left, the blue specialty pill, the quote text style, the two icon boxes at the bottom-left (brain + people icons), the rounded white bottom card with the icon+URL.
+REPLACE ONLY these texts, rendered EXACTLY:
+  - The portrait on the right side: use the person in the SECOND attached image. Match the original lighting and crop style (chest-up portrait, soft background blend on the left edge). Keep the face sharp and natural.
+  - The big dark-navy name -> exactly "${s.name}" (split first name on line 1, last name on line 2, same font weight & size).
+  - The specialty pill text -> exactly "${s.specialty}".
+KEEP these texts UNCHANGED and spelled exactly: "doktorum ol", "Bilimsel Yaklaşım", "Güvenilir Destek", "Ruh Sağlığınız", "Bizimle Güvende", "doktorumol.com.tr/uzmanlar", and the quote "Ruhsal iyi oluş halinizi artırmak için yanınızdayız."
+${TR_RULES}`.trim();
 
   const about = `
 You are editing the FIRST attached image (Instagram "Hakkında" template).
 KEEP everything: layout, "doktorum ol" logo, blue specialty pill with brain icon, big "Hakkında" headline, decorative blue underline, two icon boxes "Bilimsel Yaklaşım / Güvenilir Destek" and "Ruh Sağlığınız / Bizimle Güvende", footer card with URL.
 REPLACE ONLY:
-  - The portrait on the right: use the person in the SECOND attached image (chest-up, same lighting/crop).
-  - The specialty pill text -> "${s.specialty}".
-  - The body paragraphs under "Hakkında": rewrite as 2 short paragraphs (each 2-3 lines) summarising this bio about ${s.name}: "${bioShort}". Same font, same dark-navy color, same line spacing.
-DO NOT change the headline word "Hakkında", logo, icons, labels, or footer URL.
-Square 1:1, ultra sharp, vivid colors, professional.`.trim();
+  - The portrait on the right: use the person in the SECOND attached image (chest-up, same lighting/crop). Keep the face sharp and natural.
+  - The specialty pill text -> exactly "${s.specialty}".
+  - The body paragraphs under "Hakkında": write 2 short paragraphs (each 2-3 lines) in proper, grammatically correct TURKISH, based on this bio about ${s.name}: "${bioShort}". Use only real Turkish words and correct spelling. Same font, same dark-navy color, same line spacing.
+KEEP these UNCHANGED and spelled exactly: the headline "Hakkında", "doktorum ol", icon labels, "doktorumol.com.tr/uzmanlar".
+${TR_RULES}`.trim();
 
   const expertise = `
 You are editing the FIRST attached image (Instagram "Uzmanlık Alanları" template).
 KEEP everything: "doktorum ol" logo at top, big headline "Uzmanlık Alanları" (with "Alanları" in blue), decorative underline, the 2x3 grid of 6 rounded blue icon tiles with white-line icons + label underneath, the footer card with URL, background leaves pattern.
-REPLACE ONLY the 6 labels (and their corresponding white-line icons if a label changes) with the most relevant sub-areas for a "${s.specialty}". Pick 6 common expertise topics in Turkish, 1-3 words each, same font/size/color. Icons must stay the same flat white-line style on the same blue gradient rounded square.
-DO NOT change logo, headline, footer URL, background, or color palette.
-Square 1:1, ultra sharp, vivid colors, professional.`.trim();
+REPLACE ONLY the 6 labels (and their matching white-line icons) with the most relevant expertise sub-areas for a "${s.specialty}". Pick 6 common, real expertise topics in correct Turkish, 1-3 words each, same font/size/color. Icons stay the same flat white-line style on the same blue gradient rounded square.
+KEEP these UNCHANGED and spelled exactly: the headline "Uzmanlık Alanları", "doktorum ol", "doktorumol.com.tr/uzmanlar".
+${TR_RULES}`.trim();
 
   return { cover, about, expertise };
 }
