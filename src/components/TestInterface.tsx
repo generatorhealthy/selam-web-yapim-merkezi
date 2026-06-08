@@ -176,7 +176,7 @@ const TestInterface = () => {
             <CardContent>
               {test.content && (
                 <div className="prose max-w-none">
-                  <div dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(test.content) }} />>
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(test.content) }} />
                 </div>
               )}
 
