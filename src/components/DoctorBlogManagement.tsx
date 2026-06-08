@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeRichHtml } from "@/utils/sanitize";
 import { Plus, Eye, Edit, Trash2, Sparkles, FileText, Clock, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -455,7 +456,7 @@ const DoctorBlogManagement = ({ doctorId, doctorName, doctorSpecialty }: DoctorB
 
                   <div>
                     <label className="text-sm font-semibold mb-2 block">İçerik</label>
-                    <div className="border rounded-xl p-4 max-h-64 overflow-y-auto bg-muted/30 text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: aiGenerated.content }} />
+                    <div className="border rounded-xl p-4 max-h-64 overflow-y-auto bg-muted/30 text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(aiGenerated.content) }} />
                   </div>
 
                   <div>
@@ -610,7 +611,7 @@ const DoctorBlogManagement = ({ doctorId, doctorName, doctorSpecialty }: DoctorB
                             <img src={blog.featured_image} alt={blog.title} className="w-full h-64 object-cover rounded-xl" />
                           )}
                           <div className="bg-muted/30 p-5 rounded-xl">
-                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: blog.content }} />
+                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(blog.content) }} />
                           </div>
                           {(blog.seo_title || blog.seo_description || blog.keywords) && (
                             <div className="bg-primary/5 p-4 rounded-xl space-y-2">

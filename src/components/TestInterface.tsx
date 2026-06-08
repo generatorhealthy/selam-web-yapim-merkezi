@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Play, FileText, User } from 'lucide-react';
+import { sanitizeRichHtml } from '@/utils/sanitize';
 
 interface Test {
   id: string;
@@ -176,7 +177,7 @@ const TestInterface = () => {
             <CardContent>
               {test.content && (
                 <div className="prose max-w-none">
-                  <div dangerouslySetInnerHTML={{ __html: test.content }} />
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(test.content) }} />
                 </div>
               )}
 
