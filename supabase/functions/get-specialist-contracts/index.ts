@@ -30,13 +30,43 @@ serve(async (req) => {
   }
 
   try {
-    const { email, name }: RequestBody = await req.json();
-    console.log('get-specialist-contracts called with:', { email, name });
-
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // Auth: oturum açmış kullanıcı zorunlu
+    const authHeader = req.headers.get('Authorization') || '';
+    const userToken = authHeader.replace(/^Bearer\s+/i, '').trim();
+    if (!userToken) {
+      return new Response(JSON.stringify({ error: 'Yetkilendirme gerekli' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const { data: { user }, error: userErr } = await supabaseAdmin.auth.getUser(userToken);
+    if (userErr || !user) {
+      return new Response(JSON.stringify({ error: 'Geçersiz oturum' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { data: profile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('role, is_approved')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const isAdminStaff = !!profile && ['admin', 'staff'].includes(profile.role) && profile.is_approved === true;
+
+    let { email, name }: RequestBody = await req.json();
+    console.log('get-specialist-contracts called with:', { email, name, isAdminStaff });
+
+    // Admin/staff dışındaki kullanıcılar yalnızca KENDİ e-postalarının sözleşmelerini görebilir.
+    // İsim bazlı bulanık arama (enumeration riski) sadece admin/staff için açıktır.
+    if (!isAdminStaff) {
+      email = user.email ?? null;
+      name = null;
+    }
+
 
     // Helper to run the base query
     // Not: deleted_at filtresi kaldırıldı — uzman kendi onaylı sözleşmesini her durumda görebilmeli

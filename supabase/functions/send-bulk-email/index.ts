@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +67,14 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Auth: yalnızca admin/staff veya cron erişebilir
+  const auth = await verifyAdminOrCron(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status, headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
+
   try {
     const { recipients, subject, htmlContent, plainText }: BulkEmailRequest = await req.json();
 
@@ -86,24 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const results: Array<{ email: string; status: string; error?: string; messageId?: string }> = [];
 
-    // Auth: only admin/staff can use this
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-      if (user) {
-        const { data: profile } = await supabaseAdmin
-          .from('user_profiles')
-          .select('role')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        if (!profile || profile.role !== 'admin') {
-          return new Response(JSON.stringify({ error: 'Yalnızca admin erişebilir' }), {
-            status: 403, headers: { "Content-Type": "application/json", ...corsHeaders }
-          });
-        }
-      }
-    }
+
 
     for (const r of recipients) {
       const email = (r.email || "").trim().toLowerCase();
