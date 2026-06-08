@@ -105,18 +105,36 @@ serve(async (req) => {
     }
 
     const newSubRef = body.subscriptionReferenceCode || body.subscription_reference_code;
-    const customerEmail = (body.customerEmail || body.customer_email || "")?.toLowerCase().trim();
     const newCustomerRef = body.customerReferenceCode || body.customer_reference_code;
 
-    // Load change record
-    let changeRecord: any = null;
-    if (changeId) {
-      const { data } = await supabase.from("payment_method_changes").select("*").eq("id", changeId).maybeSingle();
-      changeRecord = data;
+    // SECURITY: bind this callback to a legitimate, server-created change request.
+    // The changeId is an unguessable UUID issued when the user starts a card change.
+    // Without a matching, not-yet-completed record we refuse to cancel/mutate any
+    // subscription, so a forged callback can no longer terminate real subscriptions
+    // or inject fake references.
+    if (!changeId) {
+      console.warn("Callback rejected: missing changeId — possible forged request.");
+      return new Response(JSON.stringify({ error: "changeId gerekli" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const targetEmail = customerEmail || changeRecord?.specialist_email;
-    const oldSubRef = changeRecord?.old_subscription_ref;
+    const { data: changeRecord } = await supabase
+      .from("payment_method_changes")
+      .select("*")
+      .eq("id", changeId)
+      .maybeSingle();
+
+    if (!changeRecord || changeRecord.status === "completed") {
+      console.warn("Callback rejected: changeId not found or already completed.");
+      return new Response(JSON.stringify({ error: "Geçersiz veya tamamlanmış istek" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Email comes ONLY from the trusted server-side record, never from the request body.
+    const targetEmail = (changeRecord.specialist_email || "").toLowerCase().trim();
+    const oldSubRef = changeRecord.old_subscription_ref;
 
     console.log("Target email:", targetEmail, "| New sub:", newSubRef, "| Old sub:", oldSubRef);
 
@@ -126,6 +144,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     // 1. Cancel the OLD subscription on Iyzico (if exists). This is crucial to avoid double charges.
     if (oldSubRef) {
