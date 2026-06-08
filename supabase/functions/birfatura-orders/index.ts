@@ -18,6 +18,26 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Token validation. Enforced only when BIRFATURA_API_TOKEN secret is configured,
+  // so the existing integration keeps working until the token is set on the BirFatura side.
+  const BIRFATURA_API_TOKEN = Deno.env.get('BIRFATURA_API_TOKEN');
+  if (BIRFATURA_API_TOKEN) {
+    const reqUrl = new URL(req.url);
+    const provided = req.headers.get('token') || req.headers.get('x-token')
+      || req.headers.get('x-api-key') || req.headers.get('api-key')
+      || req.headers.get('api_password')
+      || reqUrl.searchParams.get('token') || reqUrl.searchParams.get('apiKey') || '';
+    if (provided !== BIRFATURA_API_TOKEN) {
+      console.warn('BirFatura request rejected: invalid token');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  } else {
+    console.warn('BIRFATURA_API_TOKEN not set — request allowed without token (configure to enforce).');
+  }
+
+
   try {
     let body = null;
     try {
