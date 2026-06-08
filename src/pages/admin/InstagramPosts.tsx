@@ -88,7 +88,7 @@ export default function InstagramPosts() {
         body: { specialistId, force: true },
       });
       if (error) throw error;
-      toast.success("Üretim başlatıldı. 30 sn içinde hazır olacak.");
+      toast.success("Üretim başlatıldı. Görseller 1-2 dk içinde hazır olacak.");
       await load();
     } catch (e: any) {
       toast.error("Üretim başarısız: " + (e?.message ?? e));
