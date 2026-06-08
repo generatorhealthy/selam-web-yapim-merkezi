@@ -94,24 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const results: Array<{ email: string; status: string; error?: string; messageId?: string }> = [];
 
-    // Auth: only admin/staff can use this
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-      if (user) {
-        const { data: profile } = await supabaseAdmin
-          .from('user_profiles')
-          .select('role')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        if (!profile || profile.role !== 'admin') {
-          return new Response(JSON.stringify({ error: 'Yalnızca admin erişebilir' }), {
-            status: 403, headers: { "Content-Type": "application/json", ...corsHeaders }
-          });
-        }
-      }
-    }
+
 
     for (const r of recipients) {
       const email = (r.email || "").trim().toLowerCase();
