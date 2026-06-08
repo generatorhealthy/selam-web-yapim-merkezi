@@ -6574,6 +6574,24 @@ export type Database = {
           referrer_name: string
         }[]
       }
+      get_specialist_basic_info: {
+        Args: never
+        Returns: {
+          bio: string
+          city: string
+          experience: number
+          face_to_face_consultation: boolean
+          id: string
+          name: string
+          online_consultation: boolean
+          profile_picture: string
+          rating: number
+          reviews_count: number
+          slug: string
+          specialty: string
+          user_id: string
+        }[]
+      }
       get_specialist_follower_count: {
         Args: { p_specialist_id: string }
         Returns: number
