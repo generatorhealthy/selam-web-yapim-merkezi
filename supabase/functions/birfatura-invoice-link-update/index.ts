@@ -16,7 +16,19 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('x-api-key') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('authorization') || url.searchParams.get('token') || url.searchParams.get('apikey') || url.searchParams.get('apiKey') || '';
-    // Token optional for now
+
+    // Token validation. Enforced only when BIRFATURA_WEBHOOK_SECRET secret is configured,
+    // so the existing webhook keeps working until the token is set on the BirFatura side.
+    const BIRFATURA_WEBHOOK_SECRET = Deno.env.get('BIRFATURA_WEBHOOK_SECRET');
+    if (BIRFATURA_WEBHOOK_SECRET) {
+      const cleaned = token.replace(/^Bearer\s+/i, '').trim();
+      if (cleaned !== BIRFATURA_WEBHOOK_SECRET) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
 
     // Parse body (accept both TR and EN keys)
     let payload: any = {};
