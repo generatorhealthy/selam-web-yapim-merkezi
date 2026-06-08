@@ -83,6 +83,14 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const auth = await verifyAdminOrCron(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+
   try {
     console.log('Auto-approve from Iyzico started at:', new Date().toISOString());
 
