@@ -10,6 +10,17 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Optional webhook secret validation (enforced when WAHA_WEBHOOK_SECRET is set)
+  const WAHA_WEBHOOK_SECRET = Deno.env.get('WAHA_WEBHOOK_SECRET');
+  if (WAHA_WEBHOOK_SECRET) {
+    const token = req.headers.get('x-waha-token') || req.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim() || '';
+    if (token !== WAHA_WEBHOOK_SECRET) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   try {
     const body = await req.json();
     console.log('WAHA Webhook received:', JSON.stringify(body).substring(0, 500));
