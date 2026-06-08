@@ -211,14 +211,8 @@ const TestTaking = () => {
       // Specialist ID'si "genel" ise, ilk aktif uzmanı bul veya varsayılan değer kullan
       let finalSpecialistId = specialistId;
       if (specialistId === 'genel' || !specialistId) {
-        const { data: firstSpecialist } = await supabase
-          .from('specialists')
-          .select('id')
-          .eq('is_active', true)
-          .limit(1)
-          .single();
-        
-        finalSpecialistId = firstSpecialist?.id || 'genel';
+        const { data: publicSpecialists } = await supabase.rpc('get_public_specialists');
+        finalSpecialistId = publicSpecialists?.[0]?.id || 'genel';
       }
       
       const testResult = {
@@ -238,28 +232,20 @@ const TestTaking = () => {
 
       if (error) throw error;
 
-      // Send email notification to specialist
+      // Send email notification to specialist (uzman e-postası server tarafında bulunur)
       if (finalSpecialistId && finalSpecialistId !== 'genel') {
         try {
-          const { data: specialistData } = await supabase
-            .from('specialists')
-            .select('email')
-            .eq('id', finalSpecialistId)
-            .single();
-
-          if (specialistData?.email) {
-            await supabase.functions.invoke('send-test-results-email', {
-              body: {
-                testResultId: resultData?.id || 'unknown',
-                specialistEmail: specialistData.email,
-                patientName: patientInfo.name,
-                patientPhone: patientInfo.phone,
-                testTitle: test?.title || 'Test',
-                answers,
-                results
-              }
-            });
-          }
+          await supabase.functions.invoke('send-test-results-email', {
+            body: {
+              testResultId: resultData?.id || 'unknown',
+              specialistId: finalSpecialistId,
+              patientName: patientInfo.name,
+              patientPhone: patientInfo.phone,
+              testTitle: test?.title || 'Test',
+              answers,
+              results
+            }
+          });
         } catch (emailErr) {
           console.error('Email gönderim hatası (kritik değil):', emailErr);
         }
