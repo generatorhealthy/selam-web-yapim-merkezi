@@ -262,6 +262,14 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Auth: yalnızca admin/staff veya cron erişebilir
+  const auth = await verifyAdminOrCron(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ success: false, error: auth.error }), {
+      status: auth.status, headers: jsonHeaders,
+    });
+  }
+
   try {
     let wahaUrl = Deno.env.get('WAHA_BASE_URL') || Deno.env.get('WAHA_API_URL');
     if (wahaUrl?.includes('/dashboard')) {
