@@ -20,15 +20,31 @@ serve(async (req) => {
 
   // Token validation. Enforced only when BIRFATURA_API_TOKEN secret is configured,
   // so the existing integration keeps working until the token is set on the BirFatura side.
+  // BirFatura "Özel Entegrasyon" sends the API Şifresi (API password). Different BirFatura
+  // builds use different header names, so we check every common variant + query params.
   const BIRFATURA_API_TOKEN = Deno.env.get('BIRFATURA_API_TOKEN');
   if (BIRFATURA_API_TOKEN) {
     const reqUrl = new URL(req.url);
-    const provided = req.headers.get('token') || req.headers.get('x-token')
-      || req.headers.get('x-api-key') || req.headers.get('api-key')
-      || req.headers.get('api_password')
-      || reqUrl.searchParams.get('token') || reqUrl.searchParams.get('apiKey') || '';
-    if (provided !== BIRFATURA_API_TOKEN) {
-      console.warn('BirFatura request rejected: invalid token');
+    const headerNames = [
+      'apipassword', 'api_password', 'api-password',
+      'apikey', 'api_key', 'api-key', 'x-api-key',
+      'token', 'x-token', 'apitoken', 'api_token',
+      'password', 'sifre', 'apisifre',
+    ];
+    let provided = '';
+    for (const name of headerNames) {
+      const v = req.headers.get(name);
+      if (v) { provided = v; break; }
+    }
+    if (!provided) {
+      provided = reqUrl.searchParams.get('token')
+        || reqUrl.searchParams.get('apiKey')
+        || reqUrl.searchParams.get('apiPassword')
+        || reqUrl.searchParams.get('apipassword')
+        || '';
+    }
+    if (provided.trim() !== BIRFATURA_API_TOKEN.trim()) {
+      console.warn('BirFatura request rejected: invalid token. Received header names:', JSON.stringify(Object.fromEntries(req.headers.entries())));
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -36,6 +52,8 @@ serve(async (req) => {
   } else {
     console.warn('BIRFATURA_API_TOKEN not set — request allowed without token (configure to enforce).');
   }
+
+
 
 
   try {
