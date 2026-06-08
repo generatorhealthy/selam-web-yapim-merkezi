@@ -61,32 +61,19 @@ const TestInterface = () => {
       setTest(testData);
       setQuestionCount(count || 0);
 
-      // Eğer specialist ID'si varsa uzman bilgisini al
+      // Eğer specialist ID'si varsa uzman bilgisini al (güvenli RPC üzerinden)
       if (specialistId) {
-        const { data: specialistData, error: specialistError } = await supabase
-          .from('specialists')
-          .select('id, name, specialty, profile_picture, city, bio, rating, reviews_count, online_consultation, face_to_face_consultation')
-          .eq('id', specialistId)
-          .eq('is_active', true)
-          .single();
-
-        if (!specialistError && specialistData) {
-          setSpecialist(specialistData);
-        }
+        const { data: list } = await supabase.rpc('get_specialist_basic_info');
+        const found = (list || []).find((s: any) => s.id === specialistId);
+        if (found) setSpecialist(found);
       } else if (specialistName) {
         // specialistName parametresinden uzman bilgisini bul
-        const formattedName = specialistName.replace(/-/g, ' ');
-        const { data: specialistData, error: specialistError } = await supabase
-          .from('specialists')
-          .select('id, name, specialty, profile_picture, city, bio, rating, reviews_count, online_consultation, face_to_face_consultation')
-          .ilike('name', `%${formattedName}%`)
-          .eq('is_active', true)
-          .limit(1)
-          .single();
-
-        if (!specialistError && specialistData) {
-          setSpecialist(specialistData);
-        }
+        const formattedName = specialistName.replace(/-/g, ' ').toLowerCase();
+        const { data: list } = await supabase.rpc('get_specialist_basic_info');
+        const found = (list || []).find((s: any) =>
+          (s.name || '').toLowerCase().includes(formattedName)
+        );
+        if (found) setSpecialist(found);
       }
     } catch (error) {
       console.error('Veri alınırken hata:', error);
