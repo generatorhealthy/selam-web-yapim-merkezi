@@ -12,12 +12,16 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  const auth = await verifyAdminOrCron(req);
-  if (!auth.ok) {
-    return new Response(JSON.stringify({ error: auth.error }), {
-      status: auth.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  // Enforced only when CRON_SECRET is configured (non-breaking rollout for the cron job).
+  if (Deno.env.get('CRON_SECRET')) {
+    const auth = await verifyAdminOrCron(req);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
   }
+
 
   try {
     console.log('Daily auto-order creator started at:', new Date().toISOString());
