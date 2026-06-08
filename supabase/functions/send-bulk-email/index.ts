@@ -66,6 +66,14 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Auth: yalnızca admin/staff veya cron erişebilir
+  const auth = await verifyAdminOrCron(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status, headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
+
   try {
     const { recipients, subject, htmlContent, plainText }: BulkEmailRequest = await req.json();
 
