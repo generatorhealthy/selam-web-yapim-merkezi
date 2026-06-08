@@ -133,16 +133,22 @@ serve(async (req) => {
     console.log("Event type:", eventType, "| Payment success:", isSuccess);
 
     if (isSuccess) {
-      // Try to get email from body first, then from Iyzico API using customerReferenceCode
-      let customerEmail = (body.customerEmail || body.customer_email || "")?.toLowerCase().trim();
-      
-      if (!customerEmail && body.customerReferenceCode) {
-        console.log("No email in callback, fetching from Iyzico API with customerRef:", body.customerReferenceCode);
-        customerEmail = await getCustomerFromIyzico(body.customerReferenceCode);
+      // SECURITY: never trust the email supplied in the callback body — an attacker
+      // could POST a forged "success" event with an arbitrary customerEmail to approve
+      // an unpaid order. The authoritative email MUST be resolved from Iyzico's API
+      // using the customerReferenceCode that only a genuine Iyzico callback contains.
+      const customerRef = body.customerReferenceCode || body.customer_reference_code;
+      let customerEmail: string | null = null;
+
+      if (customerRef) {
+        console.log("Verifying customer via Iyzico API with customerRef:", customerRef);
+        customerEmail = await getCustomerFromIyzico(customerRef);
         console.log("Email from Iyzico API:", customerEmail);
+      } else {
+        console.warn("Callback rejected: no customerReferenceCode to verify against Iyzico — possible forged request.");
       }
 
-      console.log("Başarılı ödeme - Email:", customerEmail);
+      console.log("Başarılı ödeme - Doğrulanmış email:", customerEmail);
 
       if (customerEmail) {
         try {
