@@ -132,36 +132,25 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
 
       if (resultError) throw resultError;
 
-      // Uzman bilgilerini al
-      const { data: specialistData, error: specialistError } = await supabase
-        .from('specialists')
-        .select('email')
-        .eq('id', specialistId)
-        .single();
-
-      if (specialistError) throw specialistError;
-
-      // E-posta gönder
-      if (specialistData.email) {
-        try {
-          const { error: emailError } = await supabase.functions.invoke('send-test-results-email', {
-            body: {
-              testResultId: resultData.id,
-              specialistEmail: specialistData.email,
-              patientName: patientInfo.name,
-              patientPhone: patientInfo.phone,
-              testTitle: testTitle,
-              answers: answers,
-              results: {}
-            }
-          });
-
-          if (emailError) {
-            console.error('E-posta gönderim hatası:', emailError);
+      // E-posta gönder (uzman e-postası server tarafında bulunur)
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-test-results-email', {
+          body: {
+            testResultId: resultData.id,
+            specialistId: specialistId,
+            patientName: patientInfo.name,
+            patientPhone: patientInfo.phone,
+            testTitle: testTitle,
+            answers: answers,
+            results: {}
           }
-        } catch (emailError) {
-          console.error('E-posta gönderiminde beklenmeyen hata:', emailError);
+        });
+
+        if (emailError) {
+          console.error('E-posta gönderim hatası:', emailError);
         }
+      } catch (emailError) {
+        console.error('E-posta gönderiminde beklenmeyen hata:', emailError);
       }
 
       toast({
