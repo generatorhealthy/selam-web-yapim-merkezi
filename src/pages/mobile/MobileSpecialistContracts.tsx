@@ -80,7 +80,7 @@ export default function MobileSpecialistContracts() {
       });
       return;
     }
-    setViewer({ title, html: content });
+    setViewer({ title, html: sanitizeRichHtml(content) });
   };
 
   return (
