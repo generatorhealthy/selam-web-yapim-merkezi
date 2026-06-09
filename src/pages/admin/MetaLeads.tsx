@@ -164,15 +164,29 @@ const MetaLeads = () => {
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("danisan_basvurulari")
-      .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, welcome_sent_at, created_at")
-      .order("created_at", { ascending: false })
-      .limit(2000);
-    if (error) {
+    const pageSize = 1000;
+    let from = 0;
+    const all: Lead[] = [];
+    let fetchError: any = null;
+    while (true) {
+      const { data, error } = await supabase
+        .from("danisan_basvurulari")
+        .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, welcome_sent_at, created_at")
+        .order("created_at", { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (error) {
+        fetchError = error;
+        break;
+      }
+      const batch = (data || []) as Lead[];
+      all.push(...batch);
+      if (batch.length < pageSize) break;
+      from += pageSize;
+    }
+    if (fetchError) {
       toast({ title: "Hata", description: "Danışanlar yüklenemedi.", variant: "destructive" });
     } else {
-      setLeads((data || []) as Lead[]);
+      setLeads(all);
     }
     setLoading(false);
   }, [toast]);
