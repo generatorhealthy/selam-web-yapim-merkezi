@@ -228,22 +228,31 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Webhook secret ZORUNLU — secret tanımlı değilse uç nokta tamamen kapalı
-    const expectedSecret = Deno.env.get("AKBANK_WEBHOOK_SECRET");
-    if (!expectedSecret) {
-      return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const provided =
-      req.headers.get("x-webhook-secret") ||
-      new URL(req.url).searchParams.get("secret");
-    if (provided !== expectedSecret) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Webhook secret ZORUNLU — AKBANK_WEBHOOK_SECRET veya CRON_SECRET kabul edilir.
+    // Dahili çağrılar (poll-akbank-emails) service role key ile de yetkilendirilebilir.
+    const expectedSecret =
+      Deno.env.get("AKBANK_WEBHOOK_SECRET") || Deno.env.get("CRON_SECRET");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const authHeader = req.headers.get("authorization") || "";
+    const isInternalServiceCall =
+      serviceRoleKey.length > 0 && authHeader === `Bearer ${serviceRoleKey}`;
+
+    if (!isInternalServiceCall) {
+      if (!expectedSecret) {
+        return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const provided =
+        req.headers.get("x-webhook-secret") ||
+        new URL(req.url).searchParams.get("secret");
+      if (provided !== expectedSecret) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     let payload: any = {};
