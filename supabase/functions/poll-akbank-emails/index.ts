@@ -353,6 +353,7 @@ Deno.serve(async (req) => {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            "x-webhook-secret": Deno.env.get("AKBANK_WEBHOOK_SECRET") || Deno.env.get("CRON_SECRET") || "",
           },
           body: JSON.stringify({ subject, from, text: source, html: source }),
         });
