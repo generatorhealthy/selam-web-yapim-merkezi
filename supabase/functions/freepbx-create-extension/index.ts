@@ -167,12 +167,33 @@ serve(async (req) => {
     const phone = (body.phone ?? "").toString().trim();
     const email = (body.email ?? "").toString().trim();
     const orderId = body.order_id ?? null;
+    const specialistId = body.specialist_id ?? null;
 
     if (!name) {
       return new Response(JSON.stringify({ error: "İsim gerekli" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Idempotency (specialist): if this specialist already has an internal number, return it
+    if (specialistId) {
+      const { data: spec } = await supabaseAdmin
+        .from("specialists")
+        .select("internal_number")
+        .eq("id", specialistId)
+        .maybeSingle();
+      if (spec?.internal_number) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            alreadyExists: true,
+            extension: spec.internal_number,
+            message: `Bu uzman için dahili zaten var: ${spec.internal_number}`,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // Idempotency: if this order already has an extension, return it
@@ -266,6 +287,19 @@ serve(async (req) => {
     if (insertErr) {
       console.error("DB kayıt hatası:", insertErr);
     }
+
+    // If tied to a specialist, write the extension into specialists.internal_number
+    // so it shows up automatically in the "Danışan Yönlendirme" page.
+    if (specialistId) {
+      const { error: specErr } = await supabaseAdmin
+        .from("specialists")
+        .update({ internal_number: extStr })
+        .eq("id", specialistId);
+      if (specErr) {
+        console.error("Uzman internal_number güncelleme hatası:", specErr);
+      }
+    }
+
 
     return new Response(
       JSON.stringify({
