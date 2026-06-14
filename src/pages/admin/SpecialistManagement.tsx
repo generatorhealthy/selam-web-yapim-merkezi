@@ -337,6 +337,31 @@ const SpecialistManagement = () => {
         }).catch((e) => console.warn('specialist-blog auto exception:', e));
       }
 
+      // Aktif edildiyse (profil yayınlanınca) FreePBX'te otomatik dahili numara oluştur
+      // ve uzmanın internal_number alanına yaz. Böylece Danışan Yönlendirme sayfasında da görünür.
+      if (!currentStatus) {
+        const spec = specialists.find(s => s.id === id);
+        if (spec && !(spec as any).internal_number) {
+          supabase.functions.invoke('freepbx-create-extension', {
+            body: {
+              action: 'create',
+              specialist_id: id,
+              name: spec.name,
+              phone: (spec as any).phone || '',
+              email: (spec as any).email || '',
+            }
+          }).then(({ data, error: fnErr }) => {
+            if (fnErr) { console.warn('freepbx-create-extension error:', fnErr); return; }
+            const ext = (data as any)?.extension;
+            if (ext) {
+              setSpecialists(prev => prev.map(s => s.id === id ? { ...s, internal_number: ext } as any : s));
+              toast({ title: "Dahili Numara Atandı", description: `${spec.name} için FreePBX dahili numarası: ${ext}` });
+            }
+          }).catch((e) => console.warn('freepbx-create-extension exception:', e));
+        }
+      }
+
+
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
       toast({
