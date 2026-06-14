@@ -388,6 +388,19 @@ const SpecialistManagement = () => {
     }
 
     try {
+      // FreePBX'te bu uzmanın dahili numarası varsa önce orada sil
+      const specToDelete = specialists.find(s => s.id === id) as any;
+      const internalNumber = specToDelete?.internal_number;
+      if (internalNumber) {
+        try {
+          await supabase.functions.invoke('freepbx-create-extension', {
+            body: { action: 'delete', specialist_id: id, extension: internalNumber },
+          });
+        } catch (fnErr) {
+          console.warn('FreePBX dahili silme hatası:', fnErr);
+        }
+      }
+
       const { error } = await supabase
         .from('specialists')
         .delete()

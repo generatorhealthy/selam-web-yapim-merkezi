@@ -162,6 +162,69 @@ serve(async (req) => {
       );
     }
 
+    // Delete action: remove the extension from FreePBX when a specialist is deleted
+    if (action === "delete") {
+      const specialistId = body.specialist_id ?? null;
+      let extStr = (body.extension ?? "").toString().trim();
+
+      // If extension not provided, try to resolve it from the specialist record
+      if (!extStr && specialistId) {
+        const { data: spec } = await supabaseAdmin
+          .from("specialists")
+          .select("internal_number")
+          .eq("id", specialistId)
+          .maybeSingle();
+        if (spec?.internal_number) extStr = String(spec.internal_number).trim();
+      }
+
+      if (!extStr) {
+        return new Response(
+          JSON.stringify({ success: true, skipped: true, message: "Silinecek dahili numara yok" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const delMutation = `mutation {
+        deleteExtension(input: { extensionId: "${extStr}" }) {
+          status
+          message
+        }
+      }`;
+
+      let delStatus: any = null;
+      let delMessage = "";
+      try {
+        const delResult = await gql(token, delMutation);
+        delStatus = delResult?.deleteExtension?.status;
+        delMessage = delResult?.deleteExtension?.message ?? "";
+        try {
+          await gql(token, `mutation { doreload(input: {}) { status } }`);
+        } catch (reloadErr) {
+          console.warn("doreload uyarısı:", reloadErr);
+        }
+      } catch (delErr) {
+        console.error("FreePBX dahili silme hatası:", delErr);
+        delMessage = delErr instanceof Error ? delErr.message : String(delErr);
+      }
+
+      // Clean up our DB records regardless
+      await supabaseAdmin
+        .from("freepbx_extensions")
+        .delete()
+        .eq("extension", extStr);
+
+      return new Response(
+        JSON.stringify({
+          success: delStatus !== false,
+          extension: extStr,
+          message: delStatus === false
+            ? `FreePBX silme uyarısı: ${delMessage}`
+            : `Dahili silindi: ${extStr}`,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // Create action
     const name = (body.name ?? "").toString().trim();
     const phone = (body.phone ?? "").toString().trim();
