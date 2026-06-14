@@ -3514,6 +3514,45 @@ export type Database = {
         }
         Relationships: []
       }
+      freepbx_extensions: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          error_message: string | null
+          extension: string
+          id: string
+          order_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          error_message?: string | null
+          extension: string
+          id?: string
+          order_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          error_message?: string | null
+          extension?: string
+          id?: string
+          order_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       instagram_post_templates: {
         Row: {
           data_base64: string
