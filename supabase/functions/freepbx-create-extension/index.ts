@@ -17,6 +17,19 @@ const GQL_URL = `${BASE}/admin/api/api/gql`;
 const MIN_EXTENSION = 1000;
 const MAX_EXTENSION = 9999;
 
+async function fetchWithTimeout(url: string, opts: RequestInit, ms = 12000): Promise<Response> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } catch (e) {
+    throw new Error(`FreePBX sunucusuna ulasilamadi (${url}). Sunucu kapali, port engelli veya firewall Supabase'i blokluyor olabilir. Detay: ${e instanceof Error ? e.message : e}`);
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+
 async function getToken(): Promise<string> {
   const body = new URLSearchParams({
     grant_type: "client_credentials",
