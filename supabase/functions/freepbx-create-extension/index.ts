@@ -7,7 +7,11 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const BASE = (Deno.env.get("FREEPBX_BASE_URL") ?? "").replace(/\/+$/, "");
+// FreePBX API normal HTTP/HTTPS portlarında (80/443) çalışıyor.
+// Yanlışlıkla :83 gibi bir port girilirse temizleyip standart porta düşürüyoruz.
+const BASE = (Deno.env.get("FREEPBX_BASE_URL") ?? "")
+  .replace(/\/+$/, "")
+  .replace(/:83(?=\/|$)/, "");
 const CLIENT_ID = Deno.env.get("FREEPBX_CLIENT_ID") ?? "";
 const CLIENT_SECRET = Deno.env.get("FREEPBX_CLIENT_SECRET") ?? "";
 
