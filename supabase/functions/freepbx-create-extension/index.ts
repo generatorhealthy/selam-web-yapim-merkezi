@@ -95,38 +95,38 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Require an authenticated caller (admin panel)
-  const authHeader = req.headers.get("Authorization") ?? "";
-  if (!authHeader.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Yetkisiz" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
-  // Validate the user token
-  const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(
-    authHeader.replace("Bearer ", ""),
-  );
-  if (userErr || !userData?.user) {
-    return new Response(JSON.stringify({ error: "Geçersiz oturum" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const body = await req.json().catch(() => ({}));
+  const action = body.action ?? "create";
+
+  // "create" requires an authenticated caller (admin panel). "test" is read-only.
+  if (action !== "test") {
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Yetkisiz" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(
+      authHeader.replace("Bearer ", ""),
+    );
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Geçersiz oturum" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   }
 
   try {
     if (!BASE || !CLIENT_ID || !CLIENT_SECRET) {
       throw new Error("FreePBX bağlantı bilgileri eksik (secrets).");
     }
-
-    const body = await req.json().catch(() => ({}));
-    const action = body.action ?? "create";
 
     const token = await getToken();
 
