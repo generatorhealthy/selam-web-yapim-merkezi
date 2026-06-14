@@ -25,7 +25,8 @@ async function getToken(): Promise<string> {
     scope: "gql",
   });
 
-  const res = await fetch(TOKEN_URL, {
+  console.log("FreePBX token isteği:", TOKEN_URL);
+  const res = await fetchWithTimeout(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
