@@ -167,12 +167,33 @@ serve(async (req) => {
     const phone = (body.phone ?? "").toString().trim();
     const email = (body.email ?? "").toString().trim();
     const orderId = body.order_id ?? null;
+    const specialistId = body.specialist_id ?? null;
 
     if (!name) {
       return new Response(JSON.stringify({ error: "İsim gerekli" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Idempotency (specialist): if this specialist already has an internal number, return it
+    if (specialistId) {
+      const { data: spec } = await supabaseAdmin
+        .from("specialists")
+        .select("internal_number")
+        .eq("id", specialistId)
+        .maybeSingle();
+      if (spec?.internal_number) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            alreadyExists: true,
+            extension: spec.internal_number,
+            message: `Bu uzman için dahili zaten var: ${spec.internal_number}`,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // Idempotency: if this order already has an extension, return it
