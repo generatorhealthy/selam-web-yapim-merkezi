@@ -288,6 +288,19 @@ serve(async (req) => {
       console.error("DB kayıt hatası:", insertErr);
     }
 
+    // If tied to a specialist, write the extension into specialists.internal_number
+    // so it shows up automatically in the "Danışan Yönlendirme" page.
+    if (specialistId) {
+      const { error: specErr } = await supabaseAdmin
+        .from("specialists")
+        .update({ internal_number: extStr })
+        .eq("id", specialistId);
+      if (specErr) {
+        console.error("Uzman internal_number güncelleme hatası:", specErr);
+      }
+    }
+
+
     return new Response(
       JSON.stringify({
         success: true,
