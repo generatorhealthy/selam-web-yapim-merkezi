@@ -49,7 +49,7 @@ async function getToken(): Promise<string> {
 }
 
 async function gql(token: string, query: string): Promise<any> {
-  const res = await fetch(GQL_URL, {
+  const res = await fetchWithTimeout(GQL_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
