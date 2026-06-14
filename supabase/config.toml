@@ -178,3 +178,6 @@ verify_jwt = false
 
 [functions.seo-gen-desc-batch]
 verify_jwt = false
+
+[functions.freepbx-create-extension]
+verify_jwt = false
