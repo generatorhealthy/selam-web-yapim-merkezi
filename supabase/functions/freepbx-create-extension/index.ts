@@ -267,6 +267,8 @@ serve(async (req) => {
             extensionId: "${extStr}"
             enabled: true
             followMeList: "${followMeList}"
+            strategy: ringallv2prim
+            ringTime: 25
             initialRingTime: 2
             externalCallerIdMode: default
           }) { status message }
