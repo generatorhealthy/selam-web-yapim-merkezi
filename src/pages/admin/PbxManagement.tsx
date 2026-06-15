@@ -12,7 +12,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { AdminTopBar } from "@/components/AdminTopBar";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, Settings, Users, Activity, Edit2, Save, X, Plus } from "lucide-react";
+import { Phone, Settings, Users, Activity, Edit2, Save, X, Plus, PhoneForwarded } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface Specialist {
@@ -37,6 +37,34 @@ const PbxManagement = () => {
     phone: "",
     internal_number: ""
   });
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const handleBulkFollowMe = async () => {
+    if (!confirm("Tüm uzmanların Follow-Me listesi, dahili numaralar silinip kendi cep numaralarıyla (0XXXXXXXXXX#) güncellenecek ve Follow-Me etkinleştirilecek. Devam edilsin mi?")) {
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
+        body: { action: "bulk_followme" },
+      });
+      if (error) throw error;
+      toast({
+        title: "Follow-Me Güncellendi",
+        description: `Toplam: ${data.total} | Güncellenen: ${data.updated} | Atlanan: ${data.skipped} | Hatalı: ${data.failed}`,
+      });
+    } catch (error) {
+      console.error("Bulk follow-me error:", error);
+      toast({
+        title: "Hata",
+        description: "Follow-Me güncellenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
 
   const fetchSpecialists = async () => {
     try {
@@ -311,6 +339,16 @@ const PbxManagement = () => {
                     Müsait numara sayısı: {availableNumbers.length}
                   </CardDescription>
                 </div>
+                <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={handleBulkFollowMe}
+                  disabled={bulkLoading}
+                >
+                  <PhoneForwarded className="h-4 w-4" />
+                  {bulkLoading ? "Güncelleniyor..." : "Follow-Me Toplu Güncelle"}
+                </Button>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="flex items-center gap-2">
@@ -406,6 +444,7 @@ const PbxManagement = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+                </div>
               </div>
             </CardHeader>
             <CardContent>

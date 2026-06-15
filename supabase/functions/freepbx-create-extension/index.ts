@@ -225,6 +225,96 @@ serve(async (req) => {
       );
     }
 
+    // Bulk Follow-Me update: for every specialist with an internal number,
+    // set the Follow-Me list to the specialist's mobile number (0XXXXXXXXXX#)
+    // and enable Follow-Me. Removes the old internal-number entries.
+    if (action === "bulk_followme") {
+      const normalizeFollowMe = (raw: string): string | null => {
+        let d = (raw ?? "").replace(/\D/g, "");
+        if (!d) return null;
+        if (d.startsWith("90")) d = d.slice(2);
+        if (d.startsWith("0")) d = d.slice(1);
+        if (d.length < 10) return null;
+        // keep last 10 digits (mobile without leading 0)
+        d = d.slice(-10);
+        return `0${d}#`;
+      };
+
+      const { data: specs, error: specErr } = await supabaseAdmin
+        .from("specialists")
+        .select("id, name, phone, internal_number")
+        .not("internal_number", "is", null);
+
+      if (specErr) throw new Error(`Uzman listesi alınamadı: ${specErr.message}`);
+
+      const results: any[] = [];
+      let updated = 0;
+      let skipped = 0;
+      let failed = 0;
+
+      for (const s of specs ?? []) {
+        const extStr = String(s.internal_number).trim();
+        const followMeList = normalizeFollowMe(String(s.phone ?? ""));
+
+        if (!extStr || !followMeList) {
+          skipped++;
+          results.push({ extension: extStr, name: s.name, status: "skipped", reason: "Geçersiz numara" });
+          continue;
+        }
+
+        const mutation = `mutation {
+          updateFollowMe(input: {
+            extensionId: "${extStr}"
+            enabled: true
+            followMeList: "${followMeList}"
+            initialRingTime: 2
+            externalCallerIdMode: default
+          }) { status message }
+        }`;
+
+        try {
+          const r = await gql(token, mutation);
+          const st = r?.updateFollowMe?.status;
+          const msg = r?.updateFollowMe?.message ?? "";
+          if (st === false) {
+            failed++;
+            results.push({ extension: extStr, name: s.name, followMeList, status: "failed", message: msg });
+          } else {
+            updated++;
+            results.push({ extension: extStr, name: s.name, followMeList, status: "ok" });
+          }
+        } catch (e) {
+          failed++;
+          results.push({
+            extension: extStr,
+            name: s.name,
+            followMeList,
+            status: "error",
+            message: e instanceof Error ? e.message : String(e),
+          });
+        }
+      }
+
+      // Apply config once at the end
+      try {
+        await gql(token, `mutation { doreload(input: {}) { status } }`);
+      } catch (reloadErr) {
+        console.warn("doreload uyarısı:", reloadErr);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          total: (specs ?? []).length,
+          updated,
+          skipped,
+          failed,
+          results,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // Create action
     const name = (body.name ?? "").toString().trim();
     const phone = (body.phone ?? "").toString().trim();
