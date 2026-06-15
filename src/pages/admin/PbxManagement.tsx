@@ -339,6 +339,16 @@ const PbxManagement = () => {
                     Müsait numara sayısı: {availableNumbers.length}
                   </CardDescription>
                 </div>
+                <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={handleBulkFollowMe}
+                  disabled={bulkLoading}
+                >
+                  <PhoneForwarded className="h-4 w-4" />
+                  {bulkLoading ? "Güncelleniyor..." : "Follow-Me Toplu Güncelle"}
+                </Button>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="flex items-center gap-2">
