@@ -37,6 +37,34 @@ const PbxManagement = () => {
     phone: "",
     internal_number: ""
   });
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const handleBulkFollowMe = async () => {
+    if (!confirm("Tüm uzmanların Follow-Me listesi, dahili numaralar silinip kendi cep numaralarıyla (0XXXXXXXXXX#) güncellenecek ve Follow-Me etkinleştirilecek. Devam edilsin mi?")) {
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
+        body: { action: "bulk_followme" },
+      });
+      if (error) throw error;
+      toast({
+        title: "Follow-Me Güncellendi",
+        description: `Toplam: ${data.total} | Güncellenen: ${data.updated} | Atlanan: ${data.skipped} | Hatalı: ${data.failed}`,
+      });
+    } catch (error) {
+      console.error("Bulk follow-me error:", error);
+      toast({
+        title: "Hata",
+        description: "Follow-Me güncellenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
 
   const fetchSpecialists = async () => {
     try {
