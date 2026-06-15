@@ -419,6 +419,35 @@ serve(async (req) => {
       throw new Error(`FreePBX dahili oluşturmadı: ${addMessage}`);
     }
 
+    // Configure Follow-Me so the call is forwarded to the specialist's mobile.
+    // Format: 0XXXXXXXXXX# (external number suffix), Follow-Me enabled.
+    const buildFollowMe = (raw: string): string | null => {
+      let d = (raw ?? "").replace(/\D/g, "");
+      if (!d) return null;
+      if (d.startsWith("90")) d = d.slice(2);
+      if (d.startsWith("0")) d = d.slice(1);
+      if (d.length < 10) return null;
+      d = d.slice(-10);
+      return `0${d}#`;
+    };
+    const followMeList = buildFollowMe(phone);
+    if (followMeList) {
+      const fmMutation = `mutation {
+        updateFollowMe(input: {
+          extensionId: "${extStr}"
+          enabled: true
+          followMeList: "${followMeList}"
+          initialRingTime: 2
+          externalCallerIdMode: default
+        }) { status message }
+      }`;
+      try {
+        await gql(token, fmMutation);
+      } catch (fmErr) {
+        console.warn("Follow-Me ayar uyarısı:", fmErr);
+      }
+    }
+
     // Apply config (reload)
     try {
       await gql(token, `mutation { doreload(input: {}) { status } }`);
