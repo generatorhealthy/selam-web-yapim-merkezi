@@ -444,6 +444,7 @@ const PbxManagement = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
