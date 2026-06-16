@@ -39,8 +39,9 @@ const QuickRegister = () => {
   const [parsing, setParsing] = useState(false);
   const [creating, setCreating] = useState(false);
   const [parsed, setParsed] = useState<any>(null);
-  const [result, setResult] = useState<{ userId?: string; specialistId?: string } | null>(null);
+  const [result, setResult] = useState<{ userId?: string; specialistId?: string; parsed?: any } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!loading && userProfile) {
