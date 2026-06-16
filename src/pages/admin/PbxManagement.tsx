@@ -511,7 +511,17 @@ const PbxManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {specialists.map((specialist) => (
+                    {specialists
+                      .filter((s) => {
+                        const q = searchQuery.trim().toLowerCase();
+                        if (!q) return true;
+                        return (
+                          (s.name || "").toLowerCase().includes(q) ||
+                          (s.email || "").toLowerCase().includes(q) ||
+                          (s.phone || "").toLowerCase().includes(q)
+                        );
+                      })
+                      .map((specialist) => (
                       <TableRow key={specialist.id}>
                         <TableCell className="font-medium">{specialist.name}</TableCell>
                         <TableCell>{specialist.specialty}</TableCell>
