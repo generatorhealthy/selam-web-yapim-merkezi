@@ -217,10 +217,18 @@ const DoctorList = () => {
   };
 
   const updateDisplayedSpecialists = () => {
-    const endIndex = (currentPage + 1) * ITEMS_PER_PAGE;
-    const newDisplayed = filteredSpecialists.slice(0, endIndex);
+    const total = filteredSpecialists.length;
+    if (total === 0) {
+      setDisplayedSpecialists([]);
+      setHasMore(false);
+      return;
+    }
+    const count = (currentPage + 1) * ITEMS_PER_PAGE;
+    // Loop back to the beginning when we run out of specialists
+    const newDisplayed = Array.from({ length: count }, (_, i) => filteredSpecialists[i % total]);
     setDisplayedSpecialists(newDisplayed);
-    setHasMore(endIndex < filteredSpecialists.length);
+    // Always allow loading more so the list cycles endlessly
+    setHasMore(true);
   };
 
   const loadMoreSpecialists = async () => {
