@@ -41,6 +41,21 @@ const PbxManagement = () => {
   const [creatingExtId, setCreatingExtId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const getFunctionErrorMessage = async (error: any, fallback: string) => {
+    if (error?.context instanceof Response) {
+      try {
+        const payload = await error.context.clone().json();
+        if (payload?.error) return payload.error;
+      } catch {
+        try {
+          const text = await error.context.clone().text();
+          if (text) return text;
+        } catch {}
+      }
+    }
+    return error instanceof Error ? error.message : fallback;
+  };
+
   const handleAutoCreateExtension = async (specialist: Specialist) => {
     setCreatingExtId(specialist.id);
     try {
@@ -67,9 +82,10 @@ const PbxManagement = () => {
       });
     } catch (e) {
       console.error("Auto create extension error:", e);
+      const message = await getFunctionErrorMessage(e, "Dahili oluşturulamadı.");
       toast({
         title: "Hata",
-        description: e instanceof Error ? e.message : "Dahili oluşturulamadı.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -190,7 +206,7 @@ const PbxManagement = () => {
       });
     } catch (error) {
       console.error('Error updating internal number:', error);
-      const errorMessage = error instanceof Error ? error.message : "Dahili numara güncellenirken bir hata oluştu.";
+      const errorMessage = await getFunctionErrorMessage(error, "Dahili numara güncellenirken bir hata oluştu.");
       toast({
         title: "Hata",
         description: errorMessage,
