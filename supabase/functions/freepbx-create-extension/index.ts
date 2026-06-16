@@ -468,66 +468,53 @@ serve(async (req) => {
       throw new Error("Boş dahili numara kalmadı (9999 sınırı).");
     }
 
-    // Escape quotes for GraphQL string
-    const safeName = name.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-    const safePhone = phone.replace(/[^0-9+]/g, "");
-    const safeEmail = email.replace(/"/g, '\\"');
-
-    let usedTech: "virtual" | "pjsip" = "virtual";
-    let result: any;
-    try {
-      result = await gql(token, buildAddExtensionMutation({ extStr, safeName, safePhone, safeEmail, tech: "virtual" }));
-    } catch (virtualErr) {
-      if (!isVirtualTechUnsupportedError(virtualErr)) throw virtualErr;
-
-      console.warn("FreePBX virtual tech desteklemiyor, pjsip ile tekrar deneniyor:", virtualErr);
-      usedTech = "pjsip";
-      result = await gql(token, buildAddExtensionMutation({ extStr, safeName, safePhone, safeEmail, tech: "pjsip" }));
-    }
-    const addStatus = result?.addExtension?.status;
-    const addMessage = result?.addExtension?.message ?? "";
-
-    if (addStatus === false) {
-      throw new Error(`FreePBX dahili oluşturmadı: ${addMessage}`);
+    if (!BULK_URL) {
+      throw new Error("FREEPBX_BULK_URL secret tanımlı değil. Sunucudaki PHP endpoint adresini ekleyin.");
     }
 
-    // Configure Follow-Me so the call is forwarded to the specialist's mobile.
-    // Format: 0XXXXXXXXXX# (external number suffix), Follow-Me enabled.
-    const buildFollowMe = (raw: string): string | null => {
+    // Follow-Me: aramayı uzmanın cep telefonuna yönlendir (0XXXXXXXXXX#)
+    const buildFollowMe = (raw: string): string => {
       let d = (raw ?? "").replace(/\D/g, "");
-      if (!d) return null;
+      if (!d) return "";
       if (d.startsWith("90")) d = d.slice(2);
       if (d.startsWith("0")) d = d.slice(1);
-      if (d.length < 10) return null;
+      if (d.length < 10) return "";
       d = d.slice(-10);
       return `0${d}#`;
     };
     const followMeList = buildFollowMe(phone);
-    if (followMeList) {
-      const fmMutation = `mutation {
-        updateFollowMe(input: {
-          extensionId: "${extStr}"
-          enabled: true
-          followMeList: "${followMeList}"
-          strategy: ringallv2prim
-          ringTime: 25
-          initialRingTime: 2
-          externalCallerIdMode: default
-        }) { status message }
-      }`;
-      try {
-        await gql(token, fmMutation);
-      } catch (fmErr) {
-        console.warn("Follow-Me ayar uyarısı:", fmErr);
-      }
-    }
 
-    // Apply config (reload)
+    // GERÇEK virtual dahiliyi FreePBX sunucusundaki yardımcı dosya ile oluştur
+    // (fwconsole bulkimport). GraphQL API "virtual" tech oluşturamıyor.
+    const bulkRes = await fetchWithTimeout(
+      BULK_URL,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: BULK_SECRET,
+          action: "create",
+          extension: extStr,
+          name,
+          followme: followMeList,
+        }),
+      },
+      60000,
+    );
+    const bulkText = await bulkRes.text();
+    let bulkJson: any;
     try {
-      await gql(token, `mutation { doreload(input: {}) { status } }`);
-    } catch (reloadErr) {
-      console.warn("doreload uyarısı:", reloadErr);
+      bulkJson = JSON.parse(bulkText);
+    } catch {
+      throw new Error(`FreePBX sunucu yanıtı çözülemedi: ${bulkText}`);
     }
+    if (!bulkRes.ok || bulkJson.success !== true) {
+      throw new Error(
+        `Sanal dahili oluşturulamadı: ${bulkJson.error ?? bulkJson.import ?? bulkText}`,
+      );
+    }
+    const usedTech: "virtual" = "virtual";
+
 
     // Record in DB
     const { error: insertErr } = await supabaseAdmin
