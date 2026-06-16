@@ -107,9 +107,21 @@ if ($action === 'cdr_stats') {
     if (preg_match("/CDRDBNAME'\s*\]\s*=\s*'([^']*)'/", $conf, $m)) $cdrdb = $m[1];
   }
 
+  // PHP 8.1+ varsayılan olarak mysqli hatalarını exception fırlatır -> fatal hata olur.
+  // Kapatıp connect_errno ile kontrol ediyoruz.
+  if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
+
+  if (!class_exists('mysqli')) {
+    json_response(['success' => false, 'error' => 'PHP mysqli eklentisi sunucuda yüklü değil.'], 500);
+  }
+
   $mysqli = @new mysqli($dbhost, $dbuser, $dbpass, $cdrdb);
   if ($mysqli->connect_errno) {
-    json_response(['success' => false, 'error' => 'CDR veritabanına bağlanılamadı: ' . $mysqli->connect_error], 500);
+    json_response([
+      'success' => false,
+      'error' => 'CDR veritabanına bağlanılamadı (' . $mysqli->connect_errno . '): ' . $mysqli->connect_error
+        . ' | host=' . $dbhost . ' user=' . $dbuser . ' db=' . $cdrdb,
+    ], 500);
   }
   $mysqli->set_charset('utf8mb4');
 
