@@ -7,17 +7,29 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// FreePBX API normal HTTP/HTTPS portlarında (80/443) çalışıyor.
-// Yanlışlıkla :83 gibi bir port girilirse temizleyip standart porta düşürüyoruz.
-const BASE = (Deno.env.get("FREEPBX_BASE_URL") ?? "")
-  .replace(/\/+$/, "")
-  .replace(/:83(?=\/|$)/, "");
+function normalizeFreePbxUrl(raw: string, fallbackPath = ""): string {
+  const cleaned = (raw || "")
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/:83(?=\/|$)/, "")
+    .replace(/^https:\/\/168\.231\.125\.146/i, "http://168.231.125.146");
+
+  if (!cleaned) return "";
+  if (fallbackPath && /^https?:\/\/168\.231\.125\.146\/?$/i.test(cleaned)) {
+    return `http://168.231.125.146${fallbackPath}`;
+  }
+  return cleaned;
+}
+
+// FreePBX self-signed HTTPS sertifikası Supabase Deno fetch tarafından reddediliyor.
+// Bu sunucu için IP bazlı çağrıları HTTP'ye zorlayıp :83 gibi hatalı portları temizliyoruz.
+const BASE = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BASE_URL") ?? "");
 const CLIENT_ID = Deno.env.get("FREEPBX_CLIENT_ID") ?? "";
 const CLIENT_SECRET = Deno.env.get("FREEPBX_CLIENT_SECRET") ?? "";
 
 // FreePBX sunucusundaki PHP yardımcı dosyası (fwconsole bulkimport çalıştırır).
 // GraphQL API "virtual" tech'i oluşturamadığı için sanal dahili bu endpoint ile kurulur.
-const BULK_URL = Deno.env.get("FREEPBX_BULK_URL") ?? "";
+const BULK_URL = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BULK_URL") ?? "", "/freepbx-ext.php");
 const BULK_SECRET = Deno.env.get("FREEPBX_BULK_SECRET") ?? "";
 
 const TOKEN_URL = `${BASE}/admin/api/api/token`;
