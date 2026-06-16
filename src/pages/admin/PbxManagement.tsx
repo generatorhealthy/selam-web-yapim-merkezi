@@ -545,14 +545,33 @@ const PbxManagement = () => {
                               </Button>
                             </div>
                           ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditStart(specialist)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditStart(specialist)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              {!specialist.internal_number && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleAutoCreateExtension(specialist)}
+                                  disabled={creatingExtId === specialist.id}
+                                  className="h-8 gap-1 px-2"
+                                >
+                                  {creatingExtId === specialist.id ? (
+                                    <span className="animate-pulse">...</span>
+                                  ) : (
+                                    <>
+                                      <PhoneForwarded className="h-4 w-4" />
+                                      Dahili Oluştur
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>
