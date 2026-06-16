@@ -30,7 +30,7 @@ const CLIENT_SECRET = Deno.env.get("FREEPBX_CLIENT_SECRET") ?? "";
 // FreePBX sunucusundaki PHP yardımcı dosyası (fwconsole bulkimport çalıştırır).
 // GraphQL API "virtual" tech'i oluşturamadığı için sanal dahili bu endpoint ile kurulur.
 const BULK_URL = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BULK_URL") ?? "", "/freepbx-ext.php");
-const BULK_SECRET = Deno.env.get("FREEPBX_BULK_SECRET") ?? "";
+const BULK_SECRET = (Deno.env.get("FREEPBX_BULK_SECRET") ?? "").trim();
 
 const TOKEN_URL = `${BASE}/admin/api/api/token`;
 const GQL_URL = `${BASE}/admin/api/api/gql`;
@@ -502,6 +502,11 @@ serve(async (req) => {
 
     // GERÇEK virtual dahiliyi FreePBX sunucusundaki yardımcı dosya ile oluştur
     // (fwconsole bulkimport). GraphQL API "virtual" tech oluşturamıyor.
+    console.log("FreePBX bulk endpoint kontrolü:", {
+      bulkUrl: BULK_URL,
+      hasBulkSecret: BULK_SECRET.length > 0,
+      bulkSecretLength: BULK_SECRET.length,
+    });
     const bulkRes = await fetchWithTimeout(
       BULK_URL,
       {
