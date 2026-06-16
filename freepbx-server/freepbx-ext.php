@@ -23,12 +23,49 @@
  *     Kontrol: `ps aux | grep -E 'httpd|apache|php-fpm' | head`)
  */
 
-header('Content-Type: application/json');
-
-// fwconsole bulkimport + reload uzun sürebilir; PHP varsayılan 30sn limitini kaldır.
+// Hata olsa bile curl/Lovable tarafına boş cevap dönmemesi için.
 @set_time_limit(0);
 @ini_set('max_execution_time', '0');
+@ini_set('display_errors', '0');
+@ini_set('log_errors', '1');
 @ignore_user_abort(true);
+header('Content-Type: application/json; charset=utf-8');
+
+$__responded = false;
+
+function json_response($data, $status = 200) {
+  global $__responded;
+  $__responded = true;
+  http_response_code($status);
+  echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+  exit;
+}
+
+register_shutdown_function(function () {
+  global $__responded;
+  if ($__responded) {
+    return;
+  }
+
+  $err = error_get_last();
+  if ($err) {
+    http_response_code(500);
+    echo json_encode([
+      'success' => false,
+      'error' => 'PHP fatal hata',
+      'detail' => $err['message'] ?? 'bilinmeyen hata',
+      'file' => $err['file'] ?? null,
+      'line' => $err['line'] ?? null,
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    return;
+  }
+
+  http_response_code(500);
+  echo json_encode([
+    'success' => false,
+    'error' => 'PHP boş cevap verdi; işlem tamamlanmadan çıktı üretilemedi',
+  ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+});
 
 // ====== AYAR ======
 $SECRET = '1b849165041c774396da0fc92c8fa4c10af3e84d6d0da6d3';
@@ -42,9 +79,7 @@ if (!is_array($in)) {
 }
 
 if (!hash_equals($SECRET, (string)($in['secret'] ?? ''))) {
-  http_response_code(401);
-  echo json_encode(['error' => 'unauthorized']);
-  exit;
+  json_response(['success' => false, 'error' => 'unauthorized'], 401);
 }
 
 $action   = $in['action'] ?? 'create';
@@ -53,9 +88,7 @@ $name     = trim((string)($in['name'] ?? ''));
 $followme = preg_replace('/[^0-9#]/', '', (string)($in['followme'] ?? ''));
 
 if ($ext === '') {
-  http_response_code(400);
-  echo json_encode(['error' => 'extension gerekli']);
-  exit;
+  json_response(['success' => false, 'error' => 'extension gerekli'], 400);
 }
 
 function csv_field($v) {
@@ -81,14 +114,40 @@ $row = implode(',', [
 ]) . "\n";
 
 $file = tempnam(sys_get_temp_dir(), 'ext_');
-file_put_contents($file, $header . $row);
+if ($file === false) {
+  json_response(['success' => false, 'error' => 'geçici dosya oluşturulamadı'], 500);
+}
 
-$importCmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' bulkimport --type=extensions ' . escapeshellarg($file) . ' --replace 2>&1';
+$csvFile = $file . '.csv';
+if (!@rename($file, $csvFile)) {
+  $csvFile = $file;
+}
+
+$written = file_put_contents($csvFile, $header . $row);
+if ($written === false) {
+  json_response(['success' => false, 'error' => 'CSV dosyası yazılamadı', 'path' => $csvFile], 500);
+}
+
+if (!is_executable($FWCONSOLE)) {
+  @unlink($csvFile);
+  json_response(['success' => false, 'error' => 'fwconsole bulunamadı veya çalıştırılamıyor', 'path' => $FWCONSOLE], 500);
+}
+
+$importCmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' bulkimport --type=extensions --replace -- ' . escapeshellarg($csvFile) . ' 2>&1';
 
 // bulkimport'u çalıştır (dahiliyi oluşturur)
 $importOut = shell_exec($importCmd);
 
-@unlink($file);
+if ($importOut === null) {
+  @unlink($csvFile);
+  json_response([
+    'success' => false,
+    'error' => 'bulkimport komutu çıktı döndürmedi; shell_exec kapalı olabilir veya sudo izni eksik olabilir',
+    'command' => $importCmd,
+  ], 500);
+}
+
+@unlink($csvFile);
 
 // reload çok yavaş; arka planda çalıştır ki yanıt hemen dönsün (edge timeout olmasın)
 $reloadCmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' reload > /dev/null 2>&1 &';
@@ -97,10 +156,10 @@ shell_exec($reloadCmd);
 $importLower = strtolower((string)$importOut);
 $ok = (strpos($importLower, 'error') === false) && (strpos($importLower, 'exception') === false);
 
-echo json_encode([
+json_response([
   'success'   => $ok,
   'extension' => $ext,
   'followme'  => $followme,
   'import'    => trim((string)$importOut),
   'reload'    => 'arka planda baslatildi',
-]);
+], $ok ? 200 : 500);
