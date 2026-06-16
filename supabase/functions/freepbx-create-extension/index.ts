@@ -430,14 +430,13 @@ serve(async (req) => {
       addExtension(input: {
         extensionId: "${extStr}"
         name: "${safeName}"
-        tech: "pjsip"
+        tech: "virtual"
         outboundCid: "${safePhone}"
         email: "${safeEmail}"
         callerID: "${safeName}"
         umEnable: false
         vmEnable: true
         vmPassword: "${extStr}"
-        maxContacts: "1"
       }) {
         status
         message
