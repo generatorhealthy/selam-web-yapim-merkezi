@@ -26,7 +26,7 @@
 header('Content-Type: application/json');
 
 // ====== AYAR ======
-$SECRET = 'BURAYA_UZUN_RASTGELE_BIR_DEGER_YAZIN';
+$SECRET = '1b849165041c774396da0fc92c8fa4c10af3e84d6d0da6d3';
 $FWCONSOLE = '/usr/sbin/fwconsole'; // gerekirse `which fwconsole` ile doğrulayın
 // ==================
 
