@@ -18,8 +18,8 @@ const CLIENT_SECRET = Deno.env.get("FREEPBX_CLIENT_SECRET") ?? "";
 const TOKEN_URL = `${BASE}/admin/api/api/token`;
 const GQL_URL = `${BASE}/admin/api/api/gql`;
 
-const MIN_EXTENSION = 1000;
-const MAX_EXTENSION = 9999;
+const MIN_EXTENSION = 200;
+const MAX_EXTENSION = 999;
 
 async function fetchWithTimeout(url: string, opts: RequestInit, ms = 12000): Promise<Response> {
   const ctrl = new AbortController();
