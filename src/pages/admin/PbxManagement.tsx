@@ -12,7 +12,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { AdminTopBar } from "@/components/AdminTopBar";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, Settings, Users, Activity, Edit2, Save, X, Plus, PhoneForwarded } from "lucide-react";
+import { Phone, Users, Activity, Edit2, Save, X, Plus, PhoneForwarded } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { PbxCallStats } from "@/components/admin/PbxCallStats";
 
