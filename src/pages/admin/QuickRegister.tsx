@@ -261,6 +261,27 @@ Profiliniz oluşturulmuştur. Link üzerinden giriş yapabilirsiniz ${firstName}
                   <Link to="/divan_paneli/specialists">Uzman Listesi</Link>
                 </Button>
               </div>
+
+              {result.parsed && (
+                <div className="mt-6 pt-4 border-t border-green-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-semibold text-green-900">
+                      Uzmana Gönderilecek Bilgi Mesajı
+                    </Label>
+                    <Button size="sm" onClick={handleCopyMessage} className="gap-2">
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copied ? "Kopyalandı" : "Mesajı Kopyala"}
+                    </Button>
+                  </div>
+                  <Textarea
+                    readOnly
+                    value={buildWelcomeMessage(result.parsed)}
+                    rows={12}
+                    className="text-sm bg-white font-mono"
+                    onFocus={(e) => e.currentTarget.select()}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
