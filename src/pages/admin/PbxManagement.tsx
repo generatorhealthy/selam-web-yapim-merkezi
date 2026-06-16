@@ -39,6 +39,7 @@ const PbxManagement = () => {
   });
   const [bulkLoading, setBulkLoading] = useState(false);
   const [creatingExtId, setCreatingExtId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAutoCreateExtension = async (specialist: Specialist) => {
     setCreatingExtId(specialist.id);
