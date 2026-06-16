@@ -190,6 +190,7 @@ const PbxManagement = () => {
       });
     } catch (error) {
       console.error('Error updating internal number:', error);
+      const errorMessage = error instanceof Error ? error.message :
       toast({
         title: "Hata",
         description: "Dahili numara güncellenirken bir hata oluştu.",
