@@ -371,11 +371,12 @@ const DoctorList = () => {
         ) : (
           <>
             <div className="space-y-4 md:space-y-8">
-              {displayedSpecialists.map((specialist) => {
+              {displayedSpecialists.map((specialist, index) => {
                 const specialtySlug = createSpecialtySlug(specialist.specialty);
                 
                 return (
-                  <Card key={specialist.id} className="bg-white border-0 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-2xl overflow-hidden animate-fade-in">
+                  <Card key={`${specialist.id}-${index}`} className="bg-white border-0 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-2xl overflow-hidden animate-fade-in">
+
                     <CardContent className="p-4 md:p-8">
                       <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex gap-8'}`}>
                         {/* Doctor Image */}
