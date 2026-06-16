@@ -122,22 +122,29 @@ serve(async (req) => {
   const action = body.action ?? "create";
 
   // "create" requires an authenticated caller (admin panel). "test" is read-only.
+  // Server-to-server calls (e.g. from quick-register-specialist) authenticate
+  // with the service role key and are allowed without a user session.
   if (action !== "test") {
     const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace("Bearer ", "").trim();
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const isServiceCall = !!token && token === serviceRoleKey;
+
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Yetkisiz" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(
-      authHeader.replace("Bearer ", ""),
-    );
-    if (userErr || !userData?.user) {
-      return new Response(JSON.stringify({ error: "Geçersiz oturum" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+
+    if (!isServiceCall) {
+      const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+      if (userErr || !userData?.user) {
+        return new Response(JSON.stringify({ error: "Geçersiz oturum" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
   }
 
