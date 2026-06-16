@@ -83,6 +83,114 @@ if (!hash_equals($SECRET, (string)($in['secret'] ?? ''))) {
 }
 
 $action   = $in['action'] ?? 'create';
+
+/* ============================================================
+ * CDR İSTATİSTİKLERİ  (action = cdr_stats)
+ * asteriskcdrdb.cdr tablosundan çağrı raporlarını döner.
+ * extension gerektirmez; bu yüzden aşağıdaki ext kontrolünden önce çalışır.
+ * ============================================================ */
+if ($action === 'cdr_stats') {
+  $from = preg_replace('/[^0-9\- :]/', '', (string)($in['from'] ?? ''));
+  $to   = preg_replace('/[^0-9\- :]/', '', (string)($in['to'] ?? ''));
+  if ($from === '') { $from = date('Y-m-d', strtotime('-13 days')) . ' 00:00:00'; }
+  elseif (strlen($from) <= 10) { $from .= ' 00:00:00'; }
+  if ($to === '') { $to = date('Y-m-d') . ' 23:59:59'; }
+  elseif (strlen($to) <= 10) { $to .= ' 23:59:59'; }
+
+  // FreePBX DB kimlik bilgilerini /etc/freepbx.conf'tan al
+  $dbhost = 'localhost'; $dbuser = 'root'; $dbpass = ''; $cdrdb = 'asteriskcdrdb';
+  $conf = @file_get_contents('/etc/freepbx.conf');
+  if ($conf !== false) {
+    if (preg_match("/AMPDBHOST'\s*\]\s*=\s*'([^']*)'/", $conf, $m)) $dbhost = $m[1];
+    if (preg_match("/AMPDBUSER'\s*\]\s*=\s*'([^']*)'/", $conf, $m)) $dbuser = $m[1];
+    if (preg_match("/AMPDBPASS'\s*\]\s*=\s*'([^']*)'/", $conf, $m)) $dbpass = $m[1];
+    if (preg_match("/CDRDBNAME'\s*\]\s*=\s*'([^']*)'/", $conf, $m)) $cdrdb = $m[1];
+  }
+
+  $mysqli = @new mysqli($dbhost, $dbuser, $dbpass, $cdrdb);
+  if ($mysqli->connect_errno) {
+    json_response(['success' => false, 'error' => 'CDR veritabanına bağlanılamadı: ' . $mysqli->connect_error], 500);
+  }
+  $mysqli->set_charset('utf8mb4');
+
+  $fromQ = $mysqli->real_escape_string($from);
+  $toQ   = $mysqli->real_escape_string($to);
+  $where = "calldate BETWEEN '$fromQ' AND '$toQ'";
+
+  // İç dahili: 3-4 haneli numara. Dış numara: 7+ hane.
+  $isIntSrc = "src REGEXP '^[0-9]{3,4}$'";
+  $isIntDst = "dst REGEXP '^[0-9]{3,4}$'";
+  $isExtSrc = "src REGEXP '^[0-9]{7,}$'";
+  $isExtDst = "dst REGEXP '^[0-9]{7,}$'";
+
+  $stats = [];
+  $q = function($sql) use ($mysqli) {
+    $r = $mysqli->query($sql);
+    if (!$r) return [];
+    $rows = [];
+    while ($row = $r->fetch_assoc()) $rows[] = $row;
+    $r->free();
+    return $rows;
+  };
+
+  // Genel özet
+  $sum = $q("SELECT
+      COUNT(*) total,
+      SUM(disposition='ANSWERED') answered,
+      SUM(disposition='NO ANSWER') no_answer,
+      SUM(disposition='BUSY') busy,
+      SUM(disposition='FAILED') failed,
+      SUM(billsec) total_billsec,
+      SUM($isIntSrc AND $isExtDst) outbound,
+      SUM($isExtSrc AND $isIntDst) inbound,
+      SUM($isIntSrc AND $isIntDst) internal_calls,
+      COUNT(DISTINCT CASE WHEN ($isIntSrc AND $isExtDst) THEN dst END) outbound_people,
+      COUNT(DISTINCT CASE WHEN ($isExtSrc AND $isIntDst) THEN src END) inbound_people,
+      COUNT(DISTINCT CASE WHEN disposition='ANSWERED' AND $isExtDst THEN dst
+                          WHEN disposition='ANSWERED' AND $isExtSrc THEN src END) talked_people
+    FROM cdr WHERE $where")[0] ?? [];
+
+  // Günlük kırılım
+  $daily = $q("SELECT DATE(calldate) gun,
+      COUNT(*) toplam,
+      SUM(disposition='ANSWERED') cevaplanan,
+      ROUND(SUM(billsec)/60) dakika,
+      SUM($isIntSrc AND $isExtDst) giden,
+      SUM($isExtSrc AND $isIntDst) gelen
+    FROM cdr WHERE $where GROUP BY DATE(calldate) ORDER BY gun");
+
+  // Dahili (uzman) bazlı kırılım
+  $byExt = $q("SELECT ext, SUM(toplam) toplam, SUM(giden) giden, SUM(gelen) gelen,
+      SUM(cevaplanan) cevaplanan, ROUND(SUM(saniye)/60) dakika
+    FROM (
+      SELECT src ext, 1 toplam, ($isExtDst) giden, 0 gelen,
+             (disposition='ANSWERED') cevaplanan, billsec saniye
+      FROM cdr WHERE $where AND $isIntSrc
+      UNION ALL
+      SELECT dst ext, 1 toplam, 0 giden, ($isExtSrc) gelen,
+             (disposition='ANSWERED') cevaplanan, billsec saniye
+      FROM cdr WHERE $where AND $isIntDst
+    ) t GROUP BY ext ORDER BY toplam DESC LIMIT 200");
+
+  // Son çağrılar
+  $recent = $q("SELECT calldate, src, dst, duration, billsec, disposition,
+      (CASE WHEN $isIntSrc AND $isExtDst THEN 'giden'
+            WHEN $isExtSrc AND $isIntDst THEN 'gelen'
+            WHEN $isIntSrc AND $isIntDst THEN 'dahili' ELSE 'diger' END) yon
+    FROM cdr WHERE $where ORDER BY calldate DESC LIMIT 100");
+
+  $mysqli->close();
+  json_response([
+    'success' => true,
+    'from' => $from,
+    'to' => $to,
+    'summary' => $sum,
+    'daily' => $daily,
+    'by_extension' => $byExt,
+    'recent' => $recent,
+  ]);
+}
+
 $ext      = preg_replace('/\D/', '', (string)($in['extension'] ?? ''));
 $name     = trim((string)($in['name'] ?? ''));
 $followme = preg_replace('/[^0-9#]/', '', (string)($in['followme'] ?? ''));
