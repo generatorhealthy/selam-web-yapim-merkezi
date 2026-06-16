@@ -25,6 +25,11 @@
 
 header('Content-Type: application/json');
 
+// fwconsole bulkimport + reload uzun sürebilir; PHP varsayılan 30sn limitini kaldır.
+@set_time_limit(0);
+@ini_set('max_execution_time', '0');
+@ignore_user_abort(true);
+
 // ====== AYAR ======
 $SECRET = '1b849165041c774396da0fc92c8fa4c10af3e84d6d0da6d3';
 $FWCONSOLE = '/usr/sbin/fwconsole'; // gerekirse `which fwconsole` ile doğrulayın
@@ -79,12 +84,15 @@ $file = tempnam(sys_get_temp_dir(), 'ext_');
 file_put_contents($file, $header . $row);
 
 $importCmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' bulkimport --type=extensions ' . escapeshellarg($file) . ' --replace 2>&1';
-$reloadCmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' reload 2>&1';
 
+// bulkimport'u çalıştır (dahiliyi oluşturur)
 $importOut = shell_exec($importCmd);
-$reloadOut = shell_exec($reloadCmd);
 
 @unlink($file);
+
+// reload çok yavaş; arka planda çalıştır ki yanıt hemen dönsün (edge timeout olmasın)
+$reloadCmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' reload > /dev/null 2>&1 &';
+shell_exec($reloadCmd);
 
 $importLower = strtolower((string)$importOut);
 $ok = (strpos($importLower, 'error') === false) && (strpos($importLower, 'exception') === false);
@@ -94,5 +102,5 @@ echo json_encode([
   'extension' => $ext,
   'followme'  => $followme,
   'import'    => trim((string)$importOut),
-  'reload'    => trim((string)$reloadOut),
+  'reload'    => 'arka planda baslatildi',
 ]);
