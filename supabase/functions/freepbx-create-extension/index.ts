@@ -402,7 +402,18 @@ serve(async (req) => {
       .map((r: any) => parseInt(String(r.extension), 10))
       .filter((n: number) => !isNaN(n));
 
-    const allUsed = Array.from(new Set([...existingIds, ...assigned]));
+    // FreePBX GraphQL only returns core/pjsip extensions, NOT manually-created
+    // "Virtual Extensions". Those numbers live in specialists.internal_number,
+    // so merge them in to avoid assigning a number that already exists.
+    const { data: specRows } = await supabaseAdmin
+      .from("specialists")
+      .select("internal_number")
+      .not("internal_number", "is", null);
+    const specAssigned = (specRows ?? [])
+      .map((r: any) => parseInt(String(r.internal_number), 10))
+      .filter((n: number) => !isNaN(n));
+
+    const allUsed = Array.from(new Set([...existingIds, ...assigned, ...specAssigned]));
     const ext = computeNextExtension(allUsed);
     const extStr = String(ext);
 
