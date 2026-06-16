@@ -84,12 +84,15 @@ $file = tempnam(sys_get_temp_dir(), 'ext_');
 file_put_contents($file, $header . $row);
 
 $importCmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' bulkimport --type=extensions ' . escapeshellarg($file) . ' --replace 2>&1';
-$reloadCmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' reload 2>&1';
 
+// bulkimport'u çalıştır (dahiliyi oluşturur)
 $importOut = shell_exec($importCmd);
-$reloadOut = shell_exec($reloadCmd);
 
 @unlink($file);
+
+// reload çok yavaş; arka planda çalıştır ki yanıt hemen dönsün (edge timeout olmasın)
+$reloadCmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' reload > /dev/null 2>&1 &';
+shell_exec($reloadCmd);
 
 $importLower = strtolower((string)$importOut);
 $ok = (strpos($importLower, 'error') === false) && (strpos($importLower, 'exception') === false);
@@ -99,5 +102,5 @@ echo json_encode([
   'extension' => $ext,
   'followme'  => $followme,
   'import'    => trim((string)$importOut),
-  'reload'    => trim((string)$reloadOut),
+  'reload'    => 'arka planda baslatildi',
 ]);
