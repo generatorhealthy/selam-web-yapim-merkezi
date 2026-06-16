@@ -35,7 +35,7 @@ const BULK_SECRET = (Deno.env.get("FREEPBX_BULK_SECRET") ?? "").trim();
 const TOKEN_URL = `${BASE}/admin/api/api/token`;
 const GQL_URL = `${BASE}/admin/api/api/gql`;
 
-const MIN_EXTENSION = 200;
+const MIN_EXTENSION = 207;
 const MAX_EXTENSION = 999;
 
 async function fetchWithTimeout(url: string, opts: RequestInit, ms = 12000): Promise<Response> {
