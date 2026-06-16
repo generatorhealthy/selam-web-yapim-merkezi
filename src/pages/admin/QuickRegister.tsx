@@ -90,7 +90,7 @@ const QuickRegister = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult({ userId: data.userId, specialistId: data.specialistId });
+      setResult({ userId: data.userId, specialistId: data.specialistId, parsed: data.parsed });
       toast({
         title: "Başarılı",
         description: "Kullanıcı ve uzman profili oluşturuldu!",
