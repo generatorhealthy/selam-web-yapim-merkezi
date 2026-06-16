@@ -196,6 +196,40 @@ serve(async (req) => {
   }
 
   try {
+    // CDR istatistikleri: FreePBX sunucusundaki PHP yardımcısından çağrı raporlarını al
+    if (action === "cdr_stats") {
+      if (!BULK_URL || !BULK_SECRET) {
+        throw new Error("FreePBX CDR bağlantısı yapılandırılmamış (BULK_URL/BULK_SECRET).");
+      }
+      const res = await fetchWithTimeout(
+        BULK_URL,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "cdr_stats",
+            secret: BULK_SECRET,
+            from: body.from ?? "",
+            to: body.to ?? "",
+          }),
+        },
+        20000,
+      );
+      const text = await res.text();
+      let json: any;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(`CDR yanıtı çözülemedi: ${text}`);
+      }
+      if (!res.ok || json?.success === false) {
+        throw new Error(json?.error || `CDR alınamadı (${res.status})`);
+      }
+      return new Response(JSON.stringify(json), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (!BASE || !CLIENT_ID || !CLIENT_SECRET) {
       throw new Error("FreePBX bağlantı bilgileri eksik (secrets).");
     }
