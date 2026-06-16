@@ -15,6 +15,11 @@ const BASE = (Deno.env.get("FREEPBX_BASE_URL") ?? "")
 const CLIENT_ID = Deno.env.get("FREEPBX_CLIENT_ID") ?? "";
 const CLIENT_SECRET = Deno.env.get("FREEPBX_CLIENT_SECRET") ?? "";
 
+// FreePBX sunucusundaki PHP yardımcı dosyası (fwconsole bulkimport çalıştırır).
+// GraphQL API "virtual" tech'i oluşturamadığı için sanal dahili bu endpoint ile kurulur.
+const BULK_URL = Deno.env.get("FREEPBX_BULK_URL") ?? "";
+const BULK_SECRET = Deno.env.get("FREEPBX_BULK_SECRET") ?? "";
+
 const TOKEN_URL = `${BASE}/admin/api/api/token`;
 const GQL_URL = `${BASE}/admin/api/api/gql`;
 
