@@ -188,10 +188,9 @@ serve(async (req) => {
       throw new Error("FreePBX bağlantı bilgileri eksik (secrets).");
     }
 
-    const token = await getToken();
-
     // Connection test: just fetch extensions
     if (action === "test") {
+      const token = await getToken();
       const ids = await fetchExistingExtensionIds(token);
       let debugList: any = null;
       if (body.debug) {
@@ -219,6 +218,7 @@ serve(async (req) => {
 
     // Delete action: remove the extension from FreePBX when a specialist is deleted
     if (action === "delete") {
+      const token = await getToken();
       const specialistId = body.specialist_id ?? null;
       let extStr = (body.extension ?? "").toString().trim();
 
@@ -284,6 +284,7 @@ serve(async (req) => {
     // set the Follow-Me list to the specialist's mobile number (0XXXXXXXXXX#)
     // and enable Follow-Me. Removes the old internal-number entries.
     if (action === "bulk_followme") {
+      const token = await getToken();
       const normalizeFollowMe = (raw: string): string | null => {
         let d = (raw ?? "").replace(/\D/g, "");
         if (!d) return null;
@@ -439,7 +440,10 @@ serve(async (req) => {
       }
     }
 
-    const existingIds = await fetchExistingExtensionIds(token);
+    // Create flow uses the PHP helper directly. Do not call FreePBX GraphQL here:
+    // this FreePBX instance redirects some GraphQL calls to HTTPS with a self-signed cert,
+    // which Deno rejects. DB-side assigned numbers are enough for our virtual extensions.
+    const existingIds: number[] = [];
 
     // Avoid collisions with numbers we already assigned in our DB
     const { data: assignedRows } = await supabaseAdmin
