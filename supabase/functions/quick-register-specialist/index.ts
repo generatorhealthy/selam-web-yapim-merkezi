@@ -333,6 +333,34 @@ serve(async (req) => {
       }
     }
 
+    // Otomatik FreePBX dahili numara oluştur + Follow-Me (uzmanın cep numarasına yönlendir)
+    let internalNumber: string | null = null;
+    if (specialist?.id) {
+      try {
+        const { data: extData, error: extErr } = await supabaseAdmin.functions.invoke(
+          "freepbx-create-extension",
+          {
+            body: {
+              action: "create",
+              specialist_id: specialist.id,
+              name: parsed.name,
+              phone: parsed.phone,
+              email: parsed.email,
+            },
+          },
+        );
+        if (extErr) {
+          console.warn("FreePBX dahili oluşturulamadı:", extErr);
+        } else if (extData?.extension) {
+          internalNumber = String(extData.extension);
+        }
+      } catch (e) {
+        console.warn("FreePBX dahili tetiklenemedi:", e);
+      }
+    }
+
+
+
     return new Response(
       JSON.stringify({
         success: true,
