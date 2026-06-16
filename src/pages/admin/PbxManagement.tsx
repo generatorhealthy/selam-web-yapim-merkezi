@@ -12,8 +12,9 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { AdminTopBar } from "@/components/AdminTopBar";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, Settings, Users, Activity, Edit2, Save, X, Plus, PhoneForwarded } from "lucide-react";
+import { Phone, Users, Activity, Edit2, Save, X, Plus, PhoneForwarded } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { PbxCallStats } from "@/components/admin/PbxCallStats";
 
 interface Specialist {
   id: string;
@@ -318,7 +319,7 @@ const PbxManagement = () => {
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Santral Hizmeti</h1>
             <p className="text-gray-600">
-              Bulut santral sistemi ve dahili numara yönetimi
+              FreePBX bulut santral sistemi, çağrı raporları ve dahili numara yönetimi
             </p>
           </div>
 
@@ -332,7 +333,7 @@ const PbxManagement = () => {
               <CardContent>
                 <div className="text-2xl font-bold">+90 216 706 06 11</div>
                 <p className="text-xs text-muted-foreground">
-                  Verimor Hattı
+                  FreePBX SIP Hattı
                 </p>
               </CardContent>
             </Card>
@@ -353,47 +354,26 @@ const PbxManagement = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Sistem Durumu</CardTitle>
-                <Activity className="h-4 w-4 text-orange-600" />
+                <Activity className="h-4 w-4 text-emerald-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  <Badge variant="secondary" className="bg-orange-100 text-orange-700">
-                    Kurulum Aşamasında
+                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+                    Aktif
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Verimor entegrasyonu bekleniyor
+                  FreePBX entegrasyonu çalışıyor
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Entegrasyon Bilgilendirmesi */}
-          <Card className="mb-8 border-orange-200 bg-orange-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-orange-800">
-                <Settings className="h-5 w-5" />
-                Verimor Entegrasyonu
-              </CardTitle>
-              <CardDescription className="text-orange-700">
-                Mevcut 902167060611 numaranızı santral sistemine bağlamak için:
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-orange-700">
-              <ol className="list-decimal list-inside space-y-2">
-                <li>Verimor panelinden API erişimi açılması</li>
-                <li>SIP Trunk yapılandırması</li>
-                <li>Gelen arama yönlendirme ayarları</li>
-                <li>IVR sistemi devre dışı bırakılması (istek üzerine)</li>
-              </ol>
-              <div className="mt-4 p-4 bg-white rounded-lg border border-orange-200">
-                <p className="font-medium text-orange-800">Gerekli Bilgiler:</p>
-                <p className="text-sm">• Verimor API kimlik bilgileri</p>
-                <p className="text-sm">• SIP hesabı parametreleri</p>
-                <p className="text-sm">• Santral yazılımı kurulumu</p>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Çağrı İstatistikleri */}
+          <div className="mb-8">
+            <PbxCallStats />
+          </div>
+
 
           {/* Uzman Listesi ve Dahili Numara Atama */}
           <Card>
