@@ -161,13 +161,6 @@ const PbxManagement = () => {
       const specialist = specialists.find((s) => s.id === specialistId);
       if (!specialist) throw new Error("Uzman bulunamadı.");
 
-      const { error } = await supabase
-        .from('specialists')
-        .update({ internal_number: editingNumber })
-        .eq('id', specialistId);
-
-      if (error) throw error;
-
       const { data: pbxData, error: pbxError } = await supabase.functions.invoke("freepbx-create-extension", {
         body: {
           action: "create",
@@ -182,8 +175,10 @@ const PbxManagement = () => {
       if (pbxError) throw pbxError;
       if (pbxData?.error) throw new Error(pbxData.error);
 
+      const savedNumber = pbxData?.extension ? String(pbxData.extension) : editingNumber;
+
       setSpecialists(prev => prev.map(s => 
-        s.id === specialistId ? { ...s, internal_number: editingNumber } : s
+        s.id === specialistId ? { ...s, internal_number: savedNumber } : s
       ));
 
       setEditingId(null);
