@@ -90,6 +90,36 @@ async function gql(token: string, query: string): Promise<any> {
   return json.data;
 }
 
+function isVirtualTechUnsupportedError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("not support this tech(`virtual`)") || message.includes("Please use pjsip instead");
+}
+
+function buildAddExtensionMutation(params: {
+  extStr: string;
+  safeName: string;
+  safePhone: string;
+  safeEmail: string;
+  tech: "virtual" | "pjsip";
+}): string {
+  return `mutation {
+      addExtension(input: {
+        extensionId: "${params.extStr}"
+        name: "${params.safeName}"
+        tech: "${params.tech}"
+        outboundCid: "${params.safePhone}"
+        email: "${params.safeEmail}"
+        callerID: "${params.safeName}"
+        umEnable: false
+        vmEnable: true
+        vmPassword: "${params.extStr}"
+      }) {
+        status
+        message
+      }
+    }`;
+}
+
 async function fetchExistingExtensionIds(token: string): Promise<number[]> {
   const data = await gql(
     token,
@@ -438,24 +468,17 @@ serve(async (req) => {
     const safePhone = phone.replace(/[^0-9+]/g, "");
     const safeEmail = email.replace(/"/g, '\\"');
 
-    const mutation = `mutation {
-      addExtension(input: {
-        extensionId: "${extStr}"
-        name: "${safeName}"
-        tech: "virtual"
-        outboundCid: "${safePhone}"
-        email: "${safeEmail}"
-        callerID: "${safeName}"
-        umEnable: false
-        vmEnable: true
-        vmPassword: "${extStr}"
-      }) {
-        status
-        message
-      }
-    }`;
+    let usedTech: "virtual" | "pjsip" = "virtual";
+    let result: any;
+    try {
+      result = await gql(token, buildAddExtensionMutation({ extStr, safeName, safePhone, safeEmail, tech: "virtual" }));
+    } catch (virtualErr) {
+      if (!isVirtualTechUnsupportedError(virtualErr)) throw virtualErr;
 
-    const result = await gql(token, mutation);
+      console.warn("FreePBX virtual tech desteklemiyor, pjsip ile tekrar deneniyor:", virtualErr);
+      usedTech = "pjsip";
+      result = await gql(token, buildAddExtensionMutation({ extStr, safeName, safePhone, safeEmail, tech: "pjsip" }));
+    }
     const addStatus = result?.addExtension?.status;
     const addMessage = result?.addExtension?.message ?? "";
 
@@ -533,7 +556,10 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         extension: extStr,
-        message: `Dahili oluşturuldu: ${extStr} (${name})`,
+        tech: usedTech,
+        message: usedTech === "virtual"
+          ? `Dahili oluşturuldu: ${extStr} (${name})`
+          : `FreePBX virtual desteklemedi; PJSIP dahili oluşturuldu: ${extStr} (${name})`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
