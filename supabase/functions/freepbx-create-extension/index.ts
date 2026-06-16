@@ -223,7 +223,8 @@ serve(async (req) => {
         throw new Error(`CDR yanıtı çözülemedi: ${text}`);
       }
       if (!res.ok || json?.success === false) {
-        throw new Error(json?.error || `CDR alınamadı (${res.status})`);
+        const detail = json?.detail ? ` (${json.detail})` : "";
+        throw new Error((json?.error || `CDR alınamadı (${res.status})`) + detail);
       }
       return new Response(JSON.stringify(json), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
