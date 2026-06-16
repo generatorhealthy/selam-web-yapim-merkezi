@@ -366,6 +366,7 @@ serve(async (req) => {
         success: true,
         userId,
         specialistId: specialist?.id,
+        internalNumber,
         parsed,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
