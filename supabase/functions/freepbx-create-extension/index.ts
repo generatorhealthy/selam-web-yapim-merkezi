@@ -525,9 +525,13 @@ serve(async (req) => {
       throw new Error(`FreePBX sunucu yanıtı çözülemedi: ${bulkText}`);
     }
     if (!bulkRes.ok || bulkJson.success !== true) {
-      throw new Error(
-        `Sanal dahili oluşturulamadı: ${bulkJson.error ?? bulkJson.import ?? bulkText}`,
-      );
+      const bulkError = bulkJson.error ?? bulkJson.import ?? bulkText;
+      if (bulkRes.status === 401 || bulkError === "unauthorized") {
+        throw new Error(
+          "FreePBX yardımcı dosyası secret doğrulamasını reddetti. Lovable FREEPBX_BULK_SECRET ile sunucudaki freepbx-ext.php içindeki $SECRET aynı olmalı.",
+        );
+      }
+      throw new Error(`Sanal dahili oluşturulamadı: ${bulkError}`);
     }
     const usedTech: "virtual" = "virtual";
 
