@@ -109,7 +109,38 @@ const QuickRegister = () => {
     setParsed(null);
     setResult(null);
     setError(null);
+    setCopied(false);
   };
+
+  const buildWelcomeMessage = (p: any) => {
+    const firstName = (p?.name || "").trim().split(/\s+/)[0] || "";
+    const profileUrl = p?.specialty && p?.name
+      ? `https://doktorumol.com.tr/${createSpecialtySlug(p.specialty)}/${createDoctorSlug(p.name)}`
+      : "";
+    return `Bu arada şundan da bahsedeyim ${firstName} Hanım/Bey bizde sizlere ekstra yönlendirme sağlıyoruz hatta size yönlendirdiğimiz kişiler için ilk görüşmeyi biz sağlıyoruz o şekilde sizin dahili numaranızı tuşlayarak size yönlendiriyoruz
+
+Giriş bilgileriniz;
+Kullanıcı adı : ${p?.email || ""}
+Parola : ${p?.password || ""}
+
+Profil Linki : ${profileUrl}
+
+Profiliniz oluşturulmuştur. Link üzerinden giriş yapabilirsiniz ${firstName} Hanım/Bey.`;
+  };
+
+  const handleCopyMessage = async () => {
+    if (!result?.parsed) return;
+    try {
+      await navigator.clipboard.writeText(buildWelcomeMessage(result.parsed));
+      setCopied(true);
+      toast({ title: "Kopyalandı", description: "Mesaj panoya kopyalandı." });
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast({ title: "Hata", description: "Kopyalanamadı.", variant: "destructive" });
+    }
+  };
+
+
 
   if (loading) {
     return (
