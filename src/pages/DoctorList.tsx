@@ -217,10 +217,18 @@ const DoctorList = () => {
   };
 
   const updateDisplayedSpecialists = () => {
-    const endIndex = (currentPage + 1) * ITEMS_PER_PAGE;
-    const newDisplayed = filteredSpecialists.slice(0, endIndex);
+    const total = filteredSpecialists.length;
+    if (total === 0) {
+      setDisplayedSpecialists([]);
+      setHasMore(false);
+      return;
+    }
+    const count = (currentPage + 1) * ITEMS_PER_PAGE;
+    // Loop back to the beginning when we run out of specialists
+    const newDisplayed = Array.from({ length: count }, (_, i) => filteredSpecialists[i % total]);
     setDisplayedSpecialists(newDisplayed);
-    setHasMore(endIndex < filteredSpecialists.length);
+    // Always allow loading more so the list cycles endlessly
+    setHasMore(true);
   };
 
   const loadMoreSpecialists = async () => {
@@ -363,11 +371,12 @@ const DoctorList = () => {
         ) : (
           <>
             <div className="space-y-4 md:space-y-8">
-              {displayedSpecialists.map((specialist) => {
+              {displayedSpecialists.map((specialist, index) => {
                 const specialtySlug = createSpecialtySlug(specialist.specialty);
                 
                 return (
-                  <Card key={specialist.id} className="bg-white border-0 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-2xl overflow-hidden animate-fade-in">
+                  <Card key={`${specialist.id}-${index}`} className="bg-white border-0 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-2xl overflow-hidden animate-fade-in">
+
                     <CardContent className="p-4 md:p-8">
                       <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex gap-8'}`}>
                         {/* Doctor Image */}
@@ -504,12 +513,7 @@ const DoctorList = () => {
               </div>
             )}
 
-            {/* End of Results Indicator */}
-            {!hasMore && displayedSpecialists.length > 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Tüm uzmanlar gösterildi</p>
-              </div>
-            )}
+
           </>
         )}
       </div>
