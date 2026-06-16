@@ -158,15 +158,27 @@ const PbxManagement = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('specialists')
-        .update({ internal_number: editingNumber })
-        .eq('id', specialistId);
+      const specialist = specialists.find((s) => s.id === specialistId);
+      if (!specialist) throw new Error("Uzman bulunamadı.");
 
-      if (error) throw error;
+      const { data: pbxData, error: pbxError } = await supabase.functions.invoke("freepbx-create-extension", {
+        body: {
+          action: "create",
+          specialist_id: specialistId,
+          extension: editingNumber,
+          name: specialist.name,
+          phone: specialist.phone,
+          email: specialist.email,
+        },
+      });
+
+      if (pbxError) throw pbxError;
+      if (pbxData?.error) throw new Error(pbxData.error);
+
+      const savedNumber = pbxData?.extension ? String(pbxData.extension) : editingNumber;
 
       setSpecialists(prev => prev.map(s => 
-        s.id === specialistId ? { ...s, internal_number: editingNumber } : s
+        s.id === specialistId ? { ...s, internal_number: savedNumber } : s
       ));
 
       setEditingId(null);
@@ -174,7 +186,7 @@ const PbxManagement = () => {
 
       toast({
         title: "Başarılı",
-        description: "Dahili numara güncellendi.",
+        description: pbxData?.message || "Dahili numara FreePBX ile güncellendi.",
       });
     } catch (error) {
       console.error('Error updating internal number:', error);

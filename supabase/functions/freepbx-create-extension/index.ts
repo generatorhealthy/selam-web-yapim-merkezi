@@ -343,6 +343,17 @@ serve(async (req) => {
     const email = (body.email ?? "").toString().trim();
     const orderId = body.order_id ?? null;
     const specialistId = body.specialist_id ?? null;
+    const requestedExtStr = body.extension ? String(body.extension).trim() : "";
+
+    if (requestedExtStr) {
+      const requestedExt = parseInt(requestedExtStr, 10);
+      if (isNaN(requestedExt) || requestedExt < MIN_EXTENSION || requestedExt > MAX_EXTENSION) {
+        return new Response(JSON.stringify({ error: `Dahili numara ${MIN_EXTENSION}-${MAX_EXTENSION} arasında olmalıdır.` }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     if (!name) {
       return new Response(JSON.stringify({ error: "İsim gerekli" }), {
@@ -351,14 +362,15 @@ serve(async (req) => {
       });
     }
 
-    // Idempotency (specialist): if this specialist already has an internal number, return it
+    // Idempotency (specialist): if this specialist already has an internal number, return it.
+    // When an extension is explicitly supplied from the admin edit flow, recreate/sync it in FreePBX.
     if (specialistId) {
       const { data: spec } = await supabaseAdmin
         .from("specialists")
         .select("internal_number")
         .eq("id", specialistId)
         .maybeSingle();
-      if (spec?.internal_number) {
+      if (spec?.internal_number && !requestedExtStr) {
         return new Response(
           JSON.stringify({
             success: true,
@@ -414,7 +426,7 @@ serve(async (req) => {
       .filter((n: number) => !isNaN(n));
 
     const allUsed = Array.from(new Set([...existingIds, ...assigned, ...specAssigned]));
-    const ext = computeNextExtension(allUsed);
+    const ext = requestedExtStr ? parseInt(requestedExtStr, 10) : computeNextExtension(allUsed);
     const extStr = String(ext);
 
     if (ext > MAX_EXTENSION) {
