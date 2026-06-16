@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import FileUpload from "@/components/FileUpload";
 import { useUserRole } from "@/hooks/useUserRole";
-import { ArrowLeft, Sparkles, Wand2, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { ArrowLeft, Sparkles, Wand2, CheckCircle2, AlertCircle, Loader2, Copy, Check } from "lucide-react";
 
 const PLACEHOLDER = `Ad Soyad: Dr. Ahmet Yılmaz
 Telefon Numarası: 0532 111 22 33
