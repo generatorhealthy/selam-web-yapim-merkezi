@@ -513,12 +513,7 @@ const DoctorList = () => {
               </div>
             )}
 
-            {/* End of Results Indicator */}
-            {!hasMore && displayedSpecialists.length > 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Tüm uzmanlar gösterildi</p>
-              </div>
-            )}
+
           </>
         )}
       </div>
