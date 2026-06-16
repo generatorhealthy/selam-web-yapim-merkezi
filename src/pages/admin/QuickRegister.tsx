@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import FileUpload from "@/components/FileUpload";
 import { useUserRole } from "@/hooks/useUserRole";
-import { ArrowLeft, Sparkles, Wand2, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { createDoctorSlug, createSpecialtySlug } from "@/utils/doctorUtils";
+import { ArrowLeft, Sparkles, Wand2, CheckCircle2, AlertCircle, Loader2, Copy, Check } from "lucide-react";
 
 const PLACEHOLDER = `Ad Soyad: Dr. Ahmet Yılmaz
 Telefon Numarası: 0532 111 22 33
@@ -38,8 +39,9 @@ const QuickRegister = () => {
   const [parsing, setParsing] = useState(false);
   const [creating, setCreating] = useState(false);
   const [parsed, setParsed] = useState<any>(null);
-  const [result, setResult] = useState<{ userId?: string; specialistId?: string } | null>(null);
+  const [result, setResult] = useState<{ userId?: string; specialistId?: string; parsed?: any } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!loading && userProfile) {
@@ -88,7 +90,7 @@ const QuickRegister = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult({ userId: data.userId, specialistId: data.specialistId });
+      setResult({ userId: data.userId, specialistId: data.specialistId, parsed: data.parsed });
       toast({
         title: "Başarılı",
         description: "Kullanıcı ve uzman profili oluşturuldu!",
@@ -107,7 +109,38 @@ const QuickRegister = () => {
     setParsed(null);
     setResult(null);
     setError(null);
+    setCopied(false);
   };
+
+  const buildWelcomeMessage = (p: any) => {
+    const firstName = (p?.name || "").trim().split(/\s+/)[0] || "";
+    const profileUrl = p?.specialty && p?.name
+      ? `https://doktorumol.com.tr/${createSpecialtySlug(p.specialty)}/${createDoctorSlug(p.name)}`
+      : "";
+    return `Bu arada şundan da bahsedeyim ${firstName} Hanım/Bey bizde sizlere ekstra yönlendirme sağlıyoruz hatta size yönlendirdiğimiz kişiler için ilk görüşmeyi biz sağlıyoruz o şekilde sizin dahili numaranızı tuşlayarak size yönlendiriyoruz
+
+Giriş bilgileriniz;
+Kullanıcı adı : ${p?.email || ""}
+Parola : ${p?.password || ""}
+
+Profil Linki : ${profileUrl}
+
+Profiliniz oluşturulmuştur. Link üzerinden giriş yapabilirsiniz ${firstName} Hanım/Bey.`;
+  };
+
+  const handleCopyMessage = async () => {
+    if (!result?.parsed) return;
+    try {
+      await navigator.clipboard.writeText(buildWelcomeMessage(result.parsed));
+      setCopied(true);
+      toast({ title: "Kopyalandı", description: "Mesaj panoya kopyalandı." });
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast({ title: "Hata", description: "Kopyalanamadı.", variant: "destructive" });
+    }
+  };
+
+
 
   if (loading) {
     return (
@@ -228,6 +261,27 @@ const QuickRegister = () => {
                   <Link to="/divan_paneli/specialists">Uzman Listesi</Link>
                 </Button>
               </div>
+
+              {result.parsed && (
+                <div className="mt-6 pt-4 border-t border-green-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-semibold text-green-900">
+                      Uzmana Gönderilecek Bilgi Mesajı
+                    </Label>
+                    <Button size="sm" onClick={handleCopyMessage} className="gap-2">
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copied ? "Kopyalandı" : "Mesajı Kopyala"}
+                    </Button>
+                  </div>
+                  <Textarea
+                    readOnly
+                    value={buildWelcomeMessage(result.parsed)}
+                    rows={12}
+                    className="text-sm bg-white font-mono"
+                    onFocus={(e) => e.currentTarget.select()}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
