@@ -39,6 +39,7 @@ const PbxManagement = () => {
   });
   const [bulkLoading, setBulkLoading] = useState(false);
   const [creatingExtId, setCreatingExtId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAutoCreateExtension = async (specialist: Specialist) => {
     setCreatingExtId(specialist.id);
@@ -485,6 +486,14 @@ const PbxManagement = () => {
               </div>
             </CardHeader>
             <CardContent>
+              <div className="mb-4">
+                <Input
+                  placeholder="İsim, e-posta veya telefon ile ara..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="max-w-sm"
+                />
+              </div>
               {loading ? (
                 <div className="flex justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -502,7 +511,17 @@ const PbxManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {specialists.map((specialist) => (
+                    {specialists
+                      .filter((s) => {
+                        const q = searchQuery.trim().toLowerCase();
+                        if (!q) return true;
+                        return (
+                          (s.name || "").toLowerCase().includes(q) ||
+                          (s.email || "").toLowerCase().includes(q) ||
+                          (s.phone || "").toLowerCase().includes(q)
+                        );
+                      })
+                      .map((specialist) => (
                       <TableRow key={specialist.id}>
                         <TableCell className="font-medium">{specialist.name}</TableCell>
                         <TableCell>{specialist.specialty}</TableCell>
