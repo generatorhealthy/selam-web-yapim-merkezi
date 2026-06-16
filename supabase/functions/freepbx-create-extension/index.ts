@@ -158,12 +158,25 @@ serve(async (req) => {
     // Connection test: just fetch extensions
     if (action === "test") {
       const ids = await fetchExistingExtensionIds(token);
+      let debugList: any = null;
+      if (body.debug) {
+        try {
+          debugList = await gql(
+            token,
+            `query { fetchAllExtensions { extension { extensionId user { name } coreDevice { tech } } } }`,
+          );
+        } catch (e) {
+          debugList = { error: e instanceof Error ? e.message : String(e) };
+        }
+      }
       return new Response(
         JSON.stringify({
           success: true,
           message: "Bağlantı başarılı",
           count: ids.length,
+          ids,
           nextExtension: computeNextExtension(ids),
+          debugList,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
