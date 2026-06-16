@@ -38,6 +38,43 @@ const PbxManagement = () => {
     internal_number: ""
   });
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [creatingExtId, setCreatingExtId] = useState<string | null>(null);
+
+  const handleAutoCreateExtension = async (specialist: Specialist) => {
+    setCreatingExtId(specialist.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
+        body: {
+          action: "create",
+          specialist_id: specialist.id,
+          name: specialist.name,
+          phone: specialist.phone,
+          email: specialist.email,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const ext = data?.extension ? String(data.extension) : null;
+      if (ext) {
+        setSpecialists((prev) =>
+          prev.map((s) => (s.id === specialist.id ? { ...s, internal_number: ext } : s)),
+        );
+      }
+      toast({
+        title: "Dahili Oluşturuldu",
+        description: data?.message || `Dahili numara: ${ext}`,
+      });
+    } catch (e) {
+      console.error("Auto create extension error:", e);
+      toast({
+        title: "Hata",
+        description: e instanceof Error ? e.message : "Dahili oluşturulamadı.",
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingExtId(null);
+    }
+  };
 
   const handleBulkFollowMe = async () => {
     if (!confirm("Tüm uzmanların Follow-Me listesi, dahili numaralar silinip kendi cep numaralarıyla (0XXXXXXXXXX#) güncellenecek ve Follow-Me etkinleştirilecek. Devam edilsin mi?")) {
