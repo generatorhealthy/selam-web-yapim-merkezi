@@ -25,6 +25,11 @@
 
 header('Content-Type: application/json');
 
+// fwconsole bulkimport + reload uzun sürebilir; PHP varsayılan 30sn limitini kaldır.
+@set_time_limit(0);
+@ini_set('max_execution_time', '0');
+@ignore_user_abort(true);
+
 // ====== AYAR ======
 $SECRET = '1b849165041c774396da0fc92c8fa4c10af3e84d6d0da6d3';
 $FWCONSOLE = '/usr/sbin/fwconsole'; // gerekirse `which fwconsole` ile doğrulayın
