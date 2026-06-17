@@ -156,10 +156,10 @@ const PbxManagement = () => {
   const handleSave = async (specialistId: string) => {
     const internalNumber = parseInt(editingNumber);
     
-    if (isNaN(internalNumber) || internalNumber < 100 || internalNumber > 999) {
+    if (isNaN(internalNumber) || internalNumber < 100 || internalNumber > 2000) {
       toast({
         title: "Hata",
-        description: "Dahili numara 100-999 arasında olmalıdır.",
+        description: "Dahili numara 100-2000 arasında olmalıdır.",
         variant: "destructive",
       });
       return;
@@ -237,10 +237,10 @@ const PbxManagement = () => {
     // Validate internal number if provided
     if (newSpecialist.internal_number) {
       const internalNumber = parseInt(newSpecialist.internal_number);
-      if (isNaN(internalNumber) || internalNumber < 100 || internalNumber > 999) {
+      if (isNaN(internalNumber) || internalNumber < 100 || internalNumber > 2000) {
         toast({
           title: "Hata",
-          description: "Dahili numara 100-999 arasında olmalıdır.",
+          description: "Dahili numara 100-2000 arasında olmalıdır.",
           variant: "destructive",
         });
         return;
@@ -300,7 +300,7 @@ const PbxManagement = () => {
   };
 
   const assignedCount = specialists.filter(s => s.internal_number).length;
-  const availableNumbers = Array.from({length: 900}, (_, i) => i + 100).filter(num => 
+  const availableNumbers = Array.from({length: 1901}, (_, i) => i + 100).filter(num => 
     !specialists.some(s => parseInt(s.internal_number || "0") === num)
   );
 
@@ -393,9 +393,9 @@ const PbxManagement = () => {
                 type="number"
                 value={newSpecialist.internal_number}
                 onChange={(e) => setNewSpecialist((prev) => ({ ...prev, internal_number: e.target.value }))}
-                placeholder="100-999"
+                placeholder="100-2000"
                 min="100"
-                max="999"
+                max="2000"
               />
             </div>
           </div>
@@ -530,7 +530,7 @@ const PbxManagement = () => {
                         Uzman Dahili Numaraları
                       </CardTitle>
                       <CardDescription className="mt-1">
-                        Uzmanlara 100-999 arası dahili numaralar atayın. Müsait: {availableNumbers.length}
+                        Uzmanlara 100-2000 arası dahili numaralar atayın. Müsait: {availableNumbers.length}
                       </CardDescription>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -616,10 +616,10 @@ const PbxManagement = () => {
                                     type="number"
                                     value={editingNumber}
                                     onChange={(e) => setEditingNumber(e.target.value)}
-                                    placeholder="100-999"
+                                    placeholder="100-2000"
                                     className="w-24"
                                     min="100"
-                                    max="999"
+                                    max="2000"
                                   />
                                 ) : specialist.internal_number ? (
                                   <Badge className="gap-1 bg-primary/10 font-mono text-primary hover:bg-primary/15">
