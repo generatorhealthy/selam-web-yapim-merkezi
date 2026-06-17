@@ -400,93 +400,121 @@ export const PbxCallStats = () => {
           </Card>
 
           {/* Danışan Yönlendirmeleri */}
-          <Card className="border-primary/20">
-            <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <PhoneForwarded className="h-4 w-4 text-primary" />
-                  Danışan Yönlendirmeleri
-                </CardTitle>
-                {(() => {
-                  const tr = data?.transfers ?? [];
-                  const acti = tr.filter((t) => num(t.acti) === 1).length;
-                  return (
+          {(() => {
+            const transfers = data?.transfers ?? [];
+            const acti = transfers.filter((t) => num(t.acti) === 1).length;
+            const acilmadi = transfers.length - acti;
+            const toplamDk = transfers
+              .filter((t) => num(t.acti) === 1)
+              .reduce((sum, t) => sum + num(t.sure) / 60, 0);
+            const initials = (name: string) =>
+              name
+                .trim()
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((w) => w[0]?.toUpperCase() ?? "")
+                .join("");
+
+            return (
+              <Card className="overflow-hidden border-primary/20 shadow-sm">
+                <CardHeader className="border-b bg-gradient-to-r from-primary/5 via-primary/[0.03] to-transparent">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <PhoneForwarded className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base">Danışan Yönlendirmeleri</CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          Hangi danışan hangi uzmana yönlendirildi, uzman açtı mı, kaç dakika konuştular.
+                        </p>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <Badge variant="outline" className="border-emerald-300 text-emerald-700">
-                        {acti} Açıldı
+                      <Badge variant="outline" className="gap-1 border-emerald-300 bg-emerald-50 text-emerald-700">
+                        <CheckCircle2 className="h-3 w-3" /> {acti} Açıldı
                       </Badge>
-                      <Badge variant="outline" className="border-red-300 text-red-700">
-                        {tr.length - acti} Açılmadı
+                      <Badge variant="outline" className="gap-1 border-red-300 bg-red-50 text-red-700">
+                        <XCircle className="h-3 w-3" /> {acilmadi} Açılmadı
+                      </Badge>
+                      <Badge variant="outline" className="gap-1 border-violet-300 bg-violet-50 text-violet-700">
+                        <Clock className="h-3 w-3" /> {fmtMinutes(toplamDk)}
                       </Badge>
                     </div>
-                  );
-                })()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Hangi danışan hangi uzmana yönlendirildi, uzman telefonu açtı mı, kaç dakika konuştular.
-              </p>
-            </CardHeader>
-            <CardContent>
-              {(data?.transfers?.length ?? 0) === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">Bu aralıkta yönlendirme kaydı yok.</p>
-              ) : (
-                <div className="max-h-96 overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Tarih</TableHead>
-                        <TableHead>Danışan</TableHead>
-                        <TableHead>Uzman (Dahili)</TableHead>
-                        <TableHead>Açtı mı?</TableHead>
-                        <TableHead className="text-right">Görüşme</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {(data?.transfers ?? []).map((t, i) => {
-                        const acti = num(t.acti) === 1;
-                        const uzmanAdi = extMap[String(t.uzman_ext)];
-                        return (
-                          <TableRow key={i}>
-                            <TableCell className="whitespace-nowrap text-sm">
-                              {format(new Date(t.calldate), "d MMM HH:mm", { locale: tr })}
-                            </TableCell>
-                            <TableCell className="font-mono text-sm">{t.musteri}</TableCell>
-                            <TableCell className="text-sm">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="font-mono">
-                                  {t.uzman_ext}
-                                </Badge>
-                                {uzmanAdi && (
-                                  <span className="flex items-center gap-1 text-muted-foreground">
-                                    <User className="h-3 w-3" />
-                                    {uzmanAdi}
-                                  </span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {acti ? (
-                                <span className="flex items-center gap-1 text-sm font-medium text-emerald-600">
-                                  <CheckCircle2 className="h-4 w-4" /> Açtı
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-1 text-sm font-medium text-red-600">
-                                  <XCircle className="h-4 w-4" /> Açmadı
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right text-sm">
-                              {acti ? fmtMinutes(num(t.sure) / 60) : "—"}
-                            </TableCell>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {transfers.length === 0 ? (
+                    <p className="py-10 text-center text-sm text-muted-foreground">Bu aralıkta yönlendirme kaydı yok.</p>
+                  ) : (
+                    <div className="max-h-[28rem] overflow-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-card">
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead>Tarih</TableHead>
+                            <TableHead>Danışan</TableHead>
+                            <TableHead>Uzman</TableHead>
+                            <TableHead>Açtı mı?</TableHead>
+                            <TableHead className="text-right">Görüşme</TableHead>
                           </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                        </TableHeader>
+                        <TableBody>
+                          {transfers.map((t, i) => {
+                            const isOpen = num(t.acti) === 1;
+                            const uzmanAdi = extMap[String(t.uzman_ext)];
+                            return (
+                              <TableRow key={i} className="group">
+                                <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                                  {format(new Date(t.calldate), "d MMM HH:mm", { locale: tr })}
+                                </TableCell>
+                                <TableCell className="font-mono text-sm font-medium">{t.musteri}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2.5">
+                                    <div
+                                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                                        uzmanAdi
+                                          ? "bg-primary/10 text-primary"
+                                          : "bg-muted text-muted-foreground"
+                                      }`}
+                                    >
+                                      {uzmanAdi ? initials(uzmanAdi) : <User className="h-4 w-4" />}
+                                    </div>
+                                    <div className="min-w-0 leading-tight">
+                                      <p className="truncate text-sm font-medium">
+                                        {uzmanAdi || "Bilinmeyen uzman"}
+                                      </p>
+                                      <span className="font-mono text-xs text-muted-foreground">
+                                        Dahili {t.uzman_ext}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {isOpen ? (
+                                    <Badge className="gap-1 border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-50" variant="outline">
+                                      <CheckCircle2 className="h-3.5 w-3.5" /> Açtı
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 hover:bg-red-50" variant="outline">
+                                      <XCircle className="h-3.5 w-3.5" /> Açmadı
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-right text-sm font-medium">
+                                  {isOpen ? fmtMinutes(num(t.sure) / 60) : <span className="text-muted-foreground">—</span>}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
+
 
           {/* Son çağrılar */}
           <Card>
