@@ -300,7 +300,7 @@ const PbxManagement = () => {
   };
 
   const assignedCount = specialists.filter(s => s.internal_number).length;
-  const availableNumbers = Array.from({length: 900}, (_, i) => i + 100).filter(num => 
+  const availableNumbers = Array.from({length: 1901}, (_, i) => i + 100).filter(num => 
     !specialists.some(s => parseInt(s.internal_number || "0") === num)
   );
 
