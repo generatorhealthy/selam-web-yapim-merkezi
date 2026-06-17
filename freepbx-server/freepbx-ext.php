@@ -236,6 +236,21 @@ if ($action === 'cdr_stats') {
             WHEN $isIntSrc AND $isIntDst THEN 'dahili' ELSE 'diger' END) yon
     FROM cdr WHERE $where ORDER BY calldate DESC LIMIT 100");
 
+  // Danışan yönlendirmeleri (transferler):
+  // Bir dış numara (danışan) ile bir iç dahili (uzman) birbirine bağlandığında.
+  // musteri = dış numara, uzman_ext = iç dahili, sure = görüşme saniyesi,
+  // acti = uzman telefonu açtı mı (ANSWERED ve billsec>0).
+  $transfers = $q("SELECT calldate,
+      (CASE WHEN $isExtSrc AND $isIntDst THEN src ELSE dst END) musteri,
+      (CASE WHEN $isExtSrc AND $isIntDst THEN dst ELSE src END) uzman_ext,
+      billsec sure,
+      disposition,
+      (disposition='ANSWERED' AND billsec > 0) acti,
+      (CASE WHEN $isIntSrc AND $isExtDst THEN 'cikis' ELSE 'transfer' END) yon
+    FROM cdr
+    WHERE $where AND (($isExtSrc AND $isIntDst) OR ($isIntSrc AND $isExtDst))
+    ORDER BY calldate DESC LIMIT 300");
+
   $mysqli->close();
   json_response([
     'success' => true,
@@ -245,6 +260,7 @@ if ($action === 'cdr_stats') {
     'daily' => $daily,
     'by_extension' => $byExt,
     'recent' => $recent,
+    'transfers' => $transfers,
   ]);
 }
 
