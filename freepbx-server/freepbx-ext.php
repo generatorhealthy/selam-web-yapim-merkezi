@@ -97,14 +97,58 @@ if ($action === 'cdr_stats') {
   if ($to === '') { $to = date('Y-m-d') . ' 23:59:59'; }
   elseif (strlen($to) <= 10) { $to .= ' 23:59:59'; }
 
-  // FreePBX DB kimlik bilgilerini /etc/freepbx.conf'tan al
-  $dbhost = 'localhost'; $dbuser = 'root'; $dbpass = ''; $cdrdb = 'asteriskcdrdb';
-  $conf = @file_get_contents('/etc/freepbx.conf');
-  if ($conf !== false) {
-    if (preg_match("/AMPDBHOST'\s*\]\s*=\s*'([^']*)'/", $conf, $m)) $dbhost = $m[1];
-    if (preg_match("/AMPDBUSER'\s*\]\s*=\s*'([^']*)'/", $conf, $m)) $dbuser = $m[1];
-    if (preg_match("/AMPDBPASS'\s*\]\s*=\s*'([^']*)'/", $conf, $m)) $dbpass = $m[1];
-    if (preg_match("/CDRDBNAME'\s*\]\s*=\s*'([^']*)'/", $conf, $m)) $cdrdb = $m[1];
+  // FreePBX/CDR DB kimlik bilgilerini mümkün olan tüm standart dosyalardan al.
+  // Önceki sürüm sadece tek tırnaklı /etc/freepbx.conf formatını okuyordu;
+  // okunamazsa root'a düşüyordu ve "Access denied for user root" hatası veriyordu.
+  $dbhost = 'localhost'; $dbuser = ''; $dbpass = ''; $cdrdb = 'asteriskcdrdb';
+  $credentialSources = [];
+
+  $readAmpValue = function($content, $key) {
+    $quotedKey = preg_quote($key, '/');
+    if (preg_match('/\[\s*[\'\"]' . $quotedKey . '[\'\"]\s*\]\s*=\s*[\'\"]([^\'\"]*)[\'\"]/m', $content, $m)) {
+      return $m[1];
+    }
+    if (preg_match('/^\s*' . $quotedKey . '\s*=\s*[\'\"]?([^\'\"\r\n;]+)[\'\"]?/m', $content, $m)) {
+      return trim($m[1]);
+    }
+    return null;
+  };
+
+  foreach (['/etc/freepbx.conf', '/etc/amportal.conf'] as $confFile) {
+    $conf = @file_get_contents($confFile);
+    if ($conf === false) continue;
+
+    $credentialSources[] = $confFile;
+    $v = $readAmpValue($conf, 'AMPDBHOST'); if ($v !== null && $v !== '') $dbhost = $v;
+    $v = $readAmpValue($conf, 'AMPDBUSER'); if ($v !== null && $v !== '') $dbuser = $v;
+    $v = $readAmpValue($conf, 'AMPDBPASS'); if ($v !== null) $dbpass = $v;
+    $v = $readAmpValue($conf, 'CDRDBNAME'); if ($v !== null && $v !== '') $cdrdb = $v;
+  }
+
+  // Bazı FreePBX kurulumlarında CDR bilgisi ayrı dosyada olur.
+  $cdrConf = @file_get_contents('/etc/asterisk/cdr_mysql.conf');
+  if ($cdrConf !== false) {
+    $credentialSources[] = '/etc/asterisk/cdr_mysql.conf';
+    $ini = @parse_ini_string($cdrConf, true, INI_SCANNER_RAW);
+    $section = is_array($ini) ? ($ini['global'] ?? $ini) : [];
+    if (is_array($section)) {
+      if (!empty($section['hostname'])) $dbhost = $section['hostname'];
+      if (!empty($section['host'])) $dbhost = $section['host'];
+      if (!empty($section['user'])) $dbuser = $section['user'];
+      if (!empty($section['username'])) $dbuser = $section['username'];
+      if (array_key_exists('password', $section)) $dbpass = (string)$section['password'];
+      if (!empty($section['dbname'])) $cdrdb = $section['dbname'];
+      if (!empty($section['database'])) $cdrdb = $section['database'];
+    }
+  }
+
+  if ($dbuser === '') {
+    json_response([
+      'success' => false,
+      'error' => 'FreePBX CDR veritabanı kullanıcı bilgisi okunamadı.',
+      'detail' => 'PHP kullanıcısı /etc/freepbx.conf veya /etc/asterisk/cdr_mysql.conf dosyasını okuyamıyor olabilir.',
+      'sources' => $credentialSources,
+    ], 500);
   }
 
   // PHP 8.1+ varsayılan olarak mysqli hatalarını exception fırlatır -> fatal hata olur.
@@ -121,6 +165,7 @@ if ($action === 'cdr_stats') {
       'success' => false,
       'error' => 'CDR veritabanına bağlanılamadı (' . $mysqli->connect_errno . '): ' . $mysqli->connect_error
         . ' | host=' . $dbhost . ' user=' . $dbuser . ' db=' . $cdrdb,
+      'detail' => 'Okunan kaynaklar: ' . (empty($credentialSources) ? 'hiçbiri' : implode(', ', $credentialSources)),
     ], 500);
   }
   $mysqli->set_charset('utf8mb4');
