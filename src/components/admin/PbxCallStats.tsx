@@ -148,6 +148,22 @@ export const PbxCallStats = () => {
   const [data, setData] = useState<CdrResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [extMap, setExtMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    (async () => {
+      const { data: rows } = await supabase
+        .from("freepbx_extensions")
+        .select("extension, customer_name");
+      if (rows) {
+        const map: Record<string, string> = {};
+        rows.forEach((r: any) => {
+          if (r.extension) map[String(r.extension)] = r.customer_name || "";
+        });
+        setExtMap(map);
+      }
+    })();
+  }, []);
 
   const fetchStats = useCallback(async (days: number) => {
     setLoading(true);
