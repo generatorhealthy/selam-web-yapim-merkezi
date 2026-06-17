@@ -7,12 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { AdminTopBar } from "@/components/AdminTopBar";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, Users, Activity, Edit2, Save, X, Plus, PhoneForwarded } from "lucide-react";
+import { Phone, Users, Activity, Edit2, Save, X, Plus, PhoneForwarded, Search, BarChart3, Hash, Server, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { PbxCallStats } from "@/components/admin/PbxCallStats";
 
