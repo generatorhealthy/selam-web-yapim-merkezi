@@ -42,6 +42,7 @@ import {
   Mail,
   ShieldCheck,
   Smartphone,
+  Server,
   Briefcase
 } from "lucide-react";
 
