@@ -74,6 +74,16 @@ interface RecentRow {
   yon: string;
 }
 
+interface TransferRow {
+  calldate: string;
+  musteri: string;
+  uzman_ext: string;
+  sure: number;
+  disposition: string;
+  acti: number;
+  yon: string;
+}
+
 interface CdrResponse {
   success: boolean;
   from: string;
@@ -82,6 +92,7 @@ interface CdrResponse {
   daily: DailyRow[];
   by_extension: ExtRow[];
   recent: RecentRow[];
+  transfers?: TransferRow[];
 }
 
 const RANGES = [
