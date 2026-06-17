@@ -399,6 +399,95 @@ export const PbxCallStats = () => {
             </CardContent>
           </Card>
 
+          {/* Danışan Yönlendirmeleri */}
+          <Card className="border-primary/20">
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <PhoneForwarded className="h-4 w-4 text-primary" />
+                  Danışan Yönlendirmeleri
+                </CardTitle>
+                {(() => {
+                  const tr = data?.transfers ?? [];
+                  const acti = tr.filter((t) => num(t.acti) === 1).length;
+                  return (
+                    <div className="flex items-center gap-2 text-xs">
+                      <Badge variant="outline" className="border-emerald-300 text-emerald-700">
+                        {acti} Açıldı
+                      </Badge>
+                      <Badge variant="outline" className="border-red-300 text-red-700">
+                        {tr.length - acti} Açılmadı
+                      </Badge>
+                    </div>
+                  );
+                })()}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Hangi danışan hangi uzmana yönlendirildi, uzman telefonu açtı mı, kaç dakika konuştular.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {(data?.transfers?.length ?? 0) === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">Bu aralıkta yönlendirme kaydı yok.</p>
+              ) : (
+                <div className="max-h-96 overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tarih</TableHead>
+                        <TableHead>Danışan</TableHead>
+                        <TableHead>Uzman (Dahili)</TableHead>
+                        <TableHead>Açtı mı?</TableHead>
+                        <TableHead className="text-right">Görüşme</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(data?.transfers ?? []).map((t, i) => {
+                        const acti = num(t.acti) === 1;
+                        const uzmanAdi = extMap[String(t.uzman_ext)];
+                        return (
+                          <TableRow key={i}>
+                            <TableCell className="whitespace-nowrap text-sm">
+                              {format(new Date(t.calldate), "d MMM HH:mm", { locale: tr })}
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">{t.musteri}</TableCell>
+                            <TableCell className="text-sm">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="font-mono">
+                                  {t.uzman_ext}
+                                </Badge>
+                                {uzmanAdi && (
+                                  <span className="flex items-center gap-1 text-muted-foreground">
+                                    <User className="h-3 w-3" />
+                                    {uzmanAdi}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {acti ? (
+                                <span className="flex items-center gap-1 text-sm font-medium text-emerald-600">
+                                  <CheckCircle2 className="h-4 w-4" /> Açtı
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1 text-sm font-medium text-red-600">
+                                  <XCircle className="h-4 w-4" /> Açmadı
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right text-sm">
+                              {acti ? fmtMinutes(num(t.sure) / 60) : "—"}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Son çağrılar */}
           <Card>
             <CardHeader>
