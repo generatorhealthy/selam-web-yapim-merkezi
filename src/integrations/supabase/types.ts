@@ -3857,6 +3857,44 @@ export type Database = {
         }
         Relationships: []
       }
+      client_referral_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string
+          referral_id: string
+          specialist_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note: string
+          referral_id: string
+          specialist_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string
+          referral_id?: string
+          specialist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_referral_notes_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "client_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_referrals: {
         Row: {
           client_contact: string | null
