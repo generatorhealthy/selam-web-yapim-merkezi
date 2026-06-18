@@ -1,9 +1,128 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Calendar, Phone, User } from "lucide-react";
+import { Users, Calendar, Phone, User, StickyNote, Trash2, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+
+interface ReferralNote {
+  id: string;
+  note: string;
+  created_at: string;
+}
+
+const ReferralNotes = ({ referralId, specialistId }: { referralId: string; specialistId: string }) => {
+  const { toast } = useToast();
+  const [notes, setNotes] = useState<ReferralNote[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const loadNotes = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("client_referral_notes")
+      .select("id, note, created_at")
+      .eq("referral_id", referralId)
+      .order("created_at", { ascending: false });
+    if (!error) setNotes(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    void loadNotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [referralId]);
+
+  const handleAdd = async () => {
+    const trimmed = newNote.trim();
+    if (!trimmed) return;
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("client_referral_notes").insert({
+      referral_id: referralId,
+      specialist_id: specialistId,
+      note: trimmed,
+      created_by: user?.id ?? null,
+    });
+    if (error) {
+      toast({ title: "Hata", description: "Not eklenemedi", variant: "destructive" });
+    } else {
+      setNewNote("");
+      toast({ title: "Not eklendi" });
+      await loadNotes();
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bu notu silmek istediğinizden emin misiniz?")) return;
+    const { error } = await supabase.from("client_referral_notes").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Hata", description: "Not silinemedi", variant: "destructive" });
+    } else {
+      toast({ title: "Not silindi" });
+      await loadNotes();
+    }
+  };
+
+  return (
+    <div className="mt-4 border-t pt-3 space-y-3">
+      <div className="flex items-center gap-2 text-sm font-medium text-amber-600">
+        <StickyNote className="w-4 h-4" />
+        Notlar
+      </div>
+
+      <div className="space-y-2">
+        <Textarea
+          value={newNote}
+          onChange={(e) => setNewNote(e.target.value)}
+          placeholder="Bu danışanla ilgili bir not yazın..."
+          rows={2}
+        />
+        <div className="flex justify-end">
+          <Button size="sm" onClick={handleAdd} disabled={saving || !newNote.trim()}>
+            {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Not Ekle
+          </Button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-xs text-muted-foreground">Yükleniyor...</div>
+      ) : notes.length === 0 ? (
+        <div className="text-xs text-muted-foreground">Henüz not eklenmemiş.</div>
+      ) : (
+        <div className="space-y-2">
+          {notes.map((n) => (
+            <div key={n.id} className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="whitespace-pre-wrap text-gray-800 flex-1">{n.note}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => handleDelete(n.id)}
+                  title="Sil"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              <div className="mt-2 text-xs text-gray-500">
+                {format(new Date(n.created_at), "dd MMM yyyy HH:mm", { locale: tr })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface ClientReferral {
   id: string;
@@ -224,6 +343,7 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
                                 Danışan
                               </Badge>
                             </div>
+                            <ReferralNotes referralId={referral.id} specialistId={specialistId} />
                           </CardContent>
                         </Card>
                       ))}
