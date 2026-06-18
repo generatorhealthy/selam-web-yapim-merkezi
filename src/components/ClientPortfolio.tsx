@@ -343,6 +343,7 @@ export const ClientPortfolio = ({ specialistId }: ClientPortfolioProps) => {
                                 Danışan
                               </Badge>
                             </div>
+                            <ReferralNotes referralId={referral.id} specialistId={specialistId} />
                           </CardContent>
                         </Card>
                       ))}
