@@ -52,10 +52,16 @@ Deno.serve(async (req) => {
 
     const transfers: any[] = Array.isArray((cdr as any)?.transfers) ? (cdr as any).transfers : [];
 
-    // Only inbound transfers to a specialist that were NOT answered
-    const missed = transfers.filter(
-      (t) => Number(t.acti ?? 0) === 0 && String(t.yon ?? "") === "transfer",
-    );
+    // Cutoff: only notify calls that happened from this point onward.
+    // No retroactive messages for calls before this timestamp.
+    const CUTOFF = new Date("2026-06-18T10:30:00Z").getTime();
+
+    // Only inbound transfers to a specialist that were NOT answered AND after the cutoff
+    const missed = transfers.filter((t) => {
+      if (Number(t.acti ?? 0) !== 0 || String(t.yon ?? "") !== "transfer") return false;
+      const ts = t.calldate ? new Date(String(t.calldate).replace(" ", "T")).getTime() : 0;
+      return ts >= CUTOFF;
+    });
 
     if (missed.length === 0) {
       return new Response(JSON.stringify({ success: true, processed: 0, sent: 0 }), {
