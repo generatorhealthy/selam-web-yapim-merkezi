@@ -4868,6 +4868,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pbx_missed_transfer_notifications: {
+        Row: {
+          call_date: string | null
+          client_phone: string | null
+          created_at: string
+          id: string
+          signature: string
+          specialist_ext: string | null
+          specialist_name: string | null
+          specialist_phone: string | null
+          whatsapp_client_ok: boolean | null
+          whatsapp_specialist_ok: boolean | null
+        }
+        Insert: {
+          call_date?: string | null
+          client_phone?: string | null
+          created_at?: string
+          id?: string
+          signature: string
+          specialist_ext?: string | null
+          specialist_name?: string | null
+          specialist_phone?: string | null
+          whatsapp_client_ok?: boolean | null
+          whatsapp_specialist_ok?: boolean | null
+        }
+        Update: {
+          call_date?: string | null
+          client_phone?: string | null
+          created_at?: string
+          id?: string
+          signature?: string
+          specialist_ext?: string | null
+          specialist_name?: string | null
+          specialist_phone?: string | null
+          whatsapp_client_ok?: boolean | null
+          whatsapp_specialist_ok?: boolean | null
+        }
+        Relationships: []
+      }
       processed_emails: {
         Row: {
           from_address: string | null
