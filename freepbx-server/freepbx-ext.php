@@ -103,12 +103,22 @@ if ($action === 'cdr_stats') {
   $dbhost = 'localhost'; $dbuser = ''; $dbpass = ''; $cdrdb = 'asteriskcdrdb';
   $credentialSources = [];
 
+  // Geçerli tanımlayıcı (db adı / kullanıcı / host) kontrolü.
+  // Config dosyasındaki yorum/placeholder satırları (ör. "# Remote CDR DB Password")
+  // yanlışlıkla db adı olarak okunmasın diye boşluk/# içeren değerleri reddeder.
+  $validIdent = function($v) {
+    $v = trim((string)$v);
+    if ($v === '') return false;
+    if ($v[0] === '#' || $v[0] === ';') return false;        // yorum satırı
+    return (bool)preg_match('/^[A-Za-z0-9_.\-]+$/', $v);       // boşluk/garip karakter yok
+  };
+
   $readAmpValue = function($content, $key) {
     $quotedKey = preg_quote($key, '/');
     if (preg_match('/\[\s*[\'\"]' . $quotedKey . '[\'\"]\s*\]\s*=\s*[\'\"]([^\'\"]*)[\'\"]/m', $content, $m)) {
       return $m[1];
     }
-    if (preg_match('/^\s*' . $quotedKey . '\s*=\s*[\'\"]?([^\'\"\r\n;]+)[\'\"]?/m', $content, $m)) {
+    if (preg_match('/^\s*' . $quotedKey . '\s*=\s*[\'\"]?([^\'\"\r\n;#]+)[\'\"]?/m', $content, $m)) {
       return trim($m[1]);
     }
     return null;
@@ -119,10 +129,10 @@ if ($action === 'cdr_stats') {
     if ($conf === false) continue;
 
     $credentialSources[] = $confFile;
-    $v = $readAmpValue($conf, 'AMPDBHOST'); if ($v !== null && $v !== '') $dbhost = $v;
-    $v = $readAmpValue($conf, 'AMPDBUSER'); if ($v !== null && $v !== '') $dbuser = $v;
+    $v = $readAmpValue($conf, 'AMPDBHOST'); if ($validIdent($v)) $dbhost = $v;
+    $v = $readAmpValue($conf, 'AMPDBUSER'); if ($validIdent($v)) $dbuser = $v;
     $v = $readAmpValue($conf, 'AMPDBPASS'); if ($v !== null) $dbpass = $v;
-    $v = $readAmpValue($conf, 'CDRDBNAME'); if ($v !== null && $v !== '') $cdrdb = $v;
+    $v = $readAmpValue($conf, 'CDRDBNAME'); if ($validIdent($v)) $cdrdb = $v;
   }
 
   // Bazı FreePBX kurulumlarında CDR bilgisi ayrı dosyada olur.
@@ -132,15 +142,18 @@ if ($action === 'cdr_stats') {
     $ini = @parse_ini_string($cdrConf, true, INI_SCANNER_RAW);
     $section = is_array($ini) ? ($ini['global'] ?? $ini) : [];
     if (is_array($section)) {
-      if (!empty($section['hostname'])) $dbhost = $section['hostname'];
-      if (!empty($section['host'])) $dbhost = $section['host'];
-      if (!empty($section['user'])) $dbuser = $section['user'];
-      if (!empty($section['username'])) $dbuser = $section['username'];
+      if ($validIdent($section['hostname'] ?? null)) $dbhost = $section['hostname'];
+      if ($validIdent($section['host'] ?? null)) $dbhost = $section['host'];
+      if ($validIdent($section['user'] ?? null)) $dbuser = $section['user'];
+      if ($validIdent($section['username'] ?? null)) $dbuser = $section['username'];
       if (array_key_exists('password', $section)) $dbpass = (string)$section['password'];
-      if (!empty($section['dbname'])) $cdrdb = $section['dbname'];
-      if (!empty($section['database'])) $cdrdb = $section['database'];
+      if ($validIdent($section['dbname'] ?? null)) $cdrdb = $section['dbname'];
+      if ($validIdent($section['database'] ?? null)) $cdrdb = $section['database'];
     }
   }
+
+  // Son güvenlik: db adı geçerli değilse FreePBX varsayılanına dön.
+  if (!$validIdent($cdrdb)) $cdrdb = 'asteriskcdrdb';
 
   if ($dbuser === '') {
     json_response([
