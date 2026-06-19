@@ -57,10 +57,25 @@ Deno.serve(async (req) => {
     const CUTOFF = new Date("2026-06-18T10:30:00Z").getTime();
 
     // Only inbound transfers to a specialist that were NOT answered AND after the cutoff
+    const normPhone = (p: unknown) => String(p ?? "").replace(/\D/g, "");
+
+    // Clients whose transfer was ANSWERED by the specialist (in the window).
+    // If a specialist picked up ANY of the client's transfer attempts, we must NOT
+    // send the "uzman müsait değildi" message to that client.
+    const answeredClients = new Set<string>(
+      transfers
+        .filter((t) => String(t.yon ?? "") === "transfer" && Number(t.acti ?? 0) !== 0)
+        .map((t) => normPhone(t.musteri))
+        .filter(Boolean),
+    );
+
     const missed = transfers.filter((t) => {
       if (Number(t.acti ?? 0) !== 0 || String(t.yon ?? "") !== "transfer") return false;
       const ts = t.calldate ? new Date(String(t.calldate).replace(" ", "T")).getTime() : 0;
-      return ts >= CUTOFF;
+      if (ts < CUTOFF) return false;
+      // Skip if the specialist answered another transfer attempt for this client.
+      if (answeredClients.has(normPhone(t.musteri))) return false;
+      return true;
     });
 
     if (missed.length === 0) {
