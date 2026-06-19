@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     // send the "uzman müsait değildi" message to that client.
     const answeredClients = new Set<string>(
       transfers
-        .filter((t) => String(t.yon ?? "") === "transfer" && Number(t.acti ?? 0) === 1)
+        .filter((t) => String(t.yon ?? "") === "transfer" && Number(t.acti ?? 0) !== 0)
         .map((t) => normPhone(t.musteri))
         .filter(Boolean),
     );
