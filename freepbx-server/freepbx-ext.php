@@ -190,31 +190,65 @@ if ($action === 'cdr_stats') {
     return $rows;
   };
 
-  // Genel özet
+  // ----------------------------------------------------------------
+  // GERÇEK ÇAĞRI BAZLI GÖRÜNÜM
+  // CDR tablosunda bir gerçek çağrı (IVR->kuyruk->dahili) birden fazla
+  // satır (leg) üretir. Çağrı sayılarını doğru hesaplamak için satırları
+  // `linkedid` ile tekilleştiriyoruz. Her çağrı için ilk leg (en küçük
+  // sequence) temsilci satır kabul edilir; yön onun src/dst'sinden,
+  // cevaplanma ise tüm leg'lerden (herhangi biri ANSWERED ise) belirlenir.
+  // ----------------------------------------------------------------
+  $callBase = "(
+    SELECT rep.src, rep.dst,
+           agg.answered, agg.busy, agg.noanswer, agg.failed,
+           agg.billsec, agg.firstdate
+    FROM (
+      SELECT linkedid,
+             MIN(sequence) firstseq,
+             MAX(disposition='ANSWERED') answered,
+             MAX(disposition='BUSY') busy,
+             MAX(disposition='NO ANSWER') noanswer,
+             MAX(disposition='FAILED') failed,
+             SUM(billsec) billsec,
+             MIN(calldate) firstdate
+      FROM cdr WHERE $where GROUP BY linkedid
+    ) agg
+    JOIN cdr rep ON rep.linkedid = agg.linkedid AND rep.sequence = agg.firstseq
+  ) calls";
+
+  // Yön sınıflandırması (temsilci satıra göre):
+  // gelen  = dış numara aradı (src dış) -> DID'e düşse bile sayılır
+  // giden  = içeriden dış numara arandı
+  // dahili = her iki taraf da iç dahili
+  $isOut = "($isIntSrc AND $isExtDst)";
+  $isIn  = "($isExtSrc AND NOT ($isIntSrc AND $isExtDst))";
+  $isInt = "($isIntSrc AND $isIntDst)";
+
+  // Genel özet (çağrı bazlı, tekilleştirilmiş)
   $sum = $q("SELECT
       COUNT(*) total,
-      SUM(disposition='ANSWERED') answered,
-      SUM(disposition='NO ANSWER') no_answer,
-      SUM(disposition='BUSY') busy,
-      SUM(disposition='FAILED') failed,
+      SUM(answered) answered,
+      SUM(answered=0 AND busy=1) busy,
+      SUM(answered=0 AND busy=0 AND noanswer=1) no_answer,
+      SUM(answered=0 AND busy=0 AND noanswer=0 AND failed=1) failed,
       SUM(billsec) total_billsec,
-      SUM($isIntSrc AND $isExtDst) outbound,
-      SUM($isExtSrc AND $isIntDst) inbound,
-      SUM($isIntSrc AND $isIntDst) internal_calls,
-      COUNT(DISTINCT CASE WHEN ($isIntSrc AND $isExtDst) THEN dst END) outbound_people,
-      COUNT(DISTINCT CASE WHEN ($isExtSrc AND $isIntDst) THEN src END) inbound_people,
-      COUNT(DISTINCT CASE WHEN disposition='ANSWERED' AND $isExtDst THEN dst
-                          WHEN disposition='ANSWERED' AND $isExtSrc THEN src END) talked_people
-    FROM cdr WHERE $where")[0] ?? [];
+      SUM($isOut) outbound,
+      SUM($isIn) inbound,
+      SUM($isInt) internal_calls,
+      COUNT(DISTINCT CASE WHEN $isOut THEN dst END) outbound_people,
+      COUNT(DISTINCT CASE WHEN $isIn THEN src END) inbound_people,
+      COUNT(DISTINCT CASE WHEN answered=1 AND $isExtSrc THEN src
+                          WHEN answered=1 AND $isExtDst THEN dst END) talked_people
+    FROM $callBase")[0] ?? [];
 
-  // Günlük kırılım
-  $daily = $q("SELECT DATE(calldate) gun,
+  // Günlük kırılım (çağrı bazlı, tekilleştirilmiş)
+  $daily = $q("SELECT DATE(firstdate) gun,
       COUNT(*) toplam,
-      SUM(disposition='ANSWERED') cevaplanan,
+      SUM(answered) cevaplanan,
       ROUND(SUM(billsec)/60) dakika,
-      SUM($isIntSrc AND $isExtDst) giden,
-      SUM($isExtSrc AND $isIntDst) gelen
-    FROM cdr WHERE $where GROUP BY DATE(calldate) ORDER BY gun");
+      SUM($isOut) giden,
+      SUM($isIn) gelen
+    FROM $callBase GROUP BY DATE(firstdate) ORDER BY gun");
 
   // Dahili (uzman) bazlı kırılım
   $byExt = $q("SELECT ext, SUM(toplam) toplam, SUM(giden) giden, SUM(gelen) gelen,
