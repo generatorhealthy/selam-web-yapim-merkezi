@@ -61,10 +61,12 @@ function colorToStatus(bg: { red?: number; green?: number; blue?: number } | und
     if (r < 0.15) return "wrong"; // black => yanlış numara
     return "not_interested"; // dark/medium gray => istemeyenler
   }
-  // Yellow (r & g high, b low) => görüşüldü / bilgi verildi
+  // Purple (r & b high, g low) => sonra görüşülecekler
+  if (b >= 0.4 && r >= 0.35 && g < 0.4) return "follow_up";
+  // Yellow (r & g high, b low) => bilgi verilmiş olanlar
   if (r >= 0.7 && g >= 0.7 && b < 0.5) return "contacted";
-  // Green (g high) => görüşüldü / bilgi verildi
-  if (g >= 0.4 && r < 0.6 && b < 0.5) return "contacted";
+  // Green (g high) => kayıt olanlar
+  if (g >= 0.4 && r < 0.6 && b < 0.5) return "registered";
   // Red (r high, g & b low) => açmayanlar
   if (r >= 0.7 && g < 0.5 && b < 0.5) return "no_answer";
   return "new";
