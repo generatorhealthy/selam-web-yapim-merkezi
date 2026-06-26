@@ -326,6 +326,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/specialists/edit/:id" element={<SpecialistEdit />} />
               <Route path="/divan_paneli/client-referrals" element={<ClientReferrals />} />
               <Route path="/divan_paneli/meta-leads" element={<MetaLeads />} />
+              <Route path="/divan_paneli/uzman-basvurulari" element={<UzmanApplications />} />
               <Route path="/divan_paneli/client-calendar" element={<ClientCalendar />} />
               <Route path="/divan_paneli/appointments" element={<AppointmentManagement />} />
               <Route path="/divan_paneli/blog" element={<BlogManagement />} />
