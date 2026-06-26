@@ -256,7 +256,7 @@ const UzmanApplications = () => {
         </div>
 
         {/* Status summary chips */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 mb-5">
           <button
             onClick={() => setStatusFilter("all")}
             className={`rounded-lg border p-3 text-left transition ${statusFilter === "all" ? "ring-2 ring-primary border-primary" : "hover:bg-muted/50"}`}
