@@ -248,6 +248,18 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "Uzman Başvuru Sistemi",
+      description: "Meta reklamlarından gelen uzman başvuruları",
+      icon: Briefcase,
+      gradient: "from-indigo-500 via-violet-500 to-purple-600",
+      bgGradient: "from-indigo-50 to-purple-50",
+      shadowColor: "shadow-indigo-500/20",
+      route: "/divan_paneli/uzman-basvurulari",
+      buttonText: "Başvuruları Görüntüle",
+      adminOnly: false,
+      staffOnly: true
+    },
+    {
       title: "Danışan Yönlendirme",
       description: "Aylık danışan yönlendirme takibi",
       icon: UserCheck,

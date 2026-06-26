@@ -6270,6 +6270,54 @@ export type Database = {
         }
         Relationships: []
       }
+      uzman_basvurulari: {
+        Row: {
+          branch: string | null
+          call_attempts: number
+          created_at: string
+          external_id: string | null
+          full_name: string
+          id: string
+          last_called_at: string | null
+          lead_date: string | null
+          notes: string | null
+          phone: string
+          source: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          branch?: string | null
+          call_attempts?: number
+          created_at?: string
+          external_id?: string | null
+          full_name: string
+          id?: string
+          last_called_at?: string | null
+          lead_date?: string | null
+          notes?: string | null
+          phone: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          branch?: string | null
+          call_attempts?: number
+          created_at?: string
+          external_id?: string | null
+          full_name?: string
+          id?: string
+          last_called_at?: string | null
+          lead_date?: string | null
+          notes?: string | null
+          phone?: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       website_analytics: {
         Row: {
           created_at: string
