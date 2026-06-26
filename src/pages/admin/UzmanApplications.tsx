@@ -66,8 +66,8 @@ const STATUS_OPTIONS = [
   },
   {
     value: "contacted",
-    label: "Görüşüldü / Bilgi Verildi",
-    hint: "Görüşülen, bilgi verilenler (sarı)",
+    label: "Bilgi Verilmiş Olanlar",
+    hint: "Görüşülüp bilgi verilenler (sarı)",
     badge: "bg-yellow-200 text-yellow-900 border-yellow-400",
     card: "border-yellow-300 bg-yellow-50/60",
     dot: "bg-yellow-500",
