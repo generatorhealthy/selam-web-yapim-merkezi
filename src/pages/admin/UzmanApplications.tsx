@@ -73,6 +73,22 @@ const STATUS_OPTIONS = [
     dot: "bg-yellow-500",
   },
   {
+    value: "registered",
+    label: "Kayıt Olanlar",
+    hint: "Kaydı tamamlayan uzmanlar (yeşil)",
+    badge: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    card: "border-emerald-200 bg-emerald-50/40",
+    dot: "bg-emerald-600",
+  },
+  {
+    value: "follow_up",
+    label: "Sonra Görüşülecekler",
+    hint: "Sonraya ertelenen görüşmeler (mor)",
+    badge: "bg-purple-100 text-purple-800 border-purple-300",
+    card: "border-purple-200 bg-purple-50/40",
+    dot: "bg-purple-600",
+  },
+  {
     value: "no_answer",
     label: "Açmayanlar",
     hint: "Aranan ama açmayanlar (kırmızı)",
@@ -240,7 +256,7 @@ const UzmanApplications = () => {
         </div>
 
         {/* Status summary chips */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 mb-5">
           <button
             onClick={() => setStatusFilter("all")}
             className={`rounded-lg border p-3 text-left transition ${statusFilter === "all" ? "ring-2 ring-primary border-primary" : "hover:bg-muted/50"}`}
