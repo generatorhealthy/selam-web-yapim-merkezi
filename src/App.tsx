@@ -109,6 +109,7 @@ const LegalProceedings = lazy(() => import("./pages/admin/LegalProceedings"));
 const EmployeeSalaryManagement = lazy(() => import("./pages/admin/EmployeeSalaryManagement"));
 const ClientReferrals = lazy(() => import("./pages/admin/ClientReferrals"));
 const MetaLeads = lazy(() => import("./pages/admin/MetaLeads"));
+const UzmanApplications = lazy(() => import("./pages/admin/UzmanApplications"));
 const ClientCalendar = lazy(() => import("./pages/admin/ClientCalendar"));
 const PreInfoFormManagement = lazy(() => import("./pages/admin/PreInfoFormManagement"));
 const PackageManagement = lazy(() => import("./pages/admin/PackageManagement"));
