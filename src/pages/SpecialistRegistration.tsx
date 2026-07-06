@@ -109,12 +109,18 @@ const SpecialistRegistration = () => {
     setInterests(prev => (prev && prev.length > 0 ? prev : suggested));
   }, [formData.specialty]);
 
+  const [showIntro, setShowIntro] = useState(true);
+
   const steps = [
-    { num: 1, label: "Hesap", icon: User },
-    { num: 2, label: "Bilgiler", icon: Stethoscope },
-    { num: 3, label: "Profil", icon: Sparkles },
-    { num: 4, label: "Tamam", icon: Check },
+    { num: 1, label: "Bilgilendirme", icon: Sparkles },
+    { num: 2, label: "Hesap", icon: User },
+    { num: 3, label: "Bilgiler", icon: Stethoscope },
+    { num: 4, label: "Profil", icon: Camera },
+    { num: 5, label: "Profil Yayınlama", icon: Check },
   ];
+
+  // Görsel gösterim adımı: intro açıkken 1, sonrasında iç adım + 1
+  const displayStep = showIntro ? 1 : currentStep + 1;
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -406,31 +412,31 @@ const SpecialistRegistration = () => {
           className="container mx-auto px-4 py-6 md:py-12 max-w-lg"
           style={{ paddingBottom: "calc(120px + env(safe-area-inset-bottom, 0px))" }}
         >
-          {currentStep < 4 && (
+          {!(!showIntro && currentStep === 4) && (
             <div className="flex items-center justify-center gap-2 mb-10">
               {steps.map((step, index) => (
                 <div key={step.num} className="flex items-center gap-2">
                   <div className={`flex items-center gap-1.5 transition-all ${
-                    currentStep === step.num
+                    displayStep === step.num
                       ? "text-foreground font-semibold"
-                      : currentStep > step.num
+                      : displayStep > step.num
                       ? "text-green-600"
                       : "text-muted-foreground/50"
                   }`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                      currentStep === step.num
+                      displayStep === step.num
                         ? "bg-foreground text-background"
-                        : currentStep > step.num
+                        : displayStep > step.num
                         ? "bg-green-100 text-green-600"
                         : "bg-muted text-muted-foreground/50"
                     }`}>
-                      {currentStep > step.num ? <Check className="w-4 h-4" /> : step.num}
+                      {displayStep > step.num ? <Check className="w-4 h-4" /> : step.num}
                     </div>
                     <span className="text-sm hidden sm:inline">{step.label}</span>
                   </div>
                   {index < steps.length - 1 && (
                     <div className={`w-8 h-px ${
-                      currentStep > step.num ? "bg-green-300" : "bg-border"
+                      displayStep > step.num ? "bg-green-300" : "bg-border"
                     }`} />
                   )}
                 </div>
@@ -438,7 +444,102 @@ const SpecialistRegistration = () => {
             </div>
           )}
 
-          {currentStep === 1 && (
+          {showIntro && (
+            <div className="space-y-8">
+              <div className="text-center space-y-3">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+                  Doktorumol.com.tr'ye Hoş Geldiniz!
+                </h1>
+                <p className="text-muted-foreground text-sm md:text-base">
+                  Üyelik oluşturmadan önce, paketimizle neler kazanacağınıza göz atın.
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-border bg-muted/30 p-6 md:p-7 space-y-5">
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">
+                    <span className="text-primary">Doktorumol</span> Nedir?
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Doktorumol, uzman hekimler ile danışanları buluşturan Türkiye'nin güvenilir
+                    sağlık danışmanlığı platformudur.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    {
+                      icon: Check,
+                      title: "12 Aylık Üyelik",
+                      desc: "Üyeliğiniz, ödeme tarihinden itibaren tam 12 ay boyunca kesintisiz geçerlidir.",
+                    },
+                    {
+                      icon: Sparkles,
+                      title: "Her Ay Danışan Yönlendirme Garantisi",
+                      desc: "Her ay düzenli olarak yeni danışanlar size yönlendirilir, hasta potansiyeliniz sürekli canlı tutulur.",
+                    },
+                    {
+                      icon: Sparkles,
+                      title: "Yapay Zeka ile Otomatik Profil Oluşturma",
+                      desc: "Girdiğiniz bilgiler yapay zeka ile analiz edilir ve profesyonel profiliniz otomatik oluşturulur.",
+                    },
+                    {
+                      icon: Stethoscope,
+                      title: "Sosyal Medya Çalışmaları ve Reklamlar",
+                      desc: "Profiliniz sosyal medyada paylaşılır ve reklam çalışmalarıyla görünürlüğünüz artırılır.",
+                    },
+                    {
+                      icon: GraduationCap,
+                      title: "Profesyonel İçerik ve SEO Desteği",
+                      desc: "Uzman sayfanıza özgün SEO çalışması, profesyonel makaleler ve yapay zeka destekli blog sayfası dahildir.",
+                    },
+                    {
+                      icon: User,
+                      title: "Danışan Yönetim Araçları",
+                      desc: "Online randevu takvimi, danışan takibi, danışan görüşleri ve yapay zeka destekli testler kullanımınıza sunulur.",
+                    },
+                  ].map((f, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-9 h-9 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <f.icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{f.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{f.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 space-y-3">
+                <h3 className="text-base font-bold text-foreground">Neden Doktorumol?</h3>
+                <ul className="space-y-2">
+                  {[
+                    "Türkiye genelinde danışan ağına erişim",
+                    "Uzmanlık alanınıza uygun danışan eşleşmesi",
+                    "Zaman kazandıran dijital altyapı",
+                    "Kurumsal ve profesyonel görünürlük",
+                    "Performans raporları ve analiz desteği",
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2.5 text-sm text-foreground">
+                      <Check className="w-4 h-4 text-primary shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <Button
+                onClick={() => setShowIntro(false)}
+                className="w-full h-14 text-base font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-all"
+              >
+                Devam Et <ChevronRight className="w-5 h-5 ml-1" />
+              </Button>
+            </div>
+          )}
+
+          {!showIntro && currentStep === 1 && (
             <div className="space-y-8">
               <div className="text-center space-y-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Uzman Profili Oluşturun</h1>
