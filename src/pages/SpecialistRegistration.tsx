@@ -501,7 +501,7 @@ const SpecialistRegistration = () => {
                   ].map((f, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <div className="w-9 h-9 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <f.icon className="w-4.5 h-4.5 text-primary" />
+                        <f.icon className="w-4 h-4 text-primary" />
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-foreground">{f.title}</p>
