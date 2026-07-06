@@ -476,7 +476,7 @@ const SpecialistRegistration = () => {
                     {
                       icon: Sparkles,
                       title: "Her Ay Danışan Yönlendirme Garantisi",
-                      desc: "Her ay düzenli olarak yeni danışanlar size yönlendirilir, hasta potansiyeliniz sürekli canlı tutulur.",
+                      desc: "Her ay düzenli olarak yeni danışanlar size yönlendirilir, danışan potansiyeliniz sürekli canlı tutulur.",
                     },
                     {
                       icon: Sparkles,
