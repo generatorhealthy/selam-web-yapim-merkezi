@@ -456,6 +456,29 @@ const SpecialistRegistration = () => {
                 </p>
               </div>
 
+              <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+                <img
+                  src={referralGuaranteeImg}
+                  alt="Her ay danışan yönlendirme garantisi"
+                  loading="lazy"
+                  width={1280}
+                  height={640}
+                  className="w-full h-40 md:h-52 object-cover"
+                />
+                <div className="p-5 md:p-6">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    <Sparkles className="w-3.5 h-3.5" /> Garanti
+                  </div>
+                  <h2 className="mt-3 text-lg md:text-xl font-bold text-foreground">
+                    Her Ay Danışan Yönlendirme Garantisi
+                  </h2>
+                  <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                    Her ay düzenli olarak yeni danışanlar size yönlendirilir, danışan
+                    potansiyeliniz sürekli canlı tutulur.
+                  </p>
+                </div>
+              </div>
+
               <div className="rounded-3xl border border-border bg-muted/30 p-6 md:p-7 space-y-5">
                 <div>
                   <h2 className="text-lg font-bold text-foreground">
