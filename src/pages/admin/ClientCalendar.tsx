@@ -123,12 +123,15 @@ const ClientCalendar = () => {
         }
       });
 
-      // Test üyeliklerini listeden gizle ("Faydalı Bilgiler" #0000, "Uzm. Dr. Ayfer Aydın" #111111111111)
+      // Test üyeliklerini ve yönlendirme istemeyen uzmanları gizle
+      // ("Faydalı Bilgiler" #0000, "Uzm. Dr. Ayfer Aydın" #111111111111,
+      //  "Uzm. Psk. Dan. İlknur Ünal" #1155 - yönlendirme istemiyor)
       const visibleSpecialists = (specialistsData || []).filter(
         (s) =>
           s.name?.trim() !== "Faydalı Bilgiler" &&
           String(s.internal_number || "").trim() !== "0000" &&
-          String(s.internal_number || "").trim() !== "111111111111"
+          String(s.internal_number || "").trim() !== "111111111111" &&
+          String(s.internal_number || "").trim() !== "1155"
       );
 
       // Her uzman için döngü içinde yönlendirme var mı kontrol et
