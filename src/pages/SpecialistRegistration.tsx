@@ -513,7 +513,7 @@ const SpecialistRegistration = () => {
               </div>
 
               <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 space-y-3">
-                <h3 className="text-base font-bold text-foreground">Neden Doktorumol?</h3>
+                <h3 className="text-base font-bold text-foreground">Neden Doktorumol.com.tr?</h3>
                 <ul className="space-y-2">
                   {[
                     "Türkiye genelinde danışan ağına erişim",
