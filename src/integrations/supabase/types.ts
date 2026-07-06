@@ -293,7 +293,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_appointments: {
+      backup_1783008001_appointments: {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
@@ -347,7 +347,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_automatic_orders: {
+      backup_1783008001_automatic_orders: {
         Row: {
           amount: number | null
           company_name: string | null
@@ -434,7 +434,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_blog_posts: {
+      backup_1783008001_blog_posts: {
         Row: {
           admin_message: string | null
           author_id: string | null
@@ -503,7 +503,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_client_referrals: {
+      backup_1783008001_client_referrals: {
         Row: {
           client_contact: string | null
           client_name: string | null
@@ -557,7 +557,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_orders: {
+      backup_1783008001_orders: {
         Row: {
           amount: number | null
           approved_at: string | null
@@ -674,7 +674,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_packages: {
+      backup_1783008001_packages: {
         Row: {
           color: string | null
           created_at: string | null
@@ -722,7 +722,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_reviews: {
+      backup_1783008001_reviews: {
         Row: {
           comment: string | null
           created_at: string | null
@@ -758,7 +758,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_specialists: {
+      backup_1783008001_specialists: {
         Row: {
           address: string | null
           available_days: string[] | null
@@ -884,7 +884,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_test_questions: {
+      backup_1783008001_test_questions: {
         Row: {
           created_at: string | null
           id: string | null
@@ -920,7 +920,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_test_results: {
+      backup_1783008001_test_results: {
         Row: {
           answers: Json | null
           created_at: string | null
@@ -965,7 +965,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_tests: {
+      backup_1783008001_tests: {
         Row: {
           category: string | null
           content: string | null
@@ -1010,7 +1010,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782489601_user_profiles: {
+      backup_1783008001_user_profiles: {
         Row: {
           created_at: string | null
           email: string | null
@@ -1046,7 +1046,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_appointments: {
+      backup_1783094400_appointments: {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
@@ -1100,7 +1100,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_automatic_orders: {
+      backup_1783094400_automatic_orders: {
         Row: {
           amount: number | null
           company_name: string | null
@@ -1187,7 +1187,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_blog_posts: {
+      backup_1783094400_blog_posts: {
         Row: {
           admin_message: string | null
           author_id: string | null
@@ -1256,7 +1256,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_client_referrals: {
+      backup_1783094400_client_referrals: {
         Row: {
           client_contact: string | null
           client_name: string | null
@@ -1310,7 +1310,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_orders: {
+      backup_1783094400_orders: {
         Row: {
           amount: number | null
           approved_at: string | null
@@ -1427,7 +1427,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_packages: {
+      backup_1783094400_packages: {
         Row: {
           color: string | null
           created_at: string | null
@@ -1475,7 +1475,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_reviews: {
+      backup_1783094400_reviews: {
         Row: {
           comment: string | null
           created_at: string | null
@@ -1511,7 +1511,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_specialists: {
+      backup_1783094400_specialists: {
         Row: {
           address: string | null
           available_days: string[] | null
@@ -1637,7 +1637,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_test_questions: {
+      backup_1783094400_test_questions: {
         Row: {
           created_at: string | null
           id: string | null
@@ -1673,7 +1673,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_test_results: {
+      backup_1783094400_test_results: {
         Row: {
           answers: Json | null
           created_at: string | null
@@ -1718,7 +1718,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_tests: {
+      backup_1783094400_tests: {
         Row: {
           category: string | null
           content: string | null
@@ -1763,7 +1763,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782576000_user_profiles: {
+      backup_1783094400_user_profiles: {
         Row: {
           created_at: string | null
           email: string | null
@@ -1799,7 +1799,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_appointments: {
+      backup_1783180801_appointments: {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
@@ -1853,7 +1853,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_automatic_orders: {
+      backup_1783180801_automatic_orders: {
         Row: {
           amount: number | null
           company_name: string | null
@@ -1940,7 +1940,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_blog_posts: {
+      backup_1783180801_blog_posts: {
         Row: {
           admin_message: string | null
           author_id: string | null
@@ -2009,7 +2009,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_client_referrals: {
+      backup_1783180801_client_referrals: {
         Row: {
           client_contact: string | null
           client_name: string | null
@@ -2063,7 +2063,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_orders: {
+      backup_1783180801_orders: {
         Row: {
           amount: number | null
           approved_at: string | null
@@ -2180,7 +2180,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_packages: {
+      backup_1783180801_packages: {
         Row: {
           color: string | null
           created_at: string | null
@@ -2228,7 +2228,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_reviews: {
+      backup_1783180801_reviews: {
         Row: {
           comment: string | null
           created_at: string | null
@@ -2264,7 +2264,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_specialists: {
+      backup_1783180801_specialists: {
         Row: {
           address: string | null
           available_days: string[] | null
@@ -2390,7 +2390,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_test_questions: {
+      backup_1783180801_test_questions: {
         Row: {
           created_at: string | null
           id: string | null
@@ -2426,7 +2426,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_test_results: {
+      backup_1783180801_test_results: {
         Row: {
           answers: Json | null
           created_at: string | null
@@ -2471,7 +2471,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_tests: {
+      backup_1783180801_tests: {
         Row: {
           category: string | null
           content: string | null
@@ -2516,7 +2516,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782662401_user_profiles: {
+      backup_1783180801_user_profiles: {
         Row: {
           created_at: string | null
           email: string | null
@@ -2552,7 +2552,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_appointments: {
+      backup_1783267201_appointments: {
         Row: {
           appointment_date: string | null
           appointment_time: string | null
@@ -2606,7 +2606,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_automatic_orders: {
+      backup_1783267201_automatic_orders: {
         Row: {
           amount: number | null
           company_name: string | null
@@ -2693,7 +2693,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_blog_posts: {
+      backup_1783267201_blog_posts: {
         Row: {
           admin_message: string | null
           author_id: string | null
@@ -2762,7 +2762,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_client_referrals: {
+      backup_1783267201_client_referrals: {
         Row: {
           client_contact: string | null
           client_name: string | null
@@ -2816,7 +2816,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_orders: {
+      backup_1783267201_orders: {
         Row: {
           amount: number | null
           approved_at: string | null
@@ -2933,7 +2933,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_packages: {
+      backup_1783267201_packages: {
         Row: {
           color: string | null
           created_at: string | null
@@ -2981,7 +2981,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_reviews: {
+      backup_1783267201_reviews: {
         Row: {
           comment: string | null
           created_at: string | null
@@ -3017,7 +3017,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_specialists: {
+      backup_1783267201_specialists: {
         Row: {
           address: string | null
           available_days: string[] | null
@@ -3143,7 +3143,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_test_questions: {
+      backup_1783267201_test_questions: {
         Row: {
           created_at: string | null
           id: string | null
@@ -3179,7 +3179,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_test_results: {
+      backup_1783267201_test_results: {
         Row: {
           answers: Json | null
           created_at: string | null
@@ -3224,7 +3224,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_tests: {
+      backup_1783267201_tests: {
         Row: {
           category: string | null
           content: string | null
@@ -3269,7 +3269,7 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_1782748801_user_profiles: {
+      backup_1783267201_user_profiles: {
         Row: {
           created_at: string | null
           email: string | null
