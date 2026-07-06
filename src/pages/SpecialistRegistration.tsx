@@ -458,7 +458,7 @@ const SpecialistRegistration = () => {
               <div className="rounded-3xl border border-border bg-muted/30 p-6 md:p-7 space-y-5">
                 <div>
                   <h2 className="text-lg font-bold text-foreground">
-                    <span className="text-primary">Doktorumol</span> Nedir?
+                    <span className="text-primary">Doktorumol.com.tr</span>
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
                     Doktorumol, uzman hekimler ile danışanları buluşturan Türkiye'nin güvenilir
