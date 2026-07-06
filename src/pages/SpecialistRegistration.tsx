@@ -20,6 +20,7 @@ import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard
 } from "lucide-react";
+import referralGuaranteeImg from "@/assets/referral-guarantee.jpg";
 
 const PRIORITY_SPECIALTIES = [
   "Psikolog", "Psikolojik Danışmanlık", "Klinik Psikolog", "Aile Danışmanı"
@@ -455,10 +456,33 @@ const SpecialistRegistration = () => {
                 </p>
               </div>
 
+              <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+                <img
+                  src={referralGuaranteeImg}
+                  alt="Her ay danışan yönlendirme garantisi"
+                  loading="lazy"
+                  width={1280}
+                  height={640}
+                  className="w-full h-40 md:h-52 object-cover"
+                />
+                <div className="p-5 md:p-6">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    <Sparkles className="w-3.5 h-3.5" /> Garanti
+                  </div>
+                  <h2 className="mt-3 text-lg md:text-xl font-bold text-foreground">
+                    Her Ay Danışan Yönlendirme Garantisi
+                  </h2>
+                  <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                    Her ay düzenli olarak yeni danışanlar size yönlendirilir, danışan
+                    potansiyeliniz sürekli canlı tutulur.
+                  </p>
+                </div>
+              </div>
+
               <div className="rounded-3xl border border-border bg-muted/30 p-6 md:p-7 space-y-5">
                 <div>
                   <h2 className="text-lg font-bold text-foreground">
-                    <span className="text-primary">Doktorumol</span> Nedir?
+                    <span className="text-primary">Doktorumol.com.tr</span>
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
                     Doktorumol, uzman hekimler ile danışanları buluşturan Türkiye'nin güvenilir
@@ -476,7 +500,7 @@ const SpecialistRegistration = () => {
                     {
                       icon: Sparkles,
                       title: "Her Ay Danışan Yönlendirme Garantisi",
-                      desc: "Her ay düzenli olarak yeni danışanlar size yönlendirilir, hasta potansiyeliniz sürekli canlı tutulur.",
+                      desc: "Her ay düzenli olarak yeni danışanlar size yönlendirilir, danışan potansiyeliniz sürekli canlı tutulur.",
                     },
                     {
                       icon: Sparkles,
@@ -513,7 +537,7 @@ const SpecialistRegistration = () => {
               </div>
 
               <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 space-y-3">
-                <h3 className="text-base font-bold text-foreground">Neden Doktorumol?</h3>
+                <h3 className="text-base font-bold text-foreground">Neden Doktorumol.com.tr?</h3>
                 <ul className="space-y-2">
                   {[
                     "Türkiye genelinde danışan ağına erişim",
