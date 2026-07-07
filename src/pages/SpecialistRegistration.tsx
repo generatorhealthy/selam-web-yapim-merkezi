@@ -409,7 +409,7 @@ const SpecialistRegistration = () => {
           className="container mx-auto px-4 py-6 md:py-12 max-w-lg"
           style={{ paddingBottom: "calc(120px + env(safe-area-inset-bottom, 0px))" }}
         >
-          {!(!showIntro && currentStep === 4) && (
+          {currentStep !== 4 && (
             <div className="flex items-center justify-center gap-2 mb-10">
               {steps.map((step, index) => (
                 <div key={step.num} className="flex items-center gap-2">
