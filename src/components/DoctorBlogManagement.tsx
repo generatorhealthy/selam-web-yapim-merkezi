@@ -28,7 +28,7 @@ const blogSchema = z.object({
   seo_title: z.string().max(65, "Google başlık maksimum 65 karakter olmalıdır").optional(),
   seo_description: z.string().max(140, "Google açıklama maksimum 140 karakter olmalıdır").optional(),
   keywords: z.string().optional(),
-  featured_image: z.string().optional(),
+  featured_image: z.string().min(1, "Blog görseli zorunludur"),
 });
 
 type BlogFormValues = z.infer<typeof blogSchema>;
@@ -306,7 +306,7 @@ const DoctorBlogManagement = ({ doctorId, doctorName, doctorSpecialty }: DoctorB
 
       <FormField control={formInstance.control} name="featured_image" render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-sm font-semibold">Blog Görseli</FormLabel>
+          <FormLabel className="text-sm font-semibold">Blog Görseli <span className="text-destructive">*</span></FormLabel>
           <FormControl>
             <FileUpload onUpload={onImageUpload} currentImage={field.value} accept="image/jpeg,image/jpg,image/png" maxSize={5 * 1024 * 1024} />
           </FormControl>
