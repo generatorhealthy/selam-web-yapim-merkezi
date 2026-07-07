@@ -127,6 +127,10 @@ const DoctorBlogManagement = ({ doctorId, doctorName, doctorSpecialty }: DoctorB
 
   const handleAISubmit = async () => {
     if (!aiGenerated) return;
+    if (!aiGenerated.featured_image) {
+      toast({ title: "Görsel Gerekli", description: "Lütfen blog için bir görsel ekleyin.", variant: "destructive" });
+      return;
+    }
     setIsProcessing(true);
     try {
       const user = await supabase.auth.getUser();
