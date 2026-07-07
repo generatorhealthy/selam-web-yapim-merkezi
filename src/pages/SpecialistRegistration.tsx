@@ -110,18 +110,14 @@ const SpecialistRegistration = () => {
     setInterests(prev => (prev && prev.length > 0 ? prev : suggested));
   }, [formData.specialty]);
 
-  const [showIntro, setShowIntro] = useState(true);
-
   const steps = [
-    { num: 1, label: "Bilgilendirme", icon: Sparkles },
-    { num: 2, label: "Hesap", icon: User },
-    { num: 3, label: "Bilgiler", icon: Stethoscope },
-    { num: 4, label: "Profil", icon: Camera },
-    { num: 5, label: "Profil Yayınlama", icon: Check },
+    { num: 1, label: "Hesap", icon: User },
+    { num: 2, label: "Bilgiler", icon: Stethoscope },
+    { num: 3, label: "Profil", icon: Camera },
+    { num: 4, label: "Profil Yayınlama", icon: Check },
   ];
 
-  // Görsel gösterim adımı: intro açıkken 1, sonrasında iç adım + 1
-  const displayStep = showIntro ? 1 : currentStep + 1;
+  const displayStep = currentStep;
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
