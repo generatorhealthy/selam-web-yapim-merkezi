@@ -20,7 +20,6 @@ import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard
 } from "lucide-react";
-import referralGuaranteeImg from "@/assets/referral-guarantee.jpg";
 
 const PRIORITY_SPECIALTIES = [
   "Psikolog", "Psikolojik Danışmanlık", "Klinik Psikolog", "Aile Danışmanı"
