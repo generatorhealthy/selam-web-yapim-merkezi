@@ -187,6 +187,20 @@ Deno.serve(async (req) => {
         const { error } = await supabase.from("uzman_basvurulari").insert(toInsert);
         if (error) throw error;
         inserted = toInsert.length;
+
+        // Fire-and-forget WhatsApp welcome message for each brand-new applicant.
+        for (const lead of toInsert) {
+          supabase.functions
+            .invoke("notify-specialist-application", {
+              body: { fullName: lead.full_name, phone: lead.phone, branch: lead.branch },
+            })
+            .then((r) => {
+              if (r.error || (r.data as any)?.success === false) {
+                console.error("notify-specialist-application failed", lead.phone, r.error || (r.data as any)?.error);
+              }
+            })
+            .catch((e) => console.error("notify-specialist-application invoke error", e));
+        }
       }
       // NOTE: The panel is the source of truth. We only INSERT brand-new
       // applications with their colour-derived status; existing rows are never
