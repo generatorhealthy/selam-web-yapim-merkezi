@@ -33,21 +33,18 @@ function buildMessage(fullName: string, branch?: string | null) {
     `👋 Merhaba *${firstName}*,\n\n` +
     `*Doktorumol.com.tr* uzman başvurunuz için teşekkür ederiz! 🌿\n` +
     `${branchLine}` +
-    `━━━━━━━━━━━━━━━\n` +
     `⚡ *HEMEN ONLİNE KAYIT*\n` +
     `━━━━━━━━━━━━━━━\n\n` +
     `Profilinizi hemen oluşturmak için:\n` +
     `🔗 https://doktorumol.com.tr/kayit-ol\n\n` +
-    `Kayıt işleminiz sonrası uzman ekibimiz profilinizi aktif hale getirecektir. 🚀\n\n` +
+    `Kayıt işleminiz sonrası uzman ekibimiz profilinizi aktif hale getirecektir.\n\n` +
     `En kısa sürede uzman danışmanlarımız sizi arayarak detaylı bilgi verecektir.\n\n` +
-    `━━━━━━━━━━━━━━━\n` +
-    `👑 *PREMIUM PAKET – ÖZEL KAMPANYA*\n` +
+    `👑 *PREMİUM PAKET – ÖZEL KAMPANYA*\n` +
     `━━━━━━━━━━━━━━━\n\n` +
     `💰 Normal Fiyat: ~6500₺~\n` +
     `🔥 *Kampanya Fiyatı: 4000₺*\n` +
     `🎁 *%38 İndirim – Özel Fırsat!*\n` +
     `📅 *12 Aylık Abonelik*\n\n` +
-    `━━━━━━━━━━━━━━━\n` +
     `✅ *PAKET İÇERİĞİ*\n` +
     `━━━━━━━━━━━━━━━\n\n` +
     `🎯 Her Ay Danışan Yönlendirme Garantisi\n` +
@@ -65,13 +62,11 @@ function buildMessage(fullName: string, branch?: string | null) {
     `🧠 Yapay Zeka Destekli Testler\n` +
     `🔔 SMS Hatırlatıcısı\n` +
     `☎️ Dahili Hat Tanımlama\n\n` +
-    `━━━━━━━━━━━━━━━\n` +
     `🛡️ *DANIŞAN YÖNLENDİRME GARANTİSİ*\n` +
     `━━━━━━━━━━━━━━━\n\n` +
     `Her ay düzenli olarak yeni danışanlar tarafınıza yönlendirilir.\n` +
     `❗ *Herhangi bir ay danışan yönlendirilmediği takdirde, o aya ait ödemeniz tarafınıza iade edilir.*\n` +
     `Bu bizim size verdiğimiz *yazılı garantidir.* ✍️\n\n` +
-    `━━━━━━━━━━━━━━━\n\n` +
     `📞 Sorularınız için bu numara üzerinden bize yazabilirsiniz.\n` +
     `Sağlıklı günler dileriz 🌿\n\n` +
     `_Doktorumol.com.tr_`
