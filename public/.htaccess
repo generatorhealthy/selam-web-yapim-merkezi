@@ -165,8 +165,8 @@ RewriteRule ^uzmanlik-alanlari/doktor/([^/]+)/?$ /$1 [R=301,L]
 # Redirect doctor names to specialty-based URLs
 RewriteRule ^ayse-dolek-kerbel/?$ /aile-danismani/ayse-dolek-kerbel [R=301,L]
 
-# Redirect campaign pages that should never live under /blog/
-RewriteRule ^blog/(ozel-firsat|bu-aya-ozel)/?$ /$1 [R=301,L]
+# Redirect system/campaign pages that should never live under /blog/
+RewriteRule ^blog/(partner-giris|partner|ozel-firsat|bu-aya-ozel)/?$ /$1 [R=301,L]
 
 # Blog listing page - /blog must stay as /blog (not redirect)
 # Blog posts use /blog/slug format - no redirect needed

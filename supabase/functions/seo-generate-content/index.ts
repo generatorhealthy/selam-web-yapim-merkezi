@@ -14,6 +14,13 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9\s-]/g, "")
     .trim().replace(/\s+/g, "-").replace(/-+/g, "-").slice(0, 90);
 
+const RESERVED_ROUTE_SLUGS = new Set([
+  "partner",
+  "partner-giris",
+]);
+
+const isReservedRouteSlug = (value: string) => RESERVED_ROUTE_SLUGS.has(slugify(value));
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const __auth = await verifyAdminOrCron(req);
@@ -36,6 +43,18 @@ serve(async (req) => {
       .select("*, seo_branches(name, slug)")
       .eq("id", keywordId).maybeSingle();
     if (kwErr || !kw) throw new Error("Anahtar kelime bulunamadı");
+
+    if (isReservedRouteSlug(kw.main_keyword)) {
+      await supabase.from("seo_keywords").update({
+        content_status: "skipped",
+        error_message: "Sistem rotası olduğu için blog üretilmedi",
+      }).eq("id", keywordId);
+
+      return new Response(JSON.stringify({
+        skipped: true,
+        reason: "Sistem rotası olduğu için blog üretilmedi",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (kw.content_status === "published") {
       return new Response(JSON.stringify({ error: "Bu kelime için zaten içerik üretildi" }), {
@@ -321,6 +340,18 @@ Bu konuda Türkçe, SEO odaklı, MİNİMUM 800 kelimelik (hedef 1000-1300 kelime
 
     // 3. Build unique slug
     const baseSlug = slugify(blog.slug_hint || blog.title);
+    if (RESERVED_ROUTE_SLUGS.has(baseSlug)) {
+      await supabase.from("seo_keywords").update({
+        content_status: "skipped",
+        error_message: "Sistem rotası ile çakışan blog slug'ı engellendi",
+      }).eq("id", keywordId);
+
+      return new Response(JSON.stringify({
+        skipped: true,
+        reason: "Sistem rotası ile çakışan blog slug'ı engellendi",
+        slug: baseSlug,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     let finalSlug = baseSlug;
     let counter = 0;
     while (true) {
