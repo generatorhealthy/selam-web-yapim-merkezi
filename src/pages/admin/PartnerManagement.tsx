@@ -348,6 +348,32 @@ const PartnerManagement = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!openLink} onOpenChange={(v) => !v && setOpenLink(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Kullanıcı Bağla — {openLink?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Önce "Kullanıcı Oluştur" ekranından <strong>Partner</strong> rolüyle bir hesap
+              oluşturun, ardından o kullanıcının e-postasını buraya girin.
+            </p>
+            <div>
+              <Label>Partner Kullanıcı E-postası</Label>
+              <Input
+                type="email"
+                value={linkEmail}
+                onChange={(e) => setLinkEmail(e.target.value)}
+                placeholder="partner@kurum.com"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={linkUser}>Bağla</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
