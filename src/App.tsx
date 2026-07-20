@@ -82,6 +82,9 @@ const PatientSignup = lazy(() => import("./pages/PatientSignup"));
 const PatientLogin = lazy(() => import("./pages/PatientLogin"));
 const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const PartnerLogin = lazy(() => import("./pages/PartnerLogin"));
+const PartnerDashboard = lazy(() => import("./pages/partner/PartnerDashboard"));
+const PartnerManagement = lazy(() => import("./pages/admin/PartnerManagement"));
 
 // Admin pages - lazy loaded (never needed on initial visit)
 const AdminAuth = lazy(() => import("./pages/AdminAuth"));
