@@ -10,5 +10,7 @@ Disallow: /odeme/
 Disallow: /odeme-sayfasi
 Disallow: /odeme-basarili
 Disallow: /kariyer
+Disallow: /partner
+Disallow: /partner-giris
 
 Sitemap: https://doktorumol.com.tr/sitemap.xml
