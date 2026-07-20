@@ -1820,6 +1820,20 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                               </div>
                             )}
 
+                            {(() => {
+                              const partnerInfo = getPartnerInfo(order);
+                              if (!partnerInfo) return null;
+                              return (
+                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
+                                  <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">İşbirliği Kaydı</span>
+                                  <span className="text-sm font-semibold text-amber-900">{partnerInfo.name}</span>
+                                  {partnerInfo.code && (
+                                    <span className="text-xs text-amber-700 font-mono bg-amber-100 px-2 py-0.5 rounded">{partnerInfo.code}</span>
+                                  )}
+                                </div>
+                              );
+                            })()}
+
                             {/* Package & Payment Info */}
                             <div className="space-y-2">
                               <div>
