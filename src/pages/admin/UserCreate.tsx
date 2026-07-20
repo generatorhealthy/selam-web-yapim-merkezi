@@ -23,7 +23,7 @@ const UserCreate = () => {
     email: "",
     password: "",
     phone: "",
-    role: "specialist" as "admin" | "specialist" | "staff" | "legal" | "muhasebe",
+    role: "specialist" as "admin" | "specialist" | "staff" | "legal" | "muhasebe" | "partner",
     name: ""
   });
 
