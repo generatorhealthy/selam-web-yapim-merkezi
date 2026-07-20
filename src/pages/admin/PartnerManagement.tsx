@@ -294,7 +294,12 @@ const PartnerManagement = () => {
                               <TableCell>
                                 <Switch checked={p.is_active} onCheckedChange={() => toggleActive(p)} />
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right space-x-1 whitespace-nowrap">
+                                {!p.user_id && (
+                                  <Button size="sm" variant="secondary" onClick={() => setOpenLink(p)}>
+                                    Kullanıcı Bağla
+                                  </Button>
+                                )}
                                 <Button size="sm" variant="outline" onClick={() => setOpenPayment(p)}>
                                   <Wallet className="w-4 h-4 mr-1" /> Ödeme
                                 </Button>
