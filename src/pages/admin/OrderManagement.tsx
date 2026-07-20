@@ -89,6 +89,31 @@ const OrderManagement = () => {
   const [callingOrder, setCallingOrder] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
 
+  // Partner referrals lookup (email -> partner name + referral code)
+  const { data: partnerReferralsMap } = useQuery({
+    queryKey: ['partner-referrals-map'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('partner_referrals')
+        .select('specialist_email, specialist_user_id, partners(name, referral_code)');
+      if (error) throw error;
+      const byEmail = new Map<string, { name: string; code: string }>();
+      const byUserId = new Map<string, { name: string; code: string }>();
+      (data || []).forEach((r: any) => {
+        const info = { name: r.partners?.name || 'Partner', code: r.partners?.referral_code || '' };
+        if (r.specialist_email) byEmail.set(r.specialist_email.toLowerCase(), info);
+        if (r.specialist_user_id) byUserId.set(r.specialist_user_id, info);
+      });
+      return { byEmail, byUserId };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const getPartnerInfo = (order: Order) => {
+    if (!partnerReferralsMap) return null;
+    return partnerReferralsMap.byEmail.get((order.customer_email || '').toLowerCase()) || null;
+  };
+
   const handleCallCustomer = async (order: Order) => {
     if (!order.customer_phone) {
       toast({ title: "Hata", description: "Telefon numarası bulunamadı", variant: "destructive" });
