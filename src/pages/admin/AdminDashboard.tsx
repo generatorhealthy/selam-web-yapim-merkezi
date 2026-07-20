@@ -43,7 +43,8 @@ import {
   ShieldCheck,
   Smartphone,
   Server,
-  Briefcase
+  Briefcase,
+  Handshake
 } from "lucide-react";
 
 const AdminDashboard = () => {
