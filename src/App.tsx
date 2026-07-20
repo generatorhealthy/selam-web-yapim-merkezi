@@ -273,6 +273,8 @@ const AppContent = () => {
               <Route path="/iletisim" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/blog" element={<Navigate to="/blog" replace />} />
+              <Route path="/blog/partner-giris" element={<Navigate to="/partner-giris" replace />} />
+              <Route path="/blog/partner" element={<Navigate to="/partner" replace />} />
               <Route path="/blog/ozel-firsat" element={<Navigate to="/ozel-firsat" replace />} />
               <Route path="/blog/bu-aya-ozel" element={<Navigate to="/bu-aya-ozel" replace />} />
               <Route path="/blog/:slug" element={<BlogDetail />} />
