@@ -41,6 +41,8 @@ const PartnerManagement = () => {
   const [creating, setCreating] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
   const [openPayment, setOpenPayment] = useState<Partner | null>(null);
+  const [openLink, setOpenLink] = useState<Partner | null>(null);
+  const [linkEmail, setLinkEmail] = useState("");
   const [form, setForm] = useState({
     name: "",
     referral_code: "",
@@ -114,6 +116,19 @@ const PartnerManagement = () => {
   const toggleActive = async (p: Partner) => {
     const { error } = await supabase.from("partners" as any).update({ is_active: !p.is_active }).eq("id", p.id);
     if (error) return toast.error(error.message);
+    void load();
+  };
+
+  const linkUser = async () => {
+    if (!openLink || !linkEmail) return;
+    const { error } = await supabase.rpc("link_partner_user" as any, {
+      p_partner_id: openLink.id,
+      p_email: linkEmail.trim(),
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Kullanıcı bağlandı");
+    setOpenLink(null);
+    setLinkEmail("");
     void load();
   };
 
@@ -279,7 +294,12 @@ const PartnerManagement = () => {
                               <TableCell>
                                 <Switch checked={p.is_active} onCheckedChange={() => toggleActive(p)} />
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right space-x-1 whitespace-nowrap">
+                                {!p.user_id && (
+                                  <Button size="sm" variant="secondary" onClick={() => setOpenLink(p)}>
+                                    Kullanıcı Bağla
+                                  </Button>
+                                )}
                                 <Button size="sm" variant="outline" onClick={() => setOpenPayment(p)}>
                                   <Wallet className="w-4 h-4 mr-1" /> Ödeme
                                 </Button>
@@ -325,6 +345,32 @@ const PartnerManagement = () => {
           </div>
           <DialogFooter>
             <Button onClick={recordPayment}>Kaydet</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!openLink} onOpenChange={(v) => !v && setOpenLink(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Kullanıcı Bağla — {openLink?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Önce "Kullanıcı Oluştur" ekranından <strong>Partner</strong> rolüyle bir hesap
+              oluşturun, ardından o kullanıcının e-postasını buraya girin.
+            </p>
+            <div>
+              <Label>Partner Kullanıcı E-postası</Label>
+              <Input
+                type="email"
+                value={linkEmail}
+                onChange={(e) => setLinkEmail(e.target.value)}
+                placeholder="partner@kurum.com"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={linkUser}>Bağla</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
