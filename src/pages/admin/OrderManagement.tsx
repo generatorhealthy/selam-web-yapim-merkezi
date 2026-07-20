@@ -89,6 +89,31 @@ const OrderManagement = () => {
   const [callingOrder, setCallingOrder] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
 
+  // Partner referrals lookup (email -> partner name + referral code)
+  const { data: partnerReferralsMap } = useQuery({
+    queryKey: ['partner-referrals-map'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('partner_referrals')
+        .select('specialist_email, specialist_user_id, partners(name, referral_code)');
+      if (error) throw error;
+      const byEmail = new Map<string, { name: string; code: string }>();
+      const byUserId = new Map<string, { name: string; code: string }>();
+      (data || []).forEach((r: any) => {
+        const info = { name: r.partners?.name || 'Partner', code: r.partners?.referral_code || '' };
+        if (r.specialist_email) byEmail.set(r.specialist_email.toLowerCase(), info);
+        if (r.specialist_user_id) byUserId.set(r.specialist_user_id, info);
+      });
+      return { byEmail, byUserId };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const getPartnerInfo = (order: Order) => {
+    if (!partnerReferralsMap) return null;
+    return partnerReferralsMap.byEmail.get((order.customer_email || '').toLowerCase()) || null;
+  };
+
   const handleCallCustomer = async (order: Order) => {
     if (!order.customer_phone) {
       toast({ title: "Hata", description: "Telefon numarası bulunamadı", variant: "destructive" });
@@ -1794,6 +1819,20 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                 )}
                               </div>
                             )}
+
+                            {(() => {
+                              const partnerInfo = getPartnerInfo(order);
+                              if (!partnerInfo) return null;
+                              return (
+                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
+                                  <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">İşbirliği Kaydı</span>
+                                  <span className="text-sm font-semibold text-amber-900">{partnerInfo.name}</span>
+                                  {partnerInfo.code && (
+                                    <span className="text-xs text-amber-700 font-mono bg-amber-100 px-2 py-0.5 rounded">{partnerInfo.code}</span>
+                                  )}
+                                </div>
+                              );
+                            })()}
 
                             {/* Package & Payment Info */}
                             <div className="space-y-2">
