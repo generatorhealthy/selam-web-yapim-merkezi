@@ -4798,6 +4798,164 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_commission_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_no: string | null
+          notes: string | null
+          paid_at: string
+          partner_id: string
+          payment_method: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_no?: string | null
+          notes?: string | null
+          paid_at?: string
+          partner_id: string
+          payment_method?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_no?: string | null
+          notes?: string | null
+          paid_at?: string
+          partner_id?: string
+          payment_method?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_commission_payments_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_referrals: {
+        Row: {
+          commission_amount: number
+          commission_status: string
+          created_at: string
+          first_order_id: string | null
+          first_paid_at: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          partner_id: string
+          payment_id: string | null
+          signup_at: string
+          specialist_email: string
+          specialist_name: string | null
+          specialist_phone: string | null
+          specialist_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          commission_amount?: number
+          commission_status?: string
+          created_at?: string
+          first_order_id?: string | null
+          first_paid_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          partner_id: string
+          payment_id?: string | null
+          signup_at?: string
+          specialist_email: string
+          specialist_name?: string | null
+          specialist_phone?: string | null
+          specialist_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_status?: string
+          created_at?: string
+          first_order_id?: string | null
+          first_paid_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          partner_id?: string
+          payment_id?: string | null
+          signup_at?: string
+          specialist_email?: string
+          specialist_name?: string | null
+          specialist_phone?: string | null
+          specialist_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_referrals_first_order_id_fkey"
+            columns: ["first_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_referrals_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          commission_per_signup: number
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          referral_code: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          commission_per_signup?: number
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          referral_code: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          commission_per_signup?: number
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          referral_code?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       patient_profiles: {
         Row: {
           auth_provider: string | null
@@ -6621,6 +6779,7 @@ export type Database = {
         Args: { p_specialist_id: string; p_user_id: string }
         Returns: undefined
       }
+      current_partner_id: { Args: never; Returns: string }
       extract_first_int: { Args: { p_text: string }; Returns: number }
       generate_specialist_slug: { Args: { p_name: string }; Returns: string }
       generate_unique_referral_code: { Args: never; Returns: string }
@@ -6761,6 +6920,7 @@ export type Database = {
         Returns: number
       }
       invoke_twitter_share_after_may1: { Args: never; Returns: undefined }
+      is_admin_or_staff: { Args: never; Returns: boolean }
       is_admin_or_staff_user: { Args: never; Returns: boolean }
       is_admin_user: { Args: never; Returns: boolean }
       is_following_specialist: {
