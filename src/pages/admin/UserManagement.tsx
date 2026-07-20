@@ -585,6 +585,7 @@ const UserManagement = () => {
                       <SelectItem value="staff">Staff (Sınırlı Yetkili)</SelectItem>
                       <SelectItem value="legal">Hukuk Birimi</SelectItem>
                       <SelectItem value="muhasebe">Muhasebe Birimi</SelectItem>
+                      <SelectItem value="partner">Partner (İş Ortağı)</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
