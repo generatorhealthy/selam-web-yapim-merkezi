@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,8 @@ interface Stats {
 }
 
 const PartnerManagement = () => {
+  const { userProfile, loading: roleLoading } = useUserRole();
+
   const [partners, setPartners] = useState<Partner[]>([]);
   const [stats, setStats] = useState<Record<string, Stats>>({});
   const [loading, setLoading] = useState(true);
@@ -155,6 +158,18 @@ const PartnerManagement = () => {
     setPayment({ amount: 0, invoice_no: "", notes: "" });
     void load();
   };
+
+  if (roleLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  }
+
+  if (!userProfile || userProfile.role !== "admin") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Bu sayfaya erişim yetkiniz yok.</p>
+      </div>
+    );
+  }
 
   return (
     <>
