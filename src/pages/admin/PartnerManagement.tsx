@@ -119,6 +119,19 @@ const PartnerManagement = () => {
     void load();
   };
 
+  const linkUser = async () => {
+    if (!openLink || !linkEmail) return;
+    const { error } = await supabase.rpc("link_partner_user" as any, {
+      p_partner_id: openLink.id,
+      p_email: linkEmail.trim(),
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Kullanıcı bağlandı");
+    setOpenLink(null);
+    setLinkEmail("");
+    void load();
+  };
+
   const recordPayment = async () => {
     if (!openPayment || !payment.amount) return;
     const { error } = await supabase.from("partner_commission_payments" as any).insert({
