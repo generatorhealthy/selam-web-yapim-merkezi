@@ -329,6 +329,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/users/create" element={<UserCreate />} />
               <Route path="/divan_paneli/quick-register" element={<QuickRegister />} />
               <Route path="/divan_paneli/users" element={<UserManagement />} />
+              <Route path="/divan_paneli/partners" element={<PartnerManagement />} />
               <Route path="/divan_paneli/specialists/add" element={<SpecialistAdd />} />
               <Route path="/divan_paneli/specialists" element={<SpecialistManagement />} />
               <Route path="/divan_paneli/specialists/edit/:id" element={<SpecialistEdit />} />
