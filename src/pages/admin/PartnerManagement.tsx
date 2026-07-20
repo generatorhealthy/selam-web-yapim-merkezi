@@ -41,6 +41,8 @@ const PartnerManagement = () => {
   const [creating, setCreating] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
   const [openPayment, setOpenPayment] = useState<Partner | null>(null);
+  const [openLink, setOpenLink] = useState<Partner | null>(null);
+  const [linkEmail, setLinkEmail] = useState("");
   const [form, setForm] = useState({
     name: "",
     referral_code: "",

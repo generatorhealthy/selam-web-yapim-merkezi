@@ -6933,6 +6933,10 @@ export type Database = {
         Returns: boolean
       }
       is_user_approved: { Args: { user_id: string }; Returns: boolean }
+      link_partner_user: {
+        Args: { p_email: string; p_partner_id: string }
+        Returns: boolean
+      }
       list_client_referrals_backups: {
         Args: never
         Returns: {
