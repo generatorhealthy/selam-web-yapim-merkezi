@@ -122,6 +122,17 @@ const AdminDashboard = () => {
 
   const adminCards = [
     {
+      title: "Kurumsal İş Ortakları",
+      description: "Referans kodu ile uzman getiren partner kurumlar, komisyonlar ve ödemeler",
+      icon: Handshake,
+      gradient: "from-blue-500 via-indigo-500 to-purple-600",
+      bgGradient: "from-blue-50 to-indigo-50",
+      shadowColor: "shadow-blue-500/30",
+      route: "/divan_paneli/partners",
+      buttonText: "İş Ortaklarını Yönet",
+      adminOnly: true
+    },
+    {
       title: "Instagram Paylaşımları",
       description: "Aktif uzmanlar için otomatik üretilen 3 Instagram görselini görüntüle, indir, yeniden üret",
       icon: Sparkles,
