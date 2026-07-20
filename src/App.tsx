@@ -314,6 +314,11 @@ const AppContent = () => {
               <Route path="/uye-ol" element={<PatientSignup />} />
               <Route path="/danisan-giris" element={<PatientLogin />} />
               <Route path="/danisan-paneli" element={<PatientDashboard />} />
+
+              {/* Partner Portal */}
+              <Route path="/partner-giris" element={<PartnerLogin />} />
+              <Route path="/partner" element={<PartnerDashboard />} />
+              
               
               {/* Admin Routes - MUST be before dynamic catch-all routes */}
               <Route path="/divan_paneli" element={<AdminAuth />} />
