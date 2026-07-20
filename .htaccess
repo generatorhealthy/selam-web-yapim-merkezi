@@ -131,6 +131,9 @@ RewriteRule ^sitemap\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1
 # Specific blog post redirects
 RewriteRule ^uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/?$ /blog/uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur [R=301,L]
 
+# System pages must never live under /blog/
+RewriteRule ^blog/(partner-giris|partner)/?$ /$1 [R=301,L]
+
 # Blog post redirects - redirect old URLs to /blog version
 RewriteCond %{REQUEST_URI} !^/blog/
 RewriteCond %{REQUEST_URI} !^/api/
