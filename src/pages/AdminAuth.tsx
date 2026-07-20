@@ -233,12 +233,12 @@ const AdminAuth = () => {
         return;
       }
 
-      // Admin, staff, legal veya muhasebe kontrolü
-      if (!['admin', 'staff', 'legal', 'muhasebe'].includes(profile.role)) {
+      // Admin, staff, legal, muhasebe veya partner kontrolü
+      if (!['admin', 'staff', 'legal', 'muhasebe', 'partner'].includes(profile.role)) {
         await supabase.auth.signOut();
         toast({
           title: "Yetkisiz Erişim",
-          description: "Bu sayfaya sadece admin, staff, hukuk birimi ve muhasebe birimi kullanıcıları erişebilir.",
+          description: "Bu sayfaya sadece yetkili roller erişebilir.",
           variant: "destructive"
         });
         return;
