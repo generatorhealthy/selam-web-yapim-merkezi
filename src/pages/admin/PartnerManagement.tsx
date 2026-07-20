@@ -36,6 +36,8 @@ interface Stats {
 }
 
 const PartnerManagement = () => {
+  const { userProfile, loading: roleLoading } = useUserRole();
+
   const [partners, setPartners] = useState<Partner[]>([]);
   const [stats, setStats] = useState<Record<string, Stats>>({});
   const [loading, setLoading] = useState(true);
