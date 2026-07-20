@@ -259,6 +259,8 @@ const UserCreate = () => {
         successMessage += " Hukuk Birimi hesabı oluşturuldu.";
       } else if (formData.role === "muhasebe") {
         successMessage += " Muhasebe Birimi hesabı oluşturuldu.";
+      } else if (formData.role === "partner") {
+        successMessage += " İş Ortağı hesabı oluşturuldu.";
       }
 
       toast({
