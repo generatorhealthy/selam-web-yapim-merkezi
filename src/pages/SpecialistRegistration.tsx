@@ -247,6 +247,7 @@ const SpecialistRegistration = () => {
 
         setCreatedUserId(data.user.id);
         setCreatedUserEmail(email);
+        void registerPartnerReferral(data.user.id, email);
         toast.success("Hesabınız oluşturuldu!");
         setCurrentStep(2);
       }
