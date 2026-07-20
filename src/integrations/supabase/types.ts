@@ -6966,6 +6966,16 @@ export type Database = {
           is_now_blocked: boolean
         }[]
       }
+      register_partner_referral: {
+        Args: {
+          p_referral_code: string
+          p_specialist_email: string
+          p_specialist_name: string
+          p_specialist_phone: string
+          p_specialist_user_id: string
+        }
+        Returns: string
+      }
       reset_admin_login_attempts: {
         Args: { p_email: string }
         Returns: undefined

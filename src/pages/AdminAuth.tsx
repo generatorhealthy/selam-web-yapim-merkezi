@@ -233,12 +233,12 @@ const AdminAuth = () => {
         return;
       }
 
-      // Admin, staff, legal veya muhasebe kontrolü
-      if (!['admin', 'staff', 'legal', 'muhasebe'].includes(profile.role)) {
+      // Admin, staff, legal, muhasebe veya partner kontrolü
+      if (!['admin', 'staff', 'legal', 'muhasebe', 'partner'].includes(profile.role)) {
         await supabase.auth.signOut();
         toast({
           title: "Yetkisiz Erişim",
-          description: "Bu sayfaya sadece admin, staff, hukuk birimi ve muhasebe birimi kullanıcıları erişebilir.",
+          description: "Bu sayfaya sadece yetkili roller erişebilir.",
           variant: "destructive"
         });
         return;
@@ -275,15 +275,20 @@ const AdminAuth = () => {
       }
 
       // Başarılı giriş
-      const roleText = profile.role === 'admin' ? 'Admin' : 
-                       profile.role === 'staff' ? 'Staff' : 
-                       profile.role === 'legal' ? 'Hukuk Birimi' : 'Muhasebe Birimi';
+      const roleText = profile.role === 'admin' ? 'Admin' :
+                       profile.role === 'staff' ? 'Staff' :
+                       profile.role === 'legal' ? 'Hukuk Birimi' :
+                       profile.role === 'partner' ? 'İş Ortağı' : 'Muhasebe Birimi';
       toast({
         title: "Giriş Başarılı",
-        description: `${roleText} olarak divan paneline yönlendiriliyorsunuz...`,
+        description: `${roleText} olarak yönlendiriliyorsunuz...`,
       });
 
-      navigate('/divan_paneli/dashboard');
+      if (profile.role === 'partner') {
+        navigate('/partner');
+      } else {
+        navigate('/divan_paneli/dashboard');
+      }
 
     } catch (error) {
       console.error('Beklenmeyen hata:', error);

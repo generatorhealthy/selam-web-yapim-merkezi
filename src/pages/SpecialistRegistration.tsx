@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -58,12 +58,41 @@ interface FAQItem {
 
 const SpecialistRegistration = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [createdUserId, setCreatedUserId] = useState("");
   const [createdUserEmail, setCreatedUserEmail] = useState("");
+  const referralCodeRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const fromUrl = searchParams.get("ref");
+    const stored = typeof window !== "undefined" ? localStorage.getItem("partner_ref") : null;
+    const code = (fromUrl || stored || "").trim();
+    if (code) {
+      referralCodeRef.current = code.toUpperCase();
+      try { localStorage.setItem("partner_ref", code.toUpperCase()); } catch {}
+    }
+  }, [searchParams]);
+
+  const registerPartnerReferral = async (userId: string, userEmail: string) => {
+    const code = referralCodeRef.current;
+    if (!code) return;
+    try {
+      await supabase.rpc("register_partner_referral" as any, {
+        p_referral_code: code,
+        p_specialist_user_id: userId,
+        p_specialist_email: userEmail,
+        p_specialist_name: formData.name || email.split("@")[0],
+        p_specialist_phone: phone || null,
+      });
+    } catch (err) {
+      console.error("Partner referral kaydı hatası:", err);
+    }
+  };
+
 
 
   const [email, setEmail] = useState("");
@@ -183,6 +212,7 @@ const SpecialistRegistration = () => {
 
             setCreatedUserId(signInData.user.id);
             setCreatedUserEmail(email);
+            void registerPartnerReferral(signInData.user.id, email);
             toast.success("Mevcut hesabınızla devam ediliyor.");
             setCurrentStep(2);
           }
@@ -217,6 +247,7 @@ const SpecialistRegistration = () => {
 
         setCreatedUserId(data.user.id);
         setCreatedUserEmail(email);
+        void registerPartnerReferral(data.user.id, email);
         toast.success("Hesabınız oluşturuldu!");
         setCurrentStep(2);
       }

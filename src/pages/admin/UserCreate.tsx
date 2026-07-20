@@ -23,7 +23,7 @@ const UserCreate = () => {
     email: "",
     password: "",
     phone: "",
-    role: "specialist" as "admin" | "specialist" | "staff" | "legal" | "muhasebe",
+    role: "specialist" as "admin" | "specialist" | "staff" | "legal" | "muhasebe" | "partner",
     name: ""
   });
 
@@ -259,6 +259,8 @@ const UserCreate = () => {
         successMessage += " Hukuk Birimi hesabı oluşturuldu.";
       } else if (formData.role === "muhasebe") {
         successMessage += " Muhasebe Birimi hesabı oluşturuldu.";
+      } else if (formData.role === "partner") {
+        successMessage += " İş Ortağı hesabı oluşturuldu.";
       }
 
       toast({
@@ -415,6 +417,7 @@ const UserCreate = () => {
                           <SelectItem value="staff">Staff (Sınırlı Yetkili)</SelectItem>
                           <SelectItem value="legal">Hukuk Birimi</SelectItem>
                           <SelectItem value="muhasebe">Muhasebe Birimi</SelectItem>
+                          <SelectItem value="partner">Partner (İş Ortağı)</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
                         </>
                       )}

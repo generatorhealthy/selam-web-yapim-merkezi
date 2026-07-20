@@ -82,6 +82,9 @@ const PatientSignup = lazy(() => import("./pages/PatientSignup"));
 const PatientLogin = lazy(() => import("./pages/PatientLogin"));
 const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const PartnerLogin = lazy(() => import("./pages/PartnerLogin"));
+const PartnerDashboard = lazy(() => import("./pages/partner/PartnerDashboard"));
+const PartnerManagement = lazy(() => import("./pages/admin/PartnerManagement"));
 
 // Admin pages - lazy loaded (never needed on initial visit)
 const AdminAuth = lazy(() => import("./pages/AdminAuth"));
@@ -311,6 +314,11 @@ const AppContent = () => {
               <Route path="/uye-ol" element={<PatientSignup />} />
               <Route path="/danisan-giris" element={<PatientLogin />} />
               <Route path="/danisan-paneli" element={<PatientDashboard />} />
+
+              {/* Partner Portal */}
+              <Route path="/partner-giris" element={<PartnerLogin />} />
+              <Route path="/partner" element={<PartnerDashboard />} />
+              
               
               {/* Admin Routes - MUST be before dynamic catch-all routes */}
               <Route path="/divan_paneli" element={<AdminAuth />} />
@@ -321,6 +329,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/users/create" element={<UserCreate />} />
               <Route path="/divan_paneli/quick-register" element={<QuickRegister />} />
               <Route path="/divan_paneli/users" element={<UserManagement />} />
+              <Route path="/divan_paneli/partners" element={<PartnerManagement />} />
               <Route path="/divan_paneli/specialists/add" element={<SpecialistAdd />} />
               <Route path="/divan_paneli/specialists" element={<SpecialistManagement />} />
               <Route path="/divan_paneli/specialists/edit/:id" element={<SpecialistEdit />} />
