@@ -159,6 +159,18 @@ const PartnerManagement = () => {
     void load();
   };
 
+  if (roleLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  }
+
+  if (!userProfile || userProfile.role !== "admin") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Bu sayfaya erişim yetkiniz yok.</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <Helmet>
