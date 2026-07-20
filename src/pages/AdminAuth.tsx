@@ -275,15 +275,20 @@ const AdminAuth = () => {
       }
 
       // Başarılı giriş
-      const roleText = profile.role === 'admin' ? 'Admin' : 
-                       profile.role === 'staff' ? 'Staff' : 
-                       profile.role === 'legal' ? 'Hukuk Birimi' : 'Muhasebe Birimi';
+      const roleText = profile.role === 'admin' ? 'Admin' :
+                       profile.role === 'staff' ? 'Staff' :
+                       profile.role === 'legal' ? 'Hukuk Birimi' :
+                       profile.role === 'partner' ? 'İş Ortağı' : 'Muhasebe Birimi';
       toast({
         title: "Giriş Başarılı",
-        description: `${roleText} olarak divan paneline yönlendiriliyorsunuz...`,
+        description: `${roleText} olarak yönlendiriliyorsunuz...`,
       });
 
-      navigate('/divan_paneli/dashboard');
+      if (profile.role === 'partner') {
+        navigate('/partner');
+      } else {
+        navigate('/divan_paneli/dashboard');
+      }
 
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
