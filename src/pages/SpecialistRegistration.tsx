@@ -212,6 +212,7 @@ const SpecialistRegistration = () => {
 
             setCreatedUserId(signInData.user.id);
             setCreatedUserEmail(email);
+            void registerPartnerReferral(signInData.user.id, email);
             toast.success("Mevcut hesabınızla devam ediliyor.");
             setCurrentStep(2);
           }
