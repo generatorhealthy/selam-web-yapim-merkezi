@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 const PRIORITY_SPECIALTIES = [
-  "Psikolog", "Psikolojik Danışmanlık", "Klinik Psikolog", "Aile Danışmanı", "Cildiye", "Kadın Doğum ve Hastalıkları"
+  "Psikolog", "Psikolojik Danışmanlık", "Klinik Psikolog", "Aile Danışmanı", "Cildiye", "Kadın Doğum ve Hastalıkları", "Diş Hekimi"
 ];
 
 const OTHER_SPECIALTIES = [
