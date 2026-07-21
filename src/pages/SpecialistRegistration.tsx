@@ -22,17 +22,17 @@ import {
 } from "lucide-react";
 
 const PRIORITY_SPECIALTIES = [
-  "Psikolog", "Psikolojik Danışmanlık", "Klinik Psikolog", "Aile Danışmanı"
+  "Psikolog", "Psikolojik Danışmanlık", "Klinik Psikolog", "Aile Danışmanı", "Cildiye", "Kadın Doğum ve Hastalıkları"
 ];
 
 const OTHER_SPECIALTIES = [
   "Acil Tıp", "Aile Hekimliği", "Aile ve İlişki Danışmanı", "Aile ve Sosyal Yaşam Danışmanlığı",
   "Akupunktur", "Alerji Hastalıkları", "Algoloji (Fiziksel Tıp ve Rehabilitasyon)",
   "Algoloji (Noroloji)", "Androloji", "Anestezi ve Reanimasyon", "Baş ve Boyun Cerrahisi",
-  "Beyin ve Sinir Cerrahisi", "Bilişsel Davranışçı Terapi", "Çift Terapisi", "Cildiye", "Cinsel Terapi",
+  "Beyin ve Sinir Cerrahisi", "Bilişsel Davranışçı Terapi", "Çift Terapisi", "Cinsel Terapi",
   "Çocuk Cerrahisi", "Çocuk Endokrinolojisi", "Çocuk Gelişimi", "Çocuk Sağlığı ve Hastalıkları",
   "Çocuk ve Ergen Psikiyatristi", "Dil ve Konuşma Terapisti", "Diyetisyen",
-  "Eğitim Danışmanlığı", "Göz Hastalıkları", "İlişki Danışmanı", "Kadın Doğum", "Psikiyatri",
+  "Eğitim Danışmanlığı", "Göz Hastalıkları", "İlişki Danışmanı", "Psikiyatri",
   "Genel Cerrahi", "Romatoloji", "Tıbbi Onkoloji"
 ];
 
