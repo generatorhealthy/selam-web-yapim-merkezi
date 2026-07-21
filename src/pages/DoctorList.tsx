@@ -48,8 +48,8 @@ const DoctorList = () => {
   
   const specialties = [
     "Aile Danışmanı", "Cildiye", "Dil ve Konuşma Terapisti", 
-    "Eğitim Danışmanlığı", "İlişki Danışmanı", "Kadın Doğum",
-    "Psikolog", "Psikolojik Danışmanlık", "Doktor", "Uzman",
+    "Eğitim Danışmanlığı", "İlişki Danışmanı", "Kadın Doğum ve Hastalıkları",
+    "Diş Hekimi", "Psikolog", "Psikolojik Danışmanlık", "Doktor", "Uzman",
     "Psikolojik Danışman"
   ];
 
