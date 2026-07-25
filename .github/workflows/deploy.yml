@@ -3,8 +3,11 @@ name: Deploy to Hostinger
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: hostinger-deploy-main
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: false
