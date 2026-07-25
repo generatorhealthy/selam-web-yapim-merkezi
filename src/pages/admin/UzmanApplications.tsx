@@ -126,6 +126,43 @@ const UzmanApplications = () => {
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [savingNote, setSavingNote] = useState<Record<string, boolean>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sendingBulk, setSendingBulk] = useState(false);
+
+  const SMS_ELIGIBLE = new Set(["contacted", "follow_up", "no_answer"]);
+  const SMS_PREVIEW = `Sayın {Ad}, Size doktorumol.com.tr'den ulaşıyoruz.
+
+Kampanyalı paket üzerinden son alımlarımız sağlanmaktadır; akabinde danışan yönlendirmelerimiz ve diğer çalışmalarımız başlayacaktır.
+
+Aşağıdaki linkten profilinizi oluşturabilirsiniz:
+https://doktorumol.com.tr/kayit-ol
+
+Sağlıklı günler dileriz.`;
+
+  const handleBulkSms = async () => {
+    if (!SMS_ELIGIBLE.has(statusFilter)) return;
+    const statusLabel = STATUS_MAP[statusFilter]?.label || statusFilter;
+    const count = counts[statusFilter] || 0;
+    const ok = window.confirm(
+      `"${statusLabel}" listesindeki ${count} uzmana aşağıdaki SMS gönderilecek. Devam edilsin mi?\n\n${SMS_PREVIEW}`
+    );
+    if (!ok) return;
+    setSendingBulk(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-uzman-reapply-bulk-sms", {
+        body: { status: statusFilter },
+      });
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data.error);
+      toast({
+        title: "SMS gönderildi",
+        description: `${data.sentCount ?? 0} uzmana SMS iletildi (${data.recipientCount ?? 0} alıcı, ${data.skippedCount ?? 0} atlandı).`,
+      });
+    } catch (e: any) {
+      toast({ title: "SMS gönderilemedi", description: e.message || "Bilinmeyen hata", variant: "destructive" });
+    } finally {
+      setSendingBulk(false);
+    }
+  };
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
