@@ -357,7 +357,7 @@ const MetaLeads = () => {
               <PhoneForwarded className={`h-4 w-4 mr-2 ${planLoading ? "animate-pulse" : ""}`} />
               {planLoading ? "Hesaplanıyor..." : "Test Yönlendirme Planı"}
             </Button>
-            {statusFilter === "wrong" && (
+            {(statusFilter === "wrong" || statusFilter === "no_answer") && (
               <Button
                 onClick={sendReapplyBulkSms}
                 disabled={bulkSmsLoading}
