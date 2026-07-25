@@ -97,12 +97,23 @@ serve(async (req) => {
     const dryRun = url.searchParams.get("dryRun") === "1";
     const skipSent = url.searchParams.get("skipSent") === "1"; // opt-in: skip leads with welcome_sent_at set
 
+    // Parse body for optional status filter (defaults to "wrong" for backwards compatibility)
+    let bodyStatus: string | undefined;
+    try {
+      if (req.method !== "GET") {
+        const b = await req.json().catch(() => ({}));
+        if (b && typeof b.status === "string") bodyStatus = b.status;
+      }
+    } catch { /* ignore */ }
+    const ALLOWED_STATUSES = new Set(["wrong", "no_answer"]);
+    const targetStatus = bodyStatus && ALLOWED_STATUSES.has(bodyStatus) ? bodyStatus : "wrong";
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Paginate through all wrong-status leads (default row limit is 1000).
+    // Paginate through all target-status leads (default row limit is 1000).
     const pageSize = 1000;
     let from = 0;
     const rows: { id: string; full_name: string; phone: string; welcome_sent_at: string | null }[] = [];
@@ -110,7 +121,7 @@ serve(async (req) => {
       const q = supabase
         .from("danisan_basvurulari")
         .select("id, full_name, phone, welcome_sent_at")
-        .eq("status", "wrong")
+        .eq("status", targetStatus)
         .order("created_at", { ascending: false })
         .range(from, from + pageSize - 1);
       const { data, error } = await q;
@@ -142,7 +153,7 @@ serve(async (req) => {
       recipients.push({ id: r.id, name: r.full_name || "", phone: norm });
     }
 
-    console.log(`wrong-status leads: ${rows.length}, valid recipients: ${recipients.length}, skipped: ${skipped.length}`);
+    console.log(`${targetStatus}-status leads: ${rows.length}, valid recipients: ${recipients.length}, skipped: ${skipped.length}`);
 
     if (dryRun) {
       return new Response(
