@@ -14,13 +14,11 @@ const corsHeaders = {
 function buildMessage(firstName: string): string {
   const nm = (firstName || "").trim().split(/\s+/)[0] || "";
   const hi = nm ? `Sayin ${nm},` : "Merhaba,";
-  return `${hi}
+  return `${hi} Doktorumol.com.tr olarak sizi gorusme saglamistik.
 
-Doktorumol.com.tr olarak sizi aramistik ancak gorusme saglayamadik.
+Psikolog veya Aile Danismani arayisindaysaniz asagidaki linkten formu doldurabilirsiniz; en kisa surecte size ulasim saglayacagiz.
 
-Uygun oldugunuzda asagidaki linkten almak istediginiz danismanlik turunu secerek bize tekrar ulasabilirsiniz:
-
-https://doktorumol.com.tr/danismanlik-randevusu-al
+Form Linki: https://doktorumol.com.tr/danismanlik-randevusu-al
 
 Saglikli gunler dileriz.`;
 }
