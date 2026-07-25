@@ -286,10 +286,23 @@ Sağlıklı günler dileriz.`;
               <p className="text-sm text-muted-foreground">Meta reklamlarından gelen uzman başvuruları</p>
             </div>
           </div>
-          <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
-            <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            {SMS_ELIGIBLE.has(statusFilter) && (
+              <Button
+                onClick={handleBulkSms}
+                disabled={sendingBulk || (counts[statusFilter] || 0) === 0}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Send className={`h-4 w-4 mr-2 ${sendingBulk ? "animate-pulse" : ""}`} />
+                {sendingBulk ? "Gönderiliyor..." : `Kayıt Daveti SMS Gönder (${counts[statusFilter] || 0})`}
+              </Button>
+            )}
+            <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm">
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
+            </Button>
+          </div>
         </div>
 
         {/* Status summary chips */}
