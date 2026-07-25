@@ -75,19 +75,12 @@ async function sendBatchViaProxy(payload: unknown): Promise<{ status: number; bo
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  // Accept either an admin/cron caller OR a one-shot header token for agent-triggered runs.
-  const oneShot = Deno.env.get("EXT_SMS_ONESHOT_TOKEN");
-  const provided = req.headers.get("x-ext-token") || "";
-  const oneShotOk = !!oneShot && provided === oneShot;
-  if (!oneShotOk) {
-    const __auth = await verifyAdminOrCron(req);
-    if (!__auth.ok) {
-      return new Response(JSON.stringify({ error: __auth.error }), {
-        status: __auth.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+  const __auth = await verifyAdminOrCron(req);
+  if (!__auth.ok) {
+    return new Response(JSON.stringify({ error: __auth.error }), {
+      status: __auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
