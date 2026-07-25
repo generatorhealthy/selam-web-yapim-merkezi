@@ -101,6 +101,7 @@ serve(async (req) => {
     const dryRun = url.searchParams.get("dryRun") === "1";
     const body = await req.json().catch(() => ({}));
     const inRecipients: { name?: string; phone: string }[] = Array.isArray(body?.recipients) ? body.recipients : [];
+    const template: "danisan" | "uzman" = body?.template === "uzman" ? "uzman" : "danisan";
 
     const recipients: { name: string; phone: string }[] = [];
     const seen = new Set<string>();
@@ -114,8 +115,8 @@ serve(async (req) => {
 
     if (dryRun) {
       return new Response(JSON.stringify({
-        success: true, dryRun: true, recipientCount: recipients.length, skipped,
-        sample: recipients.slice(0, 3).map(r => ({ phone: r.phone, preview: toGsm7(buildMessage(r.name)) })),
+        success: true, dryRun: true, recipientCount: recipients.length, skipped, template,
+        sample: recipients.slice(0, 3).map(r => ({ phone: r.phone, preview: toGsm7(buildMessage(r.name, template)) })),
       }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -134,12 +135,12 @@ serve(async (req) => {
         username, password,
         source_addr: sender,
         source_addr_type: "5",
-        custom_id: `ext-reapply-${Date.now()}-${i}`,
+        custom_id: `ext-${template}-${Date.now()}-${i}`,
         datacoding: "0",
         valid_for: "48:00",
         send_at: "",
         datacoding_lock: "0",
-        messages: chunk.map((r) => ({ msg: toGsm7(buildMessage(r.name)), dest: r.phone })),
+        messages: chunk.map((r) => ({ msg: toGsm7(buildMessage(r.name, template)), dest: r.phone })),
       };
       const res = await sendBatchViaProxy(payload);
       const ok = res.status >= 200 && res.status < 300;
