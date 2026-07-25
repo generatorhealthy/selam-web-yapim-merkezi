@@ -96,6 +96,8 @@ serve(async (req) => {
     });
   }
 
+
+
   try {
     const url = new URL(req.url);
     const dryRun = url.searchParams.get("dryRun") === "1";
