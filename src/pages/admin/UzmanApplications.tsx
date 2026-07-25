@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, BriefcaseBusiness, Check, Copy } from "lucide-react";
+import { RefreshCw, Phone, Search, BriefcaseBusiness, Check, Copy, Send } from "lucide-react";
 import {
   Select,
   SelectContent,
