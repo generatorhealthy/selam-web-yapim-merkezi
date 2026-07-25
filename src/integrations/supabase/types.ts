@@ -6443,6 +6443,7 @@ export type Database = {
           source: string | null
           status: string
           updated_at: string
+          welcome_sent_at: string | null
         }
         Insert: {
           branch?: string | null
@@ -6458,6 +6459,7 @@ export type Database = {
           source?: string | null
           status?: string
           updated_at?: string
+          welcome_sent_at?: string | null
         }
         Update: {
           branch?: string | null
@@ -6473,6 +6475,7 @@ export type Database = {
           source?: string | null
           status?: string
           updated_at?: string
+          welcome_sent_at?: string | null
         }
         Relationships: []
       }
