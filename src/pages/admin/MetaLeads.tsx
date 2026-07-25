@@ -16,7 +16,7 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy, PhoneForwarded } from "lucide-react";
+import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy, PhoneForwarded, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -148,6 +148,32 @@ const MetaLeads = () => {
   const [planLoading, setPlanLoading] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
   const [plan, setPlan] = useState<any[]>([]);
+  const [bulkSmsLoading, setBulkSmsLoading] = useState(false);
+
+  const sendReapplyBulkSms = async () => {
+    const wrongCount = leads.filter((l) => l.status === "wrong").length;
+    const confirmed = window.confirm(
+      `${wrongCount} adet "Yanlış Ulaşanlar" kaydına SMS gönderilecek.\n\n` +
+      `Mesaj: /danismanlik-randevusu-al linki üzerinden tekrar başvuru davetiyesi.\n\n` +
+      `Devam edilsin mi?`
+    );
+    if (!confirmed) return;
+    setBulkSmsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-reapply-bulk-sms", { body: {} });
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data.error || "SMS gönderilemedi");
+      toast({
+        title: "SMS gönderimi tamamlandı",
+        description: `${data.sentCount ?? 0} numaraya gönderildi. Atlanan: ${data.skippedCount ?? 0}.`,
+      });
+      await fetchLeads();
+    } catch (e: any) {
+      toast({ title: "SMS gönderilemedi", description: e.message || "Bilinmeyen hata", variant: "destructive" });
+    } finally {
+      setBulkSmsLoading(false);
+    }
+  };
 
   const runRoutingPlan = async () => {
     setPlanLoading(true);
@@ -329,6 +355,17 @@ const MetaLeads = () => {
               <PhoneForwarded className={`h-4 w-4 mr-2 ${planLoading ? "animate-pulse" : ""}`} />
               {planLoading ? "Hesaplanıyor..." : "Test Yönlendirme Planı"}
             </Button>
+            {statusFilter === "wrong" && (
+              <Button
+                onClick={sendReapplyBulkSms}
+                disabled={bulkSmsLoading}
+                size="sm"
+                className="shrink-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+              >
+                <Send className={`h-4 w-4 mr-2 ${bulkSmsLoading ? "animate-pulse" : ""}`} />
+                {bulkSmsLoading ? "Gönderiliyor..." : "Tekrar Başvuru SMS Gönder"}
+              </Button>
+            )}
             <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
