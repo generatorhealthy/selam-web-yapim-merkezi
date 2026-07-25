@@ -151,16 +151,18 @@ const MetaLeads = () => {
   const [bulkSmsLoading, setBulkSmsLoading] = useState(false);
 
   const sendReapplyBulkSms = async () => {
-    const wrongCount = leads.filter((l) => l.status === "wrong").length;
+    const targetStatus = statusFilter === "no_answer" ? "no_answer" : "wrong";
+    const label = targetStatus === "no_answer" ? "Açmayanlar" : "Yanlış Ulaşanlar";
+    const count = leads.filter((l) => l.status === targetStatus).length;
     const confirmed = window.confirm(
-      `${wrongCount} adet "Yanlış Ulaşanlar" kaydına SMS gönderilecek.\n\n` +
+      `${count} adet "${label}" kaydına SMS gönderilecek.\n\n` +
       `Mesaj: /danismanlik-randevusu-al linki üzerinden tekrar başvuru davetiyesi.\n\n` +
       `Devam edilsin mi?`
     );
     if (!confirmed) return;
     setBulkSmsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-reapply-bulk-sms", { body: {} });
+      const { data, error } = await supabase.functions.invoke("send-reapply-bulk-sms", { body: { status: targetStatus } });
       if (error) throw error;
       if (data?.success === false) throw new Error(data.error || "SMS gönderilemedi");
       toast({
