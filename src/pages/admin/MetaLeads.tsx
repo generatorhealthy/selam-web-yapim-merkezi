@@ -123,6 +123,14 @@ const STATUS_OPTIONS = [
     card: "border-yellow-300 bg-yellow-50/60",
     dot: "bg-yellow-500",
   },
+  {
+    value: "reapplied",
+    label: "Tekrar Başvuru Sağlayanlar",
+    hint: "Form üzerinden tekrar başvuranlar (mavi)",
+    badge: "bg-blue-100 text-blue-700 border-blue-300",
+    card: "border-blue-200 bg-blue-50/40",
+    dot: "bg-blue-500",
+  },
 ];
 
 const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
