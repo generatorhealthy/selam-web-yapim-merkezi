@@ -355,6 +355,17 @@ const MetaLeads = () => {
               <PhoneForwarded className={`h-4 w-4 mr-2 ${planLoading ? "animate-pulse" : ""}`} />
               {planLoading ? "Hesaplanıyor..." : "Test Yönlendirme Planı"}
             </Button>
+            {statusFilter === "wrong" && (
+              <Button
+                onClick={sendReapplyBulkSms}
+                disabled={bulkSmsLoading}
+                size="sm"
+                className="shrink-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+              >
+                <Send className={`h-4 w-4 mr-2 ${bulkSmsLoading ? "animate-pulse" : ""}`} />
+                {bulkSmsLoading ? "Gönderiliyor..." : "Tekrar Başvuru SMS Gönder"}
+              </Button>
+            )}
             <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
