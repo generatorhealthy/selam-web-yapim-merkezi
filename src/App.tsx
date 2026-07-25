@@ -278,6 +278,8 @@ const AppContent = () => {
               <Route path="/blog/partner" element={<Navigate to="/partner" replace />} />
               <Route path="/blog/ozel-firsat" element={<Navigate to="/ozel-firsat" replace />} />
               <Route path="/blog/bu-aya-ozel" element={<Navigate to="/bu-aya-ozel" replace />} />
+              <Route path="/blog/danismanlik-randevusu-al" element={<Navigate to="/danismanlik-randevusu-al" replace />} />
+              <Route path="/danismanlik-randevusu-al" element={<DanismanlikRandevusuAl />} />
               <Route path="/blog/:slug" element={<BlogDetail />} />
               <Route path="/yazilar/:slug" element={<LegacyBlogRedirect />} />
               <Route path="/uzmanlar" element={<DoctorList />} />

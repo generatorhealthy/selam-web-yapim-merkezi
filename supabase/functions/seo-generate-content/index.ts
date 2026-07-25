@@ -17,6 +17,7 @@ const slugify = (s: string) =>
 const RESERVED_ROUTE_SLUGS = new Set([
   "partner",
   "partner-giris",
+  "danismanlik-randevusu-al",
 ]);
 
 const isReservedRouteSlug = (value: string) => RESERVED_ROUTE_SLUGS.has(slugify(value));
