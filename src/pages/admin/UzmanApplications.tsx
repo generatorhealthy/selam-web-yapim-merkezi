@@ -128,7 +128,7 @@ const UzmanApplications = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sendingBulk, setSendingBulk] = useState(false);
 
-  const SMS_ELIGIBLE = new Set(["contacted", "follow_up", "no_answer"]);
+  const SMS_ELIGIBLE = new Set(["contacted", "follow_up", "no_answer", "not_interested"]);
   const SMS_PREVIEW = `Sayın {Ad}, Size doktorumol.com.tr'den ulaşıyoruz.
 
 Kampanyalı paket üzerinden son alımlarımız sağlanmaktadır; akabinde danışan yönlendirmelerimiz ve diğer çalışmalarımız başlayacaktır.
