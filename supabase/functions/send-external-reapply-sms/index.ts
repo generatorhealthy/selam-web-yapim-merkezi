@@ -8,9 +8,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function buildMessage(firstName: string): string {
+function buildMessage(firstName: string, template: "danisan" | "uzman" = "danisan"): string {
   const nm = (firstName || "").trim().split(/\s+/)[0] || "";
   const hi = nm ? `Sayin ${nm},` : "Merhaba,";
+  if (template === "uzman") {
+    return `${hi}
+
+Size Doktorumol.com.tr'den ulasiyoruz.
+
+Turkiye genelinde danisan yonlendirme garantisi sunan platformumuzda kampanyali paketimiz uzerinden son kayitlar alinmaktadir; akabinde danisan yonlendirmeleriniz baslayacaktir.
+
+Online olarak profilinizi olusturabilirsiniz:
+https://doktorumol.com.tr/kayit-ol
+
+Saglikli gunler dileriz.`;
+  }
   return `${hi}
 
 Doktorumol.com.tr olarak sizlerle daha once gorusme saglamistik.
@@ -22,6 +34,7 @@ https://doktorumol.com.tr/danismanlik-randevusu-al
 
 Saglikli gunler dileriz.`;
 }
+
 
 function toGsm7(s: string): string {
   const map: Record<string, string> = {
