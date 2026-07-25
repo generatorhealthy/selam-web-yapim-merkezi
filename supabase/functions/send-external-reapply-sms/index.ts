@@ -88,17 +88,14 @@ async function sendBatchViaProxy(payload: unknown): Promise<{ status: number; bo
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const ONESHOT = "k9x3Qm2vRt7Zp1Lw8Nc4Bs6Yh0Fj5Dg2Aq9Ue1Ir3Ok8Mv4";
-  const oneshotHeader = req.headers.get("x-ext-token") || "";
-  if (oneshotHeader !== ONESHOT) {
-    const __auth = await verifyAdminOrCron(req);
-    if (!__auth.ok) {
-      return new Response(JSON.stringify({ error: __auth.error }), {
-        status: __auth.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+  const __auth = await verifyAdminOrCron(req);
+  if (!__auth.ok) {
+    return new Response(JSON.stringify({ error: __auth.error }), {
+      status: __auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
+
 
 
   try {
