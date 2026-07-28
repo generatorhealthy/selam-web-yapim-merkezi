@@ -237,6 +237,7 @@ const audioServer = net.createServer((socket) => {
           return;
         }
         call.socket = socket;
+        call.answered = true;
         startRealtime(uuid, call).catch((e) => {
           log("realtime başlatılamadı:", e.message);
           finishCall(uuid, "failed", { error_message: e.message });
@@ -250,14 +251,14 @@ const audioServer = net.createServer((socket) => {
           }),
         );
       } else if (type === AS_TERMINATE || type === AS_ERROR) {
-        if (uuid) finishCall(uuid, call?.outcome || "no_answer");
+        if (uuid) finishCall(uuid, call?.outcome || (call?.answered ? "failed" : "no_answer"));
         socket.end();
       }
     }
   });
 
   socket.on("close", () => {
-    if (uuid) finishCall(uuid, calls.get(uuid)?.outcome || "no_answer");
+    if (uuid) { const c = calls.get(uuid); finishCall(uuid, c?.outcome || (c?.answered ? "failed" : "no_answer")); }
   });
   socket.on("error", (e) => log("AudioSocket hata:", e.message));
 });
