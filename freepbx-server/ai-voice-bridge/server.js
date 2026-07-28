@@ -33,6 +33,9 @@ const CFG = {
   originateContext: process.env.AI_ORIGINATE_CONTEXT || "ai-outbound",
   transferContext: process.env.AI_TRANSFER_CONTEXT || "ai-transfer",
   dialContext: process.env.AI_DIAL_CONTEXT || "from-internal",
+  // FreePBX from-internal, Local kanalda gerçek bir dahili kimliği ister;
+  // yoksa outbound route eşleşmez ve çağrı anında kapanır (cannot-complete-as-dialed).
+  callerExt: process.env.AI_CALLER_EXT || "1168",
   audioSocketHost: process.env.AI_AUDIOSOCKET_HOST || "127.0.0.1",
   callTimeoutMs: Number(process.env.AI_CALL_TIMEOUT_MS || 180000),
 };
@@ -532,15 +535,23 @@ const server = http.createServer(async (req, res) => {
 
         const resp = await ami.send({
           Action: "Originate",
-          Channel: `Local/${dialNumber}@${CFG.dialContext}`,
+          Channel: `Local/${dialNumber}@${CFG.dialContext}/n`,
           Context: CFG.originateContext,
           Exten: "s",
           Priority: 1,
-          CallerID: "Doktorumol <" + dialNumber + ">",
+          CallerID: `${CFG.callerExt} <${CFG.callerExt}>`,
           Timeout: 35000,
           Async: "true",
-          Variable: `AI_UUID=${uuid},AI_HOST=${CFG.audioSocketHost}:${CFG.audioPort}`,
+          Variable: [
+            `AI_UUID=${uuid}`,
+            `AI_HOST=${CFG.audioSocketHost}:${CFG.audioPort}`,
+            // FreePBX outbound route'un çalışması için dahili kimliği:
+            `__AMPUSER=${CFG.callerExt}`,
+            `__REALCALLERIDNUM=${CFG.callerExt}`,
+            `CALLERID(num)=${CFG.callerExt}`,
+          ].join(","),
         });
+
 
         if (resp.Response !== "Success") {
           calls.delete(uuid);
