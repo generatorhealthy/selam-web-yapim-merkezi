@@ -195,17 +195,35 @@ function upsample8kTo24k(buf) {
   return out;
 }
 
-function downsample24kTo8k(buf) {
-  const inSamples = Math.floor(buf.length / 2);
-  const outSamples = Math.floor(inSamples / 3);
-  const out = Buffer.alloc(outSamples * 2);
-  for (let i = 0; i < outSamples; i++) {
-    const a = buf.readInt16LE(i * 6);
-    const b = buf.readInt16LE(i * 6 + 2);
-    const c = buf.readInt16LE(i * 6 + 4);
-    out.writeInt16LE(Math.round((a + b + c) / 3), i * 2);
+// 24k -> 8k, durum korumalı (chunk sınırlarında tıklama/cızırtı olmasın diye)
+// 13 katsayılı düşük geçiren FIR (Hamming pencereli sinc, kesim ~3.4 kHz)
+const LPF = [
+  -0.0033, -0.0106, -0.0074, 0.0290, 0.0921, 0.1650, 0.1955,
+  0.1650, 0.0921, 0.0290, -0.0074, -0.0106, -0.0033,
+];
+
+function downsample24kTo8k(call, buf) {
+  const st = (call.dsState = call.dsState || { hist: new Float32Array(LPF.length).fill(0), rem: Buffer.alloc(0), phase: 0 });
+  const data = st.rem.length ? Buffer.concat([st.rem, buf]) : buf;
+  const inSamples = Math.floor(data.length / 2);
+  st.rem = data.subarray(inSamples * 2);
+
+  const out = [];
+  const hist = st.hist;
+  for (let i = 0; i < inSamples; i++) {
+    // kaydırmalı geçmiş
+    hist.copyWithin(0, 1);
+    hist[hist.length - 1] = data.readInt16LE(i * 2);
+    if (st.phase === 0) {
+      let acc = 0;
+      for (let k = 0; k < LPF.length; k++) acc += hist[k] * LPF[k];
+      out.push(Math.max(-32768, Math.min(32767, Math.round(acc))));
+    }
+    st.phase = (st.phase + 1) % 3;
   }
-  return out;
+  const res = Buffer.alloc(out.length * 2);
+  for (let i = 0; i < out.length; i++) res.writeInt16LE(out[i], i * 2);
+  return res;
 }
 
 // ====================== AUDIOSOCKET SUNUCUSU ======================
@@ -270,20 +288,27 @@ function formatUuid(b) {
 
 const SILENCE_FRAME = Buffer.alloc(320);
 
+const PREBUFFER = 320 * 12; // ~240 ms; ağ dalgalanmasında ses kesilmesin
+
 function startPacer(call) {
   if (call.pacer) return;
   call.outBuf = call.outBuf || Buffer.alloc(0);
+  call.priming = true;
   // Asterisk 20 ms'lik (320 byte) sabit tempoda kare bekler; toplu yazım sesi kesik yapar.
   call.pacer = setInterval(() => {
     if (!call.socket || call.socket.destroyed) return;
+    if (call.priming) {
+      if (call.outBuf.length >= PREBUFFER || call.flushTail) call.priming = false;
+    }
     let frame;
-    if (call.outBuf.length >= 320) {
-      frame = call.outBuf.slice(0, 320);
-      call.outBuf = call.outBuf.slice(320);
-    } else if (call.outBuf.length > 0 && call.flushTail) {
-      frame = Buffer.concat([call.outBuf, SILENCE_FRAME]).slice(0, 320);
+    if (!call.priming && call.outBuf.length >= 320) {
+      frame = call.outBuf.subarray(0, 320);
+      call.outBuf = call.outBuf.subarray(320);
+    } else if (!call.priming && call.outBuf.length > 0 && call.flushTail) {
+      frame = Buffer.concat([call.outBuf, SILENCE_FRAME]).subarray(0, 320);
       call.outBuf = Buffer.alloc(0);
       call.flushTail = false;
+      call.priming = true;
     } else {
       frame = SILENCE_FRAME;
     }
@@ -386,7 +411,7 @@ async function startRealtime(uuid, call) {
     }
 
     if ((ev.type === "response.output_audio.delta" || ev.type === "response.audio.delta") && ev.delta) {
-      sendAudioToAsterisk(call, downsample24kTo8k(Buffer.from(ev.delta, "base64")));
+      sendAudioToAsterisk(call, downsample24kTo8k(call, Buffer.from(ev.delta, "base64")));
     } else if (ev.type === "input_audio_buffer.speech_started") {
       call.outBuf = Buffer.alloc(0); // araya girildi: kalan sesi at
     } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
