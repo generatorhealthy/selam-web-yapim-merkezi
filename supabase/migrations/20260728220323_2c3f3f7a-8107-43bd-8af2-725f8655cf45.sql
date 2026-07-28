@@ -1,0 +1,1 @@
+select cron.unschedule('ai-test-call-once-2');
