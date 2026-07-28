@@ -1,0 +1,142 @@
+// AI arama köprüsü için bağlam servisi.
+// action=start  -> danışan bilgisi + sistem talimatı + aday uzman listeleri
+// action=pick   -> verilen şehir/moda göre TEK hedef uzmanı döner (deterministik)
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  candidatesFor,
+  isFamilyTherapy,
+  loadSpecialistMetrics,
+  normalize,
+  therapyLabel,
+} from "../_shared/specialistPicker.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-bridge-secret",
+};
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+function buildSystemPrompt(lead: any, family: boolean, online: boolean, extra: string | null) {
+  const first = (lead.full_name || "").trim().split(" ")[0] || "";
+  const service = therapyLabel(lead.therapy_type);
+  const title = family ? "Aile Danışmanı" : "Psikolog / Psikolojik Danışman";
+  return `Sen Doktorumol.com.tr adına telefonla konuşan bir müşteri ilişkileri temsilcisisin. Adın Elif.
+
+KİMLİK VE ÜSLUP
+- Tamamen doğal, sıcak, samimi bir İstanbul Türkçesi konuş. Kısa cümleler kur.
+- Asla robot gibi konuşma, asla "yapay zekayım", "asistanım", "sistem" gibi ifadeler kullanma.
+- Karşı taraf araya girerse hemen sus ve dinle. Aynı cümleyi tekrarlama.
+- Konuşma en fazla 1-2 dakika sürsün, gereksiz uzatma.
+
+ARADIĞIN KİŞİ
+- Ad: ${lead.full_name}
+- Talep ettiği hizmet: ${service}
+- Görüşme tercihi: ${online ? "Online danışmanlık" : "Yüz yüze danışmanlık"}
+- Bu kişi Instagram veya Facebook'taki reklamımız üzerinden ad-soyad, telefon ve almak istediği danışmanlık türünü yazarak bize başvuru yaptı.
+
+AKIŞ
+1) "Merhaba ${first}, ben Elif, Doktorumol.com.tr'den arıyorum. Instagram üzerinden ${service} için başvurunuz bize ulaşmıştı, müsait misiniz?" diyerek başla.
+2) Müsaitse: ${title} ile ${online ? "online" : "yüz yüze"} görüşme için kendisini uzmanımıza bağlayacağını söyle. Seans ücreti ve planlama detaylarını uzmandan öğrenebileceğini belirt.
+${online ? "" : `3) Yüz yüze istiyorsa hangi şehirde görüşmek istediğini sor. Şehri öğrenince hemen 'pick_specialist' aracını çağır.
+4) O şehirde uzman yoksa: online danışmanlığın daha konforlu ve pratik olduğunu içtenlikle anlat, ikna etmeye çalış ama zorlamadan. Kabul ederse tekrar 'pick_specialist' aracını online modda çağır.`}
+5) Bağlamayı onayladığında 'transfer_call' aracını çağır ve "Sizi hemen uzmanımıza bağlıyorum, iyi günler dilerim" de.
+
+DİĞER DURUMLAR
+- "İstemiyorum / yanlışlıkla başvurmuşum / çocuğum yapmış" derse: nazikçe Instagram üzerinden ${service} talebiyle başvuru yapıldığını hatırlat. Yine istemiyorsa ısrar etme, teşekkür et ve 'set_outcome' aracını outcome="wrong_lead" ile çağır.
+- "Şu an müsait değilim, sonra arayın" derse: "Gün içinde saat kaçta arayalım?" diye sor, saati öğren ve 'set_outcome' aracını outcome="callback", callback_time="HH:MM" ile çağır.
+- Konuşma bittiğinde mutlaka bir araç çağırmış ol.
+${extra ? `\nEK TALİMAT\n${extra}` : ""}`;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const secret = Deno.env.get("AI_BRIDGE_SECRET");
+  if (!secret || req.headers.get("x-bridge-secret") !== secret) {
+    return json({ error: "unauthorized" }, 401);
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const body = await req.json().catch(() => ({}));
+    const action = body.action || "start";
+    const leadId = body.lead_id as string | undefined;
+    if (!leadId) return json({ error: "lead_id gerekli" }, 400);
+
+    const { data: lead, error: leadErr } = await supabase
+      .from("danisan_basvurulari")
+      .select("id, full_name, phone, consultation_type, therapy_type, status")
+      .eq("id", leadId)
+      .maybeSingle();
+    if (leadErr) throw leadErr;
+    if (!lead) return json({ error: "Danışan bulunamadı" }, 404);
+
+    const family = isFamilyTherapy(lead.therapy_type);
+    const leadOnline = normalize(lead.consultation_type) === "online";
+    const metrics = await loadSpecialistMetrics(supabase);
+
+    if (action === "pick") {
+      const online = body.mode === "online" ? true : body.mode === "face_to_face" ? false : leadOnline;
+      const city = (body.city as string | null) || null;
+      const list = candidatesFor(metrics, family, online, online ? null : city);
+      const target = list[0] || null;
+      return json({
+        success: true,
+        found: !!target,
+        mode: online ? "online" : "face_to_face",
+        city,
+        target: target
+          ? {
+              specialist_id: target.id,
+              specialist_name: target.name,
+              specialty: target.specialty,
+              city: target.city,
+              internal_number: target.internal_number,
+              transfer_dial: `*1${target.internal_number}`,
+              urgent: target.urgent,
+              total_referrals: target.totalReferrals,
+              days_since_last_referral: target.daysSinceLastReferral,
+            }
+          : null,
+      });
+    }
+
+    const { data: settings } = await supabase
+      .from("ai_call_settings")
+      .select("voice, system_prompt")
+      .limit(1)
+      .maybeSingle();
+
+    const onlineList = candidatesFor(metrics, family, true, null);
+    const f2fList = candidatesFor(metrics, family, false, null);
+    const cities = Array.from(new Set(f2fList.map((c) => (c.city || "").trim()).filter(Boolean)));
+
+    return json({
+      success: true,
+      lead: {
+        id: lead.id,
+        full_name: lead.full_name,
+        phone: lead.phone,
+        consultation_type: leadOnline ? "online" : "face_to_face",
+        therapy_label: therapyLabel(lead.therapy_type),
+        category: family ? "Aile Danışmanı" : "Psikolog / Psikolojik Danışman / Klinik Psikolog",
+      },
+      voice: settings?.voice || "shimmer",
+      instructions: buildSystemPrompt(lead, family, leadOnline, settings?.system_prompt || null),
+      face_to_face_cities: cities,
+      online_candidate_count: onlineList.length,
+      face_to_face_candidate_count: f2fList.length,
+    });
+  } catch (e: any) {
+    console.error("ai-call-context error:", e);
+    return json({ success: false, error: e?.message || String(e) }, 500);
+  }
+});
