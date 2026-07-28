@@ -535,15 +535,23 @@ const server = http.createServer(async (req, res) => {
 
         const resp = await ami.send({
           Action: "Originate",
-          Channel: `Local/${dialNumber}@${CFG.dialContext}`,
+          Channel: `Local/${dialNumber}@${CFG.dialContext}/n`,
           Context: CFG.originateContext,
           Exten: "s",
           Priority: 1,
-          CallerID: "Doktorumol <" + dialNumber + ">",
+          CallerID: `${CFG.callerExt} <${CFG.callerExt}>`,
           Timeout: 35000,
           Async: "true",
-          Variable: `AI_UUID=${uuid},AI_HOST=${CFG.audioSocketHost}:${CFG.audioPort}`,
+          Variable: [
+            `AI_UUID=${uuid}`,
+            `AI_HOST=${CFG.audioSocketHost}:${CFG.audioPort}`,
+            // FreePBX outbound route'un çalışması için dahili kimliği:
+            `__AMPUSER=${CFG.callerExt}`,
+            `__REALCALLERIDNUM=${CFG.callerExt}`,
+            `CALLERID(num)=${CFG.callerExt}`,
+          ].join(","),
         });
+
 
         if (resp.Response !== "Success") {
           calls.delete(uuid);
