@@ -510,7 +510,13 @@ const server = http.createServer(async (req, res) => {
         if (!session_id || !lead_id || !phone) return send(400, { error: "eksik parametre" });
 
         const uuid = uuidv4();
-        const dialNumber = `${line_prefix || "80"}${String(phone).replace(/\D/g, "").replace(/^90/, "0")}`;
+        // Telefonu 10 haneli ulusal formata indir: 05316852275 / 905316852275 / +90... -> 5316852275
+        let digits = String(phone).replace(/\D/g, "");
+        if (digits.startsWith("0090")) digits = digits.slice(4);
+        if (digits.startsWith("90") && digits.length > 10) digits = digits.slice(2);
+        if (digits.startsWith("0")) digits = digits.slice(1);
+        digits = digits.slice(-10);
+        const dialNumber = `${line_prefix || "80"}${digits}`;
 
         const call = {
           uuid,
