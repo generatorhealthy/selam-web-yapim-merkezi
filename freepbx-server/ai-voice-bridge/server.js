@@ -332,7 +332,7 @@ async function startRealtime(uuid, call) {
                 silence_duration_ms: 700,
               },
             },
-            output: { format: { type: "audio/pcm", rate: 24000 }, voice: ctx.voice || "shimmer" },
+            output: { format: { type: "audio/pcm", rate: 24000 }, voice: ctx.voice || "marin" },
           },
 
           tools: [
