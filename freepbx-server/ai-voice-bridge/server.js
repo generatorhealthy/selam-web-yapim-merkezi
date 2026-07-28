@@ -195,17 +195,35 @@ function upsample8kTo24k(buf) {
   return out;
 }
 
-function downsample24kTo8k(buf) {
-  const inSamples = Math.floor(buf.length / 2);
-  const outSamples = Math.floor(inSamples / 3);
-  const out = Buffer.alloc(outSamples * 2);
-  for (let i = 0; i < outSamples; i++) {
-    const a = buf.readInt16LE(i * 6);
-    const b = buf.readInt16LE(i * 6 + 2);
-    const c = buf.readInt16LE(i * 6 + 4);
-    out.writeInt16LE(Math.round((a + b + c) / 3), i * 2);
+// 24k -> 8k, durum korumalı (chunk sınırlarında tıklama/cızırtı olmasın diye)
+// 13 katsayılı düşük geçiren FIR (Hamming pencereli sinc, kesim ~3.4 kHz)
+const LPF = [
+  -0.0033, -0.0106, -0.0074, 0.0290, 0.0921, 0.1650, 0.1955,
+  0.1650, 0.0921, 0.0290, -0.0074, -0.0106, -0.0033,
+];
+
+function downsample24kTo8k(call, buf) {
+  const st = (call.dsState = call.dsState || { hist: new Float32Array(LPF.length).fill(0), rem: Buffer.alloc(0), phase: 0 });
+  const data = st.rem.length ? Buffer.concat([st.rem, buf]) : buf;
+  const inSamples = Math.floor(data.length / 2);
+  st.rem = data.subarray(inSamples * 2);
+
+  const out = [];
+  const hist = st.hist;
+  for (let i = 0; i < inSamples; i++) {
+    // kaydırmalı geçmiş
+    hist.copyWithin(0, 1);
+    hist[hist.length - 1] = data.readInt16LE(i * 2);
+    if (st.phase === 0) {
+      let acc = 0;
+      for (let k = 0; k < LPF.length; k++) acc += hist[k] * LPF[k];
+      out.push(Math.max(-32768, Math.min(32767, Math.round(acc))));
+    }
+    st.phase = (st.phase + 1) % 3;
   }
-  return out;
+  const res = Buffer.alloc(out.length * 2);
+  for (let i = 0; i < out.length; i++) res.writeInt16LE(out[i], i * 2);
+  return res;
 }
 
 // ====================== AUDIOSOCKET SUNUCUSU ======================
