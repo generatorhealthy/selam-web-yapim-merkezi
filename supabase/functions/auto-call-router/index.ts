@@ -22,10 +22,12 @@ const corsHeaders = {
 // Aile/Çift/Çocuk  -> Aile Danışmanı
 const FAMILY_THERAPIES = [
   "aile_terapisi",
+  "aile_danismanligi",
+  "aile_danışmanlığı",
+  "iliski_danismanligi",
+  "ilişki_danışmanlığı",
   "cift_terapisi",
   "çift_terapisi",
-  "cocuk_terapisi",
-  "çocuk_terapisi",
 ];
 
 const THERAPY_LABELS: Record<string, string> = {
@@ -33,6 +35,10 @@ const THERAPY_LABELS: Record<string, string> = {
   cift_terapisi: "Çift Terapisi",
   "çift_terapisi": "Çift Terapisi",
   aile_terapisi: "Aile Terapisi",
+  aile_danismanligi: "Aile Danışmanlığı",
+  "aile_danışmanlığı": "Aile Danışmanlığı",
+  iliski_danismanligi: "İlişki Danışmanlığı",
+  "ilişki_danışmanlığı": "İlişki Danışmanlığı",
   cocuk_terapisi: "Çocuk Terapisi",
   "çocuk_terapisi": "Çocuk Terapisi",
   ergen_terapisi: "Ergen Terapisi",
@@ -41,15 +47,21 @@ const THERAPY_LABELS: Record<string, string> = {
 const normalize = (s: string | null | undefined) =>
   (s || "").toLocaleLowerCase("tr-TR").trim();
 
+const therapyKey = (raw: string | null | undefined) =>
+  normalize(raw).replace(/[\s-]+/g, "_");
+
 const therapyLabel = (raw: string | null) => {
   if (!raw) return "danışmanlık";
-  const key = normalize(raw);
-  return THERAPY_LABELS[key] || raw.replace(/_/g, " ");
+  return THERAPY_LABELS[therapyKey(raw)] || raw.replace(/_/g, " ");
 };
 
-// Başvuru aile/çift/çocuk terapisi mi?
-const isFamilyTherapy = (therapy: string | null) =>
-  FAMILY_THERAPIES.includes(normalize(therapy));
+// Aile/İlişki/Çift -> Aile Danışmanı; Bireysel ve Çocuk -> Psikologlar
+const isFamilyTherapy = (therapy: string | null) => {
+  const k = therapyKey(therapy);
+  if (!k) return false;
+  if (FAMILY_THERAPIES.includes(k)) return true;
+  return /(iliski|ilişki|aile|cift|çift)/.test(k) && !/cocuk|çocuk|bireysel|ergen/.test(k);
+};
 
 // Uzmanın uzmanlık alanı, başvuru kategorisine uygun mu?
 // NOT: Bazı uzmanların unvanı sadece isimlerinde kısaltma olarak geçer:
