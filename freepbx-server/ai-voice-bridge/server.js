@@ -1,0 +1,582 @@
+/**
+ * Doktorumol.com.tr — Yapay Zekâ Sesli Arama Köprüsü
+ * ---------------------------------------------------
+ * FreePBX (Asterisk AudioSocket)  <-->  OpenAI Realtime API
+ *
+ * Bu servis FreePBX sunucusunun ÜZERİNDE çalışır. Üç işi vardır:
+ *   1) HTTP  /originate  -> AMI ile danışanı arar (80/81 hat prefixi ile)
+ *   2) TCP   AudioSocket -> Asterisk'ten gelen sesi OpenAI'ye, OpenAI'nin sesini Asterisk'e taşır
+ *   3) Konuşma bitince Supabase'e sonucu bildirir (not, statü, yönlendirme kaydı)
+ *
+ * Kurulum için README.md dosyasına bakın.
+ */
+
+const http = require("http");
+const net = require("net");
+const WebSocket = require("ws");
+
+// ====================== AYARLAR (ortam değişkenleri) ======================
+const CFG = {
+  httpPort: Number(process.env.BRIDGE_HTTP_PORT || 8090),
+  audioPort: Number(process.env.BRIDGE_AUDIO_PORT || 9092),
+  bridgeSecret: process.env.AI_BRIDGE_SECRET || "",
+  supabaseUrl: (process.env.SUPABASE_FUNCTIONS_URL || "").replace(/\/$/, ""),
+  openaiKey: process.env.OPENAI_API_KEY || "",
+  openaiModel: process.env.OPENAI_REALTIME_MODEL || "gpt-realtime",
+  ami: {
+    host: process.env.AMI_HOST || "127.0.0.1",
+    port: Number(process.env.AMI_PORT || 5038),
+    user: process.env.AMI_USER || "aivoice",
+    pass: process.env.AMI_PASSWORD || "",
+  },
+  // Asterisk tarafındaki context isimleri (extensions_custom.conf)
+  originateContext: process.env.AI_ORIGINATE_CONTEXT || "ai-outbound",
+  transferContext: process.env.AI_TRANSFER_CONTEXT || "ai-transfer",
+  dialContext: process.env.AI_DIAL_CONTEXT || "from-internal",
+  audioSocketHost: process.env.AI_AUDIOSOCKET_HOST || "127.0.0.1",
+  callTimeoutMs: Number(process.env.AI_CALL_TIMEOUT_MS || 180000),
+};
+
+const log = (...a) => console.log(new Date().toISOString(), ...a);
+
+// ====================== ÇAĞRI DURUMU ======================
+/** uuid -> { session_id, lead_id, phone, line_prefix, channel, ctx, outcome, transcript, reported } */
+const calls = new Map();
+
+function uuidv4() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+// ====================== SUPABASE ÇAĞRILARI ======================
+async function callFn(name, body) {
+  const res = await fetch(`${CFG.supabaseUrl}/${name}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-bridge-secret": CFG.bridgeSecret },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`${name} [${res.status}]: ${text}`);
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
+}
+
+async function reportResult(call, outcome, extra = {}) {
+  if (call.reported) return;
+  call.reported = true;
+  try {
+    await callFn("ai-call-result", {
+      session_id: call.session_id,
+      lead_id: call.lead_id,
+      line_prefix: call.line_prefix,
+      outcome,
+      transcript: call.transcript,
+      ...extra,
+    });
+    log("sonuç bildirildi:", call.lead_id, outcome);
+  } catch (e) {
+    log("sonuç bildirilemedi:", e.message);
+  }
+}
+
+// ====================== AMI (Asterisk Manager Interface) ======================
+class Ami {
+  constructor() {
+    this.buffer = "";
+    this.actionId = 0;
+    this.pending = new Map();
+    this.connected = false;
+  }
+
+  connect() {
+    return new Promise((resolve, reject) => {
+      this.socket = net.createConnection(CFG.ami.port, CFG.ami.host);
+      this.socket.setEncoding("utf8");
+      this.socket.on("data", (chunk) => this.onData(chunk));
+      this.socket.on("error", (e) => {
+        this.connected = false;
+        log("AMI hata:", e.message);
+        reject(e);
+      });
+      this.socket.on("close", () => {
+        this.connected = false;
+        log("AMI bağlantısı kapandı, 5 sn sonra yeniden denenecek");
+        setTimeout(() => this.connect().catch(() => {}), 5000);
+      });
+      this.socket.once("connect", async () => {
+        try {
+          await this.send({ Action: "Login", Username: CFG.ami.user, Secret: CFG.ami.pass, Events: "on" });
+          this.connected = true;
+          log("AMI bağlantısı kuruldu");
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+  }
+
+  onData(chunk) {
+    this.buffer += chunk;
+    let idx;
+    while ((idx = this.buffer.indexOf("\r\n\r\n")) !== -1) {
+      const raw = this.buffer.slice(0, idx);
+      this.buffer = this.buffer.slice(idx + 4);
+      const msg = {};
+      for (const line of raw.split("\r\n")) {
+        const p = line.indexOf(":");
+        if (p > 0) msg[line.slice(0, p).trim()] = line.slice(p + 1).trim();
+      }
+      this.handle(msg);
+    }
+  }
+
+  handle(msg) {
+    const id = msg.ActionID;
+    if (id && this.pending.has(id)) {
+      const { resolve } = this.pending.get(id);
+      this.pending.delete(id);
+      resolve(msg);
+    }
+    if (msg.Event === "Hangup" && msg.Channel) {
+      for (const [uuid, call] of calls) {
+        if (call.channel === msg.Channel) {
+          log("kanal kapandı:", msg.Channel, "cause:", msg["Cause-txt"]);
+          finishCall(uuid, call.outcome || "no_answer");
+        }
+      }
+    }
+  }
+
+  send(action) {
+    return new Promise((resolve, reject) => {
+      if (!this.socket || this.socket.destroyed) return reject(new Error("AMI bağlı değil"));
+      const id = String(++this.actionId);
+      const payload =
+        Object.entries({ ...action, ActionID: id })
+          .map(([k, v]) => `${k}: ${v}`)
+          .join("\r\n") + "\r\n\r\n";
+      this.pending.set(id, { resolve, reject });
+      this.socket.write(payload);
+      setTimeout(() => {
+        if (this.pending.has(id)) {
+          this.pending.delete(id);
+          reject(new Error("AMI zaman aşımı"));
+        }
+      }, 30000);
+    });
+  }
+}
+
+const ami = new Ami();
+
+// ====================== SES DÖNÜŞÜMÜ (8kHz <-> 24kHz, slin16) ======================
+function upsample8kTo24k(buf) {
+  const inSamples = buf.length / 2;
+  const out = Buffer.alloc(inSamples * 3 * 2);
+  let prev = inSamples > 0 ? buf.readInt16LE(0) : 0;
+  for (let i = 0; i < inSamples; i++) {
+    const cur = buf.readInt16LE(i * 2);
+    for (let k = 0; k < 3; k++) {
+      const v = Math.round(prev + ((cur - prev) * (k + 1)) / 3);
+      out.writeInt16LE(Math.max(-32768, Math.min(32767, v)), (i * 3 + k) * 2);
+    }
+    prev = cur;
+  }
+  return out;
+}
+
+function downsample24kTo8k(buf) {
+  const inSamples = Math.floor(buf.length / 2);
+  const outSamples = Math.floor(inSamples / 3);
+  const out = Buffer.alloc(outSamples * 2);
+  for (let i = 0; i < outSamples; i++) {
+    const a = buf.readInt16LE(i * 6);
+    const b = buf.readInt16LE(i * 6 + 2);
+    const c = buf.readInt16LE(i * 6 + 4);
+    out.writeInt16LE(Math.round((a + b + c) / 3), i * 2);
+  }
+  return out;
+}
+
+// ====================== AUDIOSOCKET SUNUCUSU ======================
+const AS_TERMINATE = 0x00;
+const AS_UUID = 0x01;
+const AS_AUDIO = 0x10;
+const AS_ERROR = 0xff;
+
+const audioServer = net.createServer((socket) => {
+  let buf = Buffer.alloc(0);
+  let uuid = null;
+  let call = null;
+
+  socket.on("data", (chunk) => {
+    buf = Buffer.concat([buf, chunk]);
+    while (buf.length >= 3) {
+      const type = buf[0];
+      const len = buf.readUInt16BE(1);
+      if (buf.length < 3 + len) break;
+      const payload = buf.slice(3, 3 + len);
+      buf = buf.slice(3 + len);
+
+      if (type === AS_UUID) {
+        uuid = formatUuid(payload);
+        call = calls.get(uuid);
+        if (!call) {
+          log("bilinmeyen AudioSocket UUID:", uuid);
+          socket.end();
+          return;
+        }
+        call.socket = socket;
+        startRealtime(uuid, call).catch((e) => {
+          log("realtime başlatılamadı:", e.message);
+          finishCall(uuid, "failed", { error_message: e.message });
+          socket.end();
+        });
+      } else if (type === AS_AUDIO && call?.openai?.readyState === WebSocket.OPEN) {
+        call.openai.send(
+          JSON.stringify({
+            type: "input_audio_buffer.append",
+            audio: upsample8kTo24k(payload).toString("base64"),
+          }),
+        );
+      } else if (type === AS_TERMINATE || type === AS_ERROR) {
+        if (uuid) finishCall(uuid, call?.outcome || "no_answer");
+        socket.end();
+      }
+    }
+  });
+
+  socket.on("close", () => {
+    if (uuid) finishCall(uuid, calls.get(uuid)?.outcome || "no_answer");
+  });
+  socket.on("error", (e) => log("AudioSocket hata:", e.message));
+});
+
+function formatUuid(b) {
+  const h = b.toString("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+function sendAudioToAsterisk(call, pcm8k) {
+  if (!call.socket || call.socket.destroyed) return;
+  // 20 ms = 320 byte parçalar hâlinde gönder
+  call.outBuf = Buffer.concat([call.outBuf || Buffer.alloc(0), pcm8k]);
+  while (call.outBuf.length >= 320) {
+    const frame = call.outBuf.slice(0, 320);
+    call.outBuf = call.outBuf.slice(320);
+    const header = Buffer.alloc(3);
+    header[0] = AS_AUDIO;
+    header.writeUInt16BE(frame.length, 1);
+    call.socket.write(Buffer.concat([header, frame]));
+  }
+}
+
+// ====================== OPENAI REALTIME ======================
+async function startRealtime(uuid, call) {
+  const ctx = await callFn("ai-call-context", { action: "start", lead_id: call.lead_id });
+  call.ctx = ctx;
+
+  const ws = new WebSocket(
+    `wss://api.openai.com/v1/realtime?model=${encodeURIComponent(CFG.openaiModel)}`,
+    { headers: { Authorization: `Bearer ${CFG.openaiKey}`, "OpenAI-Beta": "realtime=v1" } },
+  );
+  call.openai = ws;
+
+  ws.on("open", () => {
+    log("OpenAI Realtime bağlandı:", call.lead_id);
+    ws.send(
+      JSON.stringify({
+        type: "session.update",
+        session: {
+          modalities: ["audio", "text"],
+          instructions: ctx.instructions,
+          voice: ctx.voice || "shimmer",
+          input_audio_format: "pcm16",
+          output_audio_format: "pcm16",
+          input_audio_transcription: { model: "whisper-1", language: "tr" },
+          turn_detection: {
+            type: "server_vad",
+            threshold: 0.55,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 700,
+          },
+          tools: [
+            {
+              type: "function",
+              name: "pick_specialist",
+              description:
+                "Danışanın şehrine ve görüşme tercihine göre sıradaki uygun uzmanı belirler. Yüz yüze talebinde şehir öğrenilir öğrenilmez çağır.",
+              parameters: {
+                type: "object",
+                properties: {
+                  mode: { type: "string", enum: ["online", "face_to_face"] },
+                  city: { type: "string", description: "Yüz yüze görüşme istenen şehir" },
+                },
+                required: ["mode"],
+              },
+            },
+            {
+              type: "function",
+              name: "transfer_call",
+              description: "Danışanı seçilen uzmanın dahili numarasına aktarır. Sadece danışan onay verince çağır.",
+              parameters: { type: "object", properties: {}, required: [] },
+            },
+            {
+              type: "function",
+              name: "set_outcome",
+              description:
+                "Görüşme aktarımla sonuçlanmadığında sonucu kaydeder ve çağrıyı kapatır.",
+              parameters: {
+                type: "object",
+                properties: {
+                  outcome: { type: "string", enum: ["wrong_lead", "callback", "no_answer"] },
+                  callback_time: { type: "string", description: "HH:MM biçiminde tercih edilen arama saati" },
+                },
+                required: ["outcome"],
+              },
+            },
+          ],
+        },
+      }),
+    );
+    ws.send(JSON.stringify({ type: "response.create" }));
+  });
+
+  ws.on("message", async (data) => {
+    let ev;
+    try {
+      ev = JSON.parse(data.toString());
+    } catch {
+      return;
+    }
+
+    if (ev.type === "response.audio.delta" && ev.delta) {
+      sendAudioToAsterisk(call, downsample24kTo8k(Buffer.from(ev.delta, "base64")));
+    } else if (ev.type === "input_audio_buffer.speech_started") {
+      call.outBuf = Buffer.alloc(0); // araya girildi: kalan sesi at
+    } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
+      call.transcript.push({ role: "danisan", text: ev.transcript, at: new Date().toISOString() });
+    } else if (ev.type === "response.audio_transcript.done") {
+      call.transcript.push({ role: "asistan", text: ev.transcript, at: new Date().toISOString() });
+    } else if (ev.type === "response.function_call_arguments.done") {
+      await handleTool(uuid, call, ev);
+    } else if (ev.type === "error") {
+      log("OpenAI hata:", JSON.stringify(ev.error || ev).slice(0, 400));
+    }
+  });
+
+  ws.on("close", () => log("OpenAI bağlantısı kapandı:", call.lead_id));
+  ws.on("error", (e) => log("OpenAI ws hata:", e.message));
+}
+
+async function toolOutput(call, callId, output) {
+  call.openai.send(
+    JSON.stringify({
+      type: "conversation.item.create",
+      item: { type: "function_call_output", call_id: callId, output: JSON.stringify(output) },
+    }),
+  );
+  call.openai.send(JSON.stringify({ type: "response.create" }));
+}
+
+async function handleTool(uuid, call, ev) {
+  let args = {};
+  try {
+    args = JSON.parse(ev.arguments || "{}");
+  } catch {}
+
+  if (ev.name === "pick_specialist") {
+    try {
+      const res = await callFn("ai-call-context", {
+        action: "pick",
+        lead_id: call.lead_id,
+        mode: args.mode,
+        city: args.city || null,
+      });
+      call.target = res.target || null;
+      call.mode = res.mode;
+      await toolOutput(call, ev.call_id, {
+        found: res.found,
+        specialist_name: res.target?.specialist_name || null,
+        city: res.target?.city || null,
+        message: res.found
+          ? "Uygun uzman bulundu, danışan onay verirse transfer_call aracını çağır."
+          : "Bu şehirde yüz yüze uzman yok. Online danışmanlığın konforunu anlatıp ikna etmeye çalış; kabul ederse pick_specialist aracını mode=online ile tekrar çağır.",
+      });
+    } catch (e) {
+      await toolOutput(call, ev.call_id, { found: false, error: e.message });
+    }
+    return;
+  }
+
+  if (ev.name === "transfer_call") {
+    if (!call.target) {
+      await toolOutput(call, ev.call_id, { ok: false, message: "Önce pick_specialist aracını çağır." });
+      return;
+    }
+    await toolOutput(call, ev.call_id, { ok: true, message: "Aktarım yapılıyor, kısa bir kapanış cümlesi söyle." });
+    call.outcome = "transferred";
+    setTimeout(() => doTransfer(uuid, call).catch((e) => log("aktarım hatası:", e.message)), 4000);
+    return;
+  }
+
+  if (ev.name === "set_outcome") {
+    call.outcome = args.outcome || "wrong_lead";
+    call.callbackTime = args.callback_time || null;
+    await toolOutput(call, ev.call_id, { ok: true, message: "Kaydedildi, nazikçe vedalaş." });
+    setTimeout(() => hangup(uuid), 5000);
+  }
+}
+
+async function doTransfer(uuid, call) {
+  const ext = call.target.internal_number;
+  await ami.send({
+    Action: "Redirect",
+    Channel: call.channel,
+    Context: CFG.transferContext,
+    Exten: ext,
+    Priority: 1,
+  });
+  await reportResult(call, "transferred", {
+    specialist_id: call.target.specialist_id,
+    specialist_name: call.target.specialist_name,
+    extension: ext,
+    consultation_mode: call.mode,
+  });
+  cleanup(uuid);
+}
+
+async function hangup(uuid) {
+  const call = calls.get(uuid);
+  if (!call) return;
+  try {
+    if (call.channel) await ami.send({ Action: "Hangup", Channel: call.channel });
+  } catch (e) {
+    log("hangup hatası:", e.message);
+  }
+  finishCall(uuid, call.outcome || "no_answer");
+}
+
+function finishCall(uuid, outcome, extra = {}) {
+  const call = calls.get(uuid);
+  if (!call) return;
+  if (outcome === "transferred") return cleanup(uuid);
+  const payload = { ...extra };
+  if (outcome === "callback" && call.callbackTime) payload.callback_time = call.callbackTime;
+  reportResult(call, outcome, payload).finally(() => cleanup(uuid));
+}
+
+function cleanup(uuid) {
+  const call = calls.get(uuid);
+  if (!call) return;
+  try {
+    call.openai?.close();
+  } catch {}
+  try {
+    call.socket?.end();
+  } catch {}
+  clearTimeout(call.timer);
+  calls.delete(uuid);
+}
+
+// ====================== HTTP API ======================
+const server = http.createServer(async (req, res) => {
+  const send = (code, obj) => {
+    res.writeHead(code, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(obj));
+  };
+
+  if (req.headers["x-bridge-secret"] !== CFG.bridgeSecret) return send(401, { error: "unauthorized" });
+
+  if (req.url === "/health") {
+    return send(200, { ok: true, ami: ami.connected, active_calls: calls.size, model: CFG.openaiModel });
+  }
+
+  if (req.url === "/originate" && req.method === "POST") {
+    let body = "";
+    req.on("data", (c) => (body += c));
+    req.on("end", async () => {
+      try {
+        const { session_id, lead_id, phone, line_prefix } = JSON.parse(body || "{}");
+        if (!session_id || !lead_id || !phone) return send(400, { error: "eksik parametre" });
+
+        const uuid = uuidv4();
+        const dialNumber = `${line_prefix || "80"}${String(phone).replace(/\D/g, "").replace(/^90/, "0")}`;
+
+        const call = {
+          uuid,
+          session_id,
+          lead_id,
+          phone,
+          line_prefix: line_prefix || "80",
+          transcript: [],
+          outBuf: Buffer.alloc(0),
+          reported: false,
+        };
+        calls.set(uuid, call);
+
+        const resp = await ami.send({
+          Action: "Originate",
+          Channel: `Local/${dialNumber}@${CFG.dialContext}`,
+          Context: CFG.originateContext,
+          Exten: "s",
+          Priority: 1,
+          CallerID: "Doktorumol <" + dialNumber + ">",
+          Timeout: 35000,
+          Async: "true",
+          Variable: `AI_UUID=${uuid},AI_HOST=${CFG.audioSocketHost}:${CFG.audioPort}`,
+        });
+
+        if (resp.Response !== "Success") {
+          calls.delete(uuid);
+          return send(502, { error: "Originate başarısız", detail: resp.Message || "" });
+        }
+
+        call.channel = resp.Channel || null;
+        call.timer = setTimeout(() => finishCall(uuid, call.outcome || "no_answer"), CFG.callTimeoutMs);
+
+        send(200, { ok: true, uuid, dial: dialNumber });
+      } catch (e) {
+        log("originate hata:", e.message);
+        send(500, { error: e.message });
+      }
+    });
+    return;
+  }
+
+  send(404, { error: "not found" });
+});
+
+// AMI'den kanal adını yakala (Originate Async olduğu için OriginateResponse ile gelir)
+ami.handle = ((orig) =>
+  function (msg) {
+    orig.call(this, msg);
+    if (msg.Event === "VarSet" && msg.Variable === "AI_UUID" && msg.Value && msg.Channel) {
+      const c = calls.get(msg.Value);
+      if (c && !c.channel) c.channel = msg.Channel;
+    }
+  })(Ami.prototype.handle);
+
+(async () => {
+  for (const [k, v] of Object.entries({
+    AI_BRIDGE_SECRET: CFG.bridgeSecret,
+    SUPABASE_FUNCTIONS_URL: CFG.supabaseUrl,
+    OPENAI_API_KEY: CFG.openaiKey,
+    AMI_PASSWORD: CFG.ami.pass,
+  })) {
+    if (!v) {
+      console.error(`HATA: ${k} ortam değişkeni tanımlı değil.`);
+      process.exit(1);
+    }
+  }
+  await ami.connect();
+  audioServer.listen(CFG.audioPort, "0.0.0.0", () => log("AudioSocket dinleniyor:", CFG.audioPort));
+  server.listen(CFG.httpPort, "0.0.0.0", () => log("HTTP API dinleniyor:", CFG.httpPort));
+})();
