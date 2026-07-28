@@ -268,19 +268,38 @@ function formatUuid(b) {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-function sendAudioToAsterisk(call, pcm8k) {
-  if (!call.socket || call.socket.destroyed) return;
-  // 20 ms = 320 byte parçalar hâlinde gönder
-  call.outBuf = Buffer.concat([call.outBuf || Buffer.alloc(0), pcm8k]);
-  while (call.outBuf.length >= 320) {
-    const frame = call.outBuf.slice(0, 320);
-    call.outBuf = call.outBuf.slice(320);
+const SILENCE_FRAME = Buffer.alloc(320);
+
+function startPacer(call) {
+  if (call.pacer) return;
+  call.outBuf = call.outBuf || Buffer.alloc(0);
+  // Asterisk 20 ms'lik (320 byte) sabit tempoda kare bekler; toplu yazım sesi kesik yapar.
+  call.pacer = setInterval(() => {
+    if (!call.socket || call.socket.destroyed) return;
+    let frame;
+    if (call.outBuf.length >= 320) {
+      frame = call.outBuf.slice(0, 320);
+      call.outBuf = call.outBuf.slice(320);
+    } else if (call.outBuf.length > 0 && call.flushTail) {
+      frame = Buffer.concat([call.outBuf, SILENCE_FRAME]).slice(0, 320);
+      call.outBuf = Buffer.alloc(0);
+      call.flushTail = false;
+    } else {
+      frame = SILENCE_FRAME;
+    }
     const header = Buffer.alloc(3);
     header[0] = AS_AUDIO;
     header.writeUInt16BE(frame.length, 1);
     call.socket.write(Buffer.concat([header, frame]));
-  }
+  }, 20);
 }
+
+function sendAudioToAsterisk(call, pcm8k) {
+  if (!call.socket || call.socket.destroyed) return;
+  call.outBuf = Buffer.concat([call.outBuf || Buffer.alloc(0), pcm8k]);
+  startPacer(call);
+}
+
 
 // ====================== OPENAI REALTIME ======================
 async function startRealtime(uuid, call) {
