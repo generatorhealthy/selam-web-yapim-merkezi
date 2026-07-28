@@ -22,7 +22,7 @@ const CFG = {
   bridgeSecret: process.env.AI_BRIDGE_SECRET || "",
   supabaseUrl: (process.env.SUPABASE_FUNCTIONS_URL || "").replace(/\/$/, ""),
   openaiKey: process.env.OPENAI_API_KEY || "",
-  openaiModel: process.env.OPENAI_REALTIME_MODEL || "gpt-4o-realtime-preview-2024-12-17",
+  openaiModel: process.env.OPENAI_REALTIME_MODEL || "gpt-realtime",
   ami: {
     host: process.env.AMI_HOST || "127.0.0.1",
     port: Number(process.env.AMI_PORT || 5038),
