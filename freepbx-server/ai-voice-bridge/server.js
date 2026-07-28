@@ -365,14 +365,15 @@ async function startRealtime(uuid, call) {
       return;
     }
 
-    if (ev.type === "response.audio.delta" && ev.delta) {
+    if ((ev.type === "response.output_audio.delta" || ev.type === "response.audio.delta") && ev.delta) {
       sendAudioToAsterisk(call, downsample24kTo8k(Buffer.from(ev.delta, "base64")));
     } else if (ev.type === "input_audio_buffer.speech_started") {
       call.outBuf = Buffer.alloc(0); // araya girildi: kalan sesi at
     } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
       call.transcript.push({ role: "danisan", text: ev.transcript, at: new Date().toISOString() });
-    } else if (ev.type === "response.audio_transcript.done") {
+    } else if (ev.type === "response.output_audio_transcript.done" || ev.type === "response.audio_transcript.done") {
       call.transcript.push({ role: "asistan", text: ev.transcript, at: new Date().toISOString() });
+
     } else if (ev.type === "response.function_call_arguments.done") {
       await handleTool(uuid, call, ev);
     } else if (ev.type === "error") {
