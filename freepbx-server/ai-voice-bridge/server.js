@@ -288,7 +288,7 @@ async function startRealtime(uuid, call) {
 
   const ws = new WebSocket(
     `wss://api.openai.com/v1/realtime?model=${encodeURIComponent(CFG.openaiModel)}`,
-    { headers: { Authorization: `Bearer ${CFG.openaiKey}`, "OpenAI-Beta": "realtime=v1" } },
+    { headers: { Authorization: `Bearer ${CFG.openaiKey}` } },
   );
   call.openai = ws;
 
@@ -298,18 +298,23 @@ async function startRealtime(uuid, call) {
       JSON.stringify({
         type: "session.update",
         session: {
-          modalities: ["audio", "text"],
+          type: "realtime",
           instructions: ctx.instructions,
-          voice: ctx.voice || "shimmer",
-          input_audio_format: "pcm16",
-          output_audio_format: "pcm16",
-          input_audio_transcription: { model: "whisper-1", language: "tr" },
-          turn_detection: {
-            type: "server_vad",
-            threshold: 0.55,
-            prefix_padding_ms: 300,
-            silence_duration_ms: 700,
+          output_modalities: ["audio"],
+          audio: {
+            input: {
+              format: { type: "audio/pcm", rate: 24000 },
+              transcription: { model: "whisper-1", language: "tr" },
+              turn_detection: {
+                type: "server_vad",
+                threshold: 0.55,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 700,
+              },
+            },
+            output: { format: { type: "audio/pcm", rate: 24000 }, voice: ctx.voice || "shimmer" },
           },
+
           tools: [
             {
               type: "function",
