@@ -375,6 +375,13 @@ const MetaLeads = () => {
           </div>
         </div>
 
+        <AiCallPanel
+          testLeadId={leads.find((l) => l.status === "new" && l.phone)?.id || null}
+          testLeadName={leads.find((l) => l.status === "new" && l.phone)?.full_name || null}
+        />
+
+
+
         {/* Status summary chips */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-5">
           <button
