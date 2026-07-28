@@ -14,6 +14,7 @@ import {
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
+import AiCallPanel from "@/components/admin/AiCallPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy, PhoneForwarded, Send } from "lucide-react";
@@ -374,6 +375,13 @@ const MetaLeads = () => {
             </Button>
           </div>
         </div>
+
+        <AiCallPanel
+          testLeadId={leads.find((l) => l.status === "new" && l.phone)?.id || null}
+          testLeadName={leads.find((l) => l.status === "new" && l.phone)?.full_name || null}
+        />
+
+
 
         {/* Status summary chips */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-5">
