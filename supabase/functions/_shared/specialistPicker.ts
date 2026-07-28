@@ -1,12 +1,20 @@
 // Uzman seçim motoru — Danışan Takvimi ile birebir aynı öncelik mantığı.
 // (auto-call-router içindeki mantığın paylaşılan sürümü)
 
+// Aile Danışmanlarına yönlendirilecek talepler:
+//   İlişki Danışmanlığı, Aile Danışmanlığı / Aile Terapisi, Çift Terapisi
+// Psikolog / Psikolojik Danışman / Klinik Psikologlara yönlendirilecekler:
+//   Bireysel Terapi, Çocuk Terapisi, Ergen Terapisi (aşağıdaki listede yer almayan her şey)
 export const FAMILY_THERAPIES = [
   "aile_terapisi",
+  "aile_danismanligi",
+  "aile_danışmanlığı",
+  "iliski_danismanligi",
+  "ilişki_danışmanlığı",
   "cift_terapisi",
   "çift_terapisi",
-  "cocuk_terapisi",
-  "çocuk_terapisi",
+  "cift_danismanligi",
+  "çift_danışmanlığı",
 ];
 
 export const THERAPY_LABELS: Record<string, string> = {
@@ -14,6 +22,10 @@ export const THERAPY_LABELS: Record<string, string> = {
   cift_terapisi: "Çift Terapisi",
   "çift_terapisi": "Çift Terapisi",
   aile_terapisi: "Aile Terapisi",
+  aile_danismanligi: "Aile Danışmanlığı",
+  "aile_danışmanlığı": "Aile Danışmanlığı",
+  iliski_danismanligi: "İlişki Danışmanlığı",
+  "ilişki_danışmanlığı": "İlişki Danışmanlığı",
   cocuk_terapisi: "Çocuk Terapisi",
   "çocuk_terapisi": "Çocuk Terapisi",
   ergen_terapisi: "Ergen Terapisi",
