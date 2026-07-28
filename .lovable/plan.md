@@ -1,77 +1,86 @@
-## Hedef
+## Amaç
 
-Bir uzman `is_active = true` olduğunda, sistem otomatik olarak 3 adet 1000×1000 Instagram görseli üretsin (Kapak / Hakkında / Uzmanlık Alanları) ve admin panelde yeni bir "Instagram Paylaşımları" kartında listelensin.
+Danışan Yönlendirme Sistemi'ne gelen danışanları, gerçekçi Türkçe konuşan bir yapay zekâ (OpenAI Realtime "ChatGPT sesli mod") telefonla arayacak, danışanı doğru uzmana FreePBX üzerinden aktaracak ve tüm sonuçları otomatik olarak sisteme işleyecek. Kurulum tamamlanacak, ancak **otomatik başlatma kapalı** kalacak; siz "Başlat" diyene kadar hiçbir arama yapılmayacak.
 
-## 1) Şablonlar (sabit referans)
+## Mimari
 
-Yüklediğin 3 görseli proje içine kalıcı referans olarak kopyalayacağım:
-- `supabase/functions/_shared/insta-templates/cover.png` (Tuğba Yılmaz kapak)
-- `supabase/functions/_shared/insta-templates/about.png` (Hakkında)
-- `supabase/functions/_shared/insta-templates/expertise.png` (Uzmanlık Alanları)
+```text
+pg_cron (her 1 dk)
+   -> call-scheduler (kimi, ne zaman aramalı?)
+        -> ai-call-originate  --(AMI/ARI)-->  FreePBX
+                                                 |
+                                    Asterisk Dialplan + AudioSocket
+                                                 |
+                                    ai-voice-bridge (WebSocket)
+                                     <--> OpenAI Realtime API (ses)
+                                                 |
+                          Araç çağrıları (tool calls) -> Supabase
+                                                 |
+                             Aktarım: *1<dahili>  -> Uzman telefonu
+```
 
-Bu 3 görsel Gemini'ye her seferinde aynı tasarımı koruması için referans olarak verilecek.
+Konuşma bitince `call-postprocess` sonucu işler: danışan notu, statü, client_referrals kaydı.
 
-## 2) Veritabanı
+## Yapılacaklar
 
-Yeni tablo: `specialist_instagram_posts`
-- `specialist_id` (FK)
-- `cover_url`, `about_url`, `expertise_url` (storage public URL)
-- `status` ('pending' | 'processing' | 'ready' | 'failed')
-- `error_message`
-- `generated_at`
+### 1. Veritabanı
+- `ai_call_sessions`: her arama denemesi (lead_id, hat 80/81, başlangıç/bitiş, sonuç, transkript, aktarılan uzman, hata).
+- `ai_call_queue`: sıradaki aramalar (lead_id, planlanan saat, deneme sayısı, öncelik, durum).
+- `ai_call_settings`: **tek satırlık kontrol paneli** — `enabled` (varsayılan `false`), çalışma saatleri (10:00–19:00 İstanbul), açmayanlar penceresi (10:00–12:00), yeni gelenler (12:00 sonrası), günlük maksimum 2 deneme, tekrar arama aralığı (2–3 saat), hat rotasyonu ayarları.
+- `danisan_basvurulari` üzerine: `next_call_at`, `preferred_call_time`, `daily_call_count`, `last_call_date`.
 
-Yeni storage bucket: `instagram-posts` (public read).
+### 2. Uzman seçim motoru (mevcut `auto-call-router` mantığı üretime alınır)
+- Danışan takvimindeki sıralama birebir korunur: önce **Acil Yönlendirme Gerekli** (hiç yönlendirme yapılmayan en üstte), sonra son yönlendirmeden bu yana en çok gün geçen, sonra en az yönlendirme alan.
+- Online başvuru: tüm uzmanlar aday, sırayla.
+- Yüz yüze: önce aynı şehirdeki uygun uzman; şehirde uzman yoksa yapay zekâ online danışmanlığın avantajlarını anlatıp ikna eder, kabul ederse online sıradaki uzmana aktarır.
+- Kategori eşleşmesi: Bireysel → Psikolog/Psikolojik Danışman/Klinik Psikolog, Aile/Çift/Çocuk → Aile Danışmanı.
 
-Trigger: `specialists` tablosunda `is_active` false→true geçtiğinde (veya yeni satır `is_active=true` ile eklendiğinde) `pg_net` ile edge function tetiklenir. Aynı specialist için zaten `ready` kayıt varsa yeniden üretmez.
+### 3. Arama zamanlaması (İstanbul saati)
+- 10:00–12:00 → "Açmayanlar" listesi sırayla.
+- 12:00–19:00 → "Yeni Gelenler" + zamanı gelen tekrar aramalar.
+- 19:00 sonrası ve 10:00 öncesi arama yok.
+- "Daha Sonra Ara" diyen danışan bir saat belirtirse o saatte aranır.
+- Bir danışan günde en fazla 2 kez aranır; açmazsa ertesi gün yine 2 kez, aktarılana kadar.
 
-RLS: sadece admin/staff/muhasebe okuyabilir.
+### 4. Hat yönetimi (80 / 81 prefix)
+- Varsayılan hat 80. Aktarım başarılı olup danışan uzmanla görüşmeye başladığında 80 meşgul sayılır, sıradaki arama 81'den yapılır.
+- 81'den de başarılı aktarım olursa 2–3 dakika bekleyip 80'den devam edilir.
+- Danışan açmadıysa / istemediyse çağrı biter, aynı hattan devam edilir.
+- Hat durumu `ai_call_settings` + `ai_call_sessions` üzerinden takip edilir.
 
-## 3) Edge Function: `generate-specialist-instagram-posts`
+### 5. Yapay zekâ konuşma akışı
+- Ses: OpenAI Realtime API, doğal Türkçe kadın sesi, araya girilebilir (barge-in), robotik kalıplar yok.
+- Açılış: Instagram/Facebook üzerinden başvuru yaptığını, hangi hizmeti (bireysel/çift/aile/çocuk terapisi) talep ettiğini hatırlatır.
+- Senaryolar:
+  - **Kabul** → uygun uzmana `*1<dahili>` ile aktarım.
+  - **Yüz yüze / şehirde uzman yok** → online ikna, kabul ederse aktarım.
+  - **İstemiyorum / yanlış başvuru** → hizmet hatırlatması, ısrar etmeden kapanış → *Yanlış Ulaşanlar*.
+  - **Şu an müsait değilim** → "Gün içinde saat kaçta arayalım?" → o saate randevulu tekrar arama.
+  - **Açmadı** → *Açmayanlar*, 2–3 saat sonra tekrar.
 
-Girdi: `{ specialistId, force?: boolean }`
+### 6. Arama sonrası otomatik işlemler
+- Danışan notuna zaman damgalı kayıt: "14:20 arandı — Uzm. Psk. X'e aktarıldı" / "11:05 arandı, açılmadı" / "istemiyor, yanlış ulaşan".
+- Statü otomatik güncellenir (Aktarıldı / Açmayanlar / Yanlış Ulaşanlar / Daha Sonra Ara).
+- Başarılı aktarımda `client_referrals` kaydı oluşturulur: uzman, danışan adı-soyadı, iletişim, danışmanlık tipi (online / yüz yüze) — sayaç artar, Danışan Takvimi otomatik güncellenir.
 
-Akış:
-1. `specialists`'ten ad, branş, profil fotoğrafı, bio çek.
-2. `specialist_instagram_posts`'a `processing` satırı upsert et.
-3. 3 referans şablonu base64 olarak yükle.
-4. Her görsel için `google/gemini-3.1-flash-image-preview` (Nano Banana 2) ile çağrı:
-   - **Kapak**: şablon + uzman fotoğrafı → ad/soyad değişir, branş pill değişir, alıntı uzmana özel kısa cümle (bio'dan AI ile çıkarılır).
-   - **Hakkında**: şablon + uzman fotoğrafı → bio'dan 2 kısa paragrafa indirgenmiş hakkında metni, branş pill değişir.
-   - **Uzmanlık Alanları**: şablonla aynı düzen, 6 kutucuk uzmanın branşına göre AI ile seçilir (icon stili korunur).
-5. PIL post-process: 1000×1000, renk +%18, keskinlik +%35.
-6. Storage'a yükle, URL'leri DB'ye yaz, `status='ready'`.
-7. Hata olursa `failed` + `error_message`.
+### 7. Yönetim arayüzü (Danışan Yönlendirme Sistemi sayfası)
+- **"Yapay Zekâ Arama Sistemi" paneli**: Açık/Kapalı ana şalter (kapalı gelir), çalışma saatleri, hat durumları (80/81), sıradaki aramalar, bugünkü istatistik.
+- **Tek danışan test araması** butonu (siz onaylayana kadar sistemin tek kullanım yolu).
+- Canlı arama kayıtları + transkript görüntüleme.
 
-Eşzamanlılık: 3 görsel paralel `Promise.all`.
+### 8. FreePBX sunucu tarafı (SSH ile uygulanacak, adım adım doküman verilecek)
+- `res_audiosocket` / `app_audiosocket` modülünün etkinleştirilmesi.
+- AI köprüsüne bağlanan özel dialplan context'i ve aktarım için `*1<dahili>` çağrısı.
+- AMI kullanıcısı (originate için) + güvenlik ayarları.
+- 80/81 prefix'li giden hat yönlendirmeleri.
 
-## 4) Admin paneli
+## Teknik detaylar
 
-`src/pages/admin/AdminDashboard.tsx` içine yeni kart: **"Instagram Paylaşımları"** → `/admin/instagram-posts`.
+- Yeni edge fonksiyonları: `ai-call-scheduler`, `ai-call-originate`, `ai-voice-bridge` (WebSocket, OpenAI Realtime ↔ AudioSocket PCM 8k/16k dönüşümü), `ai-call-postprocess`, `ai-call-control` (panel için).
+- Gerekli secret: `OPENAI_API_KEY` (Realtime API erişimi olan hesap), `FREEPBX_AMI_*` bilgileri. Bunları kurulum sırasında sizden isteyeceğim.
+- pg_cron görevi eklenecek fakat `ai_call_settings.enabled = false` olduğu sürece scheduler hiçbir arama üretmeyecek.
+- Verimor'a bağlı hiçbir yeni kod yazılmaz; mevcut `verimor-auto-call` fonksiyonuna dokunulmaz.
 
-Yeni sayfa: `src/pages/admin/InstagramPosts.tsx`
-- En yeni üstte uzman listesi (ad, branş, profil foto, tarih, status badge).
-- Her satırda 3 görsel önizleme (lightbox), tek tek indir, hepsini ZIP indir.
-- "Yeniden Üret" butonu (force=true).
-- "Manuel Tetikle" → uzman ara + üret.
-- Status filtresi: pending/ready/failed.
-
-Yalnızca `admin` rolü görür (mevcut admin dashboard access rules ile uyumlu).
-
-## 5) Mevcut 141 uzman
-
-Tek seferlik backfill butonu admin sayfasında: "Tüm aktif uzmanlar için üret" → batch (8'li paralel).
-
-## Teknik Notlar
-
-- Model: `google/gemini-3.1-flash-image-preview` (LOVABLE_API_KEY üzerinden gateway).
-- Trigger SQL'i: `pg_net.http_post` ile edge function URL'sine async çağrı; service_role anahtarı vault'tan.
-- Görsel üretimi ~10-20sn sürebilir → trigger fire-and-forget, frontend polling ile status izler.
-
-## Onayınla başlayacaklarım
-
-1. Şablonları projeye kopyalama
-2. Migration (tablo + bucket + trigger)
-3. Edge function
-4. Admin sayfası ve dashboard kartı
-
-Onaylıyor musun? Şablonlardaki ikon seti (beyin/insanlar/ayıcık vb.) için ek bir kütüphane mi tutalım, yoksa Gemini'nin şablondan birebir kopyalamasına mı güvenelim? (Önerim: ilk versiyonda Gemini'ye bırakalım, kalitesizse sonra SVG ikon kütüphanesine geçeriz.)
+## Kapsam dışı (şimdilik)
+- Otomatik başlatma yapılmayacak; sistem hazır ama kapalı teslim edilecek.
+- WhatsApp bilgilendirme akışları mevcut haliyle kalacak.
