@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
           lead_id: lead.id,
           phone: lead.phone,
           line_prefix: line,
+          is_test: true,
         }),
       });
       const text = await res.text();

@@ -80,6 +80,7 @@ async function reportResult(call, outcome, extra = {}) {
       line_prefix: call.line_prefix,
       outcome,
       transcript: call.transcript,
+      is_test: !!call.is_test,
       ...extra,
     });
     log("sonuç bildirildi:", call.lead_id, outcome);
@@ -471,6 +472,16 @@ async function handleTool(uuid, call, ev) {
   }
 
   if (ev.name === "transfer_call") {
+    if (call.is_test) {
+      // Test aramasi: gercek aktarim yapilmaz, yonlendirme kaydi olusmaz.
+      await toolOutput(call, ev.call_id, {
+        ok: true,
+        message: "Bu bir test aramasidir. Aktarim yapilmayacak; nazikce tesekkur edip gorusmeyi bitir.",
+      });
+      call.outcome = "test";
+      setTimeout(() => hangup(uuid), 6000);
+      return;
+    }
     if (!call.target) {
       await toolOutput(call, ev.call_id, { ok: false, message: "Önce pick_specialist aracını çağır." });
       return;
@@ -561,7 +572,7 @@ const server = http.createServer(async (req, res) => {
     req.on("data", (c) => (body += c));
     req.on("end", async () => {
       try {
-        const { session_id, lead_id, phone, line_prefix } = JSON.parse(body || "{}");
+        const { session_id, lead_id, phone, line_prefix, is_test } = JSON.parse(body || "{}");
         if (!session_id || !lead_id || !phone) return send(400, { error: "eksik parametre" });
 
         const uuid = uuidv4();
@@ -579,6 +590,7 @@ const server = http.createServer(async (req, res) => {
           lead_id,
           phone,
           line_prefix: line_prefix || "80",
+          is_test: !!is_test,
           transcript: [],
           outBuf: Buffer.alloc(0),
           reported: false,

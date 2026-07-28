@@ -85,6 +85,7 @@ Deno.serve(async (req) => {
       transcript,
       line_prefix,
       error_message,
+      is_test,
     } = body || {};
 
     if (!lead_id || !outcome) return json({ error: "lead_id ve outcome gerekli" }, 400);
@@ -112,6 +113,10 @@ Deno.serve(async (req) => {
     const { date: todayIst } = istanbulParts();
     const sameDay = lead.last_call_date === todayIst;
     const dailyCount = (sameDay ? lead.daily_call_count || 0 : 0) + 1;
+
+    if (is_test) {
+      // Test aramasi: danisan statusu, yonlendirme kaydi ve hat bekletmesi degistirilmez.
+    }
 
     switch (outcome) {
       case "transferred":
@@ -161,7 +166,7 @@ Deno.serve(async (req) => {
       next_call_at: nextCallAt,
       updated_at: new Date().toISOString(),
     };
-    if (status) update.status = status;
+    if (status && !is_test) update.status = status;
     if (callback_time) update.preferred_call_time = String(callback_time);
     if (outcome === "transferred" && specialist_id) update.assigned_specialist_id = specialist_id;
 
@@ -173,7 +178,7 @@ Deno.serve(async (req) => {
 
     // Başarılı aktarım -> Danışan Yönlendirmesi kaydı
     let referralId: string | null = null;
-    if (outcome === "transferred" && specialist_id) {
+    if (outcome === "transferred" && specialist_id && !is_test) {
       const now = new Date();
       const nameParts = String(lead.full_name || "").trim().split(/\s+/);
       const clientSurname = nameParts.length > 1 ? nameParts.pop()! : "";
@@ -234,7 +239,7 @@ Deno.serve(async (req) => {
     }
 
     // Hat yönetimi: başarılı aktarımda kullanılan hat bir süre meşgul sayılır
-    if (outcome === "transferred" && line_prefix) {
+    if (outcome === "transferred" && line_prefix && !is_test) {
       const { data: s } = await supabase
         .from("ai_call_settings")
         .select("id, line_cooldown_seconds, line_prefixes, active_line_prefix")
