@@ -37,13 +37,21 @@ export const EXCLUDED_INTERNAL_NUMBERS = ["0000", "1155"];
 export const normalize = (s: string | null | undefined) =>
   (s || "").toLocaleLowerCase("tr-TR").trim();
 
+const therapyKey = (raw: string | null) => normalize(raw).replace(/[\s-]+/g, "_");
+
 export const therapyLabel = (raw: string | null) => {
   if (!raw) return "danışmanlık";
-  return THERAPY_LABELS[normalize(raw)] || raw.replace(/_/g, " ");
+  return THERAPY_LABELS[therapyKey(raw)] || (raw || "").replace(/_/g, " ");
 };
 
-export const isFamilyTherapy = (therapy: string | null) =>
-  FAMILY_THERAPIES.includes(normalize(therapy));
+// Aile Danışmanı grubu: ilişki / aile / çift talepleri.
+// Çocuk terapisi ve bireysel terapi psikologlara gider.
+export const isFamilyTherapy = (therapy: string | null) => {
+  const k = therapyKey(therapy);
+  if (!k) return false;
+  if (FAMILY_THERAPIES.includes(k)) return true;
+  return /(iliski|ilişki|aile|cift|çift)/.test(k) && !/cocuk|çocuk|bireysel|ergen/.test(k);
+};
 
 export const specialistMatchesCategory = (
   specialty: string | null,
