@@ -512,6 +512,7 @@ function cleanup(uuid) {
     call.socket?.end();
   } catch {}
   clearTimeout(call.timer);
+  if (call.pacer) clearInterval(call.pacer);
   calls.delete(uuid);
 }
 
