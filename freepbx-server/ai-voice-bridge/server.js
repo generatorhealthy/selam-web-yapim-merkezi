@@ -288,20 +288,27 @@ function formatUuid(b) {
 
 const SILENCE_FRAME = Buffer.alloc(320);
 
+const PREBUFFER = 320 * 12; // ~240 ms; ağ dalgalanmasında ses kesilmesin
+
 function startPacer(call) {
   if (call.pacer) return;
   call.outBuf = call.outBuf || Buffer.alloc(0);
+  call.priming = true;
   // Asterisk 20 ms'lik (320 byte) sabit tempoda kare bekler; toplu yazım sesi kesik yapar.
   call.pacer = setInterval(() => {
     if (!call.socket || call.socket.destroyed) return;
+    if (call.priming) {
+      if (call.outBuf.length >= PREBUFFER || call.flushTail) call.priming = false;
+    }
     let frame;
-    if (call.outBuf.length >= 320) {
-      frame = call.outBuf.slice(0, 320);
-      call.outBuf = call.outBuf.slice(320);
-    } else if (call.outBuf.length > 0 && call.flushTail) {
-      frame = Buffer.concat([call.outBuf, SILENCE_FRAME]).slice(0, 320);
+    if (!call.priming && call.outBuf.length >= 320) {
+      frame = call.outBuf.subarray(0, 320);
+      call.outBuf = call.outBuf.subarray(320);
+    } else if (!call.priming && call.outBuf.length > 0 && call.flushTail) {
+      frame = Buffer.concat([call.outBuf, SILENCE_FRAME]).subarray(0, 320);
       call.outBuf = Buffer.alloc(0);
       call.flushTail = false;
+      call.priming = true;
     } else {
       frame = SILENCE_FRAME;
     }
