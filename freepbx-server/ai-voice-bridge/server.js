@@ -22,7 +22,7 @@ const CFG = {
   bridgeSecret: process.env.AI_BRIDGE_SECRET || "",
   supabaseUrl: (process.env.SUPABASE_FUNCTIONS_URL || "").replace(/\/$/, ""),
   openaiKey: process.env.OPENAI_API_KEY || "",
-  openaiModel: process.env.OPENAI_REALTIME_MODEL || "gpt-4o-realtime-preview-2024-12-17",
+  openaiModel: process.env.OPENAI_REALTIME_MODEL || "gpt-realtime",
   ami: {
     host: process.env.AMI_HOST || "127.0.0.1",
     port: Number(process.env.AMI_PORT || 5038),
@@ -237,6 +237,7 @@ const audioServer = net.createServer((socket) => {
           return;
         }
         call.socket = socket;
+        call.answered = true;
         startRealtime(uuid, call).catch((e) => {
           log("realtime başlatılamadı:", e.message);
           finishCall(uuid, "failed", { error_message: e.message });
@@ -250,14 +251,14 @@ const audioServer = net.createServer((socket) => {
           }),
         );
       } else if (type === AS_TERMINATE || type === AS_ERROR) {
-        if (uuid) finishCall(uuid, call?.outcome || "no_answer");
+        if (uuid) finishCall(uuid, call?.outcome || (call?.answered ? "failed" : "no_answer"));
         socket.end();
       }
     }
   });
 
   socket.on("close", () => {
-    if (uuid) finishCall(uuid, calls.get(uuid)?.outcome || "no_answer");
+    if (uuid) { const c = calls.get(uuid); finishCall(uuid, c?.outcome || (c?.answered ? "failed" : "no_answer")); }
   });
   socket.on("error", (e) => log("AudioSocket hata:", e.message));
 });
@@ -288,7 +289,7 @@ async function startRealtime(uuid, call) {
 
   const ws = new WebSocket(
     `wss://api.openai.com/v1/realtime?model=${encodeURIComponent(CFG.openaiModel)}`,
-    { headers: { Authorization: `Bearer ${CFG.openaiKey}`, "OpenAI-Beta": "realtime=v1" } },
+    { headers: { Authorization: `Bearer ${CFG.openaiKey}` } },
   );
   call.openai = ws;
 
@@ -298,18 +299,23 @@ async function startRealtime(uuid, call) {
       JSON.stringify({
         type: "session.update",
         session: {
-          modalities: ["audio", "text"],
+          type: "realtime",
           instructions: ctx.instructions,
-          voice: ctx.voice || "shimmer",
-          input_audio_format: "pcm16",
-          output_audio_format: "pcm16",
-          input_audio_transcription: { model: "whisper-1", language: "tr" },
-          turn_detection: {
-            type: "server_vad",
-            threshold: 0.55,
-            prefix_padding_ms: 300,
-            silence_duration_ms: 700,
+          output_modalities: ["audio"],
+          audio: {
+            input: {
+              format: { type: "audio/pcm", rate: 24000 },
+              transcription: { model: "whisper-1", language: "tr" },
+              turn_detection: {
+                type: "server_vad",
+                threshold: 0.55,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 700,
+              },
+            },
+            output: { format: { type: "audio/pcm", rate: 24000 }, voice: ctx.voice || "shimmer" },
           },
+
           tools: [
             {
               type: "function",
@@ -360,14 +366,15 @@ async function startRealtime(uuid, call) {
       return;
     }
 
-    if (ev.type === "response.audio.delta" && ev.delta) {
+    if ((ev.type === "response.output_audio.delta" || ev.type === "response.audio.delta") && ev.delta) {
       sendAudioToAsterisk(call, downsample24kTo8k(Buffer.from(ev.delta, "base64")));
     } else if (ev.type === "input_audio_buffer.speech_started") {
       call.outBuf = Buffer.alloc(0); // araya girildi: kalan sesi at
     } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
       call.transcript.push({ role: "danisan", text: ev.transcript, at: new Date().toISOString() });
-    } else if (ev.type === "response.audio_transcript.done") {
+    } else if (ev.type === "response.output_audio_transcript.done" || ev.type === "response.audio_transcript.done") {
       call.transcript.push({ role: "asistan", text: ev.transcript, at: new Date().toISOString() });
+
     } else if (ev.type === "response.function_call_arguments.done") {
       await handleTool(uuid, call, ev);
     } else if (ev.type === "error") {
