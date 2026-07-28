@@ -493,11 +493,13 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify(obj));
   };
 
-  if (req.headers["x-bridge-secret"] !== CFG.bridgeSecret) return send(401, { error: "unauthorized" });
-
+  // /health kimlik dogrulamasiz (servis kontrolu icin)
   if (req.url === "/health") {
     return send(200, { ok: true, ami: ami.connected, active_calls: calls.size, model: CFG.openaiModel });
   }
+
+  if (req.headers["x-bridge-secret"] !== CFG.bridgeSecret) return send(401, { error: "unauthorized" });
+
 
   if (req.url === "/originate" && req.method === "POST") {
     let body = "";
