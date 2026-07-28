@@ -137,6 +137,165 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_call_queue: {
+        Row: {
+          attempt_no: number
+          created_at: string
+          id: string
+          last_error: string | null
+          lead_id: string
+          priority: number
+          scheduled_at: string
+          session_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_no?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lead_id: string
+          priority?: number
+          scheduled_at?: string
+          session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_no?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lead_id?: string
+          priority?: number
+          scheduled_at?: string
+          session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_call_sessions: {
+        Row: {
+          callback_at: string | null
+          channel_id: string | null
+          created_at: string
+          ended_at: string | null
+          error_message: string | null
+          id: string
+          is_test: boolean
+          lead_id: string | null
+          lead_name: string | null
+          lead_phone: string | null
+          line_prefix: string | null
+          outcome: string | null
+          started_at: string
+          status: string
+          transcript: Json
+          transferred_extension: string | null
+          transferred_specialist_id: string | null
+          transferred_specialist_name: string | null
+        }
+        Insert: {
+          callback_at?: string | null
+          channel_id?: string | null
+          created_at?: string
+          ended_at?: string | null
+          error_message?: string | null
+          id?: string
+          is_test?: boolean
+          lead_id?: string | null
+          lead_name?: string | null
+          lead_phone?: string | null
+          line_prefix?: string | null
+          outcome?: string | null
+          started_at?: string
+          status?: string
+          transcript?: Json
+          transferred_extension?: string | null
+          transferred_specialist_id?: string | null
+          transferred_specialist_name?: string | null
+        }
+        Update: {
+          callback_at?: string | null
+          channel_id?: string | null
+          created_at?: string
+          ended_at?: string | null
+          error_message?: string | null
+          id?: string
+          is_test?: boolean
+          lead_id?: string | null
+          lead_name?: string | null
+          lead_phone?: string | null
+          line_prefix?: string | null
+          outcome?: string | null
+          started_at?: string
+          status?: string
+          transcript?: Json
+          transferred_extension?: string | null
+          transferred_specialist_id?: string | null
+          transferred_specialist_name?: string | null
+        }
+        Relationships: []
+      }
+      ai_call_settings: {
+        Row: {
+          active_line_prefix: string
+          enabled: boolean
+          id: string
+          line_80_busy_until: string | null
+          line_81_busy_until: string | null
+          line_cooldown_seconds: number
+          line_prefixes: string[]
+          max_calls_per_day: number
+          no_answer_window_end_hour: number
+          retry_gap_minutes: number
+          system_prompt: string | null
+          updated_at: string
+          updated_by: string | null
+          voice: string
+          work_end_hour: number
+          work_start_hour: number
+        }
+        Insert: {
+          active_line_prefix?: string
+          enabled?: boolean
+          id?: string
+          line_80_busy_until?: string | null
+          line_81_busy_until?: string | null
+          line_cooldown_seconds?: number
+          line_prefixes?: string[]
+          max_calls_per_day?: number
+          no_answer_window_end_hour?: number
+          retry_gap_minutes?: number
+          system_prompt?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          voice?: string
+          work_end_hour?: number
+          work_start_hour?: number
+        }
+        Update: {
+          active_line_prefix?: string
+          enabled?: boolean
+          id?: string
+          line_80_busy_until?: string | null
+          line_81_busy_until?: string | null
+          line_cooldown_seconds?: number
+          line_prefixes?: string[]
+          max_calls_per_day?: number
+          no_answer_window_end_hour?: number
+          retry_gap_minutes?: number
+          system_prompt?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          voice?: string
+          work_end_hour?: number
+          work_start_hour?: number
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -4015,13 +4174,17 @@ export type Database = {
           call_attempts: number
           consultation_type: string
           created_at: string
+          daily_call_count: number
           external_id: string | null
           full_name: string
           id: string
+          last_call_date: string | null
           last_called_at: string | null
           lead_date: string | null
+          next_call_at: string | null
           notes: string | null
           phone: string
+          preferred_call_time: string | null
           source: string | null
           status: string
           therapy_type: string | null
@@ -4033,13 +4196,17 @@ export type Database = {
           call_attempts?: number
           consultation_type?: string
           created_at?: string
+          daily_call_count?: number
           external_id?: string | null
           full_name: string
           id?: string
+          last_call_date?: string | null
           last_called_at?: string | null
           lead_date?: string | null
+          next_call_at?: string | null
           notes?: string | null
           phone: string
+          preferred_call_time?: string | null
           source?: string | null
           status?: string
           therapy_type?: string | null
@@ -4051,13 +4218,17 @@ export type Database = {
           call_attempts?: number
           consultation_type?: string
           created_at?: string
+          daily_call_count?: number
           external_id?: string | null
           full_name?: string
           id?: string
+          last_call_date?: string | null
           last_called_at?: string | null
           lead_date?: string | null
+          next_call_at?: string | null
           notes?: string | null
           phone?: string
+          preferred_call_time?: string | null
           source?: string | null
           status?: string
           therapy_type?: string | null
