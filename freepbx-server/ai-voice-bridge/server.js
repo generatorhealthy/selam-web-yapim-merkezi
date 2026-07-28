@@ -404,7 +404,7 @@ async function startRealtime(uuid, call) {
     }
 
     if ((ev.type === "response.output_audio.delta" || ev.type === "response.audio.delta") && ev.delta) {
-      sendAudioToAsterisk(call, downsample24kTo8k(Buffer.from(ev.delta, "base64")));
+      sendAudioToAsterisk(call, downsample24kTo8k(call, Buffer.from(ev.delta, "base64")));
     } else if (ev.type === "input_audio_buffer.speech_started") {
       call.outBuf = Buffer.alloc(0); // araya girildi: kalan sesi at
     } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
