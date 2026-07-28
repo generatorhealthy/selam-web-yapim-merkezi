@@ -533,24 +533,23 @@ const server = http.createServer(async (req, res) => {
         };
         calls.set(uuid, call);
 
+        // NOT: Elle çalışan komutla birebir aynı biçim:
+        //   channel originate Local/805316852275@from-internal extension 1@ai-outbound
+        // (/n eki ve ekstra CALLERID/AMPUSER değişkenleri outbound route'u bozuyordu)
         const resp = await ami.send({
           Action: "Originate",
-          Channel: `Local/${dialNumber}@${CFG.dialContext}/n`,
+          Channel: `Local/${dialNumber}@${CFG.dialContext}`,
           Context: CFG.originateContext,
-          Exten: "s",
+          Exten: "1",
           Priority: 1,
-          CallerID: `${CFG.callerExt} <${CFG.callerExt}>`,
           Timeout: 35000,
           Async: "true",
           Variable: [
             `AI_UUID=${uuid}`,
             `AI_HOST=${CFG.audioSocketHost}:${CFG.audioPort}`,
-            // FreePBX outbound route'un çalışması için dahili kimliği:
-            `__AMPUSER=${CFG.callerExt}`,
-            `__REALCALLERIDNUM=${CFG.callerExt}`,
-            `CALLERID(num)=${CFG.callerExt}`,
           ].join(","),
         });
+
 
 
         if (resp.Response !== "Success") {
