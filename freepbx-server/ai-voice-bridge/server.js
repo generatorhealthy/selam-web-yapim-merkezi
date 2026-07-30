@@ -289,7 +289,7 @@ function formatUuid(b) {
 
 const SILENCE_FRAME = Buffer.alloc(320);
 
-const PREBUFFER = 320 * 12; // ~240 ms; ağ dalgalanmasında ses kesilmesin
+const PREBUFFER = 320 * 24; // ~480 ms; telefon hattındaki ağ dalgalanmasını yutar
 
 function startPacer(call) {
   if (call.pacer) return;
@@ -312,6 +312,9 @@ function startPacer(call) {
       call.priming = true;
     } else {
       frame = SILENCE_FRAME;
+      // Aktif cevap sırasında tampon boşalırsa küçük parçaları anında oynatıp
+      // kesik ses üretmek yerine yeniden yeterli ses birikmesini bekle.
+      if (call.responseActive && !call.flushTail) call.priming = true;
     }
     const header = Buffer.alloc(3);
     header[0] = AS_AUDIO;
@@ -353,9 +356,11 @@ async function startRealtime(uuid, call) {
               transcription: { model: "whisper-1", language: "tr" },
               turn_detection: {
                 type: "server_vad",
-                threshold: 0.55,
-                prefix_padding_ms: 300,
-                silence_duration_ms: 700,
+                threshold: 0.5,
+                prefix_padding_ms: 400,
+                silence_duration_ms: 600,
+                create_response: true,
+                interrupt_response: true,
               },
             },
             output: { format: { type: "audio/pcm", rate: 24000 }, voice: ctx.voice || "marin" },
@@ -411,10 +416,26 @@ async function startRealtime(uuid, call) {
       return;
     }
 
-    if ((ev.type === "response.output_audio.delta" || ev.type === "response.audio.delta") && ev.delta) {
+    if (ev.type === "response.created") {
+      call.responseActive = true;
+    } else if ((ev.type === "response.output_audio.delta" || ev.type === "response.audio.delta") && ev.delta) {
       sendAudioToAsterisk(call, downsample24kTo8k(call, Buffer.from(ev.delta, "base64")));
     } else if (ev.type === "input_audio_buffer.speech_started") {
       call.outBuf = Buffer.alloc(0); // araya girildi: kalan sesi at
+      call.priming = true;
+      call.flushTail = false;
+      // Sunucu interrupt_response desteklese de kalan ağ paketlerini kesin
+      // olarak durdur; danışan konuşurken asistan üstüne konuşmasın.
+      if (call.responseActive && call.openai?.readyState === WebSocket.OPEN) {
+        call.openai.send(JSON.stringify({ type: "response.cancel" }));
+      }
+    } else if (
+      ev.type === "response.output_audio.done" ||
+      ev.type === "response.audio.done" ||
+      ev.type === "response.done"
+    ) {
+      call.responseActive = false;
+      call.flushTail = true;
     } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
       call.transcript.push({ role: "danisan", text: ev.transcript, at: new Date().toISOString() });
     } else if (ev.type === "response.output_audio_transcript.done" || ev.type === "response.audio_transcript.done") {
