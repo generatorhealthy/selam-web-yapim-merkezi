@@ -428,11 +428,10 @@ async function startRealtime(uuid, call) {
       call.outBuf = Buffer.alloc(0); // araya girildi: kalan sesi at
       call.priming = true;
       call.flushTail = false;
-      // Sunucu interrupt_response desteklese de kalan ağ paketlerini kesin
-      // olarak durdur; danışan konuşurken asistan üstüne konuşmasın.
-      if (call.responseActive && call.openai?.readyState === WebSocket.OPEN) {
-        call.openai.send(JSON.stringify({ type: "response.cancel" }));
-      }
+      // semantic_vad + interrupt_response zaten sunucu tarafında iptal ediyor.
+      // Ek response.cancel göndermek "no active response" hatası üretiyordu.
+      call.responseActive = false;
+
     } else if (
       ev.type === "response.output_audio.done" ||
       ev.type === "response.audio.done" ||
