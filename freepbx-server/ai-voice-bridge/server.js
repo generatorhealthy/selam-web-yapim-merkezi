@@ -38,7 +38,66 @@ const CFG = {
   callerExt: process.env.AI_CALLER_EXT || "1168",
   audioSocketHost: process.env.AI_AUDIOSOCKET_HOST || "127.0.0.1",
   callTimeoutMs: Number(process.env.AI_CALL_TIMEOUT_MS || 180000),
+
+  // ---- OpenAI Realtime: ses ve konuşma algılama (hepsi ayarlanabilir) ----
+  // Desteklenen kadın sesleri: marin, cedar, coral, sage, shimmer, verse
+  voice: process.env.OPENAI_REALTIME_VOICE || "marin",
+  voiceSpeed: Number(process.env.OPENAI_REALTIME_SPEED || 1.0),
+  noiseReduction: process.env.OPENAI_REALTIME_NOISE_REDUCTION || "far_field", // far_field | near_field | off
+  vad: {
+    type: process.env.OPENAI_VAD_TYPE || "server_vad",
+    threshold: Number(process.env.OPENAI_VAD_THRESHOLD || 0.75),
+    prefixPaddingMs: Number(process.env.OPENAI_VAD_PREFIX_PADDING_MS || 400),
+    silenceDurationMs: Number(process.env.OPENAI_VAD_SILENCE_MS || 900),
+    createResponse: process.env.OPENAI_VAD_CREATE_RESPONSE !== "false",
+    interruptResponse: process.env.OPENAI_VAD_INTERRUPT_RESPONSE !== "false",
+  },
+  // Anlamsız/gürültü transkriptlerini eleme eşikleri
+  minTranscriptChars: Number(process.env.AI_MIN_TRANSCRIPT_CHARS || 3),
+  minTranscriptWordChars: Number(process.env.AI_MIN_TRANSCRIPT_WORD_CHARS || 2),
 };
+
+// ====================== TRANSKRİPT DOĞRULAMA KATMANI ======================
+// Nefes, öksürük, boğaz temizleme, "hı/ıh/eee/şş", tek harf, yarım kelime,
+// yalnızca noktalama ve arka plandaki anlamsız sesler gerçek talep sayılmaz.
+const FILLER_WORDS = new Set([
+  "hı", "hi", "hı hı", "hıhı", "ıh", "ııh", "ıı", "ı", "eee", "ee", "e", "ııı",
+  "şş", "ş", "ah", "oh", "hmm", "hm", "mm", "mhm", "ha", "he", "aa", "a", "ee ee",
+  "öhö", "öhöm", "ehm", "ahem", "uh", "uhm", "um", "hah", "of", "off", "yani",
+]);
+
+const NOISE_PATTERNS = [
+  /^\[.*\]$/, // [gürültü], [müzik] gibi etiketler
+  /^\(.*\)$/,
+  /^(altyazı|altyazi|abone|teşekkür|müzik|music|silence|sessizlik)\b/i, // whisper halüsinasyonları
+];
+
+function normalizeTranscript(raw) {
+  return String(raw || "")
+    .toLowerCase()
+    .replace(/[.,!?;:"'`…]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Transkript gerçek bir kullanıcı ifadesi mi? */
+function isMeaningfulSpeech(raw) {
+  const text = normalizeTranscript(raw);
+  if (!text) return false;
+  if (text.length < CFG.minTranscriptChars) return false;
+  if (NOISE_PATTERNS.some((re) => re.test(text))) return false;
+  if (!/[a-zçğıöşü]/i.test(text)) return false; // yalnızca noktalama/sayı
+
+  const words = text.split(" ").filter(Boolean);
+  const meaningful = words.filter(
+    (w) => w.length >= CFG.minTranscriptWordChars && !FILLER_WORDS.has(w),
+  );
+  if (meaningful.length === 0) return false;
+  // Tek kelime ve o kelime çok kısaysa (yarım kelime/tek harf) işleme alma
+  if (meaningful.length === 1 && meaningful[0].length < CFG.minTranscriptChars) return false;
+  return true;
+}
+
 
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 
