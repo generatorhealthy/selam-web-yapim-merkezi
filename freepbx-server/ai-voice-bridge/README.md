@@ -156,3 +156,26 @@ curl -s -H "x-bridge-secret: SECRET" http://127.0.0.1:8090/health
 
 Ardından yönetim panelinden (Danışan Yönlendirme Sistemi → Yapay Zekâ Arama Sistemi)
 "Test Araması" ile tek bir danışanı arayın. Her şey doğruysa ana şalteri açın.
+
+## Ses ve Konuşma Algılama Ayarları (ortam değişkenleri)
+
+`/etc/systemd/system/ai-voice-bridge.service` içindeki `Environment=` satırlarına eklenebilir.
+Değişiklikten sonra: `systemctl daemon-reload && systemctl restart ai-voice-bridge`
+
+| Değişken | Varsayılan | Açıklama |
+| --- | --- | --- |
+| `OPENAI_REALTIME_VOICE` | `marin` | Desteklenen kadın sesleri: `marin`, `cedar`, `coral`, `sage`, `shimmer`, `verse` |
+| `OPENAI_REALTIME_SPEED` | `1.0` | Konuşma hızı |
+| `OPENAI_REALTIME_NOISE_REDUCTION` | `far_field` | `far_field`, `near_field` veya `off` |
+| `OPENAI_VAD_TYPE` | `server_vad` | Konuşma algılama tipi |
+| `OPENAI_VAD_THRESHOLD` | `0.75` | Gürültülü ortamda 0.85–0.95'e çıkarılabilir |
+| `OPENAI_VAD_PREFIX_PADDING_MS` | `400` | Konuşma başı tampon |
+| `OPENAI_VAD_SILENCE_MS` | `900` | Cümlenin bittiğine karar verme süresi (kısa duraksamalarda cevap vermez) |
+| `OPENAI_VAD_CREATE_RESPONSE` | `true` | `false` yazılırsa otomatik cevap üretmez |
+| `OPENAI_VAD_INTERRUPT_RESPONSE` | `true` | `false` yazılırsa asistanın sözü kesilmez |
+| `AI_MIN_TRANSCRIPT_CHARS` | `3` | Anlamlı sayılacak en az karakter |
+| `AI_MIN_TRANSCRIPT_WORD_CHARS` | `2` | Anlamlı sayılacak en az kelime uzunluğu |
+
+Transkript doğrulama katmanı: nefes, öksürük, "hı/ıh/eee/şş", tek harf, yarım kelime ve
+yalnızca noktalama içeren girdiler kayda geçmez, cevap üretilmez ve **hiçbir araç
+(özellikle `transfer_call`) çağrılmaz**.
