@@ -289,17 +289,19 @@ function formatUuid(b) {
 
 const SILENCE_FRAME = Buffer.alloc(320);
 
-const PREBUFFER = 320 * 24; // ~480 ms; telefon hattındaki ağ dalgalanmasını yutar
+const PREBUFFER = 320 * 40; // ~800 ms; telefon hattındaki ağ dalgalanmasını yutar
+const REFILL = 320 * 15; // ~300 ms; tampon boşalırsa bu kadar birikince devam eder
 
 function startPacer(call) {
   if (call.pacer) return;
   call.outBuf = call.outBuf || Buffer.alloc(0);
   call.priming = true;
+  call.primeTarget = PREBUFFER;
   // Asterisk 20 ms'lik (320 byte) sabit tempoda kare bekler; toplu yazım sesi kesik yapar.
   call.pacer = setInterval(() => {
     if (!call.socket || call.socket.destroyed) return;
     if (call.priming) {
-      if (call.outBuf.length >= PREBUFFER || call.flushTail) call.priming = false;
+      if (call.outBuf.length >= (call.primeTarget || PREBUFFER) || call.flushTail) call.priming = false;
     }
     let frame;
     if (!call.priming && call.outBuf.length >= 320) {
@@ -310,12 +312,17 @@ function startPacer(call) {
       call.outBuf = Buffer.alloc(0);
       call.flushTail = false;
       call.priming = true;
+      call.primeTarget = PREBUFFER;
     } else {
       frame = SILENCE_FRAME;
       // Aktif cevap sırasında tampon boşalırsa küçük parçaları anında oynatıp
-      // kesik ses üretmek yerine yeniden yeterli ses birikmesini bekle.
-      if (call.responseActive && !call.flushTail) call.priming = true;
+      // kesik ses üretmek yerine kısa bir yeniden dolum bekle (300 ms).
+      if (call.responseActive && !call.flushTail && !call.priming) {
+        call.priming = true;
+        call.primeTarget = REFILL;
+      }
     }
+
     const header = Buffer.alloc(3);
     header[0] = AS_AUDIO;
     header.writeUInt16BE(frame.length, 1);
@@ -354,8 +361,9 @@ async function startRealtime(uuid, call) {
             input: {
               format: { type: "audio/pcm", rate: 24000 },
               transcription: { model: "whisper-1", language: "tr" },
-              // Gürültü hassasiyeti düşük server VAD: öksürük, nefes, kapı sesi
-              // veya arkadaki konuşma konuşmayı tetiklemez.
+              // Telefon hattı gürültüsünü bastır: öksürük, nefes, arka plan sesi
+              // konuşma olarak yorumlanmasın.
+              noise_reduction: { type: "far_field" },
               turn_detection: {
                 type: "server_vad",
                 threshold: 0.75,
@@ -368,9 +376,10 @@ async function startRealtime(uuid, call) {
             },
             output: {
               format: { type: "audio/pcm", rate: 24000 },
-              voice: ctx.voice || "marin",
-              speed: 1.08,
+              voice: ctx.voice || "coral",
+              speed: 1.0,
             },
+
           },
 
           tools: [
