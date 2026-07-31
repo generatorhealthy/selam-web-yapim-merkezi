@@ -366,11 +366,12 @@ async function startRealtime(uuid, call) {
               noise_reduction: { type: "far_field" },
               turn_detection: {
                 type: "server_vad",
-                threshold: 0.75,
-                prefix_padding_ms: 400,
-                silence_duration_ms: 900,
+                threshold: 0.9,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 1200,
                 create_response: true,
-                interrupt_response: true,
+                // Arka plan sesi/gürültü konuşmayı kesmesin: asistan cümlesini bitirir.
+                interrupt_response: false,
               },
 
             },
