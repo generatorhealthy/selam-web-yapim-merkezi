@@ -43,6 +43,9 @@ const CFG = {
   // Desteklenen kadın sesleri: marin, cedar, coral, sage, shimmer, verse
   voice: process.env.OPENAI_REALTIME_VOICE || "marin",
   voiceSpeed: Number(process.env.OPENAI_REALTIME_SPEED || 1.0),
+  // OpenAI Platform üzerinde kayıtlı Realtime prompt (opsiyonel, varsa kullanılır)
+  promptId: process.env.OPENAI_REALTIME_PROMPT_ID || "",
+  promptVersion: process.env.OPENAI_REALTIME_PROMPT_VERSION || "",
   noiseReduction: process.env.OPENAI_REALTIME_NOISE_REDUCTION || "far_field", // far_field | near_field | off
   vad: {
     type: process.env.OPENAI_VAD_TYPE || "server_vad",
@@ -414,7 +417,14 @@ async function startRealtime(uuid, call) {
         type: "session.update",
         session: {
           type: "realtime",
-          instructions: ctx.instructions,
+          ...(CFG.promptId
+            ? {
+                prompt: {
+                  id: CFG.promptId,
+                  ...(CFG.promptVersion ? { version: CFG.promptVersion } : {}),
+                },
+              }
+            : { instructions: ctx.instructions }),
           output_modalities: ["audio"],
           audio: {
             input: {
