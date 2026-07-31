@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
             interrupt_response: VAD_INTERRUPT,
           },
         },
-        output: { voice: VOICE, speed: SPEED },
+        output: { ...(VOICE ? { voice: VOICE } : {}), speed: SPEED },
       },
       tools: TOOLS,
     };
