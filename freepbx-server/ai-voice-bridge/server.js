@@ -361,8 +361,9 @@ async function startRealtime(uuid, call) {
             input: {
               format: { type: "audio/pcm", rate: 24000 },
               transcription: { model: "whisper-1", language: "tr" },
-              // Gürültü hassasiyeti düşük server VAD: öksürük, nefes, kapı sesi
-              // veya arkadaki konuşma konuşmayı tetiklemez.
+              // Telefon hattı gürültüsünü bastır: öksürük, nefes, arka plan sesi
+              // konuşma olarak yorumlanmasın.
+              noise_reduction: { type: "far_field" },
               turn_detection: {
                 type: "server_vad",
                 threshold: 0.75,
@@ -375,9 +376,10 @@ async function startRealtime(uuid, call) {
             },
             output: {
               format: { type: "audio/pcm", rate: 24000 },
-              voice: ctx.voice || "marin",
-              speed: 1.08,
+              voice: ctx.voice || "coral",
+              speed: 1.0,
             },
+
           },
 
           tools: [
