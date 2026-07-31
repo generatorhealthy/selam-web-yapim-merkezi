@@ -38,7 +38,66 @@ const CFG = {
   callerExt: process.env.AI_CALLER_EXT || "1168",
   audioSocketHost: process.env.AI_AUDIOSOCKET_HOST || "127.0.0.1",
   callTimeoutMs: Number(process.env.AI_CALL_TIMEOUT_MS || 180000),
+
+  // ---- OpenAI Realtime: ses ve konuşma algılama (hepsi ayarlanabilir) ----
+  // Desteklenen kadın sesleri: marin, cedar, coral, sage, shimmer, verse
+  voice: process.env.OPENAI_REALTIME_VOICE || "marin",
+  voiceSpeed: Number(process.env.OPENAI_REALTIME_SPEED || 1.0),
+  noiseReduction: process.env.OPENAI_REALTIME_NOISE_REDUCTION || "far_field", // far_field | near_field | off
+  vad: {
+    type: process.env.OPENAI_VAD_TYPE || "server_vad",
+    threshold: Number(process.env.OPENAI_VAD_THRESHOLD || 0.75),
+    prefixPaddingMs: Number(process.env.OPENAI_VAD_PREFIX_PADDING_MS || 400),
+    silenceDurationMs: Number(process.env.OPENAI_VAD_SILENCE_MS || 900),
+    createResponse: process.env.OPENAI_VAD_CREATE_RESPONSE !== "false",
+    interruptResponse: process.env.OPENAI_VAD_INTERRUPT_RESPONSE !== "false",
+  },
+  // Anlamsız/gürültü transkriptlerini eleme eşikleri
+  minTranscriptChars: Number(process.env.AI_MIN_TRANSCRIPT_CHARS || 3),
+  minTranscriptWordChars: Number(process.env.AI_MIN_TRANSCRIPT_WORD_CHARS || 2),
 };
+
+// ====================== TRANSKRİPT DOĞRULAMA KATMANI ======================
+// Nefes, öksürük, boğaz temizleme, "hı/ıh/eee/şş", tek harf, yarım kelime,
+// yalnızca noktalama ve arka plandaki anlamsız sesler gerçek talep sayılmaz.
+const FILLER_WORDS = new Set([
+  "hı", "hi", "hı hı", "hıhı", "ıh", "ııh", "ıı", "ı", "eee", "ee", "e", "ııı",
+  "şş", "ş", "ah", "oh", "hmm", "hm", "mm", "mhm", "ha", "he", "aa", "a", "ee ee",
+  "öhö", "öhöm", "ehm", "ahem", "uh", "uhm", "um", "hah", "of", "off", "yani",
+]);
+
+const NOISE_PATTERNS = [
+  /^\[.*\]$/, // [gürültü], [müzik] gibi etiketler
+  /^\(.*\)$/,
+  /^(altyazı|altyazi|abone|teşekkür|müzik|music|silence|sessizlik)\b/i, // whisper halüsinasyonları
+];
+
+function normalizeTranscript(raw) {
+  return String(raw || "")
+    .toLowerCase()
+    .replace(/[.,!?;:"'`…]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Transkript gerçek bir kullanıcı ifadesi mi? */
+function isMeaningfulSpeech(raw) {
+  const text = normalizeTranscript(raw);
+  if (!text) return false;
+  if (text.length < CFG.minTranscriptChars) return false;
+  if (NOISE_PATTERNS.some((re) => re.test(text))) return false;
+  if (!/[a-zçğıöşü]/i.test(text)) return false; // yalnızca noktalama/sayı
+
+  const words = text.split(" ").filter(Boolean);
+  const meaningful = words.filter(
+    (w) => w.length >= CFG.minTranscriptWordChars && !FILLER_WORDS.has(w),
+  );
+  if (meaningful.length === 0) return false;
+  // Tek kelime ve o kelime çok kısaysa (yarım kelime/tek harf) işleme alma
+  if (meaningful.length === 1 && meaningful[0].length < CFG.minTranscriptChars) return false;
+  return true;
+}
+
 
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 
@@ -363,22 +422,23 @@ async function startRealtime(uuid, call) {
               transcription: { model: "whisper-1", language: "tr" },
               // Telefon hattı gürültüsünü bastır: öksürük, nefes, arka plan sesi
               // konuşma olarak yorumlanmasın.
-              noise_reduction: { type: "far_field" },
+              ...(CFG.noiseReduction && CFG.noiseReduction !== "off"
+                ? { noise_reduction: { type: CFG.noiseReduction } }
+                : {}),
               turn_detection: {
-                type: "server_vad",
-                threshold: 0.9,
-                prefix_padding_ms: 300,
-                silence_duration_ms: 1200,
-                create_response: true,
-                // Arka plan sesi/gürültü konuşmayı kesmesin: asistan cümlesini bitirir.
-                interrupt_response: false,
+                type: CFG.vad.type,
+                threshold: CFG.vad.threshold,
+                prefix_padding_ms: CFG.vad.prefixPaddingMs,
+                silence_duration_ms: CFG.vad.silenceDurationMs,
+                create_response: CFG.vad.createResponse,
+                interrupt_response: CFG.vad.interruptResponse,
               },
 
             },
             output: {
               format: { type: "audio/pcm", rate: 24000 },
-              voice: ctx.voice || "coral",
-              speed: 1.0,
+              voice: ctx.voice || CFG.voice,
+              speed: CFG.voiceSpeed,
             },
 
           },
@@ -453,11 +513,34 @@ async function startRealtime(uuid, call) {
       call.responseActive = false;
       call.flushTail = true;
     } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
-      call.transcript.push({ role: "danisan", text: ev.transcript, at: new Date().toISOString() });
+      // Doğrulama katmanı: anlamsız ses/gürültü ise ne kayda geçer ne cevap üretilir.
+      if (isMeaningfulSpeech(ev.transcript)) {
+        call.lastUserSpeechValid = true;
+        call.transcript.push({ role: "danisan", text: ev.transcript, at: new Date().toISOString() });
+      } else {
+        call.lastUserSpeechValid = false;
+        log("Anlamsız ses yok sayıldı:", JSON.stringify(ev.transcript || "").slice(0, 80));
+        if (call.responseActive) {
+          try {
+            ws.send(JSON.stringify({ type: "response.cancel" }));
+          } catch {}
+          call.responseActive = false;
+          call.outBuf = Buffer.alloc(0);
+        }
+      }
     } else if (ev.type === "response.output_audio_transcript.done" || ev.type === "response.audio_transcript.done") {
       call.transcript.push({ role: "asistan", text: ev.transcript, at: new Date().toISOString() });
 
     } else if (ev.type === "response.function_call_arguments.done") {
+      // Gürültü/dolgu sesi hiçbir zaman araç çağrısına (özellikle aktarıma) yol açmaz.
+      if (call.lastUserSpeechValid === false) {
+        log("Geçersiz transkript sonrası araç çağrısı engellendi:", ev.name);
+        await toolOutput(call, ev.call_id, {
+          ok: false,
+          message: "Anlaşılır bir yanıt alınmadı. Danışana kısaca tekrar sor, işlem yapma.",
+        });
+        return;
+      }
       await handleTool(uuid, call, ev);
     } else if (ev.type === "error") {
       log("OpenAI hata:", JSON.stringify(ev.error || ev).slice(0, 400));
