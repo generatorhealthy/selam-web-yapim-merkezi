@@ -422,22 +422,23 @@ async function startRealtime(uuid, call) {
               transcription: { model: "whisper-1", language: "tr" },
               // Telefon hattı gürültüsünü bastır: öksürük, nefes, arka plan sesi
               // konuşma olarak yorumlanmasın.
-              noise_reduction: { type: "far_field" },
+              ...(CFG.noiseReduction && CFG.noiseReduction !== "off"
+                ? { noise_reduction: { type: CFG.noiseReduction } }
+                : {}),
               turn_detection: {
-                type: "server_vad",
-                threshold: 0.9,
-                prefix_padding_ms: 300,
-                silence_duration_ms: 1200,
-                create_response: true,
-                // Arka plan sesi/gürültü konuşmayı kesmesin: asistan cümlesini bitirir.
-                interrupt_response: false,
+                type: CFG.vad.type,
+                threshold: CFG.vad.threshold,
+                prefix_padding_ms: CFG.vad.prefixPaddingMs,
+                silence_duration_ms: CFG.vad.silenceDurationMs,
+                create_response: CFG.vad.createResponse,
+                interrupt_response: CFG.vad.interruptResponse,
               },
 
             },
             output: {
               format: { type: "audio/pcm", rate: 24000 },
-              voice: ctx.voice || "coral",
-              speed: 1.0,
+              voice: ctx.voice || CFG.voice,
+              speed: CFG.voiceSpeed,
             },
 
           },
