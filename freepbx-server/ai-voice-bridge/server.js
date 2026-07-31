@@ -354,14 +354,17 @@ async function startRealtime(uuid, call) {
             input: {
               format: { type: "audio/pcm", rate: 24000 },
               transcription: { model: "whisper-1", language: "tr" },
-              // Semantic VAD: cümlenin gerçekten bittiğini anlar; öksürük, "hı hı",
-              // arka plan gürültüsü gibi ufak seslerde konuşmayı kesmez.
+              // Gürültü hassasiyeti düşük server VAD: öksürük, nefes, kapı sesi
+              // veya arkadaki konuşma konuşmayı tetiklemez.
               turn_detection: {
-                type: "semantic_vad",
-                eagerness: "low",
+                type: "server_vad",
+                threshold: 0.75,
+                prefix_padding_ms: 400,
+                silence_duration_ms: 900,
                 create_response: true,
                 interrupt_response: true,
               },
+
             },
             output: {
               format: { type: "audio/pcm", rate: 24000 },
