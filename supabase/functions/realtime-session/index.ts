@@ -100,16 +100,21 @@ Deno.serve(async (req) => {
       };
     }
 
+    const payload = { expires_after: { anchor: "created_at", seconds: 600 }, session };
+    console.log("realtime session payload", JSON.stringify(payload));
+
+    // ?debug=1 → anahtar üretmeden gönderilen tam payload'ı döndür.
+    if (new URL(req.url).searchParams.get("debug") === "1") {
+      return json({ voice_env: VOICE || null, payload });
+    }
+
     const res = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        expires_after: { anchor: "created_at", seconds: 600 },
-        session,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const text = await res.text();
@@ -123,7 +128,7 @@ Deno.serve(async (req) => {
       client_secret: data.value ?? data.client_secret?.value,
       expires_at: data.expires_at,
       model: data.session?.model ?? MODEL,
-      voice: data.session?.audio?.output?.voice ?? VOICE,
+      voice: data.session?.audio?.output?.voice ?? VOICE ?? null,
       prompt_id: PROMPT_ID || null,
       prompt_version: PROMPT_VERSION || null,
     });
