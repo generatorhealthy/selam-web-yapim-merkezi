@@ -12,7 +12,9 @@ const json = (body: unknown, status = 200) =>
   });
 
 const MODEL = Deno.env.get("OPENAI_REALTIME_MODEL") || "gpt-realtime";
-const VOICE = Deno.env.get("OPENAI_REALTIME_VOICE") || "marin";
+// Ses YALNIZCA ortam değişkeninden gelir; kodda sabit ses yok.
+// Boşsa OpenAI Platform'daki kayıtlı prompt'un sesi kullanılır.
+const VOICE = (Deno.env.get("OPENAI_REALTIME_VOICE") || "").trim();
 const SPEED = Number(Deno.env.get("OPENAI_REALTIME_SPEED") || 1.0);
 const PROMPT_ID = Deno.env.get("OPENAI_REALTIME_PROMPT_ID") || "";
 const PROMPT_VERSION = Deno.env.get("OPENAI_REALTIME_PROMPT_VERSION") || "";
