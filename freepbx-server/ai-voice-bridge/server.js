@@ -513,7 +513,6 @@ async function startRealtime(uuid, call) {
       call.responseActive = false;
       call.flushTail = true;
     } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
-    } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
       // Doğrulama katmanı: anlamsız ses/gürültü ise ne kayda geçer ne cevap üretilir.
       if (isMeaningfulSpeech(ev.transcript)) {
         call.lastUserSpeechValid = true;
