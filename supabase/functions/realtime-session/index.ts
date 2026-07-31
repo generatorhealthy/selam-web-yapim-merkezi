@@ -67,7 +67,8 @@ Deno.serve(async (req) => {
 
     const session: Record<string, unknown> = {
       type: "realtime",
-      model: MODEL,
+      // Kayıtlı prompt kendi modelini taşır; model alanı gönderilirse çakışır.
+      ...(PROMPT_ID ? {} : { model: MODEL }),
       output_modalities: ["audio"],
       audio: {
         input: {
@@ -119,8 +120,8 @@ Deno.serve(async (req) => {
     return json({
       client_secret: data.value ?? data.client_secret?.value,
       expires_at: data.expires_at,
-      model: MODEL,
-      voice: VOICE,
+      model: data.session?.model ?? MODEL,
+      voice: data.session?.audio?.output?.voice ?? VOICE,
       prompt_id: PROMPT_ID || null,
       prompt_version: PROMPT_VERSION || null,
     });
