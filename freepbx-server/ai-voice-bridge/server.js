@@ -513,11 +513,35 @@ async function startRealtime(uuid, call) {
       call.responseActive = false;
       call.flushTail = true;
     } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
-      call.transcript.push({ role: "danisan", text: ev.transcript, at: new Date().toISOString() });
+    } else if (ev.type === "conversation.item.input_audio_transcription.completed") {
+      // Doğrulama katmanı: anlamsız ses/gürültü ise ne kayda geçer ne cevap üretilir.
+      if (isMeaningfulSpeech(ev.transcript)) {
+        call.lastUserSpeechValid = true;
+        call.transcript.push({ role: "danisan", text: ev.transcript, at: new Date().toISOString() });
+      } else {
+        call.lastUserSpeechValid = false;
+        log("Anlamsız ses yok sayıldı:", JSON.stringify(ev.transcript || "").slice(0, 80));
+        if (call.responseActive) {
+          try {
+            ws.send(JSON.stringify({ type: "response.cancel" }));
+          } catch {}
+          call.responseActive = false;
+          call.outBuf = Buffer.alloc(0);
+        }
+      }
     } else if (ev.type === "response.output_audio_transcript.done" || ev.type === "response.audio_transcript.done") {
       call.transcript.push({ role: "asistan", text: ev.transcript, at: new Date().toISOString() });
 
     } else if (ev.type === "response.function_call_arguments.done") {
+      // Gürültü/dolgu sesi hiçbir zaman araç çağrısına (özellikle aktarıma) yol açmaz.
+      if (call.lastUserSpeechValid === false) {
+        log("Geçersiz transkript sonrası araç çağrısı engellendi:", ev.name);
+        await toolOutput(call, ev.call_id, {
+          ok: false,
+          message: "Anlaşılır bir yanıt alınmadı. Danışana kısaca tekrar sor, işlem yapma.",
+        });
+        return;
+      }
       await handleTool(uuid, call, ev);
     } else if (ev.type === "error") {
       log("OpenAI hata:", JSON.stringify(ev.error || ev).slice(0, 400));
