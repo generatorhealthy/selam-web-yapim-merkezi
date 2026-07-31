@@ -12,7 +12,9 @@ const json = (body: unknown, status = 200) =>
   });
 
 const MODEL = Deno.env.get("OPENAI_REALTIME_MODEL") || "gpt-realtime";
-const VOICE = Deno.env.get("OPENAI_REALTIME_VOICE") || "marin";
+// Ses YALNIZCA ortam değişkeninden gelir; kodda sabit ses yok.
+// Boşsa OpenAI Platform'daki kayıtlı prompt'un sesi kullanılır.
+const VOICE = (Deno.env.get("OPENAI_REALTIME_VOICE") || "").trim();
 const SPEED = Number(Deno.env.get("OPENAI_REALTIME_SPEED") || 1.0);
 const PROMPT_ID = Deno.env.get("OPENAI_REALTIME_PROMPT_ID") || "";
 const PROMPT_VERSION = Deno.env.get("OPENAI_REALTIME_PROMPT_VERSION") || "";
@@ -85,7 +87,7 @@ Deno.serve(async (req) => {
             interrupt_response: VAD_INTERRUPT,
           },
         },
-        output: { voice: VOICE, speed: SPEED },
+        output: { ...(VOICE ? { voice: VOICE } : {}), speed: SPEED },
       },
       tools: TOOLS,
     };
@@ -98,16 +100,21 @@ Deno.serve(async (req) => {
       };
     }
 
+    const payload = { expires_after: { anchor: "created_at", seconds: 600 }, session };
+    console.log("realtime session payload", JSON.stringify(payload));
+
+    // ?debug=1 → anahtar üretmeden gönderilen tam payload'ı döndür.
+    if (new URL(req.url).searchParams.get("debug") === "1") {
+      return json({ voice_env: VOICE || null, payload });
+    }
+
     const res = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        expires_after: { anchor: "created_at", seconds: 600 },
-        session,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const text = await res.text();
@@ -121,7 +128,7 @@ Deno.serve(async (req) => {
       client_secret: data.value ?? data.client_secret?.value,
       expires_at: data.expires_at,
       model: data.session?.model ?? MODEL,
-      voice: data.session?.audio?.output?.voice ?? VOICE,
+      voice: data.session?.audio?.output?.voice ?? VOICE ?? null,
       prompt_id: PROMPT_ID || null,
       prompt_version: PROMPT_VERSION || null,
     });
