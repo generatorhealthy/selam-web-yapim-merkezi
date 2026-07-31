@@ -79,6 +79,7 @@ const TestInterface = lazy(() => import("./components/TestInterface"));
 const TestTaking = lazy(() => import("./components/TestTaking"));
 const TestResult = lazy(() => import("./pages/TestResult"));
 const SpecialistRegistration = lazy(() => import("./pages/SpecialistRegistration"));
+const VoiceAssistant = lazy(() => import("./pages/VoiceAssistant"));
 const PatientSignup = lazy(() => import("./pages/PatientSignup"));
 const PatientLogin = lazy(() => import("./pages/PatientLogin"));
 const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
@@ -259,6 +260,7 @@ const AppContent = () => {
               <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesContract />} />
               <Route path="/distance-sales-contract" element={<DistanceSalesContract />} />
               <Route path="/kayit-ol" element={<SpecialistRegistration />} />
+              <Route path="/sesli-asistan" element={<VoiceAssistant />} />
             </>
           )}
 
@@ -316,6 +318,7 @@ const AppContent = () => {
               <Route path="/giris-yap" element={<LoginPage />} />
               <Route path="/sifre-sifirla" element={<ResetPassword />} />
               <Route path="/kayit-ol" element={<SpecialistRegistration />} />
+              <Route path="/sesli-asistan" element={<VoiceAssistant />} />
               <Route path="/uye-ol" element={<PatientSignup />} />
               <Route path="/danisan-giris" element={<PatientLogin />} />
               <Route path="/danisan-paneli" element={<PatientDashboard />} />
