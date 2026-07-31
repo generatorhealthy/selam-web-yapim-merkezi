@@ -181,9 +181,9 @@ Deno.serve(async (req) => {
         therapy_label: therapyLabel(lead.therapy_type),
         category: family ? "Aile Danışmanı" : "Psikolog / Psikolojik Danışman / Klinik Psikolog",
       },
-      // ChatGPT'deki sıcak/samimi kadın sesine en yakın Realtime sesi.
-      // Veritabanındaki eski ayar yeniden devreye girip sesi değiştirmesin.
-      voice: "coral",
+      // Ses seçimi köprü sunucusundaki OPENAI_REALTIME_VOICE ortam değişkeninden
+      // yönetilir; buradan sabit bir değer göndermiyoruz.
+      voice: null,
       instructions: buildSystemPrompt(lead, family, leadOnline, settings?.system_prompt || null),
       face_to_face_cities: cities,
       online_candidate_count: onlineList.length,
