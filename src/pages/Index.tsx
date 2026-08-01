@@ -219,7 +219,7 @@ const Index = () => {
                     <div className="relative">
                       <MapPin className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-primary z-20" />
                       <Select value={selectedCity} onValueChange={setSelectedCity}>
-                        <SelectTrigger className="pl-14 h-16 text-gray-900 border-2 border-gray-200 focus:border-primary text-lg rounded-xl bg-white/90 backdrop-blur-sm transition-all duration-300 hover:border-primary/50">
+                        <SelectTrigger aria-label="Şehir seçin" className="pl-14 h-16 text-gray-900 border-2 border-gray-200 focus:border-primary text-lg rounded-xl bg-white/90 backdrop-blur-sm transition-all duration-300 hover:border-primary/50">
                           <SelectValue placeholder="Şehir seçin" />
                         </SelectTrigger>
                         <SelectContent className="bg-white/95 backdrop-blur-lg border-2 border-gray-200 shadow-xl max-h-60 overflow-y-auto rounded-xl">
