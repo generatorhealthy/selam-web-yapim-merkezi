@@ -126,7 +126,6 @@ Deno.serve(async (req) => {
         .replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
     }
 
-    const currentDate = new Date().toISOString().split('T')[0]
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
