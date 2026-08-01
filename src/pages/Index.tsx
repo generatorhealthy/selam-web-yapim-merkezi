@@ -127,7 +127,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Helmet>
-        <title>Doktorum Ol Randevu Sitesi - Randevu Al</title>
+        <title>Doktorum Ol | Online ve Yüz Yüze Uzman Randevusu</title>
         <meta name="description" content="Doktorum Ol ile psikolog, psikolojik danışman, aile danışmanı, diyetisyen ve daha birçok branşta uzmanı bul; online ya da yüz yüze kolayca randevu al." />
         <link rel="canonical" href="https://doktorumol.com.tr/" />
         <meta property="og:url" content="https://doktorumol.com.tr/" />
@@ -148,7 +148,7 @@ const Index = () => {
           <div className="max-w-6xl mx-auto">
             <header className="text-center mb-8 md:mb-12">
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white">
-                Doktorum Ol Uzman Randevu Platformu
+                Doktorum Ol ile Size Uygun Uzmanı Bulun
               </h1>
               <p className="mt-4 text-base md:text-lg text-white/90 max-w-2xl mx-auto">
                 Psikolog, aile danışmanı, diyetisyen ve birçok branşta güvenilir uzmanlarla kolayca randevu alın.
