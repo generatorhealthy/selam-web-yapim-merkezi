@@ -125,7 +125,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Helmet>
+        <title>Doktorum Ol | Online ve Yüz Yüze Uzman Randevu Sitesi</title>
+        <meta name="description" content="Doktorum Ol ile psikolog, psikolojik danışman, aile danışmanı, diyetisyen ve daha birçok branşta uzmanı bul; online ya da yüz yüze kolayca randevu al." />
+        <link rel="canonical" href="https://doktorumol.com.tr/" />
+        <meta property="og:url" content="https://doktorumol.com.tr/" />
+      </Helmet>
       <HorizontalNavigation />
+      
+
       
       {/* Hero Section */}
       <div className="hero-section above-fold bg-gradient-to-br from-primary via-blue-600 to-purple-700 text-white relative overflow-hidden min-h-[70vh]">
