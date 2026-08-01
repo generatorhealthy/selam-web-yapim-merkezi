@@ -1,10 +1,17 @@
 
+import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 
 const VisitorConsultantAgreement = () => {
   return (
     <div className="min-h-screen bg-gray-50">
+      <Helmet>
+        <title>Ziyaretçi-Danışan Sözleşmesi | Doktorum Ol</title>
+        <meta name="description" content="Doktorum Ol ziyaretçi ve danışan kullanım sözleşmesi." />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href="https://doktorumol.com.tr/ziyaretci-danisan-sozlesmesi" />
+      </Helmet>
       <HorizontalNavigation />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
