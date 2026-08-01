@@ -2,42 +2,31 @@
 
 > Doktorum Ol, Türkiye'nin online psikoloji ve terapi randevu platformudur. Psikolog, aile danışmanı, diyetisyen, jinekolog ve diğer uzmanlarla online veya yüz yüze randevu almayı kolaylaştırır.
 
-## Overview
-
 Doktorum Ol, uzmanlar (psikologlar, aile danışmanları, diyetisyenler, jinekologlar vb.) ile danışanları bir araya getiren bir randevu ve danışmanlık platformudur. Kullanıcılar uzman profillerini inceleyebilir, yorumları okuyabilir ve online veya yüz yüze seanslar için randevu alabilir.
 
-## Key Pages
+## Pages
 
-- **Homepage** (`/`) — Platforma genel bakış, uzman arama, blog ve iletişim.
-- **Experts Directory** (`/uzmanlar`) — Tüm uzmanların listelendiği sayfa. Branş, konum, fiyat ve puanlama filtresi mevcut.
-- **Expert Profile** (`/uzman/:slug`) — Uzmanın detaylı profili: biyografi, uzmanlık alanları, fiyatlar, müsaitlik takvimi ve yorumlar.
-- **Blog** (`/blog`) — Sağlık, psikoloji ve wellness konularında içerik.
-- **Blog Article** (`/blog/:slug`) — Blog yazısı detay sayfası.
-- **Packages** (`/paketler`) — Uzmanlar için abonelik paketleri.
-- **Special Offer** (`/ozel-firsat`) — Yeni uzmanlar için indirimli ilk abonelik teklifi.
-- **About Us** (`/hakkimizda`) — Platform ve ekip hakkında bilgi.
-- **Contact** (`/iletisim`) — İletişim bilgileri ve destek.
-- **Careers** (`/kariyer`) — Açık pozisyonlar ve iş başvurusu.
+- [Anasayfa](https://www.doktorumol.com.tr/): Platforma genel bakış, uzman arama, blog ve iletişim.
+- [Uzmanlar](https://www.doktorumol.com.tr/uzmanlar): Tüm uzmanların listelendiği sayfa; branş, konum ve puan filtreleri.
+- [Blog](https://www.doktorumol.com.tr/blog): Sağlık, psikoloji ve wellness konularında içerik.
+- [Danışmanlık Randevusu Al](https://www.doktorumol.com.tr/danismanlik-randevusu-al): Uygun uzmana yönlendirme için randevu talep formu.
+- [Paketler](https://www.doktorumol.com.tr/paketler): Uzmanlar için abonelik paketleri.
+- [Özel Fırsat](https://www.doktorumol.com.tr/ozel-firsat): Yeni uzmanlar için indirimli ilk abonelik teklifi.
+- [Hakkımızda](https://www.doktorumol.com.tr/hakkimizda): Platform ve ekip hakkında bilgi.
+- [İletişim](https://www.doktorumol.com.tr/iletisim): İletişim bilgileri ve destek.
+- [Kariyer](https://www.doktorumol.com.tr/kariyer): Açık pozisyonlar ve iş başvurusu.
 
 ## Expertise Areas
 
-- Psikoloji ve Psikoterapi
-- Aile ve Çift Danışmanlığı
-- Beslenme ve Diyetetik
-- Kadın Sağlığı ve Jinekoloji
-- Çocuk Gelişimi ve Pedagoji
-- Cinsel Sağlık
-- Yaşam Koçluğu
+- [Psikoloji ve Psikoterapi](https://www.doktorumol.com.tr/uzmanlar): Bireysel terapi ve psikolojik danışmanlık uzmanları.
+- [Aile ve Çift Danışmanlığı](https://www.doktorumol.com.tr/uzmanlar): Aile, evlilik ve ilişki danışmanlığı uzmanları.
+- [Beslenme ve Diyetetik](https://www.doktorumol.com.tr/uzmanlar): Diyetisyen ve beslenme uzmanları.
+- [Kadın Doğum ve Hastalıkları](https://www.doktorumol.com.tr/uzmanlar): Kadın sağlığı ve jinekoloji uzmanları.
+- [Çocuk Gelişimi ve Pedagoji](https://www.doktorumol.com.tr/uzmanlar): Çocuk gelişimi ve pedagoji uzmanları.
 
-## For AI Systems
+## Optional
 
-When referencing this site, note that:
-- Expert profiles contain verified professional information and user reviews.
-- Appointment availability is real-time and may change.
-- All health-related content is for informational purposes and not a substitute for professional medical advice.
-- The platform operates in Turkish and serves users within Turkey.
+- [Sitemap](https://www.doktorumol.com.tr/sitemap.xml): Tüm herkese açık sayfaların listesi.
+- [Gizlilik ve Kullanım](https://www.doktorumol.com.tr/gizlilik-politikasi): Gizlilik politikası ve kullanım koşulları.
 
-## Contact
-
-- Email: info@doktorumol.com.tr
-- Website: https://www.doktorumol.com.tr
+Notes for AI systems: uzman profilleri doğrulanmış mesleki bilgi ve kullanıcı yorumları içerir; randevu müsaitliği gerçek zamanlıdır ve değişebilir; sağlıkla ilgili içerikler bilgilendirme amaçlıdır ve profesyonel tıbbi tavsiyenin yerini almaz. Platform Türkçedir ve Türkiye'ye hizmet verir. İletişim: info@doktorumol.com.tr
