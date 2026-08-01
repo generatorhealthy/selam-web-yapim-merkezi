@@ -6,10 +6,11 @@ RewriteCond %{HTTP_HOST} ^www\.doktorumol\.com\.tr$ [NC]
 RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
 
 # ============================================
-# DYNAMIC SITEMAP - MUST BE AT TOP (before any catch-all rules)
-# Redirects sitemap.xml to Supabase edge function for live data
+# SITEMAP - Kendi domainimizde GERÇEK dosya olarak sunulur.
+# (Google cross-host sitemap yönlendirmelerini yok sayıyor.)
+# Dosya build öncesi scripts/generate-sitemap.mjs ile güncellenir.
 # ============================================
-RewriteRule ^sitemap\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/generate-sitemap?format=xml [R=302,L,NE]
+RewriteRule ^sitemap\.xml$ - [L]
 
 # ============================================
 # RSS FEED - For Pinterest, Google News, RSS readers

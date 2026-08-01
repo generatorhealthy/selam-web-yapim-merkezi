@@ -126,44 +126,37 @@ Deno.serve(async (req) => {
         .replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
     }
 
-    const currentDate = new Date().toISOString().split('T')[0]
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Ana Sayfalar -->
   <url>
     <loc>https://doktorumol.com.tr/</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/hakkimizda</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/iletisim</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/paketler</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlar</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -171,61 +164,51 @@ Deno.serve(async (req) => {
   <!-- Uzman Kategorileri -->
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/aile-danismani</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/cildiye</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/dil-ve-konusma-terapisti</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/diyetisyen</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/egitim-danismanligi</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/fizyoterapist</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/iliski-danismani</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/kadin-dogum</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/psikolog</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/psikolojik-danismanlik</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -263,31 +246,26 @@ ${(testsData || []).map((t: any) => `  <url>
   <!-- Yasal Sayfalar -->
   <url>
     <loc>https://doktorumol.com.tr/gizlilik-politikasi</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/aydinlatma-metni</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/mesafeli-satis-sozlesmesi</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/ziyaretci-danisan-sozlesmesi</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/yorum-kurallari</loc>
-    <lastmod>${currentDate}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
