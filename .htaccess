@@ -125,8 +125,8 @@ Options -Indexes
 # Robots.txt doğrudan sunulsun
 RewriteRule ^robots\.txt$ - [L]
 
-# Sitemap.xml dinamik olarak edge function'dan sunulsun (301 kalıcı yönlendirme - Google için güvenilir)
-RewriteRule ^sitemap\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/generate-sitemap?format=xml [R=301,L]
+# Sitemap.xml kendi domainimizde gerçek dosya olarak sunulsun (yönlendirme yok)
+RewriteRule ^sitemap\.xml$ - [L]
 
 # Specific blog post redirects
 RewriteRule ^uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur/?$ /blog/uzun-sure-cinsel-iliskiye-girmezseniz-ne-olur [R=301,L]
