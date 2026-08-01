@@ -12,5 +12,9 @@ Disallow: /odeme-basarili
 Disallow: /kariyer
 Disallow: /partner
 Disallow: /partner-giris
+Disallow: /visitor-consultant-agreement
+Disallow: /ziyaretci-danisan-sozlesmesi
+Disallow: /comment-rules
+Disallow: /yorum-kurallari
 
 Sitemap: https://doktorumol.com.tr/sitemap.xml

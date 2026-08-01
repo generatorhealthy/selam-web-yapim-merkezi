@@ -9,6 +9,8 @@ const CommentRules = () => {
         <title>Yorum Yayınlama Kuralları - Doktorum Ol</title>
         <meta name="description" content="Doktorum Ol platformunda yorum yapma kuralları ve değerlendirme kriterleri hakkında bilgi alın." />
         <meta name="keywords" content="yorum kuralları, değerlendirme, doktor yorumu, platform kuralları" />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href="https://doktorumol.com.tr/yorum-kurallari" />
       </Helmet>
       
       <div className="min-h-screen bg-gray-50">
