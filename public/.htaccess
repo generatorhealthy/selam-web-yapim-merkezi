@@ -232,3 +232,10 @@ RewriteRule ^(.*)$ /index.html [L,QSA]
 
 # ErrorDocument overrides removed to preserve real 404/500 responses
 # (prevents missing JS/CSS files from being rewritten to / and breaking hydration)
+# ===== Charset (HTTP header) =====
+AddDefaultCharset UTF-8
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|htm)$">
+        Header set Content-Type "text/html; charset=UTF-8"
+    </FilesMatch>
+</IfModule>
