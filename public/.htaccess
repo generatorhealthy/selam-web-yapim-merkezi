@@ -169,6 +169,10 @@ RewriteRule ^ayse-dolek-kerbel/?$ /aile-danismani/ayse-dolek-kerbel [R=301,L]
 # Redirect system/campaign pages that should never live under /blog/
 RewriteRule ^blog/(partner-giris|partner|ozel-firsat|bu-aya-ozel|danismanlik-randevusu-al)/?$ /$1 [R=301,L]
 
+# Consolidate duplicate legal-page aliases to one canonical URL
+RewriteRule ^visitor-consultant-agreement/?$ /ziyaretci-danisan-sozlesmesi [R=301,L]
+RewriteRule ^comment-rules/?$ /yorum-kurallari [R=301,L]
+
 # Blog listing page - /blog must stay as /blog (not redirect)
 # Blog posts use /blog/slug format - no redirect needed
 
