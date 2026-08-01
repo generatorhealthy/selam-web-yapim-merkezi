@@ -36,6 +36,22 @@ const Footer = () => {
             </Link>
           </div>
 
+          {/* Sosyal Medya */}
+          <div className="flex flex-wrap justify-center items-center gap-4 text-xs">
+            <a href="https://www.facebook.com/doktorumol/" target="_blank" rel="me noopener noreferrer" aria-label="Doktorum Ol Facebook sayfası" className="hover:text-blue-600 transition-colors">
+              Facebook
+            </a>
+            <a href="https://www.instagram.com/doktorumolcom.tr" target="_blank" rel="me noopener noreferrer" aria-label="Doktorum Ol Instagram profili" className="hover:text-blue-600 transition-colors">
+              Instagram
+            </a>
+            <a href="https://x.com/Doktorum_Ol" target="_blank" rel="me noopener noreferrer" aria-label="Doktorum Ol X (Twitter) profili" className="hover:text-blue-600 transition-colors">
+              X
+            </a>
+            <a href="https://tr.linkedin.com/company/doktorum-ol" target="_blank" rel="me noopener noreferrer" aria-label="Doktorum Ol LinkedIn sayfası" className="hover:text-blue-600 transition-colors">
+              LinkedIn
+            </a>
+          </div>
+
           <p className="border-t border-gray-200 pt-3 text-left text-xs md:text-sm text-gray-600 leading-relaxed max-w-6xl mx-auto">
             Doktorumol.com.tr, sağlık profesyonelleri ile danışanlar arasında köprü kuran bağımsız bir dijital platformdur. Platformumuzda paylaşılan görüşler, ilgili uzmanların talebi veya ricası olmaksızın, kullanıcılar tarafından özgür iradeleriyle kaleme alınmaktadır. Amacımız, kamuoyunu sağlık konularında bilgilendirmek ve doktora ulaşım sürecini şeffaflaştırmaktır. Web sitemiz, herhangi bir sağlık kurumunu veya uzmanını referans göstermemekte; yalnızca bilgi sunumu ve erişim desteği sağlamaktadır.
           </p>
