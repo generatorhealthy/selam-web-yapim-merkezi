@@ -148,7 +148,7 @@ const Index = () => {
           <div className="max-w-6xl mx-auto">
             <header className="text-center mb-8 md:mb-12">
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white">
-                Doktorum Ol Uzman Randevu Platformu
+                Doktorum Ol ile Size Uygun Uzmanı Bulun
               </h1>
               <p className="mt-4 text-base md:text-lg text-white/90 max-w-2xl mx-auto">
                 Psikolog, aile danışmanı, diyetisyen ve birçok branşta güvenilir uzmanlarla kolayca randevu alın.
