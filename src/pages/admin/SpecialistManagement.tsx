@@ -837,7 +837,7 @@ const SpecialistManagement = () => {
                             onClick={() => {
                               const message = `${specialist.name} Uzmanından bilgi almak istiyorum`;
                               const encodedMessage = encodeURIComponent(message);
-                              const whatsappUrl = `https://wa.me/902162350650?text=${encodedMessage}`;
+                              const whatsappUrl = `https://wa.me/905055566556?text=${encodedMessage}`;
                               window.open(whatsappUrl, '_blank');
                             }}
                             className="border-green-200 text-green-700 hover:bg-green-50"
