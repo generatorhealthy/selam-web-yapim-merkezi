@@ -251,7 +251,7 @@ const DoctorList = () => {
   };
 
   const handleWhatsAppClick = (phone?: string) => {
-    const whatsappUrl = `https://wa.me/902162350650`;
+    const whatsappUrl = `https://wa.me/905055566556`;
     window.open(whatsappUrl, '_blank');
   };
 
