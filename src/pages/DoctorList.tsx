@@ -256,9 +256,7 @@ const DoctorList = () => {
   };
 
   const handleCallClick = (phone?: string) => {
-    if (phone) {
-      window.location.href = `tel:${phone}`;
-    }
+    window.location.href = `tel:${resolveCallNumber(phone)}`;
   };
 
   const handleProfileClick = (specialist: Specialist) => {
