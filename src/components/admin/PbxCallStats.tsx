@@ -442,7 +442,34 @@ export const PbxCallStats = () => {
 
           {/* Danışan Yönlendirmeleri */}
           {(() => {
-            const transfers = data?.transfers ?? [];
+            const raw = data?.transfers ?? [];
+            // Aynı danışan + aynı uzmana 30 dakika içinde yapılan tekrar denemeleri tek satırda birleştir
+            const sorted = [...raw].sort(
+              (a, b) => new Date(b.calldate).getTime() - new Date(a.calldate).getTime(),
+            );
+            type T = (typeof sorted)[number] & { deneme?: number };
+            const groups: T[] = [];
+            const WINDOW = 30 * 60 * 1000;
+            for (const t of sorted) {
+              const g = groups.find(
+                (x) =>
+                  phoneKey(x.musteri) === phoneKey(t.musteri) &&
+                  String(x.uzman_ext) === String(t.uzman_ext) &&
+                  Math.abs(new Date(x.calldate).getTime() - new Date(t.calldate).getTime()) <= WINDOW,
+              );
+              if (!g) {
+                groups.push({ ...t, deneme: 1 });
+                continue;
+              }
+              g.deneme = (g.deneme ?? 1) + 1;
+              // Açılan bir deneme varsa onu baz al
+              if (num(t.acti) === 1 && num(g.acti) !== 1) {
+                g.acti = t.acti;
+                g.sure = t.sure;
+                g.calldate = t.calldate;
+              }
+            }
+            const transfers = groups;
             const acti = transfers.filter((t) => num(t.acti) === 1).length;
             const acilmadi = transfers.length - acti;
             const toplamDk = transfers
@@ -455,6 +482,7 @@ export const PbxCallStats = () => {
                 .slice(0, 2)
                 .map((w) => w[0]?.toUpperCase() ?? "")
                 .join("");
+
 
             return (
               <Card className="overflow-hidden border-primary/20 shadow-sm">
