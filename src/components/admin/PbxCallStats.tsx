@@ -85,6 +85,8 @@ interface TransferRow {
   disposition: string;
   acti: number;
   yon: string;
+  linkedid?: string;
+  uniqueid?: string;
 }
 
 interface CdrResponse {
@@ -443,14 +445,43 @@ export const PbxCallStats = () => {
           {/* Danışan Yönlendirmeleri */}
           {(() => {
             const raw = data?.transfers ?? [];
-            // Aynı danışan + aynı uzmana 30 dakika içinde yapılan tekrar denemeleri tek satırda birleştir
             const sorted = [...raw].sort(
               (a, b) => new Date(b.calldate).getTime() - new Date(a.calldate).getTime(),
             );
             type T = (typeof sorted)[number] & { deneme?: number };
+
+            // 1) AYNI ÇAĞRININ PBX bacakları (leg) tek çağrıya indirgenir.
+            // Asterisk bir çağrıyı (gelen bacak + Local kanal + uzmana giden bacak)
+            // birden fazla CDR satırı olarak kaydeder. Aynı linkedid ya da
+            // 90 saniye içindeki aynı danışan-uzman kaydı tek çağrı sayılır.
+            const LEG_WINDOW = 90 * 1000;
+            const calls: T[] = [];
+            for (const t of sorted) {
+              const sameCall = calls.find((x) => {
+                if (phoneKey(x.musteri) !== phoneKey(t.musteri)) return false;
+                if (String(x.uzman_ext) !== String(t.uzman_ext)) return false;
+                if (x.linkedid && t.linkedid) return String(x.linkedid) === String(t.linkedid);
+                return (
+                  Math.abs(new Date(x.calldate).getTime() - new Date(t.calldate).getTime()) <= LEG_WINDOW
+                );
+              });
+              if (!sameCall) {
+                calls.push({ ...t });
+                continue;
+              }
+              // Bacaklardan biri açıldıysa çağrı "açıldı" kabul edilir
+              if (num(t.acti) === 1 && num(sameCall.acti) !== 1) {
+                sameCall.acti = t.acti;
+                sameCall.disposition = t.disposition;
+              }
+              if (num(t.sure) > num(sameCall.sure)) sameCall.sure = t.sure;
+            }
+
+            // 2) Aynı danışan + aynı uzmana 30 dakika içindeki GERÇEK tekrar aramalar
+            // tek satırda birleştirilir; deneme sayısı çağrı adedini gösterir.
             const groups: T[] = [];
             const WINDOW = 30 * 60 * 1000;
-            for (const t of sorted) {
+            for (const t of calls) {
               const g = groups.find(
                 (x) =>
                   phoneKey(x.musteri) === phoneKey(t.musteri) &&
@@ -462,7 +493,6 @@ export const PbxCallStats = () => {
                 continue;
               }
               g.deneme = (g.deneme ?? 1) + 1;
-              // Açılan bir deneme varsa onu baz al
               if (num(t.acti) === 1 && num(g.acti) !== 1) {
                 g.acti = t.acti;
                 g.sure = t.sure;

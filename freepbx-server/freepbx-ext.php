@@ -292,6 +292,8 @@ if ($action === 'cdr_stats') {
       (CASE WHEN $isExtSrc AND $isIntDst THEN dst ELSE src END) uzman_ext,
       billsec sure,
       disposition,
+      uniqueid,
+      linkedid,
       (disposition='ANSWERED' AND billsec > 0) acti,
       (CASE WHEN $isIntSrc AND $isExtDst THEN 'cikis' ELSE 'transfer' END) yon
     FROM cdr
