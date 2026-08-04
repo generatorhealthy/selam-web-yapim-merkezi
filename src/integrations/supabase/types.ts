@@ -3678,6 +3678,50 @@ export type Database = {
           },
         ]
       }
+      failed_payment_notifications: {
+        Row: {
+          call_error: string | null
+          call_started_at: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          order_id: string
+          sms_error: string | null
+          sms_sent_at: string | null
+        }
+        Insert: {
+          call_error?: string | null
+          call_started_at?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_id: string
+          sms_error?: string | null
+          sms_sent_at?: string | null
+        }
+        Update: {
+          call_error?: string | null
+          call_started_at?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_id?: string
+          sms_error?: string | null
+          sms_sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "failed_payment_notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorite_specialists: {
         Row: {
           created_at: string
