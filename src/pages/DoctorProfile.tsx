@@ -267,7 +267,7 @@ const DoctorProfile = () => {
     if (specialist?.phone) {
       window.open(`tel:${specialist.phone}`, '_self');
     } else {
-      window.open('tel:02162350650', '_self');
+      window.open('tel:05308232275', '_self');
     }
   };
 
