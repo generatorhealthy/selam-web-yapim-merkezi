@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, ArrowLeft, MessageCircle, Phone, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
+import { resolveCallNumber } from "@/utils/callNumber";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
@@ -158,9 +159,7 @@ const SpecialtyPage = () => {
   };
 
   const handleCallClick = (phone?: string) => {
-    if (phone) {
-      window.location.href = `tel:${phone}`;
-    }
+    window.location.href = `tel:${resolveCallNumber(phone)}`;
   };
 
   const handleProfileClick = (specialist: Specialist) => {

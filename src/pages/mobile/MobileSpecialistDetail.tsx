@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { resolveCallNumber } from "@/utils/callNumber";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import {
@@ -577,7 +578,7 @@ export default function MobileSpecialistDetail() {
             <MessageCircle className="w-4 h-4" />
           </button>
           <a
-            href={`tel:${specialist.phone || "02167060611"}`}
+            href={`tel:${resolveCallNumber(specialist.phone)}`}
             aria-label="Ara"
             className="w-12 h-12 rounded-full flex items-center justify-center m-pressable shrink-0"
             style={{
