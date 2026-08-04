@@ -54,11 +54,16 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const auth = await verifyAdminOrCron(req);
-  if (!auth.ok) {
-    return new Response(JSON.stringify({ error: auth.error }), {
-      status: auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const cronToken = Deno.env.get("FAILED_PAYMENT_CRON_TOKEN");
+  const isCron = !!cronToken && req.headers.get("x-cron-token") === cronToken;
+
+  if (!isCron) {
+    const auth = await verifyAdminOrCron(req);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   }
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
