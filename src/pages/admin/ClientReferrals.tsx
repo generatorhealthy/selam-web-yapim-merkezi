@@ -10,7 +10,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { UserCheck, Calendar, Users, Plus, Minus, Search, Hash, Edit3, TrendingUp } from "lucide-react";
+import { UserCheck, Calendar, Users, Plus, Minus, Search, Hash, Edit3, TrendingUp, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getMonthName } from "@/utils/monthUtils";
 import {
@@ -158,6 +158,13 @@ const resolveSpecialistSmsPhone = async (spec: { name?: string; phone?: string; 
   return '';
 };
 
+// Telefon numaralarını son 10 haneye indirger (0/90/8 önekleri temizlenir)
+const phoneKey = (v: unknown) => {
+  const d = String(v ?? '').replace(/\D/g, '');
+  return d.length >= 10 ? d.slice(-10) : '';
+};
+
+
 const ClientReferrals = () => {
   const [specialists, setSpecialists] = useState<SpecialistReferral[]>([]);
   const [filteredSpecialists, setFilteredSpecialists] = useState<SpecialistReferral[]>([]);
@@ -166,6 +173,9 @@ const ClientReferrals = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [searchTerm, setSearchTerm] = useState("");
   const [clientReferralDetails, setClientReferralDetails] = useState<Record<string, ClientReferralDetail[]>>({});
+  // Santralden (FreePBX) gelen "uzman telefonu açtı mı?" bilgisi
+  // key: `${danışanTelefonuSon10Hane}|${uzmanDahili}` -> true/false
+  const [callAnswerMap, setCallAnswerMap] = useState<Record<string, boolean>>({});
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const canAccess = !roleLoading && !!userProfile && userProfile.is_approved && ['admin','staff'].includes(userProfile.role);
@@ -456,6 +466,48 @@ const ClientReferrals = () => {
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [currentYear, canAccess]);
+
+  // Santral (FreePBX) çağrı kayıtlarından uzmanın telefonu açıp açmadığını çek
+  useEffect(() => {
+    if (!canAccess) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const today = new Date();
+        const from = new Date();
+        from.setDate(from.getDate() - 89);
+        const fmt = (d: Date) => d.toISOString().slice(0, 10);
+        const { data: res, error } = await supabase.functions.invoke('freepbx-create-extension', {
+          body: { action: 'cdr_stats', from: fmt(from), to: fmt(today) },
+        });
+        if (error || !res || (res as any).error) return;
+        const transfers = ((res as any).transfers || []) as Array<{
+          musteri?: string;
+          uzman_ext?: string;
+          disposition?: string;
+          acti?: number;
+        }>;
+        const map: Record<string, boolean> = {};
+        transfers.forEach((t) => {
+          const pk = phoneKey(t.musteri);
+          const ext = String(t.uzman_ext || '').trim();
+          if (!pk || !ext) return;
+          const answered =
+            Number(t.acti) === 1 || String(t.disposition || '').toUpperCase() === 'ANSWERED';
+          const key = `${pk}|${ext}`;
+          // Bir kez bile açıldıysa "açtı" kabul et
+          map[key] = map[key] === true ? true : answered;
+        });
+        if (!cancelled) setCallAnswerMap(map);
+      } catch (e) {
+        console.warn('PBX çağrı durumu alınamadı', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [canAccess]);
+
 
   // Filter specialists based on search term and sort by referral count
   // Fetch client referral details for a specific specialist and month
@@ -1783,8 +1835,34 @@ const ClientReferrals = () => {
                                                       </Badge>
                                                     )}
                                                   </div>
+                                                  {/* Santralden gelen "uzman telefonu açtı mı?" bilgisi */}
+                                                  {(() => {
+                                                    const ext = String(specialistReferral.specialist.internal_number || '').trim();
+                                                    const pk = phoneKey(client.client_contact);
+                                                    const status = ext && pk ? callAnswerMap[`${pk}|${ext}`] : undefined;
+                                                    if (status === undefined) {
+                                                      return (
+                                                        <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                                          <Clock className="w-3.5 h-3.5" />
+                                                          Santralde Çağrı Kaydı Yok
+                                                        </div>
+                                                      );
+                                                    }
+                                                    return status ? (
+                                                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 px-2.5 py-1.5 text-xs font-semibold text-emerald-700">
+                                                        <CheckCircle2 className="w-4 h-4" />
+                                                        Uzman Telefon Cevap Verdi
+                                                      </div>
+                                                    ) : (
+                                                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-red-100 px-2.5 py-1.5 text-xs font-semibold text-red-700">
+                                                        <XCircle className="w-4 h-4" />
+                                                        Uzman Telefona Cevap Vermedi
+                                                      </div>
+                                                    );
+                                                  })()}
                                                 </div>
                                               </div>
+
                                               <div className="flex items-center gap-2 text-xs text-slate-600 pt-2 border-t border-blue-100">
                                                 <Calendar className="w-3.5 h-3.5" />
                                                 <span>
