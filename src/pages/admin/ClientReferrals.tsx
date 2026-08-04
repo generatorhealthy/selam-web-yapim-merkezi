@@ -1835,8 +1835,34 @@ const ClientReferrals = () => {
                                                       </Badge>
                                                     )}
                                                   </div>
+                                                  {/* Santralden gelen "uzman telefonu açtı mı?" bilgisi */}
+                                                  {(() => {
+                                                    const ext = String(specialistReferral.specialist.internal_number || '').trim();
+                                                    const pk = phoneKey(client.client_contact);
+                                                    const status = ext && pk ? callAnswerMap[`${pk}|${ext}`] : undefined;
+                                                    if (status === undefined) {
+                                                      return (
+                                                        <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                                          <Clock className="w-3.5 h-3.5" />
+                                                          Santralde Çağrı Kaydı Yok
+                                                        </div>
+                                                      );
+                                                    }
+                                                    return status ? (
+                                                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 px-2.5 py-1.5 text-xs font-semibold text-emerald-700">
+                                                        <CheckCircle2 className="w-4 h-4" />
+                                                        Uzman Telefon Cevap Verdi
+                                                      </div>
+                                                    ) : (
+                                                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-red-100 px-2.5 py-1.5 text-xs font-semibold text-red-700">
+                                                        <XCircle className="w-4 h-4" />
+                                                        Uzman Telefona Cevap Vermedi
+                                                      </div>
+                                                    );
+                                                  })()}
                                                 </div>
                                               </div>
+
                                               <div className="flex items-center gap-2 text-xs text-slate-600 pt-2 border-t border-blue-100">
                                                 <Calendar className="w-3.5 h-3.5" />
                                                 <span>
