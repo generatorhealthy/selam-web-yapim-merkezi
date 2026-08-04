@@ -473,7 +473,7 @@ export const PbxCallStats = () => {
           {(() => {
             const raw = data?.transfers ?? [];
             const sorted = [...raw].sort(
-              (a, b) => new Date(b.calldate).getTime() - new Date(a.calldate).getTime(),
+              (a, b) => parsePbxDate(b.calldate).getTime() - parsePbxDate(a.calldate).getTime(),
             );
             type T = (typeof sorted)[number] & { deneme?: number };
 
@@ -489,7 +489,7 @@ export const PbxCallStats = () => {
                 if (String(x.uzman_ext) !== String(t.uzman_ext)) return false;
                 if (x.linkedid && t.linkedid) return String(x.linkedid) === String(t.linkedid);
                 return (
-                  Math.abs(new Date(x.calldate).getTime() - new Date(t.calldate).getTime()) <= LEG_WINDOW
+                  Math.abs(parsePbxDate(x.calldate).getTime() - parsePbxDate(t.calldate).getTime()) <= LEG_WINDOW
                 );
               });
               if (!sameCall) {
@@ -513,7 +513,7 @@ export const PbxCallStats = () => {
                 (x) =>
                   phoneKey(x.musteri) === phoneKey(t.musteri) &&
                   String(x.uzman_ext) === String(t.uzman_ext) &&
-                  Math.abs(new Date(x.calldate).getTime() - new Date(t.calldate).getTime()) <= WINDOW,
+                  Math.abs(parsePbxDate(x.calldate).getTime() - parsePbxDate(t.calldate).getTime()) <= WINDOW,
               );
               if (!g) {
                 groups.push({ ...t, deneme: 1 });
@@ -592,7 +592,7 @@ export const PbxCallStats = () => {
                             return (
                               <TableRow key={i} className="group">
                                 <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                  {format(new Date(t.calldate), "d MMM HH:mm", { locale: tr })}
+                                  {formatPbxDate(t.calldate)}
                                 </TableCell>
                                 <TableCell className="text-sm">
                                   <p className="font-medium">{danisanAdi || "İsim bulunamadı"}</p>
@@ -685,7 +685,7 @@ export const PbxCallStats = () => {
                         return (
                           <TableRow key={i}>
                             <TableCell className="whitespace-nowrap text-sm">
-                              {format(new Date(r.calldate), "d MMM HH:mm", { locale: tr })}
+                              {formatPbxDate(r.calldate)}
                             </TableCell>
                             <TableCell>
                               <Badge
