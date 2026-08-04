@@ -34,6 +34,33 @@ import {
   User,
 } from "lucide-react";
 
+// PBX sunucusu saatleri UTC olarak yazıyor ("2026-08-04 10:51:00").
+// Bu yüzden UTC olarak parse edip İstanbul saatine çeviriyoruz.
+const parsePbxDate = (value: string): Date => {
+  if (!value) return new Date(NaN);
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+  if (m) {
+    return new Date(
+      Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]),
+    );
+  }
+  return new Date(value);
+};
+
+const formatPbxDate = (value: string): string => {
+  const d = parsePbxDate(value);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("tr-TR", {
+    timeZone: "Europe/Istanbul",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+
+
 interface Summary {
   total: number;
   answered: number;
@@ -446,7 +473,7 @@ export const PbxCallStats = () => {
           {(() => {
             const raw = data?.transfers ?? [];
             const sorted = [...raw].sort(
-              (a, b) => new Date(b.calldate).getTime() - new Date(a.calldate).getTime(),
+              (a, b) => parsePbxDate(b.calldate).getTime() - parsePbxDate(a.calldate).getTime(),
             );
             type T = (typeof sorted)[number] & { deneme?: number };
 
@@ -462,7 +489,7 @@ export const PbxCallStats = () => {
                 if (String(x.uzman_ext) !== String(t.uzman_ext)) return false;
                 if (x.linkedid && t.linkedid) return String(x.linkedid) === String(t.linkedid);
                 return (
-                  Math.abs(new Date(x.calldate).getTime() - new Date(t.calldate).getTime()) <= LEG_WINDOW
+                  Math.abs(parsePbxDate(x.calldate).getTime() - parsePbxDate(t.calldate).getTime()) <= LEG_WINDOW
                 );
               });
               if (!sameCall) {
@@ -486,7 +513,7 @@ export const PbxCallStats = () => {
                 (x) =>
                   phoneKey(x.musteri) === phoneKey(t.musteri) &&
                   String(x.uzman_ext) === String(t.uzman_ext) &&
-                  Math.abs(new Date(x.calldate).getTime() - new Date(t.calldate).getTime()) <= WINDOW,
+                  Math.abs(parsePbxDate(x.calldate).getTime() - parsePbxDate(t.calldate).getTime()) <= WINDOW,
               );
               if (!g) {
                 groups.push({ ...t, deneme: 1 });
@@ -565,7 +592,7 @@ export const PbxCallStats = () => {
                             return (
                               <TableRow key={i} className="group">
                                 <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                                  {format(new Date(t.calldate), "d MMM HH:mm", { locale: tr })}
+                                  {formatPbxDate(t.calldate)}
                                 </TableCell>
                                 <TableCell className="text-sm">
                                   <p className="font-medium">{danisanAdi || "İsim bulunamadı"}</p>
@@ -658,7 +685,7 @@ export const PbxCallStats = () => {
                         return (
                           <TableRow key={i}>
                             <TableCell className="whitespace-nowrap text-sm">
-                              {format(new Date(r.calldate), "d MMM HH:mm", { locale: tr })}
+                              {formatPbxDate(r.calldate)}
                             </TableCell>
                             <TableCell>
                               <Badge
