@@ -166,6 +166,9 @@ const ClientReferrals = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [searchTerm, setSearchTerm] = useState("");
   const [clientReferralDetails, setClientReferralDetails] = useState<Record<string, ClientReferralDetail[]>>({});
+  // Santralden (FreePBX) gelen "uzman telefonu açtı mı?" bilgisi
+  // key: `${danışanTelefonuSon10Hane}|${uzmanDahili}` -> true/false
+  const [callAnswerMap, setCallAnswerMap] = useState<Record<string, boolean>>({});
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const canAccess = !roleLoading && !!userProfile && userProfile.is_approved && ['admin','staff'].includes(userProfile.role);
