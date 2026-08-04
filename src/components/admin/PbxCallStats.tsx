@@ -569,11 +569,17 @@ export const PbxCallStats = () => {
                                       <CheckCircle2 className="h-3.5 w-3.5" /> Açtı
                                     </Badge>
                                   ) : (
-                                    <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 hover:bg-red-50" variant="outline">
-                                      <XCircle className="h-3.5 w-3.5" /> Açmadı
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 hover:bg-red-50" variant="outline">
+                                        <XCircle className="h-3.5 w-3.5" /> Açmadı
+                                      </Badge>
+                                      {(t.deneme ?? 1) > 1 && (
+                                        <span className="text-xs text-muted-foreground">{t.deneme} deneme</span>
+                                      )}
+                                    </div>
                                   )}
                                 </TableCell>
+
                                 <TableCell className="text-right text-sm font-medium">
                                   {isOpen ? fmtMinutes(num(t.sure) / 60) : <span className="text-muted-foreground">—</span>}
                                 </TableCell>
