@@ -503,12 +503,17 @@ export const PbxCallStats = () => {
                           {transfers.map((t, i) => {
                             const isOpen = num(t.acti) === 1;
                             const uzmanAdi = extMap[String(t.uzman_ext)];
+                            const danisanAdi = leadMap[phoneKey(t.musteri)];
                             return (
                               <TableRow key={i} className="group">
                                 <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                                   {format(new Date(t.calldate), "d MMM HH:mm", { locale: tr })}
                                 </TableCell>
-                                <TableCell className="font-mono text-sm font-medium">{t.musteri}</TableCell>
+                                <TableCell className="text-sm">
+                                  <p className="font-medium">{danisanAdi || "İsim bulunamadı"}</p>
+                                  <span className="font-mono text-xs text-muted-foreground">{t.musteri}</span>
+                                </TableCell>
+
                                 <TableCell>
                                   <div className="flex items-center gap-2.5">
                                     <div
