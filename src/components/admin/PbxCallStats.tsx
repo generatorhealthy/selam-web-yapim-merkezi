@@ -149,6 +149,7 @@ export const PbxCallStats = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [extMap, setExtMap] = useState<Record<string, string>>({});
+  const [leadMap, setLeadMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -164,6 +165,28 @@ export const PbxCallStats = () => {
       }
     })();
   }, []);
+
+  // Danışan yönlendirme sisteminden telefon -> ad soyad eşlemesi
+  useEffect(() => {
+    (async () => {
+      const map: Record<string, string> = {};
+      const pageSize = 1000;
+      for (let page = 0; page < 10; page++) {
+        const { data: rows, error: err } = await supabase
+          .from("danisan_basvurulari")
+          .select("full_name, phone")
+          .range(page * pageSize, page * pageSize + pageSize - 1);
+        if (err || !rows || rows.length === 0) break;
+        rows.forEach((r: any) => {
+          const key = phoneKey(r.phone);
+          if (key && r.full_name && !map[key]) map[key] = r.full_name;
+        });
+        if (rows.length < pageSize) break;
+      }
+      setLeadMap(map);
+    })();
+  }, []);
+
 
   const fetchStats = useCallback(async (days: number) => {
     setLoading(true);
