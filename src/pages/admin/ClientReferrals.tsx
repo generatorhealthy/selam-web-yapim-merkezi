@@ -486,18 +486,25 @@ const ClientReferrals = () => {
           uzman_ext?: string;
           disposition?: string;
           acti?: number;
+          sure?: number;
+          yon?: string;
         }>;
         const map: Record<string, boolean> = {};
         transfers.forEach((t) => {
           const pk = phoneKey(t.musteri);
           const ext = String(t.uzman_ext || '').trim();
           if (!pk || !ext) return;
+          // Sadece danışanın uzman dahilisine aktarıldığı bacakları değerlendir.
+          // "cikis" (dahiliden danışanı arama) bacağında ANSWERED = danışan açtı,
+          // uzmanın açtığı anlamına gelmez.
+          if (String(t.yon || '') !== 'transfer') return;
           const answered =
-            Number(t.acti) === 1 || String(t.disposition || '').toUpperCase() === 'ANSWERED';
+            String(t.disposition || '').toUpperCase() === 'ANSWERED' && Number(t.sure || 0) > 0;
           const key = `${pk}|${ext}`;
           // Bir kez bile açıldıysa "açtı" kabul et
           map[key] = map[key] === true ? true : answered;
         });
+
         if (!cancelled) setCallAnswerMap(map);
       } catch (e) {
         console.warn('PBX çağrı durumu alınamadı', e);
