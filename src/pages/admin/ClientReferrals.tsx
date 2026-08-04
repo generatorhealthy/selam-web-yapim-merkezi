@@ -158,6 +158,13 @@ const resolveSpecialistSmsPhone = async (spec: { name?: string; phone?: string; 
   return '';
 };
 
+// Telefon numaralarını son 10 haneye indirger (0/90/8 önekleri temizlenir)
+const phoneKey = (v: unknown) => {
+  const d = String(v ?? '').replace(/\D/g, '');
+  return d.length >= 10 ? d.slice(-10) : '';
+};
+
+
 const ClientReferrals = () => {
   const [specialists, setSpecialists] = useState<SpecialistReferral[]>([]);
   const [filteredSpecialists, setFilteredSpecialists] = useState<SpecialistReferral[]>([]);
