@@ -4,7 +4,7 @@ import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret, x-cron-token",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
