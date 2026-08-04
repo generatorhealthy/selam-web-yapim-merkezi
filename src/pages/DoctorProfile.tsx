@@ -263,12 +263,17 @@ const DoctorProfile = () => {
     }
   };
 
+  const CALL_CENTER_NUMBER = '05308232275';
+  const resolveCallNumber = (phone?: string | null) => {
+    const digits = (phone || '').replace(/\D/g, '');
+    if (!digits) return CALL_CENTER_NUMBER;
+    // Eski santral numaraları -> yeni santral numarası
+    if (digits.endsWith('2167060611') || digits.endsWith('2162350650')) return CALL_CENTER_NUMBER;
+    return phone as string;
+  };
+
   const handlePhoneCall = () => {
-    if (specialist?.phone) {
-      window.open(`tel:${specialist.phone}`, '_self');
-    } else {
-      window.open('tel:05308232275', '_self');
-    }
+    window.open(`tel:${resolveCallNumber(specialist?.phone)}`, '_self');
   };
 
   const [waDialogOpen, setWaDialogOpen] = useState(false);

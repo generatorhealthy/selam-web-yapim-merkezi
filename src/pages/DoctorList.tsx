@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Search, MessageCircle, Phone, CheckCircle, Filter } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { resolveCallNumber } from "@/utils/callNumber";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -256,9 +257,7 @@ const DoctorList = () => {
   };
 
   const handleCallClick = (phone?: string) => {
-    if (phone) {
-      window.location.href = `tel:${phone}`;
-    }
+    window.location.href = `tel:${resolveCallNumber(phone)}`;
   };
 
   const handleProfileClick = (specialist: Specialist) => {
