@@ -85,6 +85,8 @@ interface TransferRow {
   disposition: string;
   acti: number;
   yon: string;
+  linkedid?: string;
+  uniqueid?: string;
 }
 
 interface CdrResponse {
