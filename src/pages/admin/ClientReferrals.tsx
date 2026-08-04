@@ -467,6 +467,48 @@ const ClientReferrals = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [currentYear, canAccess]);
 
+  // Santral (FreePBX) çağrı kayıtlarından uzmanın telefonu açıp açmadığını çek
+  useEffect(() => {
+    if (!canAccess) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const today = new Date();
+        const from = new Date();
+        from.setDate(from.getDate() - 89);
+        const fmt = (d: Date) => d.toISOString().slice(0, 10);
+        const { data: res, error } = await supabase.functions.invoke('freepbx-create-extension', {
+          body: { action: 'cdr_stats', from: fmt(from), to: fmt(today) },
+        });
+        if (error || !res || (res as any).error) return;
+        const transfers = ((res as any).transfers || []) as Array<{
+          musteri?: string;
+          uzman_ext?: string;
+          disposition?: string;
+          acti?: number;
+        }>;
+        const map: Record<string, boolean> = {};
+        transfers.forEach((t) => {
+          const pk = phoneKey(t.musteri);
+          const ext = String(t.uzman_ext || '').trim();
+          if (!pk || !ext) return;
+          const answered =
+            Number(t.acti) === 1 || String(t.disposition || '').toUpperCase() === 'ANSWERED';
+          const key = `${pk}|${ext}`;
+          // Bir kez bile açıldıysa "açtı" kabul et
+          map[key] = map[key] === true ? true : answered;
+        });
+        if (!cancelled) setCallAnswerMap(map);
+      } catch (e) {
+        console.warn('PBX çağrı durumu alınamadı', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [canAccess]);
+
+
   // Filter specialists based on search term and sort by referral count
   // Fetch client referral details for a specific specialist and month
   const fetchClientReferralDetails = async (specialistId: string, month: number) => {
