@@ -107,12 +107,30 @@ const RANGES = [
 
 const num = (v: unknown) => Number(v ?? 0) || 0;
 
+// Telefon numaralarını son 10 haneye indirger (0/90/8 önekleri temizlenir)
+const phoneKey = (v: unknown) => {
+  const d = String(v ?? "").replace(/\D/g, "");
+  return d.length >= 10 ? d.slice(-10) : "";
+};
+
+const DISPOSITION_TR: Record<string, string> = {
+  ANSWERED: "Cevaplandı",
+  "NO ANSWER": "Cevapsız",
+  NOANSWER: "Cevapsız",
+  BUSY: "Meşgul",
+  FAILED: "Başarısız",
+  CONGESTION: "Hat Yoğun",
+};
+
+const dispositionTr = (v: string) => DISPOSITION_TR[(v || "").toUpperCase()] ?? (v || "Bilinmiyor");
+
 const fmtMinutes = (totalMin: number) => {
   const h = Math.floor(totalMin / 60);
   const m = Math.round(totalMin % 60);
   if (h > 0) return `${h}s ${m}dk`;
   return `${m} dk`;
 };
+
 
 const StatCard = ({
   icon: Icon,
@@ -149,6 +167,7 @@ export const PbxCallStats = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [extMap, setExtMap] = useState<Record<string, string>>({});
+  const [leadMap, setLeadMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     (async () => {
@@ -164,6 +183,28 @@ export const PbxCallStats = () => {
       }
     })();
   }, []);
+
+  // Danışan yönlendirme sisteminden telefon -> ad soyad eşlemesi
+  useEffect(() => {
+    (async () => {
+      const map: Record<string, string> = {};
+      const pageSize = 1000;
+      for (let page = 0; page < 10; page++) {
+        const { data: rows, error: err } = await supabase
+          .from("danisan_basvurulari")
+          .select("full_name, phone")
+          .range(page * pageSize, page * pageSize + pageSize - 1);
+        if (err || !rows || rows.length === 0) break;
+        rows.forEach((r: any) => {
+          const key = phoneKey(r.phone);
+          if (key && r.full_name && !map[key]) map[key] = r.full_name;
+        });
+        if (rows.length < pageSize) break;
+      }
+      setLeadMap(map);
+    })();
+  }, []);
+
 
   const fetchStats = useCallback(async (days: number) => {
     setLoading(true);
@@ -462,12 +503,17 @@ export const PbxCallStats = () => {
                           {transfers.map((t, i) => {
                             const isOpen = num(t.acti) === 1;
                             const uzmanAdi = extMap[String(t.uzman_ext)];
+                            const danisanAdi = leadMap[phoneKey(t.musteri)];
                             return (
                               <TableRow key={i} className="group">
                                 <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                                   {format(new Date(t.calldate), "d MMM HH:mm", { locale: tr })}
                                 </TableCell>
-                                <TableCell className="font-mono text-sm font-medium">{t.musteri}</TableCell>
+                                <TableCell className="text-sm">
+                                  <p className="font-medium">{danisanAdi || "İsim bulunamadı"}</p>
+                                  <span className="font-mono text-xs text-muted-foreground">{t.musteri}</span>
+                                </TableCell>
+
                                 <TableCell>
                                   <div className="flex items-center gap-2.5">
                                     <div
@@ -520,63 +566,78 @@ export const PbxCallStats = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Son Çağrılar</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Aranan numaraların yanında danışan yönlendirme sistemindeki ad soyad bilgisi gösterilir.
+              </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {(data?.recent?.length ?? 0) === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">Bu aralıkta çağrı kaydı yok.</p>
               ) : (
-                <div className="max-h-96 overflow-auto">
+                <div className="max-h-[42rem] overflow-auto">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Tarih</TableHead>
-                        <TableHead>Yön</TableHead>
-                        <TableHead>Arayan</TableHead>
-                        <TableHead>Aranan</TableHead>
-                        <TableHead className="text-right">Süre</TableHead>
-                        <TableHead>Durum</TableHead>
+                    <TableHeader className="sticky top-0 z-10 bg-card">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-[130px]">Tarih</TableHead>
+                        <TableHead className="w-[110px]">Yön</TableHead>
+                        <TableHead className="w-[180px]">Arayan</TableHead>
+                        <TableHead>Aranan Danışan</TableHead>
+                        <TableHead className="w-[100px] text-right">Süre</TableHead>
+                        <TableHead className="w-[140px]">Durum</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {(data?.recent ?? []).map((r, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="whitespace-nowrap text-sm">
-                            {format(new Date(r.calldate), "d MMM HH:mm", { locale: tr })}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={
-                                r.yon === "gelen"
-                                  ? "border-amber-300 text-amber-700"
-                                  : r.yon === "giden"
-                                  ? "border-blue-300 text-blue-700"
-                                  : "border-cyan-300 text-cyan-700"
-                              }
-                            >
-                              {r.yon}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">{r.src}</TableCell>
-                          <TableCell className="font-mono text-sm">{r.dst}</TableCell>
-                          <TableCell className="text-right text-sm">{fmtMinutes(num(r.billsec) / 60)}</TableCell>
-                          <TableCell>
-                            <span
-                              className={`text-xs font-medium ${
-                                r.disposition === "ANSWERED" ? "text-emerald-600" : "text-muted-foreground"
-                              }`}
-                            >
-                              {r.disposition}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {(data?.recent ?? []).map((r, i) => {
+                        const answered = (r.disposition || "").toUpperCase() === "ANSWERED";
+                        const arananAdi = leadMap[phoneKey(r.dst)];
+                        const arayanAdi = leadMap[phoneKey(r.src)];
+                        return (
+                          <TableRow key={i}>
+                            <TableCell className="whitespace-nowrap text-sm">
+                              {format(new Date(r.calldate), "d MMM HH:mm", { locale: tr })}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  r.yon === "gelen"
+                                    ? "border-amber-300 text-amber-700"
+                                    : r.yon === "giden"
+                                    ? "border-blue-300 text-blue-700"
+                                    : "border-cyan-300 text-cyan-700"
+                                }
+                              >
+                                {r.yon === "gelen" ? "Gelen" : r.yon === "giden" ? "Giden" : "Diğer"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {arayanAdi && <p className="font-medium">{arayanAdi}</p>}
+                              <span className="font-mono text-xs text-muted-foreground">{r.src}</span>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              <p className="font-medium">{arananAdi || "İsim bulunamadı"}</p>
+                              <span className="font-mono text-xs text-muted-foreground">{r.dst}</span>
+                            </TableCell>
+                            <TableCell className="text-right text-sm">{fmtMinutes(num(r.billsec) / 60)}</TableCell>
+                            <TableCell>
+                              <span
+                                className={`text-xs font-medium ${
+                                  answered ? "text-emerald-600" : "text-muted-foreground"
+                                }`}
+                              >
+                                {dispositionTr(r.disposition)}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
               )}
             </CardContent>
           </Card>
+
         </>
       )}
     </div>
