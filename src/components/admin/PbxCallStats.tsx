@@ -107,12 +107,30 @@ const RANGES = [
 
 const num = (v: unknown) => Number(v ?? 0) || 0;
 
+// Telefon numaralarını son 10 haneye indirger (0/90/8 önekleri temizlenir)
+const phoneKey = (v: unknown) => {
+  const d = String(v ?? "").replace(/\D/g, "");
+  return d.length >= 10 ? d.slice(-10) : "";
+};
+
+const DISPOSITION_TR: Record<string, string> = {
+  ANSWERED: "Cevaplandı",
+  "NO ANSWER": "Cevapsız",
+  NOANSWER: "Cevapsız",
+  BUSY: "Meşgul",
+  FAILED: "Başarısız",
+  CONGESTION: "Hat Yoğun",
+};
+
+const dispositionTr = (v: string) => DISPOSITION_TR[(v || "").toUpperCase()] ?? (v || "Bilinmiyor");
+
 const fmtMinutes = (totalMin: number) => {
   const h = Math.floor(totalMin / 60);
   const m = Math.round(totalMin % 60);
   if (h > 0) return `${h}s ${m}dk`;
   return `${m} dk`;
 };
+
 
 const StatCard = ({
   icon: Icon,
