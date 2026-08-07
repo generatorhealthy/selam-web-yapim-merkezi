@@ -47,6 +47,31 @@ const SmsManagement = () => {
   const [isFetching, setIsFetching] = useState(true);
   const [smsStatus, setSmsStatus] = useState<{type: 'success' | 'error' | null, message: string}>({type: null, message: ''});
   const [recentSms, setRecentSms] = useState<any[]>([]);
+  const [appLaunchLoading, setAppLaunchLoading] = useState<'dry' | 'send' | null>(null);
+
+  const runAppLaunchCampaign = async (dryRun: boolean) => {
+    if (!dryRun && !window.confirm('Tüm aktif uzmanlara mobil uygulama duyuru SMS\'i gönderilecek. Onaylıyor musun?')) return;
+    setAppLaunchLoading(dryRun ? 'dry' : 'send');
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        `send-app-launch-bulk-sms${dryRun ? '?dryRun=1' : ''}`,
+        { body: {} }
+      );
+      if (error) throw error;
+      const res: any = data || {};
+      if (res.success === false) throw new Error(res.error || 'Bilinmeyen hata');
+      toast({
+        title: dryRun ? 'Test tamamlandı' : 'Gönderim tamamlandı',
+        description: dryRun
+          ? `${res.recipientCount} geçerli numara bulundu (${res.skipped?.length ?? 0} atlandı).`
+          : `${res.sentCount} uzmana SMS gönderildi (${res.skippedCount} atlandı).`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Hata', description: e.message || 'Gönderim başarısız', variant: 'destructive' });
+    } finally {
+      setAppLaunchLoading(null);
+    }
+  };
 
   // SMS template messages
   const templates = [
