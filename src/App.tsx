@@ -286,7 +286,8 @@ const AppContent = () => {
               <Route path="/blog/:slug" element={<BlogDetail />} />
               <Route path="/yazilar/:slug" element={<LegacyBlogRedirect />} />
               <Route path="/uzmanlar" element={<DoctorList />} />
-              <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />
+              <Route path="/:specialtySlug/:doctorName/uzmani-degerlendir" element={<SpecialistReviewPage />} />
+              <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />>
               <Route path="/randevu-al/:specialtySlug/:doctorName" element={<BookAppointment />} />
               <Route path="/randevu-sayfasi" element={<RandevuSayfasi />} />
               <Route path="/uzmanlik/:specialty" element={<SpecialtyPage />} />
