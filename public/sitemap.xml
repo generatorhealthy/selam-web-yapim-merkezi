@@ -7436,20 +7436,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/z004-psikiyatri-ne-demek</loc>
-    <lastmod>2025-09-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psikiyatri-doktoruna-gitmek-sicile-isler-mi</loc>
-    <lastmod>2025-09-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/uzman-aile-danismani-aysel-taskin-ile-saglikli-ve-guclu-iliskilere-dogru</loc>
     <lastmod>2025-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/z004-psikiyatri-ne-demek</loc>
+    <lastmod>2026-08-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7803,13 +7797,7 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/psikiyatriye-gitmek-hangi-mesleklere-engel</loc>
-    <lastmod>2025-08-09</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/enfeksiyon-ve-iltihap-ayni-sey-mi</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2026-08-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7846,6 +7834,12 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/kadin-cinsel-sagligi-butunsel-rehber</loc>
     <lastmod>2026-05-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikiyatri-doktoruna-gitmek-sicile-isler-mi</loc>
+    <lastmod>2026-08-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7918,6 +7912,12 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/hatayda-psikolojik-destege-giden-yol-psk-merve-nur-akcan-ile-icsel-yolculuk</loc>
     <lastmod>2026-04-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/enfeksiyon-ve-iltihap-ayni-sey-mi</loc>
+    <lastmod>2026-08-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -10007,7 +10007,7 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-fatma-gul-celebi</loc>
-    <lastmod>2026-05-26</lastmod>
+    <lastmod>2026-08-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
