@@ -3659,7 +3659,10 @@ export type Database = {
           featured_image: string | null
           id: string
           keywords: string | null
+          last_refreshed_at: string | null
           published_at: string | null
+          refresh_count: number
+          refresh_note: string | null
           revision_count: number | null
           seo_description: string | null
           seo_title: string | null
@@ -3681,7 +3684,10 @@ export type Database = {
           featured_image?: string | null
           id?: string
           keywords?: string | null
+          last_refreshed_at?: string | null
           published_at?: string | null
+          refresh_count?: number
+          refresh_note?: string | null
           revision_count?: number | null
           seo_description?: string | null
           seo_title?: string | null
@@ -3703,7 +3709,10 @@ export type Database = {
           featured_image?: string | null
           id?: string
           keywords?: string | null
+          last_refreshed_at?: string | null
           published_at?: string | null
+          refresh_count?: number
+          refresh_note?: string | null
           revision_count?: number | null
           seo_description?: string | null
           seo_title?: string | null
