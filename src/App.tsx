@@ -402,6 +402,7 @@ const AppContent = () => {
               <Route path="/test-al/:testId/:specialistId" element={<TestTaking />} />
               <Route path="/test-sonuc/:testId/:specialistId" element={<TestResult />} />
               <Route path="/:specialtySlug/:specialistName/test/:testId" element={<TestInterface />} />
+              <Route path="/:specialtySlug/:specialistName/uzmani-degerlendir" element={<SpecialistReviewPage />} />
               <Route path="/:specialtySlug/:specialistName" element={<DoctorProfile />} />
               
               {/* Doctor Routes */}
