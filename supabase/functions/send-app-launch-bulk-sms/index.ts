@@ -12,11 +12,13 @@ const corsHeaders = {
 
 const MESSAGE = `Sayin Uzmanimiz,
 
-Doktorum Ol mobil uygulamasi artik App Store ve Google Play'de!
+Doktorum Ol mobil uygulamasi artik App Store ve Play Store'da!
 
 Randevularinizi yonetin, danisanlarinizla iletisimde kalin, takviminizi cebinizden kontrol edin.
 
-Indirin: https://apps.apple.com/tr/app/doktorum-ol/id6762599027?l=tr
+App Store: https://apps.apple.com/tr/app/doktorum-ol/id6762599027?l=tr
+
+Play Store: https://play.google.com/store/apps/details?id=app.lovable.doktorumol
 
 Doktorumol.com.tr`;
 

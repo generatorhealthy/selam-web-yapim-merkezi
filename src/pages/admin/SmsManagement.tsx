@@ -47,6 +47,31 @@ const SmsManagement = () => {
   const [isFetching, setIsFetching] = useState(true);
   const [smsStatus, setSmsStatus] = useState<{type: 'success' | 'error' | null, message: string}>({type: null, message: ''});
   const [recentSms, setRecentSms] = useState<any[]>([]);
+  const [appLaunchLoading, setAppLaunchLoading] = useState<'dry' | 'send' | null>(null);
+
+  const runAppLaunchCampaign = async (dryRun: boolean) => {
+    if (!dryRun && !window.confirm('Tüm aktif uzmanlara mobil uygulama duyuru SMS\'i gönderilecek. Onaylıyor musun?')) return;
+    setAppLaunchLoading(dryRun ? 'dry' : 'send');
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        `send-app-launch-bulk-sms${dryRun ? '?dryRun=1' : ''}`,
+        { body: {} }
+      );
+      if (error) throw error;
+      const res: any = data || {};
+      if (res.success === false) throw new Error(res.error || 'Bilinmeyen hata');
+      toast({
+        title: dryRun ? 'Test tamamlandı' : 'Gönderim tamamlandı',
+        description: dryRun
+          ? `${res.recipientCount} geçerli numara bulundu (${res.skipped?.length ?? 0} atlandı).`
+          : `${res.sentCount} uzmana SMS gönderildi (${res.skippedCount} atlandı).`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Hata', description: e.message || 'Gönderim başarısız', variant: 'destructive' });
+    } finally {
+      setAppLaunchLoading(null);
+    }
+  };
 
   // SMS template messages
   const templates = [
@@ -414,7 +439,51 @@ const SmsManagement = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Mobil Uygulama Duyuru Kampanyası */}
+            <Card className="border-0 bg-white/80 backdrop-blur-xl shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-xl">
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Mobil Uygulama Duyurusu (Toplu SMS)
+                </CardTitle>
+                <CardDescription className="text-emerald-100">
+                  Tüm aktif uzmanlara App Store + Play Store bağlantılarını içeren duyuru SMS'i gönderir
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <pre className="whitespace-pre-wrap text-sm text-slate-700 bg-slate-50 rounded-lg p-4 border">{`Sayin Uzmanimiz,
+
+Doktorum Ol mobil uygulamasi artik App Store ve Play Store'da!
+
+Randevularinizi yonetin, danisanlarinizla iletisimde kalin, takviminizi cebinizden kontrol edin.
+
+App Store: https://apps.apple.com/tr/app/doktorum-ol/id6762599027?l=tr
+
+Play Store: https://play.google.com/store/apps/details?id=app.lovable.doktorumol
+
+Doktorumol.com.tr`}</pre>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="outline"
+                    disabled={appLaunchLoading !== null}
+                    onClick={() => runAppLaunchCampaign(true)}
+                  >
+                    {appLaunchLoading === 'dry' ? 'Kontrol ediliyor...' : 'Önce Test Et (gönderim yok)'}
+                  </Button>
+                  <Button
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                    disabled={appLaunchLoading !== null}
+                    onClick={() => runAppLaunchCampaign(false)}
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    {appLaunchLoading === 'send' ? 'Gönderiliyor...' : 'Tüm Aktif Uzmanlara Gönder'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* SMS Gönderim Formu */}
