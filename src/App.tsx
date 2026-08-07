@@ -54,6 +54,7 @@ const BlogDetail = lazy(() => import("./pages/BlogDetail"));
 
 const DoctorList = lazy(() => import("./pages/DoctorList"));
 const DoctorProfile = lazy(() => import("./pages/DoctorProfile"));
+const SpecialistReviewPage = lazy(() => import("./pages/SpecialistReviewPage"));
 const BookAppointment = lazy(() => import("./pages/BookAppointment"));
 const DanismanlikRandevusuAl = lazy(() => import("./pages/DanismanlikRandevusuAl"));
 const RandevuSayfasi = lazy(() => import("./pages/RandevuSayfasi"));
