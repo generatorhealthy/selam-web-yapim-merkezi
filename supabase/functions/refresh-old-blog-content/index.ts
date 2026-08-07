@@ -115,6 +115,7 @@ serve(async (req) => {
             content: newContent,
             word_count: newWordCount,
             published_at: nowIso,
+            updated_at: nowIso,
             last_refreshed_at: nowIso,
             refresh_count: (post.refresh_count || 0) + 1,
             refresh_note: stripHtml(addition).slice(0, 300),
