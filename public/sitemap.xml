@@ -7436,18 +7436,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psikiyatriye-gitmek-hangi-mesleklere-engel</loc>
-    <lastmod>2025-08-09</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/uzman-aile-danismani-aysel-taskin-ile-saglikli-ve-guclu-iliskilere-dogru</loc>
-    <lastmod>2025-07-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/z004-psikiyatri-ne-demek</loc>
     <lastmod>2025-09-13</lastmod>
     <changefreq>weekly</changefreq>
@@ -7460,8 +7448,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/enfeksiyon-ve-iltihap-ayni-sey-mi</loc>
-    <lastmod>2025-09-13</lastmod>
+    <loc>https://doktorumol.com.tr/blog/uzman-aile-danismani-aysel-taskin-ile-saglikli-ve-guclu-iliskilere-dogru</loc>
+    <lastmod>2025-07-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7810,6 +7798,18 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/elif-yasemin-yuvaci-aile-danismanligi</loc>
     <lastmod>2026-04-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikiyatriye-gitmek-hangi-mesleklere-engel</loc>
+    <lastmod>2025-08-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/enfeksiyon-ve-iltihap-ayni-sey-mi</loc>
+    <lastmod>2025-09-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
