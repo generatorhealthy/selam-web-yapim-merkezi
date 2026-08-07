@@ -673,6 +673,35 @@ const ClientReferrals = () => {
           throw insertError;
         }
         console.log('✅ [INSERT] Danışan bilgisi başarıyla eklendi:', insertResult);
+
+        // Danışana bilgilendirme + değerlendirme linki (SMS + WhatsApp) — uzman telefonu açsın ya da açmasın
+        try {
+          const notifyRes = await supabase.functions.invoke('notify-referred-client', {
+            body: {
+              specialistId,
+              clientName: clientData.client_name,
+              clientSurname: clientData.client_surname,
+              clientContact: clientData.client_contact,
+              consultationType: clientData.consultation_type || 'online',
+            },
+          });
+          console.log('📨 [CLIENT-NOTIFY] notify-referred-client response:', notifyRes);
+          const res: any = notifyRes.data || {};
+          if (notifyRes.error || res.success === false) {
+            toast({
+              title: 'Danışan bilgilendirmesi gönderilemedi',
+              description: notifyRes.error?.message || res.error || 'Bilinmeyen hata',
+              variant: 'default',
+            });
+          } else {
+            toast({
+              title: 'Danışan bilgilendirildi',
+              description: `${clientData.client_name} kişisine ${[res.smsSent ? 'SMS' : null, res.waSent ? 'WhatsApp' : null].filter(Boolean).join(' + ')} ile uzman bilgisi ve değerlendirme linki iletildi.`,
+            });
+          }
+        } catch (notifyEx) {
+          console.error('❌ [CLIENT-NOTIFY] Exception:', notifyEx);
+        }
       } else {
         // Sayı azaltma - en son kaydı sil
         const { data: existingRecords, error: fetchError } = await supabase

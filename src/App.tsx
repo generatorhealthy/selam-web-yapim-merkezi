@@ -54,6 +54,7 @@ const BlogDetail = lazy(() => import("./pages/BlogDetail"));
 
 const DoctorList = lazy(() => import("./pages/DoctorList"));
 const DoctorProfile = lazy(() => import("./pages/DoctorProfile"));
+const SpecialistReviewPage = lazy(() => import("./pages/SpecialistReviewPage"));
 const BookAppointment = lazy(() => import("./pages/BookAppointment"));
 const DanismanlikRandevusuAl = lazy(() => import("./pages/DanismanlikRandevusuAl"));
 const RandevuSayfasi = lazy(() => import("./pages/RandevuSayfasi"));
@@ -285,6 +286,7 @@ const AppContent = () => {
               <Route path="/blog/:slug" element={<BlogDetail />} />
               <Route path="/yazilar/:slug" element={<LegacyBlogRedirect />} />
               <Route path="/uzmanlar" element={<DoctorList />} />
+              <Route path="/:specialtySlug/:doctorName/uzmani-degerlendir" element={<SpecialistReviewPage />} />
               <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />
               <Route path="/randevu-al/:specialtySlug/:doctorName" element={<BookAppointment />} />
               <Route path="/randevu-sayfasi" element={<RandevuSayfasi />} />
@@ -400,6 +402,7 @@ const AppContent = () => {
               <Route path="/test-al/:testId/:specialistId" element={<TestTaking />} />
               <Route path="/test-sonuc/:testId/:specialistId" element={<TestResult />} />
               <Route path="/:specialtySlug/:specialistName/test/:testId" element={<TestInterface />} />
+              <Route path="/:specialtySlug/:specialistName/uzmani-degerlendir" element={<SpecialistReviewPage />} />
               <Route path="/:specialtySlug/:specialistName" element={<DoctorProfile />} />
               
               {/* Doctor Routes */}

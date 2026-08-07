@@ -187,3 +187,6 @@ verify_jwt = false
 
 [functions.realtime-transfer-approve]
 verify_jwt = false
+
+[functions.notify-referred-client]
+verify_jwt = false
