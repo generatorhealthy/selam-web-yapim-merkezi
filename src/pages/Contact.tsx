@@ -221,16 +221,13 @@ const Contact = () => {
                     için destek sağlamaktadır. Ofisimizi ziyaret edebilir veya çevrimiçi
                     kanallardan bize ulaşabilirsiniz.
                   </p>
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ADDRESS)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Button
+                    className="w-fit h-12 px-7 rounded-full bg-foreground text-primary-foreground hover:bg-foreground/90 font-semibold gap-2"
+                    onClick={() => window.location.href = `tel:${CALL_CENTER_TEL}`}
                   >
-                    <Button className="w-fit h-12 px-7 rounded-full bg-foreground text-primary-foreground hover:bg-foreground/90 font-semibold gap-2">
-                      Yol tarifi al
-                      <ArrowUpRight className="w-4 h-4" />
-                    </Button>
-                  </a>
+                    Hemen Ara
+                    <ArrowUpRight className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             </Card>
