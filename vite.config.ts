@@ -86,7 +86,7 @@ export default defineConfig(({ mode }) => ({
     include: ["react-dropzone", "attr-accept"],
   },
   plugins: [
-    fixCjsInterop(),
+    fixCjsInterop(mode),
     react(),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
