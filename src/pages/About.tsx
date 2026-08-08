@@ -76,7 +76,6 @@ const specialties = [
   "Çocuk Gelişimi",
   "Dil ve Konuşma Terapisi",
   "Fizyoterapi",
-  "Yaşam Koçluğu",
 ];
 
 const stats = [
