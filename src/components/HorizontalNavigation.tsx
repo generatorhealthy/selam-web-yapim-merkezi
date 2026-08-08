@@ -424,62 +424,114 @@ export function HorizontalNavigation() {
           )}
         </div>
 
-        {/* Mobile Navigation Menu */}
+        {/* Mobile Fullscreen Menu — Apple tarzı */}
         {isMobile && isMobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-white border-t shadow-lg z-50 rounded-b-2xl mx-4">
-            <div className="px-4 py-4 space-y-2">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={handleMenuItemClick}
-                  className={`block px-4 py-3 rounded-full font-medium transition-all duration-200 ${
-                    isActive(item.path)
-                      ? "text-white bg-gradient-to-r from-blue-600 to-indigo-600"
-                      : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-              
-              {/* Mobile Auth Section */}
-              <div className="border-t pt-3 mt-3">
-                {!authInitialized && (
-                  <div className="px-4 py-3">
-                    <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full"></div>
-                  </div>
-                )}
-                
-                {shouldShowSpecialistProfile && (
-                  <div 
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-full transition-all duration-200" 
-                    onClick={handleProfileClick}
+          <div
+            className="fixed inset-0 z-[100] flex flex-col animate-in fade-in duration-200"
+            style={{
+              background: "rgba(255,255,255,0.92)",
+              backdropFilter: "saturate(180%) blur(24px)",
+              WebkitBackdropFilter: "saturate(180%) blur(24px)",
+            }}
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Üst bar */}
+            <div
+              className="flex items-center justify-between px-5 pb-3 border-b border-gray-200/70"
+              style={{ paddingTop: "max(env(safe-area-inset-top), 14px)" }}
+            >
+              <Link to="/" onClick={handleMenuItemClick} className="h-10 overflow-hidden">
+                <img
+                  src="/logo.webp"
+                  alt="Doktorum Ol Logo"
+                  className="h-full w-auto object-contain"
+                  onError={handleLogoError}
+                />
+              </Link>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="Menüyü kapat"
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 active:scale-95 transition-transform"
+              >
+                <X className="h-5 w-5 text-gray-900" />
+              </button>
+            </div>
+
+            {/* İçerik */}
+            <div className="flex-1 overflow-y-auto px-5 pt-5 pb-8">
+              <p className="px-1 pb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-gray-400">
+                Menü
+              </p>
+              <nav className="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden">
+                {navigationItems.map((item, i) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={handleMenuItemClick}
+                    className={`flex items-center justify-between px-4 py-4 active:bg-gray-50 transition-colors ${
+                      i !== navigationItems.length - 1 ? "border-b border-gray-100" : ""
+                    }`}
                   >
-                    <Avatar className="w-8 h-8 border-2 border-blue-100">
-                      <AvatarImage 
-                        src={userProfile?.profile_picture || undefined} 
-                        alt="Profil"
-                      />
+                    <span
+                      className={`text-[18px] tracking-[-0.01em] ${
+                        isActive(item.path)
+                          ? "font-semibold text-blue-600"
+                          : "font-medium text-gray-900"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                    <ChevronRight className="h-5 w-5 text-gray-300" />
+                  </Link>
+                ))}
+              </nav>
+
+              {/* Profil / Auth */}
+              <div className="mt-6">
+                {!authInitialized && (
+                  <div className="h-14 rounded-2xl bg-gray-100 animate-pulse" />
+                )}
+
+                {(shouldShowSpecialistProfile ||
+                  (authInitialized && !isLoading && isLoggedIn && userRole === "patient")) && (
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full flex items-center gap-3 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-[0.99] transition-transform text-left"
+                  >
+                    <Avatar className="w-11 h-11 border-2 border-blue-100">
+                      <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
                       <AvatarFallback className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium">
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="text-sm">
-                      <p className="font-medium text-gray-900">
-                        {userProfile?.name || 'Dr. Uzman'}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">
+                        {userProfile?.name || (userRole === "patient" ? "Danışan" : "Dr. Uzman")}
                       </p>
-                      <p className="text-xs text-gray-500">Uzman Paneli</p>
+                      <p className="text-[13px] text-gray-500">
+                        {userRole === "patient" ? "Danışan Paneli" : "Uzman Paneli"}
+                      </p>
                     </div>
-                  </div>
+                    <ChevronRight className="h-5 w-5 text-gray-300" />
+                  </button>
                 )}
-                
+
                 {authInitialized && !isLoggedIn && (
-                  <div className="space-y-2">
-                    {currentPath !== '/bu-aya-ozel' && (
-                      <Button 
+                  <div className="space-y-3">
+                    <Button
+                      className="w-full h-12 text-[16px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl shadow-lg"
+                      onClick={() => {
+                        navigate("/giris-yap");
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Giriş Yap
+                    </Button>
+                    {currentPath !== "/bu-aya-ozel" && (
+                      <Button
                         variant="outline"
-                        className="w-full border-blue-200 text-blue-600 hover:bg-blue-50 rounded-full font-medium"
+                        className="w-full h-12 text-[16px] border-gray-200 text-blue-600 hover:bg-blue-50 rounded-2xl font-semibold"
                         onClick={() => {
                           setShowRegistrationForm(true);
                           setIsMobileMenuOpen(false);
@@ -488,21 +540,13 @@ export function HorizontalNavigation() {
                         Kayıt Olmak İstiyorum
                       </Button>
                     )}
-                    <Button 
-                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-                      onClick={() => {
-                        navigate('/giris-yap');
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      Giriş
-                    </Button>
                   </div>
                 )}
               </div>
             </div>
           </div>
         )}
+
         </div>
       </div>
 
