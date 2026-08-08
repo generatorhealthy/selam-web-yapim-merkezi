@@ -45,7 +45,7 @@ const DoctorList = () => {
   const [selectedCity, setSelectedCity] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const ITEMS_PER_PAGE = 4;
+  const ITEMS_PER_PAGE = 12;
   
   const specialties = [
     "Aile Danışmanı", "Cildiye", "Dil ve Konuşma Terapisti", 
