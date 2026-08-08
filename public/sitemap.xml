@@ -7484,14 +7484,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/gastroenteroloji-ilk-muayene-ac-mi-tok-mu</loc>
-    <lastmod>2025-09-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/psikiyatri-raporu-ne-kadar-gecerli</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2026-08-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7502,8 +7496,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/ben-aldirma-hangi-mevsimde-yapilir</loc>
-    <lastmod>2025-09-13</lastmod>
+    <loc>https://doktorumol.com.tr/blog/gastroenteroloji-ilk-muayene-ac-mi-tok-mu</loc>
+    <lastmod>2026-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/regl-iken-kadin-hastaliklarina-gidilir-mi</loc>
+    <lastmod>2026-08-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7515,19 +7515,19 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/basur-nedir-basur-belirtileri-ve-basur-agrisina-ne-iyi-gelir</loc>
-    <lastmod>2025-09-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/regl-iken-kadin-hastaliklarina-gidilir-mi</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2026-08-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/bulasiciligi-yuksek-cilt-hastaligi-uyuz-ve-cozumleri</loc>
     <lastmod>2025-08-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikiyatri-ne-gibi-sorular-sorar</loc>
+    <lastmod>2026-08-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7563,12 +7563,6 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/akupunktur-icin-hangi-doktora-gidilir</loc>
-    <lastmod>2025-09-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psikiyatri-ne-gibi-sorular-sorar</loc>
     <lastmod>2025-09-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -7928,6 +7922,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/ben-aldirma-hangi-mevsimde-yapilir</loc>
+    <lastmod>2026-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/online-danismanlikta-duygusal-mesafe-nasil-azaltilir</loc>
     <lastmod>2025-11-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -7942,6 +7942,12 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/psikolog-destegini-anlamak</loc>
     <lastmod>2026-05-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/ankara-psikolog-reyhan-uzer</loc>
+    <lastmod>2026-08-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -9484,12 +9490,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolog/psk-zerrin-gunduz</loc>
-    <lastmod>2026-04-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-zeynep-erguney</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -9616,14 +9616,20 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/aile-danismani/aile-selda-temelli-senel</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/psikolog/kl-psk-edanur-dag</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/aile-danismani/aile-selda-temelli-senel</loc>
-    <lastmod>2026-04-20</lastmod>
+    <loc>https://doktorumol.com.tr/psikolog/reyhan-uzer</loc>
+    <lastmod>2026-08-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -9647,6 +9653,12 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/aile-danismani/aile-danismani-nese-uslu</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/psikolog/psk-zerrin-gunduz</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
