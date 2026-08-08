@@ -17,10 +17,11 @@ const LOCAL_RESOLVE: Record<string, string> = {
   "@supabase/postgrest-js": "node_modules/@supabase/postgrest-js/dist/index.mjs",
 };
 
-function fixCjsInterop(): Plugin {
+function fixCjsInterop(mode: string): Plugin {
   return {
     name: "fix-cjs-interop",
     enforce: "pre",
+    apply: mode === "production" ? "build" : "serve",
     resolveId(source, importer) {
       if (!importer) return null;
       const local = LOCAL_RESOLVE[source];
