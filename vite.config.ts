@@ -17,11 +17,13 @@ const LOCAL_RESOLVE: Record<string, string> = {
   "@supabase/postgrest-js": "node_modules/@supabase/postgrest-js/dist/index.mjs",
 };
 
-function fixCjsInterop(): Plugin {
+function fixCjsInterop(mode: string): Plugin {
   return {
     name: "fix-cjs-interop",
     enforce: "pre",
+    apply: "build",
     resolveId(source, importer) {
+      if (mode !== "production") return null;
       if (!importer) return null;
       const local = LOCAL_RESOLVE[source];
       if (local) return path.resolve(__dirname, local);
@@ -85,7 +87,7 @@ export default defineConfig(({ mode }) => ({
     include: ["react-dropzone", "attr-accept"],
   },
   plugins: [
-    fixCjsInterop(),
+    fixCjsInterop(mode),
     react(),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
