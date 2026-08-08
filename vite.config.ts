@@ -21,8 +21,9 @@ function fixCjsInterop(mode: string): Plugin {
   return {
     name: "fix-cjs-interop",
     enforce: "pre",
-    apply: mode === "production" ? "build" : "serve",
+    apply: "build",
     resolveId(source, importer) {
+      if (mode !== "production") return null;
       if (!importer) return null;
       const local = LOCAL_RESOLVE[source];
       if (local) return path.resolve(__dirname, local);
