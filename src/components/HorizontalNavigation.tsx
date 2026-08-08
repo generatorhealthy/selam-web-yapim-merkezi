@@ -259,6 +259,18 @@ export function HorizontalNavigation() {
     setIsMobileMenuOpen(false);
   };
 
+  // Tam ekran menü açıkken arka plan kaydırmasını kilitle
+  useEffect(() => {
+    if (isMobile && isMobileMenuOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isMobile, isMobileMenuOpen]);
+
+
   return (
     <>
       <AdminTopBar userRole={userRole} />
