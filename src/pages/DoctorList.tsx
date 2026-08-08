@@ -45,7 +45,7 @@ const DoctorList = () => {
   const [selectedCity, setSelectedCity] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const ITEMS_PER_PAGE = 4;
+  const ITEMS_PER_PAGE = 12;
   
   const specialties = [
     "Aile Danışmanı", "Cildiye", "Dil ve Konuşma Terapisti", 
@@ -281,222 +281,213 @@ const DoctorList = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>
+    <div className="min-h-screen bg-[#f5f5f7]">
       <HorizontalNavigation />
-      
-      {/* Header Section */}
-      <div className="bg-white py-8 md:py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-2xl md:text-4xl font-bold mb-2 md:mb-4" style={{ color: '#4f7cff' }}>
-            Uzmanlar
-          </h1>
-          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-            Alanında uzman, deneyimli uzmanlarla tanışın. Sağlığınız için en doğru rehberliği alın ve hemen randevu oluşturun.
-          </p>
+
+      {/* Hero + Filters */}
+      <div className="bg-[#f5f5f7] pt-10 pb-6 md:pt-16 md:pb-10">
+        <div className="container mx-auto px-4">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
+            <div>
+              <span className="text-[11px] md:text-xs font-semibold tracking-[0.18em] text-gray-500 uppercase">
+                Uzmanları Keşfet
+              </span>
+              <h1 className="mt-3 text-3xl md:text-5xl font-bold tracking-tight text-gray-900 leading-[1.1]">
+                Alanında uzman
+                <br />
+                <span className="text-[#4f7cff]">danışmanlarla</span> tanışın.
+              </h1>
+            </div>
+
+            <div className="lg:pb-2">
+              <p className="text-sm md:text-base text-gray-600 mb-4 max-w-md">
+                Deneyimli ve alanında uzman profesyonellerimizle tanışın, size en uygun uzmanı kolayca bulun.
+              </p>
+              <div className="rounded-[22px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_10px_40px_-16px_rgba(0,0,0,0.18)] p-3">
+                <div className="grid gap-2 md:grid-cols-[1.3fr_1fr_1fr_auto]">
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Uzman ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-11 text-sm bg-[#f5f5f7] border-0 rounded-xl focus-visible:ring-1 focus-visible:ring-[#4f7cff]"
+                    />
+                  </div>
+
+                  <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
+                    <SelectTrigger className="h-11 text-sm bg-[#f5f5f7] border-0 rounded-xl">
+                      <SelectValue placeholder="Uzmanlık Alanı" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl bg-white/95 backdrop-blur-md shadow-xl">
+                      <SelectItem value="all" className="rounded-lg">Tümü</SelectItem>
+                      {specialties.map(specialty => (
+                        <SelectItem key={specialty} value={specialty} className="rounded-lg">
+                          {specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={selectedCity} onValueChange={setSelectedCity}>
+                    <SelectTrigger className="h-11 text-sm bg-[#f5f5f7] border-0 rounded-xl" aria-label="Şehir seçin">
+                      <SelectValue placeholder="Şehir" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl bg-white/95 backdrop-blur-md shadow-xl max-h-60">
+                      <SelectItem value="all" className="rounded-lg">Tümü</SelectItem>
+                      {cities.map(city => (
+                        <SelectItem key={city} value={city} className="rounded-lg">
+                          {city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setSelectedSpecialty("");
+                      setSelectedCity("");
+                      setCurrentPage(0);
+                    }}
+                    className="h-11 px-4 text-sm font-semibold rounded-xl text-[#4f7cff] hover:bg-[#4f7cff]/10"
+                  >
+                    <Filter className="w-4 h-4 mr-1.5" />
+                    Temizle
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-4 md:py-8">
-        {/* Filter Section */}
-        <div className="bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 rounded-3xl shadow-lg border border-white/40 p-6 md:p-8 mb-6 md:mb-8 backdrop-blur-sm">
-          <div className="flex items-center gap-4 mb-6 md:mb-8">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
-              <Filter className="w-6 h-6 md:w-7 md:h-7 text-white" />
-            </div>
-            <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Uzman Ara & Filtrele
-            </h2>
-          </div>
-          
-          <div className={`grid gap-4 md:gap-6 ${isMobile ? 'grid-cols-1' : 'md:grid-cols-4'}`}>
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-hover:text-blue-500 transition-colors" />
-              <Input
-                placeholder="Doktor adı, branş veya şehir..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-14 text-base border-2 border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm hover:border-blue-300 focus:border-blue-500 transition-all duration-300 shadow-sm"
-              />
-            </div>
-            
-            <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
-              <SelectTrigger className="h-14 text-base border-2 border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm hover:border-blue-300 focus:border-blue-500 transition-all duration-300 shadow-sm">
-                <SelectValue placeholder="Uzmanlık Alanı Seçin" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-2 bg-white/95 backdrop-blur-md shadow-xl">
-                <SelectItem value="all" className="rounded-lg">Tümü</SelectItem>
-                {specialties.map(specialty => (
-                  <SelectItem key={specialty} value={specialty} className="rounded-lg">
-                    {specialty}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
-              <SelectTrigger className="h-14 text-base border-2 border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm hover:border-blue-300 focus:border-blue-500 transition-all duration-300 shadow-sm">
-                <SelectValue placeholder="Şehir Seçin" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-2 bg-white/95 backdrop-blur-md shadow-xl max-h-60">
-                <SelectItem value="all" className="rounded-lg">Tümü</SelectItem>
-                {cities.map(city => (
-                  <SelectItem key={city} value={city} className="rounded-lg">
-                    {city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setSearchTerm("");
-                setSelectedSpecialty("");
-                setSelectedCity("");
-                setCurrentPage(0);
-              }}
-              className="h-14 text-base border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-2xl font-semibold bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm"
-            >
-              Filtreleri Temizle
-            </Button>
-          </div>
-          
-        </div>
-
+      <div className="container mx-auto px-4 pb-12">
         {filteredSpecialists.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-16">
             <p className="text-gray-600 text-lg">Arama kriterlerinize uygun uzman bulunamadı.</p>
           </div>
         ) : (
           <>
-            <div className="space-y-4 md:space-y-8">
+            <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {displayedSpecialists.map((specialist, index) => {
                 const specialtySlug = createSpecialtySlug(specialist.specialty);
-                
+
                 return (
-                  <Card key={`${specialist.id}-${index}`} className="bg-white border-0 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-2xl overflow-hidden animate-fade-in">
+                  <Card
+                    key={`${specialist.id}-${index}`}
+                    className="group bg-white border-0 rounded-[22px] overflow-hidden shadow-[0_4px_24px_-12px_rgba(0,0,0,0.15)] hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.28)] hover:-translate-y-1 transition-all duration-300 flex flex-col animate-fade-in"
+                  >
+                    {/* Photo */}
+                    <button
+                      type="button"
+                      onClick={() => handleProfileClick(specialist)}
+                      className="relative block w-full aspect-[4/3] overflow-hidden bg-[#f5f5f7]"
+                      aria-label={`${specialist.name} profilini görüntüle`}
+                    >
+                      <img
+                        src={specialist.profile_picture || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600&h=450&fit=crop&crop=face"}
+                        alt={`${specialist.name} - ${specialist.specialty}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      />
+                      <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur px-2.5 py-1 text-[11px] font-semibold text-green-700 shadow-sm">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Onaylı
+                      </span>
+                    </button>
 
-                    <CardContent className="p-4 md:p-8">
-                      <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex gap-8'}`}>
-                        {/* Doctor Image */}
-                        <div className={`${isMobile ? 'self-center' : 'flex-shrink-0'}`}>
-                          <img
-                            src={specialist.profile_picture || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face"}
-                            alt={specialist.name}
-                            className={`${isMobile ? 'w-24 h-24' : 'w-40 h-40'} rounded-2xl object-cover cursor-pointer hover:opacity-80 transition-opacity`}
-                            onClick={() => handleProfileClick(specialist)}
-                          />
-                        </div>
+                    <CardContent className="flex flex-1 flex-col p-5">
+                      <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#4f7cff]">
+                        {specialist.specialty}
+                      </span>
 
-                        {/* Doctor Info */}
-                        <div className="flex-1">
-                          <div className={`${isMobile ? 'text-center' : 'flex items-start justify-between'} mb-4`}>
-                            <div>
-                              <div className={`${isMobile ? 'flex flex-col items-center gap-2' : 'flex items-center gap-3'} mb-3`}>
-                                <h3 
-                                  className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors`}
-                                  onClick={() => handleProfileClick(specialist)}
-                                >
-                                  {specialist.name}
-                                </h3>
-                                <div className="flex items-center gap-2 text-green-600">
-                                  <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
-                                  <span className="text-xs md:text-sm font-semibold">Onaylı Profil</span>
-                                </div>
-                              </div>
-                              
-                              <div className={`mb-4 ${isMobile ? 'flex justify-center' : ''}`}>
-                                <Badge className="text-sm px-4 py-2 rounded-xl font-semibold" style={{ backgroundColor: '#e3f2fd', color: '#1976d2' }}>
-                                  👤 {specialist.specialty}
-                                </Badge>
-                              </div>
+                      <h3
+                        onClick={() => handleProfileClick(specialist)}
+                        className="mt-2 text-lg font-bold tracking-tight text-gray-900 cursor-pointer hover:text-[#4f7cff] transition-colors line-clamp-1"
+                      >
+                        {specialist.name}
+                      </h3>
 
-                              <div className={`${isMobile ? 'flex flex-col items-center gap-2' : 'flex items-center gap-6'} text-base text-gray-600 mb-4`}>
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="w-5 h-5" />
-                                  {specialist.city}
-                                </div>
-                                {specialist.experience && (
-                                  <span className="flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                    {specialist.experience} yıl deneyim
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                      <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5" />
+                          {specialist.city}
+                        </span>
+                        {specialist.experience ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                            {specialist.experience} yıl deneyim
+                          </span>
+                        ) : null}
+                      </div>
 
-                          {specialist.bio && (
-                            <p className={`text-gray-600 text-base leading-relaxed mb-6 line-clamp-3 ${isMobile ? 'text-center text-sm' : ''}`}>
-                              {specialist.bio}
-                            </p>
-                          )}
+                      {specialist.bio && (
+                        <p className="mt-3 text-[13px] leading-relaxed text-gray-600 line-clamp-3">
+                          {specialist.bio}
+                        </p>
+                      )}
 
-                          {/* Consultation Types */}
-                          <div className={`${isMobile ? 'flex justify-center' : 'flex'} gap-4 mb-6 md:mb-8`}>
-                            {getAppointmentTypes(specialist).map((type) => (
-                              <Badge 
-                                key={type} 
-                                variant="outline" 
-                                className={`text-sm px-4 py-2 rounded-xl font-semibold ${
-                                  type === 'Online' 
-                                    ? 'border-green-200 text-green-700 bg-green-50' 
-                                    : 'border-purple-200 text-purple-700 bg-purple-50'
-                                }`}
-                              >
-                                {type === 'Online' ? '🌐 Online' : '👥 Yüz Yüze'}
-                              </Badge>
-                            ))}
-                          </div>
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        {getAppointmentTypes(specialist).map((type) => (
+                          <Badge
+                            key={type}
+                            variant="outline"
+                            className={`text-[11px] px-2.5 py-1 rounded-full font-semibold ${
+                              type === 'Online'
+                                ? 'border-green-200 text-green-700 bg-green-50'
+                                : 'border-purple-200 text-purple-700 bg-purple-50'
+                            }`}
+                          >
+                            {type === 'Online' ? 'Online' : 'Yüz Yüze'}
+                          </Badge>
+                        ))}
+                      </div>
 
-                          {/* Action Buttons */}
-                          <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-4'}`}>
-                            <Button 
-                              asChild 
-                              className={`${isMobile ? 'w-full' : ''} h-12 px-8 text-base font-semibold rounded-xl text-white`} 
-                              style={{ backgroundColor: '#4f7cff' }}
+                      <div className="mt-auto pt-5 flex flex-col gap-2">
+                        <Button
+                          asChild
+                          className="w-full h-10 text-sm font-semibold rounded-full text-white"
+                          style={{ backgroundColor: '#4f7cff' }}
+                        >
+                          <Link to={`/${specialtySlug}/${specialist.slug}`}>
+                            Profili İncele
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          asChild
+                          className="w-full h-10 text-sm font-semibold rounded-full border"
+                          style={{ borderColor: '#4f7cff', color: '#4f7cff' }}
+                        >
+                          <Link to={`/randevu-al/${specialtySlug}/${specialist.slug}`}>
+                            Randevu Al
+                          </Link>
+                        </Button>
+
+                        {specialist.phone && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleWhatsAppClick(specialist.phone)}
+                              className="flex-1 h-9 rounded-full text-gray-600 hover:bg-gray-100"
+                              title="WhatsApp"
                             >
-                              <Link to={`/${specialtySlug}/${specialist.slug}`}>
-                                Profili İncele
-                              </Link>
+                              <MessageCircle className="w-4 h-4" />
                             </Button>
-                            
-                            <Button 
-                              variant="outline" 
-                              asChild 
-                              className={`${isMobile ? 'w-full' : ''} h-12 px-8 text-base font-semibold rounded-xl border-2`}
-                              style={{ borderColor: '#4f7cff', color: '#4f7cff' }}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCallClick(specialist.phone)}
+                              className="flex-1 h-9 rounded-full text-gray-600 hover:bg-gray-100"
+                              title="Ara"
                             >
-                              <Link to={`/randevu-al/${specialtySlug}/${specialist.slug}`}>
-                                📅 Randevu Al
-                              </Link>
+                              <Phone className="w-4 h-4" />
                             </Button>
-
-                            {/* Contact Buttons */}
-                            {specialist.phone && (
-                              <div className={`${isMobile ? 'flex justify-center' : 'flex'} gap-3`}>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => handleWhatsAppClick(specialist.phone)}
-                                  className="w-12 h-12 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
-                                  title="WhatsApp"
-                                >
-                                  <MessageCircle className="w-5 h-5" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => handleCallClick(specialist.phone)}
-                                  className="w-12 h-12 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
-                                  title="Ara"
-                                >
-                                  <Phone className="w-5 h-5" />
-                                </Button>
-                              </div>
-                            )}
                           </div>
-                        </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -506,13 +497,11 @@ const DoctorList = () => {
 
             {/* Loading More Indicator */}
             {loadingMore && (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Daha fazla uzman yükleniyor...</p>
+              <div className="text-center py-10">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4f7cff] mx-auto mb-4"></div>
+                <p className="text-gray-600 text-sm">Daha fazla uzman yükleniyor...</p>
               </div>
             )}
-
-
           </>
         )}
       </div>
