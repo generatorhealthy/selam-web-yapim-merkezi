@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, ChevronDown, User, Stethoscope } from "lucide-react";
+import { X, ChevronDown, ChevronRight, User, Stethoscope } from "lucide-react";
 
 import { AdminTopBar } from "./AdminTopBar";
 import RegistrationForm from "./RegistrationForm";
