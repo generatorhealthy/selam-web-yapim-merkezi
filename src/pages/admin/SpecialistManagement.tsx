@@ -732,7 +732,7 @@ const SpecialistManagement = () => {
                       </div>
 
                       {/* Status Badge */}
-                      <div className="mb-4">
+                      <div className="mb-4 flex flex-wrap items-center gap-2">
                         <Badge 
                           variant={specialist.is_active ? "default" : "secondary"}
                           className={
@@ -750,7 +750,18 @@ const SpecialistManagement = () => {
                               : "Pasif"
                           }
                         </Badge>
+                        {partnerRefs[specialist.id] && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-purple-100 text-purple-800 hover:bg-purple-100 gap-1"
+                            title={`Partner: ${partnerRefs[specialist.id]}`}
+                          >
+                            <Handshake className="w-3 h-3" />
+                            Partner Referans Kayıt
+                          </Badge>
+                        )}
                       </div>
+
 
                       {/* Info Grid */}
                       <div className="space-y-3 mb-4">
