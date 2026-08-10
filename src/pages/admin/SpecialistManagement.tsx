@@ -27,7 +27,9 @@ import {
   MoreVertical,
   UserCheck,
   MessageCircle,
-  StickyNote
+  StickyNote,
+  Handshake
+
 } from "lucide-react";
 import { SpecialistNotesDialog } from "@/components/admin/SpecialistNotesDialog";
 import { Link } from "react-router-dom";
@@ -108,10 +110,38 @@ const SpecialistManagement = () => {
     }
   };
 
+  const [partnerRefs, setPartnerRefs] = useState<Record<string, string>>({});
+
+  // Partner referansıyla kayıt olan uzmanları tespit et
+  const loadPartnerReferrals = async () => {
+    if (specialists.length === 0) return;
+    const { data } = await supabase
+      .from("partner_referrals")
+      .select("specialist_user_id, specialist_email, specialist_phone, partners(name)");
+    if (!data) return;
+
+    const digits = (v?: string | null) => (v || "").replace(/\D/g, "").slice(-10);
+    const map: Record<string, string> = {};
+
+    specialists.forEach((s: any) => {
+      const match = data.find((r: any) => {
+        if (r.specialist_user_id && s.user_id && r.specialist_user_id === s.user_id) return true;
+        if (r.specialist_email && s.email && r.specialist_email.toLowerCase() === String(s.email).toLowerCase()) return true;
+        const rp = digits(r.specialist_phone);
+        return !!rp && rp === digits(s.phone);
+      });
+      if (match) map[s.id] = (match as any).partners?.name || "Partner";
+    });
+
+    setPartnerRefs(map);
+  };
+
   useEffect(() => {
     void loadNotesData();
+    void loadPartnerReferrals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specialists]);
+
 
   // Kullanıcı yetki kontrolü - basitleştirilmiş ve güvenilir
   useEffect(() => {
@@ -704,7 +734,7 @@ const SpecialistManagement = () => {
                       </div>
 
                       {/* Status Badge */}
-                      <div className="mb-4">
+                      <div className="mb-4 flex flex-wrap items-center gap-2">
                         <Badge 
                           variant={specialist.is_active ? "default" : "secondary"}
                           className={
@@ -722,7 +752,18 @@ const SpecialistManagement = () => {
                               : "Pasif"
                           }
                         </Badge>
+                        {partnerRefs[specialist.id] && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-purple-100 text-purple-800 hover:bg-purple-100 gap-1"
+                            title={`Partner: ${partnerRefs[specialist.id]}`}
+                          >
+                            <Handshake className="w-3 h-3" />
+                            Partner Referans Kayıt
+                          </Badge>
+                        )}
                       </div>
+
 
                       {/* Info Grid */}
                       <div className="space-y-3 mb-4">
