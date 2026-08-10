@@ -27,7 +27,9 @@ import {
   MoreVertical,
   UserCheck,
   MessageCircle,
-  StickyNote
+  StickyNote,
+  Handshake
+
 } from "lucide-react";
 import { SpecialistNotesDialog } from "@/components/admin/SpecialistNotesDialog";
 import { Link } from "react-router-dom";
