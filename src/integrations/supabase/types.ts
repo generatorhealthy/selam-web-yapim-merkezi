@@ -7221,6 +7221,7 @@ export type Database = {
         }[]
       }
       merge_duplicate_client_referrals: { Args: never; Returns: undefined }
+      normalize_ref_code: { Args: { p_text: string }; Returns: string }
       notify_search_engines_async: {
         Args: { _id?: string; _slug?: string; _type: string }
         Returns: undefined
