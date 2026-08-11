@@ -87,7 +87,11 @@ const SpecialistRegistration = () => {
     if (code) {
       referralCodeRef.current = code;
       try { localStorage.setItem("partner_ref", code); } catch {}
+      if (fromUrl && typeof window !== "undefined") {
+        try { localStorage.setItem("partner_ref_landing", window.location.href); } catch {}
+      }
     }
+
   }, [searchParams]);
 
 
