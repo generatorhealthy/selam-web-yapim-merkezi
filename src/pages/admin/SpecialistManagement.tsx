@@ -765,11 +765,17 @@ const SpecialistManagement = () => {
                         {partnerRefs[specialist.id] && (
                           <Badge
                             variant="secondary"
-                            className="bg-purple-100 text-purple-800 hover:bg-purple-100 gap-1"
-                            title={`Partner: ${partnerRefs[specialist.id]}`}
+                            className={
+                              partnerRefs[specialist.id].verified
+                                ? "bg-purple-100 text-purple-800 hover:bg-purple-100 gap-1"
+                                : "bg-amber-100 text-amber-800 hover:bg-amber-100 gap-1"
+                            }
+                            title={partnerRefs[specialist.id].detail}
                           >
                             <Handshake className="w-3 h-3" />
-                            Partner Referans Kayıt
+                            {partnerRefs[specialist.id].verified
+                              ? "Partner Referans Kayıt"
+                              : "Partner Referans (Doğrulanmadı)"}
                           </Badge>
                         )}
                       </div>
