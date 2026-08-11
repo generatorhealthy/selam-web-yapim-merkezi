@@ -284,20 +284,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/cilt-muayenesi-nasil-yapilir</loc>
-    <lastmod>2025-09-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/vajinal-ultrason-aleti-kac-cm</loc>
     <lastmod>2025-09-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/hangi-benler-lazerle-alinmaz</loc>
-    <lastmod>2025-09-10</lastmod>
+    <loc>https://doktorumol.com.tr/blog/cilt-muayenesi-nasil-yapilir</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7418,6 +7412,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/hangi-benler-lazerle-alinmaz</loc>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/uzm-psk-ebru-ozcan-ile-bilincli-saglikli-ve-guclu-bir-yasama-adim</loc>
     <lastmod>2025-07-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -7563,7 +7563,7 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/hangi-vitamin-eksikligi-alerji-yapar</loc>
-    <lastmod>2025-09-10</lastmod>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7966,6 +7966,12 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/travma-sonrasi-stresle-basa-cikma</loc>
     <lastmod>2026-04-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/zeynep-caner-genc-yetiskinlik</loc>
+    <lastmod>2026-08-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -9568,12 +9574,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolog/hayal-aliyeva</loc>
-    <lastmod>2026-07-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/aile-danismani/aile-danismani-elif-polat</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -9742,8 +9742,20 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/psikolog/zeynep-caner</loc>
+    <lastmod>2026-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/klinik-psikolog/basak-tiras-bilgili</loc>
     <lastmod>2026-05-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/psikolog/hayal-aliyeva</loc>
+    <lastmod>2026-07-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
