@@ -110,18 +110,18 @@ const SpecialistManagement = () => {
     }
   };
 
-  const [partnerRefs, setPartnerRefs] = useState<Record<string, string>>({});
+  const [partnerRefs, setPartnerRefs] = useState<Record<string, { partner: string; verified: boolean; detail: string }>>({});
 
   // Partner referansıyla kayıt olan uzmanları tespit et
   const loadPartnerReferrals = async () => {
     if (specialists.length === 0) return;
     const { data } = await supabase
       .from("partner_referrals")
-      .select("specialist_user_id, specialist_email, specialist_phone, partners(name)");
+      .select("specialist_user_id, specialist_email, specialist_phone, source, ref_code_used, landing_url, partners(name)");
     if (!data) return;
 
     const digits = (v?: string | null) => (v || "").replace(/\D/g, "").slice(-10);
-    const map: Record<string, string> = {};
+    const map: Record<string, { partner: string; verified: boolean; detail: string }> = {};
 
     specialists.forEach((s: any) => {
       const match = data.find((r: any) => {
@@ -129,12 +129,22 @@ const SpecialistManagement = () => {
         if (r.specialist_email && s.email && r.specialist_email.toLowerCase() === String(s.email).toLowerCase()) return true;
         const rp = digits(r.specialist_phone);
         return !!rp && rp === digits(s.phone);
-      });
-      if (match) map[s.id] = (match as any).partners?.name || "Partner";
+      }) as any;
+      if (match) {
+        const verified = match.source === "link" && !!match.ref_code_used;
+        map[s.id] = {
+          partner: match.partners?.name || "Partner",
+          verified,
+          detail: verified
+            ? `Partner: ${match.partners?.name || "Partner"}\nDoğrulandı: referans linkiyle kayıt (${match.ref_code_used})`
+            : `Partner: ${match.partners?.name || "Partner"}\nDoğrulanmadı: kayıt zamanı eşleşmesiyle elle eklendi`,
+        };
+      }
     });
 
     setPartnerRefs(map);
   };
+
 
   useEffect(() => {
     void loadNotesData();
