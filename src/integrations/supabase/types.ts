@@ -5110,11 +5110,15 @@ export type Database = {
           first_order_id: string | null
           first_paid_at: string | null
           id: string
+          landing_url: string | null
           notes: string | null
           paid_at: string | null
           partner_id: string
           payment_id: string | null
+          ref_code_used: string | null
           signup_at: string
+          signup_session_id: string | null
+          source: string
           specialist_email: string
           specialist_name: string | null
           specialist_phone: string | null
@@ -5128,11 +5132,15 @@ export type Database = {
           first_order_id?: string | null
           first_paid_at?: string | null
           id?: string
+          landing_url?: string | null
           notes?: string | null
           paid_at?: string | null
           partner_id: string
           payment_id?: string | null
+          ref_code_used?: string | null
           signup_at?: string
+          signup_session_id?: string | null
+          source?: string
           specialist_email: string
           specialist_name?: string | null
           specialist_phone?: string | null
@@ -5146,11 +5154,15 @@ export type Database = {
           first_order_id?: string | null
           first_paid_at?: string | null
           id?: string
+          landing_url?: string | null
           notes?: string | null
           paid_at?: string | null
           partner_id?: string
           payment_id?: string | null
+          ref_code_used?: string | null
           signup_at?: string
+          signup_session_id?: string | null
+          source?: string
           specialist_email?: string
           specialist_name?: string | null
           specialist_phone?: string | null
@@ -5462,8 +5474,11 @@ export type Database = {
           last_activity_at: string | null
           left_at: string | null
           max_step_reached: number | null
+          ref_code: string | null
           referrer: string | null
           session_id: string
+          specialist_email: string | null
+          specialist_user_id: string | null
           started_at: string | null
           step_timestamps: Json | null
           time_on_page: number | null
@@ -5486,8 +5501,11 @@ export type Database = {
           last_activity_at?: string | null
           left_at?: string | null
           max_step_reached?: number | null
+          ref_code?: string | null
           referrer?: string | null
           session_id: string
+          specialist_email?: string | null
+          specialist_user_id?: string | null
           started_at?: string | null
           step_timestamps?: Json | null
           time_on_page?: number | null
@@ -5510,8 +5528,11 @@ export type Database = {
           last_activity_at?: string | null
           left_at?: string | null
           max_step_reached?: number | null
+          ref_code?: string | null
           referrer?: string | null
           session_id?: string
+          specialist_email?: string | null
+          specialist_user_id?: string | null
           started_at?: string | null
           step_timestamps?: Json | null
           time_on_page?: number | null
@@ -7017,6 +7038,15 @@ export type Database = {
         Args: { p_new_slug: string; p_specialist_id: string }
         Returns: Json
       }
+      attach_signup_identity_to_analytics: {
+        Args: {
+          p_ref_code?: string
+          p_session_id: string
+          p_specialist_email: string
+          p_specialist_user_id: string
+        }
+        Returns: undefined
+      }
       backup_client_referrals: { Args: never; Returns: undefined }
       can_manage_users: { Args: { target_user_id?: string }; Returns: boolean }
       check_admin_login_block: {
@@ -7234,16 +7264,29 @@ export type Database = {
           is_now_blocked: boolean
         }[]
       }
-      register_partner_referral: {
-        Args: {
-          p_referral_code: string
-          p_specialist_email: string
-          p_specialist_name: string
-          p_specialist_phone: string
-          p_specialist_user_id: string
-        }
-        Returns: string
-      }
+      register_partner_referral:
+        | {
+            Args: {
+              p_referral_code: string
+              p_specialist_email: string
+              p_specialist_name: string
+              p_specialist_phone: string
+              p_specialist_user_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_landing_url?: string
+              p_referral_code: string
+              p_session_id?: string
+              p_specialist_email: string
+              p_specialist_name: string
+              p_specialist_phone: string
+              p_specialist_user_id: string
+            }
+            Returns: string
+          }
       reset_admin_login_attempts: {
         Args: { p_email: string }
         Returns: undefined
