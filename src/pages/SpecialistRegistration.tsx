@@ -87,12 +87,37 @@ const SpecialistRegistration = () => {
     if (code) {
       referralCodeRef.current = code;
       try { localStorage.setItem("partner_ref", code); } catch {}
+      if (fromUrl && typeof window !== "undefined") {
+        try { localStorage.setItem("partner_ref_landing", window.location.href); } catch {}
+      }
     }
+
   }, [searchParams]);
 
 
   const registerPartnerReferral = async (userId: string, userEmail: string) => {
     const code = referralCodeRef.current;
+    // Kanıt verileri: hangi oturum, hangi link
+    const sessionId =
+      typeof window !== "undefined" ? sessionStorage.getItem("reg_analytics_session") : null;
+    const landingUrl =
+      (typeof window !== "undefined" ? localStorage.getItem("partner_ref_landing") : null) ||
+      (typeof window !== "undefined" ? window.location.href : null);
+
+    // Kayıt analitiği oturumunu gerçek kullanıcıyla eşleştir (tahmine gerek kalmasın)
+    if (sessionId) {
+      try {
+        await supabase.rpc("attach_signup_identity_to_analytics" as any, {
+          p_session_id: sessionId,
+          p_specialist_user_id: userId,
+          p_specialist_email: userEmail,
+          p_ref_code: code || null,
+        });
+      } catch (err) {
+        console.error("Analitik kimlik eşleştirme hatası:", err);
+      }
+    }
+
     if (!code) return;
     try {
       await supabase.rpc("register_partner_referral" as any, {
@@ -101,11 +126,14 @@ const SpecialistRegistration = () => {
         p_specialist_email: userEmail,
         p_specialist_name: formData.name || email.split("@")[0],
         p_specialist_phone: phone || null,
+        p_session_id: sessionId,
+        p_landing_url: landingUrl,
       });
     } catch (err) {
       console.error("Partner referral kaydı hatası:", err);
     }
   };
+
 
 
 
