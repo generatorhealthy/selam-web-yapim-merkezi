@@ -68,14 +68,28 @@ const SpecialistRegistration = () => {
   const referralCodeRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const fromUrl = searchParams.get("ref");
+    // ?ref= parametresi reklam linklerinde kırpılmış/bozuk gelebiliyor.
+    // Bu yüzden ham query string üzerinden de güvenli şekilde okuyoruz.
+    let fromUrl: string | null = null;
+    try {
+      fromUrl = searchParams.get("ref");
+    } catch {
+      fromUrl = null;
+    }
+    if (!fromUrl && typeof window !== "undefined") {
+      const raw = new URLSearchParams(window.location.search).get("ref");
+      if (raw) {
+        try { fromUrl = decodeURIComponent(raw); } catch { fromUrl = raw.replace(/%[0-9A-Fa-f]?$/g, ""); }
+      }
+    }
     const stored = typeof window !== "undefined" ? localStorage.getItem("partner_ref") : null;
-    const code = (fromUrl || stored || "").trim();
+    const code = (fromUrl || stored || "").replace(/\+/g, " ").trim();
     if (code) {
-      referralCodeRef.current = code.toUpperCase();
-      try { localStorage.setItem("partner_ref", code.toUpperCase()); } catch {}
+      referralCodeRef.current = code;
+      try { localStorage.setItem("partner_ref", code); } catch {}
     }
   }, [searchParams]);
+
 
   const registerPartnerReferral = async (userId: string, userEmail: string) => {
     const code = referralCodeRef.current;
