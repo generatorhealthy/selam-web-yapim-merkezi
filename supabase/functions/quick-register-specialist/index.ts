@@ -66,7 +66,7 @@ Kurallar:
 - "city": Şehir. Şu listeden tam eşleşen: ${CITIES.join(", ")}.
 - "education": Eğitim/Tıp Fakültesi vb. (yoksa null)
 - "university": Üniversite (yoksa null)
-- "experience": Deneyim yılı sayı olarak (yoksa null)
+- "experience": Deneyim yılı TAM SAYI olarak (ondalık olmasın). Ay olarak yazılmışsa yıla çevirip yuvarla, 12 aydan azsa 0 yaz (yoksa null)
 - "address": Adres (yoksa null)
 - "certifications": Sertifikalar (yoksa null)
 - "online_consultation": Danışmanlık türü içinde "online" geçiyorsa true
