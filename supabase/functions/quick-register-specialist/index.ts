@@ -66,7 +66,7 @@ Kurallar:
 - "city": Şehir. Şu listeden tam eşleşen: ${CITIES.join(", ")}.
 - "education": Eğitim/Tıp Fakültesi vb. (yoksa null)
 - "university": Üniversite (yoksa null)
-- "experience": Deneyim yılı sayı olarak (yoksa null)
+- "experience": Deneyim yılı TAM SAYI olarak (ondalık olmasın). Ay olarak yazılmışsa yıla çevirip yuvarla, 12 aydan azsa 0 yaz (yoksa null)
 - "address": Adres (yoksa null)
 - "certifications": Sertifikalar (yoksa null)
 - "online_consultation": Danışmanlık türü içinde "online" geçiyorsa true
@@ -291,7 +291,10 @@ serve(async (req) => {
         bio: parsed.bio,
         education: parsed.education,
         university: parsed.university,
-        experience: parsed.experience,
+        experience:
+          parsed.experience === null || parsed.experience === undefined || isNaN(Number(parsed.experience))
+            ? null
+            : Math.max(0, Math.round(Number(parsed.experience))),
         address: parsed.address,
         certifications: parsed.certifications,
         working_hours_start: "10:00",
