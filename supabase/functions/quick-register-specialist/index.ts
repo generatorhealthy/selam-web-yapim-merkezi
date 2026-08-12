@@ -291,7 +291,10 @@ serve(async (req) => {
         bio: parsed.bio,
         education: parsed.education,
         university: parsed.university,
-        experience: parsed.experience,
+        experience:
+          parsed.experience === null || parsed.experience === undefined || isNaN(Number(parsed.experience))
+            ? null
+            : Math.max(0, Math.round(Number(parsed.experience))),
         address: parsed.address,
         certifications: parsed.certifications,
         working_hours_start: "10:00",
