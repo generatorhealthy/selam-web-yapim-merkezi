@@ -477,10 +477,21 @@ Deno.serve(async (req) => {
       }
       const chatId = `${phone}@c.us`;
 
-      const send = async (text: string, options?: string[]) => {
+      const sendPlain = async (text: string) => {
+        const r = await supabase.functions.invoke("waha-proxy", {
+          body: { action: "sendText", sessionName, payload: { chatId, text } },
+        });
+        return !r.error && (r.data as any)?.success !== false;
+      };
+
+      // options varsa: uzun bilgilendirme metni ayrı mesaj, anket sorusu kısa tutulur
+      // (WhatsApp anket başlığı ~255 karakterde kesiliyor)
+      const send = async (text: string, options?: string[], question?: string) => {
         if (options?.length) {
+          const q = question || text;
+          if (q !== text) await sendPlain(text);
           const p = await supabase.functions.invoke("waha-proxy", {
-            body: { action: "sendPoll", sessionName, payload: { chatId, name: text, options } },
+            body: { action: "sendPoll", sessionName, payload: { chatId, name: q, options } },
           });
           if (!p.error && (p.data as any)?.success !== false) return true;
         }
@@ -530,7 +541,7 @@ Deno.serve(async (req) => {
           modeLabel(isOnlineRequest(body.consultationType)),
           publicSpecialtyLabel(groupForTherapy(body.therapyType)),
         );
-        const ok = await send(question, YES_NO);
+        const ok = await send(question, YES_NO, Q_CONSENT);
         const { data: created } = await supabase
           .from("whatsapp_bot_sessions")
           .insert({
@@ -574,8 +585,8 @@ Deno.serve(async (req) => {
       const transcript = pushTranscript(existing, "client", answerRaw);
       const step = String(existing.last_question || "consent");
 
-      const reply = async (text: string, options?: string[], nextState?: string, nextStep?: string, patch?: Record<string, unknown>) => {
-        await send(text, options);
+      const reply = async (text: string, options?: string[], nextState?: string, nextStep?: string, patch?: Record<string, unknown>, question?: string) => {
+        await send(text, options, question);
         transcript.push({ from: "bot", text, buttons: options });
         await saveSession(existing.id, {
           transcript,
@@ -603,10 +614,44 @@ Deno.serve(async (req) => {
               publicSpecialtyLabel(groupForTherapy(existing.therapy_type)),
             ),
             YES_NO,
+            undefined,
+            undefined,
+            undefined,
+            Q_CONSENT,
           );
           return json({ success: true, state: existing.state, repeated: true });
         }
         answers.consent = true;
+        await reply(
+          msgRoleInfo(publicSpecialtyLabel(groupForTherapy(existing.therapy_type))),
+          APPROVE,
+          "awaiting_info_confirm",
+          "info_confirm",
+          undefined,
+          Q_INFO,
+        );
+        return json({ success: true, state: "awaiting_info_confirm" });
+      }
+
+      // 1b) bilgilendirme onayı
+      if (step === "info_confirm") {
+        if (isNegative(answerRaw)) {
+          answers.infoConfirm = false;
+          await reply(msgDeclined(), undefined, "declined", "done");
+          return json({ success: true, state: "declined" });
+        }
+        if (!isPositive(answerRaw)) {
+          await reply(
+            msgRoleInfo(publicSpecialtyLabel(groupForTherapy(existing.therapy_type))),
+            APPROVE,
+            undefined,
+            undefined,
+            undefined,
+            Q_INFO,
+          );
+          return json({ success: true, state: existing.state, repeated: true });
+        }
+        answers.infoConfirm = true;
 
         // Başvuruda alan bilgisi varsa tekrar sorma, doğrudan sonraki adıma geç
         if (existing.therapy_type) {
@@ -741,7 +786,7 @@ Deno.serve(async (req) => {
         if (!match.selected && !online) {
           await reply(msgNoCitySpecialist(city), ONLINE_FALLBACK, "awaiting_online_fallback", "online_fallback", {
             offered_online_fallback: true,
-          });
+          }, "Online görüşme seçeneğini değerlendirmek ister misiniz?");
           return json({ success: true, state: "awaiting_online_fallback" });
         }
         if (!match.selected) {
@@ -755,7 +800,7 @@ Deno.serve(async (req) => {
           selection_reason: match.selectionReason ?? null,
           consultation_type: online ? "online" : "yuz_yuze",
           offered_online_fallback: usedFallback || !!existing.offered_online_fallback,
-        });
+        }, Q_APPROVAL);
         return json({ success: true, state: "awaiting_approval", specialistId: match.selected.id });
       }
     }
