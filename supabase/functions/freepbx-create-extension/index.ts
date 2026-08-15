@@ -250,6 +250,24 @@ serve(async (req) => {
           debugList = { error: e instanceof Error ? e.message : String(e) };
         }
       }
+      // Read-only Follow-Me teşhisi: belirli bir dahilinin yönlendirme ayarı
+      let followMeDebug: any = null;
+      const fmExt = (body.followmeExt ?? "").toString().trim();
+      if (fmExt) {
+        const queries = [
+          `query { fetchFollowMe(extensionId: "${fmExt}") { status message enabled followMeList strategy ringTime } }`,
+          `query { findmefollow(extensionId: "${fmExt}") { grplist grptime strategy } }`,
+        ];
+        for (const q of queries) {
+          try {
+            followMeDebug = await gql(token, q);
+            break;
+          } catch (e) {
+            followMeDebug = { error: e instanceof Error ? e.message : String(e) };
+          }
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
