@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { TEMPLATE_BASE64 } from "./templates.ts";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 

@@ -1,6 +1,6 @@
 // AI arama zamanlayıcısı — pg_cron tarafından her dakika çağrılır.
 // ai_call_settings.enabled = false iken HİÇBİR arama başlatmaz.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {

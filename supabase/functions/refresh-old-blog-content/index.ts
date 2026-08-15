@@ -1,7 +1,7 @@
 // Eski blog yazılarını güncelleyip tazeler: konuyla ilgili 100-200 kelime ek içerik üretir,
 // içeriğe ekler ve yayınlanma tarihini bugüne çeker. En eski yazıdan başlar.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {

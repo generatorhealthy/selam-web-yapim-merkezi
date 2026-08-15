@@ -1,7 +1,7 @@
 // One-shot bulk EMAIL to all active specialists announcing the mobile app launch.
 // Uses Brevo (info@doktorumol.com.tr). Reuses the styled HTML wrapper from send-bulk-email.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
