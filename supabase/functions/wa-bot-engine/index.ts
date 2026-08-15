@@ -328,22 +328,22 @@ Deno.serve(async (req) => {
         let ok = false;
         let errMsg = "";
 
-        // 1) Gerçek WhatsApp butonları (WAHA Plus)
+        // NOWEB, sendButtons mesajını kabul etse bile WhatsApp'a teslim etmiyor.
+        // Dokunulabilir tek seçimli seçenekleri NOWEB'in desteklediği anket olarak gönder.
         if (step.buttons?.length) {
           const btnRes = await supabase.functions.invoke("waha-proxy", {
             body: {
-              action: "sendButtons",
+              action: "sendPoll",
               sessionName,
               payload: {
                 chatId,
-                body: bodyText,
-                footer: "Doktorumol.com.tr",
-                buttons: step.buttons.map((b, idx) => ({ id: String(idx + 1), text: b })),
+                name: bodyText,
+                options: step.buttons,
               },
             },
           });
           ok = !btnRes.error && (btnRes.data as any)?.success !== false;
-          if (!ok) errMsg = btnRes.error?.message || (btnRes.data as any)?.error || "buton gönderilemedi";
+          if (!ok) errMsg = btnRes.error?.message || (btnRes.data as any)?.error || "seçenekler gönderilemedi";
         }
 
         // 2) Buton desteklenmiyorsa numaralı metne düş
@@ -354,7 +354,7 @@ Deno.serve(async (req) => {
           });
           ok = !res.error && (res.data as any)?.success !== false;
           if (!ok) errors.push(res.error?.message || (res.data as any)?.error || errMsg || "Bilinmeyen hata");
-          else if (errMsg) errors.push(`Buton desteklenmedi, metin olarak gönderildi (${errMsg})`);
+          else if (errMsg) errors.push(`Dokunulabilir seçenek desteklenmedi, metin olarak gönderildi (${errMsg})`);
         }
         if (ok) sent.push(text);
         if (i < botSteps.length - 1) await new Promise((r) => setTimeout(r, 1500));
