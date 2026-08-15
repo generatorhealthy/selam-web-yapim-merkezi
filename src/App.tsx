@@ -117,6 +117,7 @@ const ClientReferrals = lazy(() => import("./pages/admin/ClientReferrals"));
 const MetaLeads = lazy(() => import("./pages/admin/MetaLeads"));
 const UzmanApplications = lazy(() => import("./pages/admin/UzmanApplications"));
 const ClientCalendar = lazy(() => import("./pages/admin/ClientCalendar"));
+const WhatsappBotManagement = lazy(() => import("./pages/admin/WhatsappBotManagement"));
 const PreInfoFormManagement = lazy(() => import("./pages/admin/PreInfoFormManagement"));
 const PackageManagement = lazy(() => import("./pages/admin/PackageManagement"));
 const TestManagement = lazy(() => import("./pages/admin/TestManagement"));
@@ -347,6 +348,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/meta-leads" element={<MetaLeads />} />
               <Route path="/divan_paneli/uzman-basvurulari" element={<UzmanApplications />} />
               <Route path="/divan_paneli/client-calendar" element={<ClientCalendar />} />
+              <Route path="/divan_paneli/whatsapp-bot" element={<WhatsappBotManagement />} />
               <Route path="/divan_paneli/appointments" element={<AppointmentManagement />} />
               <Route path="/divan_paneli/blog" element={<BlogManagement />} />
               <Route path="/divan_paneli/customers" element={<CustomerManagement />} />

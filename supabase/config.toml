@@ -192,3 +192,6 @@ verify_jwt = false
 
 [functions.notify-referred-client]
 verify_jwt = false
+
+[functions.wa-bot-engine]
+verify_jwt = false

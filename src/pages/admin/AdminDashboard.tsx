@@ -296,6 +296,18 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "WhatsApp Bot Yönetimi",
+      description: "Danışan yönlendirme botu ve test simülasyonu",
+      icon: MessageCircle,
+      gradient: "from-emerald-500 via-green-500 to-teal-600",
+      bgGradient: "from-emerald-50 to-teal-50",
+      shadowColor: "shadow-emerald-500/20",
+      route: "/divan_paneli/whatsapp-bot",
+      buttonText: "Botu Yönet",
+      adminOnly: true,
+      staffOnly: false
+    },
+    {
       title: "Randevu Yönetimi",
       description: "Randevuları görüntüle ve yönet",
       icon: Calendar,

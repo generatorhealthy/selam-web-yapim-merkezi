@@ -6793,6 +6793,93 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_bot_sessions: {
+        Row: {
+          city: string | null
+          client_name: string | null
+          consultation_type: string | null
+          created_at: string
+          id: string
+          is_test: boolean
+          last_message_at: string | null
+          lead_id: string | null
+          offered_online_fallback: boolean
+          phone: string
+          selected_specialist_id: string | null
+          selection_reason: string | null
+          state: string
+          therapy_type: string | null
+          transcript: Json
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          client_name?: string | null
+          consultation_type?: string | null
+          created_at?: string
+          id?: string
+          is_test?: boolean
+          last_message_at?: string | null
+          lead_id?: string | null
+          offered_online_fallback?: boolean
+          phone: string
+          selected_specialist_id?: string | null
+          selection_reason?: string | null
+          state?: string
+          therapy_type?: string | null
+          transcript?: Json
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          client_name?: string | null
+          consultation_type?: string | null
+          created_at?: string
+          id?: string
+          is_test?: boolean
+          last_message_at?: string | null
+          lead_id?: string | null
+          offered_online_fallback?: boolean
+          phone?: string
+          selected_specialist_id?: string | null
+          selection_reason?: string | null
+          state?: string
+          therapy_type?: string | null
+          transcript?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_bot_settings: {
+        Row: {
+          enabled: boolean
+          id: string
+          notes: string | null
+          test_mode: boolean
+          updated_at: string
+          updated_by: string | null
+          urgent_days: number
+        }
+        Insert: {
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          test_mode?: boolean
+          updated_at?: string
+          updated_by?: string | null
+          urgent_days?: number
+        }
+        Update: {
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          test_mode?: boolean
+          updated_at?: string
+          updated_by?: string | null
+          urgent_days?: number
+        }
+        Relationships: []
+      }
       whatsapp_lines: {
         Row: {
           created_at: string
