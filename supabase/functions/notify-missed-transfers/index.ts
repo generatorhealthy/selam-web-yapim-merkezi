@@ -1,7 +1,7 @@
 // Detect missed specialist transfers (uzman telefonu açmadı) from FreePBX CDR and
 // send automatic WhatsApp notifications to BOTH the specialist and the client.
 // Idempotent: each transfer is notified only once (tracked in pbx_missed_transfer_notifications).
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

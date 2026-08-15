@@ -1,5 +1,5 @@
 // Bonus uygulama: 12. ay tamamlanan referanslara +2 ay ücretsiz üyelik ekler
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {

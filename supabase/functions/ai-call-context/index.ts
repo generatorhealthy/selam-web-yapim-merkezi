@@ -1,7 +1,7 @@
 // AI arama köprüsü için bağlam servisi.
 // action=start  -> danışan bilgisi + sistem talimatı + aday uzman listeleri
 // action=pick   -> verilen şehir/moda göre TEK hedef uzmanı döner (deterministik)
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   candidatesFor,
   isFamilyTherapy,
