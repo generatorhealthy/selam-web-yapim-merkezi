@@ -6793,6 +6793,45 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_bot_auto_replies: {
+        Row: {
+          chat_id: string
+          created_at: string
+          error: string | null
+          id: string
+          incoming_body: string | null
+          intent: string
+          is_test: boolean
+          phone: string | null
+          reply_text: string
+          session_name: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          incoming_body?: string | null
+          intent: string
+          is_test?: boolean
+          phone?: string | null
+          reply_text: string
+          session_name: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          incoming_body?: string | null
+          intent?: string
+          is_test?: boolean
+          phone?: string | null
+          reply_text?: string
+          session_name?: string
+        }
+        Relationships: []
+      }
       whatsapp_bot_sessions: {
         Row: {
           city: string | null
@@ -6852,6 +6891,11 @@ export type Database = {
       }
       whatsapp_bot_settings: {
         Row: {
+          auto_reply_cooldown_minutes: number
+          auto_reply_enabled: boolean
+          auto_reply_general_text: string
+          auto_reply_price_text: string
+          auto_reply_test_mode: boolean
           enabled: boolean
           id: string
           notes: string | null
@@ -6861,6 +6905,11 @@ export type Database = {
           urgent_days: number
         }
         Insert: {
+          auto_reply_cooldown_minutes?: number
+          auto_reply_enabled?: boolean
+          auto_reply_general_text?: string
+          auto_reply_price_text?: string
+          auto_reply_test_mode?: boolean
           enabled?: boolean
           id?: string
           notes?: string | null
@@ -6870,6 +6919,11 @@ export type Database = {
           urgent_days?: number
         }
         Update: {
+          auto_reply_cooldown_minutes?: number
+          auto_reply_enabled?: boolean
+          auto_reply_general_text?: string
+          auto_reply_price_text?: string
+          auto_reply_test_mode?: boolean
           enabled?: boolean
           id?: string
           notes?: string | null

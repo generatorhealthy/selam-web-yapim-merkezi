@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -23,6 +24,8 @@ import {
   Users,
   ShieldCheck,
   Loader2,
+  MessageSquare,
+  Reply,
 } from "lucide-react";
 
 const THERAPY_OPTIONS = [
@@ -40,6 +43,24 @@ interface BotSettings {
   enabled: boolean;
   test_mode: boolean;
   urgent_days: number;
+  auto_reply_enabled: boolean;
+  auto_reply_test_mode: boolean;
+  auto_reply_price_text: string;
+  auto_reply_general_text: string;
+  auto_reply_cooldown_minutes: number;
+}
+
+interface AutoReply {
+  id: string;
+  session_name: string;
+  chat_id: string;
+  phone: string | null;
+  incoming_body: string | null;
+  intent: string;
+  reply_text: string;
+  is_test: boolean;
+  error: string | null;
+  created_at: string;
 }
 
 interface Candidate {
@@ -121,13 +142,34 @@ const WhatsappBotManagement = () => {
     finalApproval: true,
   });
 
+  const [autoReplyTest, setAutoReplyTest] = useState("Fiyat nedir?");
+  const [autoReplies, setAutoReplies] = useState<AutoReply[]>([]);
+  const [autoRepliesLoading, setAutoRepliesLoading] = useState(false);
+
   const loadSettings = async () => {
     const { data } = await supabase
       .from("whatsapp_bot_settings")
-      .select("id, enabled, test_mode, urgent_days")
+      .select(
+        "id, enabled, test_mode, urgent_days, auto_reply_enabled, auto_reply_test_mode, auto_reply_price_text, auto_reply_general_text, auto_reply_cooldown_minutes"
+      )
       .limit(1)
       .maybeSingle();
     if (data) setSettings(data as BotSettings);
+  };
+
+  const loadAutoReplies = async () => {
+    setAutoRepliesLoading(true);
+    const { data, error } = await supabase
+      .from("whatsapp_bot_auto_replies")
+      .select("id, session_name, chat_id, phone, incoming_body, intent, reply_text, is_test, error, created_at")
+      .order("created_at", { ascending: false })
+      .limit(25);
+    setAutoRepliesLoading(false);
+    if (error) {
+      toast({ title: "Cevap kayıtları yüklenemedi", description: error.message, variant: "destructive" });
+      return;
+    }
+    setAutoReplies((data as AutoReply[]) || []);
   };
 
   const loadSessions = async () => {
@@ -142,6 +184,7 @@ const WhatsappBotManagement = () => {
   useEffect(() => {
     loadSettings();
     loadSessions();
+    loadAutoReplies();
   }, []);
 
   const updateSettings = async (patch: Partial<BotSettings>) => {
@@ -158,6 +201,43 @@ const WhatsappBotManagement = () => {
     }
     setSettings({ ...settings, ...patch } as BotSettings);
     toast({ title: "Ayarlar güncellendi" });
+  };
+
+  const detectIntent = (text: string): "price" | "general" => {
+    const t = text
+      .toLocaleLowerCase("tr-TR")
+      .replace(/ı/g, "i")
+      .replace(/İ/g, "i")
+      .replace(/ş/g, "s")
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c");
+    const priceWords = [
+      "fiyat",
+      "ucret",
+      "seans",
+      "kac",
+      "kac tl",
+      "ne kadar",
+      "ucretli",
+      "parasi",
+      "odeme",
+      "tl",
+      "paraya",
+      "odem",
+      "maas",
+      "maaş",
+      "bedel",
+      "ucreti",
+      "fiyati",
+      "fiyatlari",
+      "seans ucreti",
+      "terapi ucreti",
+      "danismanlik ucreti",
+      "ne kadara",
+    ];
+    return priceWords.some((w) => t.includes(w)) ? "price" : "general";
   };
 
   const runSimulation = async () => {
@@ -399,6 +479,129 @@ const WhatsappBotManagement = () => {
           </Card>
         </div>
 
+        {/* Auto-reply settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Reply className="w-5 h-5 text-rose-600" /> WhatsApp Otomatik Cevaplar
+            </CardTitle>
+            <CardDescription>
+              Danışan fiyat/seans ücreti veya genel bilgi sorduğunda otomatik cevap verir
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-5">
+                <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
+                  <div>
+                    <Label className="font-semibold">Otomatik cevap aktif</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Gelen danışan mesajlarına otomatik cevap gönderir
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!!settings?.auto_reply_enabled}
+                    disabled={!settings || savingSettings}
+                    onCheckedChange={(v) => updateSettings({ auto_reply_enabled: v })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
+                  <div>
+                    <Label className="font-semibold">Test modu</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Açıkken gerçek WhatsApp mesajı gönderilmez, sadece kaydedilir
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!!settings?.auto_reply_test_mode}
+                    disabled={!settings || savingSettings}
+                    onCheckedChange={(v) => updateSettings({ auto_reply_test_mode: v })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Aynı sohbete tekrar cevap süresi (dakika)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={settings?.auto_reply_cooldown_minutes ?? 60}
+                    onChange={(e) =>
+                      setSettings(
+                        settings ? { ...settings, auto_reply_cooldown_minutes: Number(e.target.value) } : settings
+                      )
+                    }
+                    onBlur={() =>
+                      settings && updateSettings({ auto_reply_cooldown_minutes: settings.auto_reply_cooldown_minutes })
+                    }
+                    className="max-w-[140px]"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Belirtilen süre içinde aynı numaraya otomatik cevap gönderilmez.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4 rounded-xl border p-4">
+                <p className="font-semibold text-sm">Cevap önizlemesi</p>
+                <div className="space-y-2">
+                  <Label className="text-xs">Örnek danışan mesajı</Label>
+                  <Input
+                    value={autoReplyTest}
+                    onChange={(e) => setAutoReplyTest(e.target.value)}
+                    placeholder="Danışan mesajını yazın..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Tespit edilen niyet</Label>
+                  <Badge variant={detectIntent(autoReplyTest) === "price" ? "default" : "secondary"}>
+                    {detectIntent(autoReplyTest) === "price" ? "Fiyat / seans ücreti" : "Genel bilgi"}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Gönderilecek cevap</Label>
+                  <div className="rounded-xl bg-muted p-3 text-sm whitespace-pre-line">
+                    {detectIntent(autoReplyTest) === "price"
+                      ? settings?.auto_reply_price_text
+                      : settings?.auto_reply_general_text}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Fiyat / seans ücreti metni</Label>
+              <Textarea
+                rows={3}
+                value={settings?.auto_reply_price_text ?? ""}
+                onChange={(e) =>
+                  setSettings(
+                    settings ? { ...settings, auto_reply_price_text: e.target.value } : settings
+                  )
+                }
+                onBlur={() =>
+                  settings && updateSettings({ auto_reply_price_text: settings.auto_reply_price_text })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Genel bilgi metni</Label>
+              <Textarea
+                rows={3}
+                value={settings?.auto_reply_general_text ?? ""}
+                onChange={(e) =>
+                  setSettings(
+                    settings ? { ...settings, auto_reply_general_text: e.target.value } : settings
+                  )
+                }
+                onBlur={() =>
+                  settings && updateSettings({ auto_reply_general_text: settings.auto_reply_general_text })
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {result && (
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
@@ -532,6 +735,66 @@ const WhatsappBotManagement = () => {
             </Card>
           </div>
         )}
+
+        {/* Auto-reply logs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MessageSquare className="w-5 h-5 text-blue-600" /> Otomatik Cevap Kayıtları
+            </CardTitle>
+            <CardDescription>Son 25 otomatik cevap denemesi</CardDescription>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            {autoRepliesLoading ? (
+              <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+            ) : autoReplies.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Henüz otomatik cevap kaydı yok.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tarih</TableHead>
+                    <TableHead>Telefon</TableHead>
+                    <TableHead>Gelen mesaj</TableHead>
+                    <TableHead>Niyet</TableHead>
+                    <TableHead>Cevap</TableHead>
+                    <TableHead>Durum</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {autoReplies.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="whitespace-nowrap text-xs">
+                        {new Date(r.created_at).toLocaleString("tr-TR")}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-xs">{r.phone || r.chat_id}</TableCell>
+                      <TableCell className="max-w-[200px] truncate text-xs">
+                        {r.incoming_body || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={r.intent === "price" ? "default" : "secondary"}>
+                          {r.intent === "price" ? "Fiyat" : "Genel"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[240px] text-xs text-muted-foreground whitespace-pre-line">
+                        {r.reply_text}
+                      </TableCell>
+                      <TableCell>
+                        {r.error ? (
+                          <Badge variant="destructive">Hata</Badge>
+                        ) : r.is_test ? (
+                          <Badge variant="outline">Test</Badge>
+                        ) : (
+                          <Badge variant="default">Gönderildi</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
