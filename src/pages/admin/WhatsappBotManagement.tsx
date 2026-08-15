@@ -275,6 +275,49 @@ const WhatsappBotManagement = () => {
     }
   };
 
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<Record<string, unknown> | null>(null);
+
+  const sendTest = async () => {
+    const phone = String(form.phone || "").replace(/\D/g, "");
+    if (phone.length < 10) {
+      toast({ title: "Telefon gerekli", description: "Lütfen geçerli bir telefon numarası girin", variant: "destructive" });
+      return;
+    }
+    setSendingTest(true);
+    setTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("wa-bot-engine", {
+        body: {
+          action: "test_send",
+          clientName: form.clientName,
+          phone,
+          therapyType: form.therapyType,
+          consultationType: form.consultationType,
+          city: form.consultationType === "online" ? null : form.city,
+          answers: {
+            consent: form.consent,
+            onlineFallback: form.onlineFallback,
+            finalApproval: form.finalApproval,
+          },
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Test gönderimi başarısız");
+      setTestResult(data);
+      toast({ title: "Test mesajları gönderildi", description: `${data.sentCount} adet mesaj ${phone} numarasına iletildi.` });
+      loadSessions();
+    } catch (e) {
+      toast({
+        title: "Test gönderimi hatası",
+        description: e instanceof Error ? e.message : "Bilinmeyen hata",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
   const liveActive = settings?.enabled && !settings?.test_mode;
 
   return (
