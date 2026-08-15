@@ -177,21 +177,21 @@ const SpecialOffer = () => {
                 
                 <div className="flex flex-col sm:flex-row gap-4 mt-8">
                   <Link 
-                    to="/odeme/special-offer" 
-                   state={{
+                    to="/odeme/ozel-firsat" 
+                    state={{
                       packageData: {
-                        id: 'special-offer',
+                        id: 'ozel-firsat',
                         name: "Premium Paket - Bu Aya Özel",
-                        price: 3600,
-                        originalPrice: 4999,
+                        price: 4000,
+                        originalPrice: 6500,
                         features: packageFeatures
                       }
-                   }}
+                    }}
                     className="flex-1"
                   >
                     <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-lg">
                       <Crown className="w-5 h-5 mr-2" />
-                      Satın Al - 3600₺
+                      Satın Al - 4000₺
                     </Button>
                   </Link>
                   
