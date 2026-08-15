@@ -514,6 +514,24 @@ Deno.serve(async (req) => {
           text: payload.text,
         });
         break;
+      case 'sendButtons':
+        endpoint = `/api/sendButtons`;
+        method = 'POST';
+        body = JSON.stringify({
+          session: sessionName,
+          chatId: payload.chatId,
+          header: payload.header || undefined,
+          body: payload.body ?? payload.text,
+          footer: payload.footer || undefined,
+          buttons: (Array.isArray(payload.buttons) ? payload.buttons : [])
+            .map((b: any, i: number) => {
+              const text = typeof b === 'string' ? b : String(b?.text ?? '');
+              return { type: 'reply', text: text.slice(0, 20), id: String(b?.id ?? i + 1) };
+            })
+            .filter((b: any) => b.text),
+        });
+        break;
+
       case 'sendImage':
         endpoint = `/api/sendImage`;
         method = 'POST';
