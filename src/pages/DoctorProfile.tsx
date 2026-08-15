@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,6 +79,7 @@ interface Review {
 const DoctorProfile = () => {
   const { specialtySlug, doctorName } = useParams();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -112,10 +113,19 @@ const DoctorProfile = () => {
       console.log('Found specialist by slug match:', foundSpecialist);
 
       if (!foundSpecialist) {
+        // Fallback: URL may be missing the numeric suffix (e.g. /yesim-demir vs /yesim-demir-1)
+        const { data: resolved } = await supabase
+          .rpc('resolve_specialist_slug', { p_slug: doctorName });
+        const match = Array.isArray(resolved) ? resolved[0] : resolved;
+        if (match?.slug && match.slug !== doctorName) {
+          navigate(`/${createSpecialtySlug(match.specialty || '')}/${match.slug}`, { replace: true });
+          return;
+        }
         console.log('No specialist found with both matching doctor and specialty slugs');
         setSpecialist(null);
         return;
       }
+
 
       console.log('Setting specialist data:', foundSpecialist);
       setSpecialist(foundSpecialist);

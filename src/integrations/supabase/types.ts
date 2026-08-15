@@ -7291,6 +7291,13 @@ export type Database = {
         Args: { p_email: string }
         Returns: undefined
       }
+      resolve_specialist_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          slug: string
+          specialty: string
+        }[]
+      }
       restore_client_referrals_from_backup: {
         Args: { p_backup_timestamp: string }
         Returns: undefined
