@@ -471,7 +471,7 @@ Deno.serve(async (req) => {
       };
 
       // ---- oturumu bul / oluştur
-      const { data: existing } = await supabase
+      const { data: existingRow } = await supabase
         .from("whatsapp_bot_sessions")
         .select("*")
         .eq("phone", phone)
@@ -480,6 +480,7 @@ Deno.serve(async (req) => {
         .order("last_message_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      const existing: any = existingRow;
 
       const pushTranscript = (s: any, from: "bot" | "client", text: string, buttons?: string[]) => {
         const t = Array.isArray(s?.transcript) ? s.transcript : [];
