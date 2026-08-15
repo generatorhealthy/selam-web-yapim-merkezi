@@ -79,6 +79,7 @@ interface Review {
 const DoctorProfile = () => {
   const { specialtySlug, doctorName } = useParams();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
