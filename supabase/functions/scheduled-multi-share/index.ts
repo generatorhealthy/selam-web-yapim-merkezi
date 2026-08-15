@@ -2,7 +2,7 @@
 // 1 yayınlanmış blog seçer ve Twitter + LinkedIn + Tumblr'a paralel paylaşır.
 // Her platform için farklı başlık/metin varyasyonu üretir.
 import { createHmac } from "node:crypto";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
