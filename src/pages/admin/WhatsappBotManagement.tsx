@@ -117,9 +117,14 @@ const STATE_LABELS: Record<string, string> = {
   declined: "Danışan istemedi",
   no_specialist: "Uygun uzman bulunamadı",
   awaiting_consent: "Onay bekleniyor",
+  awaiting_area: "Alan seçimi bekleniyor",
+  awaiting_mode: "Görüşme tipi bekleniyor",
+  awaiting_city: "Şehir bilgisi bekleniyor",
   awaiting_online_fallback: "Online alternatif bekleniyor",
+  awaiting_approval: "Uzman onayı bekleniyor",
   awaiting_final_approval: "Son onay bekleniyor",
 };
+
 
 const stateVariant = (state: string) =>
   state === "completed" ? "default" : state === "no_specialist" ? "destructive" : "secondary";
