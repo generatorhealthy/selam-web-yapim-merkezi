@@ -1,0 +1,1 @@
+UPDATE public.whatsapp_bot_settings SET enabled = true, test_mode = false, updated_at = now();
