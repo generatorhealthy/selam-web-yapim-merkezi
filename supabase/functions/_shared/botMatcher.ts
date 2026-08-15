@@ -38,7 +38,16 @@ export const THERAPY_LABELS: Record<string, string> = {
   teen: "Ergen Terapisi",
   relationship: "İlişki Danışmanlığı",
   couple: "Çift Terapisi",
+  couples: "Çift Terapisi",
+  couple_therapy: "Çift Terapisi",
+  marriage: "Çift Terapisi",
   family: "Aile Danışmanlığı",
+  family_therapy: "Aile Terapisi",
+  individual_therapy: "Bireysel Terapi",
+  child_therapy: "Çocuk Terapisi",
+  psikolog: "Bireysel Terapi",
+  psikolojik_danismanlik: "Bireysel Terapi",
+  "psikolojik_danışmanlık": "Bireysel Terapi",
 };
 
 export type SpecialistGroup = "psikoloji" | "aile_danismani";
@@ -59,10 +68,21 @@ const deTr = (s: string) =>
 export const therapyKey = (raw?: string | null) =>
   normalize(raw).replace(/[\s-]+/g, "_");
 
+// Etiket her zaman Türkçe döner; bilinmeyen/İngilizce anahtarlar ham gösterilmez.
 export const therapyLabel = (raw?: string | null) => {
   if (!raw) return "danışmanlık";
-  return THERAPY_LABELS[therapyKey(raw)] || String(raw).replace(/_/g, " ");
+  const known = THERAPY_LABELS[therapyKey(raw)];
+  if (known) return known;
+  // Bilinmeyen değer İngilizce/teknik ise ham basmak yerine gruba göre Türkçe etiket ver
+  if (/^[a-z0-9_\-\s]+$/i.test(String(raw))) {
+    return groupForTherapy(raw) === "aile_danismani" ? "Aile Danışmanlığı" : "Bireysel Terapi";
+  }
+  return String(raw).replace(/_/g, " ");
 };
+
+// Danışana gösterilecek branş adı (klinik psikolog / psikolojik danışman hepsi "Psikolog")
+export const publicSpecialtyLabel = (g: SpecialistGroup) =>
+  g === "aile_danismani" ? "Aile Danışmanı" : "Psikolog";
 
 // Başvuru türünden hedef uzman grubunu belirle.
 export function groupForTherapy(therapy?: string | null): SpecialistGroup {
