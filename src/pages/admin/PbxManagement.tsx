@@ -97,18 +97,48 @@ const PbxManagement = () => {
   };
 
   const handleBulkFollowMe = async () => {
-    if (!confirm("Tüm uzmanların Follow-Me listesi, dahili numaralar silinip kendi cep numaralarıyla (0XXXXXXXXXX#) güncellenecek ve Follow-Me etkinleştirilecek. Devam edilsin mi?")) {
+    if (!confirm("Tüm uzmanların dahilileri, aramayı kendi cep telefonlarına (0XXXXXXXXXX#) yönlendirecek şekilde yeniden kurulacak. Bu işlem birkaç dakika sürebilir. Devam edilsin mi?")) {
       return;
     }
     setBulkLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
-        body: { action: "bulk_followme" },
-      });
-      if (error) throw error;
+      let offset = 0;
+      let total = 0;
+      let updated = 0;
+      let skipped = 0;
+      let failed = 0;
+      const failedList: string[] = [];
+
+      // Her dahili için FreePBX sunucusunda bulkimport + reload çalıştığı için
+      // işlem parça parça (8'erli) ilerliyor.
+      for (let guard = 0; guard < 60; guard++) {
+        const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
+          body: { action: "bulk_followme", offset, limit: 8 },
+        });
+        if (error) throw error;
+
+        total = data.total ?? total;
+        updated += data.updated ?? 0;
+        skipped += data.skipped ?? 0;
+        failed += data.failed ?? 0;
+        (data.results ?? [])
+          .filter((r: any) => r.status === "failed" || r.status === "error")
+          .forEach((r: any) => failedList.push(`${r.extension}: ${r.message ?? ""}`));
+
+        toast({
+          title: "Yönlendirme kuruluyor...",
+          description: `${Math.min(offset + (data.batch ?? 0), total)} / ${total} dahili işlendi`,
+        });
+
+        if (data.done || data.nextOffset == null) break;
+        offset = data.nextOffset;
+      }
+
+      if (failedList.length) console.error("Follow-Me hataları:", failedList);
+
       toast({
-        title: "Follow-Me Güncellendi",
-        description: `Toplam: ${data.total} | Güncellenen: ${data.updated} | Atlanan: ${data.skipped} | Hatalı: ${data.failed}`,
+        title: "Yönlendirme Tamamlandı",
+        description: `Toplam: ${total} | Kurulan: ${updated} | Atlanan: ${skipped} | Hatalı: ${failed}`,
       });
     } catch (error) {
       console.error("Bulk follow-me error:", error);
@@ -121,6 +151,7 @@ const PbxManagement = () => {
       setBulkLoading(false);
     }
   };
+
 
 
   const fetchSpecialists = async () => {
