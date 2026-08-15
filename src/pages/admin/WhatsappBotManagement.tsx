@@ -184,9 +184,10 @@ const WhatsappBotManagement = () => {
   useEffect(() => {
     loadSettings();
     loadSessions();
+    loadAutoReplies();
   }, []);
 
-  const updateSettings = async (patch: Partial<BotSettings>) => {
+  const detectIntent = (text: string): "price" | "general" => {
     if (!settings) return;
     setSavingSettings(true);
     const { error } = await supabase
