@@ -52,6 +52,32 @@ function detectIntent(text: string): 'price' | 'general' {
   return 'general';
 }
 
+// WAHA anket oyu (poll.vote) veya metin cevabından danışanın seçimini çıkar
+function extractAnswer(body: Record<string, unknown>, message: Record<string, unknown>): string {
+  const vote =
+    (body.vote as Record<string, unknown> | undefined) ||
+    (message.vote as Record<string, unknown> | undefined) ||
+    ((message.payload as Record<string, unknown> | undefined)?.vote as Record<string, unknown> | undefined);
+  const selected =
+    (vote?.selectedOptions as unknown[] | undefined) ||
+    (message.selectedOptions as unknown[] | undefined);
+  if (Array.isArray(selected) && selected.length) {
+    const first = selected[0] as Record<string, unknown> | string;
+    const name = typeof first === 'string' ? first : String(first?.name ?? first?.localId ?? '');
+    if (name) return name;
+  }
+  return String(message.body || '').trim();
+}
+
+function voteChatId(body: Record<string, unknown>, message: Record<string, unknown>): string {
+  const vote =
+    (body.vote as Record<string, unknown> | undefined) ||
+    (message.vote as Record<string, unknown> | undefined);
+  return String(
+    message.chatId || vote?.from || vote?.to || (vote as any)?.chatId || '',
+  );
+}
+
 function parsePhone(chatId: string) {
   return String(chatId || '').split('@')[0].replace(/[^0-9]/g, '');
 }
@@ -144,14 +170,18 @@ Deno.serve(async (req) => {
       (body.payload as Record<string, unknown> | undefined) ||
       body;
 
-    if (!isAutoReplyable(message)) {
+    const event = String(body.event ?? '');
+    const isPollVote = event.includes('poll') || !!(body.vote || message.vote || message.selectedOptions);
+    const answerText = extractAnswer(body, message);
+
+    if (!isPollVote && !isAutoReplyable(message)) {
       return json({ ok: true, skipped: true, reason: 'not replyable' });
     }
 
     const sessionName = String(
       message.session_name ?? body.session_name ?? body.session ?? message.session ?? '',
     );
-    const chatId = String(message.chatId || '');
+    const chatId = isPollVote ? voteChatId(body, message) : String(message.chatId || '');
     const phone = parsePhone(chatId);
     const incomingBody = String(message.body || '');
 
@@ -165,12 +195,28 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    if (!settings || !settings.auto_reply_enabled) {
+    // Anket oyu / aktif akış cevabı: otomatik yanıt ayarından bağımsız işlenir
+    if (isPollVote && !(await hasActiveReferralSession(supabase, phone))) {
+      return json({ ok: true, skipped: true, reason: 'poll vote without active session' });
+    }
+
+    if (!isPollVote && (!settings || !settings.auto_reply_enabled)) {
       return json({ ok: true, skipped: true, reason: 'auto_reply disabled' });
     }
 
+
     if (await hasActiveReferralSession(supabase, phone)) {
-      return json({ ok: true, skipped: true, reason: 'active referral session' });
+      // Danışan aktif yönlendirme akışındaysa cevabı bot motoruna aktar
+      const engine = await supabase.functions.invoke('wa-bot-engine', {
+        body: { action: 'reply', phone, text: answerText },
+      });
+      return json({
+        ok: true,
+        routedToEngine: true,
+        answer: answerText,
+        engine: engine.data ?? null,
+        error: engine.error?.message ?? null,
+      });
     }
 
     const cooldownMinutes = Math.max(1, Number(settings.auto_reply_cooldown_minutes) || 60);
