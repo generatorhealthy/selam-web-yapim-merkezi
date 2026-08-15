@@ -370,15 +370,28 @@ serve(async (req) => {
       };
 
       const onlyExt = (body.extension ?? "").toString().trim();
+      // Her bulkimport + reload birkaç saniye sürüyor; edge fonksiyon zaman aşımına
+      // düşmesin diye parça parça (offset/limit) çalışıyoruz.
+      const offset = Number.isFinite(Number(body.offset)) ? Math.max(0, Number(body.offset)) : 0;
+      const limit = Number.isFinite(Number(body.limit)) ? Math.min(20, Math.max(1, Number(body.limit))) : 8;
 
       let query = supabaseAdmin
         .from("specialists")
         .select("id, name, phone, internal_number")
-        .not("internal_number", "is", null);
+        .not("internal_number", "is", null)
+        .order("internal_number", { ascending: true });
       if (onlyExt) query = query.eq("internal_number", onlyExt);
+      else query = query.range(offset, offset + limit - 1);
 
       const { data: specs, error: specErr } = await query;
       if (specErr) throw new Error(`Uzman listesi alınamadı: ${specErr.message}`);
+
+      const { count: totalCount } = await supabaseAdmin
+        .from("specialists")
+        .select("id", { count: "exact", head: true })
+        .not("internal_number", "is", null);
+
+
 
       const results: any[] = [];
       let updated = 0;
