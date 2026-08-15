@@ -348,6 +348,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/meta-leads" element={<MetaLeads />} />
               <Route path="/divan_paneli/uzman-basvurulari" element={<UzmanApplications />} />
               <Route path="/divan_paneli/client-calendar" element={<ClientCalendar />} />
+              <Route path="/divan_paneli/whatsapp-bot" element={<WhatsappBotManagement />} />
               <Route path="/divan_paneli/appointments" element={<AppointmentManagement />} />
               <Route path="/divan_paneli/blog" element={<BlogManagement />} />
               <Route path="/divan_paneli/customers" element={<CustomerManagement />} />
