@@ -128,11 +128,11 @@ const SpecialOffer = () => {
                 
                 <div className="text-center mb-6">
                   <div className="flex items-center justify-center gap-3 mb-2">
-                    <span className="text-3xl md:text-4xl font-bold text-primary">3600₺</span>
-                    <span className="text-xl text-muted-foreground line-through">4999₺</span>
+                    <span className="text-3xl md:text-4xl font-bold text-primary">4000₺</span>
+                    <span className="text-xl text-muted-foreground line-through">6500₺</span>
                   </div>
                   <Badge className="bg-red-100 text-red-700 border-red-200 text-sm px-3 py-1">
-                    %40 İndirim - Bu Aya Özel!
+                    %38 İndirim - Bu Aya Özel!
                   </Badge>
                 </div>
                 
