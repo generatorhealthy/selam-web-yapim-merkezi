@@ -195,3 +195,9 @@ verify_jwt = false
 
 [functions.wa-bot-engine]
 verify_jwt = false
+
+[functions.wa-bot-chat-handler]
+verify_jwt = false
+
+[functions.waha-webhook]
+verify_jwt = false
