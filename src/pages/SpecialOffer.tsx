@@ -10,7 +10,7 @@ import { FeatureBox } from "@/components/FeatureBox";
 const SpecialOffer = () => {
   const handleWhatsAppContact = () => {
     const phoneNumber = "905308232275";
-    const message = "Merhaba, Kampanyalı Paket üzerinden Kayıt Olmak İstiyorum.";
+    const message = "Merhaba, Bu Aya Özel 4000₺ Paket üzerinden Kayıt Olmak İstiyorum.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -42,9 +42,9 @@ const SpecialOffer = () => {
   return (
     <>
       <Helmet>
-        <title>Bu Aya Özel Kampanya - 3600₺ Doktor Randevu Sistemi | DoktorumOl</title>
-        <meta name="description" content="Bu aya özel 3600₺'ye profesyonel doktor randevu sistemi! 7/24 online randevu, hasta takibi, SMS hatırlatma ve daha fazlası. Hemen başlayın!" />
-        <meta name="keywords" content="doktor randevu sistemi, online randevu, hasta takibi, tıbbi yazılım, kampanya, 3600 tl" />
+        <title>Bu Aya Özel Kampanya - 4000₺ Doktor Randevu Sistemi | DoktorumOl</title>
+        <meta name="description" content="Bu aya özel 4000₺'ye profesyonel doktor randevu sistemi! 7/24 online randevu, hasta takibi, SMS hatırlatma ve daha fazlası. Hemen başlayın!" />
+        <meta name="keywords" content="doktor randevu sistemi, online randevu, hasta takibi, tıbbi yazılım, kampanya, 4000 tl" />
       </Helmet>
       
       <HorizontalNavigation />
@@ -128,11 +128,11 @@ const SpecialOffer = () => {
                 
                 <div className="text-center mb-6">
                   <div className="flex items-center justify-center gap-3 mb-2">
-                    <span className="text-3xl md:text-4xl font-bold text-primary">3600₺</span>
-                    <span className="text-xl text-muted-foreground line-through">4999₺</span>
+                    <span className="text-3xl md:text-4xl font-bold text-primary">4000₺</span>
+                    <span className="text-xl text-muted-foreground line-through">6500₺</span>
                   </div>
                   <Badge className="bg-red-100 text-red-700 border-red-200 text-sm px-3 py-1">
-                    %40 İndirim - Bu Aya Özel!
+                    %38 İndirim - Bu Aya Özel!
                   </Badge>
                 </div>
                 
@@ -177,21 +177,21 @@ const SpecialOffer = () => {
                 
                 <div className="flex flex-col sm:flex-row gap-4 mt-8">
                   <Link 
-                    to="/odeme/special-offer" 
-                   state={{
+                    to="/odeme/ozel-firsat" 
+                    state={{
                       packageData: {
-                        id: 'special-offer',
+                        id: 'ozel-firsat',
                         name: "Premium Paket - Bu Aya Özel",
-                        price: 3600,
-                        originalPrice: 4999,
+                        price: 4000,
+                        originalPrice: 6500,
                         features: packageFeatures
                       }
-                   }}
+                    }}
                     className="flex-1"
                   >
                     <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-lg">
                       <Crown className="w-5 h-5 mr-2" />
-                      Satın Al - 3600₺
+                      Satın Al - 4000₺
                     </Button>
                   </Link>
                   
