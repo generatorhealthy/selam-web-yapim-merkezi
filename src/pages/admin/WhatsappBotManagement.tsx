@@ -736,6 +736,66 @@ const WhatsappBotManagement = () => {
           </div>
         )}
 
+        {/* Auto-reply logs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MessageSquare className="w-5 h-5 text-blue-600" /> Otomatik Cevap Kayıtları
+            </CardTitle>
+            <CardDescription>Son 25 otomatik cevap denemesi</CardDescription>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            {autoRepliesLoading ? (
+              <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+            ) : autoReplies.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Henüz otomatik cevap kaydı yok.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tarih</TableHead>
+                    <TableHead>Telefon</TableHead>
+                    <TableHead>Gelen mesaj</TableHead>
+                    <TableHead>Niyet</TableHead>
+                    <TableHead>Cevap</TableHead>
+                    <TableHead>Durum</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {autoReplies.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="whitespace-nowrap text-xs">
+                        {new Date(r.created_at).toLocaleString("tr-TR")}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-xs">{r.phone || r.chat_id}</TableCell>
+                      <TableCell className="max-w-[200px] truncate text-xs">
+                        {r.incoming_body || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={r.intent === "price" ? "default" : "secondary"}>
+                          {r.intent === "price" ? "Fiyat" : "Genel"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[240px] text-xs text-muted-foreground whitespace-pre-line">
+                        {r.reply_text}
+                      </TableCell>
+                      <TableCell>
+                        {r.error ? (
+                          <Badge variant="destructive">Hata</Badge>
+                        ) : r.is_test ? (
+                          <Badge variant="outline">Test</Badge>
+                        ) : (
+                          <Badge variant="default">Gönderildi</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Son Bot Kayıtları</CardTitle>
