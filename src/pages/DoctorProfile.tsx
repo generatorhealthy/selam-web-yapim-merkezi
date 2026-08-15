@@ -112,10 +112,19 @@ const DoctorProfile = () => {
       console.log('Found specialist by slug match:', foundSpecialist);
 
       if (!foundSpecialist) {
+        // Fallback: URL may be missing the numeric suffix (e.g. /yesim-demir vs /yesim-demir-1)
+        const { data: resolved } = await supabase
+          .rpc('resolve_specialist_slug', { p_slug: doctorName });
+        const match = Array.isArray(resolved) ? resolved[0] : resolved;
+        if (match?.slug && match.slug !== doctorName) {
+          navigate(`/${createSpecialtySlug(match.specialty || '')}/${match.slug}`, { replace: true });
+          return;
+        }
         console.log('No specialist found with both matching doctor and specialty slugs');
         setSpecialist(null);
         return;
       }
+
 
       console.log('Setting specialist data:', foundSpecialist);
       setSpecialist(foundSpecialist);
