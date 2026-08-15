@@ -26,6 +26,7 @@ import {
   Loader2,
   MessageSquare,
   Reply,
+  Send,
 } from "lucide-react";
 
 const THERAPY_OPTIONS = [
@@ -274,6 +275,49 @@ const WhatsappBotManagement = () => {
     }
   };
 
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<Record<string, unknown> | null>(null);
+
+  const sendTest = async () => {
+    const phone = String(form.phone || "").replace(/\D/g, "");
+    if (phone.length < 10) {
+      toast({ title: "Telefon gerekli", description: "Lütfen geçerli bir telefon numarası girin", variant: "destructive" });
+      return;
+    }
+    setSendingTest(true);
+    setTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("wa-bot-engine", {
+        body: {
+          action: "test_send",
+          clientName: form.clientName,
+          phone,
+          therapyType: form.therapyType,
+          consultationType: form.consultationType,
+          city: form.consultationType === "online" ? null : form.city,
+          answers: {
+            consent: form.consent,
+            onlineFallback: form.onlineFallback,
+            finalApproval: form.finalApproval,
+          },
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Test gönderimi başarısız");
+      setTestResult(data);
+      toast({ title: "Test mesajları gönderildi", description: `${data.sentCount} adet mesaj ${phone} numarasına iletildi.` });
+      loadSessions();
+    } catch (e) {
+      toast({
+        title: "Test gönderimi hatası",
+        description: e instanceof Error ? e.message : "Bilinmeyen hata",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
   const liveActive = settings?.enabled && !settings?.test_mode;
 
   return (
@@ -475,6 +519,35 @@ const WhatsappBotManagement = () => {
                   </>
                 )}
               </Button>
+
+              <Button
+                onClick={sendTest}
+                disabled={sendingTest || !form.phone}
+                variant="outline"
+                className="w-full"
+              >
+                {sendingTest ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> WhatsApp&apos;a gönderiliyor
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" /> WhatsApp Test Mesajı Gönder
+                  </>
+                )}
+              </Button>
+
+              {testResult && (
+                <div className="rounded-xl border p-4 bg-muted/50 space-y-1 text-sm">
+                  <p className="font-semibold">Test sonucu</p>
+                  <p>Gönderilen mesaj: {String(testResult.sentCount ?? 0)}</p>
+                  <p>WhatsApp oturumu: {String(testResult.sessionName ?? "—")}</p>
+                  {Array.isArray(testResult.errors) && testResult.errors.length > 0 && (
+                    <p className="text-destructive">Hatalar: {testResult.errors.join(", ")}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">{String(testResult.note ?? "")}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
