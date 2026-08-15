@@ -26,6 +26,7 @@ import {
   Loader2,
   MessageSquare,
   Reply,
+  Send,
 } from "lucide-react";
 
 const THERAPY_OPTIONS = [
