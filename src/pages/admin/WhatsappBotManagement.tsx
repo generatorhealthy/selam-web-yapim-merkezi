@@ -142,6 +142,10 @@ const WhatsappBotManagement = () => {
     finalApproval: true,
   });
 
+  const [autoReplyTest, setAutoReplyTest] = useState("Fiyat nedir?");
+  const [autoReplies, setAutoReplies] = useState<AutoReply[]>([]);
+  const [autoRepliesLoading, setAutoRepliesLoading] = useState(false);
+
   const loadSettings = async () => {
     const { data } = await supabase
       .from("whatsapp_bot_settings")
