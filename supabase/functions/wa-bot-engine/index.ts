@@ -53,6 +53,20 @@ const msgConsent = (name: string, therapy: string, mode: string, role: string) =
     .replace("aile danışmanıumuzun", "aile danışmanımızın")
     .replace("psikologumuzun", "psikoloğumuzun");
 
+const msgRoleInfo = (role: string) => {
+  const r = role.toLocaleLowerCase("tr-TR");
+  return (
+    `Başvurunuz doğrultusunda sistemimizde size uygun bir *${r}* araştırması yapacağız ve ` +
+    `alanında yetkin bir ${r}a yönlendirmenizi sağlayacağız.\n\n` +
+    `Görüşme detaylarını, randevu saatini ve *seans ücretlerini* doğrudan ${r}ımızdan öğrenebilirsiniz.\n\n` +
+    `Onaylıyor musunuz?`
+  )
+    .replace(/aile danışmanıa/g, "aile danışmanına")
+    .replace(/aile danışmanıımızdan/g, "aile danışmanımızdan")
+    .replace(/psikologa/g, "psikoloğa")
+    .replace(/psikologımızdan/g, "psikoloğumuzdan");
+};
+
 const msgSearching = () =>
   `Teşekkür ederiz. Başvurunuz doğrultusunda size uygun uzmanımızı belirliyoruz. ` +
   `Uygun uzmanımızın bilgileri ve yönlendirme süreci kısa süre içinde sizinle paylaşılacaktır.`;
@@ -84,8 +98,19 @@ const msgDeclined = () =>
   `İleride destek almak isterseniz bizimle tekrar iletişime geçebilirsiniz.`;
 
 const YES_NO = ["Evet, yönlendirme istiyorum", "Hayır, vazgeçtim"];
+const Q_CONSENT = "Size uygun bir uzman yönlendirmesi yapmamızı ister misiniz?";
+const Q_INFO = "Yönlendirme sürecini onaylıyor musunuz?";
+const Q_APPROVAL = "Uzmanımızın sizinle iletişime geçmesini onaylıyor musunuz?";
 const APPROVE = ["Onaylıyorum", "Vazgeçtim"];
 const ONLINE_FALLBACK = ["Evet, online uzman istiyorum", "Hayır, istemiyorum"];
+
+// Anket başlığı kısa olmalı (WhatsApp ~255 karakterde kesiyor)
+const pollQuestionFor = (buttons: string[], text: string) => {
+  if (buttons === YES_NO || buttons[0] === YES_NO[0]) return Q_CONSENT;
+  if (buttons[0] === ONLINE_FALLBACK[0]) return "Online görüşme seçeneğini değerlendirmek ister misiniz?";
+  if (buttons[0] === APPROVE[0]) return /seans ücret/i.test(text) ? Q_INFO : Q_APPROVAL;
+  return text.length > 200 ? text.slice(0, 190) + "..." : text;
+};
 
 const modeLabel = (online: boolean) => (online ? "Online" : "Yüz yüze");
 
@@ -188,6 +213,8 @@ function runFlow(
     return { steps, state: "declined", match: null, fallbackMatch: null, usedOnlineFallback: false };
   }
   steps.push({ from: "client", text: YES_NO[0] });
+  steps.push({ from: "bot", text: msgRoleInfo(role), buttons: APPROVE });
+  steps.push({ from: "client", text: APPROVE[0] });
   steps.push({ from: "bot", text: msgSearching() });
 
   let match = matchSpecialist(all, { therapyType: input.therapyType, online, city, urgentDays });
@@ -377,13 +404,20 @@ Deno.serve(async (req) => {
         // NOWEB, sendButtons mesajını kabul etse bile WhatsApp'a teslim etmiyor.
         // Dokunulabilir tek seçimli seçenekleri NOWEB'in desteklediği anket olarak gönder.
         if (step.buttons?.length) {
+          const pollQ = pollQuestionFor(step.buttons, step.text);
+          if (pollQ !== bodyText) {
+            await supabase.functions.invoke("waha-proxy", {
+              body: { action: "sendText", sessionName, payload: { chatId, text: bodyText } },
+            });
+            await new Promise((r) => setTimeout(r, 800));
+          }
           const btnRes = await supabase.functions.invoke("waha-proxy", {
             body: {
               action: "sendPoll",
               sessionName,
               payload: {
                 chatId,
-                name: bodyText,
+                name: pollQ,
                 options: step.buttons,
               },
             },
@@ -458,10 +492,21 @@ Deno.serve(async (req) => {
       }
       const chatId = `${phone}@c.us`;
 
-      const send = async (text: string, options?: string[]) => {
+      const sendPlain = async (text: string) => {
+        const r = await supabase.functions.invoke("waha-proxy", {
+          body: { action: "sendText", sessionName, payload: { chatId, text } },
+        });
+        return !r.error && (r.data as any)?.success !== false;
+      };
+
+      // options varsa: uzun bilgilendirme metni ayrı mesaj, anket sorusu kısa tutulur
+      // (WhatsApp anket başlığı ~255 karakterde kesiliyor)
+      const send = async (text: string, options?: string[], question?: string) => {
         if (options?.length) {
+          const q = question || text;
+          if (q !== text) await sendPlain(text);
           const p = await supabase.functions.invoke("waha-proxy", {
-            body: { action: "sendPoll", sessionName, payload: { chatId, name: text, options } },
+            body: { action: "sendPoll", sessionName, payload: { chatId, name: q, options } },
           });
           if (!p.error && (p.data as any)?.success !== false) return true;
         }
@@ -511,7 +556,7 @@ Deno.serve(async (req) => {
           modeLabel(isOnlineRequest(body.consultationType)),
           publicSpecialtyLabel(groupForTherapy(body.therapyType)),
         );
-        const ok = await send(question, YES_NO);
+        const ok = await send(question, YES_NO, Q_CONSENT);
         const { data: created } = await supabase
           .from("whatsapp_bot_sessions")
           .insert({
@@ -555,8 +600,8 @@ Deno.serve(async (req) => {
       const transcript = pushTranscript(existing, "client", answerRaw);
       const step = String(existing.last_question || "consent");
 
-      const reply = async (text: string, options?: string[], nextState?: string, nextStep?: string, patch?: Record<string, unknown>) => {
-        await send(text, options);
+      const reply = async (text: string, options?: string[], nextState?: string, nextStep?: string, patch?: Record<string, unknown>, question?: string) => {
+        await send(text, options, question);
         transcript.push({ from: "bot", text, buttons: options });
         await saveSession(existing.id, {
           transcript,
@@ -584,10 +629,44 @@ Deno.serve(async (req) => {
               publicSpecialtyLabel(groupForTherapy(existing.therapy_type)),
             ),
             YES_NO,
+            undefined,
+            undefined,
+            undefined,
+            Q_CONSENT,
           );
           return json({ success: true, state: existing.state, repeated: true });
         }
         answers.consent = true;
+        await reply(
+          msgRoleInfo(publicSpecialtyLabel(groupForTherapy(existing.therapy_type))),
+          APPROVE,
+          "awaiting_info_confirm",
+          "info_confirm",
+          undefined,
+          Q_INFO,
+        );
+        return json({ success: true, state: "awaiting_info_confirm" });
+      }
+
+      // 1b) bilgilendirme onayı
+      if (step === "info_confirm") {
+        if (isNegative(answerRaw)) {
+          answers.infoConfirm = false;
+          await reply(msgDeclined(), undefined, "declined", "done");
+          return json({ success: true, state: "declined" });
+        }
+        if (!isPositive(answerRaw)) {
+          await reply(
+            msgRoleInfo(publicSpecialtyLabel(groupForTherapy(existing.therapy_type))),
+            APPROVE,
+            undefined,
+            undefined,
+            undefined,
+            Q_INFO,
+          );
+          return json({ success: true, state: existing.state, repeated: true });
+        }
+        answers.infoConfirm = true;
 
         // Başvuruda alan bilgisi varsa tekrar sorma, doğrudan sonraki adıma geç
         if (existing.therapy_type) {
@@ -722,7 +801,7 @@ Deno.serve(async (req) => {
         if (!match.selected && !online) {
           await reply(msgNoCitySpecialist(city), ONLINE_FALLBACK, "awaiting_online_fallback", "online_fallback", {
             offered_online_fallback: true,
-          });
+          }, "Online görüşme seçeneğini değerlendirmek ister misiniz?");
           return json({ success: true, state: "awaiting_online_fallback" });
         }
         if (!match.selected) {
@@ -736,7 +815,7 @@ Deno.serve(async (req) => {
           selection_reason: match.selectionReason ?? null,
           consultation_type: online ? "online" : "yuz_yuze",
           offered_online_fallback: usedFallback || !!existing.offered_online_fallback,
-        });
+        }, Q_APPROVAL);
         return json({ success: true, state: "awaiting_approval", specialistId: match.selected.id });
       }
     }
