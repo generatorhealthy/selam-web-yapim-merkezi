@@ -50,10 +50,24 @@ const SpecialistReviewPage = () => {
         p_slug: doctorName,
       });
       if (error) console.error("Uzman bulunamadı:", error);
-      const found = Array.isArray(data) ? data[0] : data;
+      let found = Array.isArray(data) ? data[0] : data;
+      if (!found) {
+        // URL numeric suffix eksik olabilir (ör. /yesim-demir vs /yesim-demir-1)
+        const { data: resolved } = await supabase.rpc("resolve_specialist_slug", {
+          p_slug: doctorName,
+        });
+        const match = Array.isArray(resolved) ? resolved[0] : resolved;
+        if (match?.slug) {
+          const { data: retry } = await supabase.rpc("get_public_specialist_by_slug", {
+            p_slug: match.slug,
+          });
+          found = Array.isArray(retry) ? retry[0] : retry;
+        }
+      }
       setSpecialist((found as PublicSpecialist) || null);
       setLoading(false);
     };
+
     if (doctorName) fetchSpecialist();
   }, [doctorName]);
 
