@@ -42,9 +42,9 @@ const SpecialOffer = () => {
   return (
     <>
       <Helmet>
-        <title>Bu Aya Özel Kampanya - 3600₺ Doktor Randevu Sistemi | DoktorumOl</title>
-        <meta name="description" content="Bu aya özel 3600₺'ye profesyonel doktor randevu sistemi! 7/24 online randevu, hasta takibi, SMS hatırlatma ve daha fazlası. Hemen başlayın!" />
-        <meta name="keywords" content="doktor randevu sistemi, online randevu, hasta takibi, tıbbi yazılım, kampanya, 3600 tl" />
+        <title>Bu Aya Özel Kampanya - 4000₺ Doktor Randevu Sistemi | DoktorumOl</title>
+        <meta name="description" content="Bu aya özel 4000₺'ye profesyonel doktor randevu sistemi! 7/24 online randevu, hasta takibi, SMS hatırlatma ve daha fazlası. Hemen başlayın!" />
+        <meta name="keywords" content="doktor randevu sistemi, online randevu, hasta takibi, tıbbi yazılım, kampanya, 4000 tl" />
       </Helmet>
       
       <HorizontalNavigation />
