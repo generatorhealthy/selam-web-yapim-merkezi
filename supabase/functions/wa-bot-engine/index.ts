@@ -97,6 +97,47 @@ const isNegative = (raw: string) => {
   return /(hayır|hayir|istemiyorum|vazge|gerek yok)/.test(t);
 };
 
+// ------------------------------------------------- çoklu adım (canlı akış) metinleri
+const AREA_OPTIONS: { label: string; therapy: string }[] = [
+  { label: "Bireysel Terapi", therapy: "bireysel_terapi" },
+  { label: "Çocuk / Ergen Terapisi", therapy: "cocuk_terapisi" },
+  { label: "İlişki / Çift Terapisi", therapy: "cift_terapisi" },
+  { label: "Aile Danışmanlığı", therapy: "aile_danismanligi" },
+];
+const AREA_LABELS = AREA_OPTIONS.map((a) => a.label);
+const MODE_OPTIONS = ["Online görüşme", "Yüz yüze görüşme"];
+
+const msgAskArea = () =>
+  `Hangi alanda destek almak istiyorsunuz? Lütfen aşağıdaki seçeneklerden birini işaretleyin.`;
+const msgAskMode = () =>
+  `Görüşmeyi nasıl yapmak istersiniz? Lütfen bir seçenek işaretleyin.`;
+const msgAskCity = () =>
+  `Yüz yüze görüşme için hangi şehirde olduğunuzu yazar mısınız? (Örn: İstanbul)`;
+
+// Anket cevabını seçenek listesiyle eşleştir (metin veya 1/2/3 numarası)
+const matchOption = (raw: string, options: string[]): number => {
+  const t = normalizeTr(raw);
+  if (!t) return -1;
+  const num = parseInt(t, 10);
+  if (!Number.isNaN(num) && num >= 1 && num <= options.length) return num - 1;
+  const exact = options.findIndex((o) => normalizeTr(o) === t);
+  if (exact >= 0) return exact;
+  return options.findIndex((o) => normalizeTr(o).includes(t) || t.includes(normalizeTr(o)));
+};
+
+function normalizeTr(s: string) {
+  return String(s || "")
+    .toLocaleLowerCase("tr-TR")
+    .trim()
+    .replace(/ı/g, "i")
+    .replace(/ş/g, "s")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c");
+}
+
+
 // ------------------------------------------------------------------- simülasyon
 interface SimInput {
   clientName?: string;
