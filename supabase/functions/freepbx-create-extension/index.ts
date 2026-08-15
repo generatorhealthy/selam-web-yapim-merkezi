@@ -347,11 +347,17 @@ serve(async (req) => {
       );
     }
 
-    // Bulk Follow-Me update: for every specialist with an internal number,
-    // set the Follow-Me list to the specialist's mobile number (0XXXXXXXXXX#)
-    // and enable Follow-Me. Removes the old internal-number entries.
+    // Bulk Follow-Me update: her uzmanın dahilisini, uzmanın cep telefonuna
+    // yönlendirecek şekilde yeniden kurar (0XXXXXXXXXX#).
+    // ÖNEMLİ: Dahililer "virtual" tech ile FreePBX sunucusundaki PHP yardımcısı
+    // (fwconsole bulkimport --replace) üzerinden oluşturuluyor. GraphQL API bu
+    // sanal dahilileri GÖRMEDİĞİ için updateFollowMe mutasyonu çalışmıyordu.
+    // Bu yüzden follow-me da aynı yardımcı üzerinden yeniden import ediliyor.
     if (action === "bulk_followme") {
-      const token = await getToken();
+      if (!BULK_URL || !BULK_SECRET) {
+        throw new Error("FreePBX yardımcı endpoint yapılandırılmamış (BULK_URL/BULK_SECRET).");
+      }
+
       const normalizeFollowMe = (raw: string): string | null => {
         let d = (raw ?? "").replace(/\D/g, "");
         if (!d) return null;
@@ -363,11 +369,15 @@ serve(async (req) => {
         return `0${d}#`;
       };
 
-      const { data: specs, error: specErr } = await supabaseAdmin
+      const onlyExt = (body.extension ?? "").toString().trim();
+
+      let query = supabaseAdmin
         .from("specialists")
         .select("id, name, phone, internal_number")
         .not("internal_number", "is", null);
+      if (onlyExt) query = query.eq("internal_number", onlyExt);
 
+      const { data: specs, error: specErr } = await query;
       if (specErr) throw new Error(`Uzman listesi alınamadı: ${specErr.message}`);
 
       const results: any[] = [];
@@ -376,34 +386,47 @@ serve(async (req) => {
       let failed = 0;
 
       for (const s of specs ?? []) {
-        const extStr = String(s.internal_number).trim();
+        const extStr = String(s.internal_number ?? "").trim();
         const followMeList = normalizeFollowMe(String(s.phone ?? ""));
 
-        if (!extStr || !followMeList) {
+        if (!extStr || !/^\d{3,4}$/.test(extStr) || !followMeList) {
           skipped++;
-          results.push({ extension: extStr, name: s.name, status: "skipped", reason: "Geçersiz numara" });
+          results.push({ extension: extStr, name: s.name, status: "skipped", reason: "Geçersiz dahili veya telefon" });
           continue;
         }
 
-        const mutation = `mutation {
-          updateFollowMe(input: {
-            extensionId: "${extStr}"
-            enabled: true
-            followMeList: "${followMeList}"
-            strategy: ringallv2prim
-            ringTime: 25
-            initialRingTime: 2
-            externalCallerIdMode: default
-          }) { status message }
-        }`;
-
         try {
-          const r = await gql(token, mutation);
-          const st = r?.updateFollowMe?.status;
-          const msg = r?.updateFollowMe?.message ?? "";
-          if (st === false) {
+          const res = await fetchWithTimeout(
+            BULK_URL,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                secret: BULK_SECRET,
+                action: "create",
+                extension: extStr,
+                name: s.name ?? extStr,
+                followme: followMeList,
+              }),
+            },
+            60000,
+          );
+          const text = await res.text();
+          let json: any;
+          try {
+            json = JSON.parse(text);
+          } catch {
+            json = { success: false, error: text };
+          }
+          if (!res.ok || json?.success !== true) {
             failed++;
-            results.push({ extension: extStr, name: s.name, followMeList, status: "failed", message: msg });
+            results.push({
+              extension: extStr,
+              name: s.name,
+              followMeList,
+              status: "failed",
+              message: json?.error ?? json?.import ?? text,
+            });
           } else {
             updated++;
             results.push({ extension: extStr, name: s.name, followMeList, status: "ok" });
@@ -420,13 +443,6 @@ serve(async (req) => {
         }
       }
 
-      // Apply config once at the end
-      try {
-        await gql(token, `mutation { doreload(input: {}) { status } }`);
-      } catch (reloadErr) {
-        console.warn("doreload uyarısı:", reloadErr);
-      }
-
       return new Response(
         JSON.stringify({
           success: true,
@@ -439,6 +455,8 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+
+
 
     // Create action
     const name = (body.name ?? "").toString().trim();
