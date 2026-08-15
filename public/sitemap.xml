@@ -9676,12 +9676,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/klinik-psikolog/dilek-uzun</loc>
-    <lastmod>2026-08-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/aile-ve-i-liski-danismani/kubra-simsek</loc>
     <lastmod>2026-04-22</lastmod>
     <changefreq>monthly</changefreq>
@@ -9708,6 +9702,12 @@
   <url>
     <loc>https://doktorumol.com.tr/psikolog/reyhan-uzer</loc>
     <lastmod>2026-08-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/klinik-psikolog/dilek-uzun</loc>
+    <lastmod>2026-08-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -9942,12 +9942,6 @@
   <url>
     <loc>https://doktorumol.com.tr/cocuk-ve-ergen-psikoterapist/gaye-didem-cabukoglu</loc>
     <lastmod>2026-08-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-ilknur-unal</loc>
-    <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
