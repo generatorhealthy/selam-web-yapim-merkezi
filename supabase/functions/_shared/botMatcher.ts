@@ -31,6 +31,14 @@ export const THERAPY_LABELS: Record<string, string> = {
   aile_danismanligi: "Aile Danışmanlığı",
   "aile_danışmanlığı": "Aile Danışmanlığı",
   aile_terapisi: "Aile Terapisi",
+  // İngilizce anahtarlar (form/lead kaynaklı)
+  individual: "Bireysel Terapi",
+  child: "Çocuk Terapisi",
+  adolescent: "Ergen Terapisi",
+  teen: "Ergen Terapisi",
+  relationship: "İlişki Danışmanlığı",
+  couple: "Çift Terapisi",
+  family: "Aile Danışmanlığı",
 };
 
 export type SpecialistGroup = "psikoloji" | "aile_danismani";
