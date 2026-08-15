@@ -479,6 +479,129 @@ const WhatsappBotManagement = () => {
           </Card>
         </div>
 
+        {/* Auto-reply settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Reply className="w-5 h-5 text-rose-600" /> WhatsApp Otomatik Cevaplar
+            </CardTitle>
+            <CardDescription>
+              Danışan fiyat/seans ücreti veya genel bilgi sorduğunda otomatik cevap verir
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-5">
+                <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
+                  <div>
+                    <Label className="font-semibold">Otomatik cevap aktif</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Gelen danışan mesajlarına otomatik cevap gönderir
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!!settings?.auto_reply_enabled}
+                    disabled={!settings || savingSettings}
+                    onCheckedChange={(v) => updateSettings({ auto_reply_enabled: v })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
+                  <div>
+                    <Label className="font-semibold">Test modu</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Açıkken gerçek WhatsApp mesajı gönderilmez, sadece kaydedilir
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!!settings?.auto_reply_test_mode}
+                    disabled={!settings || savingSettings}
+                    onCheckedChange={(v) => updateSettings({ auto_reply_test_mode: v })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Aynı sohbete tekrar cevap süresi (dakika)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={settings?.auto_reply_cooldown_minutes ?? 60}
+                    onChange={(e) =>
+                      setSettings(
+                        settings ? { ...settings, auto_reply_cooldown_minutes: Number(e.target.value) } : settings
+                      )
+                    }
+                    onBlur={() =>
+                      settings && updateSettings({ auto_reply_cooldown_minutes: settings.auto_reply_cooldown_minutes })
+                    }
+                    className="max-w-[140px]"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Belirtilen süre içinde aynı numaraya otomatik cevap gönderilmez.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4 rounded-xl border p-4">
+                <p className="font-semibold text-sm">Cevap önizlemesi</p>
+                <div className="space-y-2">
+                  <Label className="text-xs">Örnek danışan mesajı</Label>
+                  <Input
+                    value={autoReplyTest}
+                    onChange={(e) => setAutoReplyTest(e.target.value)}
+                    placeholder="Danışan mesajını yazın..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Tespit edilen niyet</Label>
+                  <Badge variant={detectIntent(autoReplyTest) === "price" ? "default" : "secondary"}>
+                    {detectIntent(autoReplyTest) === "price" ? "Fiyat / seans ücreti" : "Genel bilgi"}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Gönderilecek cevap</Label>
+                  <div className="rounded-xl bg-muted p-3 text-sm whitespace-pre-line">
+                    {detectIntent(autoReplyTest) === "price"
+                      ? settings?.auto_reply_price_text
+                      : settings?.auto_reply_general_text}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Fiyat / seans ücreti metni</Label>
+              <Textarea
+                rows={3}
+                value={settings?.auto_reply_price_text ?? ""}
+                onChange={(e) =>
+                  setSettings(
+                    settings ? { ...settings, auto_reply_price_text: e.target.value } : settings
+                  )
+                }
+                onBlur={() =>
+                  settings && updateSettings({ auto_reply_price_text: settings.auto_reply_price_text })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Genel bilgi metni</Label>
+              <Textarea
+                rows={3}
+                value={settings?.auto_reply_general_text ?? ""}
+                onChange={(e) =>
+                  setSettings(
+                    settings ? { ...settings, auto_reply_general_text: e.target.value } : settings
+                  )
+                }
+                onBlur={() =>
+                  settings && updateSettings({ auto_reply_general_text: settings.auto_reply_general_text })
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {result && (
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
