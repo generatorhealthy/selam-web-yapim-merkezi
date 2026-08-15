@@ -17,6 +17,47 @@ const json = (b: unknown, s = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// WAHA oturumunun webhook ayarını denetler; poll.vote / message eksikse ekler.
+// Danışan anket oyları ancak bu webhook ile bize ulaşır.
+// deno-lint-ignore no-explicit-any
+async function ensureWebhook(supabase: any) {
+  const listRes = await supabase.functions.invoke("waha-proxy", { body: { action: "sessions.list" } });
+  const sessions = Array.isArray((listRes.data as any)?.data) ? (listRes.data as any).data : [];
+  const working = sessions.find((s: any) => String(s?.status || "").toUpperCase() === "WORKING");
+  if (!working?.name) return { ok: false, reason: "Çalışan WAHA oturumu yok" };
+
+  const hookUrl = `${Deno.env.get("SUPABASE_URL")?.replace(/\/+$/, "")}/functions/v1/wa-bot-chat-handler`;
+  const wanted = ["message", "message.any", "poll.vote", "poll.vote.failed"];
+  const cfg = working.config || {};
+  const hooks: any[] = Array.isArray(cfg.webhooks) ? cfg.webhooks : [];
+  const mine = hooks.find((h) => String(h?.url || "").includes("wa-bot-chat-handler"));
+  const hasAll = mine && wanted.every((e) => (mine.events || []).includes(e));
+  if (hasAll) return { ok: true, alreadyConfigured: true, session: working.name, events: mine.events };
+
+  const secret = Deno.env.get("WAHA_BOT_SECRET") || Deno.env.get("WAHA_WEBHOOK_SECRET");
+  const newHook = {
+    url: hookUrl,
+    events: wanted,
+    ...(secret ? { customHeaders: [{ name: "x-bot-secret", value: secret }] } : {}),
+  };
+  const others = hooks.filter((h) => !String(h?.url || "").includes("wa-bot-chat-handler"));
+
+  const upd = await supabase.functions.invoke("waha-proxy", {
+    body: {
+      action: "sessions.update",
+      sessionName: working.name,
+      payload: { name: working.name, config: { ...cfg, webhooks: [...others, newHook] } },
+    },
+  });
+  return {
+    ok: !upd.error && (upd.data as any)?.success !== false,
+    session: working.name,
+    updated: true,
+    previousEvents: mine?.events ?? null,
+    detail: (upd.data as any)?.error ?? upd.error?.message ?? null,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -28,6 +69,10 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const limit = Math.min(Number(body.limit) || 10, 25);
+
+    // Webhook denetimi (anket cevaplarının gelmesi için şart)
+    const webhook = await ensureWebhook(supabase).catch((e) => ({ ok: false, error: (e as Error).message }));
+    if (body.webhookOnly === true) return json({ success: true, webhook });
 
     const { data: settings } = await supabase
       .from("whatsapp_bot_settings")
@@ -90,7 +135,7 @@ Deno.serve(async (req) => {
       await new Promise((r) => setTimeout(r, 1200));
     }
 
-    return json({ success: true, processed: results.length, results });
+    return json({ success: true, webhook, processed: results.length, results });
   } catch (e) {
     console.error("wa-bot-dispatch-leads error:", e);
     return json({ success: false, error: (e as Error).message }, 500);
