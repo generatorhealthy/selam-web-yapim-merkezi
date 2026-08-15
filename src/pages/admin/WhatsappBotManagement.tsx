@@ -43,6 +43,24 @@ interface BotSettings {
   enabled: boolean;
   test_mode: boolean;
   urgent_days: number;
+  auto_reply_enabled: boolean;
+  auto_reply_test_mode: boolean;
+  auto_reply_price_text: string;
+  auto_reply_general_text: string;
+  auto_reply_cooldown_minutes: number;
+}
+
+interface AutoReply {
+  id: string;
+  session_name: string;
+  chat_id: string;
+  phone: string | null;
+  incoming_body: string | null;
+  intent: string;
+  reply_text: string;
+  is_test: boolean;
+  error: string | null;
+  created_at: string;
 }
 
 interface Candidate {
