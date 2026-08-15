@@ -20,6 +20,8 @@ import {
   matchSpecialist,
   MatchResult,
   therapyLabel,
+  groupForTherapy,
+  publicSpecialtyLabel,
 } from "../_shared/botMatcher.ts";
 
 const corsHeaders = {
@@ -42,22 +44,24 @@ const firstName = (name?: string | null) =>
   String(name || "").trim().split(" ")[0] || "Merhaba";
 
 // ---------------------------------------------------------------- mesaj metinleri
-const msgConsent = (name: string, therapy: string, mode: string) =>
+const msgConsent = (name: string, therapy: string, mode: string, role: string) =>
   `Merhaba ${firstName(name)},\n\n` +
-  `*${BRAND}* üzerinden yaptığınız *${therapy}* (${mode}) danışmanlık başvurunuz bize ulaştı.\n\n` +
-  `Başvurunuzdaki tercihler doğrultusunda size uygun bir uzman yönlendirmesi yapmak için sizinle iletişime geçiyoruz. ` +
+  `*${BRAND}* üzerinden yaptığınız *${therapy}* (${mode}) başvurunuz bize ulaştı.\n\n` +
+  `Başvurunuzdaki tercihler doğrultusunda size uygun bir *${role.toLocaleLowerCase("tr-TR")}* yönlendirmesi yapmak için sizinle iletişime geçiyoruz. ` +
   `Görüşmelerin *ücretli* olduğunu belirtmek isteriz.\n\n` +
-  `Size uygun uzmanımızın yönlendirilmesini ve uzmanımızın sizinle iletişime geçmesini ister misiniz?`;
+  `Size uygun ${role.toLocaleLowerCase("tr-TR")}umuzun sizinle iletişime geçmesini ister misiniz?`
+    .replace("aile danışmanıumuzun", "aile danışmanımızın")
+    .replace("psikologumuzun", "psikoloğumuzun");
 
 const msgSearching = () =>
   `Teşekkür ederiz. Başvurunuz doğrultusunda size uygun uzmanımızı belirliyoruz. ` +
   `Uygun uzmanımızın bilgileri ve yönlendirme süreci kısa süre içinde sizinle paylaşılacaktır.`;
 
-const msgSpecialistFound = (spec: Candidate, mode: string) =>
-  `Başvurunuz doğrultusunda size uygun bir uzman belirledik.\n\n` +
-  `*${spec.name}*${spec.specialty ? ` — ${spec.specialty}` : ""}\n` +
+const msgSpecialistFound = (spec: Candidate, mode: string, role = "Uzman") =>
+  `Başvurunuz doğrultusunda size uygun bir ${role.toLocaleLowerCase("tr-TR")} belirledik.\n\n` +
+  `*${spec.name}* — ${role}\n` +
   `Görüşme şekli: ${mode}\n\n` +
-  `Uzmanımız sizinle gün içerisinde iletişime geçerek görüşme detayları hakkında bilgi verecektir. ` +
+  `${role} sizinle gün içerisinde iletişime geçerek görüşme detayları hakkında bilgi verecektir. ` +
   `Görüşmeler ücretlidir.\n\n` +
   `Uzmanımızın sizinle iletişime geçmesini onaylıyor musunuz?`;
 
@@ -79,7 +83,7 @@ const msgDeclined = () =>
   `Anladık. Talebiniz doğrultusunda herhangi bir uzman yönlendirmesi yapılmayacaktır. ` +
   `İleride destek almak isterseniz bizimle tekrar iletişime geçebilirsiniz.`;
 
-const YES_NO = ["Evet, uzman yönlendirmesi istiyorum", "Hayır, vazgeçtim"];
+const YES_NO = ["Evet, yönlendirme istiyorum", "Hayır, vazgeçtim"];
 const APPROVE = ["Onaylıyorum", "Vazgeçtim"];
 const ONLINE_FALLBACK = ["Evet, online uzman istiyorum", "Hayır, istemiyorum"];
 
@@ -175,7 +179,8 @@ function runFlow(
   const city = input.city || null;
   const answers = input.answers || {};
 
-  steps.push({ from: "bot", text: msgConsent(name, therapy, modeLabel(online)), buttons: YES_NO });
+  const role = publicSpecialtyLabel(groupForTherapy(input.therapyType));
+  steps.push({ from: "bot", text: msgConsent(name, therapy, modeLabel(online), role), buttons: YES_NO });
 
   if (answers.consent === false) {
     steps.push({ from: "client", text: YES_NO[1] });
@@ -209,7 +214,7 @@ function runFlow(
     return { steps, state: "no_specialist", match, fallbackMatch, usedOnlineFallback };
   }
 
-  steps.push({ from: "bot", text: msgSpecialistFound(match.selected, modeLabel(online)), buttons: APPROVE });
+  steps.push({ from: "bot", text: msgSpecialistFound(match.selected, modeLabel(online), role), buttons: APPROVE });
 
   if (answers.finalApproval === false) {
     steps.push({ from: "client", text: APPROVE[1] });
@@ -504,6 +509,7 @@ Deno.serve(async (req) => {
           clientName,
           therapyLabel(body.therapyType),
           modeLabel(isOnlineRequest(body.consultationType)),
+          publicSpecialtyLabel(groupForTherapy(body.therapyType)),
         );
         const ok = await send(question, YES_NO);
         const { data: created } = await supabase
@@ -570,10 +576,34 @@ Deno.serve(async (req) => {
           return json({ success: true, state: "declined" });
         }
         if (!isPositive(answerRaw)) {
-          await reply(msgConsent(existing.client_name || "Danışan", therapyLabel(existing.therapy_type), modeLabel(isOnlineRequest(existing.consultation_type))), YES_NO);
+          await reply(
+            msgConsent(
+              existing.client_name || "Danışan",
+              therapyLabel(existing.therapy_type),
+              modeLabel(isOnlineRequest(existing.consultation_type)),
+              publicSpecialtyLabel(groupForTherapy(existing.therapy_type)),
+            ),
+            YES_NO,
+          );
           return json({ success: true, state: existing.state, repeated: true });
         }
         answers.consent = true;
+
+        // Başvuruda alan bilgisi varsa tekrar sorma, doğrudan sonraki adıma geç
+        if (existing.therapy_type) {
+          if (existing.consultation_type) {
+            const online = isOnlineRequest(existing.consultation_type);
+            answers.online = online;
+            if (!online && !existing.city) {
+              await reply(msgAskCity(), undefined, "awaiting_city", "city");
+              return json({ success: true, state: "awaiting_city" });
+            }
+            return await runMatchStep(online, existing.city);
+          }
+          await reply(msgAskMode(), MODE_OPTIONS, "awaiting_mode", "mode");
+          return json({ success: true, state: "awaiting_mode" });
+        }
+
         await reply(msgAskArea(), AREA_LABELS, "awaiting_area", "area");
         return json({ success: true, state: "awaiting_area" });
       }
@@ -700,7 +730,8 @@ Deno.serve(async (req) => {
           return json({ success: true, state: "no_specialist" });
         }
 
-        await reply(msgSpecialistFound(match.selected, modeLabel(online)), APPROVE, "awaiting_approval", "approval", {
+        const role = publicSpecialtyLabel(groupForTherapy((existing.therapy_type as string) || undefined));
+        await reply(msgSpecialistFound(match.selected, modeLabel(online), role), APPROVE, "awaiting_approval", "approval", {
           selected_specialist_id: match.selected.id,
           selection_reason: match.selectionReason ?? null,
           consultation_type: online ? "online" : "yuz_yuze",
