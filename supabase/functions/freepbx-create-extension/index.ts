@@ -456,10 +456,18 @@ serve(async (req) => {
         }
       }
 
+      const processed = (specs ?? []).length;
+      const nextOffset = onlyExt ? null : offset + processed;
+      const done = onlyExt ? true : processed < limit || (totalCount ?? 0) <= (nextOffset ?? 0);
+
       return new Response(
         JSON.stringify({
           success: true,
-          total: (specs ?? []).length,
+          total: totalCount ?? processed,
+          batch: processed,
+          offset,
+          nextOffset: done ? null : nextOffset,
+          done,
           updated,
           skipped,
           failed,
@@ -467,6 +475,7 @@ serve(async (req) => {
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+
     }
 
 
