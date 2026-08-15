@@ -187,7 +187,7 @@ const WhatsappBotManagement = () => {
     loadAutoReplies();
   }, []);
 
-  const detectIntent = (text: string): "price" | "general" => {
+  const updateSettings = async (patch: Partial<BotSettings>) => {
     if (!settings) return;
     setSavingSettings(true);
     const { error } = await supabase
@@ -201,6 +201,43 @@ const WhatsappBotManagement = () => {
     }
     setSettings({ ...settings, ...patch } as BotSettings);
     toast({ title: "Ayarlar güncellendi" });
+  };
+
+  const detectIntent = (text: string): "price" | "general" => {
+    const t = text
+      .toLocaleLowerCase("tr-TR")
+      .replace(/ı/g, "i")
+      .replace(/İ/g, "i")
+      .replace(/ş/g, "s")
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c");
+    const priceWords = [
+      "fiyat",
+      "ucret",
+      "seans",
+      "kac",
+      "kac tl",
+      "ne kadar",
+      "ucretli",
+      "parasi",
+      "odeme",
+      "tl",
+      "paraya",
+      "odem",
+      "maas",
+      "maaş",
+      "bedel",
+      "ucreti",
+      "fiyati",
+      "fiyatlari",
+      "seans ucreti",
+      "terapi ucreti",
+      "danismanlik ucreti",
+      "ne kadara",
+    ];
+    return priceWords.some((w) => t.includes(w)) ? "price" : "general";
   };
 
   const runSimulation = async () => {
