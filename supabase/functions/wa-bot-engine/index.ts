@@ -225,8 +225,15 @@ Deno.serve(async (req) => {
 
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const auth = await verifyAdminOrCron(req);
-  if (!auth.ok) return json({ success: false, error: auth.error }, auth.status);
+  // Dahili test tetikleyici (yalnızca test gönderimi için, sır başlığıyla)
+  const testToken = Deno.env.get("WA_BOT_TEST_TOKEN");
+  const testHeader = req.headers.get("x-wa-bot-test-token");
+  const testAuthorized = !!testToken && !!testHeader && testHeader === testToken;
+
+  if (!testAuthorized) {
+    const auth = await verifyAdminOrCron(req);
+    if (!auth.ok) return json({ success: false, error: auth.error }, auth.status);
+  }
 
   try {
     const supabase = createClient(
