@@ -181,7 +181,48 @@ function runFlow(
   return { steps, state: "completed", match, fallbackMatch, usedOnlineFallback };
 }
 
+// --------------------------------------------------- WhatsApp gönderim yardımcıları
+function getSessionNameForLineId(lineId: string) {
+  return `line_${lineId.replace(/-/g, "").slice(0, 16)}`;
+}
+
+async function getWorkingSessionName(supabase: any): Promise<string | null> {
+  const { data: activeLines } = await supabase
+    .from("whatsapp_lines")
+    .select("id, phone_number")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  const lines = (activeLines || []) as any[];
+  if (!lines.length) return null;
+
+  const candidates = lines.map((l) => getSessionNameForLineId(l.id));
+  const activePhones = new Set(
+    lines.map((l) => String(l.phone_number || "").replace(/\D/g, "")).filter(Boolean),
+  );
+
+  const res = await supabase.functions.invoke("waha-proxy", { body: { action: "sessions.list" } });
+  const sessions = Array.isArray((res.data as any)?.data) ? (res.data as any).data : [];
+
+  const working = (s: any) => String(s?.status || "").toUpperCase() === "WORKING";
+  const direct = candidates.find((c) => sessions.some((s: any) => s?.name === c && working(s)));
+  if (direct) return direct;
+
+  const matched = sessions.find((s: any) => {
+    if (!working(s)) return false;
+    const mePhone = String(s?.me?.id || "").split("@")[0]?.replace(/\D/g, "") || "";
+    return mePhone && activePhones.has(mePhone);
+  });
+  return matched?.name || null;
+}
+
+function withButtonHints(text: string, buttons?: string[]) {
+  if (!buttons?.length) return text;
+  return `${text}\n\n${buttons.map((b, i) => `${i + 1}) ${b}`).join("\n")}`;
+}
+
 Deno.serve(async (req) => {
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const auth = await verifyAdminOrCron(req);
