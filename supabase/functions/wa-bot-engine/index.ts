@@ -104,6 +104,14 @@ const Q_APPROVAL = "Uzmanımızın sizinle iletişime geçmesini onaylıyor musu
 const APPROVE = ["Onaylıyorum", "Vazgeçtim"];
 const ONLINE_FALLBACK = ["Evet, online uzman istiyorum", "Hayır, istemiyorum"];
 
+// Anket başlığı kısa olmalı (WhatsApp ~255 karakterde kesiyor)
+const pollQuestionFor = (buttons: string[], text: string) => {
+  if (buttons === YES_NO || buttons[0] === YES_NO[0]) return Q_CONSENT;
+  if (buttons[0] === ONLINE_FALLBACK[0]) return "Online görüşme seçeneğini değerlendirmek ister misiniz?";
+  if (buttons[0] === APPROVE[0]) return /seans ücret/i.test(text) ? Q_INFO : Q_APPROVAL;
+  return text.length > 200 ? text.slice(0, 190) + "..." : text;
+};
+
 const modeLabel = (online: boolean) => (online ? "Online" : "Yüz yüze");
 
 // Danışan cevabını yorumla (buton metni, 1/2 veya serbest metin)
@@ -396,13 +404,20 @@ Deno.serve(async (req) => {
         // NOWEB, sendButtons mesajını kabul etse bile WhatsApp'a teslim etmiyor.
         // Dokunulabilir tek seçimli seçenekleri NOWEB'in desteklediği anket olarak gönder.
         if (step.buttons?.length) {
+          const pollQ = pollQuestionFor(step.buttons, step.text);
+          if (pollQ !== bodyText) {
+            await supabase.functions.invoke("waha-proxy", {
+              body: { action: "sendText", sessionName, payload: { chatId, text: bodyText } },
+            });
+            await new Promise((r) => setTimeout(r, 800));
+          }
           const btnRes = await supabase.functions.invoke("waha-proxy", {
             body: {
               action: "sendPoll",
               sessionName,
               payload: {
                 chatId,
-                name: bodyText,
+                name: pollQ,
                 options: step.buttons,
               },
             },
