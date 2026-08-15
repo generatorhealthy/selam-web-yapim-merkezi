@@ -276,7 +276,9 @@ serve(async (req) => {
           ids,
           nextExtension: computeNextExtension(ids),
           debugList,
+          followMeDebug,
         }),
+
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
