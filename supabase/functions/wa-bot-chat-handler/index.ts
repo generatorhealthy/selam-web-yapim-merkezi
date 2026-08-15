@@ -170,14 +170,18 @@ Deno.serve(async (req) => {
       (body.payload as Record<string, unknown> | undefined) ||
       body;
 
-    if (!isAutoReplyable(message)) {
+    const event = String(body.event ?? '');
+    const isPollVote = event.includes('poll') || !!(body.vote || message.vote || message.selectedOptions);
+    const answerText = extractAnswer(body, message);
+
+    if (!isPollVote && !isAutoReplyable(message)) {
       return json({ ok: true, skipped: true, reason: 'not replyable' });
     }
 
     const sessionName = String(
       message.session_name ?? body.session_name ?? body.session ?? message.session ?? '',
     );
-    const chatId = String(message.chatId || '');
+    const chatId = isPollVote ? voteChatId(body, message) : String(message.chatId || '');
     const phone = parsePhone(chatId);
     const incomingBody = String(message.body || '');
 
@@ -191,9 +195,15 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    if (!settings || !settings.auto_reply_enabled) {
+    // Anket oyu / aktif akış cevabı: otomatik yanıt ayarından bağımsız işlenir
+    if (isPollVote && !(await hasActiveReferralSession(supabase, phone))) {
+      return json({ ok: true, skipped: true, reason: 'poll vote without active session' });
+    }
+
+    if (!isPollVote && (!settings || !settings.auto_reply_enabled)) {
       return json({ ok: true, skipped: true, reason: 'auto_reply disabled' });
     }
+
 
     if (await hasActiveReferralSession(supabase, phone)) {
       // Danışan aktif yönlendirme akışındaysa cevabı bot motoruna aktar
