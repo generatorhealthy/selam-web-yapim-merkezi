@@ -316,15 +316,43 @@ Deno.serve(async (req) => {
       for (let i = 0; i < botSteps.length; i++) {
         const step = botSteps[i];
         const prefix = i === 0 ? "🧪 *TEST MESAJI — Sistem denemesi*\n\n" : "";
-        const text = prefix + withButtonHints(step.text, step.buttons);
-        const res = await supabase.functions.invoke("waha-proxy", {
-          body: { action: "sendText", sessionName, payload: { chatId: `${phone}@c.us`, text } },
-        });
-        const ok = !res.error && (res.data as any)?.success !== false;
+        const chatId = `${phone}@c.us`;
+        const bodyText = prefix + step.text;
+        let ok = false;
+        let errMsg = "";
+
+        // 1) Gerçek WhatsApp butonları (WAHA Plus)
+        if (step.buttons?.length) {
+          const btnRes = await supabase.functions.invoke("waha-proxy", {
+            body: {
+              action: "sendButtons",
+              sessionName,
+              payload: {
+                chatId,
+                body: bodyText,
+                footer: "Doktorumol.com.tr",
+                buttons: step.buttons.map((b, idx) => ({ id: String(idx + 1), text: b })),
+              },
+            },
+          });
+          ok = !btnRes.error && (btnRes.data as any)?.success !== false;
+          if (!ok) errMsg = btnRes.error?.message || (btnRes.data as any)?.error || "buton gönderilemedi";
+        }
+
+        // 2) Buton desteklenmiyorsa numaralı metne düş
+        const text = bodyText + (step.buttons?.length ? `\n\n${step.buttons.map((b, x) => `${x + 1}) ${b}`).join("\n")}` : "");
+        if (!ok) {
+          const res = await supabase.functions.invoke("waha-proxy", {
+            body: { action: "sendText", sessionName, payload: { chatId, text } },
+          });
+          ok = !res.error && (res.data as any)?.success !== false;
+          if (!ok) errors.push(res.error?.message || (res.data as any)?.error || errMsg || "Bilinmeyen hata");
+          else if (errMsg) errors.push(`Buton desteklenmedi, metin olarak gönderildi (${errMsg})`);
+        }
         if (ok) sent.push(text);
-        else errors.push(res.error?.message || (res.data as any)?.error || "Bilinmeyen hata");
         if (i < botSteps.length - 1) await new Promise((r) => setTimeout(r, 1500));
       }
+
 
       await supabase.from("whatsapp_bot_sessions").insert({
         lead_id: null,
