@@ -181,7 +181,48 @@ function runFlow(
   return { steps, state: "completed", match, fallbackMatch, usedOnlineFallback };
 }
 
+// --------------------------------------------------- WhatsApp gönderim yardımcıları
+function getSessionNameForLineId(lineId: string) {
+  return `line_${lineId.replace(/-/g, "").slice(0, 16)}`;
+}
+
+async function getWorkingSessionName(supabase: any): Promise<string | null> {
+  const { data: activeLines } = await supabase
+    .from("whatsapp_lines")
+    .select("id, phone_number")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  const lines = (activeLines || []) as any[];
+  if (!lines.length) return null;
+
+  const candidates = lines.map((l) => getSessionNameForLineId(l.id));
+  const activePhones = new Set(
+    lines.map((l) => String(l.phone_number || "").replace(/\D/g, "")).filter(Boolean),
+  );
+
+  const res = await supabase.functions.invoke("waha-proxy", { body: { action: "sessions.list" } });
+  const sessions = Array.isArray((res.data as any)?.data) ? (res.data as any).data : [];
+
+  const working = (s: any) => String(s?.status || "").toUpperCase() === "WORKING";
+  const direct = candidates.find((c) => sessions.some((s: any) => s?.name === c && working(s)));
+  if (direct) return direct;
+
+  const matched = sessions.find((s: any) => {
+    if (!working(s)) return false;
+    const mePhone = String(s?.me?.id || "").split("@")[0]?.replace(/\D/g, "") || "";
+    return mePhone && activePhones.has(mePhone);
+  });
+  return matched?.name || null;
+}
+
+function withButtonHints(text: string, buttons?: string[]) {
+  if (!buttons?.length) return text;
+  return `${text}\n\n${buttons.map((b, i) => `${i + 1}) ${b}`).join("\n")}`;
+}
+
 Deno.serve(async (req) => {
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const auth = await verifyAdminOrCron(req);
@@ -250,6 +291,69 @@ Deno.serve(async (req) => {
         fallbackMatch: flow.fallbackMatch,
       });
     }
+
+    // ---------------------------------------------------------------- test_send
+    // Belirtilen numaraya botun tüm mesajlarını GERÇEKTEN gönderir.
+    // Uzmana hiçbir bildirim gitmez, client_referrals kaydı OLUŞTURULMAZ.
+    if (action === "test_send") {
+      const phone = String(body.phone || "").replace(/\D/g, "");
+      if (phone.length < 10) {
+        return json({ success: false, error: "Geçerli bir telefon numarası gerekli" }, 400);
+      }
+
+      const all = await loadCandidates(supabase, urgentDays);
+      const flow = runFlow(all, body as SimInput, urgentDays);
+
+      const sessionName = await getWorkingSessionName(supabase);
+      if (!sessionName) {
+        return json({ success: false, error: "Bağlı/çalışan aktif WhatsApp hattı bulunamadı" });
+      }
+
+      const botSteps = flow.steps.filter((s) => s.from === "bot");
+      const sent: string[] = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < botSteps.length; i++) {
+        const step = botSteps[i];
+        const prefix = i === 0 ? "🧪 *TEST MESAJI — Sistem denemesi*\n\n" : "";
+        const text = prefix + withButtonHints(step.text, step.buttons);
+        const res = await supabase.functions.invoke("waha-proxy", {
+          body: { action: "sendText", sessionName, payload: { chatId: `${phone}@c.us`, text } },
+        });
+        const ok = !res.error && (res.data as any)?.success !== false;
+        if (ok) sent.push(text);
+        else errors.push(res.error?.message || (res.data as any)?.error || "Bilinmeyen hata");
+        if (i < botSteps.length - 1) await new Promise((r) => setTimeout(r, 1500));
+      }
+
+      await supabase.from("whatsapp_bot_sessions").insert({
+        lead_id: null,
+        phone,
+        client_name: body.clientName || "Test Danışanı",
+        therapy_type: body.therapyType ?? null,
+        consultation_type: body.consultationType ?? null,
+        city: body.city ?? null,
+        state: "completed",
+        selected_specialist_id: null,
+        selection_reason: "TEST GÖNDERİMİ — uzmana aktarım yapılmadı",
+        offered_online_fallback: flow.usedOnlineFallback,
+        is_test: true,
+        transcript: flow.steps,
+        last_message_at: new Date().toISOString(),
+      });
+
+      return json({
+        success: errors.length === 0,
+        testSend: true,
+        phone,
+        sessionName,
+        sentCount: sent.length,
+        messages: sent,
+        errors,
+        note: "Uzmana aktarım yapılmadı, yönlendirme kaydı oluşturulmadı.",
+      });
+    }
+
 
     // start / reply: gerçek akış. Mesaj gönderimi ayarlar kapalıyken yapılmaz.
     if (action === "start" || action === "reply") {
