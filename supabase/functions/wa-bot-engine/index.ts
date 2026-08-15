@@ -53,6 +53,20 @@ const msgConsent = (name: string, therapy: string, mode: string, role: string) =
     .replace("aile danışmanıumuzun", "aile danışmanımızın")
     .replace("psikologumuzun", "psikoloğumuzun");
 
+const msgRoleInfo = (role: string) => {
+  const r = role.toLocaleLowerCase("tr-TR");
+  return (
+    `Başvurunuz doğrultusunda sistemimizde size uygun bir *${r}* araştırması yapacağız ve ` +
+    `alanında yetkin bir ${r}a yönlendirmenizi sağlayacağız.\n\n` +
+    `Görüşme detaylarını, randevu saatini ve *seans ücretlerini* doğrudan ${r}ımızdan öğrenebilirsiniz.\n\n` +
+    `Onaylıyor musunuz?`
+  )
+    .replace(/aile danışmanıa/g, "aile danışmanına")
+    .replace(/aile danışmanıımızdan/g, "aile danışmanımızdan")
+    .replace(/psikologa/g, "psikoloğa")
+    .replace(/psikologımızdan/g, "psikoloğumuzdan");
+};
+
 const msgSearching = () =>
   `Teşekkür ederiz. Başvurunuz doğrultusunda size uygun uzmanımızı belirliyoruz. ` +
   `Uygun uzmanımızın bilgileri ve yönlendirme süreci kısa süre içinde sizinle paylaşılacaktır.`;
@@ -84,6 +98,9 @@ const msgDeclined = () =>
   `İleride destek almak isterseniz bizimle tekrar iletişime geçebilirsiniz.`;
 
 const YES_NO = ["Evet, yönlendirme istiyorum", "Hayır, vazgeçtim"];
+const Q_CONSENT = "Size uygun bir uzman yönlendirmesi yapmamızı ister misiniz?";
+const Q_INFO = "Yönlendirme sürecini onaylıyor musunuz?";
+const Q_APPROVAL = "Uzmanımızın sizinle iletişime geçmesini onaylıyor musunuz?";
 const APPROVE = ["Onaylıyorum", "Vazgeçtim"];
 const ONLINE_FALLBACK = ["Evet, online uzman istiyorum", "Hayır, istemiyorum"];
 
@@ -188,6 +205,8 @@ function runFlow(
     return { steps, state: "declined", match: null, fallbackMatch: null, usedOnlineFallback: false };
   }
   steps.push({ from: "client", text: YES_NO[0] });
+  steps.push({ from: "bot", text: msgRoleInfo(role), buttons: APPROVE });
+  steps.push({ from: "client", text: APPROVE[0] });
   steps.push({ from: "bot", text: msgSearching() });
 
   let match = matchSpecialist(all, { therapyType: input.therapyType, online, city, urgentDays });
