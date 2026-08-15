@@ -307,6 +307,14 @@ Deno.serve(async (req) => {
       case 'sessions.list':
         endpoint = '/api/sessions';
         break;
+      case 'sessions.get':
+        endpoint = `/api/sessions/${encodeURIComponent(String(sessionName ?? ''))}`;
+        break;
+      case 'sessions.update':
+        endpoint = `/api/sessions/${encodeURIComponent(String(sessionName ?? ''))}`;
+        method = 'PUT';
+        body = JSON.stringify(payload ?? {});
+        break;
       case 'sessions.start': {
         const encodedSessionName = encodeURIComponent(String(sessionName ?? ''));
         const candidateRequests = [
