@@ -431,7 +431,7 @@ Deno.serve(async (req) => {
     }
 
 
-    // start / reply: gerçek akış. Mesaj gönderimi ayarlar kapalıyken yapılmaz.
+    // ------------------------------------------------------- CANLI AKIŞ (danışan)
     if (action === "start" || action === "reply") {
       if (!liveSendAllowed) {
         return json({
@@ -441,11 +441,274 @@ Deno.serve(async (req) => {
             "WhatsApp botu şu anda kapalı veya test modunda. Gerçek mesaj gönderilmedi. Panelden botu açıp test modunu kapatmalısınız.",
         });
       }
-      return json({
-        success: false,
-        error: "Canlı gönderim henüz etkinleştirilmedi (WhatsApp API entegrasyonu son aşamada aktif edilecek).",
-      });
+
+      const sessionName = await getWorkingSessionName(supabase);
+      if (!sessionName) {
+        return json({ success: false, error: "Bağlı/çalışan aktif WhatsApp hattı bulunamadı" });
+      }
+
+      const phone = String(body.phone || "").replace(/\D/g, "");
+      if (phone.length < 10) {
+        return json({ success: false, error: "Geçerli bir telefon numarası gerekli" }, 400);
+      }
+      const chatId = `${phone}@c.us`;
+
+      const send = async (text: string, options?: string[]) => {
+        if (options?.length) {
+          const p = await supabase.functions.invoke("waha-proxy", {
+            body: { action: "sendPoll", sessionName, payload: { chatId, name: text, options } },
+          });
+          if (!p.error && (p.data as any)?.success !== false) return true;
+        }
+        const r = await supabase.functions.invoke("waha-proxy", {
+          body: {
+            action: "sendText",
+            sessionName,
+            payload: { chatId, text: withButtonHints(text, options) },
+          },
+        });
+        return !r.error && (r.data as any)?.success !== false;
+      };
+
+      // ---- oturumu bul / oluştur
+      const { data: existing } = await supabase
+        .from("whatsapp_bot_sessions")
+        .select("*")
+        .eq("phone", phone)
+        .eq("is_test", false)
+        .not("state", "in", "(completed,declined,no_specialist)")
+        .order("last_message_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const pushTranscript = (s: any, from: "bot" | "client", text: string, buttons?: string[]) => {
+        const t = Array.isArray(s?.transcript) ? s.transcript : [];
+        t.push({ from, text, buttons });
+        return t;
+      };
+
+      const saveSession = async (id: string, patch: Record<string, unknown>) => {
+        await supabase
+          .from("whatsapp_bot_sessions")
+          .update({ ...patch, last_message_at: new Date().toISOString() })
+          .eq("id", id);
+      };
+
+      if (action === "start") {
+        if (existing) {
+          return json({ success: true, skipped: true, reason: "Aktif oturum mevcut", sessionId: existing.id });
+        }
+        const clientName = String(body.clientName || "Danışan");
+        const question = msgConsent(
+          clientName,
+          therapyLabel(body.therapyType),
+          modeLabel(isOnlineRequest(body.consultationType)),
+        );
+        const ok = await send(question, YES_NO);
+        const { data: created } = await supabase
+          .from("whatsapp_bot_sessions")
+          .insert({
+            lead_id: body.leadId ?? null,
+            phone,
+            client_name: clientName,
+            therapy_type: body.therapyType ?? null,
+            consultation_type: body.consultationType ?? null,
+            city: body.city ?? null,
+            state: "awaiting_consent",
+            is_test: false,
+            last_question: "consent",
+            last_options: YES_NO,
+            answers: {},
+            transcript: [{ from: "bot", text: question, buttons: YES_NO }],
+            last_message_at: new Date().toISOString(),
+          })
+          .select("id")
+          .maybeSingle();
+
+        if (body.leadId) {
+          await supabase
+            .from("danisan_basvurulari")
+            .update({ wa_bot_started_at: new Date().toISOString(), wa_bot_error: ok ? null : "Mesaj gönderilemedi" })
+            .eq("id", body.leadId);
+        }
+
+        return json({ success: ok, started: true, sessionId: created?.id ?? null, phone });
+      }
+
+      // ------------------------------------------------------------------ reply
+      const answerRaw = String(body.text || "").trim();
+      if (!existing) {
+        return json({ success: true, skipped: true, reason: "Aktif bot oturumu yok" });
+      }
+      if (!answerRaw) {
+        return json({ success: true, skipped: true, reason: "Boş cevap" });
+      }
+
+      const answers = (existing.answers || {}) as Record<string, unknown>;
+      const transcript = pushTranscript(existing, "client", answerRaw);
+      const step = String(existing.last_question || "consent");
+
+      const reply = async (text: string, options?: string[], nextState?: string, nextStep?: string, patch?: Record<string, unknown>) => {
+        await send(text, options);
+        transcript.push({ from: "bot", text, buttons: options });
+        await saveSession(existing.id, {
+          transcript,
+          answers,
+          state: nextState ?? existing.state,
+          last_question: nextStep ?? existing.last_question,
+          last_options: options ?? null,
+          ...(patch || {}),
+        });
+      };
+
+      // 1) onay adımı
+      if (step === "consent") {
+        if (isNegative(answerRaw)) {
+          answers.consent = false;
+          await reply(msgDeclined(), undefined, "declined", "done");
+          return json({ success: true, state: "declined" });
+        }
+        if (!isPositive(answerRaw)) {
+          await reply(msgConsent(existing.client_name || "Danışan", therapyLabel(existing.therapy_type), modeLabel(isOnlineRequest(existing.consultation_type))), YES_NO);
+          return json({ success: true, state: existing.state, repeated: true });
+        }
+        answers.consent = true;
+        await reply(msgAskArea(), AREA_LABELS, "awaiting_area", "area");
+        return json({ success: true, state: "awaiting_area" });
+      }
+
+      // 2) alan seçimi
+      if (step === "area") {
+        const idx = matchOption(answerRaw, AREA_LABELS);
+        if (idx < 0) {
+          await reply(msgAskArea(), AREA_LABELS);
+          return json({ success: true, state: existing.state, repeated: true });
+        }
+        answers.area = AREA_OPTIONS[idx].label;
+        await reply(msgAskMode(), MODE_OPTIONS, "awaiting_mode", "mode", {
+          therapy_type: AREA_OPTIONS[idx].therapy,
+        });
+        return json({ success: true, state: "awaiting_mode" });
+      }
+
+      // 3) görüşme tipi
+      if (step === "mode") {
+        const idx = matchOption(answerRaw, MODE_OPTIONS);
+        if (idx < 0) {
+          await reply(msgAskMode(), MODE_OPTIONS);
+          return json({ success: true, state: existing.state, repeated: true });
+        }
+        const online = idx === 0;
+        answers.online = online;
+        if (!online && !existing.city) {
+          await reply(msgAskCity(), undefined, "awaiting_city", "city", { consultation_type: "yuz_yuze" });
+          return json({ success: true, state: "awaiting_city" });
+        }
+        return await runMatchStep(online, existing.city);
+      }
+
+      // 4) şehir (yüz yüze)
+      if (step === "city") {
+        answers.city = answerRaw;
+        await supabase.from("whatsapp_bot_sessions").update({ city: answerRaw }).eq("id", existing.id);
+        existing.city = answerRaw;
+        return await runMatchStep(false, answerRaw);
+      }
+
+      // 5) online alternatif teklifi
+      if (step === "online_fallback") {
+        if (!isPositive(answerRaw)) {
+          answers.onlineFallback = false;
+          await reply(msgDeclined(), undefined, "declined", "done");
+          return json({ success: true, state: "declined" });
+        }
+        answers.onlineFallback = true;
+        return await runMatchStep(true, null, true);
+      }
+
+      // 6) uzman onayı
+      if (step === "approval") {
+        if (isNegative(answerRaw)) {
+          answers.finalApproval = false;
+          await reply(msgDeclined(), undefined, "declined", "done");
+          return json({ success: true, state: "declined" });
+        }
+        if (!isPositive(answerRaw)) {
+          await reply("Onayınızı alabilmemiz için lütfen aşağıdaki seçeneklerden birini işaretleyin.", APPROVE);
+          return json({ success: true, state: existing.state, repeated: true });
+        }
+        answers.finalApproval = true;
+
+        const specId = existing.selected_specialist_id as string | null;
+        const all = await loadCandidates(supabase, urgentDays);
+        const spec = all.find((c) => c.id === specId) || null;
+
+        if (spec) {
+          const now = new Date();
+          const nameParts = String(existing.client_name || "").trim().split(" ");
+          await supabase.from("client_referrals").insert({
+            specialist_id: spec.id,
+            year: now.getFullYear(),
+            month: now.getMonth() + 1,
+            is_referred: true,
+            referred_at: now.toISOString(),
+            referral_count: 1,
+            client_name: nameParts.slice(0, -1).join(" ") || nameParts[0] || "Danışan",
+            client_surname: nameParts.length > 1 ? nameParts[nameParts.length - 1] : "",
+            client_contact: existing.phone,
+            consultation_type: answers.online === false ? "Yüz yüze" : "Online",
+            notes: "WhatsApp botu üzerinden otomatik yönlendirme",
+          });
+          if (existing.lead_id) {
+            await supabase
+              .from("danisan_basvurulari")
+              .update({ status: "yonlendirildi", assigned_specialist_id: spec.id })
+              .eq("id", existing.lead_id);
+          }
+        }
+
+        await reply(
+          spec ? msgCompleted(spec) : "Onayınız için teşekkür ederiz. Ekibimiz en kısa sürede sizinle iletişime geçecektir.",
+          undefined,
+          "completed",
+          "done",
+        );
+        return json({ success: true, state: "completed", specialistId: spec?.id ?? null });
+      }
+
+      return json({ success: true, skipped: true, reason: `Bilinmeyen adım: ${step}` });
+
+      // ---- eşleştirme + uzman onayı sorusu
+      async function runMatchStep(online: boolean, city: string | null, usedFallback = false) {
+        const all = await loadCandidates(supabase, urgentDays);
+        const match = matchSpecialist(all, {
+          therapyType: (existing.therapy_type as string) || undefined,
+          online,
+          city: online ? null : city,
+          urgentDays,
+        });
+
+        if (!match.selected && !online) {
+          await reply(msgNoCitySpecialist(city), ONLINE_FALLBACK, "awaiting_online_fallback", "online_fallback", {
+            offered_online_fallback: true,
+          });
+          return json({ success: true, state: "awaiting_online_fallback" });
+        }
+        if (!match.selected) {
+          await reply(msgNoSpecialistAtAll(), undefined, "no_specialist", "done");
+          return json({ success: true, state: "no_specialist" });
+        }
+
+        await reply(msgSpecialistFound(match.selected, modeLabel(online)), APPROVE, "awaiting_approval", "approval", {
+          selected_specialist_id: match.selected.id,
+          selection_reason: match.selectionReason ?? null,
+          consultation_type: online ? "online" : "yuz_yuze",
+          offered_online_fallback: usedFallback || !!existing.offered_online_fallback,
+        });
+        return json({ success: true, state: "awaiting_approval", specialistId: match.selected.id });
+      }
     }
+
 
     return json({ success: false, error: "Bilinmeyen aksiyon" }, 400);
   } catch (e) {
