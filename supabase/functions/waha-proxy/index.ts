@@ -531,6 +531,21 @@ Deno.serve(async (req) => {
             .filter((b: any) => b.text),
         });
         break;
+      case 'sendPoll':
+        endpoint = `/api/sendPoll`;
+        method = 'POST';
+        body = JSON.stringify({
+          session: sessionName,
+          chatId: payload.chatId,
+          poll: {
+            name: String(payload.name ?? payload.text ?? '').slice(0, 255),
+            options: (Array.isArray(payload.options) ? payload.options : [])
+              .map((option: unknown) => String(option).trim().slice(0, 100))
+              .filter(Boolean),
+            multipleAnswers: false,
+          },
+        });
+        break;
 
       case 'sendImage':
         endpoint = `/api/sendImage`;
