@@ -4234,6 +4234,8 @@ export type Database = {
           status: string
           therapy_type: string | null
           updated_at: string
+          wa_bot_error: string | null
+          wa_bot_started_at: string | null
           welcome_sent_at: string | null
         }
         Insert: {
@@ -4256,6 +4258,8 @@ export type Database = {
           status?: string
           therapy_type?: string | null
           updated_at?: string
+          wa_bot_error?: string | null
+          wa_bot_started_at?: string | null
           welcome_sent_at?: string | null
         }
         Update: {
@@ -4278,6 +4282,8 @@ export type Database = {
           status?: string
           therapy_type?: string | null
           updated_at?: string
+          wa_bot_error?: string | null
+          wa_bot_started_at?: string | null
           welcome_sent_at?: string | null
         }
         Relationships: []
@@ -6834,6 +6840,7 @@ export type Database = {
       }
       whatsapp_bot_sessions: {
         Row: {
+          answers: Json
           city: string | null
           client_name: string | null
           consultation_type: string | null
@@ -6841,6 +6848,8 @@ export type Database = {
           id: string
           is_test: boolean
           last_message_at: string | null
+          last_options: Json | null
+          last_question: string | null
           lead_id: string | null
           offered_online_fallback: boolean
           phone: string
@@ -6852,6 +6861,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          answers?: Json
           city?: string | null
           client_name?: string | null
           consultation_type?: string | null
@@ -6859,6 +6869,8 @@ export type Database = {
           id?: string
           is_test?: boolean
           last_message_at?: string | null
+          last_options?: Json | null
+          last_question?: string | null
           lead_id?: string | null
           offered_online_fallback?: boolean
           phone: string
@@ -6870,6 +6882,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          answers?: Json
           city?: string | null
           client_name?: string | null
           consultation_type?: string | null
@@ -6877,6 +6890,8 @@ export type Database = {
           id?: string
           is_test?: boolean
           last_message_at?: string | null
+          last_options?: Json | null
+          last_question?: string | null
           lead_id?: string | null
           offered_online_fallback?: boolean
           phone?: string
