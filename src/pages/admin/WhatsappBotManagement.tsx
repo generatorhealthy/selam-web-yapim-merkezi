@@ -149,10 +149,27 @@ const WhatsappBotManagement = () => {
   const loadSettings = async () => {
     const { data } = await supabase
       .from("whatsapp_bot_settings")
-      .select("id, enabled, test_mode, urgent_days")
+      .select(
+        "id, enabled, test_mode, urgent_days, auto_reply_enabled, auto_reply_test_mode, auto_reply_price_text, auto_reply_general_text, auto_reply_cooldown_minutes"
+      )
       .limit(1)
       .maybeSingle();
     if (data) setSettings(data as BotSettings);
+  };
+
+  const loadAutoReplies = async () => {
+    setAutoRepliesLoading(true);
+    const { data, error } = await supabase
+      .from("whatsapp_bot_auto_replies")
+      .select("id, session_name, chat_id, phone, incoming_body, intent, reply_text, is_test, error, created_at")
+      .order("created_at", { ascending: false })
+      .limit(25);
+    setAutoRepliesLoading(false);
+    if (error) {
+      toast({ title: "Cevap kayıtları yüklenemedi", description: error.message, variant: "destructive" });
+      return;
+    }
+    setAutoReplies((data as AutoReply[]) || []);
   };
 
   const loadSessions = async () => {
