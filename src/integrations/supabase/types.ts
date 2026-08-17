@@ -2812,6 +2812,36 @@ export type Database = {
           },
         ]
       }
+      blocked_visitors: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          ip_address: string | null
+          phone: string | null
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          ip_address?: string | null
+          phone?: string | null
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          ip_address?: string | null
+          phone?: string | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       blog_categories: {
         Row: {
           created_at: string
@@ -6645,6 +6675,7 @@ export type Database = {
         }[]
       }
       merge_duplicate_client_referrals: { Args: never; Returns: undefined }
+      normalize_phone_digits: { Args: { _phone: string }; Returns: string }
       normalize_ref_code: { Args: { p_text: string }; Returns: string }
       notify_search_engines_async: {
         Args: { _id?: string; _slug?: string; _type: string }
