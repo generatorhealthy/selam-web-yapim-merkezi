@@ -147,7 +147,9 @@ const BookAppointment = () => {
       if (error) {
         console.error('Database error:', error);
 
-        if (error.message.includes('row-level security policy')) {
+        if (error.message.includes('blocked_visitor')) {
+          toast.error('Bu iletişim bilgileriyle randevu oluşturulamıyor. Lütfen bizimle iletişime geçin.');
+        } else if (error.message.includes('row-level security policy')) {
           toast.error('Randevu oluşturulurken yetkilendirme hatası oluştu. Lütfen sayfayı yenileyip tekrar deneyin.');
         } else if (error.message.includes('appointments_appointment_type_check')) {
           toast.error('Randevu türü geçersiz. Lütfen geçerli bir randevu türü seçin.');
