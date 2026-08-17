@@ -7418,32 +7418,32 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/uzm-psk-ebru-ozcan-ile-bilincli-saglikli-ve-guclu-bir-yasama-adim</loc>
-    <lastmod>2025-07-14</lastmod>
+    <loc>https://doktorumol.com.tr/blog/burak-ala-ile-bdt-egitimi</loc>
+    <lastmod>2026-08-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/burak-ala-ile-bdt-egitimi</loc>
-    <lastmod>2025-07-14</lastmod>
+    <loc>https://doktorumol.com.tr/blog/uzm-psk-ebru-ozcan-ile-bilincli-saglikli-ve-guclu-bir-yasama-adim</loc>
+    <lastmod>2026-08-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/kadin-hastaliklari-ve-dogum-uzmani-tahibe-derici-uzmanlik-alanlari-ve-hizmetleri</loc>
-    <lastmod>2025-07-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/uzman-aile-danismani-aysel-taskin-ile-saglikli-ve-guclu-iliskilere-dogru</loc>
-    <lastmod>2025-07-14</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/z004-psikiyatri-ne-demek</loc>
     <lastmod>2026-08-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/uzman-aile-danismani-aysel-taskin-ile-saglikli-ve-guclu-iliskilere-dogru</loc>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -8380,6 +8380,12 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/depresyon-iyilesme-rehberi</loc>
     <lastmod>2026-05-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/mersin-psikolog-melisa-sude-kav</loc>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -9332,14 +9338,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psk-dan-ayca-harmankaya-ile-danismanlik-hizmeti</loc>
-    <lastmod>2025-07-14</lastmod>
+    <loc>https://doktorumol.com.tr/blog/cocuk-ihmal-ve-istismarini-onleme-calismalari</loc>
+    <lastmod>2025-07-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/cocuk-ihmal-ve-istismarini-onleme-calismalari</loc>
-    <lastmod>2025-07-15</lastmod>
+    <loc>https://doktorumol.com.tr/blog/psk-dan-ayca-harmankaya-ile-danismanlik-hizmeti</loc>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -9369,7 +9375,7 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/sule-uludag-ile-saglikli-aile-iliskileri</loc>
-    <lastmod>2025-07-14</lastmod>
+    <lastmod>2026-08-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -9666,6 +9672,12 @@
   <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-zerrin-gunduz</loc>
     <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/psikolog/melisa-sude-kav</loc>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
