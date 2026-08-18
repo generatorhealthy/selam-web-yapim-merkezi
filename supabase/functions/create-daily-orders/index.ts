@@ -65,6 +65,8 @@ serve(async (req) => {
     let createdCount = 0;
     let skippedCount = 0;
     let errorCount = 0;
+    const noPrevOrder: Array<{ name: string; emails: string; phone: string }> = [];
+
 
     const normPhone = (p?: string | null) => {
       if (!p) return "";
