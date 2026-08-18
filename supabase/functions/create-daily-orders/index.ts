@@ -233,6 +233,66 @@ serve(async (req) => {
       }
     }
 
+    // Önceki sipariş bulunamadığı için atlanan uzmanları info@doktorumol.com.tr adresine bildir
+    if (noPrevOrder.length > 0) {
+      try {
+        const brevoApiKey = Deno.env.get('BREVO_API_KEY');
+        if (!brevoApiKey) {
+          console.error('BREVO_API_KEY is not configured, skip notification not sent');
+        } else {
+          const rows = noPrevOrder.map((s) => `
+            <tr>
+              <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${s.name}</td>
+              <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${s.emails}</td>
+              <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${s.phone}</td>
+            </tr>`).join('');
+
+          const htmlContent = `
+            <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;">
+              <h2 style="color:#2d3748;">Otomatik Sipariş Oluşturulamadı (${noPrevOrder.length})</h2>
+              <p style="color:#4a5568;">
+                ${todayStr} tarihinde ödeme günü gelen aşağıdaki uzmanlar için <b>önceki sipariş kaydı bulunamadı</b>,
+                bu yüzden yanlış tutar / yanlış ay ile sipariş oluşturulmadı. Lütfen manuel kontrol edin.
+              </p>
+              <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                <thead>
+                  <tr style="background:#f7fafc;text-align:left;">
+                    <th style="padding:8px;">Uzman</th>
+                    <th style="padding:8px;">E-posta(lar)</th>
+                    <th style="padding:8px;">Telefon</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+              <p style="color:#718096;font-size:12px;margin-top:20px;">Doktorumol.com.tr otomatik sipariş sistemi</p>
+            </div>`;
+
+          const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'api-key': brevoApiKey,
+            },
+            body: JSON.stringify({
+              sender: { name: 'Doktorumol.com.tr', email: 'info@doktorumol.com.tr' },
+              to: [{ email: 'info@doktorumol.com.tr', name: 'Doktorumol Admin' }],
+              subject: `Otomatik sipariş oluşturulamadı - ${noPrevOrder.length} uzman (${todayStr})`,
+              htmlContent,
+            }),
+          });
+          if (!res.ok) {
+            console.error('Brevo notification failed:', await res.text());
+          } else {
+            console.log(`Skip notification e-mail sent for ${noPrevOrder.length} specialists`);
+          }
+        }
+      } catch (mailErr) {
+        console.error('Skip notification error:', mailErr);
+      }
+    }
+
+
     const result = {
       success: true,
       message: 'Daily orders processed',
