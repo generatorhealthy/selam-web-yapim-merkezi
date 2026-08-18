@@ -41,7 +41,7 @@ serve(async (req) => {
     // Find active specialists whose payment_day is today
     const { data: dueSpecialists, error: specError } = await supabaseAdmin
       .from('specialists')
-      .select('id, name, email, payment_day, package_price, specialty, city, phone')
+      .select('id, name, email, payment_day, package_price, specialty, city, phone, user_id')
       .eq('payment_day', dayOfMonth)
       .eq('is_active', true);
 
