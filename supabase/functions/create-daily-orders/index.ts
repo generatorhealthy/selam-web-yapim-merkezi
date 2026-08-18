@@ -155,8 +155,14 @@ serve(async (req) => {
           // amounts (e.g. 2.998 TL for a 4.000 TL package) and duplicate "1st month" rows.
           console.log(`No previous order found for ${specialist.name} (${emails.join(', ')}), skipping to avoid a wrong order`);
           skippedCount++;
+          noPrevOrder.push({
+            name: specialist.name || '-',
+            emails: emails.join(', '),
+            phone: specialist.phone || '-',
+          });
           continue;
         }
+
 
         // Duplicate guard: an order created today for the same customer (any known e-mail)
         const dupEmails = Array.from(new Set([...emails, String(prev.customer_email || '').toLowerCase().trim()])).filter(Boolean);
