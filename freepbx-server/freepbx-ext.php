@@ -315,7 +315,8 @@ if ($action === 'cdr_stats') {
 
 $ext      = preg_replace('/\D/', '', (string)($in['extension'] ?? ''));
 $name     = trim((string)($in['name'] ?? ''));
-$followme = preg_replace('/[^0-9#]/', '', (string)($in['followme'] ?? ''));
+// Çift hat yönlendirmesi için "-" ayırıcısı korunmalı (or. 805xxxxxxxxx#-815xxxxxxxxx#)
+$followme = preg_replace('/[^0-9#\-]/', '', (string)($in['followme'] ?? ''));
 
 if ($ext === '') {
   json_response(['success' => false, 'error' => 'extension gerekli'], 400);

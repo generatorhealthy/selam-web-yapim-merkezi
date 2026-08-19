@@ -367,8 +367,8 @@ serve(async (req) => {
         // keep last 10 digits (mobile without leading 0)
         d = d.slice(-10);
         // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-        // Ön ek olmadan follow-me bacagi aninda dusuyor (NO ANSWER, 0 sn).
-        return `80${d}#`;
+        // Cift hat: gelen cagri 80 hattindaysa 81 bacagi, 81'deyse 80 bacagi calar.
+        return `80${d}#-81${d}#`;
       };
 
       const onlyExt = (body.extension ?? "").toString().trim();
@@ -594,8 +594,8 @@ serve(async (req) => {
       if (d.length < 10) return "";
       d = d.slice(-10);
       // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-      // Ön ek olmadan follow-me bacagi aninda dusuyor (NO ANSWER, 0 sn).
-      return `80${d}#`;
+      // Cift hat: gelen cagri 80 hattindaysa 81 bacagi, 81'deyse 80 bacagi calar.
+      return `80${d}#-81${d}#`;
     };
     const followMeList = buildFollowMe(phone);
 

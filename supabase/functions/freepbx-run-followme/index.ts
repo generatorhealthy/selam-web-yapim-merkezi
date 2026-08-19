@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -83,11 +84,63 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
+
+    // Toplu mod: tüm uzmanların dahililerini çift hat (80/81) yönlendirmesine geçirir.
+    if (body.batch === true) {
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      );
+      const offset = Math.max(0, Number(body.offset ?? 0) || 0);
+      const limit = Math.min(25, Math.max(1, Number(body.limit ?? 15) || 15));
+      const fixedCallerId = body.trunk_prefix === "81" ? "905317893880" : "905335822275";
+
+      const { data: specs, error: specErr } = await supabaseAdmin
+        .from("specialists")
+        .select("id, name, phone, internal_number")
+        .not("internal_number", "is", null)
+        .order("internal_number", { ascending: true })
+        .range(offset, offset + limit - 1);
+      if (specErr) throw new Error(`Uzman listesi alınamadı: ${specErr.message}`);
+
+      const { count: total } = await supabaseAdmin
+        .from("specialists")
+        .select("id", { count: "exact", head: true })
+        .not("internal_number", "is", null);
+
+      const results: unknown[] = [];
+      let updated = 0, skipped = 0, failed = 0;
+      for (const s of specs ?? []) {
+        const ext = String(s.internal_number ?? "").trim();
+        const digits = normalizePhone(String(s.phone ?? ""));
+        if (!/^\d{3,4}$/.test(ext) || !digits) {
+          skipped++;
+          results.push({ extension: ext, name: s.name, status: "skipped", reason: "Geçersiz dahili veya telefon" });
+          continue;
+        }
+        const fm = `80${digits}#-81${digits}#`;
+        try {
+          await setDirectRingStrategy(ext, fm, fixedCallerId);
+          updated++;
+          results.push({ extension: ext, name: s.name, status: "updated", followme: fm });
+        } catch (e) {
+          failed++;
+          results.push({ extension: ext, name: s.name, status: "failed", error: e instanceof Error ? e.message : String(e) });
+        }
+      }
+
+      const nextOffset = offset + (specs?.length ?? 0);
+      return new Response(
+        JSON.stringify({ ok: failed === 0, total: total ?? 0, offset, processed: specs?.length ?? 0, updated, skipped, failed, nextOffset, hasMore: nextOffset < (total ?? 0), results }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const extension = String(body.extension ?? "").trim();
     const phone = String(body.phone ?? "").trim();
     const name = String(body.name ?? extension).trim();
     const trunkPrefix: "80" | "81" = body.trunk_prefix === "81" ? "81" : "80";
-    const dualTrunk = body.dual_trunk === true;
+    const dualTrunk = body.dual_trunk !== false;
     const fixedCallerId = trunkPrefix === "81" ? "905317893880" : "905335822275";
 
     if (!extension || !phone) throw new Error("extension ve phone zorunlu");
