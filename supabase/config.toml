@@ -182,6 +182,11 @@ verify_jwt = false
 [functions.freepbx-create-extension]
 verify_jwt = false
 
+[functions.freepbx-run-followme]
+verify_jwt = false
+
+
+
 
 
 [functions.realtime-session]
