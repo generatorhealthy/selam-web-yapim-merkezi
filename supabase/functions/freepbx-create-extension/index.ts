@@ -585,7 +585,7 @@ serve(async (req) => {
       throw new Error("FREEPBX_BULK_URL secret tanımlı değil. Sunucudaki PHP endpoint adresini ekleyin.");
     }
 
-    // Follow-Me: aramayı uzmanın cep telefonuna yönlendir (0XXXXXXXXXX#)
+    // Follow-Me: aramayı uzmanın cep telefonuna yönlendir (80XXXXXXXXXX#)
     const buildFollowMe = (raw: string): string => {
       let d = (raw ?? "").replace(/\D/g, "");
       if (!d) return "";
@@ -594,8 +594,8 @@ serve(async (req) => {
       if (d.length < 10) return "";
       d = d.slice(-10);
       // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-        // Ön ek olmadan follow-me bacagi aninda dusuyor (NO ANSWER, 0 sn).
-        return `80${d}#`;
+      // Ön ek olmadan follow-me bacagi aninda dusuyor (NO ANSWER, 0 sn).
+      return `80${d}#`;
     };
     const followMeList = buildFollowMe(phone);
 
