@@ -25,7 +25,7 @@ const BASE = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BASE_URL") ?? "");
 const CLIENT_ID = Deno.env.get("FREEPBX_CLIENT_ID") ?? "";
 const CLIENT_SECRET = Deno.env.get("FREEPBX_CLIENT_SECRET") ?? "";
 
-async function setDirectRingStrategy(extension: string, followme: string): Promise<unknown> {
+async function setDirectRingStrategy(extension: string, followme: string, fixedCallerId: string): Promise<unknown> {
   if (!BASE || !CLIENT_ID || !CLIENT_SECRET) return { skipped: true };
 
   const tokenResponse = await fetch(`${BASE}/admin/api/api/token`, {
@@ -51,7 +51,7 @@ async function setDirectRingStrategy(extension: string, followme: string): Promi
       strategy: ringallv2
       ringTime: 25
       externalCallerIdMode: fixed
-      fixedCallerId: "905335822275"
+      fixedCallerId: "${fixedCallerId}"
     }) { status message }
   }`;
   const response = await fetch(`${BASE}/admin/api/api/gql`, {
@@ -69,14 +69,14 @@ async function setDirectRingStrategy(extension: string, followme: string): Promi
   return json?.data;
 }
 
-function normalizeFollowMe(raw: string): string | null {
+function normalizeFollowMe(raw: string, trunkPrefix: "80" | "81"): string | null {
   let d = (raw ?? "").replace(/\D/g, "");
   if (!d) return null;
   if (d.startsWith("90")) d = d.slice(2);
   if (d.startsWith("0")) d = d.slice(1);
   if (d.length < 10) return null;
   d = d.slice(-10);
-  return `80${d}#`;
+  return `${trunkPrefix}${d}#`;
 }
 
 serve(async (req) => {
@@ -87,11 +87,13 @@ serve(async (req) => {
     const extension = String(body.extension ?? "").trim();
     const phone = String(body.phone ?? "").trim();
     const name = String(body.name ?? extension).trim();
+    const trunkPrefix: "80" | "81" = body.trunk_prefix === "81" ? "81" : "80";
+    const fixedCallerId = trunkPrefix === "81" ? "905317893880" : "905335822275";
 
     if (!extension || !phone) throw new Error("extension ve phone zorunlu");
     if (!BULK_URL || !BULK_SECRET) throw new Error("FreePBX yardımcı endpoint yapılandırılmamış");
 
-    const followme = normalizeFollowMe(phone);
+    const followme = normalizeFollowMe(phone, trunkPrefix);
     if (!followme) throw new Error(`Geçersiz telefon: ${phone}`);
 
     const res = await fetch(BULK_URL, {
@@ -109,10 +111,10 @@ serve(async (req) => {
 
     let strategyResult: unknown = null;
     if (res.ok && json?.success === true) {
-      strategyResult = await setDirectRingStrategy(extension, followme);
+      strategyResult = await setDirectRingStrategy(extension, followme, fixedCallerId);
     }
 
-    return new Response(JSON.stringify({ ok: res.ok && json?.success === true, extension, followme, result: json, strategyResult }), {
+    return new Response(JSON.stringify({ ok: res.ok && json?.success === true, extension, followme, trunkPrefix, result: json, strategyResult }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
