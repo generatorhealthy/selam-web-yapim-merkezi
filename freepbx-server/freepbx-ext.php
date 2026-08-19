@@ -336,7 +336,9 @@ $row = implode(',', [
   'virtual',
   '',                 // secret (virtual'da gerekmez)
   $fmEnabled,         // findmefollow_enabled
-  'ringallv2-prim',   // findmefollow_strategy
+  // Sanal dahilinin kayıtlı bir ana cihazı yok. "ringallv2-prim" önce ana
+  // cihazı aradığı için dış listedeki cep telefonu hiç çalmayabiliyor.
+  'ringallv2',        // findmefollow_strategy: listedeki cep telefonunu doğrudan çaldır
   $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
   'fixed',            // Dış bacağa danışanın yabancı CID'sini taşıma

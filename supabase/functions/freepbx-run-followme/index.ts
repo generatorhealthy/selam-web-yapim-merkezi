@@ -21,6 +21,53 @@ function normalizeFreePbxUrl(raw: string, fallbackPath = ""): string {
 
 const BULK_URL = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BULK_URL") ?? "", "/freepbx-ext.php");
 const BULK_SECRET = (Deno.env.get("FREEPBX_BULK_SECRET") ?? "").trim();
+const BASE = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BASE_URL") ?? "");
+const CLIENT_ID = Deno.env.get("FREEPBX_CLIENT_ID") ?? "";
+const CLIENT_SECRET = Deno.env.get("FREEPBX_CLIENT_SECRET") ?? "";
+
+async function setDirectRingStrategy(extension: string, followme: string): Promise<unknown> {
+  if (!BASE || !CLIENT_ID || !CLIENT_SECRET) return { skipped: true };
+
+  const tokenResponse = await fetch(`${BASE}/admin/api/api/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      scope: "gql",
+    }),
+  });
+  const tokenJson = await tokenResponse.json();
+  if (!tokenResponse.ok || !tokenJson?.access_token) {
+    throw new Error("FreePBX GraphQL token alınamadı");
+  }
+
+  const query = `mutation {
+    updateFollowMe(input: {
+      extensionId: "${extension}"
+      enabled: true
+      followMeList: "${followme}"
+      strategy: ringallv2
+      ringTime: 25
+      externalCallerIdMode: fixed
+      fixedCallerId: "905335822275"
+    }) { status message }
+  }`;
+  const response = await fetch(`${BASE}/admin/api/api/gql`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${tokenJson.access_token}`,
+    },
+    body: JSON.stringify({ query }),
+  });
+  const json = await response.json();
+  if (!response.ok || json?.errors) {
+    throw new Error(`Follow-Me stratejisi güncellenemedi: ${JSON.stringify(json?.errors ?? json)}`);
+  }
+  return json?.data;
+}
 
 function normalizeFollowMe(raw: string): string | null {
   let d = (raw ?? "").replace(/\D/g, "");
@@ -60,7 +107,12 @@ serve(async (req) => {
       json = { success: false, error: text };
     }
 
-    return new Response(JSON.stringify({ ok: res.ok && json?.success === true, extension, followme, result: json }), {
+    let strategyResult: unknown = null;
+    if (res.ok && json?.success === true) {
+      strategyResult = await setDirectRingStrategy(extension, followme);
+    }
+
+    return new Response(JSON.stringify({ ok: res.ok && json?.success === true, extension, followme, result: json, strategyResult }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
