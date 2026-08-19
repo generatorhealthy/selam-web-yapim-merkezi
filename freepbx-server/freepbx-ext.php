@@ -327,7 +327,7 @@ function csv_field($v) {
 }
 
 // CSV oluştur
-$header = "extension,name,description,tech,secret,findmefollow_enabled,findmefollow_strategy,findmefollow_grplist,findmefollow_grptime,voicemail_enable,voicemail_vmpwd\n";
+$header = "extension,name,description,tech,secret,findmefollow_enabled,findmefollow_strategy,findmefollow_grplist,findmefollow_grptime,findmefollow_changecid,findmefollow_fixedcid,voicemail_enable,voicemail_vmpwd\n";
 $fmEnabled = $followme !== '' ? 'CHECKED' : '';
 $row = implode(',', [
   $ext,
@@ -337,8 +337,10 @@ $row = implode(',', [
   '',                 // secret (virtual'da gerekmez)
   $fmEnabled,         // findmefollow_enabled
   'ringallv2-prim',   // findmefollow_strategy
-  $followme,          // findmefollow_grplist (0XXXXXXXXXX#)
+  $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
+  'fixed',            // Dış bacağa danışanın yabancı CID'sini taşıma
+  '905335822275',     // FCT trunk tarafından yetkilendirilmiş sabit CID
   '',                 // voicemail_enable
   '',                 // voicemail_vmpwd
 ]) . "\n";
