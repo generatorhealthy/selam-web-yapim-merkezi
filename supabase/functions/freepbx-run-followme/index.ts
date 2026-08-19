@@ -69,14 +69,13 @@ async function setDirectRingStrategy(extension: string, followme: string, fixedC
   return json?.data;
 }
 
-function normalizeFollowMe(raw: string, trunkPrefix: "80" | "81"): string | null {
+function normalizePhone(raw: string): string | null {
   let d = (raw ?? "").replace(/\D/g, "");
   if (!d) return null;
   if (d.startsWith("90")) d = d.slice(2);
   if (d.startsWith("0")) d = d.slice(1);
   if (d.length < 10) return null;
-  d = d.slice(-10);
-  return `${trunkPrefix}${d}#`;
+  return d.slice(-10);
 }
 
 serve(async (req) => {
@@ -88,33 +87,45 @@ serve(async (req) => {
     const phone = String(body.phone ?? "").trim();
     const name = String(body.name ?? extension).trim();
     const trunkPrefix: "80" | "81" = body.trunk_prefix === "81" ? "81" : "80";
+    const dualTrunk = body.dual_trunk === true;
     const fixedCallerId = trunkPrefix === "81" ? "905317893880" : "905335822275";
 
     if (!extension || !phone) throw new Error("extension ve phone zorunlu");
     if (!BULK_URL || !BULK_SECRET) throw new Error("FreePBX yardımcı endpoint yapılandırılmamış");
 
-    const followme = normalizeFollowMe(phone, trunkPrefix);
-    if (!followme) throw new Error(`Geçersiz telefon: ${phone}`);
+    const normalizedPhone = normalizePhone(phone);
+    if (!normalizedPhone) throw new Error(`Geçersiz telefon: ${phone}`);
+    // Gelen çağrı 80 hattındaysa 81, 81 hattındaysa 80 üzerinden çıkabilsin.
+    // Aynı hatta denk gelen bacak operatörce BUSY reddedilir; diğer bacak çalar.
+    const followme = dualTrunk
+      ? `80${normalizedPhone}#-81${normalizedPhone}#`
+      : `${trunkPrefix}${normalizedPhone}#`;
 
-    const res = await fetch(BULK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ secret: BULK_SECRET, action: "create", extension, name, followme }),
-    });
-    const text = await res.text();
-    let json: any;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      json = { success: false, error: text };
+    let resOk = true;
+    let json: unknown = { success: true, skipped: "existing extension dual-trunk update" };
+    // PHP bulk-import eski sürümlerde Follow-Me ayırıcısını temizlediği için,
+    // çift hat güncellemesinde mevcut dahiliyi doğrudan GraphQL ile güncelle.
+    if (!dualTrunk) {
+      const res = await fetch(BULK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: BULK_SECRET, action: "create", extension, name, followme }),
+      });
+      resOk = res.ok;
+      const text = await res.text();
+      try {
+        json = JSON.parse(text);
+      } catch {
+        json = { success: false, error: text };
+      }
     }
 
     let strategyResult: unknown = null;
-    if (res.ok && json?.success === true) {
+    if (resOk && typeof json === "object" && json !== null && "success" in json && json.success === true) {
       strategyResult = await setDirectRingStrategy(extension, followme, fixedCallerId);
     }
 
-    return new Response(JSON.stringify({ ok: res.ok && json?.success === true, extension, followme, trunkPrefix, result: json, strategyResult }), {
+    return new Response(JSON.stringify({ ok: resOk && typeof json === "object" && json !== null && "success" in json && json.success === true, extension, followme, trunkPrefix, dualTrunk, result: json, strategyResult }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
