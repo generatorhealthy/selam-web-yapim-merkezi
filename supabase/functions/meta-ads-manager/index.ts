@@ -65,7 +65,9 @@ const BodySchema = z.object({
     tone: z.string().optional(),
   }).optional(),
   q: z.string().optional(),
+  instruction: z.string().max(2000).optional(),
   fields: z.array(z.string()).optional(),
+
   since: z.string().optional(),
   until: z.string().optional(),
   level: z.enum(["campaign", "adset", "ad"]).default("campaign"),
