@@ -293,6 +293,7 @@ const SpecialistRegistration = () => {
         setCreatedUserEmail(email);
         void registerPartnerReferral(data.user.id, email);
         toast.success("Hesabınız oluşturuldu!");
+        void trackMetaLead({ email, phone, external_id: data.user.id });
         setCurrentStep(2);
       }
     } catch (err: any) {
