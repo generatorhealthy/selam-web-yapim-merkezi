@@ -404,7 +404,63 @@ async function sanitizeTargeting(
   return t;
 }
 
+const PROFESSION_KEYWORDS = [
+  "Psychology", "Clinical psychology", "Psychologist", "Psychotherapy", "Psychotherapist",
+  "Counseling psychology", "Mental health counselor", "Family therapy", "Couples therapy",
+  "Marriage and family therapist", "Cognitive behavioral therapy", "Child psychology",
+  "Psikolog", "Klinik psikoloji", "Psikoterapi", "Aile danışmanlığı", "Psikolojik danışmanlık",
+  "American Psychological Association", "Psychology Today", "Therapy",
+];
+
+const COMMERCIAL_KEYWORDS = [
+  "Digital marketing", "Online advertising", "Facebook for Business", "Instagram for Business",
+  "Google Ads", "Google My Business", "Social media marketing", "Lead generation",
+  "Small business owners", "Entrepreneurship", "Search engine optimization",
+  "Personal branding", "Content marketing", "Website", "Online booking",
+];
+
+type InterestCandidate = { id: string; name: string; audience_size?: number; path?: string[] };
+
+async function discoverInterestCandidates(
+  token: string,
+  keywords: string[],
+): Promise<InterestCandidate[]> {
+  const out = new Map<string, InterestCandidate>();
+  const batchSize = 5;
+  for (let i = 0; i < keywords.length; i += batchSize) {
+    const batch = keywords.slice(i, i + batchSize);
+    const results = await Promise.all(
+      batch.map(async (kw) => {
+        try {
+          const res = await metaFetch(
+            `/search?type=adinterest&limit=6&q=${encodeURIComponent(kw)}`,
+            token,
+          );
+          return (res?.data || []) as any[];
+        } catch {
+          return [] as any[];
+        }
+      }),
+    );
+    for (const list of results) {
+      for (const item of list) {
+        if (!item?.id || !item?.name) continue;
+        const id = String(item.id);
+        if (out.has(id)) continue;
+        out.set(id, {
+          id,
+          name: String(item.name),
+          audience_size: item.audience_size_upper_bound ?? item.audience_size,
+          path: Array.isArray(item.path) ? item.path : undefined,
+        });
+      }
+    }
+  }
+  return Array.from(out.values());
+}
+
 function parseJsonLoose(text: string): any {
+
 
   try {
     return JSON.parse(text);
@@ -800,6 +856,11 @@ Deno.serve(async (req) => {
           perf = null;
         }
 
+        const [professionCandidates, commercialCandidates] = await Promise.all([
+          discoverInterestCandidates(token, PROFESSION_KEYWORDS),
+          discoverInterestCandidates(token, COMMERCIAL_KEYWORDS),
+        ]);
+
         const system =
           "Sen Doktorumol.com.tr (Türkiye merkezli online psikolog/terapi & uzman platformu) için kıdemli bir Meta Ads hedefleme stratejistisin. " +
           "SADECE geçerli JSON döndür, markdown veya açıklama yazma. Şema: " +
@@ -809,11 +870,24 @@ Deno.serve(async (req) => {
           "geo_locations, age_min, age_max, genders, flexible_spec (interests/behaviors id+name ile), exclusions, " +
           "locales, publisher_platforms, facebook_positions, instagram_positions, device_platforms, targeting_automation. " +
           "Mevcut geo_locations ve custom_audiences'ı kullanıcı aksini istemedikçe koru. " +
-          "Interest/behavior kullanırken gerçek Facebook hedefleme kategorileri ve gerçek id'ler kullan; id'den emin değilsen o kalemi ekleme ve warnings'e yaz. " +
+          "ÇOK ÖNEMLİ: interest/behavior id'lerini ASLA kendin uydurma. SADECE prompt'ta verilen " +
+          "'MESLEK SİNYALİ ADAYLARI' ve 'TİCARİ/DİJİTAL SİNYAL ADAYLARI' listelerindeki id+name çiftlerini kullan. " +
+          "Listede uygun karşılığı olmayan bir sinyali targeting'e ekleme, sadece warnings'e yaz. " +
+          "HEDEFLEME MİMARİSİ (zorunlu): flexible_spec[0] = MESLEK grubu (psikoloji/terapi/danışmanlık meslek sinyalleri) — bu grup asla boş olmasın " +
+          "ve sadece dijital pazarlama ilgi alanlarından oluşan bir hedefleme ASLA üretme. " +
+          "flexible_spec[1] = ticari/dijital pazarlama sinyalleri (Meta/Google reklamları, işletme hesabı, lead generation, SEO, kişisel marka, online randevu) " +
+          "— bu grup AND olarak çalışır ve kitleyi daraltır; tahmini kitle çok küçük olacaksa 2. grubu kaldırıp ticari sinyalleri meslek grubuyla aynı OR grubuna taşı ve bunu warnings'e yaz. " +
+          "Yalnızca psikolojiye meraklı genel kullanıcıları, terapi arayan danışanları ve psikoloji öğrencilerini hedefleme; mümkün olduğunda exclusions ile azalt. " +
+          "Yaş varsayılan 25-50 (veri destekliyorsa 23-55), Türkiye geneli konum. " +
           "Türkiye pazarına uygun, sağlık/psikoloji reklam politikalarına uyumlu (kişisel özellik ima etmeyen) öneriler ver. " +
           "summary, changes.reason, warnings ve budgetAdvice Türkçe olmalı. " +
           "KULLANICI TALEBİ en yüksek önceliktedir: talimat uzun ve detaylı olsa da tüm maddelerini eksiksiz uygula; " +
           "uygulayamadığın maddeyi warnings'e gerekçesiyle yaz ve changes listesinde talimattaki her maddeye karşılık gelen değişikliği göster.";
+
+        const fmt = (list: InterestCandidate[]) =>
+          list
+            .map((c) => `- id=${c.id} | ${c.name}${c.path?.length ? ` | ${c.path.join(" > ")}` : ""}`)
+            .join("\n");
 
         const prompt = [
           `Kampanya hedefi (objective): ${adset?.campaign?.objective || "bilinmiyor"}`,
@@ -822,8 +896,11 @@ Deno.serve(async (req) => {
           `Günlük bütçe (kuruş): ${adset?.daily_budget || "-"} | Toplam bütçe (kuruş): ${adset?.lifetime_budget || "-"}`,
           `Mevcut hedefleme JSON:\n${JSON.stringify(adset?.targeting ?? {}, null, 2)}`,
           `Son 30 gün performansı:\n${perf ? JSON.stringify(perf, null, 2) : "veri yok"}`,
+          `MESLEK SİNYALİ ADAYLARI (Meta'dan doğrulanmış gerçek id'ler — flexible_spec[0] için bunlardan seç):\n${fmt(professionCandidates) || "bulunamadı"}`,
+          `TİCARİ/DİJİTAL SİNYAL ADAYLARI (gerçek id'ler — flexible_spec[1] için bunlardan seç):\n${fmt(commercialCandidates) || "bulunamadı"}`,
           `Kullanıcı talebi: ${body.instruction?.trim() || "Genel optimizasyon yap: daha nitelikli potansiyel müşteri getirecek şekilde hedeflemeyi iyileştir."}`,
         ].join("\n\n");
+
 
         const text = await callGpt(lovKey, system, prompt);
         const json = parseJsonLoose(text);
