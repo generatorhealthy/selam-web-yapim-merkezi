@@ -355,7 +355,8 @@ Deno.serve(async (req) => {
 
         if (Object.keys(params).length === 0) return metaError(400, "Güncellenecek alan yok");
         const result = await metaPost(`/${body.adSetId}`, token, params);
-        return metaResponse({ success: true, result });
+        return metaResponse({ success: true, result, warnings });
+
       }
 
       case "updateAd": {
