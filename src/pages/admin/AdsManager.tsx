@@ -145,6 +145,119 @@ const objectiveLabels: Record<string, string> = {
   VIDEO_VIEWS: "Video Görüntüleme",
 };
 
+const platformLabels: Record<string, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  audience_network: "Audience Network",
+  messenger: "Messenger",
+  threads: "Threads",
+};
+
+const deviceLabels: Record<string, string> = {
+  mobile: "Mobil",
+  desktop: "Masaüstü",
+};
+
+function TargetingSummary({ targeting, names }: { targeting: any; names: Record<string, string> }) {
+  if (!targeting) return <div className="text-sm text-slate-500">Hedefleme verisi yok.</div>;
+
+  const label = (item: any) => item?.name || names[String(item?.id)] || `#${item?.id}`;
+
+  const geo = targeting.geo_locations || {};
+  const excludedGeo = targeting.excluded_geo_locations || {};
+  const geoParts: string[] = [];
+  if (geo.countries?.length) geoParts.push(`Ülkeler: ${geo.countries.join(", ")}`);
+  if (geo.regions?.length) geoParts.push(`Bölgeler: ${geo.regions.map((r: any) => r.name || r.key).join(", ")}`);
+  if (geo.cities?.length) geoParts.push(`Şehirler: ${geo.cities.map((c: any) => `${c.name || c.key}${c.radius ? ` (+${c.radius}${c.distance_unit || "km"})` : ""}`).join(", ")}`);
+  if (geo.zips?.length) geoParts.push(`Posta kodları: ${geo.zips.map((z: any) => z.name || z.key).join(", ")}`);
+  if (geo.location_types?.length) geoParts.push(`Konum tipi: ${geo.location_types.join(", ")}`);
+
+  const flex: any[] = Array.isArray(targeting.flexible_spec) ? targeting.flexible_spec : [];
+  const rootGroups = [
+    ["interests", "İlgi alanları"],
+    ["behaviors", "Davranışlar"],
+    ["work_positions", "Meslekler"],
+    ["industries", "Sektörler"],
+    ["life_events", "Yaşam olayları"],
+    ["education_statuses", "Eğitim durumu"],
+    ["family_statuses", "Aile durumu"],
+    ["relationship_statuses", "İlişki durumu"],
+  ] as const;
+
+  const groupLines = (obj: any) =>
+    rootGroups
+      .map(([key, title]) => {
+        const arr = obj?.[key];
+        if (!Array.isArray(arr) || arr.length === 0) return null;
+        return `${title}: ${arr.map((i: any) => (typeof i === "object" ? label(i) : String(i))).join(", ")}`;
+      })
+      .filter(Boolean) as string[];
+
+  const rows: { title: string; value: string }[] = [
+    { title: "Yaş", value: `${targeting.age_min ?? "?"} - ${targeting.age_max ?? "?"}` },
+    {
+      title: "Cinsiyet",
+      value: !targeting.genders || targeting.genders.length === 0
+        ? "Tümü"
+        : targeting.genders.includes(1) && !targeting.genders.includes(2) ? "Erkek" : "Kadın",
+    },
+    { title: "Konum", value: geoParts.length ? geoParts.join(" · ") : "—" },
+  ];
+
+  if (Object.keys(excludedGeo).length) {
+    rows.push({ title: "Hariç tutulan konum", value: JSON.stringify(excludedGeo).slice(0, 300) });
+  }
+  if (targeting.locales?.length) rows.push({ title: "Diller (locale)", value: targeting.locales.join(", ") });
+  if (targeting.publisher_platforms?.length) {
+    rows.push({ title: "Platformlar", value: targeting.publisher_platforms.map((p: string) => platformLabels[p] || p).join(", ") });
+  }
+  if (targeting.facebook_positions?.length) rows.push({ title: "Facebook yerleşimleri", value: targeting.facebook_positions.join(", ") });
+  if (targeting.instagram_positions?.length) rows.push({ title: "Instagram yerleşimleri", value: targeting.instagram_positions.join(", ") });
+  if (targeting.messenger_positions?.length) rows.push({ title: "Messenger yerleşimleri", value: targeting.messenger_positions.join(", ") });
+  if (targeting.audience_network_positions?.length) rows.push({ title: "Audience Network", value: targeting.audience_network_positions.join(", ") });
+  if (targeting.device_platforms?.length) {
+    rows.push({ title: "Cihazlar", value: targeting.device_platforms.map((d: string) => deviceLabels[d] || d).join(", ") });
+  }
+  if (targeting.user_os?.length) rows.push({ title: "İşletim sistemi", value: targeting.user_os.join(", ") });
+  if (targeting.custom_audiences?.length) {
+    rows.push({ title: "Özel hedef kitleler", value: targeting.custom_audiences.map((a: any) => a.name || a.id).join(", ") });
+  }
+  if (targeting.excluded_custom_audiences?.length) {
+    rows.push({ title: "Hariç tutulan kitleler", value: targeting.excluded_custom_audiences.map((a: any) => a.name || a.id).join(", ") });
+  }
+
+  const rootDetail = groupLines(targeting);
+  if (rootDetail.length) rows.push({ title: "Detaylı hedefleme", value: rootDetail.join(" · ") });
+
+  flex.forEach((spec, idx) => {
+    const lines = groupLines(spec);
+    if (lines.length) rows.push({ title: `Daraltma grubu ${idx + 1}`, value: lines.join(" · ") });
+  });
+
+  const exclusions = targeting.exclusions;
+  if (exclusions) {
+    const lines = groupLines(exclusions);
+    if (lines.length) rows.push({ title: "Hariç tutulanlar", value: lines.join(" · ") });
+  }
+
+  if (targeting.targeting_automation) {
+    const adv = targeting.targeting_automation.advantage_audience;
+    rows.push({ title: "Advantage+ kitle", value: adv === 1 ? "Açık" : "Kapalı" });
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 divide-y">
+      {rows.map((r) => (
+        <div key={r.title} className="grid grid-cols-[150px_1fr] gap-3 px-3 py-2 text-sm">
+          <span className="text-slate-500">{r.title}</span>
+          <span className="text-slate-800 break-words">{r.value || "—"}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
 export default function AdsManager() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [insights, setInsights] = useState<Insight[]>([]);
@@ -177,6 +290,15 @@ export default function AdsManager() {
 
   const [editAdSet, setEditAdSet] = useState<{ adSet: AdSet; campaignId: string } | null>(null);
   const [adSetForm, setAdSetForm] = useState({ name: "", status: "ACTIVE", dailyBudget: "", lifetimeBudget: "", ageMin: "", ageMax: "", genders: "all", startTime: "", endTime: "" });
+  const [targetingDetail, setTargetingDetail] = useState<any>(null);
+  const [targetingNames, setTargetingNames] = useState<Record<string, string>>({});
+  const [targetingLoading, setTargetingLoading] = useState(false);
+  const [targetingJson, setTargetingJson] = useState("");
+  const [targetingDirty, setTargetingDirty] = useState(false);
+  const [aiTgInstruction, setAiTgInstruction] = useState("");
+  const [aiTgLoading, setAiTgLoading] = useState(false);
+  const [aiTgResult, setAiTgResult] = useState<any>(null);
+
 
   const [editAd, setEditAd] = useState<{ ad: Ad; adSetId: string } | null>(null);
   const [adForm, setAdForm] = useState({ name: "", status: "ACTIVE", message: "", headline: "", description: "", link: "" });
@@ -386,10 +508,81 @@ export default function AdsManager() {
       startTime: adSet.start_time ? adSet.start_time.slice(0, 16) : "",
       endTime: adSet.end_time ? adSet.end_time.slice(0, 16) : "",
     });
+    setTargetingDetail(null);
+    setTargetingNames({});
+    setTargetingJson(JSON.stringify(adSet.targeting ?? {}, null, 2));
+    setTargetingDirty(false);
+    setAiTgResult(null);
+    setAiTgInstruction("");
+    loadTargeting(adSet.id);
+  };
+
+  const loadTargeting = async (adSetId: string) => {
+    setTargetingLoading(true);
+    try {
+      const data: any = await invoke({ action: "getAdSetTargeting", adSetId });
+      setTargetingDetail(data?.adSet || null);
+      setTargetingNames(data?.targetingNames || {});
+      if (data?.adSet?.targeting) {
+        setTargetingJson(JSON.stringify(data.adSet.targeting, null, 2));
+        setTargetingDirty(false);
+      }
+    } catch (err: any) {
+      toast.error("Hedefleme alınamadı: " + err.message);
+    } finally {
+      setTargetingLoading(false);
+    }
+  };
+
+  const runAiTargeting = async () => {
+    if (!editAdSet) return;
+    setAiTgLoading(true);
+    setAiTgResult(null);
+    try {
+      const data: any = await invoke({
+        action: "aiTargeting",
+        adSetId: editAdSet.adSet.id,
+        instruction: aiTgInstruction || undefined,
+      });
+      setAiTgResult(data);
+    } catch (err: any) {
+      toast.error("AI önerisi alınamadı: " + err.message);
+    } finally {
+      setAiTgLoading(false);
+    }
+  };
+
+  const applyAiTargeting = () => {
+    if (!aiTgResult?.targeting) return;
+    const t = aiTgResult.targeting;
+    setTargetingJson(JSON.stringify(t, null, 2));
+    setTargetingDirty(true);
+    setAdSetForm((prev) => ({
+      ...prev,
+      ageMin: t.age_min ? String(t.age_min) : prev.ageMin,
+      ageMax: t.age_max ? String(t.age_max) : prev.ageMax,
+      genders: !t.genders || t.genders.length === 0 ? "all" : t.genders.includes(1) && !t.genders.includes(2) ? "male" : "female",
+    }));
+    toast.success("AI hedeflemesi forma uygulandı. Kaydet'e basmayı unutmayın.");
   };
 
   const saveAdSet = async () => {
     if (!editAdSet) return;
+
+    let targetingPayload: any;
+    if (targetingDirty) {
+      try {
+        targetingPayload = JSON.parse(targetingJson);
+      } catch {
+        toast.error("Hedefleme JSON'u geçersiz, düzeltin.");
+        return;
+      }
+      if (adSetForm.ageMin) targetingPayload.age_min = Number(adSetForm.ageMin);
+      if (adSetForm.ageMax) targetingPayload.age_max = Number(adSetForm.ageMax);
+      if (adSetForm.genders === "all") delete targetingPayload.genders;
+      else targetingPayload.genders = adSetForm.genders === "male" ? [1] : [2];
+    }
+
     setSaving(true);
     try {
       await invoke({
@@ -399,9 +592,13 @@ export default function AdsManager() {
         status: adSetForm.status as "ACTIVE" | "PAUSED",
         budget: adSetForm.dailyBudget ? Number(adSetForm.dailyBudget) : undefined,
         lifetimeBudget: adSetForm.lifetimeBudget ? Number(adSetForm.lifetimeBudget) : undefined,
-        ageMin: adSetForm.ageMin ? Number(adSetForm.ageMin) : undefined,
-        ageMax: adSetForm.ageMax ? Number(adSetForm.ageMax) : undefined,
-        genders: adSetForm.genders === "all" ? [] : adSetForm.genders === "male" ? [1] : [2],
+        ...(targetingPayload
+          ? { targeting: targetingPayload }
+          : {
+              ageMin: adSetForm.ageMin ? Number(adSetForm.ageMin) : undefined,
+              ageMax: adSetForm.ageMax ? Number(adSetForm.ageMax) : undefined,
+              genders: adSetForm.genders === "all" ? [] : adSetForm.genders === "male" ? [1] : [2],
+            }),
         startTime: adSetForm.startTime || undefined,
         endTime: adSetForm.endTime || undefined,
       });
@@ -415,6 +612,7 @@ export default function AdsManager() {
       setSaving(false);
     }
   };
+
 
   const openAdEdit = async (ad: Ad, adSetId: string) => {
     setEditAd({ ad, adSetId });
@@ -1075,11 +1273,106 @@ export default function AdsManager() {
                   <Input type="datetime-local" value={adSetForm.endTime} onChange={(e) => setAdSetForm({ ...adSetForm, endTime: e.target.value })} />
                 </div>
               </div>
-              {editAdSet?.adSet.targeting?.geo_locations && (
-                <div className="text-xs text-slate-500">
-                  Konum hedeflemesi korunur: {JSON.stringify(editAdSet.adSet.targeting.geo_locations).slice(0, 160)}
+              {/* Tüm hedefleme detayları */}
+              <div className="space-y-3 pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Target className="w-4 h-4" /> Tüm Hedefleme Detayları
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => editAdSet && loadTargeting(editAdSet.adSet.id)}
+                    disabled={targetingLoading}
+                  >
+                    {targetingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  </Button>
                 </div>
-              )}
+                {targetingLoading && !targetingDetail ? (
+                  <div className="text-sm text-slate-500 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Hedefleme yükleniyor...
+                  </div>
+                ) : (
+                  <TargetingSummary
+                    targeting={targetingDetail?.targeting || editAdSet?.adSet.targeting}
+                    names={targetingNames}
+                  />
+                )}
+                {targetingDetail && (
+                  <div className="text-xs text-slate-500">
+                    Optimizasyon: {targetingDetail.optimization_goal || "—"} · Faturalama: {targetingDetail.billing_event || "—"} · Teklif stratejisi: {targetingDetail.bid_strategy || "—"}
+                  </div>
+                )}
+              </div>
+
+              {/* AI ile müdahale */}
+              <div className="space-y-3 pt-3 border-t">
+                <Label className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-600" /> AI ile Hedefleme Müdahalesi
+                </Label>
+                <Textarea
+                  rows={3}
+                  placeholder="Ne yapmasını istiyorsunuz? Örn: 'İstanbul + Ankara odaklı, 25-45 yaş, terapi/psikoloji ilgi alanları ekle, erkek hedeflemeyi kaldır.' Boş bırakırsanız genel optimizasyon yapar."
+                  value={aiTgInstruction}
+                  onChange={(e) => setAiTgInstruction(e.target.value)}
+                />
+                <Button variant="outline" onClick={runAiTargeting} disabled={aiTgLoading}>
+                  {aiTgLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  AI Önerisi Al
+                </Button>
+
+                {aiTgResult && (
+                  <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 space-y-3">
+                    {aiTgResult.summary && <p className="text-sm text-slate-800">{aiTgResult.summary}</p>}
+                    {Array.isArray(aiTgResult.changes) && aiTgResult.changes.length > 0 && (
+                      <div className="space-y-2">
+                        {aiTgResult.changes.map((c: any, i: number) => (
+                          <div key={i} className="text-xs bg-white rounded-md border p-2">
+                            <div className="font-medium text-slate-700">{c.field}</div>
+                            <div className="text-slate-600">
+                              <span className="line-through">{String(c.from ?? "—")}</span> → <span className="text-emerald-700 font-medium">{String(c.to ?? "—")}</span>
+                            </div>
+                            {c.reason && <div className="text-slate-500 mt-1">{c.reason}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {Array.isArray(aiTgResult.warnings) && aiTgResult.warnings.length > 0 && (
+                      <ul className="text-xs text-amber-700 list-disc pl-4 space-y-1">
+                        {aiTgResult.warnings.map((w: string, i: number) => <li key={i}>{w}</li>)}
+                      </ul>
+                    )}
+                    {aiTgResult.budgetAdvice && (
+                      <p className="text-xs text-slate-600">Bütçe önerisi: {aiTgResult.budgetAdvice}</p>
+                    )}
+                    {aiTgResult.targeting && (
+                      <Button size="sm" onClick={applyAiTargeting}>
+                        Öneriyi Forma Uygula
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* JSON düzenleyici */}
+              <div className="space-y-2 pt-3 border-t">
+                <Label>Hedefleme JSON (gelişmiş)</Label>
+                <Textarea
+                  rows={10}
+                  className="font-mono text-xs"
+                  value={targetingJson}
+                  onChange={(e) => {
+                    setTargetingJson(e.target.value);
+                    setTargetingDirty(true);
+                  }}
+                />
+                <p className="text-xs text-slate-500">
+                  {targetingDirty
+                    ? "Kaydet'e bastığınızda bu JSON tüm hedeflemeyi değiştirir."
+                    : "Değişiklik yapmazsanız mevcut konum/ilgi alanı hedeflemesi korunur."}
+                </p>
+              </div>
+
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditAdSet(null)}>İptal</Button>
