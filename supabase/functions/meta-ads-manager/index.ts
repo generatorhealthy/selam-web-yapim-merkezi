@@ -309,6 +309,90 @@ function broadenInvalidAudience(
   return t;
 }
 
+
+// Meta removed the Instagram Explore placements from the Marketing API (subcode 2490589).
+function removeDeprecatedPlacements(
+  targeting: Record<string, any>,
+  warnings: string[],
+): Record<string, any> {
+  const t = JSON.parse(JSON.stringify(targeting ?? {}));
+  if (Array.isArray(t.instagram_positions)) {
+    t.instagram_positions = t.instagram_positions.filter(
+      (p: unknown) => p !== "explore" && p !== "explore_home",
+    );
+    if (t.instagram_positions.length === 0) delete t.instagram_positions;
+  }
+  warnings.push("Meta tarafından kaldırılan Instagram Keşfet yerleşimi çıkarıldı.");
+  return t;
+}
+
+// Subcode 1870247: some detailed-targeting interests were consolidated. Meta returns
+// the deprecated ids together with their alternatives inside error_user_msg — swap
+// them automatically (deduplicating) instead of failing the save.
+function replaceDeprecatedInterests(
+  targeting: Record<string, any>,
+  error: unknown,
+  warnings: string[],
+): Record<string, any> {
+  const message = error instanceof Error ? error.message : String(error);
+  const mapping = new Map<string, { id: string; name: string } | null>();
+  const re =
+    /"deprecated_interest_id"\s*:\s*"(\d+)"\s*,\s*"deprecated_interest_name"\s*:\s*"([^"]*)"\s*,\s*"alternative_interest_id"\s*:\s*"(\d+)"\s*,\s*"alternative_interest_name"\s*:\s*"([^"]*)"/g;
+  // The payload arrives escaped inside the error message; unescape once for matching.
+  const unescaped = message.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  for (const m of unescaped.matchAll(re)) {
+    mapping.set(m[1], { id: m[3], name: m[4] });
+    warnings.push(`"${m[2]}" ilgi alanı Meta tarafından kaldırıldı, "${m[4]}" ile değiştirildi.`);
+  }
+  // Ids named as deprecated without an alternative are simply dropped.
+  for (const m of unescaped.matchAll(/"deprecated_interest_id"\s*:\s*"(\d+)"/g)) {
+    if (!mapping.has(m[1])) {
+      mapping.set(m[1], null);
+      warnings.push(`Kullanımdan kaldırılan ${m[1]} id'li ilgi alanı hedeflemeden çıkarıldı.`);
+    }
+  }
+
+  const t = JSON.parse(JSON.stringify(targeting ?? {}));
+  const nodes: any[] = [t];
+  for (const key of ["flexible_spec", "exclusions"]) {
+    const val = t[key];
+    if (Array.isArray(val)) val.forEach((g) => g && nodes.push(g));
+    else if (val) nodes.push(val);
+  }
+
+  for (const node of nodes) {
+    for (const key of TARGET_LIST_KEYS) {
+      if (!Array.isArray(node[key])) continue;
+      const seen = new Set<string>();
+      const kept: any[] = [];
+      for (const item of node[key]) {
+        const id = item?.id ? String(item.id) : "";
+        let next = item;
+        if (mapping.has(id)) {
+          const alt = mapping.get(id);
+          if (!alt) continue;
+          next = { id: alt.id, name: alt.name };
+        }
+        const identity = String(next?.id ?? JSON.stringify(next));
+        if (seen.has(identity)) continue;
+        seen.add(identity);
+        kept.push(next);
+      }
+      if (kept.length > 0) node[key] = kept;
+      else delete node[key];
+    }
+  }
+
+  if (Array.isArray(t.flexible_spec)) {
+    t.flexible_spec = t.flexible_spec.filter((g: any) => g && Object.keys(g).length > 0);
+    if (t.flexible_spec.length === 0) delete t.flexible_spec;
+  }
+  if (t.exclusions && Object.keys(t.exclusions).length === 0) delete t.exclusions;
+
+  return t;
+}
+
+
 async function sanitizeTargeting(
   targeting: Record<string, any>,
   token: string,
@@ -420,6 +504,54 @@ const COMMERCIAL_KEYWORDS = [
 ];
 
 type InterestCandidate = { id: string; name: string; audience_size?: number; path?: string[] };
+
+// The user's brief often names concrete interests/professions. Pull those phrases out
+// so we can resolve them to real Meta interest ids and let the AI use them verbatim.
+const INSTRUCTION_STOPWORDS = new Set([
+  "ana", "hedef", "reklam", "reklamlar", "reklamları", "türkiye", "genelinde", "platformu",
+  "platforma", "kayıt", "olma", "için", "ile", "ve", "veya", "olan", "olarak", "gibi",
+  "yüksek", "ihtimali", "yeni", "amacıyla", "ücretli", "üyelik", "satın", "alma",
+  "kişiler", "kişi", "kullanıcı", "kullanıcılar", "kitle", "kitleyi", "sinyal", "sinyalleri",
+  "grup", "grubu", "bütçe", "günlük", "optimizasyon", "not", "önemli", "lütfen",
+]);
+
+function extractInstructionKeywords(instruction: string): string[] {
+  if (!instruction) return [];
+  const out = new Set<string>();
+
+  // Quoted phrases are the strongest signal.
+  for (const m of instruction.matchAll(/["“”'']([^"“”'']{3,60})["“”'']/g)) {
+    out.add(m[1].trim());
+  }
+
+  // Then multi-word capitalised phrases and standalone meaningful words.
+  const cleaned = instruction.replace(/[•\-–—*_#>]/g, " ");
+  for (const line of cleaned.split(/[\n.;:,()/]+/)) {
+    const words = line.trim().split(/\s+/).filter(Boolean);
+    let buffer: string[] = [];
+    const flush = () => {
+      if (buffer.length >= 1) {
+        const phrase = buffer.join(" ").trim();
+        if (phrase.length >= 4 && phrase.length <= 60) out.add(phrase);
+      }
+      buffer = [];
+    };
+    for (const raw of words) {
+      const word = raw.replace(/[^\p{L}\p{N}+&]/gu, "");
+      if (!word || word.length < 3 || INSTRUCTION_STOPWORDS.has(word.toLocaleLowerCase("tr"))) {
+        flush();
+        continue;
+      }
+      const isCapital = word[0] === word[0].toLocaleUpperCase("tr") && /\p{L}/u.test(word[0]);
+      if (isCapital) buffer.push(word);
+      else flush();
+    }
+    flush();
+  }
+
+  return Array.from(out).slice(0, 20);
+}
+
 
 async function discoverInterestCandidates(
   token: string,
@@ -646,29 +778,34 @@ Deno.serve(async (req) => {
 
         if (Object.keys(params).length === 0) return metaError(400, "Güncellenecek alan yok");
         let result;
-        try {
-          result = await metaPost(`/${body.adSetId}`, token, params);
-        } catch (error) {
-          const subcode = getMetaErrorSubcode(error);
-          if (params.targeting && subcode === 2446395) {
-            const broadened = broadenInvalidAudience(JSON.parse(params.targeting), warnings);
-            params.targeting = JSON.stringify(broadened);
+        const handled = new Set<number>();
+        for (let attempt = 0; ; attempt++) {
+          try {
             result = await metaPost(`/${body.adSetId}`, token, params);
-          } else if (params.targeting && subcode === 2490589) {
+            break;
+          } catch (error) {
+            const subcode = getMetaErrorSubcode(error);
+            const canRetry =
+              !!params.targeting &&
+              attempt < 4 &&
+              subcode !== null &&
+              !handled.has(subcode) &&
+              [2446395, 2490589, 1870247].includes(subcode);
+            if (!canRetry) throw error;
+            handled.add(subcode!);
             const targeting = JSON.parse(params.targeting);
-            if (Array.isArray(targeting.instagram_positions)) {
-              targeting.instagram_positions = targeting.instagram_positions.filter(
-                (placement: unknown) => placement !== "explore" && placement !== "explore_home",
+            if (subcode === 2446395) {
+              params.targeting = JSON.stringify(broadenInvalidAudience(targeting, warnings));
+            } else if (subcode === 2490589) {
+              params.targeting = JSON.stringify(removeDeprecatedPlacements(targeting, warnings));
+            } else {
+              params.targeting = JSON.stringify(
+                replaceDeprecatedInterests(targeting, error, warnings),
               );
-              if (targeting.instagram_positions.length === 0) delete targeting.instagram_positions;
             }
-            warnings.push("Meta tarafından kaldırılan Instagram Keşfet yerleşimi çıkarıldı.");
-            params.targeting = JSON.stringify(targeting);
-            result = await metaPost(`/${body.adSetId}`, token, params);
-          } else {
-            throw error;
           }
         }
+
         return metaResponse({ success: true, result, warnings });
 
       }
@@ -856,33 +993,41 @@ Deno.serve(async (req) => {
           perf = null;
         }
 
-        const [professionCandidates, commercialCandidates] = await Promise.all([
+        const instruction = body.instruction?.trim() || "";
+        const instructionKeywords = extractInstructionKeywords(instruction);
+
+        const [professionCandidates, commercialCandidates, instructionCandidates] = await Promise.all([
           discoverInterestCandidates(token, PROFESSION_KEYWORDS),
           discoverInterestCandidates(token, COMMERCIAL_KEYWORDS),
+          instructionKeywords.length > 0
+            ? discoverInterestCandidates(token, instructionKeywords)
+            : Promise.resolve([] as InterestCandidate[]),
         ]);
 
         const system =
           "Sen Doktorumol.com.tr (Türkiye merkezli online psikolog/terapi & uzman platformu) için kıdemli bir Meta Ads hedefleme stratejistisin. " +
           "SADECE geçerli JSON döndür, markdown veya açıklama yazma. Şema: " +
           '{"summary": string, "changes": [{"field": string, "from": string, "to": string, "reason": string}], ' +
-          '"warnings": [string], "targeting": object, "budgetAdvice": string}. ' +
+          '"warnings": [string], "targeting": object, "budgetAdvice": string, "instructionChecklist": [{"item": string, "status": "uygulandı"|"kısmen"|"uygulanamadı", "note": string}]}. ' +
           "targeting alanı Meta Marketing API targeting spec'i olarak DOĞRUDAN gönderilebilir, tam ve geçerli olmalı: " +
           "geo_locations, age_min, age_max, genders, flexible_spec (interests/behaviors id+name ile), exclusions, " +
           "locales, publisher_platforms, facebook_positions, instagram_positions, device_platforms, targeting_automation. " +
           "Mevcut geo_locations ve custom_audiences'ı kullanıcı aksini istemedikçe koru. " +
-          "ÇOK ÖNEMLİ: interest/behavior id'lerini ASLA kendin uydurma. SADECE prompt'ta verilen " +
-          "'MESLEK SİNYALİ ADAYLARI' ve 'TİCARİ/DİJİTAL SİNYAL ADAYLARI' listelerindeki id+name çiftlerini kullan. " +
+          "ÇOK ÖNEMLİ: interest/behavior id'lerini ASLA kendin uydurma. SADECE prompt'ta verilen aday listelerindeki (MESLEK, TİCARİ/DİJİTAL, TALİMATTAN TÜRETİLEN) id+name çiftlerini kullan. " +
           "Listede uygun karşılığı olmayan bir sinyali targeting'e ekleme, sadece warnings'e yaz. " +
           "HEDEFLEME MİMARİSİ (zorunlu): flexible_spec[0] = MESLEK grubu (psikoloji/terapi/danışmanlık meslek sinyalleri) — bu grup asla boş olmasın " +
           "ve sadece dijital pazarlama ilgi alanlarından oluşan bir hedefleme ASLA üretme. " +
           "flexible_spec[1] = ticari/dijital pazarlama sinyalleri (Meta/Google reklamları, işletme hesabı, lead generation, SEO, kişisel marka, online randevu) " +
           "— bu grup AND olarak çalışır ve kitleyi daraltır; tahmini kitle çok küçük olacaksa 2. grubu kaldırıp ticari sinyalleri meslek grubuyla aynı OR grubuna taşı ve bunu warnings'e yaz. " +
           "Yalnızca psikolojiye meraklı genel kullanıcıları, terapi arayan danışanları ve psikoloji öğrencilerini hedefleme; mümkün olduğunda exclusions ile azalt. " +
+          "Instagram 'explore'/'explore_home' yerleşimlerini asla kullanma (Meta kaldırdı). " +
           "Yaş varsayılan 25-50 (veri destekliyorsa 23-55), Türkiye geneli konum. " +
           "Türkiye pazarına uygun, sağlık/psikoloji reklam politikalarına uyumlu (kişisel özellik ima etmeyen) öneriler ver. " +
-          "summary, changes.reason, warnings ve budgetAdvice Türkçe olmalı. " +
-          "KULLANICI TALEBİ en yüksek önceliktedir: talimat uzun ve detaylı olsa da tüm maddelerini eksiksiz uygula; " +
-          "uygulayamadığın maddeyi warnings'e gerekçesiyle yaz ve changes listesinde talimattaki her maddeye karşılık gelen değişikliği göster.";
+          "summary, changes.reason, warnings, budgetAdvice ve instructionChecklist Türkçe olmalı. " +
+          "KULLANICI TALİMATI en yüksek önceliktedir ve tek tek uygulanmalıdır: talimatı numaralı maddelere böl, " +
+          "her madde için instructionChecklist'e bir satır yaz (uygulandı/kısmen/uygulanamadı + gerekçe) ve " +
+          "hedefleme dışındaki maddeleri (bütçe, teklif stratejisi, optimizasyon, yerleşim, yaş, dil, cihaz, reklam metni önerisi) " +
+          "changes ve budgetAdvice içinde somut değerlerle karşıla. Hiçbir maddeyi sessizce atlama.";
 
         const fmt = (list: InterestCandidate[]) =>
           list
@@ -890,16 +1035,18 @@ Deno.serve(async (req) => {
             .join("\n");
 
         const prompt = [
+          `KULLANICI TALİMATI (en yüksek öncelik — tüm maddelerini uygula):\n${instruction || "Genel optimizasyon yap: daha nitelikli potansiyel müşteri getirecek şekilde hedeflemeyi iyileştir."}`,
           `Kampanya hedefi (objective): ${adset?.campaign?.objective || "bilinmiyor"}`,
           `Reklam seti adı: ${adset?.name}`,
-          `Optimizasyon: ${adset?.optimization_goal || "-"} / Faturalama: ${adset?.billing_event || "-"}`,
+          `Optimizasyon: ${adset?.optimization_goal || "-"} / Faturalama: ${adset?.billing_event || "-"} / Teklif stratejisi: ${adset?.bid_strategy || "-"}`,
           `Günlük bütçe (kuruş): ${adset?.daily_budget || "-"} | Toplam bütçe (kuruş): ${adset?.lifetime_budget || "-"}`,
           `Mevcut hedefleme JSON:\n${JSON.stringify(adset?.targeting ?? {}, null, 2)}`,
           `Son 30 gün performansı:\n${perf ? JSON.stringify(perf, null, 2) : "veri yok"}`,
           `MESLEK SİNYALİ ADAYLARI (Meta'dan doğrulanmış gerçek id'ler — flexible_spec[0] için bunlardan seç):\n${fmt(professionCandidates) || "bulunamadı"}`,
           `TİCARİ/DİJİTAL SİNYAL ADAYLARI (gerçek id'ler — flexible_spec[1] için bunlardan seç):\n${fmt(commercialCandidates) || "bulunamadı"}`,
-          `Kullanıcı talebi: ${body.instruction?.trim() || "Genel optimizasyon yap: daha nitelikli potansiyel müşteri getirecek şekilde hedeflemeyi iyileştir."}`,
+          `TALİMATTAN TÜRETİLEN ADAYLAR (kullanıcının yazdığı kavramların Meta'daki gerçek karşılıkları):\n${fmt(instructionCandidates) || "bulunamadı"}`,
         ].join("\n\n");
+
 
 
         const text = await callGpt(lovKey, system, prompt);
