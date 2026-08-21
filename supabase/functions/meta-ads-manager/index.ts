@@ -176,7 +176,117 @@ async function callGpt(apiKey: string, system: string, prompt: string): Promise<
 }
 
 
+// Meta rejects targeting specs that contain non-existent interest/behavior ids.
+// Validate every id, try to recover by name, drop what stays invalid.
+const TARGET_LIST_KEYS = [
+  "interests",
+  "behaviors",
+  "work_positions",
+  "industries",
+  "life_events",
+  "education_majors",
+  "family_statuses",
+  "income",
+];
+
+async function sanitizeTargeting(
+  targeting: Record<string, any>,
+  token: string,
+  warnings: string[],
+): Promise<Record<string, any>> {
+  const t = JSON.parse(JSON.stringify(targeting ?? {}));
+
+  const groups: any[] = [];
+  const pushGroups = (node: any) => {
+    if (!node || typeof node !== "object") return;
+    groups.push(node);
+    for (const key of ["flexible_spec", "exclusions"]) {
+      const val = node[key];
+      if (Array.isArray(val)) val.forEach((g) => g && groups.push(g));
+      else if (val) groups.push(val);
+    }
+  };
+  pushGroups(t);
+
+  const ids = new Set<string>();
+  for (const g of groups) {
+    for (const key of TARGET_LIST_KEYS) {
+      if (Array.isArray(g[key])) {
+        for (const item of g[key]) if (item?.id) ids.add(String(item.id));
+      }
+    }
+  }
+  if (ids.size === 0) return t;
+
+  const valid = new Set<string>();
+  const idList = Array.from(ids);
+  for (let i = 0; i < idList.length; i += 40) {
+    const chunk = idList.slice(i, i + 40);
+    try {
+      const res = await metaFetch(
+        `/search?type=adTargetingCategory&limit=100&id_list=${encodeURIComponent(JSON.stringify(chunk))}`,
+        token,
+      );
+      for (const item of res?.data || []) valid.add(String(item.id));
+    } catch (_e) {
+      // if validation call fails, assume chunk is fine rather than wiping targeting
+      chunk.forEach((id) => valid.add(id));
+    }
+  }
+
+  const resolveByName = async (name?: string): Promise<string | null> => {
+    if (!name) return null;
+    try {
+      const res = await metaFetch(
+        `/search?type=adinterest&limit=5&q=${encodeURIComponent(name)}`,
+        token,
+      );
+      const hit = (res?.data || [])[0];
+      return hit?.id ? String(hit.id) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  for (const g of groups) {
+    for (const key of TARGET_LIST_KEYS) {
+      if (!Array.isArray(g[key])) continue;
+      const kept: any[] = [];
+      for (const item of g[key]) {
+        const id = item?.id ? String(item.id) : "";
+        if (id && valid.has(id)) {
+          kept.push(item);
+          continue;
+        }
+        const recovered = key === "interests" ? await resolveByName(item?.name) : null;
+        if (recovered) {
+          kept.push({ ...item, id: recovered });
+          warnings.push(`"${item?.name || id}" ilgi alanı ID'si düzeltildi (${id || "yok"} → ${recovered}).`);
+        } else {
+          warnings.push(`"${item?.name || id}" geçersiz olduğu için hedeflemeden çıkarıldı.`);
+        }
+      }
+      if (kept.length > 0) g[key] = kept;
+      else delete g[key];
+    }
+  }
+
+  // drop empty flexible_spec groups (Meta rejects empty objects)
+  for (const node of [t]) {
+    if (Array.isArray(node.flexible_spec)) {
+      node.flexible_spec = node.flexible_spec.filter(
+        (g: any) => g && Object.keys(g).length > 0,
+      );
+      if (node.flexible_spec.length === 0) delete node.flexible_spec;
+    }
+    if (node.exclusions && Object.keys(node.exclusions).length === 0) delete node.exclusions;
+  }
+
+  return t;
+}
+
 function parseJsonLoose(text: string): any {
+
   try {
     return JSON.parse(text);
   } catch {
