@@ -646,29 +646,34 @@ Deno.serve(async (req) => {
 
         if (Object.keys(params).length === 0) return metaError(400, "Güncellenecek alan yok");
         let result;
-        try {
-          result = await metaPost(`/${body.adSetId}`, token, params);
-        } catch (error) {
-          const subcode = getMetaErrorSubcode(error);
-          if (params.targeting && subcode === 2446395) {
-            const broadened = broadenInvalidAudience(JSON.parse(params.targeting), warnings);
-            params.targeting = JSON.stringify(broadened);
+        const handled = new Set<number>();
+        for (let attempt = 0; ; attempt++) {
+          try {
             result = await metaPost(`/${body.adSetId}`, token, params);
-          } else if (params.targeting && subcode === 2490589) {
+            break;
+          } catch (error) {
+            const subcode = getMetaErrorSubcode(error);
+            const canRetry =
+              !!params.targeting &&
+              attempt < 4 &&
+              subcode !== null &&
+              !handled.has(subcode) &&
+              [2446395, 2490589, 1870247].includes(subcode);
+            if (!canRetry) throw error;
+            handled.add(subcode!);
             const targeting = JSON.parse(params.targeting);
-            if (Array.isArray(targeting.instagram_positions)) {
-              targeting.instagram_positions = targeting.instagram_positions.filter(
-                (placement: unknown) => placement !== "explore" && placement !== "explore_home",
+            if (subcode === 2446395) {
+              params.targeting = JSON.stringify(broadenInvalidAudience(targeting, warnings));
+            } else if (subcode === 2490589) {
+              params.targeting = JSON.stringify(removeDeprecatedPlacements(targeting, warnings));
+            } else {
+              params.targeting = JSON.stringify(
+                replaceDeprecatedInterests(targeting, error, warnings),
               );
-              if (targeting.instagram_positions.length === 0) delete targeting.instagram_positions;
             }
-            warnings.push("Meta tarafından kaldırılan Instagram Keşfet yerleşimi çıkarıldı.");
-            params.targeting = JSON.stringify(targeting);
-            result = await metaPost(`/${body.adSetId}`, token, params);
-          } else {
-            throw error;
           }
         }
+
         return metaResponse({ success: true, result, warnings });
 
       }
