@@ -137,57 +137,44 @@ const ADSET_TARGETING_FIELDS = [
   "campaign{id,name,objective}",
 ].join(",");
 
-// Streaming Responses API call (reasoning models can run long; never buffer).
+// Fast, reliable chat-completions call for targeting analysis.
 async function callGpt(apiKey: string, system: string, prompt: string): Promise<string> {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Lovable-API-Key": apiKey,
-      "X-Lovable-AIG-SDK": "fetch",
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-5.6-sol",
-      instructions: system,
-      input: prompt,
-      stream: true,
-      reasoning: { effort: "low", summary: "auto" },
-    }),
-  });
-
-  if (!res.ok || !res.body) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`AI gateway ${res.status}: ${text.slice(0, 400)}`);
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let out = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      if (!line.startsWith("data:")) continue;
-      const payload = line.slice(5).trim();
-      if (!payload || payload === "[DONE]") continue;
-      try {
-        const evt = JSON.parse(payload);
-        if (evt.type === "response.output_text.delta" && typeof evt.delta === "string") {
-          out += evt.delta;
-        } else if (evt.type === "response.completed" && !out) {
-          out = evt.response?.output_text ?? "";
-        }
-      } catch {
-        // ignore keep-alive / partial frames
+  const models = ["google/gemini-3.7-flash", "openai/gpt-5.6-sol"];
+  let lastErr = "";
+  for (const model of models) {
+    try {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Lovable-API-Key": apiKey,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: prompt },
+          ],
+        }),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        lastErr = `AI gateway ${res.status}: ${text.slice(0, 300)}`;
+        // terminal statuses: don't try other models pointlessly except 400 (bad model)
+        if (res.status !== 400 && res.status !== 404) throw new Error(lastErr);
+        continue;
       }
+      const json = JSON.parse(text);
+      const out = json?.choices?.[0]?.message?.content ?? "";
+      if (out) return out;
+      lastErr = "AI boş yanıt döndü";
+    } catch (e: any) {
+      lastErr = e?.message || String(e);
     }
   }
-  return out;
+  throw new Error(lastErr || "AI çağrısı başarısız");
 }
+
 
 function parseJsonLoose(text: string): any {
   try {
