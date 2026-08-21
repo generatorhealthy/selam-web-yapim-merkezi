@@ -65,6 +65,35 @@ interface Campaign {
   stop_time?: string;
 }
 
+interface AdSet {
+  id: string;
+  name: string;
+  status: string;
+  effective_status: string;
+  daily_budget?: string;
+  lifetime_budget?: string;
+  bid_amount?: string;
+  optimization_goal?: string;
+  start_time?: string;
+  end_time?: string;
+  targeting?: any;
+}
+
+interface Ad {
+  id: string;
+  name: string;
+  status: string;
+  effective_status: string;
+  creative?: {
+    id: string;
+    name?: string;
+    title?: string;
+    body?: string;
+    thumbnail_url?: string;
+    object_story_spec?: any;
+  };
+}
+
 interface Insight {
   campaign_id?: string;
   campaign_name?: string;
