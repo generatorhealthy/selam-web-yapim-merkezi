@@ -398,6 +398,16 @@ const SpecialistRegistration = () => {
       }
 
       toast.success("Uzman profiliniz başarıyla oluşturuldu!");
+      void trackMetaLead({
+        event_name: "CompleteRegistration",
+        email: createdUserEmail || email,
+        phone,
+        first_name: formData.name?.split(" ")[0],
+        last_name: formData.name?.split(" ").slice(1).join(" "),
+        city: formData.city,
+        external_id: createdUserId,
+        lead_event_source: "Doktorumol Uzman Profil Tamamlandı",
+      });
       setCurrentStep(4);
 
       // E-posta gönder (arka planda)
