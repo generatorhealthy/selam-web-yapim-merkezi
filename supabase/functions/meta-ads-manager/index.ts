@@ -65,7 +65,7 @@ const BodySchema = z.object({
     tone: z.string().optional(),
   }).optional(),
   q: z.string().optional(),
-  instruction: z.string().max(2000).optional(),
+  instruction: z.string().max(30000).optional(),
   fields: z.array(z.string()).optional(),
 
   since: z.string().optional(),
