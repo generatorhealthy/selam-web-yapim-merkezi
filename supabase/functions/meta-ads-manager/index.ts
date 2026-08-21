@@ -448,9 +448,8 @@ Deno.serve(async (req) => {
         if (body.targeting) {
           const clean = await sanitizeTargeting(body.targeting, token, warnings);
           params.targeting = JSON.stringify(clean);
-        }
-
         } else if (body.ageMin || body.ageMax || body.genders) {
+
           // merge into existing targeting so we don't wipe geo/interests
           const current = await metaFetch(`/${body.adSetId}?fields=targeting`, token);
           const targeting = { ...(current?.targeting || {}) };
