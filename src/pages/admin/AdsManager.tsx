@@ -160,6 +160,25 @@ export default function AdsManager() {
   const [targetResults, setTargetResults] = useState<any[]>([]);
   const [targetLoading, setTargetLoading] = useState(false);
 
+  // --- editing state ---
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [adSets, setAdSets] = useState<Record<string, AdSet[]>>({});
+  const [adSetsLoading, setAdSetsLoading] = useState<Record<string, boolean>>({});
+  const [expandedAdSet, setExpandedAdSet] = useState<Record<string, boolean>>({});
+  const [ads, setAds] = useState<Record<string, Ad[]>>({});
+  const [adsLoading, setAdsLoading] = useState<Record<string, boolean>>({});
+  const [saving, setSaving] = useState(false);
+
+  const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
+  const [campaignForm, setCampaignForm] = useState({ name: "", status: "ACTIVE", dailyBudget: "", lifetimeBudget: "", spendCap: "" });
+
+  const [editAdSet, setEditAdSet] = useState<{ adSet: AdSet; campaignId: string } | null>(null);
+  const [adSetForm, setAdSetForm] = useState({ name: "", status: "ACTIVE", dailyBudget: "", lifetimeBudget: "", ageMin: "", ageMax: "", genders: "all", startTime: "", endTime: "" });
+
+  const [editAd, setEditAd] = useState<{ ad: Ad; adSetId: string } | null>(null);
+  const [adForm, setAdForm] = useState({ name: "", status: "ACTIVE", message: "", headline: "", description: "", link: "" });
+  const [adCreativeLoading, setAdCreativeLoading] = useState(false);
+
   const invoke = async (body: object) => {
     const { data, error } = await supabase.functions.invoke("meta-ads-manager", { body });
     if (error) throw error;
