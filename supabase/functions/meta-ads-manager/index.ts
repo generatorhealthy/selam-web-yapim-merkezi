@@ -25,7 +25,11 @@ const ActionSchema = z.enum([
   "getAdCreative",
   "updateAdCreative",
   "deleteEntity",
+  // targeting
+  "getAdSetTargeting",
+  "aiTargeting",
 ]);
+
 
 const BodySchema = z.object({
   action: ActionSchema,
