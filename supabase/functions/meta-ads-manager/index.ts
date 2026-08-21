@@ -117,6 +117,20 @@ async function metaPost(path: string, token: string, params: Record<string, stri
   }
 }
 
+function getMetaErrorSubcode(error: unknown): number | null {
+  const message = error instanceof Error ? error.message : String(error);
+  const jsonStart = message.indexOf("{");
+  if (jsonStart < 0) return null;
+  try {
+    const payload = JSON.parse(message.slice(jsonStart));
+    return typeof payload?.error?.error_subcode === "number"
+      ? payload.error.error_subcode
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 const ADSET_TARGETING_FIELDS = [
   "id",
   "name",
@@ -245,6 +259,53 @@ function sanitizePlacements(t: Record<string, any>, warnings: string[]) {
     if (devices.length > 0) t.device_platforms = devices;
     else delete t.device_platforms;
   }
+}
+
+// Meta treats separate flexible_spec entries as AND groups. AI suggestions can
+// accidentally create an audience that must satisfy unrelated professions and
+// interests simultaneously, which Meta rejects with subcode 2446395. On that
+// specific rejection, merge the groups into one OR group and retry once.
+function broadenInvalidAudience(
+  targeting: Record<string, any>,
+  warnings: string[],
+): Record<string, any> {
+  const t = JSON.parse(JSON.stringify(targeting ?? {}));
+  const specs = Array.isArray(t.flexible_spec)
+    ? t.flexible_spec.filter((spec: unknown) => spec && typeof spec === "object")
+    : [];
+
+  if (specs.length > 1) {
+    const merged: Record<string, any[]> = {};
+    for (const spec of specs) {
+      for (const [key, value] of Object.entries(spec as Record<string, any>)) {
+        if (!Array.isArray(value)) continue;
+        const existing = merged[key] ?? [];
+        const seen = new Set(existing.map((item: any) => String(item?.id ?? JSON.stringify(item))));
+        for (const item of value) {
+          const identity = String(item?.id ?? JSON.stringify(item));
+          if (!seen.has(identity)) {
+            existing.push(item);
+            seen.add(identity);
+          }
+        }
+        if (existing.length > 0) merged[key] = existing;
+      }
+    }
+    if (Object.keys(merged).length > 0) t.flexible_spec = [merged];
+    else delete t.flexible_spec;
+    warnings.push("Meta hedef kitleyi fazla dar bulduğu için daraltma grupları tek bir geniş OR grubunda birleştirildi.");
+  }
+
+  // These optional constraints often make an otherwise valid detailed audience
+  // too small. Keep core geo, age, gender, interests and explicit exclusions.
+  for (const key of ["work_employers", "education_schools", "college_years"]) {
+    if (key in t) {
+      delete t[key];
+      warnings.push(`${key} fazla dar hedeflemeyi önlemek için çıkarıldı.`);
+    }
+  }
+
+  return t;
 }
 
 async function sanitizeTargeting(
@@ -527,7 +588,18 @@ Deno.serve(async (req) => {
         }
 
         if (Object.keys(params).length === 0) return metaError(400, "Güncellenecek alan yok");
-        const result = await metaPost(`/${body.adSetId}`, token, params);
+        let result;
+        try {
+          result = await metaPost(`/${body.adSetId}`, token, params);
+        } catch (error) {
+          if (params.targeting && getMetaErrorSubcode(error) === 2446395) {
+            const broadened = broadenInvalidAudience(JSON.parse(params.targeting), warnings);
+            params.targeting = JSON.stringify(broadened);
+            result = await metaPost(`/${body.adSetId}`, token, params);
+          } else {
+            throw error;
+          }
+        }
         return metaResponse({ success: true, result, warnings });
 
       }
