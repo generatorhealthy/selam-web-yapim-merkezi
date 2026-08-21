@@ -493,15 +493,22 @@ Deno.serve(async (req) => {
       case "updateAdSet": {
         if (!body.adSetId) return metaError(400, "adSetId required");
         const params: Record<string, string> = {};
+        const warnings: string[] = [];
         if (body.name) params.name = body.name;
         if (body.status) params.status = body.status;
         if (body.budget) params.daily_budget = String(Math.round(body.budget * 100));
         if (body.lifetimeBudget) params.lifetime_budget = String(Math.round(body.lifetimeBudget * 100));
         if (body.bidAmount) params.bid_amount = String(Math.round(body.bidAmount * 100));
-        if (body.startTime) params.start_time = body.startTime;
+        if (body.startTime) {
+          const requestedStart = Date.parse(body.startTime);
+          if (Number.isFinite(requestedStart) && requestedStart > Date.now()) {
+            params.start_time = body.startTime;
+          } else {
+            warnings.push("Reklam seti başladığı için başlangıç zamanı değiştirilmeden korundu.");
+          }
+        }
         if (body.endTime) params.end_time = body.endTime;
 
-        const warnings: string[] = [];
         if (body.targeting) {
           const clean = await sanitizeTargeting(body.targeting, token, warnings);
           params.targeting = JSON.stringify(clean);
