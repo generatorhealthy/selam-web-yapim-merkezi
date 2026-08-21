@@ -117,6 +117,93 @@ async function metaPost(path: string, token: string, params: Record<string, stri
   }
 }
 
+const ADSET_TARGETING_FIELDS = [
+  "id",
+  "name",
+  "status",
+  "effective_status",
+  "daily_budget",
+  "lifetime_budget",
+  "bid_amount",
+  "bid_strategy",
+  "billing_event",
+  "optimization_goal",
+  "destination_type",
+  "promoted_object",
+  "start_time",
+  "end_time",
+  "targeting",
+  "campaign_id",
+  "campaign{id,name,objective}",
+].join(",");
+
+// Streaming Responses API call (reasoning models can run long; never buffer).
+async function callGpt(apiKey: string, system: string, prompt: string): Promise<string> {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Lovable-API-Key": apiKey,
+      "X-Lovable-AIG-SDK": "fetch",
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-5.6-sol",
+      instructions: system,
+      input: prompt,
+      stream: true,
+      reasoning: { effort: "low", summary: "auto" },
+    }),
+  });
+
+  if (!res.ok || !res.body) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`AI gateway ${res.status}: ${text.slice(0, 400)}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let out = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      try {
+        const evt = JSON.parse(payload);
+        if (evt.type === "response.output_text.delta" && typeof evt.delta === "string") {
+          out += evt.delta;
+        } else if (evt.type === "response.completed" && !out) {
+          out = evt.response?.output_text ?? "";
+        }
+      } catch {
+        // ignore keep-alive / partial frames
+      }
+    }
+  }
+  return out;
+}
+
+function parseJsonLoose(text: string): any {
+  try {
+    return JSON.parse(text);
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]);
+      } catch { /* fallthrough */ }
+    }
+    return null;
+  }
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
