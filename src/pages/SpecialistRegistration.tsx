@@ -16,6 +16,7 @@ import InterestsSelector from "@/components/InterestsSelector";
 import { hasSuggestedInterests, getSuggestedInterests } from "@/lib/specialistInterests";
 import { sendSms } from "@/services/smsService";
 import { translateAuthError } from "@/utils/authErrors";
+import { trackMetaLead } from "@/lib/metaCapi";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard
