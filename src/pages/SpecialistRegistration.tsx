@@ -16,6 +16,7 @@ import InterestsSelector from "@/components/InterestsSelector";
 import { hasSuggestedInterests, getSuggestedInterests } from "@/lib/specialistInterests";
 import { sendSms } from "@/services/smsService";
 import { translateAuthError } from "@/utils/authErrors";
+import { trackMetaLead } from "@/lib/metaCapi";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard
@@ -256,6 +257,7 @@ const SpecialistRegistration = () => {
             setCreatedUserEmail(email);
             void registerPartnerReferral(signInData.user.id, email);
             toast.success("Mevcut hesabınızla devam ediliyor.");
+            void trackMetaLead({ email, phone, external_id: signInData.user.id });
             setCurrentStep(2);
           }
           return;
@@ -291,6 +293,7 @@ const SpecialistRegistration = () => {
         setCreatedUserEmail(email);
         void registerPartnerReferral(data.user.id, email);
         toast.success("Hesabınız oluşturuldu!");
+        void trackMetaLead({ email, phone, external_id: data.user.id });
         setCurrentStep(2);
       }
     } catch (err: any) {
@@ -395,6 +398,16 @@ const SpecialistRegistration = () => {
       }
 
       toast.success("Uzman profiliniz başarıyla oluşturuldu!");
+      void trackMetaLead({
+        event_name: "CompleteRegistration",
+        email: createdUserEmail || email,
+        phone,
+        first_name: formData.name?.split(" ")[0],
+        last_name: formData.name?.split(" ").slice(1).join(" "),
+        city: formData.city,
+        external_id: createdUserId,
+        lead_event_source: "Doktorumol Uzman Profil Tamamlandı",
+      });
       setCurrentStep(4);
 
       // E-posta gönder (arka planda)
