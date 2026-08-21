@@ -1356,6 +1356,31 @@ export default function AdsManager() {
                         ))}
                       </div>
                     )}
+                    {Array.isArray(aiTgResult.instructionChecklist) && aiTgResult.instructionChecklist.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-xs font-medium text-slate-700">Talimat kontrol listesi</div>
+                        <ul className="space-y-1">
+                          {aiTgResult.instructionChecklist.map((c: any, i: number) => (
+                            <li key={i} className="text-xs bg-white rounded-md border p-2">
+                              <span
+                                className={
+                                  c.status === "uygulandı"
+                                    ? "text-emerald-700 font-medium"
+                                    : c.status === "kısmen"
+                                      ? "text-amber-700 font-medium"
+                                      : "text-red-600 font-medium"
+                                }
+                              >
+                                {c.status || "—"}
+                              </span>
+                              <span className="text-slate-700"> · {c.item}</span>
+                              {c.note && <div className="text-slate-500 mt-0.5">{c.note}</div>}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     {Array.isArray(aiTgResult.warnings) && aiTgResult.warnings.length > 0 && (
                       <ul className="text-xs text-amber-700 list-disc pl-4 space-y-1">
                         {aiTgResult.warnings.map((w: string, i: number) => <li key={i}>{w}</li>)}
