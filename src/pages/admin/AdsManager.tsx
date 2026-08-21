@@ -177,6 +177,15 @@ export default function AdsManager() {
 
   const [editAdSet, setEditAdSet] = useState<{ adSet: AdSet; campaignId: string } | null>(null);
   const [adSetForm, setAdSetForm] = useState({ name: "", status: "ACTIVE", dailyBudget: "", lifetimeBudget: "", ageMin: "", ageMax: "", genders: "all", startTime: "", endTime: "" });
+  const [targetingDetail, setTargetingDetail] = useState<any>(null);
+  const [targetingNames, setTargetingNames] = useState<Record<string, string>>({});
+  const [targetingLoading, setTargetingLoading] = useState(false);
+  const [targetingJson, setTargetingJson] = useState("");
+  const [targetingDirty, setTargetingDirty] = useState(false);
+  const [aiTgInstruction, setAiTgInstruction] = useState("");
+  const [aiTgLoading, setAiTgLoading] = useState(false);
+  const [aiTgResult, setAiTgResult] = useState<any>(null);
+
 
   const [editAd, setEditAd] = useState<{ ad: Ad; adSetId: string } | null>(null);
   const [adForm, setAdForm] = useState({ name: "", status: "ACTIVE", message: "", headline: "", description: "", link: "" });
