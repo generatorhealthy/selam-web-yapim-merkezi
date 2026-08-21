@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
@@ -25,6 +26,8 @@ import {
   Target,
   ChevronRight,
   ArrowLeft,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import AdminBackButton from "@/components/AdminBackButton";
 import {
@@ -714,8 +717,8 @@ export default function AdsManager() {
                               const insight = insightMap.get(c.id);
                               const isOpen = !!expanded[c.id];
                               return (
-                                <>
-                                <TableRow key={c.id}>
+                                <Fragment key={c.id}>
+                                <TableRow>
                                   <TableCell className="pr-0">
                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleExpand(c.id)} aria-label="Reklam setlerini göster">
                                       <ChevronRight className={`w-4 h-4 transition-transform ${isOpen ? "rotate-90" : ""}`} />
@@ -843,7 +846,7 @@ export default function AdsManager() {
                                     </TableCell>
                                   </TableRow>
                                 )}
-                                </>
+                                </Fragment>
                               );
                             })
                           )}
