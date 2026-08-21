@@ -487,7 +487,102 @@ Deno.serve(async (req) => {
         return metaResponse(json);
       }
 
+      case "getAdSetTargeting": {
+        if (!body.adSetId) return metaError(400, "adSetId required");
+        const adset = await metaFetch(`/${body.adSetId}?fields=${ADSET_TARGETING_FIELDS}`, token);
+
+        // Resolve interest/behavior ids to readable names where Meta returns ids only
+        const t = adset?.targeting || {};
+        const collectIds = (node: any): string[] => {
+          const ids: string[] = [];
+          const scan = (obj: any) => {
+            if (!obj || typeof obj !== "object") return;
+            for (const key of ["interests", "behaviors", "work_positions", "industries", "life_events", "education_majors", "family_statuses", "income"]) {
+              const arr = obj[key];
+              if (Array.isArray(arr)) {
+                for (const item of arr) {
+                  if (item?.id && !item?.name) ids.push(String(item.id));
+                }
+              }
+            }
+          };
+          scan(node);
+          for (const key of ["flexible_spec", "exclusions"]) {
+            const val = node?.[key];
+            if (Array.isArray(val)) val.forEach(scan);
+            else if (val) scan(val);
+          }
+          return ids;
+        };
+        const missing = Array.from(new Set(collectIds(t))).slice(0, 40);
+        let names: Record<string, string> = {};
+        if (missing.length > 0) {
+          try {
+            const res = await metaFetch(
+              `/search?type=adTargetingCategory&limit=100&id_list=${encodeURIComponent(JSON.stringify(missing))}`,
+              token,
+            );
+            for (const item of res?.data || []) names[String(item.id)] = item.name;
+          } catch (_e) {
+            names = {};
+          }
+        }
+
+        return metaResponse({ adSet: adset, targetingNames: names });
+      }
+
+      case "aiTargeting": {
+        if (!body.adSetId) return metaError(400, "adSetId required");
+        const lovKey = Deno.env.get("LOVABLE_API_KEY");
+        if (!lovKey) return metaError(500, "LOVABLE_API_KEY not configured");
+
+        const adset = await metaFetch(`/${body.adSetId}?fields=${ADSET_TARGETING_FIELDS}`, token);
+
+        let perf: unknown = null;
+        try {
+          const insightFields = ["spend", "impressions", "reach", "clicks", "ctr", "cpc", "cpm", "actions", "cost_per_action_type"].join(",");
+          const res = await metaFetch(
+            `/${body.adSetId}/insights?fields=${insightFields}&date_preset=last_30d`,
+            token,
+          );
+          perf = res?.data?.[0] ?? null;
+        } catch (_e) {
+          perf = null;
+        }
+
+        const system =
+          "Sen Doktorumol.com.tr (Türkiye merkezli online psikolog/terapi & uzman platformu) için kıdemli bir Meta Ads hedefleme stratejistisin. " +
+          "SADECE geçerli JSON döndür, markdown veya açıklama yazma. Şema: " +
+          '{"summary": string, "changes": [{"field": string, "from": string, "to": string, "reason": string}], ' +
+          '"warnings": [string], "targeting": object, "budgetAdvice": string}. ' +
+          "targeting alanı Meta Marketing API targeting spec'i olarak DOĞRUDAN gönderilebilir, tam ve geçerli olmalı: " +
+          "geo_locations, age_min, age_max, genders, flexible_spec (interests/behaviors id+name ile), exclusions, " +
+          "locales, publisher_platforms, facebook_positions, instagram_positions, device_platforms, targeting_automation. " +
+          "Mevcut geo_locations ve custom_audiences'ı kullanıcı aksini istemedikçe koru. " +
+          "Interest/behavior kullanırken gerçek Facebook hedefleme kategorileri ve gerçek id'ler kullan; id'den emin değilsen o kalemi ekleme ve warnings'e yaz. " +
+          "Türkiye pazarına uygun, sağlık/psikoloji reklam politikalarına uyumlu (kişisel özellik ima etmeyen) öneriler ver. " +
+          "summary, changes.reason, warnings ve budgetAdvice Türkçe olmalı.";
+
+        const prompt = [
+          `Kampanya hedefi (objective): ${adset?.campaign?.objective || "bilinmiyor"}`,
+          `Reklam seti adı: ${adset?.name}`,
+          `Optimizasyon: ${adset?.optimization_goal || "-"} / Faturalama: ${adset?.billing_event || "-"}`,
+          `Günlük bütçe (kuruş): ${adset?.daily_budget || "-"} | Toplam bütçe (kuruş): ${adset?.lifetime_budget || "-"}`,
+          `Mevcut hedefleme JSON:\n${JSON.stringify(adset?.targeting ?? {}, null, 2)}`,
+          `Son 30 gün performansı:\n${perf ? JSON.stringify(perf, null, 2) : "veri yok"}`,
+          `Kullanıcı talebi: ${body.instruction?.trim() || "Genel optimizasyon yap: daha nitelikli potansiyel müşteri getirecek şekilde hedeflemeyi iyileştir."}`,
+        ].join("\n\n");
+
+        const text = await callGpt(lovKey, system, prompt);
+        const json = parseJsonLoose(text);
+        if (!json) {
+          return metaError(502, "AI yanıtı çözümlenemedi, tekrar deneyin.");
+        }
+        return metaResponse({ ...json, currentTargeting: adset?.targeting ?? {} });
+      }
+
       default: {
+
         return metaError(400, "Unknown action");
       }
     }
