@@ -1273,11 +1273,106 @@ export default function AdsManager() {
                   <Input type="datetime-local" value={adSetForm.endTime} onChange={(e) => setAdSetForm({ ...adSetForm, endTime: e.target.value })} />
                 </div>
               </div>
-              {editAdSet?.adSet.targeting?.geo_locations && (
-                <div className="text-xs text-slate-500">
-                  Konum hedeflemesi korunur: {JSON.stringify(editAdSet.adSet.targeting.geo_locations).slice(0, 160)}
+              {/* Tüm hedefleme detayları */}
+              <div className="space-y-3 pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Target className="w-4 h-4" /> Tüm Hedefleme Detayları
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => editAdSet && loadTargeting(editAdSet.adSet.id)}
+                    disabled={targetingLoading}
+                  >
+                    {targetingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  </Button>
                 </div>
-              )}
+                {targetingLoading && !targetingDetail ? (
+                  <div className="text-sm text-slate-500 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Hedefleme yükleniyor...
+                  </div>
+                ) : (
+                  <TargetingSummary
+                    targeting={targetingDetail?.targeting || editAdSet?.adSet.targeting}
+                    names={targetingNames}
+                  />
+                )}
+                {targetingDetail && (
+                  <div className="text-xs text-slate-500">
+                    Optimizasyon: {targetingDetail.optimization_goal || "—"} · Faturalama: {targetingDetail.billing_event || "—"} · Teklif stratejisi: {targetingDetail.bid_strategy || "—"}
+                  </div>
+                )}
+              </div>
+
+              {/* AI ile müdahale */}
+              <div className="space-y-3 pt-3 border-t">
+                <Label className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-600" /> AI ile Hedefleme Müdahalesi
+                </Label>
+                <Textarea
+                  rows={3}
+                  placeholder="Ne yapmasını istiyorsunuz? Örn: 'İstanbul + Ankara odaklı, 25-45 yaş, terapi/psikoloji ilgi alanları ekle, erkek hedeflemeyi kaldır.' Boş bırakırsanız genel optimizasyon yapar."
+                  value={aiTgInstruction}
+                  onChange={(e) => setAiTgInstruction(e.target.value)}
+                />
+                <Button variant="outline" onClick={runAiTargeting} disabled={aiTgLoading}>
+                  {aiTgLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  AI Önerisi Al
+                </Button>
+
+                {aiTgResult && (
+                  <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 space-y-3">
+                    {aiTgResult.summary && <p className="text-sm text-slate-800">{aiTgResult.summary}</p>}
+                    {Array.isArray(aiTgResult.changes) && aiTgResult.changes.length > 0 && (
+                      <div className="space-y-2">
+                        {aiTgResult.changes.map((c: any, i: number) => (
+                          <div key={i} className="text-xs bg-white rounded-md border p-2">
+                            <div className="font-medium text-slate-700">{c.field}</div>
+                            <div className="text-slate-600">
+                              <span className="line-through">{String(c.from ?? "—")}</span> → <span className="text-emerald-700 font-medium">{String(c.to ?? "—")}</span>
+                            </div>
+                            {c.reason && <div className="text-slate-500 mt-1">{c.reason}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {Array.isArray(aiTgResult.warnings) && aiTgResult.warnings.length > 0 && (
+                      <ul className="text-xs text-amber-700 list-disc pl-4 space-y-1">
+                        {aiTgResult.warnings.map((w: string, i: number) => <li key={i}>{w}</li>)}
+                      </ul>
+                    )}
+                    {aiTgResult.budgetAdvice && (
+                      <p className="text-xs text-slate-600">Bütçe önerisi: {aiTgResult.budgetAdvice}</p>
+                    )}
+                    {aiTgResult.targeting && (
+                      <Button size="sm" onClick={applyAiTargeting}>
+                        Öneriyi Forma Uygula
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* JSON düzenleyici */}
+              <div className="space-y-2 pt-3 border-t">
+                <Label>Hedefleme JSON (gelişmiş)</Label>
+                <Textarea
+                  rows={10}
+                  className="font-mono text-xs"
+                  value={targetingJson}
+                  onChange={(e) => {
+                    setTargetingJson(e.target.value);
+                    setTargetingDirty(true);
+                  }}
+                />
+                <p className="text-xs text-slate-500">
+                  {targetingDirty
+                    ? "Kaydet'e bastığınızda bu JSON tüm hedeflemeyi değiştirir."
+                    : "Değişiklik yapmazsanız mevcut konum/ilgi alanı hedeflemesi korunur."}
+                </p>
+              </div>
+
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditAdSet(null)}>İptal</Button>
