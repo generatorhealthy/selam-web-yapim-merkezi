@@ -395,10 +395,81 @@ export default function AdsManager() {
       startTime: adSet.start_time ? adSet.start_time.slice(0, 16) : "",
       endTime: adSet.end_time ? adSet.end_time.slice(0, 16) : "",
     });
+    setTargetingDetail(null);
+    setTargetingNames({});
+    setTargetingJson(JSON.stringify(adSet.targeting ?? {}, null, 2));
+    setTargetingDirty(false);
+    setAiTgResult(null);
+    setAiTgInstruction("");
+    loadTargeting(adSet.id);
+  };
+
+  const loadTargeting = async (adSetId: string) => {
+    setTargetingLoading(true);
+    try {
+      const data: any = await invoke({ action: "getAdSetTargeting", adSetId });
+      setTargetingDetail(data?.adSet || null);
+      setTargetingNames(data?.targetingNames || {});
+      if (data?.adSet?.targeting) {
+        setTargetingJson(JSON.stringify(data.adSet.targeting, null, 2));
+        setTargetingDirty(false);
+      }
+    } catch (err: any) {
+      toast.error("Hedefleme alınamadı: " + err.message);
+    } finally {
+      setTargetingLoading(false);
+    }
+  };
+
+  const runAiTargeting = async () => {
+    if (!editAdSet) return;
+    setAiTgLoading(true);
+    setAiTgResult(null);
+    try {
+      const data: any = await invoke({
+        action: "aiTargeting",
+        adSetId: editAdSet.adSet.id,
+        instruction: aiTgInstruction || undefined,
+      });
+      setAiTgResult(data);
+    } catch (err: any) {
+      toast.error("AI önerisi alınamadı: " + err.message);
+    } finally {
+      setAiTgLoading(false);
+    }
+  };
+
+  const applyAiTargeting = () => {
+    if (!aiTgResult?.targeting) return;
+    const t = aiTgResult.targeting;
+    setTargetingJson(JSON.stringify(t, null, 2));
+    setTargetingDirty(true);
+    setAdSetForm((prev) => ({
+      ...prev,
+      ageMin: t.age_min ? String(t.age_min) : prev.ageMin,
+      ageMax: t.age_max ? String(t.age_max) : prev.ageMax,
+      genders: !t.genders || t.genders.length === 0 ? "all" : t.genders.includes(1) && !t.genders.includes(2) ? "male" : "female",
+    }));
+    toast.success("AI hedeflemesi forma uygulandı. Kaydet'e basmayı unutmayın.");
   };
 
   const saveAdSet = async () => {
     if (!editAdSet) return;
+
+    let targetingPayload: any;
+    if (targetingDirty) {
+      try {
+        targetingPayload = JSON.parse(targetingJson);
+      } catch {
+        toast.error("Hedefleme JSON'u geçersiz, düzeltin.");
+        return;
+      }
+      if (adSetForm.ageMin) targetingPayload.age_min = Number(adSetForm.ageMin);
+      if (adSetForm.ageMax) targetingPayload.age_max = Number(adSetForm.ageMax);
+      if (adSetForm.genders === "all") delete targetingPayload.genders;
+      else targetingPayload.genders = adSetForm.genders === "male" ? [1] : [2];
+    }
+
     setSaving(true);
     try {
       await invoke({
@@ -408,9 +479,13 @@ export default function AdsManager() {
         status: adSetForm.status as "ACTIVE" | "PAUSED",
         budget: adSetForm.dailyBudget ? Number(adSetForm.dailyBudget) : undefined,
         lifetimeBudget: adSetForm.lifetimeBudget ? Number(adSetForm.lifetimeBudget) : undefined,
-        ageMin: adSetForm.ageMin ? Number(adSetForm.ageMin) : undefined,
-        ageMax: adSetForm.ageMax ? Number(adSetForm.ageMax) : undefined,
-        genders: adSetForm.genders === "all" ? [] : adSetForm.genders === "male" ? [1] : [2],
+        ...(targetingPayload
+          ? { targeting: targetingPayload }
+          : {
+              ageMin: adSetForm.ageMin ? Number(adSetForm.ageMin) : undefined,
+              ageMax: adSetForm.ageMax ? Number(adSetForm.ageMax) : undefined,
+              genders: adSetForm.genders === "all" ? [] : adSetForm.genders === "male" ? [1] : [2],
+            }),
         startTime: adSetForm.startTime || undefined,
         endTime: adSetForm.endTime || undefined,
       });
@@ -424,6 +499,7 @@ export default function AdsManager() {
       setSaving(false);
     }
   };
+
 
   const openAdEdit = async (ad: Ad, adSetId: string) => {
     setEditAd({ ad, adSetId });
