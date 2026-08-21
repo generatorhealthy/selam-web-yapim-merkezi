@@ -189,12 +189,71 @@ const TARGET_LIST_KEYS = [
   "income",
 ];
 
+const PLACEMENT_RULES: Record<string, { platform: string; values: Set<string> }> = {
+  facebook_positions: {
+    platform: "facebook",
+    values: new Set([
+      "feed", "right_hand_column", "instant_article", "marketplace", "video_feeds",
+      "story", "search", "facebook_reels", "in_stream_video", "profile_feed",
+      "notification", "facebook_business_explore", "facebook_reels_overlay",
+    ]),
+  },
+  instagram_positions: {
+    platform: "instagram",
+    values: new Set(["stream", "story", "explore", "explore_home", "reels", "profile_feed", "profile_reels"]),
+  },
+  messenger_positions: {
+    platform: "messenger",
+    values: new Set(["messenger_home", "sponsored_messages", "story"]),
+  },
+  audience_network_positions: {
+    platform: "audience_network",
+    values: new Set(["classic", "rewarded_video"]),
+  },
+  threads_positions: {
+    platform: "threads",
+    values: new Set(["threads_stream"]),
+  },
+};
+
+function sanitizePlacements(t: Record<string, any>, warnings: string[]) {
+  const allowedPlatforms = new Set(["facebook", "instagram", "messenger", "audience_network", "threads"]);
+  let platforms = Array.isArray(t.publisher_platforms)
+    ? t.publisher_platforms.filter((value: unknown) => typeof value === "string" && allowedPlatforms.has(value))
+    : [];
+
+  for (const [key, rule] of Object.entries(PLACEMENT_RULES)) {
+    if (!Array.isArray(t[key])) continue;
+    const original = t[key].filter((value: unknown) => typeof value === "string");
+    const cleaned = Array.from(new Set(original.filter((value: string) => rule.values.has(value))));
+    const removed = original.filter((value: string) => !rule.values.has(value));
+    if (removed.length > 0) warnings.push(`${key} içindeki geçersiz yerleşimler çıkarıldı: ${Array.from(new Set(removed)).join(", ")}.`);
+    if (cleaned.length > 0) {
+      t[key] = cleaned;
+      if (!platforms.includes(rule.platform)) platforms.push(rule.platform);
+    } else {
+      delete t[key];
+    }
+  }
+
+  platforms = Array.from(new Set(platforms));
+  if (platforms.length > 0) t.publisher_platforms = platforms;
+  else delete t.publisher_platforms;
+
+  if (Array.isArray(t.device_platforms)) {
+    const devices = Array.from(new Set(t.device_platforms.filter((value: unknown) => value === "mobile" || value === "desktop")));
+    if (devices.length > 0) t.device_platforms = devices;
+    else delete t.device_platforms;
+  }
+}
+
 async function sanitizeTargeting(
   targeting: Record<string, any>,
   token: string,
   warnings: string[],
 ): Promise<Record<string, any>> {
   const t = JSON.parse(JSON.stringify(targeting ?? {}));
+  sanitizePlacements(t, warnings);
 
   const groups: any[] = [];
   const pushGroups = (node: any) => {
@@ -216,8 +275,6 @@ async function sanitizeTargeting(
       }
     }
   }
-  if (ids.size === 0) return t;
-
   const valid = new Set<string>();
   const idList = Array.from(ids);
   for (let i = 0; i < idList.length; i += 40) {
