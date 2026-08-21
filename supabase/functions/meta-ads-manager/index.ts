@@ -214,7 +214,8 @@ const PLACEMENT_RULES: Record<string, { platform: string; values: Set<string> }>
   },
   instagram_positions: {
     platform: "instagram",
-    values: new Set(["stream", "story", "explore", "explore_home", "reels", "profile_feed", "profile_reels"]),
+    // Meta removed Instagram Explore placements from the Marketing API.
+    values: new Set(["stream", "story", "reels", "profile_feed", "profile_reels"]),
   },
   messenger_positions: {
     platform: "messenger",
@@ -592,9 +593,21 @@ Deno.serve(async (req) => {
         try {
           result = await metaPost(`/${body.adSetId}`, token, params);
         } catch (error) {
-          if (params.targeting && getMetaErrorSubcode(error) === 2446395) {
+          const subcode = getMetaErrorSubcode(error);
+          if (params.targeting && subcode === 2446395) {
             const broadened = broadenInvalidAudience(JSON.parse(params.targeting), warnings);
             params.targeting = JSON.stringify(broadened);
+            result = await metaPost(`/${body.adSetId}`, token, params);
+          } else if (params.targeting && subcode === 2490589) {
+            const targeting = JSON.parse(params.targeting);
+            if (Array.isArray(targeting.instagram_positions)) {
+              targeting.instagram_positions = targeting.instagram_positions.filter(
+                (placement: unknown) => placement !== "explore" && placement !== "explore_home",
+              );
+              if (targeting.instagram_positions.length === 0) delete targeting.instagram_positions;
+            }
+            warnings.push("Meta tarafından kaldırılan Instagram Keşfet yerleşimi çıkarıldı.");
+            params.targeting = JSON.stringify(targeting);
             result = await metaPost(`/${body.adSetId}`, token, params);
           } else {
             throw error;
