@@ -306,10 +306,23 @@ export default function AdsManager() {
 
   const invoke = async (body: object) => {
     const { data, error } = await supabase.functions.invoke("meta-ads-manager", { body });
-    if (error) throw error;
+    if (error) {
+      // Surface the real server message instead of the generic "non-2xx" text
+      let detail = error.message;
+      try {
+        const ctx: any = (error as any).context;
+        if (ctx?.text) {
+          const txt = await ctx.text();
+          const parsed = JSON.parse(txt);
+          if (parsed?.error) detail = parsed.error;
+        }
+      } catch { /* keep generic message */ }
+      throw new Error(detail);
+    }
     if (data && (data as any).error) throw new Error((data as any).error);
     return data;
   };
+
 
   const loadCampaigns = async () => {
     setLoading(true);
