@@ -691,6 +691,7 @@ export default function AdsManager() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead className="w-8" />
                             <TableHead>Kampanya</TableHead>
                             <TableHead>Hedef</TableHead>
                             <TableHead>Durum</TableHead>
@@ -702,7 +703,7 @@ export default function AdsManager() {
                         <TableBody>
                           {filteredCampaigns.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                                 Kampanya bulunamadı.
                               </TableCell>
                             </TableRow>
@@ -711,8 +712,15 @@ export default function AdsManager() {
                               const meta = statusMeta[c.effective_status || c.status] || statusMeta.PAUSED;
                               const StatusIcon = meta.icon;
                               const insight = insightMap.get(c.id);
+                              const isOpen = !!expanded[c.id];
                               return (
+                                <>
                                 <TableRow key={c.id}>
+                                  <TableCell className="pr-0">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleExpand(c.id)} aria-label="Reklam setlerini göster">
+                                      <ChevronRight className={`w-4 h-4 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                                    </Button>
+                                  </TableCell>
                                   <TableCell>
                                     <div className="font-medium text-sm">{c.name}</div>
                                     <div className="text-xs text-slate-500">ID: {c.id}</div>
@@ -734,19 +742,108 @@ export default function AdsManager() {
                                     {insight ? `${parseFloat(insight.spend).toLocaleString("tr-TR", { maximumFractionDigits: 2 })} ₺` : "—"}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => toggleCampaign(c)}
-                                      disabled={busyId === c.id}
-                                    >
-                                      {busyId === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <>
-                                        {c.effective_status === "ACTIVE" ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-                                        {c.effective_status === "ACTIVE" ? "Duraklat" : "Aktif Et"}
-                                      </>}
-                                    </Button>
+                                    <div className="flex items-center justify-end gap-2">
+                                      <Button variant="outline" size="sm" onClick={() => openCampaignEdit(c)}>
+                                        <Pencil className="w-4 h-4 mr-1" /> Düzenle
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => toggleCampaign(c)}
+                                        disabled={busyId === c.id}
+                                      >
+                                        {busyId === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <>
+                                          {c.effective_status === "ACTIVE" ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+                                          {c.effective_status === "ACTIVE" ? "Duraklat" : "Aktif Et"}
+                                        </>}
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600" onClick={() => archiveEntity(c.id, loadCampaigns)} aria-label="Kampanyayı arşivle">
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
                                   </TableCell>
                                 </TableRow>
+
+                                {isOpen && (
+                                  <TableRow key={`${c.id}-sets`} className="bg-slate-50/60 hover:bg-slate-50/60">
+                                    <TableCell colSpan={7} className="py-3">
+                                      {adSetsLoading[c.id] ? (
+                                        <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
+                                      ) : (adSets[c.id] || []).length === 0 ? (
+                                        <div className="text-sm text-slate-500 py-2 pl-2">Bu kampanyada reklam seti yok.</div>
+                                      ) : (
+                                        <div className="space-y-2">
+                                          {(adSets[c.id] || []).map((s) => {
+                                            const sMeta = statusMeta[s.effective_status || s.status] || statusMeta.PAUSED;
+                                            const setOpen = !!expandedAdSet[s.id];
+                                            return (
+                                              <div key={s.id} className="rounded-lg border bg-white">
+                                                <div className="flex flex-wrap items-center gap-3 px-3 py-2">
+                                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleExpandAdSet(s.id)} aria-label="Reklamları göster">
+                                                    <ChevronRight className={`w-4 h-4 transition-transform ${setOpen ? "rotate-90" : ""}`} />
+                                                  </Button>
+                                                  <div className="min-w-[180px] flex-1">
+                                                    <div className="text-sm font-medium">{s.name}</div>
+                                                    <div className="text-xs text-slate-500">
+                                                      Yaş {s.targeting?.age_min ?? "?"}-{s.targeting?.age_max ?? "?"} · {s.optimization_goal || "—"}
+                                                    </div>
+                                                  </div>
+                                                  <Badge variant="outline" className={`${sMeta.className} text-xs`}>{sMeta.label}</Badge>
+                                                  <div className="text-sm w-28 text-right">
+                                                    {s.daily_budget ? `${(parseInt(s.daily_budget, 10) / 100).toLocaleString("tr-TR")} ₺/gün` : s.lifetime_budget ? `${(parseInt(s.lifetime_budget, 10) / 100).toLocaleString("tr-TR")} ₺ toplam` : "—"}
+                                                  </div>
+                                                  <div className="flex items-center gap-2">
+                                                    <Button variant="outline" size="sm" onClick={() => openAdSetEdit(s, c.id)}>
+                                                      <Pencil className="w-4 h-4 mr-1" /> Düzenle
+                                                    </Button>
+                                                    <Button variant="outline" size="sm" disabled={busyId === s.id} onClick={() => toggleEntity(s.id, s.effective_status, "adset", c.id)}>
+                                                      {busyId === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : s.effective_status === "ACTIVE" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                    </Button>
+                                                  </div>
+                                                </div>
+
+                                                {setOpen && (
+                                                  <div className="border-t bg-slate-50/70 px-3 py-2 space-y-2">
+                                                    {adsLoading[s.id] ? (
+                                                      <div className="flex justify-center py-3"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
+                                                    ) : (ads[s.id] || []).length === 0 ? (
+                                                      <div className="text-sm text-slate-500">Bu sette reklam yok.</div>
+                                                    ) : (
+                                                      (ads[s.id] || []).map((a) => {
+                                                        const aMeta = statusMeta[a.effective_status || a.status] || statusMeta.PAUSED;
+                                                        return (
+                                                          <div key={a.id} className="flex flex-wrap items-center gap-3 rounded-lg border bg-white px-3 py-2">
+                                                            {a.creative?.thumbnail_url && (
+                                                              <img src={a.creative.thumbnail_url} alt={a.name} className="w-10 h-10 rounded object-cover" loading="lazy" />
+                                                            )}
+                                                            <div className="min-w-[180px] flex-1">
+                                                              <div className="text-sm font-medium">{a.name}</div>
+                                                              <div className="text-xs text-slate-500 line-clamp-1">{a.creative?.body || a.creative?.title || "—"}</div>
+                                                            </div>
+                                                            <Badge variant="outline" className={`${aMeta.className} text-xs`}>{aMeta.label}</Badge>
+                                                            <div className="flex items-center gap-2">
+                                                              <Button variant="outline" size="sm" onClick={() => openAdEdit(a, s.id)}>
+                                                                <Pencil className="w-4 h-4 mr-1" /> Metni Düzenle
+                                                              </Button>
+                                                              <Button variant="outline" size="sm" disabled={busyId === a.id} onClick={() => toggleEntity(a.id, a.effective_status, "ad", s.id)}>
+                                                                {busyId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : a.effective_status === "ACTIVE" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                                              </Button>
+                                                            </div>
+                                                          </div>
+                                                        );
+                                                      })
+                                                    )}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                                </>
                               );
                             })
                           )}
