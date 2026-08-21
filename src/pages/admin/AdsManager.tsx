@@ -145,6 +145,119 @@ const objectiveLabels: Record<string, string> = {
   VIDEO_VIEWS: "Video Görüntüleme",
 };
 
+const platformLabels: Record<string, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  audience_network: "Audience Network",
+  messenger: "Messenger",
+  threads: "Threads",
+};
+
+const deviceLabels: Record<string, string> = {
+  mobile: "Mobil",
+  desktop: "Masaüstü",
+};
+
+function TargetingSummary({ targeting, names }: { targeting: any; names: Record<string, string> }) {
+  if (!targeting) return <div className="text-sm text-slate-500">Hedefleme verisi yok.</div>;
+
+  const label = (item: any) => item?.name || names[String(item?.id)] || `#${item?.id}`;
+
+  const geo = targeting.geo_locations || {};
+  const excludedGeo = targeting.excluded_geo_locations || {};
+  const geoParts: string[] = [];
+  if (geo.countries?.length) geoParts.push(`Ülkeler: ${geo.countries.join(", ")}`);
+  if (geo.regions?.length) geoParts.push(`Bölgeler: ${geo.regions.map((r: any) => r.name || r.key).join(", ")}`);
+  if (geo.cities?.length) geoParts.push(`Şehirler: ${geo.cities.map((c: any) => `${c.name || c.key}${c.radius ? ` (+${c.radius}${c.distance_unit || "km"})` : ""}`).join(", ")}`);
+  if (geo.zips?.length) geoParts.push(`Posta kodları: ${geo.zips.map((z: any) => z.name || z.key).join(", ")}`);
+  if (geo.location_types?.length) geoParts.push(`Konum tipi: ${geo.location_types.join(", ")}`);
+
+  const flex: any[] = Array.isArray(targeting.flexible_spec) ? targeting.flexible_spec : [];
+  const rootGroups = [
+    ["interests", "İlgi alanları"],
+    ["behaviors", "Davranışlar"],
+    ["work_positions", "Meslekler"],
+    ["industries", "Sektörler"],
+    ["life_events", "Yaşam olayları"],
+    ["education_statuses", "Eğitim durumu"],
+    ["family_statuses", "Aile durumu"],
+    ["relationship_statuses", "İlişki durumu"],
+  ] as const;
+
+  const groupLines = (obj: any) =>
+    rootGroups
+      .map(([key, title]) => {
+        const arr = obj?.[key];
+        if (!Array.isArray(arr) || arr.length === 0) return null;
+        return `${title}: ${arr.map((i: any) => (typeof i === "object" ? label(i) : String(i))).join(", ")}`;
+      })
+      .filter(Boolean) as string[];
+
+  const rows: { title: string; value: string }[] = [
+    { title: "Yaş", value: `${targeting.age_min ?? "?"} - ${targeting.age_max ?? "?"}` },
+    {
+      title: "Cinsiyet",
+      value: !targeting.genders || targeting.genders.length === 0
+        ? "Tümü"
+        : targeting.genders.includes(1) && !targeting.genders.includes(2) ? "Erkek" : "Kadın",
+    },
+    { title: "Konum", value: geoParts.length ? geoParts.join(" · ") : "—" },
+  ];
+
+  if (Object.keys(excludedGeo).length) {
+    rows.push({ title: "Hariç tutulan konum", value: JSON.stringify(excludedGeo).slice(0, 300) });
+  }
+  if (targeting.locales?.length) rows.push({ title: "Diller (locale)", value: targeting.locales.join(", ") });
+  if (targeting.publisher_platforms?.length) {
+    rows.push({ title: "Platformlar", value: targeting.publisher_platforms.map((p: string) => platformLabels[p] || p).join(", ") });
+  }
+  if (targeting.facebook_positions?.length) rows.push({ title: "Facebook yerleşimleri", value: targeting.facebook_positions.join(", ") });
+  if (targeting.instagram_positions?.length) rows.push({ title: "Instagram yerleşimleri", value: targeting.instagram_positions.join(", ") });
+  if (targeting.messenger_positions?.length) rows.push({ title: "Messenger yerleşimleri", value: targeting.messenger_positions.join(", ") });
+  if (targeting.audience_network_positions?.length) rows.push({ title: "Audience Network", value: targeting.audience_network_positions.join(", ") });
+  if (targeting.device_platforms?.length) {
+    rows.push({ title: "Cihazlar", value: targeting.device_platforms.map((d: string) => deviceLabels[d] || d).join(", ") });
+  }
+  if (targeting.user_os?.length) rows.push({ title: "İşletim sistemi", value: targeting.user_os.join(", ") });
+  if (targeting.custom_audiences?.length) {
+    rows.push({ title: "Özel hedef kitleler", value: targeting.custom_audiences.map((a: any) => a.name || a.id).join(", ") });
+  }
+  if (targeting.excluded_custom_audiences?.length) {
+    rows.push({ title: "Hariç tutulan kitleler", value: targeting.excluded_custom_audiences.map((a: any) => a.name || a.id).join(", ") });
+  }
+
+  const rootDetail = groupLines(targeting);
+  if (rootDetail.length) rows.push({ title: "Detaylı hedefleme", value: rootDetail.join(" · ") });
+
+  flex.forEach((spec, idx) => {
+    const lines = groupLines(spec);
+    if (lines.length) rows.push({ title: `Daraltma grubu ${idx + 1}`, value: lines.join(" · ") });
+  });
+
+  const exclusions = targeting.exclusions;
+  if (exclusions) {
+    const lines = groupLines(exclusions);
+    if (lines.length) rows.push({ title: "Hariç tutulanlar", value: lines.join(" · ") });
+  }
+
+  if (targeting.targeting_automation) {
+    const adv = targeting.targeting_automation.advantage_audience;
+    rows.push({ title: "Advantage+ kitle", value: adv === 1 ? "Açık" : "Kapalı" });
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 divide-y">
+      {rows.map((r) => (
+        <div key={r.title} className="grid grid-cols-[150px_1fr] gap-3 px-3 py-2 text-sm">
+          <span className="text-slate-500">{r.title}</span>
+          <span className="text-slate-800 break-words">{r.value || "—"}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
 export default function AdsManager() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [insights, setInsights] = useState<Insight[]>([]);
