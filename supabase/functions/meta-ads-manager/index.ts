@@ -8,34 +8,59 @@ const AD_ACCOUNT_ID = "939321929194033";
 const GRAPH_API_VERSION = "v21.0";
 const BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
 
-const ActionSchema = z.union([
-  z.literal("list"),
-  z.literal("toggleStatus"),
-  z.literal("updateBudget"),
-  z.literal("createCampaign"),
-  z.literal("aiSuggestions"),
-  z.literal("targetingSearch"),
-  z.literal("insights"),
+const ActionSchema = z.enum([
+  "list",
+  "toggleStatus",
+  "updateBudget",
+  "createCampaign",
+  "aiSuggestions",
+  "targetingSearch",
+  "insights",
+  // editing
+  "listAdSets",
+  "listAds",
+  "updateCampaign",
+  "updateAdSet",
+  "updateAd",
+  "getAdCreative",
+  "updateAdCreative",
+  "deleteEntity",
 ]);
 
 const BodySchema = z.object({
   action: ActionSchema,
   campaignId: z.string().optional(),
   adSetId: z.string().optional(),
-  status: z.enum(["ACTIVE", "PAUSED"]).optional(),
+  adId: z.string().optional(),
+  entityId: z.string().optional(),
+  status: z.enum(["ACTIVE", "PAUSED", "ARCHIVED"]).optional(),
   budget: z.number().positive().optional(),
+  lifetimeBudget: z.number().positive().optional(),
+  spendCap: z.number().positive().optional(),
+  bidAmount: z.number().positive().optional(),
   name: z.string().min(1).optional(),
   objective: z.string().min(1).optional(),
   specialAdCategories: z.array(z.string()).default([]),
   targeting: z.record(z.any()).optional(),
-  creative: z.record(z.any()).optional(),
+  ageMin: z.number().int().min(13).max(65).optional(),
+  ageMax: z.number().int().min(13).max(65).optional(),
+  genders: z.array(z.number().int()).optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  creative: z.object({
+    message: z.string().optional(),
+    headline: z.string().optional(),
+    description: z.string().optional(),
+    link: z.string().optional(),
+    cta: z.string().optional(),
+  }).optional(),
   suggestions: z.object({
     specialty: z.string().min(1),
     goal: z.string().min(1),
     audienceNotes: z.string().optional(),
     tone: z.string().optional(),
   }).optional(),
-  q: z.string().optional(), // targeting search query
+  q: z.string().optional(),
   fields: z.array(z.string()).optional(),
   since: z.string().optional(),
   until: z.string().optional(),
@@ -69,6 +94,23 @@ async function metaFetch(path: string, token: string, options: RequestInit = {})
   }
 }
 
+// POST with form-urlencoded body (required for complex params like targeting JSON)
+async function metaPost(path: string, token: string, params: Record<string, string>) {
+  const body = new URLSearchParams({ ...params, access_token: token });
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    body: body.toString(),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`Meta API ${res.status}: ${text}`);
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -93,7 +135,6 @@ Deno.serve(async (req) => {
   try {
     switch (body.action) {
       case "list": {
-        // campaigns + adsets + ads compact list
         const fields = [
           "id",
           "name",
@@ -104,6 +145,7 @@ Deno.serve(async (req) => {
           "daily_budget",
           "lifetime_budget",
           "spend_cap",
+          "bid_strategy",
           "created_time",
           "start_time",
           "stop_time",
@@ -115,40 +157,190 @@ Deno.serve(async (req) => {
         return metaResponse(campaigns);
       }
 
+      case "listAdSets": {
+        if (!body.campaignId) return metaError(400, "campaignId required");
+        const fields = [
+          "id",
+          "name",
+          "status",
+          "effective_status",
+          "daily_budget",
+          "lifetime_budget",
+          "bid_amount",
+          "billing_event",
+          "optimization_goal",
+          "start_time",
+          "end_time",
+          "targeting",
+          "campaign_id",
+        ].join(",");
+        const adsets = await metaFetch(
+          `/${body.campaignId}/adsets?fields=${fields}&limit=100`,
+          token,
+        );
+        return metaResponse(adsets);
+      }
+
+      case "listAds": {
+        if (!body.adSetId) return metaError(400, "adSetId required");
+        const fields = [
+          "id",
+          "name",
+          "status",
+          "effective_status",
+          "adset_id",
+          "creative{id,name,title,body,object_story_spec,thumbnail_url,image_url}",
+        ].join(",");
+        const ads = await metaFetch(
+          `/${body.adSetId}/ads?fields=${fields}&limit=100`,
+          token,
+        );
+        return metaResponse(ads);
+      }
+
       case "insights": {
         const level = body.level || "campaign";
-        const datePreset = "last_30d";
-        const fields = (body.fields || ["spend", "impressions", "reach", "clicks", "cpc", "ctr", "cpm", "actions", "cost_per_action_type"]).join(",");
-        const sinceParam = body.since ? `&since=${body.since}` : "";
-        const untilParam = body.until ? `&until=${body.until}` : "";
+        const fields = (body.fields || ["campaign_id", "campaign_name", "adset_id", "adset_name", "ad_id", "ad_name", "spend", "impressions", "reach", "clicks", "cpc", "ctr", "cpm", "actions", "cost_per_action_type"]).join(",");
+        const range = body.since && body.until
+          ? `&time_range=${encodeURIComponent(JSON.stringify({ since: body.since, until: body.until }))}`
+          : `&date_preset=last_30d`;
         const insights = await metaFetch(
-          `/act_${AD_ACCOUNT_ID}/insights?level=${level}&fields=${fields}&date_preset=${datePreset}&limit=100${sinceParam}${untilParam}`,
+          `/act_${AD_ACCOUNT_ID}/insights?level=${level}&fields=${fields}&limit=200${range}`,
           token,
         );
         return metaResponse(insights);
       }
 
       case "toggleStatus": {
-        if (!body.campaignId) return metaError(400, "campaignId required");
+        const id = body.campaignId || body.adSetId || body.adId || body.entityId;
+        if (!id) return metaError(400, "id required");
         const status = body.status || "PAUSED";
-        const result = await metaFetch(
-          `/${body.campaignId}?status=${status}`,
-          token,
-          { method: "POST" },
-        );
+        const result = await metaPost(`/${id}`, token, { status });
         return metaResponse({ success: true, result });
       }
 
       case "updateBudget": {
+        const id = body.adSetId || body.campaignId;
+        if (!id) return metaError(400, "adSetId or campaignId required");
+        if (!body.budget && !body.lifetimeBudget) return metaError(400, "budget required");
+        const params: Record<string, string> = {};
+        if (body.budget) params.daily_budget = String(Math.round(body.budget * 100));
+        if (body.lifetimeBudget) params.lifetime_budget = String(Math.round(body.lifetimeBudget * 100));
+        const result = await metaPost(`/${id}`, token, params);
+        return metaResponse({ success: true, result });
+      }
+
+      case "updateCampaign": {
+        if (!body.campaignId) return metaError(400, "campaignId required");
+        const params: Record<string, string> = {};
+        if (body.name) params.name = body.name;
+        if (body.status) params.status = body.status;
+        if (body.budget) params.daily_budget = String(Math.round(body.budget * 100));
+        if (body.lifetimeBudget) params.lifetime_budget = String(Math.round(body.lifetimeBudget * 100));
+        if (body.spendCap) params.spend_cap = String(Math.round(body.spendCap * 100));
+        if (Object.keys(params).length === 0) return metaError(400, "Güncellenecek alan yok");
+        const result = await metaPost(`/${body.campaignId}`, token, params);
+        return metaResponse({ success: true, result });
+      }
+
+      case "updateAdSet": {
         if (!body.adSetId) return metaError(400, "adSetId required");
-        if (!body.budget) return metaError(400, "budget required");
-        // budget in cents
-        const dailyBudget = Math.round(body.budget * 100);
+        const params: Record<string, string> = {};
+        if (body.name) params.name = body.name;
+        if (body.status) params.status = body.status;
+        if (body.budget) params.daily_budget = String(Math.round(body.budget * 100));
+        if (body.lifetimeBudget) params.lifetime_budget = String(Math.round(body.lifetimeBudget * 100));
+        if (body.bidAmount) params.bid_amount = String(Math.round(body.bidAmount * 100));
+        if (body.startTime) params.start_time = body.startTime;
+        if (body.endTime) params.end_time = body.endTime;
+
+        if (body.targeting) {
+          params.targeting = JSON.stringify(body.targeting);
+        } else if (body.ageMin || body.ageMax || body.genders) {
+          // merge into existing targeting so we don't wipe geo/interests
+          const current = await metaFetch(`/${body.adSetId}?fields=targeting`, token);
+          const targeting = { ...(current?.targeting || {}) };
+          if (body.ageMin) targeting.age_min = body.ageMin;
+          if (body.ageMax) targeting.age_max = body.ageMax;
+          if (body.genders) {
+            if (body.genders.length === 0) delete targeting.genders;
+            else targeting.genders = body.genders;
+          }
+          params.targeting = JSON.stringify(targeting);
+        }
+
+        if (Object.keys(params).length === 0) return metaError(400, "Güncellenecek alan yok");
+        const result = await metaPost(`/${body.adSetId}`, token, params);
+        return metaResponse({ success: true, result });
+      }
+
+      case "updateAd": {
+        if (!body.adId) return metaError(400, "adId required");
+        const params: Record<string, string> = {};
+        if (body.name) params.name = body.name;
+        if (body.status) params.status = body.status;
+        if (Object.keys(params).length === 0) return metaError(400, "Güncellenecek alan yok");
+        const result = await metaPost(`/${body.adId}`, token, params);
+        return metaResponse({ success: true, result });
+      }
+
+      case "getAdCreative": {
+        if (!body.adId) return metaError(400, "adId required");
         const result = await metaFetch(
-          `/${body.adSetId}?daily_budget=${dailyBudget}`,
+          `/${body.adId}?fields=id,name,status,creative{id,name,title,body,object_story_spec,asset_feed_spec,thumbnail_url}`,
           token,
-          { method: "POST" },
         );
+        return metaResponse(result);
+      }
+
+      case "updateAdCreative": {
+        if (!body.adId) return metaError(400, "adId required");
+        if (!body.creative) return metaError(400, "creative required");
+
+        // Meta creatives are immutable: read current creative, clone it with new
+        // texts, then point the ad to the new creative.
+        const adInfo = await metaFetch(
+          `/${body.adId}?fields=creative{id,name,object_story_spec,degrees_of_freedom_spec}`,
+          token,
+        );
+        const spec = adInfo?.creative?.object_story_spec;
+        if (!spec) {
+          return metaError(
+            400,
+            "Bu reklamın metni panelden düzenlenemiyor (dinamik/katalog reklam öğesi). Ads Manager kullanın.",
+          );
+        }
+
+        const newSpec: any = JSON.parse(JSON.stringify(spec));
+        const c = body.creative;
+        const applyToData = (data: any) => {
+          if (!data) return;
+          if (c.message !== undefined) data.message = c.message;
+          if (c.headline !== undefined) data.name = c.headline;
+          if (c.description !== undefined) data.description = c.description;
+          if (c.link !== undefined && data.link !== undefined) data.link = c.link;
+          if (c.cta && data.call_to_action?.type) data.call_to_action.type = c.cta;
+        };
+        applyToData(newSpec.link_data);
+        applyToData(newSpec.video_data);
+        if (newSpec.photo_data && c.message !== undefined) newSpec.photo_data.caption = c.message;
+
+        const created = await metaPost(`/act_${AD_ACCOUNT_ID}/adcreatives`, token, {
+          name: `${adInfo?.creative?.name || "Creative"} (panel ${new Date().toISOString().slice(0, 16)})`,
+          object_story_spec: JSON.stringify(newSpec),
+        });
+
+        const result = await metaPost(`/${body.adId}`, token, {
+          creative: JSON.stringify({ creative_id: created.id }),
+        });
+        return metaResponse({ success: true, creativeId: created.id, result });
+      }
+
+      case "deleteEntity": {
+        const id = body.entityId || body.adId || body.adSetId || body.campaignId;
+        if (!id) return metaError(400, "id required");
+        // soft delete: archive keeps history/reporting intact
+        const result = await metaPost(`/${id}`, token, { status: "ARCHIVED" });
         return metaResponse({ success: true, result });
       }
 
@@ -156,20 +348,13 @@ Deno.serve(async (req) => {
         if (!body.name || !body.objective) {
           return metaError(400, "name and objective required");
         }
-        const params = new URLSearchParams();
-        params.append("name", body.name);
-        params.append("objective", body.objective);
-        params.append("status", "PAUSED");
-        params.append("special_ad_categories", JSON.stringify(body.specialAdCategories));
-        params.append("access_token", token);
-        const res = await fetch(`${BASE_URL}/act_${AD_ACCOUNT_ID}/campaigns`, {
-          method: "POST",
-          body: params.toString(),
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        const result = await metaPost(`/act_${AD_ACCOUNT_ID}/campaigns`, token, {
+          name: body.name,
+          objective: body.objective,
+          status: "PAUSED",
+          special_ad_categories: JSON.stringify(body.specialAdCategories),
         });
-        const text = await res.text();
-        if (!res.ok) throw new Error(`Meta API ${res.status}: ${text}`);
-        return metaResponse({ success: true, result: JSON.parse(text) });
+        return metaResponse({ success: true, result });
       }
 
       case "targetingSearch": {
@@ -203,7 +388,6 @@ Deno.serve(async (req) => {
         try {
           json = JSON.parse(text);
         } catch {
-          // fallback: extract JSON from code block if any
           const match = text.match(/\{[\s\S]*\}/);
           json = match ? JSON.parse(match[0]) : { raw: text };
         }
