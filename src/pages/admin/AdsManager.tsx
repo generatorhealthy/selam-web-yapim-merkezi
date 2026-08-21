@@ -959,8 +959,192 @@ export default function AdsManager() {
 
           <div className="text-xs text-slate-500 flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
-            Bütçe güncelleme ve reklam seti detayları için Ads Manager kullanılabilir; bu panel temel yönetim ve AI önerileri sunar.
+            Kampanya, reklam seti ve reklam metinlerini buradan düzenleyebilirsiniz. Değişiklikler doğrudan Meta hesabına yazılır.
           </div>
+        </div>
+
+        {/* Kampanya düzenle */}
+        <Dialog open={!!editCampaign} onOpenChange={(o) => !o && setEditCampaign(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Kampanyayı Düzenle</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label>Kampanya Adı</Label>
+                <Input value={campaignForm.name} onChange={(e) => setCampaignForm({ ...campaignForm, name: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Durum</Label>
+                <Select value={campaignForm.status} onValueChange={(v) => setCampaignForm({ ...campaignForm, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">Aktif</SelectItem>
+                    <SelectItem value="PAUSED">Duraklatıldı</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Günlük Bütçe (₺)</Label>
+                  <Input type="number" min="1" value={campaignForm.dailyBudget} onChange={(e) => setCampaignForm({ ...campaignForm, dailyBudget: e.target.value })} placeholder="örn: 350" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Toplam Bütçe (₺)</Label>
+                  <Input type="number" min="1" value={campaignForm.lifetimeBudget} onChange={(e) => setCampaignForm({ ...campaignForm, lifetimeBudget: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Harcama Limiti (₺)</Label>
+                <Input type="number" min="1" value={campaignForm.spendCap} onChange={(e) => setCampaignForm({ ...campaignForm, spendCap: e.target.value })} />
+              </div>
+              <p className="text-xs text-slate-500">
+                Bütçe kampanya seviyesinde tanımlı değilse (CBO kapalı), bütçeyi reklam setinden düzenlemelisiniz.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditCampaign(null)}>İptal</Button>
+              <Button onClick={saveCampaign} disabled={saving}>
+                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Kaydet
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reklam seti düzenle */}
+        <Dialog open={!!editAdSet} onOpenChange={(o) => !o && setEditAdSet(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Reklam Setini Düzenle</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label>Set Adı</Label>
+                <Input value={adSetForm.name} onChange={(e) => setAdSetForm({ ...adSetForm, name: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Durum</Label>
+                  <Select value={adSetForm.status} onValueChange={(v) => setAdSetForm({ ...adSetForm, status: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">Aktif</SelectItem>
+                      <SelectItem value="PAUSED">Duraklatıldı</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Cinsiyet</Label>
+                  <Select value={adSetForm.genders} onValueChange={(v) => setAdSetForm({ ...adSetForm, genders: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tümü</SelectItem>
+                      <SelectItem value="male">Erkek</SelectItem>
+                      <SelectItem value="female">Kadın</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Günlük Bütçe (₺)</Label>
+                  <Input type="number" min="1" value={adSetForm.dailyBudget} onChange={(e) => setAdSetForm({ ...adSetForm, dailyBudget: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Toplam Bütçe (₺)</Label>
+                  <Input type="number" min="1" value={adSetForm.lifetimeBudget} onChange={(e) => setAdSetForm({ ...adSetForm, lifetimeBudget: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Min Yaş</Label>
+                  <Input type="number" min="13" max="65" value={adSetForm.ageMin} onChange={(e) => setAdSetForm({ ...adSetForm, ageMin: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Maks Yaş</Label>
+                  <Input type="number" min="13" max="65" value={adSetForm.ageMax} onChange={(e) => setAdSetForm({ ...adSetForm, ageMax: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Başlangıç</Label>
+                  <Input type="datetime-local" value={adSetForm.startTime} onChange={(e) => setAdSetForm({ ...adSetForm, startTime: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bitiş</Label>
+                  <Input type="datetime-local" value={adSetForm.endTime} onChange={(e) => setAdSetForm({ ...adSetForm, endTime: e.target.value })} />
+                </div>
+              </div>
+              {editAdSet?.adSet.targeting?.geo_locations && (
+                <div className="text-xs text-slate-500">
+                  Konum hedeflemesi korunur: {JSON.stringify(editAdSet.adSet.targeting.geo_locations).slice(0, 160)}
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditAdSet(null)}>İptal</Button>
+              <Button onClick={saveAdSet} disabled={saving}>
+                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Kaydet
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reklam / metin düzenle */}
+        <Dialog open={!!editAd} onOpenChange={(o) => !o && setEditAd(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Reklamı Düzenle</DialogTitle>
+            </DialogHeader>
+            {adCreativeLoading ? (
+              <div className="py-10 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>
+            ) : (
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>Reklam Adı</Label>
+                  <Input value={adForm.name} onChange={(e) => setAdForm({ ...adForm, name: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Durum</Label>
+                  <Select value={adForm.status} onValueChange={(v) => setAdForm({ ...adForm, status: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">Aktif</SelectItem>
+                      <SelectItem value="PAUSED">Duraklatıldı</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Ana Metin</Label>
+                  <Textarea rows={5} value={adForm.message} onChange={(e) => setAdForm({ ...adForm, message: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Başlık</Label>
+                    <Input value={adForm.headline} onChange={(e) => setAdForm({ ...adForm, headline: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Açıklama</Label>
+                    <Input value={adForm.description} onChange={(e) => setAdForm({ ...adForm, description: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Hedef Bağlantı</Label>
+                  <Input value={adForm.link} onChange={(e) => setAdForm({ ...adForm, link: e.target.value })} placeholder="https://doktorumol.com.tr/kayit-ol" />
+                </div>
+                <p className="text-xs text-slate-500">
+                  Metin değişiklikleri Meta'da yeni bir reklam öğesi oluşturur ve reklama otomatik atanır; görsel/video aynı kalır.
+                </p>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditAd(null)}>İptal</Button>
+              <Button onClick={saveAd} disabled={saving || adCreativeLoading}>
+                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Kaydet
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         </div>
       </div>
     </>
