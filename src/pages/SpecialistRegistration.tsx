@@ -257,6 +257,7 @@ const SpecialistRegistration = () => {
             setCreatedUserEmail(email);
             void registerPartnerReferral(signInData.user.id, email);
             toast.success("Mevcut hesabınızla devam ediliyor.");
+            void trackMetaLead({ email, phone, external_id: signInData.user.id });
             setCurrentStep(2);
           }
           return;
