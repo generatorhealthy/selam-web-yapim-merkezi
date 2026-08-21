@@ -273,6 +273,216 @@ export default function AdsManager() {
     }
   };
 
+  // ---------- ad set / ad loading ----------
+  const loadAdSets = async (campaignId: string) => {
+    setAdSetsLoading((p) => ({ ...p, [campaignId]: true }));
+    try {
+      const data: any = await invoke({ action: "listAdSets", campaignId });
+      setAdSets((p) => ({ ...p, [campaignId]: data?.data || [] }));
+    } catch (err: any) {
+      toast.error("Reklam setleri alınamadı: " + err.message);
+    } finally {
+      setAdSetsLoading((p) => ({ ...p, [campaignId]: false }));
+    }
+  };
+
+  const toggleExpand = (campaignId: string) => {
+    const next = !expanded[campaignId];
+    setExpanded((p) => ({ ...p, [campaignId]: next }));
+    if (next && !adSets[campaignId]) loadAdSets(campaignId);
+  };
+
+  const loadAds = async (adSetId: string) => {
+    setAdsLoading((p) => ({ ...p, [adSetId]: true }));
+    try {
+      const data: any = await invoke({ action: "listAds", adSetId });
+      setAds((p) => ({ ...p, [adSetId]: data?.data || [] }));
+    } catch (err: any) {
+      toast.error("Reklamlar alınamadı: " + err.message);
+    } finally {
+      setAdsLoading((p) => ({ ...p, [adSetId]: false }));
+    }
+  };
+
+  const toggleExpandAdSet = (adSetId: string) => {
+    const next = !expandedAdSet[adSetId];
+    setExpandedAdSet((p) => ({ ...p, [adSetId]: next }));
+    if (next && !ads[adSetId]) loadAds(adSetId);
+  };
+
+  const toggleEntity = async (id: string, current: string, kind: "adset" | "ad", parentId: string) => {
+    const next = current === "ACTIVE" ? "PAUSED" : "ACTIVE";
+    setBusyId(id);
+    try {
+      await invoke({ action: "toggleStatus", entityId: id, status: next });
+      toast.success(next === "ACTIVE" ? "Aktif edildi" : "Duraklatıldı");
+      if (kind === "adset") {
+        setAdSets((p) => ({
+          ...p,
+          [parentId]: (p[parentId] || []).map((a) => (a.id === id ? { ...a, status: next, effective_status: next } : a)),
+        }));
+      } else {
+        setAds((p) => ({
+          ...p,
+          [parentId]: (p[parentId] || []).map((a) => (a.id === id ? { ...a, status: next, effective_status: next } : a)),
+        }));
+      }
+    } catch (err: any) {
+      toast.error("İşlem başarısız: " + err.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // ---------- editing ----------
+  const openCampaignEdit = (c: Campaign) => {
+    setEditCampaign(c);
+    setCampaignForm({
+      name: c.name,
+      status: c.effective_status === "ACTIVE" ? "ACTIVE" : "PAUSED",
+      dailyBudget: c.daily_budget ? String(parseInt(c.daily_budget, 10) / 100) : "",
+      lifetimeBudget: c.lifetime_budget ? String(parseInt(c.lifetime_budget, 10) / 100) : "",
+      spendCap: c.spend_cap ? String(parseInt(c.spend_cap, 10) / 100) : "",
+    });
+  };
+
+  const saveCampaign = async () => {
+    if (!editCampaign) return;
+    setSaving(true);
+    try {
+      await invoke({
+        action: "updateCampaign",
+        campaignId: editCampaign.id,
+        name: campaignForm.name || undefined,
+        status: campaignForm.status as "ACTIVE" | "PAUSED",
+        budget: campaignForm.dailyBudget ? Number(campaignForm.dailyBudget) : undefined,
+        lifetimeBudget: campaignForm.lifetimeBudget ? Number(campaignForm.lifetimeBudget) : undefined,
+        spendCap: campaignForm.spendCap ? Number(campaignForm.spendCap) : undefined,
+      });
+      toast.success("Kampanya güncellendi");
+      setEditCampaign(null);
+      loadCampaigns();
+    } catch (err: any) {
+      toast.error("Güncellenemedi: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openAdSetEdit = (adSet: AdSet, campaignId: string) => {
+    setEditAdSet({ adSet, campaignId });
+    const g = adSet.targeting?.genders;
+    setAdSetForm({
+      name: adSet.name,
+      status: adSet.effective_status === "ACTIVE" ? "ACTIVE" : "PAUSED",
+      dailyBudget: adSet.daily_budget ? String(parseInt(adSet.daily_budget, 10) / 100) : "",
+      lifetimeBudget: adSet.lifetime_budget ? String(parseInt(adSet.lifetime_budget, 10) / 100) : "",
+      ageMin: adSet.targeting?.age_min ? String(adSet.targeting.age_min) : "",
+      ageMax: adSet.targeting?.age_max ? String(adSet.targeting.age_max) : "",
+      genders: !g || g.length === 0 ? "all" : g.includes(1) && !g.includes(2) ? "male" : "female",
+      startTime: adSet.start_time ? adSet.start_time.slice(0, 16) : "",
+      endTime: adSet.end_time ? adSet.end_time.slice(0, 16) : "",
+    });
+  };
+
+  const saveAdSet = async () => {
+    if (!editAdSet) return;
+    setSaving(true);
+    try {
+      await invoke({
+        action: "updateAdSet",
+        adSetId: editAdSet.adSet.id,
+        name: adSetForm.name || undefined,
+        status: adSetForm.status as "ACTIVE" | "PAUSED",
+        budget: adSetForm.dailyBudget ? Number(adSetForm.dailyBudget) : undefined,
+        lifetimeBudget: adSetForm.lifetimeBudget ? Number(adSetForm.lifetimeBudget) : undefined,
+        ageMin: adSetForm.ageMin ? Number(adSetForm.ageMin) : undefined,
+        ageMax: adSetForm.ageMax ? Number(adSetForm.ageMax) : undefined,
+        genders: adSetForm.genders === "all" ? [] : adSetForm.genders === "male" ? [1] : [2],
+        startTime: adSetForm.startTime || undefined,
+        endTime: adSetForm.endTime || undefined,
+      });
+      toast.success("Reklam seti güncellendi");
+      const cid = editAdSet.campaignId;
+      setEditAdSet(null);
+      loadAdSets(cid);
+    } catch (err: any) {
+      toast.error("Güncellenemedi: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openAdEdit = async (ad: Ad, adSetId: string) => {
+    setEditAd({ ad, adSetId });
+    setAdForm({ name: ad.name, status: ad.effective_status === "ACTIVE" ? "ACTIVE" : "PAUSED", message: "", headline: "", description: "", link: "" });
+    setAdCreativeLoading(true);
+    try {
+      const data: any = await invoke({ action: "getAdCreative", adId: ad.id });
+      const spec = data?.creative?.object_story_spec;
+      const d = spec?.link_data || spec?.video_data || {};
+      setAdForm({
+        name: data?.name || ad.name,
+        status: (data?.status || ad.status) === "ACTIVE" ? "ACTIVE" : "PAUSED",
+        message: d.message || spec?.photo_data?.caption || data?.creative?.body || "",
+        headline: d.name || data?.creative?.title || "",
+        description: d.description || "",
+        link: d.link || d.call_to_action?.value?.link || "",
+      });
+    } catch (err: any) {
+      toast.error("Reklam öğesi alınamadı: " + err.message);
+    } finally {
+      setAdCreativeLoading(false);
+    }
+  };
+
+  const saveAd = async () => {
+    if (!editAd) return;
+    setSaving(true);
+    try {
+      await invoke({
+        action: "updateAd",
+        adId: editAd.ad.id,
+        name: adForm.name || undefined,
+        status: adForm.status as "ACTIVE" | "PAUSED",
+      });
+      if (adForm.message || adForm.headline || adForm.description) {
+        await invoke({
+          action: "updateAdCreative",
+          adId: editAd.ad.id,
+          creative: {
+            message: adForm.message || undefined,
+            headline: adForm.headline || undefined,
+            description: adForm.description || undefined,
+            link: adForm.link || undefined,
+          },
+        });
+      }
+      toast.success("Reklam güncellendi");
+      const sid = editAd.adSetId;
+      setEditAd(null);
+      loadAds(sid);
+    } catch (err: any) {
+      toast.error("Güncellenemedi: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const archiveEntity = async (id: string, refresh: () => void) => {
+    if (!confirm("Bu öğe arşivlenecek (silinmiş gibi durur, veriler korunur). Devam?")) return;
+    setBusyId(id);
+    try {
+      await invoke({ action: "deleteEntity", entityId: id });
+      toast.success("Arşivlendi");
+      refresh();
+    } catch (err: any) {
+      toast.error("Arşivlenemedi: " + err.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const totals = insights.reduce(
     (acc, i) => {
       acc.spend += parseFloat(i.spend || "0");
