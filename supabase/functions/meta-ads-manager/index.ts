@@ -404,7 +404,63 @@ async function sanitizeTargeting(
   return t;
 }
 
+const PROFESSION_KEYWORDS = [
+  "Psychology", "Clinical psychology", "Psychologist", "Psychotherapy", "Psychotherapist",
+  "Counseling psychology", "Mental health counselor", "Family therapy", "Couples therapy",
+  "Marriage and family therapist", "Cognitive behavioral therapy", "Child psychology",
+  "Psikolog", "Klinik psikoloji", "Psikoterapi", "Aile danışmanlığı", "Psikolojik danışmanlık",
+  "American Psychological Association", "Psychology Today", "Therapy",
+];
+
+const COMMERCIAL_KEYWORDS = [
+  "Digital marketing", "Online advertising", "Facebook for Business", "Instagram for Business",
+  "Google Ads", "Google My Business", "Social media marketing", "Lead generation",
+  "Small business owners", "Entrepreneurship", "Search engine optimization",
+  "Personal branding", "Content marketing", "Website", "Online booking",
+];
+
+type InterestCandidate = { id: string; name: string; audience_size?: number; path?: string[] };
+
+async function discoverInterestCandidates(
+  token: string,
+  keywords: string[],
+): Promise<InterestCandidate[]> {
+  const out = new Map<string, InterestCandidate>();
+  const batchSize = 5;
+  for (let i = 0; i < keywords.length; i += batchSize) {
+    const batch = keywords.slice(i, i + batchSize);
+    const results = await Promise.all(
+      batch.map(async (kw) => {
+        try {
+          const res = await metaFetch(
+            `/search?type=adinterest&limit=6&q=${encodeURIComponent(kw)}`,
+            token,
+          );
+          return (res?.data || []) as any[];
+        } catch {
+          return [] as any[];
+        }
+      }),
+    );
+    for (const list of results) {
+      for (const item of list) {
+        if (!item?.id || !item?.name) continue;
+        const id = String(item.id);
+        if (out.has(id)) continue;
+        out.set(id, {
+          id,
+          name: String(item.name),
+          audience_size: item.audience_size_upper_bound ?? item.audience_size,
+          path: Array.isArray(item.path) ? item.path : undefined,
+        });
+      }
+    }
+  }
+  return Array.from(out.values());
+}
+
 function parseJsonLoose(text: string): any {
+
 
   try {
     return JSON.parse(text);
