@@ -65,7 +65,7 @@ const BodySchema = z.object({
     tone: z.string().optional(),
   }).optional(),
   q: z.string().optional(),
-  instruction: z.string().max(2000).optional(),
+  instruction: z.string().max(30000).optional(),
   fields: z.array(z.string()).optional(),
 
   since: z.string().optional(),
@@ -548,7 +548,9 @@ Deno.serve(async (req) => {
           "Mevcut geo_locations ve custom_audiences'ı kullanıcı aksini istemedikçe koru. " +
           "Interest/behavior kullanırken gerçek Facebook hedefleme kategorileri ve gerçek id'ler kullan; id'den emin değilsen o kalemi ekleme ve warnings'e yaz. " +
           "Türkiye pazarına uygun, sağlık/psikoloji reklam politikalarına uyumlu (kişisel özellik ima etmeyen) öneriler ver. " +
-          "summary, changes.reason, warnings ve budgetAdvice Türkçe olmalı.";
+          "summary, changes.reason, warnings ve budgetAdvice Türkçe olmalı. " +
+          "KULLANICI TALEBİ en yüksek önceliktedir: talimat uzun ve detaylı olsa da tüm maddelerini eksiksiz uygula; " +
+          "uygulayamadığın maddeyi warnings'e gerekçesiyle yaz ve changes listesinde talimattaki her maddeye karşılık gelen değişikliği göster.";
 
         const prompt = [
           `Kampanya hedefi (objective): ${adset?.campaign?.objective || "bilinmiyor"}`,
