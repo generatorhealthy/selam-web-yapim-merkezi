@@ -307,7 +307,89 @@ function broadenInvalidAudience(
   }
 
   return t;
+
+// Meta removed the Instagram Explore placements from the Marketing API (subcode 2490589).
+function removeDeprecatedPlacements(
+  targeting: Record<string, any>,
+  warnings: string[],
+): Record<string, any> {
+  const t = JSON.parse(JSON.stringify(targeting ?? {}));
+  if (Array.isArray(t.instagram_positions)) {
+    t.instagram_positions = t.instagram_positions.filter(
+      (p: unknown) => p !== "explore" && p !== "explore_home",
+    );
+    if (t.instagram_positions.length === 0) delete t.instagram_positions;
+  }
+  warnings.push("Meta tarafından kaldırılan Instagram Keşfet yerleşimi çıkarıldı.");
+  return t;
 }
+
+// Subcode 1870247: some detailed-targeting interests were consolidated. Meta returns
+// the deprecated ids together with their alternatives inside error_user_msg — swap
+// them automatically (deduplicating) instead of failing the save.
+function replaceDeprecatedInterests(
+  targeting: Record<string, any>,
+  error: unknown,
+  warnings: string[],
+): Record<string, any> {
+  const message = error instanceof Error ? error.message : String(error);
+  const mapping = new Map<string, { id: string; name: string } | null>();
+  const re =
+    /"deprecated_interest_id"\s*:\s*"(\d+)"\s*,\s*"deprecated_interest_name"\s*:\s*"([^"]*)"\s*,\s*"alternative_interest_id"\s*:\s*"(\d+)"\s*,\s*"alternative_interest_name"\s*:\s*"([^"]*)"/g;
+  // The payload arrives escaped inside the error message; unescape once for matching.
+  const unescaped = message.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  for (const m of unescaped.matchAll(re)) {
+    mapping.set(m[1], { id: m[3], name: m[4] });
+    warnings.push(`"${m[2]}" ilgi alanı Meta tarafından kaldırıldı, "${m[4]}" ile değiştirildi.`);
+  }
+  // Ids named as deprecated without an alternative are simply dropped.
+  for (const m of unescaped.matchAll(/"deprecated_interest_id"\s*:\s*"(\d+)"/g)) {
+    if (!mapping.has(m[1])) {
+      mapping.set(m[1], null);
+      warnings.push(`Kullanımdan kaldırılan ${m[1]} id'li ilgi alanı hedeflemeden çıkarıldı.`);
+    }
+  }
+
+  const t = JSON.parse(JSON.stringify(targeting ?? {}));
+  const nodes: any[] = [t];
+  for (const key of ["flexible_spec", "exclusions"]) {
+    const val = t[key];
+    if (Array.isArray(val)) val.forEach((g) => g && nodes.push(g));
+    else if (val) nodes.push(val);
+  }
+
+  for (const node of nodes) {
+    for (const key of TARGET_LIST_KEYS) {
+      if (!Array.isArray(node[key])) continue;
+      const seen = new Set<string>();
+      const kept: any[] = [];
+      for (const item of node[key]) {
+        const id = item?.id ? String(item.id) : "";
+        let next = item;
+        if (mapping.has(id)) {
+          const alt = mapping.get(id);
+          if (!alt) continue;
+          next = { id: alt.id, name: alt.name };
+        }
+        const identity = String(next?.id ?? JSON.stringify(next));
+        if (seen.has(identity)) continue;
+        seen.add(identity);
+        kept.push(next);
+      }
+      if (kept.length > 0) node[key] = kept;
+      else delete node[key];
+    }
+  }
+
+  if (Array.isArray(t.flexible_spec)) {
+    t.flexible_spec = t.flexible_spec.filter((g: any) => g && Object.keys(g).length > 0);
+    if (t.flexible_spec.length === 0) delete t.flexible_spec;
+  }
+  if (t.exclusions && Object.keys(t.exclusions).length === 0) delete t.exclusions;
+
+  return t;
+}
+
 
 async function sanitizeTargeting(
   targeting: Record<string, any>,
