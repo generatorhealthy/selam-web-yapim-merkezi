@@ -1145,7 +1145,6 @@ export default function AdsManager() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        </div>
       </div>
     </>
   );
