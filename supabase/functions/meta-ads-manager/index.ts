@@ -505,6 +505,54 @@ const COMMERCIAL_KEYWORDS = [
 
 type InterestCandidate = { id: string; name: string; audience_size?: number; path?: string[] };
 
+// The user's brief often names concrete interests/professions. Pull those phrases out
+// so we can resolve them to real Meta interest ids and let the AI use them verbatim.
+const INSTRUCTION_STOPWORDS = new Set([
+  "ana", "hedef", "reklam", "reklamlar", "reklamları", "türkiye", "genelinde", "platformu",
+  "platforma", "kayıt", "olma", "için", "ile", "ve", "veya", "olan", "olarak", "gibi",
+  "yüksek", "ihtimali", "yeni", "amacıyla", "ücretli", "üyelik", "satın", "alma",
+  "kişiler", "kişi", "kullanıcı", "kullanıcılar", "kitle", "kitleyi", "sinyal", "sinyalleri",
+  "grup", "grubu", "bütçe", "günlük", "optimizasyon", "not", "önemli", "lütfen",
+]);
+
+function extractInstructionKeywords(instruction: string): string[] {
+  if (!instruction) return [];
+  const out = new Set<string>();
+
+  // Quoted phrases are the strongest signal.
+  for (const m of instruction.matchAll(/["“”'']([^"“”'']{3,60})["“”'']/g)) {
+    out.add(m[1].trim());
+  }
+
+  // Then multi-word capitalised phrases and standalone meaningful words.
+  const cleaned = instruction.replace(/[•\-–—*_#>]/g, " ");
+  for (const line of cleaned.split(/[\n.;:,()/]+/)) {
+    const words = line.trim().split(/\s+/).filter(Boolean);
+    let buffer: string[] = [];
+    const flush = () => {
+      if (buffer.length >= 1) {
+        const phrase = buffer.join(" ").trim();
+        if (phrase.length >= 4 && phrase.length <= 60) out.add(phrase);
+      }
+      buffer = [];
+    };
+    for (const raw of words) {
+      const word = raw.replace(/[^\p{L}\p{N}+&]/gu, "");
+      if (!word || word.length < 3 || INSTRUCTION_STOPWORDS.has(word.toLocaleLowerCase("tr"))) {
+        flush();
+        continue;
+      }
+      const isCapital = word[0] === word[0].toLocaleUpperCase("tr") && /\p{L}/u.test(word[0]);
+      if (isCapital) buffer.push(word);
+      else flush();
+    }
+    flush();
+  }
+
+  return Array.from(out).slice(0, 20);
+}
+
+
 async function discoverInterestCandidates(
   token: string,
   keywords: string[],
