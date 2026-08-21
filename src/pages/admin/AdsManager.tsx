@@ -598,7 +598,7 @@ export default function AdsManager() {
 
     setSaving(true);
     try {
-      await invoke({
+      const res: any = await invoke({
         action: "updateAdSet",
         adSetId: editAdSet.adSet.id,
         name: adSetForm.name || undefined,
@@ -615,7 +615,13 @@ export default function AdsManager() {
         startTime: adSetForm.startTime || undefined,
         endTime: adSetForm.endTime || undefined,
       });
-      toast.success("Reklam seti güncellendi");
+      const w: string[] = Array.isArray(res?.warnings) ? res.warnings : [];
+      if (w.length > 0) {
+        toast.success("Reklam seti güncellendi", { description: w.slice(0, 4).join(" • ") });
+      } else {
+        toast.success("Reklam seti güncellendi");
+      }
+
       const cid = editAdSet.campaignId;
       setEditAdSet(null);
       loadAdSets(cid);
