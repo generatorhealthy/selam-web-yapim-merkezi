@@ -32,10 +32,20 @@ const browserSafeAuthLock = async <R,>(name: string, acquireTimeout: number, fn:
   return currentLock;
 };
 
+const getSupabaseFetchTimeout = (input: RequestInfo | URL) => {
+  const url = typeof input === "string"
+    ? input
+    : input instanceof URL
+      ? input.href
+      : input.url;
+
+  return url.includes("/functions/v1/meta-ads-manager") ? 120_000 : 25_000;
+};
+
 const supabaseFetch: typeof fetch = async (input, init?: RequestInit) => {
   const requestInit = init ?? {};
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25_000);
+  const timeout = setTimeout(() => controller.abort(), getSupabaseFetchTimeout(input));
 
   if (requestInit.signal) {
     if (requestInit.signal.aborted) controller.abort();
