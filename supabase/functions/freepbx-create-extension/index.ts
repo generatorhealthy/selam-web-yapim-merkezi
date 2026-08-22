@@ -287,7 +287,7 @@ serve(async (req) => {
       const fmExt = (body.followmeExt ?? "").toString().trim();
       if (fmExt) {
         const queries = [
-          `query { fetchFollowMe(extensionId: "${fmExt}") { status message enabled followMeList strategy ringTime } }`,
+          `query { fetchFollowMe(extensionId: "${fmExt}") { status message enabled followMeList strategy ringTime externalCallerIdMode fixedCallerId } }`,
           `query { findmefollow(extensionId: "${fmExt}") { grplist grptime strategy } }`,
         ];
         for (const q of queries) {
