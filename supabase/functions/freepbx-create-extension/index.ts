@@ -160,7 +160,7 @@ async function enforceFollowMeRouting(
         extensionId: "${extension}"
         enabled: true
         followMeList: "${followMeList}"
-        strategy: ringallv2
+        strategy: hunt
         ringTime: 25
         externalCallerIdMode: default
       }) { status message }
@@ -169,6 +169,14 @@ async function enforceFollowMeRouting(
 
   if (result?.updateFollowMe?.status !== true) {
     throw new Error(`Follow-Me doğrulanamadı: ${result?.updateFollowMe?.message ?? "bilinmeyen hata"}`);
+  }
+
+  const reloadResult = await gql(
+    token,
+    `mutation { doreload(input: {}) { status message } }`,
+  );
+  if (reloadResult?.doreload?.status !== true) {
+    throw new Error(`FreePBX yeniden yüklenemedi: ${reloadResult?.doreload?.message ?? "bilinmeyen hata"}`);
   }
 }
 
