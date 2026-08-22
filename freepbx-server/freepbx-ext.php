@@ -337,9 +337,8 @@ $row = implode(',', [
   'virtual',
   '',                 // secret (virtual'da gerekmez)
   $fmEnabled,         // findmefollow_enabled
-  // Gelen çağrının kullandığı trunk meşgulse sıradaki trunk'a geç. Aynı cep
-  // telefonunu iki hattan eş zamanlı aratmak operatör tarafında çakışabiliyor.
-  'hunt',             // 80 meşgulse 81'e geç; 81'den gelen çağrıda 80 boş olur
+  // Mevcut çalışan uzman dahilileriyle aynı Follow-Me stratejisi.
+  'ringallv2',        // önce sanal dahili, ardından dış yönlendirme listesi
   $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
   'default',          // 80/81 trunk'ları kendi yetkili çıkış CID'lerini kullansın

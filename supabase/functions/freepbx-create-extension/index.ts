@@ -160,7 +160,7 @@ async function enforceFollowMeRouting(
         extensionId: "${extension}"
         enabled: true
         followMeList: "${followMeList}"
-        strategy: hunt
+        strategy: ringallv2
         ringTime: 25
         externalCallerIdMode: default
       }) { status message }
@@ -315,9 +315,8 @@ serve(async (req) => {
       );
     }
 
-    // Virtual extensions can appear correctly configured while failing during
-    // attended/blind transfers. Recreate a single target as a real PJSIP
-    // extension; Follow-Me then runs through FreePBX's standard extension path.
+    // Diagnostic repair option for a real PJSIP extension. Normal specialist
+    // extensions continue to use the established virtual + ringallv2 setup.
     if (action === "recreate_pjsip_followme") {
       const extension = String(body.extension ?? "").trim();
       const phone = String(body.phone ?? "").replace(/\D/g, "").replace(/^90/, "").replace(/^0/, "").slice(-10);
