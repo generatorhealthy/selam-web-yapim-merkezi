@@ -105,39 +105,6 @@ serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
 
-    // One-time repair path restricted to the known broken test extension.
-    if (body.action === "repair_1224_pjsip" && String(body.extension) === "1224") {
-      if (!BASE || !CLIENT_ID || !CLIENT_SECRET) throw new Error("FreePBX API yapılandırılmamış");
-      const tokenResponse = await fetch(`${BASE}/admin/api/api/token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ grant_type: "client_credentials", client_id: CLIENT_ID, client_secret: CLIENT_SECRET, scope: "gql" }),
-      });
-      const tokenJson = await tokenResponse.json();
-      if (!tokenResponse.ok || !tokenJson?.access_token) throw new Error("FreePBX token alınamadı");
-      const callGql = async (query: string) => {
-        const response = await fetch(`${BASE}/admin/api/api/gql`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenJson.access_token}` },
-          body: JSON.stringify({ query }),
-        });
-        const json = await response.json();
-        if (!response.ok || json?.errors) throw new Error(JSON.stringify(json?.errors ?? json));
-        return json.data;
-      };
-      try {
-        await callGql(`mutation { deleteExtension(input: { extensionId: "1224" }) { status message } }`);
-      } catch (error) {
-        console.warn("1224 eski dahili silme uyarısı:", error);
-      }
-      const added = await callGql(`mutation { addExtension(input: { extensionId: "1224" name: "fatih" tech: "pjsip" outboundCid: "" email: "" callerID: "fatih" umEnable: false vmEnable: false vmPassword: "1224" }) { status message } }`);
-      if (added?.addExtension?.status !== true) throw new Error(`1224 PJSIP oluşturulamadı: ${JSON.stringify(added)}`);
-      const routing = await setDirectRingStrategy("1224", "805316852275#-815316852275#");
-      return new Response(JSON.stringify({ ok: true, extension: "1224", tech: "pjsip", routing }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     // Toplu mod: tüm uzmanların dahililerini çift hat (80/81) yönlendirmesine geçirir.
     if (body.batch === true) {
       const supabaseAdmin = createClient(
