@@ -632,6 +632,9 @@ async function handleTool(uuid, call, ev) {
 
 async function doTransfer(uuid, call) {
   const ext = call.target.internal_number;
+  // Redirect the answered caller channel to a context that dials the virtual
+  // extension directly. The ai-transfer dialplan must not prepend *1: that is
+  // an in-call phone feature code and fails when used as a fresh Local channel.
   await ami.send({
     Action: "Redirect",
     Channel: call.channel,
