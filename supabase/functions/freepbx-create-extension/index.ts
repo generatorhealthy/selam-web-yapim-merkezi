@@ -160,7 +160,7 @@ async function enforceFollowMeRouting(
         extensionId: "${extension}"
         enabled: true
         followMeList: "${followMeList}"
-        strategy: ringall
+        strategy: hunt
         ringTime: 25
         externalCallerIdMode: default
       }) { status message }
@@ -380,7 +380,7 @@ serve(async (req) => {
     }
 
     // Bulk Follow-Me update: her uzmanın dahilisini, uzmanın cep telefonuna
-    // yönlendirecek şekilde yeniden kurar (0XXXXXXXXXX#).
+  // yönlendirecek şekilde yeniden kurar (80XXXXXXXXXX#-81XXXXXXXXXX#).
     // ÖNEMLİ: Dahililer "virtual" tech ile FreePBX sunucusundaki PHP yardımcısı
     // (fwconsole bulkimport --replace) üzerinden oluşturuluyor. GraphQL API bu
     // sanal dahilileri GÖRMEDİĞİ için updateFollowMe mutasyonu çalışmıyordu.
