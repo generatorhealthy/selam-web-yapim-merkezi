@@ -268,6 +268,20 @@ serve(async (req) => {
       throw new Error("FreePBX bağlantı bilgileri eksik (secrets).");
     }
 
+    if (action === "restart_asterisk") {
+      const token = await getToken();
+      const restart = await gql(
+        token,
+        `mutation { fwconsoleCommand(input: { command: restart }) { status message transaction_id } }`,
+      );
+      if (restart?.fwconsoleCommand?.status !== true) {
+        throw new Error(`Asterisk yeniden başlatılamadı: ${restart?.fwconsoleCommand?.message ?? "bilinmeyen hata"}`);
+      }
+      return new Response(JSON.stringify({ success: true, restart: restart.fwconsoleCommand }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Connection test: just fetch extensions
     if (action === "test") {
       const token = await getToken();
