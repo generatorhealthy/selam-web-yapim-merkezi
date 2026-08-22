@@ -377,8 +377,8 @@ $row = implode(',', [
   'ringall',          // devresiz sanal dahiliyi beklemeden yönlendirme listesini çaldır
   $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
-  'fixed',            // Operatörün kabul ettiği kurumsal CID'yi dış transferde zorla
-  '902167060611',     // Trunk'a tanımlı 0216 CID; yabancı/mobil CID reddini engeller
+  'default',          // CID'yi trunk'ın kendi yetkili kimliğine bırak (FCT 403 önlenir)
+  '',                 // fixedcid kullanılmıyor
   '',                 // voicemail_enable
   '',                 // voicemail_vmpwd
 ]) . "\n";
