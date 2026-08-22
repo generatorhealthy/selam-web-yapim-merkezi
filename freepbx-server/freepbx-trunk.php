@@ -134,7 +134,7 @@ if (!empty($prefer) && !empty($prefixes)) {
     }, $fctNames);
     $r = $db->query(
       "SELECT DISTINCT ort.route_id " .
-      "FROM outbound_route_trunk ort " .
+      "FROM outbound_route_trunks ort " .
       "JOIN trunks t ON t.trunkid = ort.trunk_id " .
       "WHERE t.name IN (" . implode(',', $quotedNames) . ")"
     );
@@ -146,7 +146,7 @@ if (!empty($prefer) && !empty($prefixes)) {
   foreach ($routeIds as $rid) {
     $ridQ = $db->real_escape_string($rid);
     $existing = [];
-    $r = $db->query("SELECT trunk_id FROM outbound_route_trunk WHERE route_id='$ridQ' ORDER BY seq ASC");
+    $r = $db->query("SELECT trunk_id FROM outbound_route_trunks WHERE route_id='$ridQ' ORDER BY seq ASC");
     while ($r && ($row = $r->fetch_assoc())) $existing[] = (string)$row['trunk_id'];
     if ($r) $r->free();
     if (empty($existing)) continue;
@@ -164,11 +164,11 @@ if (!empty($prefer) && !empty($prefixes)) {
     }
 
     if ($ordered !== $existing) {
-      $db->query("DELETE FROM outbound_route_trunk WHERE route_id='$ridQ'");
+      $db->query("DELETE FROM outbound_route_trunks WHERE route_id='$ridQ'");
       $seq = 0;
       foreach ($ordered as $tid) {
         $tidQ = $db->real_escape_string($tid);
-        $db->query("INSERT INTO outbound_route_trunk (route_id, trunk_id, seq) VALUES ('$ridQ','$tidQ',$seq)");
+        $db->query("INSERT INTO outbound_route_trunks (route_id, trunk_id, seq) VALUES ('$ridQ','$tidQ',$seq)");
         $seq++;
       }
     }
