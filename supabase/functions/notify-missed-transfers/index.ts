@@ -52,6 +52,23 @@ Deno.serve(async (req) => {
 
     const transfers: any[] = Array.isArray((cdr as any)?.transfers) ? (cdr as any).transfers : [];
 
+    const transferDiagnostics = transfers
+      .filter((t) => String(t.uzman_ext ?? "") === "1224")
+      .slice(0, 12)
+      .map((t) => ({
+        calldate: t.calldate,
+        musteri: t.musteri,
+        uzman_ext: t.uzman_ext,
+        sure: t.sure,
+        disposition: t.disposition,
+        yon: t.yon,
+        uniqueid: t.uniqueid,
+        linkedid: t.linkedid,
+      }));
+    if (transferDiagnostics.length > 0) {
+      console.log("1224 transfer diagnostics:", JSON.stringify(transferDiagnostics));
+    }
+
     // Cutoff: only notify calls that happened from this point onward.
     // No retroactive messages for calls before this timestamp.
     const CUTOFF = new Date("2026-06-18T10:30:00Z").getTime();
