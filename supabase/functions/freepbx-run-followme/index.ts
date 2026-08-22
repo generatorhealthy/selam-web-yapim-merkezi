@@ -26,7 +26,7 @@ const BASE = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BASE_URL") ?? "");
 const CLIENT_ID = Deno.env.get("FREEPBX_CLIENT_ID") ?? "";
 const CLIENT_SECRET = Deno.env.get("FREEPBX_CLIENT_SECRET") ?? "";
 
-async function setDirectRingStrategy(extension: string, followme: string, fixedCallerId: string): Promise<unknown> {
+async function setDirectRingStrategy(extension: string, followme: string): Promise<unknown> {
   if (!BASE || !CLIENT_ID || !CLIENT_SECRET) return { skipped: true };
 
   const tokenResponse = await fetch(`${BASE}/admin/api/api/token`, {
@@ -51,8 +51,7 @@ async function setDirectRingStrategy(extension: string, followme: string, fixedC
       followMeList: "${followme}"
       strategy: ringallv2
       ringTime: 25
-      externalCallerIdMode: fixed
-      fixedCallerId: "${fixedCallerId}"
+      externalCallerIdMode: default
     }) { status message }
   }`;
   const response = await fetch(`${BASE}/admin/api/api/gql`, {
@@ -93,8 +92,6 @@ serve(async (req) => {
       );
       const offset = Math.max(0, Number(body.offset ?? 0) || 0);
       const limit = Math.min(25, Math.max(1, Number(body.limit ?? 15) || 15));
-      const fixedCallerId = body.trunk_prefix === "81" ? "905317893880" : "905335822275";
-
       const { data: specs, error: specErr } = await supabaseAdmin
         .from("specialists")
         .select("id, name, phone, internal_number")
@@ -120,7 +117,7 @@ serve(async (req) => {
         }
         const fm = `80${digits}#-81${digits}#`;
         try {
-          await setDirectRingStrategy(ext, fm, fixedCallerId);
+          await setDirectRingStrategy(ext, fm);
           updated++;
           results.push({ extension: ext, name: s.name, status: "updated", followme: fm });
         } catch (e) {
@@ -141,7 +138,6 @@ serve(async (req) => {
     const name = String(body.name ?? extension).trim();
     const trunkPrefix: "80" | "81" = body.trunk_prefix === "81" ? "81" : "80";
     const dualTrunk = body.dual_trunk !== false;
-    const fixedCallerId = trunkPrefix === "81" ? "905317893880" : "905335822275";
 
     if (!extension || !phone) throw new Error("extension ve phone zorunlu");
     if (!BULK_URL || !BULK_SECRET) throw new Error("FreePBX yardımcı endpoint yapılandırılmamış");
@@ -175,7 +171,7 @@ serve(async (req) => {
 
     let strategyResult: unknown = null;
     if (resOk && typeof json === "object" && json !== null && "success" in json && json.success === true) {
-      strategyResult = await setDirectRingStrategy(extension, followme, fixedCallerId);
+      strategyResult = await setDirectRingStrategy(extension, followme);
     }
 
     return new Response(JSON.stringify({ ok: resOk && typeof json === "object" && json !== null && "success" in json && json.success === true, extension, followme, trunkPrefix, dualTrunk, result: json, strategyResult }), {
