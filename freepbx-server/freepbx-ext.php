@@ -342,8 +342,8 @@ $row = implode(',', [
   'ringallv2',        // findmefollow_strategy: listedeki cep telefonunu doğrudan çaldır
   $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
-  'fixed',            // Dış bacağa danışanın yabancı CID'sini taşıma
-  '905335822275',     // FCT trunk tarafından yetkilendirilmiş sabit CID
+  'default',          // 80/81 trunk'ları kendi yetkili çıkış CID'lerini kullansın
+  '',                 // Tek bir sabit CID diğer trunk'ın çağrısını reddettirmesin
   '',                 // voicemail_enable
   '',                 // voicemail_vmpwd
 ]) . "\n";
