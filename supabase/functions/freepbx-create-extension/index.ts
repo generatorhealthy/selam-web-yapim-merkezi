@@ -324,6 +324,22 @@ serve(async (req) => {
         }
       }
 
+      let commandSchema: any = null;
+      if (body.commandSchema === true) {
+        const typeNames = ["fwconsoleCommandInput", "FwconsoleCommandInput", "FWConsoleCommandInput"];
+        commandSchema = {};
+        for (const typeName of typeNames) {
+          try {
+            commandSchema[typeName] = await gql(
+              token,
+              `query { __type(name: "${typeName}") { name kind inputFields { name defaultValue type { kind name ofType { kind name } } } fields { name type { kind name ofType { kind name } } } } }`,
+            );
+          } catch (e) {
+            commandSchema[typeName] = { error: e instanceof Error ? e.message : String(e) };
+          }
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -334,6 +350,7 @@ serve(async (req) => {
           debugList,
           followMeDebug,
           schemaDebug,
+          commandSchema,
         }),
 
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
