@@ -339,7 +339,7 @@ $row = implode(',', [
   $fmEnabled,         // findmefollow_enabled
   // Gelen çağrının kullandığı trunk meşgul olabilir. İki trunk'ı aynı anda
   // deneyerek boş olan hat üzerinden uzmanın telefonunu gecikmeden çaldır.
-  'ringallv2',        // findmefollow_strategy: 80 ve 81'i eş zamanlı dene
+  'ringall',          // sanal ana cihazı beklemeden 80 ve 81'i eş zamanlı dene
   $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
   'default',          // 80/81 trunk'ları kendi yetkili çıkış CID'lerini kullansın
