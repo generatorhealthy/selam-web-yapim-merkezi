@@ -165,11 +165,10 @@ serve(async (req) => {
 
     const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) throw new Error(`Geçersiz telefon: ${phone}`);
-    // Gelen çağrı 80 hattındaysa 81, 81 hattındaysa 80 üzerinden çıkabilsin.
-    // Aynı hatta denk gelen bacak operatörce BUSY reddedilir; diğer bacak çalar.
-    const followme = dualTrunk
-      ? `80${normalizedPhone}#-81${normalizedPhone}#`
-      : `${trunkPrefix}${normalizedPhone}#`;
+    // Transfer bacağı çok kanallı Verimor rotasından çıkmalı (öneksiz numara).
+    // 80/81 önekli FCT hatları tek kanallı ve transferde 403 verdiği için
+    // Follow-Me artık öneksiz numara çevirir.
+    const followme = `0${normalizedPhone}#`;
 
     // Dahililer FreePBX'te "virtual" olarak oluşturuluyor. GraphQL başarılı
     // yanıt verse bile virtual dahilinin gerçek Follow-Me kaydını her zaman
