@@ -49,7 +49,7 @@ async function setDirectRingStrategy(extension: string, followme: string): Promi
       extensionId: "${extension}"
       enabled: true
       followMeList: "${followme}"
-      strategy: ringall
+       strategy: hunt
       ringTime: 25
       externalCallerIdMode: default
     }) { status message }
