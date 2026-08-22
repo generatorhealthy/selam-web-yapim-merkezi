@@ -314,9 +314,6 @@ serve(async (req) => {
                   args { name type { kind name ofType { kind name ofType { kind name } } } }
                 }
               }
-              fwconsoleInput: __type(name: "fwconsoleCommandInput") {
-                inputFields { name type { kind name ofType { kind name } } }
-              }
             }`,
           );
         } catch (e) {
