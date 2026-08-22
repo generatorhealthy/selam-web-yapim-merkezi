@@ -306,7 +306,15 @@ serve(async (req) => {
         try {
           schemaDebug = await gql(
             token,
-            `query { __schema { queryType { fields { name } } mutationType { fields { name } } } }`,
+            `query {
+              __schema { queryType { fields { name } } mutationType { fields { name } } }
+              mutationDetails: __type(name: "Mutation") {
+                fields {
+                  name
+                  args { name type { kind name ofType { kind name ofType { kind name } } } }
+                }
+              }
+            }`,
           );
         } catch (e) {
           schemaDebug = { error: e instanceof Error ? e.message : String(e) };
