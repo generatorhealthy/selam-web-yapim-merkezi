@@ -313,6 +313,42 @@ if ($action === 'cdr_stats') {
   ]);
 }
 
+/* ============================================================
+ * ASTERISK / TRUNK TEŞHİSİ  (action = trunk_diagnostics)
+ * Hassas yapılandırma döndürmeden trunk kayıtlarını, aktif kanalları ve
+ * son çağrıların gerçek hangup nedenlerini okur.
+ * ============================================================ */
+if ($action === 'trunk_diagnostics') {
+  if (!is_executable($FWCONSOLE)) {
+    json_response(['success' => false, 'error' => 'fwconsole bulunamadı veya çalıştırılamıyor'], 500);
+  }
+
+  $runAsterisk = function($command) use ($FWCONSOLE) {
+    $cmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' asterisk -rx ' . escapeshellarg($command) . ' 2>&1';
+    return trim((string)shell_exec($cmd));
+  };
+
+  $channels = $runAsterisk('core show channels concise');
+  $pjsip = $runAsterisk('pjsip show registrations');
+  $sip = $runAsterisk('sip show registry');
+
+  // Yalnızca trunk sağlığı için gerekli satırları döndür; URI ve olası
+  // kullanıcı bilgilerini maskele.
+  $sanitize = function($text) {
+    $text = preg_replace('/sip:[^\s@]+@/i', 'sip:***@', (string)$text);
+    $text = preg_replace('/\b(password|secret|username)\s*[=:]\s*\S+/i', '$1=***', $text);
+    return substr($text, 0, 12000);
+  };
+
+  json_response([
+    'success' => true,
+    'checked_at' => date('c'),
+    'pjsip_registrations' => $sanitize($pjsip),
+    'sip_registry' => $sanitize($sip),
+    'active_channels' => $sanitize($channels),
+  ]);
+}
+
 $ext      = preg_replace('/\D/', '', (string)($in['extension'] ?? ''));
 $name     = trim((string)($in['name'] ?? ''));
 // Çift hat yönlendirmesi için "-" ayırıcısı korunmalı (or. 805xxxxxxxxx#-815xxxxxxxxx#)
