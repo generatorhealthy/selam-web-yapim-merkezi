@@ -118,14 +118,12 @@ function buildAddExtensionMutation(params: {
   safePhone: string;
   safeEmail: string;
   tech: "virtual" | "pjsip";
-  secret?: string;
 }): string {
   return `mutation {
       addExtension(input: {
         extensionId: "${params.extStr}"
         name: "${params.safeName}"
         tech: "${params.tech}"
-        ${params.secret ? `secret: "${params.secret}"` : ""}
         outboundCid: "${params.safePhone}"
         email: "${params.safeEmail}"
         callerID: "${params.safeName}"
@@ -335,14 +333,12 @@ serve(async (req) => {
         console.warn("PJSIP dönüşümünde eski dahili silme uyarısı:", error);
       }
 
-      const pjsipSecret = crypto.randomUUID().replace(/-/g, "");
       const addResult = await gql(token, buildAddExtensionMutation({
         extStr: extension,
         safeName: name,
         safePhone: "",
         safeEmail: "",
         tech: "pjsip",
-        secret: pjsipSecret,
       }));
       if (addResult?.addExtension?.status !== true) {
         throw new Error(`PJSIP dahili oluşturulamadı: ${addResult?.addExtension?.message ?? "bilinmeyen hata"}`);

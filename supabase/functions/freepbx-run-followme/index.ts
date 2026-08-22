@@ -130,8 +130,7 @@ serve(async (req) => {
       } catch (error) {
         console.warn("1224 eski dahili silme uyarısı:", error);
       }
-      const secret = crypto.randomUUID().replace(/-/g, "");
-      const added = await callGql(`mutation { addExtension(input: { extensionId: "1224" name: "fatih" tech: "pjsip" secret: "${secret}" callerID: "fatih" umEnable: false vmEnable: false }) { status message } }`);
+      const added = await callGql(`mutation { addExtension(input: { extensionId: "1224" name: "fatih" tech: "pjsip" outboundCid: "" email: "" callerID: "fatih" umEnable: false vmEnable: false vmPassword: "1224" }) { status message } }`);
       if (added?.addExtension?.status !== true) throw new Error(`1224 PJSIP oluşturulamadı: ${JSON.stringify(added)}`);
       const routing = await setDirectRingStrategy("1224", "805316852275#-815316852275#");
       return new Response(JSON.stringify({ ok: true, extension: "1224", tech: "pjsip", routing }), {
