@@ -123,6 +123,26 @@ if (!empty($prefer) && !empty($prefixes)) {
     if ($r) $r->free();
   }
 
+  // FreePBX bazı kurulumlarda 80/81 önekini derlenmiş dialplan'da tutup
+  // outbound_route_patterns alanlarında beklediğimiz biçimde göstermiyor.
+  // FCT'ye özel mevcut rotaları trunk bağlantısından da bul; böylece loglarda
+  // görülen ROUTEID 3/4 kesin olarak güncellenir.
+  $fctNames = array_keys($trunkCids);
+  if (!empty($fctNames)) {
+    $quotedNames = array_map(function ($name) use ($db) {
+      return "'" . $db->real_escape_string((string)$name) . "'";
+    }, $fctNames);
+    $r = $db->query(
+      "SELECT DISTINCT ort.route_id " .
+      "FROM outbound_route_trunk ort " .
+      "JOIN trunks t ON t.trunkid = ort.trunk_id " .
+      "WHERE t.name IN (" . implode(',', $quotedNames) . ")"
+    );
+    while ($r && ($row = $r->fetch_assoc())) $routeIds[] = (string)$row['route_id'];
+    if ($r) $r->free();
+  }
+  $routeIds = array_values(array_unique($routeIds));
+
   foreach ($routeIds as $rid) {
     $ridQ = $db->real_escape_string($rid);
     $existing = [];
