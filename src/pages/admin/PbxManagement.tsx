@@ -41,6 +41,7 @@ const PbxManagement = () => {
     internal_number: ""
   });
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [trunkLoading, setTrunkLoading] = useState(false);
   const [creatingExtId, setCreatingExtId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
