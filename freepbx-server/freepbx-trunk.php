@@ -131,9 +131,13 @@ if (!empty($prefer) && !empty($prefixes)) {
     if ($r) $r->free();
     if (empty($existing)) continue;
 
+    // Tercih edilen trunk'lar rotada daha önce bulunmasa bile ekle. Eski
+    // davranış yalnızca mevcut trunk'ları sıraladığı için FCT'ye özel 80/81
+    // rotalarında Verimor hiç eklenmiyor ve transfer bacağı yine FCT'ye
+    // düşüyordu.
     $ordered = [];
     foreach ($preferIds as $pid) {
-      if (in_array($pid, $existing, true)) $ordered[] = $pid;
+      if (!in_array($pid, $ordered, true)) $ordered[] = $pid;
     }
     foreach ($existing as $tid) {
       if (!in_array($tid, $ordered, true)) $ordered[] = $tid;
