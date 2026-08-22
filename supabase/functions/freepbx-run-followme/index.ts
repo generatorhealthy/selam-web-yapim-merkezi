@@ -150,23 +150,22 @@ serve(async (req) => {
       ? `80${normalizedPhone}#-81${normalizedPhone}#`
       : `${trunkPrefix}${normalizedPhone}#`;
 
-    let resOk = true;
-    let json: unknown = { success: true, skipped: "existing extension dual-trunk update" };
-    // PHP bulk-import eski sürümlerde Follow-Me ayırıcısını temizlediği için,
-    // çift hat güncellemesinde mevcut dahiliyi doğrudan GraphQL ile güncelle.
-    if (!dualTrunk) {
-      const res = await fetch(BULK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret: BULK_SECRET, action: "create", extension, name, followme }),
-      });
-      resOk = res.ok;
-      const text = await res.text();
-      try {
-        json = JSON.parse(text);
-      } catch {
-        json = { success: false, error: text };
-      }
+    // Dahililer FreePBX'te "virtual" olarak oluşturuluyor. GraphQL başarılı
+    // yanıt verse bile virtual dahilinin gerçek Follow-Me kaydını her zaman
+    // güncellemeyebiliyor. Bu nedenle tek/çift trunk fark etmeksizin önce
+    // fwconsole bulkimport kullanan PHP yardımcısıyla kalıcı kaydı yeniden yaz.
+    const res = await fetch(BULK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secret: BULK_SECRET, action: "create", extension, name, followme }),
+    });
+    const resOk = res.ok;
+    const text = await res.text();
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = { success: false, error: text };
     }
 
     let strategyResult: unknown = null;
