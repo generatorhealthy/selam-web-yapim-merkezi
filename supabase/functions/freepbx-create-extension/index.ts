@@ -160,7 +160,7 @@ async function enforceFollowMeRouting(
         extensionId: "${extension}"
         enabled: true
         followMeList: "${followMeList}"
-        strategy: ringallv2
+        strategy: ringall
         ringTime: 25
         externalCallerIdMode: fixed
         fixedCallerId: "902167060611"
@@ -301,6 +301,18 @@ serve(async (req) => {
         }
       }
 
+      let schemaDebug: any = null;
+      if (body.schema === true) {
+        try {
+          schemaDebug = await gql(
+            token,
+            `query { __schema { queryType { fields { name } } mutationType { fields { name } } } }`,
+          );
+        } catch (e) {
+          schemaDebug = { error: e instanceof Error ? e.message : String(e) };
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -310,6 +322,7 @@ serve(async (req) => {
           nextExtension: computeNextExtension(ids),
           debugList,
           followMeDebug,
+          schemaDebug,
         }),
 
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },

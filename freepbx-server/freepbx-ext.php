@@ -337,8 +337,8 @@ $row = implode(',', [
   'virtual',
   '',                 // secret (virtual'da gerekmez)
   $fmEnabled,         // findmefollow_enabled
-  // Mevcut çalışan uzman dahilileriyle aynı Follow-Me stratejisi.
-  'ringallv2',        // önce sanal dahili, ardından dış yönlendirme listesi
+  // Virtual dahilinin cihaz bacağı yoktur; dış numaraları doğrudan çaldır.
+  'ringall',          // devresiz sanal dahiliyi beklemeden yönlendirme listesini çaldır
   $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
   'fixed',            // Operatörün kabul ettiği kurumsal CID'yi dış transferde zorla
