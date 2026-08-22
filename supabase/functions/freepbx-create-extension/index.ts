@@ -363,6 +363,22 @@ serve(async (req) => {
         }
       }
 
+      let asteriskDebug: any = null;
+      if (body.asteriskDebug === true) {
+        try {
+          asteriskDebug = await gql(
+            token,
+            `query {
+              systemType: __type(name: "system") { fields { name type { kind name ofType { kind name } } } }
+              asterisk: fetchAsteriskDetails { status message }
+              database: fetchDBStatus { status message }
+            }`,
+          );
+        } catch (e) {
+          asteriskDebug = { error: e instanceof Error ? e.message : String(e) };
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -375,6 +391,7 @@ serve(async (req) => {
           schemaDebug,
           commandSchema,
           telephonySchema,
+          asteriskDebug,
         }),
 
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
