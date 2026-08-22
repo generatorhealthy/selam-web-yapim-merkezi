@@ -136,7 +136,7 @@ serve(async (req) => {
           results.push({ extension: ext, name: s.name, status: "skipped", reason: "Geçersiz dahili veya telefon" });
           continue;
         }
-        const fm = `80${digits}#-81${digits}#`;
+        const fm = `0${digits}#`;
         try {
           await setDirectRingStrategy(ext, fm);
           updated++;
