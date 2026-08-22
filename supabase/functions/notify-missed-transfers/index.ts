@@ -68,6 +68,16 @@ Deno.serve(async (req) => {
     if (transferDiagnostics.length > 0) {
       console.log("1224 transfer diagnostics:", JSON.stringify(transferDiagnostics));
     }
+    const recentDiagnostics = (Array.isArray((cdr as any)?.recent) ? (cdr as any).recent : [])
+      .filter((row: any) => {
+        const src = String(row?.src ?? "");
+        const dst = String(row?.dst ?? "");
+        return src === "1224" || dst === "1224" || dst.includes("5316852275");
+      })
+      .slice(0, 20);
+    if (recentDiagnostics.length > 0) {
+      console.log("1224 raw CDR diagnostics:", JSON.stringify(recentDiagnostics));
+    }
 
     // Cutoff: only notify calls that happened from this point onward.
     // No retroactive messages for calls before this timestamp.
