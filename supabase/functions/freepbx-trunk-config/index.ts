@@ -20,7 +20,9 @@ function normalizeFreePbxUrl(raw: string, fallbackPath = ""): string {
   return cleaned;
 }
 
-const BULK_URL = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BULK_URL") ?? "", "/freepbx-ext.php");
+// Trunk ayarları bağımsız /freepbx-trunk.php dosyası tarafından uygulanır.
+const BULK_URL = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BULK_URL") ?? "", "/freepbx-ext.php")
+  .replace(/\/[^/]*\.php$/i, "/freepbx-trunk.php");
 const BULK_SECRET = (Deno.env.get("FREEPBX_BULK_SECRET") ?? "").trim();
 
 // FCT hatlarının kendi yetkili numaraları (80 = FCT0505, 81 = FCT0606).
