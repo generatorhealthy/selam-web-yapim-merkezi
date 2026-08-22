@@ -93,53 +93,64 @@ foreach ($trunkCids as $trunkName => $cid) {
   ];
 }
 
-// --- 2) Giden rotalarda tercih edilen trunk'ları başa al ---
-$prefer = array_values(array_filter(array_map('strval', (array)($in['prefer_trunks'] ?? []))));
-$prefixes = array_values(array_filter(array_map(function ($p) {
-  return preg_replace('/\D/', '', (string)$p);
-}, (array)($in['route_prefixes'] ?? []))));
-
+// --- 2) Rota bazlı trunk ataması ---
+// route_trunks: { "80": ["FCT0505"], "81": ["FCT0606"] }
+// Her önek için ilgili rota SADECE verilen trunk'ları (verilen sırayla) kullanır.
+$routeTrunks = is_array($in['route_trunks'] ?? null) ? $in['route_trunks'] : [];
 $routeLog = [];
-if (!empty($prefer) && !empty($prefixes)) {
-  $preferIds = [];
-  foreach ($prefer as $pn) {
-    $pnQ = $db->real_escape_string($pn);
-    $r = $db->query("SELECT trunkid FROM trunks WHERE name='$pnQ' LIMIT 1");
-    $row = $r ? $r->fetch_assoc() : null;
-    if ($row) $preferIds[] = (string)$row['trunkid'];
-    if ($r) $r->free();
+
+$trunkIdByName = [];
+$r = $db->query("SELECT trunkid, name FROM trunks");
+while ($r && ($row = $r->fetch_assoc())) $trunkIdByName[(string)$row['name']] = (string)$row['trunkid'];
+if ($r) $r->free();
+
+// Her önek için hedef trunk kimlikleri
+$targets = [];
+foreach ($routeTrunks as $prefix => $names) {
+  $ids = [];
+  foreach ((array)$names as $n) {
+    $n = trim((string)$n);
+    if (isset($trunkIdByName[$n])) $ids[] = $trunkIdByName[$n];
+  }
+  if (!empty($ids)) $targets[(string)$prefix] = $ids;
+}
+
+foreach ($targets as $prefix => $ids) {
+  $primary = $ids[0];
+  // Diğer öneklerin birincil trunk'ları (rota ayrımı için)
+  $others = [];
+  foreach ($targets as $p2 => $ids2) {
+    if ($p2 !== $prefix) $others[] = $ids2[0];
   }
 
-  $conds = [];
-  foreach ($prefixes as $p) {
-    $pQ = $db->real_escape_string($p);
-    $conds[] = "match_pattern_prefix LIKE '$pQ%'";
-    $conds[] = "match_pattern_pass LIKE '$pQ%'";
-  }
+  // Bu öneke ait rotaları bul: önce patern, sonra mevcut trunk bağlantısı.
   $routeIds = [];
-  if (!empty($conds)) {
-    $r = $db->query("SELECT DISTINCT route_id FROM outbound_route_patterns WHERE " . implode(' OR ', $conds));
-    while ($r && ($row = $r->fetch_assoc())) $routeIds[] = (string)$row['route_id'];
-    if ($r) $r->free();
-  }
-
-  // FreePBX bazı kurulumlarda 80/81 önekini derlenmiş dialplan'da tutup
-  // outbound_route_patterns alanlarında beklediğimiz biçimde göstermiyor.
-  // FCT'ye özel mevcut rotaları trunk bağlantısından da bul; böylece loglarda
-  // görülen ROUTEID 3/4 kesin olarak güncellenir.
-  $fctNames = array_keys($trunkCids);
-  if (!empty($fctNames)) {
-    $quotedNames = array_map(function ($name) use ($db) {
-      return "'" . $db->real_escape_string((string)$name) . "'";
-    }, $fctNames);
+  $pQ = $db->real_escape_string(preg_replace('/\D/', '', (string)$prefix));
+  if ($pQ !== '') {
     $r = $db->query(
-      "SELECT DISTINCT ort.route_id " .
-      "FROM outbound_route_trunks ort " .
-      "JOIN trunks t ON t.trunkid = ort.trunk_id " .
-      "WHERE t.name IN (" . implode(',', $quotedNames) . ")"
+      "SELECT DISTINCT route_id FROM outbound_route_patterns " .
+      "WHERE match_pattern_prefix LIKE '$pQ%' OR match_pattern_pass LIKE '$pQ%'"
     );
     while ($r && ($row = $r->fetch_assoc())) $routeIds[] = (string)$row['route_id'];
     if ($r) $r->free();
+  }
+  if (empty($routeIds)) {
+    $primQ = $db->real_escape_string($primary);
+    $r = $db->query("SELECT DISTINCT route_id FROM outbound_route_trunks WHERE trunk_id='$primQ'");
+    $cand = [];
+    while ($r && ($row = $r->fetch_assoc())) $cand[] = (string)$row['route_id'];
+    if ($r) $r->free();
+    // Diğer öneke ait trunk'ı da içeren rotaları ayıkla
+    foreach ($cand as $rid) {
+      $ridQ = $db->real_escape_string($rid);
+      $has = [];
+      $r = $db->query("SELECT trunk_id FROM outbound_route_trunks WHERE route_id='$ridQ'");
+      while ($r && ($row = $r->fetch_assoc())) $has[] = (string)$row['trunk_id'];
+      if ($r) $r->free();
+      $conflict = false;
+      foreach ($others as $o) { if (in_array($o, $has, true)) { $conflict = true; break; } }
+      if (!$conflict) $routeIds[] = $rid;
+    }
   }
   $routeIds = array_values(array_unique($routeIds));
 
@@ -149,33 +160,21 @@ if (!empty($prefer) && !empty($prefixes)) {
     $r = $db->query("SELECT trunk_id FROM outbound_route_trunks WHERE route_id='$ridQ' ORDER BY seq ASC");
     while ($r && ($row = $r->fetch_assoc())) $existing[] = (string)$row['trunk_id'];
     if ($r) $r->free();
-    if (empty($existing)) continue;
 
-    // Tercih edilen trunk'lar rotada daha önce bulunmasa bile ekle. Eski
-    // davranış yalnızca mevcut trunk'ları sıraladığı için FCT'ye özel 80/81
-    // rotalarında Verimor hiç eklenmiyor ve transfer bacağı yine FCT'ye
-    // düşüyordu.
-    $ordered = [];
-    foreach ($preferIds as $pid) {
-      if (!in_array($pid, $ordered, true)) $ordered[] = $pid;
-    }
-    foreach ($existing as $tid) {
-      if (!in_array($tid, $ordered, true)) $ordered[] = $tid;
-    }
-
-    if ($ordered !== $existing) {
+    if ($existing !== $ids) {
       $db->query("DELETE FROM outbound_route_trunks WHERE route_id='$ridQ'");
       $seq = 0;
-      foreach ($ordered as $tid) {
+      foreach ($ids as $tid) {
         $tidQ = $db->real_escape_string($tid);
         $db->query("INSERT INTO outbound_route_trunks (route_id, trunk_id, seq) VALUES ('$ridQ','$tidQ',$seq)");
         $seq++;
       }
     }
 
-    $routeLog[] = ['route_id' => $rid, 'before' => $existing, 'after' => $ordered, 'error' => $db->error ?: null];
+    $routeLog[] = ['prefix' => $prefix, 'route_id' => $rid, 'before' => $existing, 'after' => $ids, 'error' => $db->error ?: null];
   }
 }
+
 
 $state = [];
 $r = $db->query("SELECT name, tech, outcid, keepcid, disabled FROM trunks ORDER BY name");

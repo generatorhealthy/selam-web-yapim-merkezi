@@ -35,9 +35,12 @@ const DEFAULT_TRUNK_CIDS: Record<string, string> = {
   FCT0606: "905317893880",
 };
 
-// Transfer bacağı için çok kanallı Verimor trunk'ları öne alınır.
-const DEFAULT_PREFER_TRUNKS = ["Verimor0216", "Verimor0216_2"];
-const DEFAULT_ROUTE_PREFIXES = ["80", "81"];
+// Önek bazlı hat ayrımı: 80 -> FCT0505, 81 -> FCT0606.
+// Öneksiz aramalar Verimor rotasında kalır (bu rotalara dokunulmaz).
+const DEFAULT_ROUTE_TRUNKS: Record<string, string[]> = {
+  "80": ["FCT0505"],
+  "81": ["FCT0606"],
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -63,8 +66,7 @@ serve(async (req) => {
       secret: BULK_SECRET,
       action: "trunk_config",
       trunk_cids: body?.trunk_cids ?? DEFAULT_TRUNK_CIDS,
-      prefer_trunks: body?.prefer_trunks ?? DEFAULT_PREFER_TRUNKS,
-      route_prefixes: body?.route_prefixes ?? DEFAULT_ROUTE_PREFIXES,
+      route_trunks: body?.route_trunks ?? DEFAULT_ROUTE_TRUNKS,
     };
 
     console.log("FreePBX trunk_config isteği:", BULK_URL, JSON.stringify({ ...payload, secret: "***" }));
