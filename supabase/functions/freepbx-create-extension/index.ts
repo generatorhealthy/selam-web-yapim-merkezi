@@ -163,7 +163,7 @@ async function enforceFollowMeRouting(
         strategy: ringallv2
         ringTime: 25
         externalCallerIdMode: fixed
-        fixedCallerId: "905335822275"
+        fixedCallerId: "902167060611"
       }) { status message }
     }`,
   );
@@ -436,7 +436,7 @@ serve(async (req) => {
         d = d.slice(-10);
         // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
         // İki trunk aynı anda denenir. Operatör transfer edilen danışanın yabancı
-        // CID'sini reddettiği için doğrulanmış kurumsal Caller ID sabitlenir.
+        // CID'sini reddettiği için trunk'a tanımlı 0216 santral CID'si sabitlenir.
         return `80${d}#-81${d}#`;
       };
 
@@ -665,7 +665,7 @@ serve(async (req) => {
       if (d.length < 10) return "";
       d = d.slice(-10);
       // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-      // İki trunk aynı anda denenir; dış aramalarda yetkili kurumsal CID kullanılır.
+      // İki trunk aynı anda denenir; dış aramalarda trunk'a tanımlı 0216 CID kullanılır.
       return `80${d}#-81${d}#`;
     };
     const followMeList = buildFollowMe(phone);

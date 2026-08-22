@@ -52,7 +52,7 @@ async function setDirectRingStrategy(extension: string, followme: string): Promi
         strategy: ringallv2
       ringTime: 25
       externalCallerIdMode: fixed
-      fixedCallerId: "905335822275"
+      fixedCallerId: "902167060611"
     }) { status message }
   }`;
   const response = await fetch(`${BASE}/admin/api/api/gql`, {

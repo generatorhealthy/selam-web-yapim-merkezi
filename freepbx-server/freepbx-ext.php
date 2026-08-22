@@ -342,7 +342,7 @@ $row = implode(',', [
   $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
   'fixed',            // Operatörün kabul ettiği kurumsal CID'yi dış transferde zorla
-  '905335822275',     // Danışanın yabancı CID'sinin trunk'a taşınmasını engeller
+  '902167060611',     // Trunk'a tanımlı 0216 CID; yabancı/mobil CID reddini engeller
   '',                 // voicemail_enable
   '',                 // voicemail_vmpwd
 ]) . "\n";
