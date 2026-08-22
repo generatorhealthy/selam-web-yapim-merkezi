@@ -1,0 +1,1 @@
+UPDATE public.automatic_orders SET is_active = false, updated_at = now() WHERE id = '6d80c331-a93f-4d64-86ae-a8c31d30cf04';
