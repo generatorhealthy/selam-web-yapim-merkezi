@@ -162,7 +162,7 @@ async function enforceFollowMeRouting(
         followMeList: "${followMeList}"
         strategy: ringallv2
         ringTime: 25
-        externalCallerIdMode: default
+        externalCallerIdMode: forcedid
       }) { status message }
     }`,
   );
@@ -434,8 +434,8 @@ serve(async (req) => {
         // keep last 10 digits (mobile without leading 0)
         d = d.slice(-10);
         // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-        // İki trunk aynı anda denenir. Arayan kimliği Follow-Me tarafından sabitlenmez;
-        // böylece 80 ve 81 trunk'ları kendi yetkili çıkış CID'lerini kullanabilir.
+        // İki trunk aynı anda denenir. Follow-Me forcedid modu, dışarıdan gelen
+        // danışanın yabancı CID'si yerine aranan kurumsal DID'yi operatöre taşır.
         return `80${d}#-81${d}#`;
       };
 
@@ -664,7 +664,7 @@ serve(async (req) => {
       if (d.length < 10) return "";
       d = d.slice(-10);
       // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-      // İki trunk aynı anda denenir; her trunk kendi çıkış CID'sini kullanır.
+      // İki trunk aynı anda denenir; dış aramalarda aranan kurumsal DID kullanılır.
       return `80${d}#-81${d}#`;
     };
     const followMeList = buildFollowMe(phone);
