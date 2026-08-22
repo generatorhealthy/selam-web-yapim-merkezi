@@ -25,8 +25,12 @@ const BULK_URL = normalizeFreePbxUrl(Deno.env.get("FREEPBX_BULK_URL") ?? "", "/f
   .replace(/\/[^/]*\.php$/i, "/freepbx-trunk.php");
 const BULK_SECRET = (Deno.env.get("FREEPBX_BULK_SECRET") ?? "").trim();
 
-// FCT hatlarının kendi yetkili numaraları (80 = FCT0505, 81 = FCT0606).
+// Her trunk kendi yetkili numarasını Caller ID olarak göndermek zorunda.
+// Verimor: transfer bacağında danışanın numarası değil, kendi 0216 hattımız
+// gitmeli (aksi halde 403 / yetkisiz CID). FCT: kendi hat numaraları.
 const DEFAULT_TRUNK_CIDS: Record<string, string> = {
+  Verimor0216: "902167060611",
+  Verimor0216_2: "902167060611",
   FCT0505: "905335822275",
   FCT0606: "905317893880",
 };
