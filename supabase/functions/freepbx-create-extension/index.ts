@@ -301,6 +301,14 @@ serve(async (req) => {
         }
       }
 
+      let schemaDebug: any = null;
+      if (body.schema === true) {
+        schemaDebug = await gql(
+          token,
+          `query { __schema { queryType { fields { name } } mutationType { fields { name } } } }`,
+        );
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -310,6 +318,7 @@ serve(async (req) => {
           nextExtension: computeNextExtension(ids),
           debugList,
           followMeDebug,
+          schemaDebug,
         }),
 
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
