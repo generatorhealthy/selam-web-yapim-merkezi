@@ -69,15 +69,15 @@ exten => s,1,NoOp(AI outbound call ${AI_UUID})
 ; Yapay zekâ aktarım kararı verdiğinde kanal buraya yönlendirilir.
 exten => _X.,1,NoOp(AI transfer to extension ${EXTEN})
  same => n,Set(CALLERID(name)=Doktorumol Danisan)
- same => n,Dial(Local/*1${EXTEN}@from-internal,60)
+ same => n,Dial(Local/${EXTEN}@from-internal,60)
  same => n,Hangup()
 ```
 ```bash
 fwconsole reload
 ```
 
-`*1<dahili>` aktarım kodu sizde farklı çalışıyorsa yalnızca `Dial(...)` satırını
-kendi kodunuza göre düzenleyin.
+Aktarım, bir telefonun çağrı içi özellik kodunu taklit etmez; dahiliyi doğrudan
+`from-internal` içinde arar ve dahilinin Follow-Me ayarını çalıştırır.
 
 ## 5. Giden hat (80 / 81 prefix)
 
