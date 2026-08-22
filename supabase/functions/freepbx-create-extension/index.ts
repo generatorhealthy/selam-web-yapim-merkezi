@@ -337,6 +337,32 @@ serve(async (req) => {
         }
       }
 
+      let telephonySchema: any = null;
+      if (body.telephonySchema === true) {
+        try {
+          const rawSchema = await gql(
+            token,
+            `query {
+              queryType: __type(name: "Query") {
+                fields { name args { name type { kind name ofType { kind name } } } type { kind name ofType { kind name } } }
+              }
+              commandEnum: __type(name: "command") { enumValues { name } }
+              fwconsolePayload: __type(name: "fwconsoleCommandPayload") {
+                fields { name type { kind name ofType { kind name } } }
+              }
+            }`,
+          );
+          const fields = rawSchema?.queryType?.fields ?? [];
+          telephonySchema = {
+            queryFields: fields.filter((field: any) => /trunk|route|service|status|asterisk|pjsip|sip/i.test(field.name)),
+            commandEnum: rawSchema?.commandEnum ?? null,
+            fwconsolePayload: rawSchema?.fwconsolePayload ?? null,
+          };
+        } catch (e) {
+          telephonySchema = { error: e instanceof Error ? e.message : String(e) };
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -348,6 +374,7 @@ serve(async (req) => {
           followMeDebug,
           schemaDebug,
           commandSchema,
+          telephonySchema,
         }),
 
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
