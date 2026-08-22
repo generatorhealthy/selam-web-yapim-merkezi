@@ -606,6 +606,15 @@ const PbxManagement = () => {
                         <PhoneForwarded className="h-4 w-4" />
                         {bulkLoading ? "Güncelleniyor..." : "Follow-Me Toplu Güncelle"}
                       </Button>
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={handleTrunkConfig}
+                        disabled={trunkLoading}
+                      >
+                        <Server className="h-4 w-4" />
+                        {trunkLoading ? "Uygulanıyor..." : "Trunk & Rota Ayarını Uygula"}
+                      </Button>
                       {addDialog}
                     </div>
                   </div>
