@@ -341,8 +341,8 @@ $row = implode(',', [
   'ringallv2',        // önce sanal dahili, ardından dış yönlendirme listesi
   $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
-  'forcedid',         // Dış transferde danışanın CID'si yerine aranan kurumsal DID'yi zorla
-  '',                 // forcedid, inbound route üzerindeki DID'yi dinamik kullanır
+  'fixed',            // Operatörün kabul ettiği kurumsal CID'yi dış transferde zorla
+  '905335822275',     // Danışanın yabancı CID'sinin trunk'a taşınmasını engeller
   '',                 // voicemail_enable
   '',                 // voicemail_vmpwd
 ]) . "\n";
