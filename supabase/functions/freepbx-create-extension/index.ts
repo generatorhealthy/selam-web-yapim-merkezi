@@ -118,12 +118,14 @@ function buildAddExtensionMutation(params: {
   safePhone: string;
   safeEmail: string;
   tech: "virtual" | "pjsip";
+  secret?: string;
 }): string {
   return `mutation {
       addExtension(input: {
         extensionId: "${params.extStr}"
         name: "${params.safeName}"
         tech: "${params.tech}"
+        ${params.secret ? `secret: "${params.secret}"` : ""}
         outboundCid: "${params.safePhone}"
         email: "${params.safeEmail}"
         callerID: "${params.safeName}"
@@ -313,6 +315,44 @@ serve(async (req) => {
 
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    }
+
+    // Virtual extensions can appear correctly configured while failing during
+    // attended/blind transfers. Recreate a single target as a real PJSIP
+    // extension; Follow-Me then runs through FreePBX's standard extension path.
+    if (action === "recreate_pjsip_followme") {
+      const extension = String(body.extension ?? "").trim();
+      const phone = String(body.phone ?? "").replace(/\D/g, "").replace(/^90/, "").replace(/^0/, "").slice(-10);
+      const name = String(body.name ?? extension).trim().replace(/["\\]/g, "");
+      if (!/^\d{3,4}$/.test(extension) || phone.length !== 10) {
+        throw new Error("Geçerli extension ve telefon gerekli");
+      }
+
+      const token = await getToken();
+      try {
+        await gql(token, `mutation { deleteExtension(input: { extensionId: "${extension}" }) { status message } }`);
+      } catch (error) {
+        console.warn("PJSIP dönüşümünde eski dahili silme uyarısı:", error);
+      }
+
+      const pjsipSecret = crypto.randomUUID().replace(/-/g, "");
+      const addResult = await gql(token, buildAddExtensionMutation({
+        extStr: extension,
+        safeName: name,
+        safePhone: "",
+        safeEmail: "",
+        tech: "pjsip",
+        secret: pjsipSecret,
+      }));
+      if (addResult?.addExtension?.status !== true) {
+        throw new Error(`PJSIP dahili oluşturulamadı: ${addResult?.addExtension?.message ?? "bilinmeyen hata"}`);
+      }
+
+      const followMeList = `80${phone}#-81${phone}#`;
+      await enforceFollowMeRouting(token, extension, followMeList);
+      return new Response(JSON.stringify({ success: true, extension, tech: "pjsip", followMeList }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Delete action: remove the extension from FreePBX when a specialist is deleted
