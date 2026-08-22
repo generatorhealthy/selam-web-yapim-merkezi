@@ -160,7 +160,7 @@ async function enforceFollowMeRouting(
         extensionId: "${extension}"
         enabled: true
         followMeList: "${followMeList}"
-        strategy: ringallv2
+        strategy: ringall
         ringTime: 25
         externalCallerIdMode: fixed
         fixedCallerId: "902167060611"
@@ -268,6 +268,20 @@ serve(async (req) => {
       throw new Error("FreePBX bağlantı bilgileri eksik (secrets).");
     }
 
+    if (action === "restart_asterisk") {
+      const token = await getToken();
+      const restart = await gql(
+        token,
+        `mutation { fwconsoleCommand(input: { command: restart }) { status message transaction_id } }`,
+      );
+      if (restart?.fwconsoleCommand?.status !== true) {
+        throw new Error(`Asterisk yeniden başlatılamadı: ${restart?.fwconsoleCommand?.message ?? "bilinmeyen hata"}`);
+      }
+      return new Response(JSON.stringify({ success: true, restart: restart.fwconsoleCommand }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Connection test: just fetch extensions
     if (action === "test") {
       const token = await getToken();
@@ -301,6 +315,84 @@ serve(async (req) => {
         }
       }
 
+      let schemaDebug: any = null;
+      if (body.schema === true) {
+        try {
+          schemaDebug = await gql(
+            token,
+            `query {
+              __schema { queryType { fields { name } } mutationType { fields { name } } }
+              mutationDetails: __type(name: "Mutation") {
+                fields {
+                  name
+                  args { name type { kind name ofType { kind name ofType { kind name } } } }
+                }
+              }
+            }`,
+          );
+        } catch (e) {
+          schemaDebug = { error: e instanceof Error ? e.message : String(e) };
+        }
+      }
+
+      let commandSchema: any = null;
+      if (body.commandSchema === true) {
+        const typeNames = ["fwconsoleCommandInput", "FwconsoleCommandInput", "FWConsoleCommandInput"];
+        commandSchema = {};
+        for (const typeName of typeNames) {
+          try {
+            commandSchema[typeName] = await gql(
+              token,
+              `query { __type(name: "${typeName}") { name kind inputFields { name defaultValue type { kind name ofType { kind name } } } fields { name type { kind name ofType { kind name } } } } }`,
+            );
+          } catch (e) {
+            commandSchema[typeName] = { error: e instanceof Error ? e.message : String(e) };
+          }
+        }
+      }
+
+      let telephonySchema: any = null;
+      if (body.telephonySchema === true) {
+        try {
+          const rawSchema = await gql(
+            token,
+            `query {
+              queryType: __type(name: "Query") {
+                fields { name args { name type { kind name ofType { kind name } } } type { kind name ofType { kind name } } }
+              }
+              commandEnum: __type(name: "command") { enumValues { name } }
+              fwconsolePayload: __type(name: "fwconsoleCommandPayload") {
+                fields { name type { kind name ofType { kind name } } }
+              }
+            }`,
+          );
+          const fields = rawSchema?.queryType?.fields ?? [];
+          telephonySchema = {
+            queryFields: fields.filter((field: any) => /trunk|route|service|status|asterisk|pjsip|sip/i.test(field.name)),
+            commandEnum: rawSchema?.commandEnum ?? null,
+            fwconsolePayload: rawSchema?.fwconsolePayload ?? null,
+          };
+        } catch (e) {
+          telephonySchema = { error: e instanceof Error ? e.message : String(e) };
+        }
+      }
+
+      let asteriskDebug: any = null;
+      if (body.asteriskDebug === true) {
+        try {
+          asteriskDebug = await gql(
+            token,
+            `query {
+              systemType: __type(name: "system") { fields { name type { kind name ofType { kind name } } } }
+              asterisk: fetchAsteriskDetails { status message asteriskStatus asteriskVersion amiStatus needReload }
+              database: fetchDBStatus { status message dbStatus }
+            }`,
+          );
+        } catch (e) {
+          asteriskDebug = { error: e instanceof Error ? e.message : String(e) };
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -310,6 +402,10 @@ serve(async (req) => {
           nextExtension: computeNextExtension(ids),
           debugList,
           followMeDebug,
+          schemaDebug,
+          commandSchema,
+          telephonySchema,
+          asteriskDebug,
         }),
 
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
