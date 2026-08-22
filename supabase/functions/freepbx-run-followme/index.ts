@@ -49,7 +49,7 @@ async function setDirectRingStrategy(extension: string, followme: string): Promi
       extensionId: "${extension}"
       enabled: true
       followMeList: "${followme}"
-      strategy: ringallv2
+      strategy: hunt
       ringTime: 25
       externalCallerIdMode: default
     }) { status message }
@@ -66,7 +66,28 @@ async function setDirectRingStrategy(extension: string, followme: string): Promi
   if (!response.ok || json?.errors) {
     throw new Error(`Follow-Me stratejisi güncellenemedi: ${JSON.stringify(json?.errors ?? json)}`);
   }
-  return json?.data;
+  if (json?.data?.updateFollowMe?.status !== true) {
+    throw new Error(`Follow-Me güncellemesi reddedildi: ${JSON.stringify(json?.data ?? json)}`);
+  }
+
+  // bulkimport kendi reload işlemini arka planda başlatır. GraphQL değişikliğinin
+  // o reload ile ezilmemesi ve canlı dialplan'a kesin uygulanması için son reload'u
+  // Follow-Me güncellemesinden sonra bekleyerek çalıştır.
+  const reloadQuery = `mutation { doreload(input: {}) { status message } }`;
+  const reloadResponse = await fetch(`${BASE}/admin/api/api/gql`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${tokenJson.access_token}`,
+    },
+    body: JSON.stringify({ query: reloadQuery }),
+  });
+  const reloadJson = await reloadResponse.json();
+  if (!reloadResponse.ok || reloadJson?.errors || reloadJson?.data?.doreload?.status !== true) {
+    throw new Error(`FreePBX yeniden yüklenemedi: ${JSON.stringify(reloadJson?.errors ?? reloadJson)}`);
+  }
+
+  return { ...json?.data, reload: reloadJson?.data?.doreload };
 }
 
 function normalizePhone(raw: string): string | null {
