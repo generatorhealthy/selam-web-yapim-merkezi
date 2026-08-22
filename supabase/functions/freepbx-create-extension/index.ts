@@ -162,7 +162,8 @@ async function enforceFollowMeRouting(
         followMeList: "${followMeList}"
         strategy: ringallv2
         ringTime: 25
-        externalCallerIdMode: default
+        externalCallerIdMode: fixed
+        fixedCallerId: "905335822275"
       }) { status message }
     }`,
   );
@@ -287,7 +288,7 @@ serve(async (req) => {
       const fmExt = (body.followmeExt ?? "").toString().trim();
       if (fmExt) {
         const queries = [
-          `query { fetchFollowMe(extensionId: "${fmExt}") { status message enabled followMeList strategy ringTime } }`,
+          `query { fetchFollowMe(extensionId: "${fmExt}") { status message enabled followMeList strategy ringTime externalCallerIdMode fixedCallerId } }`,
           `query { findmefollow(extensionId: "${fmExt}") { grplist grptime strategy } }`,
         ];
         for (const q of queries) {
@@ -434,8 +435,8 @@ serve(async (req) => {
         // keep last 10 digits (mobile without leading 0)
         d = d.slice(-10);
         // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-        // İki trunk aynı anda denenir. Arayan kimliği Follow-Me tarafından sabitlenmez;
-        // böylece 80 ve 81 trunk'ları kendi yetkili çıkış CID'lerini kullanabilir.
+        // İki trunk aynı anda denenir. Operatör transfer edilen danışanın yabancı
+        // CID'sini reddettiği için doğrulanmış kurumsal Caller ID sabitlenir.
         return `80${d}#-81${d}#`;
       };
 
@@ -664,7 +665,7 @@ serve(async (req) => {
       if (d.length < 10) return "";
       d = d.slice(-10);
       // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-      // İki trunk aynı anda denenir; her trunk kendi çıkış CID'sini kullanır.
+      // İki trunk aynı anda denenir; dış aramalarda yetkili kurumsal CID kullanılır.
       return `80${d}#-81${d}#`;
     };
     const followMeList = buildFollowMe(phone);
