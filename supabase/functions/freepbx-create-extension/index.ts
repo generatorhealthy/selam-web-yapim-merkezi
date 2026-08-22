@@ -439,7 +439,7 @@ serve(async (req) => {
         throw new Error(`PJSIP dahili oluşturulamadı: ${addResult?.addExtension?.message ?? "bilinmeyen hata"}`);
       }
 
-      const followMeList = `80${phone}#-81${phone}#`;
+      const followMeList = `0${phone}#`;
       await enforceFollowMeRouting(token, extension, followMeList);
       return new Response(JSON.stringify({ success: true, extension, tech: "pjsip", followMeList }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -532,7 +532,7 @@ serve(async (req) => {
         // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
         // İki trunk aynı anda denenir. Operatör transfer edilen danışanın yabancı
         // CID'sini reddettiği için trunk'a tanımlı 0216 santral CID'si sabitlenir.
-        return `80${d}#-81${d}#`;
+        return `0${d}#`;
       };
 
       const onlyExt = (body.extension ?? "").toString().trim();
@@ -761,7 +761,7 @@ serve(async (req) => {
       d = d.slice(-10);
       // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
       // İki trunk aynı anda denenir; dış aramalarda trunk'a tanımlı 0216 CID kullanılır.
-      return `80${d}#-81${d}#`;
+      return `0${d}#`;
     };
     const followMeList = buildFollowMe(phone);
 
