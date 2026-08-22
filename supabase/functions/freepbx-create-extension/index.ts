@@ -148,6 +148,31 @@ async function fetchExistingExtensionIds(token: string): Promise<number[]> {
     .filter((n: number) => !isNaN(n));
 }
 
+async function enforceFollowMeRouting(
+  token: string,
+  extension: string,
+  followMeList: string,
+): Promise<void> {
+  const result = await gql(
+    token,
+    `mutation {
+      updateFollowMe(input: {
+        extensionId: "${extension}"
+        enabled: true
+        followMeList: "${followMeList}"
+        strategy: ringallv2
+        ringTime: 25
+        externalCallerIdMode: fixed
+        fixedCallerId: "905335822275"
+      }) { status message }
+    }`,
+  );
+
+  if (result?.updateFollowMe?.status !== true) {
+    throw new Error(`Follow-Me doğrulanamadı: ${result?.updateFollowMe?.message ?? "bilinmeyen hata"}`);
+  }
+}
+
 function computeNextExtension(existing: number[]): number {
   const used = existing.filter((n) => n >= MIN_EXTENSION && n <= MAX_EXTENSION);
   if (used.length === 0) return MIN_EXTENSION;
@@ -443,6 +468,8 @@ serve(async (req) => {
               message: json?.error ?? json?.import ?? text,
             });
           } else {
+            const token = await getToken();
+            await enforceFollowMeRouting(token, extStr, followMeList);
             updated++;
             results.push({ extension: extStr, name: s.name, followMeList, status: "ok" });
           }
@@ -637,6 +664,13 @@ serve(async (req) => {
       }
       throw new Error(`Sanal dahili oluşturulamadı: ${bulkError}`);
     }
+
+    // Sunucudaki eski bulk-import sürümleri çift trunk listesindeki "#-"
+    // ayırıcısını kaldırabiliyor veya virtual dahiliyi ringallv2prim ile
+    // oluşturabiliyor. Import sonrasında GraphQL üzerinden doğru listeyi ve
+    // doğrudan cep telefonunu çaldıran stratejiyi kesin olarak uygula.
+    const token = await getToken();
+    await enforceFollowMeRouting(token, extStr, followMeList);
     const usedTech: "virtual" = "virtual";
 
 
