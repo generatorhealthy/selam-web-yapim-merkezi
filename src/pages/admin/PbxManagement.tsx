@@ -152,6 +152,37 @@ const PbxManagement = () => {
     }
   };
 
+  // Transferlerde FCT 403 hatasını önlemek için trunk CID'lerini zorlar ve
+  // 80/81 rotalarında çok kanallı Verimor trunk'larını sıranın başına alır.
+  const handleTrunkConfig = async () => {
+    if (!confirm("FCT hatlarına kendi numaraları 'Force Trunk CID' olarak yazılacak ve 80/81 rotalarında Verimor trunk'ları öne alınacak. Devam edilsin mi?")) {
+      return;
+    }
+    setTrunkLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("freepbx-trunk-config", { body: {} });
+      if (error) {
+        const message = await getFunctionErrorMessage(error, "Trunk ayarı uygulanamadı.");
+        throw new Error(message);
+      }
+      console.log("Trunk config sonucu:", data);
+      const updated = (data?.trunks_updated ?? []).length;
+      const routes = (data?.routes_reordered ?? []).length;
+      toast({
+        title: "Trunk Ayarları Uygulandı",
+        description: `${updated} trunk CID güncellendi, ${routes} giden rota yeniden sıralandı. FreePBX reload arka planda çalışıyor.`,
+      });
+    } catch (error) {
+      console.error("Trunk config error:", error);
+      toast({
+        title: "Hata",
+        description: error instanceof Error ? error.message : "Trunk ayarı uygulanamadı.",
+        variant: "destructive",
+      });
+    } finally {
+      setTrunkLoading(false);
+    }
+  };
 
 
   const fetchSpecialists = async () => {
