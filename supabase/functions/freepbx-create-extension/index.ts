@@ -468,6 +468,8 @@ serve(async (req) => {
               message: json?.error ?? json?.import ?? text,
             });
           } else {
+            const token = await getToken();
+            await enforceFollowMeRouting(token, extStr, followMeList);
             updated++;
             results.push({ extension: extStr, name: s.name, followMeList, status: "ok" });
           }
