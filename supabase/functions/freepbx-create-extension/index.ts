@@ -162,8 +162,7 @@ async function enforceFollowMeRouting(
         followMeList: "${followMeList}"
         strategy: ringall
         ringTime: 25
-        externalCallerIdMode: fixed
-        fixedCallerId: "902167060611"
+        externalCallerIdMode: default
       }) { status message }
     }`,
   );

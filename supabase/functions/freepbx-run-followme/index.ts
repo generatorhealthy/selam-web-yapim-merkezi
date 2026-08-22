@@ -51,8 +51,7 @@ async function setDirectRingStrategy(extension: string, followme: string): Promi
       followMeList: "${followme}"
       strategy: ringall
       ringTime: 25
-      externalCallerIdMode: fixed
-      fixedCallerId: "902167060611"
+      externalCallerIdMode: default
     }) { status message }
   }`;
   const response = await fetch(`${BASE}/admin/api/api/gql`, {
