@@ -370,8 +370,8 @@ serve(async (req) => {
             token,
             `query {
               systemType: __type(name: "system") { fields { name type { kind name ofType { kind name } } } }
-              asterisk: fetchAsteriskDetails { status message }
-              database: fetchDBStatus { status message }
+              asterisk: fetchAsteriskDetails { status message asteriskStatus asteriskVersion amiStatus needReload }
+              database: fetchDBStatus { status message dbStatus }
             }`,
           );
         } catch (e) {
