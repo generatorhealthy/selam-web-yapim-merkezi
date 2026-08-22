@@ -160,7 +160,7 @@ async function enforceFollowMeRouting(
         extensionId: "${extension}"
         enabled: true
         followMeList: "${followMeList}"
-        strategy: hunt
+        strategy: ringallv2
         ringTime: 25
         externalCallerIdMode: default
       }) { status message }

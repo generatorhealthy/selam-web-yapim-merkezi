@@ -337,9 +337,9 @@ $row = implode(',', [
   'virtual',
   '',                 // secret (virtual'da gerekmez)
   $fmEnabled,         // findmefollow_enabled
-  // İki trunk'ı aynı anda çaldırmak yerine sırayla dene. Gelen çağrının kullandığı
-  // trunk meşgulse ilk bacak hızlıca düşer ve diğer trunk üzerinden devam eder.
-  'hunt',             // findmefollow_strategy: 80'i, gerekirse 81'i sırayla dene
+  // Gelen çağrının kullandığı trunk meşgul olabilir. İki trunk'ı aynı anda
+  // deneyerek boş olan hat üzerinden uzmanın telefonunu gecikmeden çaldır.
+  'ringallv2',        // findmefollow_strategy: 80 ve 81'i eş zamanlı dene
   $followme,          // findmefollow_grplist (80XXXXXXXXXX#)
   '25',               // findmefollow_grptime
   'default',          // 80/81 trunk'ları kendi yetkili çıkış CID'lerini kullansın
