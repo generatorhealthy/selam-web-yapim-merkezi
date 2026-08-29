@@ -1894,8 +1894,8 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setUpgradeOrder(order);
-                                    setUpgradeAmount(String(order.amount));
-                                    setUpgradePeriod('NOW');
+                                    setUpgradeAmount(String(calculateTefeTufeAmount(Number(order.amount) || 0)));
+                                    setUpgradePeriod('NEXT_PERIOD');
                                   }}
                                 >
                                   <DollarSign className="w-3.5 h-3.5 mr-1" />
