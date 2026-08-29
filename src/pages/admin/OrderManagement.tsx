@@ -87,6 +87,46 @@ const OrderManagement = () => {
   const [noteInput, setNoteInput] = useState<Record<string, string>>({});
   const [addingNote, setAddingNote] = useState<string | null>(null);
   const [callingOrder, setCallingOrder] = useState<string | null>(null);
+  const [upgradeOrder, setUpgradeOrder] = useState<Order | null>(null);
+  const [upgradeAmount, setUpgradeAmount] = useState("");
+  const [upgradePeriod, setUpgradePeriod] = useState<'NOW' | 'NEXT_PERIOD'>('NOW');
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleSubscriptionUpgrade = async () => {
+    if (!upgradeOrder) return;
+    const price = Number(String(upgradeAmount).replace(',', '.'));
+    if (!price || price <= 0) {
+      toast({ title: "Geçersiz tutar", description: "Lütfen yeni aylık tutarı girin.", variant: "destructive" });
+      return;
+    }
+    const subRef = (upgradeOrder as any).subscription_reference_code;
+    if (!subRef) {
+      toast({ title: "Abonelik referansı yok", description: "Bu siparişte iyzico abonelik referans kodu bulunamadı.", variant: "destructive" });
+      return;
+    }
+    setIsUpgrading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('iyzico-subscription-upgrade', {
+        body: {
+          subscriptionReferenceCode: subRef,
+          newPrice: price,
+          orderId: upgradeOrder.id,
+          upgradePeriod,
+        },
+      });
+      if (error) throw error;
+      if (!(data as any)?.success) throw new Error(JSON.stringify((data as any)?.iyzico || (data as any)?.error));
+      toast({ title: "Abonelik güncellendi", description: `Yeni aylık tutar: ${price.toLocaleString('tr-TR')} ₺ (müşteri işlem yapmadı)` });
+      setUpgradeOrder(null);
+      setUpgradeAmount("");
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    } catch (e: any) {
+      toast({ title: "Güncelleme başarısız", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
   const observerTarget = useRef<HTMLDivElement>(null);
 
   // Partner referrals lookup (email -> partner name + referral code)
