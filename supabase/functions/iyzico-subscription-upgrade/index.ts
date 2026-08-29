@@ -145,7 +145,7 @@ serve(async (req) => {
     }
 
     if (!targetPlanRef) {
-      const created = await iyzicoRequest("POST", `/v2/subscription/pricing-plans`, {
+      const created = await iyzicoRequest("POST", `/v2/subscription/products/${productRef}/pricing-plans`, {
         productReferenceCode: productRef,
         name: planName || `TEFE-TUFE Zamli Plan ${price.toFixed(2)} TL`,
         price: price.toFixed(2),
