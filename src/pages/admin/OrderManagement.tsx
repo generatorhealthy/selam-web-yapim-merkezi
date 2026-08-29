@@ -94,12 +94,23 @@ const OrderManagement = () => {
 
   // Sözleşme md. 7.2 — TEFE+TÜFE/2 ortalamasına göre yıllık zam oranı (%29,72)
   const TEFE_TUFE_RATE = 0.2972;
-  const TEFE_TUFE_OVERRIDES: Record<string, number> = { "2998": 3889.01 };
+  // 12 ay sonunda geçerli zamlı tutarlar (KDV dahil)
+  const TEFE_TUFE_OVERRIDES: Record<string, number> = {
+    "2998": 3889.01,
+    "3600": 4669.92,
+    "4000": 5188.80,
+  };
+  // iyzico'da önceden oluşturulmuş ödeme planı referansları (varsa yeni plan oluşturulmaz)
+  const IYZICO_PLAN_REFS: Record<string, string> = {
+    "4669.92": "5eb664f8-61bd-4137-824b-0244128bcb94",
+    "5188.8": "293860b1-4893-44dc-9c97-2658fefc3a4f",
+  };
   const calculateTefeTufeAmount = (current: number) => {
     const key = String(Math.round(current));
     if (TEFE_TUFE_OVERRIDES[key]) return TEFE_TUFE_OVERRIDES[key];
     return Math.round(current * (1 + TEFE_TUFE_RATE) * 100) / 100;
   };
+
 
 
   const handleSubscriptionUpgrade = async () => {
@@ -122,8 +133,10 @@ const OrderManagement = () => {
           newPrice: price,
           orderId: upgradeOrder.id,
           upgradePeriod,
+          ...(IYZICO_PLAN_REFS[String(price)] ? { pricingPlanReferenceCode: IYZICO_PLAN_REFS[String(price)] } : {}),
         },
       });
+
       if (error) throw error;
       if (!(data as any)?.success) throw new Error(JSON.stringify((data as any)?.iyzico || (data as any)?.error));
       toast({ title: "Abonelik güncellendi", description: `Yeni aylık tutar: ${price.toLocaleString('tr-TR')} ₺ (müşteri işlem yapmadı)` });
