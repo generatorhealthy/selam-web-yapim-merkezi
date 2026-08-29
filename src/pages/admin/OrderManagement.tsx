@@ -133,8 +133,10 @@ const OrderManagement = () => {
           newPrice: price,
           orderId: upgradeOrder.id,
           upgradePeriod,
+          ...(IYZICO_PLAN_REFS[String(price)] ? { pricingPlanReferenceCode: IYZICO_PLAN_REFS[String(price)] } : {}),
         },
       });
+
       if (error) throw error;
       if (!(data as any)?.success) throw new Error(JSON.stringify((data as any)?.iyzico || (data as any)?.error));
       toast({ title: "Abonelik güncellendi", description: `Yeni aylık tutar: ${price.toLocaleString('tr-TR')} ₺ (müşteri işlem yapmadı)` });
