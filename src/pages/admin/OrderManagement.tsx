@@ -2439,6 +2439,50 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
 
       </Tabs>
 
+      {/* Abonelik Tutarı Güncelleme (TEFE-TÜFE) Dialog */}
+      <Dialog open={!!upgradeOrder} onOpenChange={(open) => !open && setUpgradeOrder(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Abonelik Tutarını Güncelle</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              {upgradeOrder?.customer_name} — mevcut tutar {Number(upgradeOrder?.amount || 0).toLocaleString('tr-TR')} ₺.
+              İyzico aboneliği yeni plana taşınır, müşterinin kart bilgisini yeniden girmesi gerekmez.
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="upgradeAmount">Yeni Aylık Tutar (KDV dahil ₺)</Label>
+              <Input
+                id="upgradeAmount"
+                value={upgradeAmount}
+                onChange={(e) => setUpgradeAmount(e.target.value)}
+                placeholder="3889.01"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Geçerlilik</Label>
+              <Select value={upgradePeriod} onValueChange={(v) => setUpgradePeriod(v as 'NOW' | 'NEXT_PERIOD')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NOW">Hemen (bu dönemden itibaren)</SelectItem>
+                  <SelectItem value="NEXT_PERIOD">Sonraki dönemden itibaren</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setUpgradeOrder(null)} disabled={isUpgrading}>
+                Vazgeç
+              </Button>
+              <Button onClick={handleSubscriptionUpgrade} disabled={isUpgrading}>
+                {isUpgrading ? 'Güncelleniyor...' : 'Güncelle'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Send Order Email Dialog */}
       <SendOrderEmailDialog
         order={emailOrder}
