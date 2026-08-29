@@ -63,6 +63,8 @@ serve(async (req) => {
       orderId,
       planName,
       upgradePeriod = "NOW",
+      pricingPlanReferenceCode,
+
       dryRun = false,
     } = await req.json();
 
