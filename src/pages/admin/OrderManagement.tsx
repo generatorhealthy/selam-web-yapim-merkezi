@@ -89,8 +89,18 @@ const OrderManagement = () => {
   const [callingOrder, setCallingOrder] = useState<string | null>(null);
   const [upgradeOrder, setUpgradeOrder] = useState<Order | null>(null);
   const [upgradeAmount, setUpgradeAmount] = useState("");
-  const [upgradePeriod, setUpgradePeriod] = useState<'NOW' | 'NEXT_PERIOD'>('NOW');
+  const [upgradePeriod, setUpgradePeriod] = useState<'NOW' | 'NEXT_PERIOD'>('NEXT_PERIOD');
   const [isUpgrading, setIsUpgrading] = useState(false);
+
+  // Sözleşme md. 7.2 — TEFE+TÜFE/2 ortalamasına göre yıllık zam oranı (%29,72)
+  const TEFE_TUFE_RATE = 0.2972;
+  const TEFE_TUFE_OVERRIDES: Record<string, number> = { "2998": 3889.01 };
+  const calculateTefeTufeAmount = (current: number) => {
+    const key = String(Math.round(current));
+    if (TEFE_TUFE_OVERRIDES[key]) return TEFE_TUFE_OVERRIDES[key];
+    return Math.round(current * (1 + TEFE_TUFE_RATE) * 100) / 100;
+  };
+
 
   const handleSubscriptionUpgrade = async () => {
     if (!upgradeOrder) return;
