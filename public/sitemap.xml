@@ -344,19 +344,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/kaygidan-guvene-aleyna-yilmaz-ile-bdtnin-gucu</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/bedia-ocal-ile-iliskilerde-farkindalik-ve-denge</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/aileden-cocuga-butuncul-destek-psk-dan-ayse-orman</loc>
     <lastmod>2025-09-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -398,31 +386,19 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psikolog-filiz-altundag-ile-bilissel-ve-duygusal-donusum</loc>
-    <lastmod>2025-09-20</lastmod>
+    <loc>https://doktorumol.com.tr/blog/kaygidan-guvene-aleyna-yilmaz-ile-bdtnin-gucu</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/aileden-cocuga-butuncul-destek-psk-dan-ayse-orman</loc>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/psk-dan-salih-serdar-borklu-ile-bireysel-ve-ailevi-yasamda-profesyonel-destek</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psikolog-irem-bulut-ile-cocuk-ergen-ve-yetiskinlere-yonelik-profesyonel-destek</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psk-dan-hulya-isik-ile-icsel-denge-ve-uyum-yolculugu</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/uzm-psk-dan-reyyan-ayapbek-ozbek-ile-aile-ve-bireysel-yasamda-profesyonel-destek</loc>
     <lastmod>2025-09-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -454,6 +430,18 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/kaygidan-dengeye-psk-sude-sinav-ile-butuncul-yaklasim</loc>
     <lastmod>2025-09-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikolog-irem-bulut-ile-cocuk-ergen-ve-yetiskinlere-yonelik-profesyonel-destek</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psk-dan-hulya-isik-ile-icsel-denge-ve-uyum-yolculugu</loc>
+    <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7352,6 +7340,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/psikolog-filiz-altundag-ile-bilissel-ve-duygusal-donusum</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/yeni-mezun-psikolog-klinik-psikolog-ve-aile-danismanlari-icin-dijital-danisan-kazanma-rehberi-adan-zye-sektorel-buyume-stratejileri</loc>
     <lastmod>2026-07-21</lastmod>
     <changefreq>weekly</changefreq>
@@ -7414,6 +7408,12 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/psk-berfin-kandemir-ile-psikolojik-destek-ve-guclu-bir-yolculuk</loc>
     <lastmod>2026-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/uzm-psk-dan-reyyan-ayapbek-ozbek-ile-aile-ve-bireysel-yasamda-profesyonel-destek</loc>
+    <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -8228,6 +8228,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/istanbul-psikolog-gizem-kara</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/ergen-psikolog-destegi-rehberi</loc>
     <lastmod>2026-05-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -8374,6 +8380,12 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/mersin-psikolog-melisa-sude-kav</loc>
     <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/dilan-miray-yilmaz-aile-danismani</loc>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -9604,6 +9616,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/psikolog/gizem-kara</loc>
+    <lastmod>2026-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-kaan-uzunoglu</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -9694,6 +9712,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/aile-danismani/dilan-miray-yilmaz</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/psikolojik-danismanlik/ozlem-baser-kalkan</loc>
     <lastmod>2026-05-06</lastmod>
     <changefreq>monthly</changefreq>
@@ -9749,7 +9773,7 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/psikolog/zeynep-caner</loc>
-    <lastmod>2026-08-10</lastmod>
+    <lastmod>2026-08-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -10019,12 +10043,6 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/psikolog/ruken-esen</loc>
-    <lastmod>2026-04-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolog/psk-aleyna-yilmaz</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
