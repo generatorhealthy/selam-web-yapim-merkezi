@@ -63,6 +63,8 @@ serve(async (req) => {
       orderId,
       planName,
       upgradePeriod = "NOW",
+      pricingPlanReferenceCode,
+
       dryRun = false,
     } = await req.json();
 
@@ -131,6 +133,10 @@ serve(async (req) => {
         Number(p.paymentIntervalCount || 1) === Number(paymentIntervalCount),
     )?.referenceCode;
 
+    // Manuel olarak verilen plan referansı her zaman öncelikli
+    if (pricingPlanReferenceCode) targetPlanRef = pricingPlanReferenceCode;
+
+
     if (dryRun) {
       return new Response(
         JSON.stringify({ success: true, dryRun: true, productRef, currentPlanRef, targetPlanRef, price }),
@@ -139,7 +145,7 @@ serve(async (req) => {
     }
 
     if (!targetPlanRef) {
-      const created = await iyzicoRequest("POST", `/v2/subscription/pricing-plans`, {
+      const created = await iyzicoRequest("POST", `/v2/subscription/products/${productRef}/pricing-plans`, {
         productReferenceCode: productRef,
         name: planName || `TEFE-TUFE Zamli Plan ${price.toFixed(2)} TL`,
         price: price.toFixed(2),
