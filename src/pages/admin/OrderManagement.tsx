@@ -87,6 +87,46 @@ const OrderManagement = () => {
   const [noteInput, setNoteInput] = useState<Record<string, string>>({});
   const [addingNote, setAddingNote] = useState<string | null>(null);
   const [callingOrder, setCallingOrder] = useState<string | null>(null);
+  const [upgradeOrder, setUpgradeOrder] = useState<Order | null>(null);
+  const [upgradeAmount, setUpgradeAmount] = useState("");
+  const [upgradePeriod, setUpgradePeriod] = useState<'NOW' | 'NEXT_PERIOD'>('NOW');
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleSubscriptionUpgrade = async () => {
+    if (!upgradeOrder) return;
+    const price = Number(String(upgradeAmount).replace(',', '.'));
+    if (!price || price <= 0) {
+      toast({ title: "Geçersiz tutar", description: "Lütfen yeni aylık tutarı girin.", variant: "destructive" });
+      return;
+    }
+    const subRef = (upgradeOrder as any).subscription_reference_code;
+    if (!subRef) {
+      toast({ title: "Abonelik referansı yok", description: "Bu siparişte iyzico abonelik referans kodu bulunamadı.", variant: "destructive" });
+      return;
+    }
+    setIsUpgrading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('iyzico-subscription-upgrade', {
+        body: {
+          subscriptionReferenceCode: subRef,
+          newPrice: price,
+          orderId: upgradeOrder.id,
+          upgradePeriod,
+        },
+      });
+      if (error) throw error;
+      if (!(data as any)?.success) throw new Error(JSON.stringify((data as any)?.iyzico || (data as any)?.error));
+      toast({ title: "Abonelik güncellendi", description: `Yeni aylık tutar: ${price.toLocaleString('tr-TR')} ₺ (müşteri işlem yapmadı)` });
+      setUpgradeOrder(null);
+      setUpgradeAmount("");
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    } catch (e: any) {
+      toast({ title: "Güncelleme başarısız", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
   const observerTarget = useRef<HTMLDivElement>(null);
 
   // Partner referrals lookup (email -> partner name + referral code)
@@ -147,7 +187,7 @@ const OrderManagement = () => {
   const SEARCH_PAGE_SIZE = 250;
   const isSearchMode = searchInput.trim().length > 0;
   const normalizedSearchInput = searchInput.trim().toLowerCase();
-  const ORDER_LIST_SELECT = "id, customer_name, customer_email, package_name, amount, status, created_at, customer_phone, customer_address, customer_city, customer_tc_no, company_name, company_tax_no, company_tax_office, package_type, payment_method, customer_type, contract_ip_address, is_first_order, subscription_month, deleted_at, contract_emails_sent, invoice_sent, invoice_number, invoice_date, payment_status, updated_at, approved_by, approved_at, parent_order_id, payment_transaction_id";
+  const ORDER_LIST_SELECT = "id, customer_name, customer_email, package_name, amount, status, created_at, customer_phone, customer_address, customer_city, customer_tc_no, company_name, company_tax_no, company_tax_office, package_type, payment_method, customer_type, contract_ip_address, is_first_order, subscription_month, deleted_at, contract_emails_sent, invoice_sent, invoice_number, invoice_date, payment_status, updated_at, approved_by, approved_at, parent_order_id, payment_transaction_id, subscription_reference_code";
   const DELETED_ORDER_SELECT = "id, customer_name, customer_email, package_name, amount, deleted_at";
 
   // Order stats via RPC (fast aggregation, avoids paginated client-side counts)
@@ -1846,7 +1886,24 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                   {order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi'}
                                 </div>
                               </div>
+                              {order.payment_method === 'credit_card' && (order as any).subscription_reference_code && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setUpgradeOrder(order);
+                                    setUpgradeAmount(String(order.amount));
+                                    setUpgradePeriod('NOW');
+                                  }}
+                                >
+                                  <DollarSign className="w-3.5 h-3.5 mr-1" />
+                                  Abonelik Tutarını Güncelle (TEFE-TÜFE)
+                                </Button>
+                              )}
                             </div>
+
 
                             {/* TC & Date Info */}
                             <div className="flex justify-between items-center text-sm">
@@ -2381,6 +2438,50 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
         </TabsContent>
 
       </Tabs>
+
+      {/* Abonelik Tutarı Güncelleme (TEFE-TÜFE) Dialog */}
+      <Dialog open={!!upgradeOrder} onOpenChange={(open) => !open && setUpgradeOrder(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Abonelik Tutarını Güncelle</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              {upgradeOrder?.customer_name} — mevcut tutar {Number(upgradeOrder?.amount || 0).toLocaleString('tr-TR')} ₺.
+              İyzico aboneliği yeni plana taşınır, müşterinin kart bilgisini yeniden girmesi gerekmez.
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="upgradeAmount">Yeni Aylık Tutar (KDV dahil ₺)</Label>
+              <Input
+                id="upgradeAmount"
+                value={upgradeAmount}
+                onChange={(e) => setUpgradeAmount(e.target.value)}
+                placeholder="3889.01"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Geçerlilik</Label>
+              <Select value={upgradePeriod} onValueChange={(v) => setUpgradePeriod(v as 'NOW' | 'NEXT_PERIOD')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NOW">Hemen (bu dönemden itibaren)</SelectItem>
+                  <SelectItem value="NEXT_PERIOD">Sonraki dönemden itibaren</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setUpgradeOrder(null)} disabled={isUpgrading}>
+                Vazgeç
+              </Button>
+              <Button onClick={handleSubscriptionUpgrade} disabled={isUpgrading}>
+                {isUpgrading ? 'Güncelleniyor...' : 'Güncelle'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Send Order Email Dialog */}
       <SendOrderEmailDialog
