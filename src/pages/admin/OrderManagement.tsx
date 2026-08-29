@@ -1886,7 +1886,24 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                   {order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi'}
                                 </div>
                               </div>
+                              {order.payment_method === 'credit_card' && (order as any).subscription_reference_code && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setUpgradeOrder(order);
+                                    setUpgradeAmount(String(order.amount));
+                                    setUpgradePeriod('NOW');
+                                  }}
+                                >
+                                  <DollarSign className="w-3.5 h-3.5 mr-1" />
+                                  Abonelik Tutarını Güncelle (TEFE-TÜFE)
+                                </Button>
+                              )}
                             </div>
+
 
                             {/* TC & Date Info */}
                             <div className="flex justify-between items-center text-sm">
