@@ -124,17 +124,6 @@ const AdminDashboard = () => {
 
   const adminCards = [
     {
-      title: "Reklam Birimi",
-      description: "Meta Ads kampanyalarını, bütçeyi ve AI hedef kitle önerilerini Divan panelinden yönetin",
-      icon: Megaphone,
-      gradient: "from-blue-600 via-indigo-500 to-violet-600",
-      bgGradient: "from-blue-50 to-indigo-50",
-      shadowColor: "shadow-blue-500/30",
-      route: "/divan_paneli/reklam-birimi",
-      buttonText: "Reklamları Yönet",
-      adminOnly: true
-    },
-    {
       title: "Kurumsal İş Ortakları",
       description: "Referans kodu ile uzman getiren partner kurumlar, komisyonlar ve ödemeler",
       icon: Handshake,
