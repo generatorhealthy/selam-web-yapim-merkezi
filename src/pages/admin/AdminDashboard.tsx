@@ -44,8 +44,7 @@ import {
   Smartphone,
   Server,
   Briefcase,
-  Handshake,
-  Megaphone
+  Handshake
 } from "lucide-react";
 
 const AdminDashboard = () => {
