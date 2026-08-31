@@ -10,9 +10,6 @@ const CookieConsent = () => {
     // Apple App Store guideline 5.1.2(i): native uygulamada çerez/tracking bildirimi gösterme
     if (Capacitor.isNativePlatform()) return;
 
-    const isMobile = window.matchMedia("(max-width: 767px)").matches;
-    if (isMobile) return;
-
     const consent = localStorage.getItem('cookie-consent');
     if (consent) return;
 
@@ -24,6 +21,7 @@ const CookieConsent = () => {
       return () => clearTimeout(t);
     }
   }, []);
+
 
   const handleAccept = () => {
     localStorage.setItem('cookie-consent', 'accepted');
@@ -38,36 +36,24 @@ const CookieConsent = () => {
   if (!showBanner) return null;
 
   return (
-    <>
-      {/* Hafif arka plan overlay */}
+    <div
+      className="fixed inset-x-0 bottom-0 z-[60] pointer-events-none"
+      style={{ contain: "layout paint" }}
+    >
       <div
-        className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[59] animate-fade-in"
-        aria-hidden="true"
-      />
-
-      <div
-        className="fixed left-1/2 -translate-x-1/2 bottom-6 z-[60] w-[min(94vw,560px)] rounded-2xl border border-border bg-card shadow-2xl p-6 md:p-7 animate-fade-in"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cookie-consent-title"
+        className="pointer-events-auto mx-auto mb-2 w-[min(96vw,720px)] rounded-xl border border-border bg-card shadow-lg px-4 py-3 md:px-5 md:py-4"
+        role="region"
+        aria-label="Çerez tercihleri"
         aria-describedby="cookie-consent-description"
         data-cookie-consent
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
       >
-        <div className="flex flex-col gap-4">
-          <h2
-            id="cookie-consent-title"
-            className="text-lg md:text-xl font-bold text-foreground tracking-tight"
-          >
-            Gizliliğinize değer veriyoruz
-          </h2>
-
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <p
             id="cookie-consent-description"
-            className="text-sm text-muted-foreground leading-relaxed"
+            className="text-xs md:text-sm text-muted-foreground leading-snug"
           >
-            Tarama deneyiminizi geliştirmek, kişiselleştirilmiş içerikler sunmak ve
-            trafiğimizi analiz etmek için çerezleri kullanıyoruz. "Tümünü Kabul Et"e
-            tıklayarak çerez kullanımımıza izin vermiş olursunuz.{" "}
+            Deneyiminizi iyileştirmek ve trafiği analiz etmek için çerezler kullanıyoruz.{" "}
             <Link
               to="/privacy"
               className="text-primary underline-offset-2 hover:underline font-medium"
@@ -83,35 +69,36 @@ const CookieConsent = () => {
             </Link>
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch gap-2 pt-1">
+          <div className="flex items-stretch gap-2 shrink-0">
             <Button
               variant="outline"
-              size="default"
+              size="sm"
               asChild
-              className="text-sm font-medium border-primary text-primary hover:bg-primary/5 sm:flex-1"
+              className="text-xs font-medium border-primary text-primary hover:bg-primary/5 flex-1 md:flex-none"
             >
               <Link to="/gizlilik-politikasi">Kişiselleştir</Link>
             </Button>
             <Button
               variant="secondary"
-              size="default"
+              size="sm"
               onClick={handleReject}
-              className="text-sm font-medium sm:flex-1"
+              className="text-xs font-medium flex-1 md:flex-none"
             >
               Reddet
             </Button>
             <Button
               onClick={handleAccept}
-              size="default"
-              className="text-sm font-semibold sm:flex-[1.4] shadow-md"
+              size="sm"
+              className="text-xs font-semibold flex-1 md:flex-none"
             >
               Tüm çerezleri kabul et
             </Button>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
+
 };
 
 export default CookieConsent;
