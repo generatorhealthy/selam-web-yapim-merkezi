@@ -10,9 +10,6 @@ const CookieConsent = () => {
     // Apple App Store guideline 5.1.2(i): native uygulamada çerez/tracking bildirimi gösterme
     if (Capacitor.isNativePlatform()) return;
 
-    const isMobile = window.matchMedia("(max-width: 767px)").matches;
-    if (isMobile) return;
-
     const consent = localStorage.getItem('cookie-consent');
     if (consent) return;
 
@@ -24,6 +21,7 @@ const CookieConsent = () => {
       return () => clearTimeout(t);
     }
   }, []);
+
 
   const handleAccept = () => {
     localStorage.setItem('cookie-consent', 'accepted');
