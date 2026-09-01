@@ -259,23 +259,14 @@ const RandevuSayfasi = () => {
       ? (typeof selectedDate === 'string' ? selectedDate : format(selectedDate, 'yyyy-MM-dd'))
       : '';
     
-    if (dateStr && selectedSpecialistData.available_time_slots) {
-      return getAvailableSlotsForDate(selectedSpecialistData.available_time_slots, dateStr);
+    if (selectedSpecialistData.available_time_slots) {
+      if (dateStr) {
+        return getAvailableSlotsForDate(selectedSpecialistData.available_time_slots, dateStr);
+      }
+      return parseAvailability(selectedSpecialistData.available_time_slots).default;
     }
-    
-    // Fallback
-    if (Array.isArray(selectedSpecialistData.available_time_slots) && selectedSpecialistData.available_time_slots.length > 0) {
-      return selectedSpecialistData.available_time_slots;
-    }
-    
-    return [
-      "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
-      "12:30", "13:00", "13:30", "14:00", "14:30", "15:00",
-      "15:30", "16:00", "16:30", "17:00", "17:30", "18:00",
-      "18:30", "19:00", "19:30", "20:00", "20:30", "21:00",
-      "21:30", "22:00", "22:30", "23:00", "23:30", "00:00"
-    ];
-  };
+
+    return DEFAULT_TIME_SLOTS;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
