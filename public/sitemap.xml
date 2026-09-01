@@ -446,24 +446,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/akademiden-uygulamaya-uzm-psk-nur-seyda-peker-ile-butuncul-destek</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/cocuk-aile-ve-cift-danismani-aysegul-piskin-bozan-kimdir</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psikolog-irem-dag-ile-13-yillik-deneyimden-gelen-guvenilir-destek</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/aile-ici-iletisimde-bilimsel-ve-empatik-yaklasim</loc>
     <lastmod>2025-09-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -496,6 +478,24 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/tuva-ramazanoglu-ile-cocuk-aile-ve-bireylere-butuncul-destek</loc>
     <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/akademiden-uygulamaya-uzm-psk-nur-seyda-peker-ile-butuncul-destek</loc>
+    <lastmod>2026-09-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/cocuk-aile-ve-cift-danismani-aysegul-piskin-bozan-kimdir</loc>
+    <lastmod>2026-09-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikolog-irem-dag-ile-13-yillik-deneyimden-gelen-guvenilir-destek</loc>
+    <lastmod>2026-09-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7940,12 +7940,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/mahni-noshadi-durmaz-psikolojik-danismanlik</loc>
-    <lastmod>2026-06-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/iclal-atmaca-psikolojik-degerlendirme</loc>
     <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
@@ -9718,20 +9712,8 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danisman/mahni-noshadi-durmaz</loc>
-    <lastmod>2026-06-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/psikolog/gizem-kara</loc>
     <lastmod>2026-08-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/klinik-psikolog/ceren-kusatman</loc>
-    <lastmod>2026-08-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -9762,6 +9744,12 @@
   <url>
     <loc>https://doktorumol.com.tr/aile-danismani/dilan-miray-yilmaz</loc>
     <lastmod>2026-08-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/uzman-psikolog/ceren-kusatman</loc>
+    <lastmod>2026-09-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -10038,12 +10026,6 @@
   <url>
     <loc>https://doktorumol.com.tr/klinik-psikolog/klinik-psk-gamze-tura-uslu</loc>
     <lastmod>2026-04-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolog-sinirbilim-uzmani/psk-emine-beyza-bozkus</loc>
-    <lastmod>2026-07-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
