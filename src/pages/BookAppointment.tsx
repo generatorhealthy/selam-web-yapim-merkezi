@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getAvailableSlotsForDate, DEFAULT_TIME_SLOTS } from "@/utils/availabilityUtils";
+import { getAvailableSlotsForDate, parseAvailability, DEFAULT_TIME_SLOTS } from "@/utils/availabilityUtils";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -444,8 +444,10 @@ const BookAppointment = () => {
                           const dateStr = formData.appointmentDate 
                             ? (typeof formData.appointmentDate === 'string' ? formData.appointmentDate : format(new Date(formData.appointmentDate), 'yyyy-MM-dd'))
                             : '';
-                          const slots = dateStr && specialist?.available_time_slots
-                            ? getAvailableSlotsForDate(specialist.available_time_slots, dateStr)
+                          const slots = specialist?.available_time_slots
+                            ? (dateStr
+                                ? getAvailableSlotsForDate(specialist.available_time_slots, dateStr)
+                                : parseAvailability(specialist.available_time_slots).default)
                             : DEFAULT_TIME_SLOTS;
                           return slots.map((time: string) => (
                             <button
