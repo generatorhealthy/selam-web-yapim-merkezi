@@ -444,8 +444,10 @@ const BookAppointment = () => {
                           const dateStr = formData.appointmentDate 
                             ? (typeof formData.appointmentDate === 'string' ? formData.appointmentDate : format(new Date(formData.appointmentDate), 'yyyy-MM-dd'))
                             : '';
-                          const slots = dateStr && specialist?.available_time_slots
-                            ? getAvailableSlotsForDate(specialist.available_time_slots, dateStr)
+                          const slots = specialist?.available_time_slots
+                            ? (dateStr
+                                ? getAvailableSlotsForDate(specialist.available_time_slots, dateStr)
+                                : parseAvailability(specialist.available_time_slots).default)
                             : DEFAULT_TIME_SLOTS;
                           return slots.map((time: string) => (
                             <button
