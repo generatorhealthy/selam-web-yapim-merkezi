@@ -267,6 +267,9 @@ const RandevuSayfasi = () => {
     }
 
     return DEFAULT_TIME_SLOTS;
+  };
+
+
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
