@@ -452,30 +452,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/sevda-bostan-ile-aile-ve-iliski-alaninda-guvenilir-destek</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/uzm-kln-psk-mahmut-bilal-kaya-ile-13-yillik-mesleki-deneyimden-gelen-guven</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psk-dan-ozge-mardi-ile-online-ve-yuz-yuze-danismanlik-deneyimi</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/abidin-guler-ile-22-yillik-deneyimin-getirdigi-profesyonel-destek</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/tuva-ramazanoglu-ile-cocuk-aile-ve-bireylere-butuncul-destek</loc>
     <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
@@ -500,8 +476,26 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psk-kubra-karyagdi-ile-bireysel-gelisim-ve-icsel-denge-yolculugu</loc>
-    <lastmod>2025-09-20</lastmod>
+    <loc>https://doktorumol.com.tr/blog/sevda-bostan-ile-aile-ve-iliski-alaninda-guvenilir-destek</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/uzm-kln-psk-mahmut-bilal-kaya-ile-13-yillik-mesleki-deneyimden-gelen-guven</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psk-dan-ozge-mardi-ile-online-ve-yuz-yuze-danismanlik-deneyimi</loc>
+    <lastmod>2026-09-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/abidin-guler-ile-22-yillik-deneyimin-getirdigi-profesyonel-destek</loc>
+    <lastmod>2026-09-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7418,6 +7412,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/psk-kubra-karyagdi-ile-bireysel-gelisim-ve-icsel-denge-yolculugu</loc>
+    <lastmod>2026-09-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/burak-ala-ile-bdt-egitimi</loc>
     <lastmod>2026-08-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -7563,7 +7563,7 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/psk-eylul-kose-ile-saglikli-iliskiler-ve-guclu-baglar</loc>
-    <lastmod>2025-09-20</lastmod>
+    <lastmod>2026-09-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -9671,7 +9671,7 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-zerrin-gunduz</loc>
-    <lastmod>2026-04-20</lastmod>
+    <lastmod>2026-09-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -9756,6 +9756,12 @@
   <url>
     <loc>https://doktorumol.com.tr/psikolog/burcu-kara</loc>
     <lastmod>2026-07-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/psikolog/zeynep-sule-dundar</loc>
+    <lastmod>2026-07-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
