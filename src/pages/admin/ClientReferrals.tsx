@@ -512,6 +512,7 @@ const ClientReferrals = () => {
         if (!cancelled) setCallAnswerMap(map);
       } catch (e) {
         console.warn('PBX çağrı durumu alınamadı', e);
+        if (!cancelled) setCdrUnavailable(true);
       }
     })();
     return () => {
