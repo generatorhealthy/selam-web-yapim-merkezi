@@ -704,10 +704,23 @@ shell_exec($reloadCmd);
 $importLower = strtolower((string)$importOut);
 $ok = (strpos($importLower, 'error') === false) && (strpos($importLower, 'exception') === false);
 
+// Yeni dahilide çağrı kaydını otomatik aç (AstDB; reload gerektirmez)
+$recEnabled = false;
+if (is_executable($FWCONSOLE)) {
+  foreach (['in/external', 'out/external', 'in/internal', 'out/internal'] as $recPath) {
+    shell_exec('sudo ' . escapeshellarg($FWCONSOLE) . ' asterisk -rx '
+      . escapeshellarg("database put AMPUSER {$ext}/recording/{$recPath} force") . ' > /dev/null 2>&1 &');
+  }
+  shell_exec('sudo ' . escapeshellarg($FWCONSOLE) . ' asterisk -rx '
+    . escapeshellarg("database put AMPUSER {$ext}/recording/priority 15") . ' > /dev/null 2>&1 &');
+  $recEnabled = true;
+}
+
 json_response([
   'success'   => $ok,
   'extension' => $ext,
   'followme'  => $followme,
+  'recording' => $recEnabled ? 'force (otomatik acildi)' : 'acilamadi',
   'import'    => trim((string)$importOut),
   'reload'    => 'arka planda baslatildi',
 ], $ok ? 200 : 500);
