@@ -263,6 +263,43 @@ serve(async (req) => {
       });
     }
 
+    // Çağrı kaydı (recording) yönetimi: FreePBX sunucusundaki PHP yardımcısına yönlendir
+    if (action === "bulk_recording" || action === "enable_recording") {
+      if (!BULK_URL || !BULK_SECRET) {
+        throw new Error("FreePBX bağlantısı yapılandırılmamış (BULK_URL/BULK_SECRET).");
+      }
+      const res = await fetchWithTimeout(
+        BULK_URL,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "bulk_recording",
+            secret: BULK_SECRET,
+            extension: body.extension ?? "",
+            mode: body.mode ?? "force",
+            check: body.check ?? false,
+          }),
+        },
+        20000,
+      );
+      const text = await res.text();
+      let json: any;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(`Recording yanıtı çözülemedi: ${text}`);
+      }
+      if (!res.ok || json?.success === false) {
+        const detail = json?.detail ? ` (${json.detail})` : "";
+        throw new Error((json?.error || `Recording işlemi başarısız (${res.status})`) + detail);
+      }
+      return new Response(JSON.stringify(json), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
     if (!BASE || !CLIENT_ID || !CLIENT_SECRET) {
       throw new Error("FreePBX bağlantı bilgileri eksik (secrets).");
     }
