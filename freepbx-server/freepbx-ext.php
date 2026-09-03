@@ -277,10 +277,12 @@ if ($action === 'cdr_stats') {
     ) t GROUP BY ext ORDER BY toplam DESC LIMIT 200");
 
   // Son çağrılar
-  $recent = $q("SELECT calldate, src, dst, duration, billsec, disposition,
+  $recent = $q("SELECT calldate, src, dst, duration, billsec, disposition, recordingfile,
       (CASE WHEN $isIntSrc AND $isExtDst THEN 'giden'
             WHEN $isExtSrc AND $isIntDst THEN 'gelen'
             WHEN $isIntSrc AND $isIntDst THEN 'dahili' ELSE 'diger' END) yon
+    FROM cdr WHERE $where ORDER BY calldate DESC LIMIT 100");
+
     FROM cdr WHERE $where ORDER BY calldate DESC LIMIT 100");
 
   // Danışan yönlendirmeleri (transferler):
