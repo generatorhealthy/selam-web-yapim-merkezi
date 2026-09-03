@@ -1884,9 +1884,11 @@ const ClientReferrals = () => {
                                                     const status = ext && pk ? callAnswerMap[`${pk}|${ext}`] : undefined;
                                                     if (status === undefined) {
                                                       return (
-                                                        <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                                        <div className={`mt-2 flex items-center gap-1.5 text-xs font-medium ${cdrUnavailable ? 'text-amber-600' : 'text-slate-500'}`}>
                                                           <Clock className="w-3.5 h-3.5" />
-                                                          Santralde Çağrı Kaydı Yok
+                                                          {cdrUnavailable
+                                                            ? 'Santral Kayıtlarına Ulaşılamadı'
+                                                            : 'Santralde Çağrı Kaydı Yok'}
                                                         </div>
                                                       );
                                                     }
