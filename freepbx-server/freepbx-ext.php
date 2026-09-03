@@ -300,6 +300,18 @@ if ($action === 'cdr_stats') {
     WHERE $where AND (($isExtSrc AND $isIntDst) OR ($isIntSrc AND $isExtDst))
     ORDER BY calldate DESC LIMIT 300");
 
+  $mysqli->close();
+
+  json_response([
+    'success' => true,
+    'from' => $from,
+    'to' => $to,
+    'summary' => $sum,
+    'daily' => $daily,
+    'by_extension' => $byExt,
+    'recent' => $recent,
+    'transfers' => $transfers,
+  ]);
 }
 
 /* ============================================================
