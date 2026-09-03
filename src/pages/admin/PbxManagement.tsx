@@ -56,9 +56,14 @@ const PbxManagement = () => {
         const message = await getFunctionErrorMessage(error, "Çağrı kaydı açılamadı.");
         throw new Error(message);
       }
+      const count =
+        data?.extension_count ?? data?.updated ?? (Array.isArray(data?.extensions) ? data.extensions.length : 0);
+      if (data?.success === false) {
+        throw new Error(data?.error || "Çağrı kaydı açılamadı.");
+      }
       toast({
         title: "Çağrı Kaydı Açıldı",
-        description: data?.message || `${data?.updated ?? 0} dahilide kayıt aktif edildi.`,
+        description: `${count} dahilide kayıt aktif edildi. ${data?.note || "İşlem arka planda sürüyor; sonraki çağrılardan itibaren kayıt alınır."}`,
       });
     } catch (error) {
       console.error("Bulk recording error:", error);
