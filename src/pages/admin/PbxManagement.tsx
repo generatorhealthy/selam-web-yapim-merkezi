@@ -615,6 +615,15 @@ const PbxManagement = () => {
                         <Server className="h-4 w-4" />
                         {trunkLoading ? "Uygulanıyor..." : "Trunk & Rota Ayarını Uygula"}
                       </Button>
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={handleBulkRecording}
+                        disabled={recordingLoading}
+                      >
+                        <Mic className="h-4 w-4" />
+                        {recordingLoading ? "Açılıyor..." : "Tüm Çağrı Kayıtlarını Aç"}
+                      </Button>
                       {addDialog}
                     </div>
                   </div>
