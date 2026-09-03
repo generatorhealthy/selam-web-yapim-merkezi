@@ -296,6 +296,8 @@ if ($action === 'cdr_stats') {
       disposition,
       uniqueid,
       linkedid,
+      recordingfile,
+
       (disposition='ANSWERED' AND billsec > 0) acti,
       (CASE WHEN $isIntSrc AND $isExtDst THEN 'cikis' ELSE 'transfer' END) yon
     FROM cdr
