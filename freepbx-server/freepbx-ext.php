@@ -283,7 +283,7 @@ if ($action === 'cdr_stats') {
             WHEN $isIntSrc AND $isIntDst THEN 'dahili' ELSE 'diger' END) yon
     FROM cdr WHERE $where ORDER BY calldate DESC LIMIT 100");
 
-    FROM cdr WHERE $where ORDER BY calldate DESC LIMIT 100");
+
 
   // Danışan yönlendirmeleri (transferler):
   // Bir dış numara (danışan) ile bir iç dahili (uzman) birbirine bağlandığında.
