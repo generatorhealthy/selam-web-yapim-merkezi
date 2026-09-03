@@ -176,6 +176,7 @@ const ClientReferrals = () => {
   // Santralden (FreePBX) gelen "uzman telefonu açtı mı?" bilgisi
   // key: `${danışanTelefonuSon10Hane}|${uzmanDahili}` -> true/false
   const [callAnswerMap, setCallAnswerMap] = useState<Record<string, boolean>>({});
+  const [cdrUnavailable, setCdrUnavailable] = useState(false);
   const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const canAccess = !roleLoading && !!userProfile && userProfile.is_approved && ['admin','staff'].includes(userProfile.role);
@@ -480,7 +481,11 @@ const ClientReferrals = () => {
         const { data: res, error } = await supabase.functions.invoke('freepbx-create-extension', {
           body: { action: 'cdr_stats', from: fmt(from), to: fmt(today) },
         });
-        if (error || !res || (res as any).error) return;
+        if (error || !res || (res as any).error) {
+          if (!cancelled) setCdrUnavailable(true);
+          return;
+        }
+        if (!cancelled) setCdrUnavailable(false);
         const transfers = ((res as any).transfers || []) as Array<{
           musteri?: string;
           uzman_ext?: string;
@@ -508,6 +513,7 @@ const ClientReferrals = () => {
         if (!cancelled) setCallAnswerMap(map);
       } catch (e) {
         console.warn('PBX çağrı durumu alınamadı', e);
+        if (!cancelled) setCdrUnavailable(true);
       }
     })();
     return () => {
@@ -1878,9 +1884,11 @@ const ClientReferrals = () => {
                                                     const status = ext && pk ? callAnswerMap[`${pk}|${ext}`] : undefined;
                                                     if (status === undefined) {
                                                       return (
-                                                        <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                                        <div className={`mt-2 flex items-center gap-1.5 text-xs font-medium ${cdrUnavailable ? 'text-amber-600' : 'text-slate-500'}`}>
                                                           <Clock className="w-3.5 h-3.5" />
-                                                          Santralde Çağrı Kaydı Yok
+                                                          {cdrUnavailable
+                                                            ? 'Santral Kayıtlarına Ulaşılamadı'
+                                                            : 'Santralde Çağrı Kaydı Yok'}
                                                         </div>
                                                       );
                                                     }
