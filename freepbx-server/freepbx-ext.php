@@ -277,10 +277,12 @@ if ($action === 'cdr_stats') {
     ) t GROUP BY ext ORDER BY toplam DESC LIMIT 200");
 
   // Son çağrılar
-  $recent = $q("SELECT calldate, src, dst, duration, billsec, disposition,
+  $recent = $q("SELECT calldate, src, dst, duration, billsec, disposition, recordingfile,
       (CASE WHEN $isIntSrc AND $isExtDst THEN 'giden'
             WHEN $isExtSrc AND $isIntDst THEN 'gelen'
             WHEN $isIntSrc AND $isIntDst THEN 'dahili' ELSE 'diger' END) yon
+    FROM cdr WHERE $where ORDER BY calldate DESC LIMIT 100");
+
     FROM cdr WHERE $where ORDER BY calldate DESC LIMIT 100");
 
   // Danışan yönlendirmeleri (transferler):
@@ -294,6 +296,8 @@ if ($action === 'cdr_stats') {
       disposition,
       uniqueid,
       linkedid,
+      recordingfile,
+
       (disposition='ANSWERED' AND billsec > 0) acti,
       (CASE WHEN $isIntSrc AND $isExtDst THEN 'cikis' ELSE 'transfer' END) yon
     FROM cdr
@@ -313,6 +317,105 @@ if ($action === 'cdr_stats') {
     'transfers' => $transfers,
   ]);
 }
+
+/* ============================================================
+ * ÇAĞRI KAYDI DOSYASI  (action = recording_file)
+ *
+ * CDR'daki recordingfile alanındaki dosya adını alır, kayıt
+ * klasöründe bulur ve base64 olarak döner. Divan Paneli'ndeki
+ * "Dinle" butonu bu action'ı kullanır.
+ *
+ * Parametreler:
+ *   file (zorunlu): CDR recordingfile değeri (sadece dosya adı kullanılır)
+ *   date (opsiyonel): çağrı tarihi (Y-m-d) -> doğru klasöre hızlı erişim
+ * ============================================================ */
+if ($action === 'recording_file') {
+  $MONITOR = '/var/spool/asterisk/monitor';
+  $raw = (string)($in['file'] ?? '');
+  $file = basename(str_replace('\\', '/', $raw));
+
+  // Güvenlik: sadece bilinen ses dosyası adları
+  if ($file === '' || !preg_match('/^[A-Za-z0-9._\-]+\.(wav|WAV|gsm|ulaw|alaw|sln|mp3|ogg|g722)$/', $file)) {
+    json_response(['success' => false, 'error' => 'Geçersiz kayıt dosyası adı'], 400);
+  }
+
+  $candidates = [];
+
+  // 1) Verilen tarihe göre doğrudan klasör
+  $date = (string)($in['date'] ?? '');
+  if ($date !== '' && ($ts = strtotime($date)) !== false) {
+    $candidates[] = $MONITOR . '/' . date('Y/m/d', $ts) . '/' . $file;
+    $candidates[] = $MONITOR . '/' . date('Y/m/d', $ts - 86400) . '/' . $file;
+    $candidates[] = $MONITOR . '/' . date('Y/m/d', $ts + 86400) . '/' . $file;
+  }
+
+  // 2) Dosya adının içindeki tarih damgası (ör. ...-20260903-150102-...)
+  if (preg_match('/(20\d{2})(\d{2})(\d{2})/', $file, $m)) {
+    $candidates[] = $MONITOR . '/' . $m[1] . '/' . $m[2] . '/' . $m[3] . '/' . $file;
+  }
+
+  // 3) Kök klasör (bazı kurulumlar tarih klasörü kullanmaz)
+  $candidates[] = $MONITOR . '/' . $file;
+
+  $path = null;
+  foreach ($candidates as $c) {
+    if (is_file($c) && is_readable($c)) { $path = $c; break; }
+  }
+
+  // 4) Son çare: son 90 günün klasörlerinde ara (sınırlı tarama)
+  if ($path === null) {
+    for ($i = 0; $i < 90; $i++) {
+      $c = $MONITOR . '/' . date('Y/m/d', time() - $i * 86400) . '/' . $file;
+      if (is_file($c) && is_readable($c)) { $path = $c; break; }
+    }
+  }
+
+  if ($path === null) {
+    json_response([
+      'success' => false,
+      'error' => 'Kayıt dosyası sunucuda bulunamadı',
+      'detail' => 'Çağrı kaydı bu çağrı için oluşturulmamış veya dosya silinmiş olabilir.',
+      'file' => $file,
+    ], 404);
+  }
+
+  // Kayıt klasörü dışına çıkılmadığını doğrula
+  $realPath = realpath($path);
+  $realRoot = realpath($MONITOR);
+  if ($realPath === false || $realRoot === false || strpos($realPath, $realRoot) !== 0) {
+    json_response(['success' => false, 'error' => 'Erişim reddedildi'], 403);
+  }
+
+  $size = filesize($realPath);
+  if ($size === false || $size <= 0) {
+    json_response(['success' => false, 'error' => 'Kayıt dosyası boş'], 404);
+  }
+  if ($size > 25 * 1024 * 1024) {
+    json_response(['success' => false, 'error' => 'Kayıt dosyası çok büyük (25MB üzeri)'], 413);
+  }
+
+  $ext = strtolower(pathinfo($realPath, PATHINFO_EXTENSION));
+  $mimeMap = [
+    'wav' => 'audio/wav', 'mp3' => 'audio/mpeg', 'ogg' => 'audio/ogg',
+    'gsm' => 'audio/gsm', 'ulaw' => 'audio/basic', 'alaw' => 'audio/basic',
+    'sln' => 'application/octet-stream', 'g722' => 'audio/G722',
+  ];
+
+  $bytes = @file_get_contents($realPath);
+  if ($bytes === false) {
+    json_response(['success' => false, 'error' => 'Kayıt dosyası okunamadı (izin)'], 500);
+  }
+
+  json_response([
+    'success' => true,
+    'file' => $file,
+    'size' => $size,
+    'mime' => $mimeMap[$ext] ?? 'application/octet-stream',
+    'base64' => base64_encode($bytes),
+  ]);
+}
+
+
 
 /* ============================================================
  * ÇAĞRI KAYDI AÇMA  (action = bulk_recording / enable_recording)
