@@ -42,6 +42,35 @@ const PbxManagement = () => {
   });
   const [bulkLoading, setBulkLoading] = useState(false);
   const [trunkLoading, setTrunkLoading] = useState(false);
+  const [recordingLoading, setRecordingLoading] = useState(false);
+
+  // Tüm dahililerde çağrı kaydını (force) açar; yeni dahililer zaten kayıtlı oluşur.
+  const handleBulkRecording = async () => {
+    if (!confirm("Tüm dahililerde gelen/giden çağrı kaydı 'force' olarak açılacak. Devam edilsin mi?")) return;
+    setRecordingLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
+        body: { action: "bulk_recording", mode: "force" },
+      });
+      if (error) {
+        const message = await getFunctionErrorMessage(error, "Çağrı kaydı açılamadı.");
+        throw new Error(message);
+      }
+      toast({
+        title: "Çağrı Kaydı Açıldı",
+        description: data?.message || `${data?.updated ?? 0} dahilide kayıt aktif edildi.`,
+      });
+    } catch (error) {
+      console.error("Bulk recording error:", error);
+      toast({
+        title: "Hata",
+        description: error instanceof Error ? error.message : "Çağrı kaydı açılamadı.",
+        variant: "destructive",
+      });
+    } finally {
+      setRecordingLoading(false);
+    }
+  };
   const [creatingExtId, setCreatingExtId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
