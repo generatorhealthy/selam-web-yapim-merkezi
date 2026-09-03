@@ -300,18 +300,135 @@ if ($action === 'cdr_stats') {
     WHERE $where AND (($isExtSrc AND $isIntDst) OR ($isIntSrc AND $isExtDst))
     ORDER BY calldate DESC LIMIT 300");
 
-  $mysqli->close();
+}
+
+/* ============================================================
+ * ÇAĞRI KAYDI AÇMA  (action = bulk_recording / enable_recording)
+ *
+ * AstDB'de her dahili için recording policy'yi yazar:
+ *   AMPUSER/<dahili>/recording/{in,out}/{external,internal}
+ * Dialplan (sub-record-check) bu anahtarları çağrı anında okur;
+ * fwconsole reload GEREKMEZ, değişiklik sonraki çağrıda etkin olur.
+ *
+ * Kayıtlar /var/spool/asterisk/monitor/YYYY/MM/DD/ altına yazılır
+ * ve CDR'daki recordingfile alanı dolar.
+ *
+ * Parametreler:
+ *   extension (opsiyonel): tek dahili; verilmezse TÜM dahililer
+ *   mode (opsiyonel): force|yes|dontcare|no|never (varsayılan force)
+ *   check (opsiyonel): true ise mevcut kayıt durumunu okur (yazmaz)
+ * ============================================================ */
+if ($action === 'bulk_recording' || $action === 'enable_recording') {
+  if (!is_executable($FWCONSOLE)) {
+    json_response(['success' => false, 'error' => 'fwconsole bulunamadı veya çalıştırılamıyor'], 500);
+  }
+
+  $runAsterisk = function($command) use ($FWCONSOLE) {
+    $cmd = 'sudo ' . escapeshellarg($FWCONSOLE) . ' asterisk -rx ' . escapeshellarg($command) . ' 2>&1';
+    return trim((string)shell_exec($cmd));
+  };
+
+  // ---- Kontrol modu: mevcut kayıt politikalarını oku
+  if (!empty($in['check'])) {
+    $show = $runAsterisk('database show AMPUSER');
+    $lines = explode("\n", $show);
+    $policies = [];
+    foreach ($lines as $line) {
+      if (stripos($line, '/recording/in/external') === false && stripos($line, '/recording/out/external') === false) continue;
+      if (preg_match('/AMPUSER\/(\d+)\/recording\/(in|out)\/external\s*:\s*(\S+)/i', $line, $m)) {
+        $ext = $m[1]; $dir = $m[2]; $val = strtolower($m[3]);
+        $policies[$ext] = $policies[$ext] ?? ['in' => '', 'out' => ''];
+        $policies[$ext][$dir] = $val;
+      }
+    }
+    json_response([
+      'success' => true,
+      'check' => true,
+      'policies' => $policies,
+      'recording_enabled_count' => count(array_filter($policies, function($p) { return $p['in'] === 'force' && $p['out'] === 'force'; })),
+    ]);
+  }
+
+  $mode = preg_replace('/[^a-z]/', '', strtolower((string)($in['mode'] ?? 'force')));
+  if (!in_array($mode, ['force', 'yes', 'dontcare', 'no', 'never'], true)) $mode = 'force';
+
+  // Dahili listesi: parametre verilirse tek, yoksa users tablosundaki tüm dahililer
+  $extensions = [];
+  $oneExt = preg_replace('/[^0-9]/', '', (string)($in['extension'] ?? ''));
+  if ($oneExt !== '') {
+    $extensions[] = $oneExt;
+  } else {
+    // users tablosu FreePBX ana DB'sinde (asterisk); kimlik bilgilerini freepbx.conf'tan oku
+    $dbhost = 'localhost'; $dbuser = ''; $dbpass = ''; $ampdb = 'asterisk';
+    $conf = @file_get_contents('/etc/freepbx.conf');
+    if ($conf === false) $conf = @file_get_contents('/etc/amportal.conf');
+    if ($conf !== false) {
+      $readVal = function($content, $key) {
+        $qk = preg_quote($key, '/');
+        if (preg_match('/\[\s*[\'"]' . $qk . '[\'"]\s*\]\s*=\s*[\'"]([^\'"]*)[\'"]/m', $content, $m)) return $m[1];
+        if (preg_match('/^\s*' . $qk . '\s*=\s*[\'"]?([^\'"\r\n;#]+)[\'"]?/m', $content, $m)) return trim($m[1]);
+        return null;
+      };
+      $v = $readVal($conf, 'AMPDBHOST'); if ($v) $dbhost = $v;
+      $v = $readVal($conf, 'AMPDBUSER'); if ($v) $dbuser = $v;
+      $v = $readVal($conf, 'AMPDBPASS'); if ($v !== null) $dbpass = $v;
+      $v = $readVal($conf, 'AMPDBNAME'); if ($v) $ampdb = $v;
+    }
+    if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
+    if (!class_exists('mysqli')) {
+      json_response(['success' => false, 'error' => 'PHP mysqli eklentisi sunucuda yüklü değil.'], 500);
+    }
+    $mysqli = @new mysqli($dbhost, $dbuser, $dbpass, $ampdb);
+    if ($mysqli->connect_errno) {
+      json_response([
+        'success' => false,
+        'error' => 'FreePBX veritabanına bağlanılamadı (' . $mysqli->connect_errno . '): ' . $mysqli->connect_error,
+      ], 500);
+    }
+    $res = $mysqli->query("SELECT extension FROM users WHERE extension REGEXP '^[0-9]{3,4}$'");
+    if (!$res) {
+      json_response(['success' => false, 'error' => 'Dahili listesi alınamadı: ' . $mysqli->error], 500);
+    }
+    while ($r = $res->fetch_assoc()) { $extensions[] = $r['extension']; }
+    $mysqli->close();
+  }
+
+  if (empty($extensions)) {
+    json_response(['success' => false, 'error' => 'Kayıt açılacak dahili bulunamadı.'], 500);
+  }
+
+  // Tüm dahililer için yazma işlemi uzayabilir (dahili sayısı x komut);
+  // arka planda bash script olarak çalıştır, yanıt hemen dönsün.
+  $safeMode = $mode;
+  $extList = implode(' ', array_map('intval', $extensions));
+  $script = '/tmp/enable_recording_' . date('Ymd_His') . '.sh';
+  $scriptContent = "#!/bin/bash\n"
+    . "LOG=/tmp/enable_recording.log\n"
+    . ": > \$LOG\n"
+    . "for e in {$extList}; do\n"
+    . "  for p in in/external out/external in/internal out/internal; do\n"
+    . "    echo -n \"AMPUSER \${e}/recording/\${p} = {$safeMode} -> \" >> \$LOG\n"
+    . "    sudo " . escapeshellarg($FWCONSOLE) . " asterisk -rx \"database put AMPUSER \${e}/recording/\${p} {$safeMode}\" >> \$LOG 2>&1\n"
+    . "  done\n"
+    . "  echo -n \"AMPUSER \${e}/recording/priority = 15 -> \" >> \$LOG\n"
+    . "  sudo " . escapeshellarg($FWCONSOLE) . " asterisk -rx \"database put AMPUSER \${e}/recording/priority 15\" >> \$LOG 2>&1\n"
+    . "done\n"
+    . "echo 'BULK_RECORDING_DONE' >> \$LOG\n";
+  @file_put_contents($script, $scriptContent);
+  @chmod($script, 0755);
+  shell_exec('nohup bash ' . escapeshellarg($script) . ' > /dev/null 2>&1 &');
+
   json_response([
     'success' => true,
-    'from' => $from,
-    'to' => $to,
-    'summary' => $sum,
-    'daily' => $daily,
-    'by_extension' => $byExt,
-    'recent' => $recent,
-    'transfers' => $transfers,
+    'mode' => $mode,
+    'extension_count' => count($extensions),
+    'extensions' => count($extensions) <= 150 ? $extensions : array_slice($extensions, 0, 150),
+    'log' => '/tmp/enable_recording.log',
+    'note' => 'KAYIT AKTIF: islem arka planda basladi; sonraki cagrılardan itibaren kayit olur. Reload gerekmez.',
   ]);
 }
+
+
 
 /* ============================================================
  * ASTERISK / TRUNK TEŞHİSİ  (action = trunk_diagnostics)
