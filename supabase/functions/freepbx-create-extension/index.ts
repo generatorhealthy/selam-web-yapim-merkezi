@@ -262,6 +262,41 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // Çağrı kaydı ses dosyası: FreePBX sunucusundan base64 olarak al
+    if (action === "recording_file") {
+      if (!BULK_URL || !BULK_SECRET) {
+        throw new Error("FreePBX bağlantısı yapılandırılmamış (BULK_URL/BULK_SECRET).");
+      }
+      const res = await fetchWithTimeout(
+        BULK_URL,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "recording_file",
+            secret: BULK_SECRET,
+            file: body.file ?? "",
+            date: body.date ?? "",
+          }),
+        },
+        45000,
+      );
+      const text = await res.text();
+      let json: any;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(`Kayıt yanıtı çözülemedi: ${text.slice(0, 200)}`);
+      }
+      if (!res.ok || json?.success === false) {
+        const detail = json?.detail ? ` (${json.detail})` : "";
+        throw new Error((json?.error || `Kayıt alınamadı (${res.status})`) + detail);
+      }
+      return new Response(JSON.stringify(json), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     // Çağrı kaydı (recording) yönetimi: FreePBX sunucusundaki PHP yardımcısına yönlendir
     if (action === "bulk_recording" || action === "enable_recording") {
