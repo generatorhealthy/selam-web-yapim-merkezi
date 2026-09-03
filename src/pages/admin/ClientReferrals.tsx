@@ -480,7 +480,11 @@ const ClientReferrals = () => {
         const { data: res, error } = await supabase.functions.invoke('freepbx-create-extension', {
           body: { action: 'cdr_stats', from: fmt(from), to: fmt(today) },
         });
-        if (error || !res || (res as any).error) return;
+        if (error || !res || (res as any).error) {
+          if (!cancelled) setCdrUnavailable(true);
+          return;
+        }
+        if (!cancelled) setCdrUnavailable(false);
         const transfers = ((res as any).transfers || []) as Array<{
           musteri?: string;
           uzman_ext?: string;
