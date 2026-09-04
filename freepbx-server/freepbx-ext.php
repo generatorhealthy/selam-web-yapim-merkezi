@@ -276,8 +276,16 @@ if ($action === 'cdr_stats') {
       FROM cdr WHERE $where AND $isIntDst
     ) t GROUP BY ext ORDER BY toplam DESC LIMIT 200");
 
+  // Aynı gerçek çağrının başka bir bacağında (leg) kayıt dosyası olabilir.
+  // Örn. danışan DID'e düşer, sonra dahiliye transfer olur; kayıt ilk bacakta olur.
+  // Bu yüzden recordingfile boşsa linkedid üzerinden kardeş bacaklara bakıyoruz.
+  $recFallback = "COALESCE(NULLIF(cdr.recordingfile, ''),
+      (SELECT c2.recordingfile FROM cdr c2
+        WHERE c2.linkedid = cdr.linkedid AND c2.recordingfile <> ''
+        ORDER BY c2.sequence ASC LIMIT 1)) recordingfile";
+
   // Son çağrılar
-  $recent = $q("SELECT calldate, src, dst, duration, billsec, disposition, recordingfile,
+  $recent = $q("SELECT calldate, src, dst, duration, billsec, disposition, $recFallback,
       (CASE WHEN $isIntSrc AND $isExtDst THEN 'giden'
             WHEN $isExtSrc AND $isIntDst THEN 'gelen'
             WHEN $isIntSrc AND $isIntDst THEN 'dahili' ELSE 'diger' END) yon
@@ -296,13 +304,14 @@ if ($action === 'cdr_stats') {
       disposition,
       uniqueid,
       linkedid,
-      recordingfile,
+      $recFallback,
 
       (disposition='ANSWERED' AND billsec > 0) acti,
       (CASE WHEN $isIntSrc AND $isExtDst THEN 'cikis' ELSE 'transfer' END) yon
     FROM cdr
     WHERE $where AND (($isExtSrc AND $isIntDst) OR ($isIntSrc AND $isExtDst))
     ORDER BY calldate DESC LIMIT 300");
+
 
   $mysqli->close();
 
