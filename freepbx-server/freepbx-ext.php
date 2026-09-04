@@ -578,7 +578,23 @@ if ($action === 'recording_setup') {
 
   // Aynı hook kullanıcı tarafından önceden tanımlandıysa üzerine yazıp mevcut
   // santral davranışını bozmayalım; anlaşılır hata dönerek manuel inceleme iste.
-  if (preg_match('/^\s*\[macro-dialout-trunk-predial-hook\]\s*$/mi', $withoutManagedBlock)) {
+  // GÜVENLİK: Bu hook bazı FreePBX sürümlerinde zaten tanımlı olduğu için
+  // giden çağrıların anında reddedilmesine (softphone "declined") yol açabiliyor.
+  // Bu yüzden varsayılan olarak KAPALI; yalnızca chain_hook=true ile eklenir.
+  $chainHook = ($in['chain_hook'] ?? false) === true || ($in['chain_hook'] ?? '') === 'true';
+
+  if (!$chainHook) {
+    if ($withoutManagedBlock !== $existingDialplan) {
+      @file_put_contents($customDialplan, rtrim($withoutManagedBlock) . "\n", LOCK_EX);
+      $applied['call_center_chain_recording'] = 'kaldırıldı (giden çağrı reddi riski)';
+      if (is_executable($FWCONSOLE)) {
+        shell_exec('sudo ' . escapeshellarg($FWCONSOLE) . ' reload > /dev/null 2>&1');
+        $applied['reload'] = 'tamamlandı';
+      }
+    } else {
+      $applied['call_center_chain_recording'] = false;
+    }
+  } elseif (preg_match('/^\s*\[macro-dialout-trunk-predial-hook\]\s*$/mi', $withoutManagedBlock)) {
     $errors[] = 'macro-dialout-trunk-predial-hook zaten özel olarak tanımlı; otomatik kayıt bloğu eklenmedi.';
   } else {
     $newDialplan = rtrim($withoutManagedBlock) . "\n\n" . $recordingBlock;
