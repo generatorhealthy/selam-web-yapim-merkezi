@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,10 +32,6 @@ import {
   PhoneForwarded,
   XCircle,
   User,
-  Play,
-  Pause,
-  Loader2,
-  MicOff,
 } from "lucide-react";
 
 // PBX sunucusu saatleri UTC olarak yazıyor ("2026-08-04 10:51:00").
