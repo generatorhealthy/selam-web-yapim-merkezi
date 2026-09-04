@@ -554,11 +554,9 @@ if ($action === 'recording_setup') {
 
   $db->close();
 
-  // 3) Değişikliğin canlı dialplan'a geçmesi için reload (arka planda).
-  if (is_executable($FWCONSOLE)) {
-    @shell_exec('sudo ' . escapeshellarg($FWCONSOLE) . ' reload > /tmp/freepbx-recording-reload.log 2>&1 &');
-    $applied['reload'] = 'başlatıldı';
-  }
+  // AstDB, bu FreePBX sürümünde kayıt politikasının gerçek ve kalıcı
+  // kaynağıdır. Reload politikaları silme riski taşıdığı için gerekmez.
+  $applied['reload'] = 'gerekmez';
 
   // 4) Kayıt klasörü durumu (bugün kaç dosya oluştu?)
   $monitor = '/var/spool/asterisk/monitor';
