@@ -136,9 +136,17 @@ serve(async (req) => {
           results.push({ extension: ext, name: s.name, status: "skipped", reason: "Geçersiz dahili veya telefon" });
           continue;
         }
-        const fm = `0${digits}#`;
+        const fm = `80${digits}#-81${digits}#`;
         try {
-          await setDirectRingStrategy(ext, fm);
+          const response = await fetch(BULK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ secret: BULK_SECRET, action: "create", extension: ext, name: s.name, followme: fm }),
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok || payload?.success !== true) {
+            throw new Error(payload?.error ?? `FreePBX yönlendirme hatası (${response.status})`);
+          }
           updated++;
           results.push({ extension: ext, name: s.name, status: "updated", followme: fm });
         } catch (e) {
@@ -165,10 +173,9 @@ serve(async (req) => {
 
     const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) throw new Error(`Geçersiz telefon: ${phone}`);
-    // Transfer bacağı çok kanallı Verimor rotasından çıkmalı (öneksiz numara).
-    // 80/81 önekli FCT hatları tek kanallı ve transferde 403 verdiği için
-    // Follow-Me artık öneksiz numara çevirir.
-    const followme = `0${normalizedPhone}#`;
+    // Transfer bacağını yetkili CID kullanan iki FCT rotasına sırayla gönder.
+    // İlk hat dolu veya erişilemezse 81 rotası otomatik yedek olur.
+    const followme = `80${normalizedPhone}#-81${normalizedPhone}#`;
 
     // Dahililer FreePBX'te "virtual" olarak oluşturuluyor. GraphQL başarılı
     // yanıt verse bile virtual dahilinin gerçek Follow-Me kaydını her zaman

@@ -544,7 +544,7 @@ serve(async (req) => {
         throw new Error(`PJSIP dahili oluşturulamadı: ${addResult?.addExtension?.message ?? "bilinmeyen hata"}`);
       }
 
-      const followMeList = `0${phone}#`;
+      const followMeList = `80${phone}#-81${phone}#`;
       await enforceFollowMeRouting(token, extension, followMeList);
       return new Response(JSON.stringify({ success: true, extension, tech: "pjsip", followMeList }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -616,7 +616,7 @@ serve(async (req) => {
     }
 
     // Bulk Follow-Me update: her uzmanın dahilisini, uzmanın cep telefonuna
-  // yönlendirecek şekilde yeniden kurar (80XXXXXXXXXX#-81XXXXXXXXXX#).
+    // iki ayrı FCT rotası üzerinden yedekli yönlendirecek şekilde yeniden kurar.
     // ÖNEMLİ: Dahililer "virtual" tech ile FreePBX sunucusundaki PHP yardımcısı
     // (fwconsole bulkimport --replace) üzerinden oluşturuluyor. GraphQL API bu
     // sanal dahilileri GÖRMEDİĞİ için updateFollowMe mutasyonu çalışmıyordu.
@@ -634,10 +634,9 @@ serve(async (req) => {
         if (d.length < 10) return null;
         // keep last 10 digits (mobile without leading 0)
         d = d.slice(-10);
-        // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-        // İki trunk aynı anda denenir. Operatör transfer edilen danışanın yabancı
-        // CID'sini reddettiği için trunk'a tanımlı 0216 santral CID'si sabitlenir.
-        return `0${d}#`;
+        // 80 ilk FCT hattını, 81 ikinci FCT hattını seçer. İlk hat çağrı merkezinin
+        // mevcut görüşmesinde meşgulse Follow-Me ikinci hattan devam eder.
+        return `80${d}#-81${d}#`;
       };
 
       const onlyExt = (body.extension ?? "").toString().trim();
@@ -856,7 +855,7 @@ serve(async (req) => {
       throw new Error("FREEPBX_BULK_URL secret tanımlı değil. Sunucudaki PHP endpoint adresini ekleyin.");
     }
 
-    // Follow-Me: aramayı uzmanın cep telefonuna yönlendir (80XXXXXXXXXX#)
+    // Follow-Me: aramayı uzmanın cep telefonuna iki FCT hattıyla yedekli yönlendir.
     const buildFollowMe = (raw: string): string => {
       let d = (raw ?? "").replace(/\D/g, "");
       if (!d) return "";
@@ -864,9 +863,9 @@ serve(async (req) => {
       if (d.startsWith("0")) d = d.slice(1);
       if (d.length < 10) return "";
       d = d.slice(-10);
-      // Giden aramalar santralde "8" ön ekiyle trunk seciyor (or. 805xxxxxxxxx).
-      // İki trunk aynı anda denenir; dış aramalarda trunk'a tanımlı 0216 CID kullanılır.
-      return `0${d}#`;
+      // 80 ilk FCT hattını, 81 ikinci FCT hattını seçer. İlk hat doluysa ikinci
+      // hat otomatik denenir; her rota kendi yetkili CID'sini gönderir.
+      return `80${d}#-81${d}#`;
     };
     const followMeList = buildFollowMe(phone);
 
