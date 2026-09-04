@@ -39,7 +39,12 @@ const getSupabaseFetchTimeout = (input: RequestInfo | URL) => {
       ? input.href
       : input.url;
 
-  return url.includes("/functions/v1/meta-ads-manager") ? 120_000 : 25_000;
+  if (url.includes("/functions/v1/meta-ads-manager")) return 120_000;
+  if (
+    url.includes("/functions/v1/freepbx-create-extension") ||
+    url.includes("/functions/v1/freepbx-run-followme")
+  ) return 90_000;
+  return 25_000;
 };
 
 const supabaseFetch: typeof fetch = async (input, init?: RequestInit) => {

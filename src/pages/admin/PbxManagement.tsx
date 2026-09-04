@@ -111,12 +111,13 @@ const PbxManagement = () => {
       const failedList: string[] = [];
 
       // Her dahili için FreePBX sunucusunda bulkimport + reload çalıştığı için
-      // işlem parça parça (8'erli) ilerliyor.
-      for (let guard = 0; guard < 60; guard++) {
+      // işlem küçük parçalar halinde ilerler; böylece istek zaman aşımına düşmez.
+      for (let guard = 0; guard < 120; guard++) {
         const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
-          body: { action: "bulk_followme", offset, limit: 8 },
+          body: { action: "bulk_followme", offset, limit: 2 },
         });
         if (error) throw error;
+        if (data?.success !== true) throw new Error(data?.error || "FreePBX toplu güncellemeyi reddetti.");
 
         total = data.total ?? total;
         updated += data.updated ?? 0;
@@ -143,9 +144,10 @@ const PbxManagement = () => {
       });
     } catch (error) {
       console.error("Bulk follow-me error:", error);
+      const message = await getFunctionErrorMessage(error, "Follow-Me güncellenirken bir hata oluştu.");
       toast({
         title: "Hata",
-        description: "Follow-Me güncellenirken bir hata oluştu.",
+        description: message,
         variant: "destructive",
       });
     } finally {
