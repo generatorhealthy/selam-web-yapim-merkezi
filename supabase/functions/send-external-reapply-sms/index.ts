@@ -1,5 +1,6 @@
 // Bulk SMS to externally-supplied recipients (not stored in DB) using the same
 // re-apply template as send-reapply-bulk-sms. Accepts { recipients: [{name, phone}] }.
+import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
@@ -110,7 +111,7 @@ serve(async (req) => {
     let skipped = 0;
     for (const r of inRecipients) {
       const n = normalizePhone(r.phone || "");
-      if (!n || seen.has(n)) { skipped++; continue; }
+      if (!n || seen.has(n) || isBlockedPhone(n)) { skipped++; continue; }
       seen.add(n);
       recipients.push({ name: (r.name || "").toString(), phone: n });
     }

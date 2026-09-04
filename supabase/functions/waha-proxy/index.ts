@@ -1,3 +1,4 @@
+import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
@@ -514,8 +515,17 @@ Deno.serve(async (req) => {
         });
       }
       case 'sendText':
+        if (isBlockedPhone(String(payload?.chatId ?? '').split('@')[0])) {
+          console.warn('Blocked phone, WhatsApp mesaji iptal edildi:', payload?.chatId);
+          return new Response(
+            JSON.stringify({ success: false, blocked: true, error: 'Bu numara engellenmis listede' }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+
         endpoint = `/api/sendText`;
         method = 'POST';
+
         body = JSON.stringify({
           session: sessionName,
           chatId: payload.chatId,

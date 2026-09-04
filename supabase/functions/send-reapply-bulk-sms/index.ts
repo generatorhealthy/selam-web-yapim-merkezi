@@ -1,6 +1,7 @@
 // Bulk SMS to all "Yanlış Ulaşanlar" (status='wrong') leads inviting them to re-apply
 // via /danismanlik-randevusu-al. Uses Verimor batch API through the same proxy chain
 // as send-app-launch-bulk-sms.
+import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
@@ -153,6 +154,10 @@ serve(async (req) => {
         continue;
       }
       seen.add(norm);
+      if (isBlockedPhone(norm)) {
+        skipped.push({ id: r.id, reason: "blocked" });
+        continue;
+      }
       recipients.push({ id: r.id, name: r.full_name || "", phone: norm });
     }
 

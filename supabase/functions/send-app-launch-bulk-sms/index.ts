@@ -1,6 +1,7 @@
 // One-shot bulk SMS to all active specialists announcing the mobile app launch.
 // Uses Verimor batch API via static IP relay or ScrapingBee proxy
 // (Supabase Edge IPs are not whitelisted in Verimor).
+import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
@@ -98,6 +99,10 @@ const handler = async (req: Request): Promise<Response> => {
       const norm = normalizePhone(s.phone ?? "");
       if (!norm) {
         skipped.push({ id: s.id, name: s.name, phone: s.phone, reason: "invalid_phone" });
+        continue;
+      }
+      if (isBlockedPhone(norm)) {
+        skipped.push({ id: s.id, name: s.name, phone: s.phone, reason: "blocked" });
         continue;
       }
       if (seen.has(norm)) {

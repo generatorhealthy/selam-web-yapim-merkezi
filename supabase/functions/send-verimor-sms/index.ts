@@ -1,3 +1,4 @@
+import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
@@ -18,6 +19,14 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { phone, message }: SmsRequest = await req.json();
+
+    if (isBlockedPhone(phone)) {
+      console.warn('Blocked phone, SMS iptal edildi:', phone);
+      return new Response(
+        JSON.stringify({ success: false, blocked: true, error: 'Bu numara engellenmis listede, SMS gonderilmedi' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     const username = Deno.env.get('VERIMOR_USERNAME');
     const password = Deno.env.get('VERIMOR_PASSWORD');

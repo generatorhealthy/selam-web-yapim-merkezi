@@ -1,3 +1,4 @@
+import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
@@ -266,7 +267,7 @@ serve(async (req: Request): Promise<Response> => {
     };
 
     // 3) Her danışan için plan oluştur
-    const plan = (leads || []).map((lead: any) => {
+    const plan = (leads || []).filter((lead: any) => !isBlockedPhone(lead.phone)).map((lead: any) => {
       const family = isFamilyTherapy(lead.therapy_type);
       const online = normalize(lead.consultation_type) === "online";
 

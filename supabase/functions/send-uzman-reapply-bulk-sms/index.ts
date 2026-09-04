@@ -1,6 +1,7 @@
 // Bulk SMS to specialists (uzman_basvurulari) in a given status category,
 // inviting them to complete registration at /kayit-ol. Uses Verimor batch API
 // through the same proxy chain as send-reapply-bulk-sms.
+import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
@@ -146,6 +147,10 @@ serve(async (req) => {
         continue;
       }
       seen.add(norm);
+      if (isBlockedPhone(norm)) {
+        skipped.push({ id: r.id, reason: "blocked" });
+        continue;
+      }
       recipients.push({ id: r.id, name: r.full_name || "", phone: norm });
     }
 
