@@ -492,56 +492,47 @@ if ($action === 'recording_setup') {
   $applied = [];
   $errors = [];
 
-  // 1) Dahililer (users tablosu): giden/gelen, iç/dış tüm çağrılar
+  // 1) Dahililer: Bu FreePBX sürümünde ayrıntılı kayıt politikaları SQL'de
+  // recording_* kolonlarında değil, kalıcı Asterisk AstDB AMPUSER ağacında
+  // tutulur. users.recording eski/genel bir alandır; dört yön politikasının
+  // yerine geçmez. Tüm dahilileri alıp gerçek kaynak olan AstDB'ye yaz.
   $userCols = $cols('users');
-  $recCols = array_values(array_filter($userCols, function ($c) {
-    return stripos($c, 'recording_') === 0 && stripos($c, 'priority') === false && stripos($c, 'ondemand') === false;
-  }));
-  if (!empty($recCols)) {
-    $sets = [];
-    foreach ($recCols as $c) $sets[] = "`$c` = '" . $db->real_escape_string($mode) . "'";
-    if (in_array('recording_priority', $userCols, true)) $sets[] = "`recording_priority` = 15";
-    if ($db->query("UPDATE `users` SET " . implode(', ', $sets))) {
-      $applied['extensions_updated'] = $db->affected_rows;
-      $applied['extension_columns'] = $recCols;
-    } else {
-      $errors[] = 'users güncellenemedi: ' . $db->error;
-    }
+  $extensions = [];
+  $extResult = $db->query("SELECT extension FROM users WHERE extension REGEXP '^[0-9]{3,4}$'");
+  if ($extResult) {
+    while ($row = $extResult->fetch_assoc()) $extensions[] = $row['extension'];
+    $extResult->free();
   } else {
-    $errors[] = 'users tablosunda kayıt (recording_*) kolonu bulunamadı';
-    // Bu FreePBX sürümü kayıt politikasını başka bir tabloda tutuyor olabilir.
-    // Adayları otomatik keşfet ve raporla.
-    $candidates = [];
-    $q = $db->query(
-      "SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS
-       WHERE TABLE_SCHEMA = '" . $db->real_escape_string($dbname) . "'
-         AND COLUMN_NAME LIKE '%record%'
-       ORDER BY TABLE_NAME, COLUMN_NAME"
-    );
-    if ($q) {
-      while ($row = $q->fetch_assoc()) {
-        $candidates[$row['TABLE_NAME']][] = $row['COLUMN_NAME'];
-      }
-      $q->free();
-    }
-    $applied['recording_column_candidates'] = $candidates;
+    $errors[] = 'Dahili listesi okunamadı: ' . $db->error;
+  }
 
-    // kvstore tabloları (FreePBX 16/17) kayıt ayarlarını key/value olarak tutabilir.
-    $kv = [];
-    $q2 = $db->query(
-      "SELECT TABLE_NAME FROM information_schema.TABLES
-       WHERE TABLE_SCHEMA = '" . $db->real_escape_string($dbname) . "'
-         AND (TABLE_NAME LIKE 'kvstore%' OR TABLE_NAME LIKE '%recording%' OR TABLE_NAME LIKE '%callrecord%')
-       ORDER BY TABLE_NAME"
-    );
-    if ($q2) {
-      while ($row = $q2->fetch_assoc()) $kv[] = $row['TABLE_NAME'];
-      $q2->free();
+  if (!empty($extensions) && is_executable($FWCONSOLE)) {
+    $safeMode = $mode;
+    $extList = implode(' ', array_map('intval', $extensions));
+    $script = '/tmp/setup_recording_' . date('Ymd_His') . '.sh';
+    $scriptContent = "#!/bin/bash\n"
+      . "LOG=/tmp/setup_recording.log\n"
+      . ": > \$LOG\n"
+      . "for e in {$extList}; do\n"
+      . "  for p in in/external out/external in/internal out/internal; do\n"
+      . "    sudo " . escapeshellarg($FWCONSOLE) . " asterisk -rx \"database put AMPUSER \${e}/recording/\${p} {$safeMode}\" >> \$LOG 2>&1\n"
+      . "  done\n"
+      . "  sudo " . escapeshellarg($FWCONSOLE) . " asterisk -rx \"database put AMPUSER \${e}/recording/priority 15\" >> \$LOG 2>&1\n"
+      . "done\n"
+      . "echo 'RECORDING_SETUP_DONE' >> \$LOG\n";
+    if (@file_put_contents($script, $scriptContent) === false) {
+      $errors[] = 'Kayıt ayarı komut dosyası oluşturulamadı';
+    } else {
+      @chmod($script, 0755);
+      shell_exec('nohup bash ' . escapeshellarg($script) . ' > /dev/null 2>&1 &');
+      $applied['extensions_updated'] = count($extensions);
+      $applied['storage'] = 'Asterisk AstDB AMPUSER';
+      $applied['log'] = '/tmp/setup_recording.log';
     }
-    $applied['recording_table_candidates'] = $kv;
-
-    // users tablosunun kolon listesini de raporla (teşhis için).
-    $applied['users_columns'] = $userCols;
+  } elseif (empty($extensions) && empty($errors)) {
+    $errors[] = 'Kayıt açılacak dahili bulunamadı';
+  } elseif (!is_executable($FWCONSOLE)) {
+    $errors[] = 'fwconsole bulunamadı veya çalıştırılamıyor';
   }
 
   // 2) Gelen yönlendirmeler (incoming tablosu): danışan bize aradığında
@@ -563,11 +554,9 @@ if ($action === 'recording_setup') {
 
   $db->close();
 
-  // 3) Değişikliğin canlı dialplan'a geçmesi için reload (arka planda).
-  if (is_executable($FWCONSOLE)) {
-    @shell_exec('sudo ' . escapeshellarg($FWCONSOLE) . ' reload > /tmp/freepbx-recording-reload.log 2>&1 &');
-    $applied['reload'] = 'başlatıldı';
-  }
+  // AstDB, bu FreePBX sürümünde kayıt politikasının gerçek ve kalıcı
+  // kaynağıdır. Reload politikaları silme riski taşıdığı için gerekmez.
+  $applied['reload'] = 'gerekmez';
 
   // 4) Kayıt klasörü durumu (bugün kaç dosya oluştu?)
   $monitor = '/var/spool/asterisk/monitor';
