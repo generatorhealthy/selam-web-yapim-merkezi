@@ -1,3 +1,4 @@
+import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
@@ -215,6 +216,10 @@ const handler = async (req: Request): Promise<Response> => {
     const preparedCustomers = unpaidCustomers
       .filter(c => {
         if (!c.customer_phone || c.customer_phone.trim() === '') return false;
+        if (isBlockedPhone(c.customer_phone)) {
+          console.log(`Skipping ${c.customer_name}: engellenmis numara`);
+          return false;
+        }
         // Strip non-digits to compare
         const digits = c.customer_phone.replace(/\D/g, '');
         // Skip office/default numbers
