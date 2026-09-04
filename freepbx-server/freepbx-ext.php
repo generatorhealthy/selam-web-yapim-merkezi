@@ -445,12 +445,11 @@ if ($action === 'recording_file') {
 /* ============================================================
  * KALICI ÇAĞRI KAYDI  (action = recording_setup)
  *
- * AstDB'ye yazılan kayıt politikaları `fwconsole reload` sırasında
- * FreePBX veritabanından yeniden üretilir; bu yüzden AstDB'ye yazmak
- * kalıcı değildir. Bu action politikayı doğrudan FreePBX MySQL
- * veritabanına (users + gelen yönlendirmeler) yazar ve reload eder.
- * Böylece hem uzmana transfer edilen bacak hem de bizim danışanla
- * yaptığımız görüşme kaydedilir ve reload sonrası da kalıcı olur.
+ * Tüm dahili politikalarını force yapar. Ayrıca çağrı merkezinin mobil
+ * trunk üzerinden başlattığı (AMPUSER bilgisi olmayan) çağrıları da
+ * macro-dialout-trunk-predial-hook içinde MixMonitor ile kaydeder.
+ * AUDIOHOOK_INHERIT sayesinde danışanla ilk görüşme ve sonradan uzmana
+ * aktarılan konuşma aynı çağrı zincirinde kayda devam eder.
  * ============================================================ */
 if ($action === 'recording_setup') {
   $mode = strtolower(preg_replace('/[^a-z]/i', '', (string)($in['mode'] ?? 'force')));
@@ -552,11 +551,56 @@ if ($action === 'recording_setup') {
     }
   }
 
+  // 3) Çağrı merkezi trunk çağrıları: Bazı operatörler PBX'e mobil trunk
+  // üzerinden girip danışanı 80/81 rotalarıyla arıyor. Bu kanallarda AMPUSER
+  // bulunmadığı için dahili politikaları tek başına MixMonitor başlatmıyor.
+  // FreePBX'in resmi trunk öncesi hook'una yönetilen bir kayıt bloğu ekle.
+  $customDialplan = '/etc/asterisk/extensions_custom.conf';
+  $beginMarker = '; BEGIN DOKTORUMOL ALL-CALL RECORDING';
+  $endMarker = '; END DOKTORUMOL ALL-CALL RECORDING';
+  $recordingBlock = $beginMarker . "\n"
+    . "[macro-dialout-trunk-predial-hook]\n"
+    . "exten => s,1,NoOp(Doktorumol tum cagri zinciri kaydi)\n"
+    . " same => n,GotoIf(\$[\"\${RECORDING_STATUS}\"=\"RECORDING\"]?done)\n"
+    . " same => n,Set(__CALLFILENAME=dm-all-\${STRFTIME(\${EPOCH},,%Y%m%d-%H%M%S)}-\${UNIQUEID})\n"
+    . " same => n,Set(CDR(recordingfile)=\${CALLFILENAME}.wav)\n"
+    . " same => n,Set(__RECORDING_STATUS=RECORDING)\n"
+    . " same => n,Set(AUDIOHOOK_INHERIT(MixMonitor)=yes)\n"
+    . " same => n,MixMonitor(/var/spool/asterisk/monitor/\${CALLFILENAME}.wav,b)\n"
+    . " same => n(done),MacroExit()\n"
+    . $endMarker . "\n";
+
+  $existingDialplan = @file_get_contents($customDialplan);
+  if ($existingDialplan === false) $existingDialplan = '';
+  $managedPattern = '/' . preg_quote($beginMarker, '/') . '.*?' . preg_quote($endMarker, '/') . '\\s*/s';
+  $withoutManagedBlock = preg_replace($managedPattern, '', $existingDialplan);
+  if ($withoutManagedBlock === null) $withoutManagedBlock = $existingDialplan;
+
+  // Aynı hook kullanıcı tarafından önceden tanımlandıysa üzerine yazıp mevcut
+  // santral davranışını bozmayalım; anlaşılır hata dönerek manuel inceleme iste.
+  if (preg_match('/^\s*\[macro-dialout-trunk-predial-hook\]\s*$/mi', $withoutManagedBlock)) {
+    $errors[] = 'macro-dialout-trunk-predial-hook zaten özel olarak tanımlı; otomatik kayıt bloğu eklenmedi.';
+  } else {
+    $newDialplan = rtrim($withoutManagedBlock) . "\n\n" . $recordingBlock;
+    if (@file_put_contents($customDialplan, $newDialplan, LOCK_EX) === false) {
+      $errors[] = 'extensions_custom.conf yazılamadı; çağrı merkezi trunk kaydı açılamadı.';
+    } else {
+      $applied['call_center_chain_recording'] = true;
+      $applied['recording_hook'] = 'macro-dialout-trunk-predial-hook';
+      $applied['recording_scope'] = 'danışan ilk görüşme + uzman aktarımı';
+
+      if (is_executable($FWCONSOLE)) {
+        $reloadOutput = trim((string)shell_exec('sudo ' . escapeshellarg($FWCONSOLE) . ' reload 2>&1'));
+        $reloadOk = stripos($reloadOutput, 'error') === false && stripos($reloadOutput, 'failed') === false;
+        $applied['reload'] = $reloadOk ? 'tamamlandı' : 'çıktı kontrol edilmeli';
+        if (!$reloadOk) $errors[] = 'Dialplan yazıldı ancak fwconsole reload çıktısı hata içeriyor: ' . substr($reloadOutput, 0, 300);
+      }
+    }
+  }
+
   $db->close();
 
-  // AstDB, bu FreePBX sürümünde kayıt politikasının gerçek ve kalıcı
-  // kaynağıdır. Reload politikaları silme riski taşıdığı için gerekmez.
-  $applied['reload'] = 'gerekmez';
+  if (!isset($applied['reload'])) $applied['reload'] = 'gerekmez';
 
   // 4) Kayıt klasörü durumu (bugün kaç dosya oluştu?)
   $monitor = '/var/spool/asterisk/monitor';
@@ -571,7 +615,7 @@ if ($action === 'recording_setup') {
     'mode' => $mode,
     'applied' => $applied,
     'errors' => $errors,
-    'note' => 'Kayıt yalnızca bu işlemden sonra yapılan çağrılar için oluşur.',
+    'note' => 'Kayıt yalnızca bu işlemden sonra yapılan çağrılar için oluşur; danışanla ilk görüşme ve uzman aktarımı aynı zincirde kaydedilir.',
   ]);
 }
 
