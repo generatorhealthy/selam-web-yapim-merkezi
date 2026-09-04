@@ -516,8 +516,12 @@ Deno.serve(async (req) => {
       case 'sendText':
         if (isBlockedPhone(String(payload?.chatId ?? '').split('@')[0])) {
           console.warn('Blocked phone, WhatsApp mesaji iptal edildi:', payload?.chatId);
-          return jsonResponse({ success: false, blocked: true, error: 'Bu numara engellenmis listede' });
+          return new Response(
+            JSON.stringify({ success: false, blocked: true, error: 'Bu numara engellenmis listede' }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
         }
+
         endpoint = `/api/sendText`;
         method = 'POST';
 
