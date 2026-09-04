@@ -136,7 +136,7 @@ serve(async (req) => {
           results.push({ extension: ext, name: s.name, status: "skipped", reason: "Geçersiz dahili veya telefon" });
           continue;
         }
-        const fm = `80${digits}#-81${digits}#`;
+        const fm = `0${digits}#`;
         try {
           const response = await fetch(BULK_URL, {
             method: "POST",
@@ -175,7 +175,7 @@ serve(async (req) => {
     if (!normalizedPhone) throw new Error(`Geçersiz telefon: ${phone}`);
     // Transfer bacağını yetkili CID kullanan iki FCT rotasına sırayla gönder.
     // İlk hat dolu veya erişilemezse 81 rotası otomatik yedek olur.
-    const followme = `80${normalizedPhone}#-81${normalizedPhone}#`;
+    const followme = `0${normalizedPhone}#`;
 
     // Dahililer FreePBX'te "virtual" olarak oluşturuluyor. GraphQL başarılı
     // yanıt verse bile virtual dahilinin gerçek Follow-Me kaydını her zaman
