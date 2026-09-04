@@ -276,8 +276,16 @@ if ($action === 'cdr_stats') {
       FROM cdr WHERE $where AND $isIntDst
     ) t GROUP BY ext ORDER BY toplam DESC LIMIT 200");
 
+  // Aynı gerçek çağrının başka bir bacağında (leg) kayıt dosyası olabilir.
+  // Örn. danışan DID'e düşer, sonra dahiliye transfer olur; kayıt ilk bacakta olur.
+  // Bu yüzden recordingfile boşsa linkedid üzerinden kardeş bacaklara bakıyoruz.
+  $recFallback = "COALESCE(NULLIF(cdr.recordingfile, ''),
+      (SELECT c2.recordingfile FROM cdr c2
+        WHERE c2.linkedid = cdr.linkedid AND c2.recordingfile <> ''
+        ORDER BY c2.sequence ASC LIMIT 1)) recordingfile";
+
   // Son çağrılar
-  $recent = $q("SELECT calldate, src, dst, duration, billsec, disposition, recordingfile,
+  $recent = $q("SELECT calldate, src, dst, duration, billsec, disposition, $recFallback,
       (CASE WHEN $isIntSrc AND $isExtDst THEN 'giden'
             WHEN $isExtSrc AND $isIntDst THEN 'gelen'
             WHEN $isIntSrc AND $isIntDst THEN 'dahili' ELSE 'diger' END) yon
@@ -296,13 +304,14 @@ if ($action === 'cdr_stats') {
       disposition,
       uniqueid,
       linkedid,
-      recordingfile,
+      $recFallback,
 
       (disposition='ANSWERED' AND billsec > 0) acti,
       (CASE WHEN $isIntSrc AND $isExtDst THEN 'cikis' ELSE 'transfer' END) yon
     FROM cdr
     WHERE $where AND (($isExtSrc AND $isIntDst) OR ($isIntSrc AND $isExtDst))
     ORDER BY calldate DESC LIMIT 300");
+
 
   $mysqli->close();
 
@@ -433,7 +442,119 @@ if ($action === 'recording_file') {
  *   mode (opsiyonel): force|yes|dontcare|no|never (varsayılan force)
  *   check (opsiyonel): true ise mevcut kayıt durumunu okur (yazmaz)
  * ============================================================ */
+/* ============================================================
+ * KALICI ÇAĞRI KAYDI  (action = recording_setup)
+ *
+ * AstDB'ye yazılan kayıt politikaları `fwconsole reload` sırasında
+ * FreePBX veritabanından yeniden üretilir; bu yüzden AstDB'ye yazmak
+ * kalıcı değildir. Bu action politikayı doğrudan FreePBX MySQL
+ * veritabanına (users + gelen yönlendirmeler) yazar ve reload eder.
+ * Böylece hem uzmana transfer edilen bacak hem de bizim danışanla
+ * yaptığımız görüşme kaydedilir ve reload sonrası da kalıcı olur.
+ * ============================================================ */
+if ($action === 'recording_setup') {
+  $mode = strtolower(preg_replace('/[^a-z]/i', '', (string)($in['mode'] ?? 'force')));
+  if (!in_array($mode, ['force', 'yes', 'dontcare', 'no', 'never'], true)) $mode = 'force';
+
+  $readVal = function($content, $key) {
+    $qk = preg_quote($key, '/');
+    if (preg_match('/\[\s*[\'\"]' . $qk . '[\'\"]\s*\]\s*=\s*[\'\"]([^\'\"]*)[\'\"]/m', $content, $m)) return $m[1];
+    if (preg_match('/^\s*' . $qk . '\s*=\s*[\'\"]?([^\'\"\r\n;#]+)[\'\"]?/m', $content, $m)) return trim($m[1]);
+    return null;
+  };
+
+  $dbhost = 'localhost'; $dbuser = ''; $dbpass = ''; $dbname = 'asterisk';
+  foreach (['/etc/freepbx.conf', '/etc/amportal.conf'] as $confFile) {
+    $conf = @file_get_contents($confFile);
+    if ($conf === false) continue;
+    $v = $readVal($conf, 'AMPDBHOST'); if ($v) $dbhost = $v;
+    $v = $readVal($conf, 'AMPDBUSER'); if ($v) $dbuser = $v;
+    $v = $readVal($conf, 'AMPDBPASS'); if ($v !== null) $dbpass = $v;
+    $v = $readVal($conf, 'AMPDBNAME'); if ($v) $dbname = $v;
+  }
+  if ($dbuser === '') {
+    json_response(['success' => false, 'error' => 'FreePBX veritabanı bilgisi okunamadı'], 500);
+  }
+  if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
+  $db = @new mysqli($dbhost, $dbuser, $dbpass, $dbname);
+  if ($db->connect_errno) {
+    json_response(['success' => false, 'error' => 'FreePBX veritabanına bağlanılamadı: ' . $db->connect_error], 500);
+  }
+  $db->set_charset('utf8mb4');
+
+  $cols = function($table) use ($db) {
+    $out = [];
+    $r = $db->query("SHOW COLUMNS FROM `$table`");
+    if ($r) { while ($row = $r->fetch_assoc()) $out[] = $row['Field']; $r->free(); }
+    return $out;
+  };
+
+  $applied = [];
+  $errors = [];
+
+  // 1) Dahililer (users tablosu): giden/gelen, iç/dış tüm çağrılar
+  $userCols = $cols('users');
+  $recCols = array_values(array_filter($userCols, function ($c) {
+    return stripos($c, 'recording_') === 0 && stripos($c, 'priority') === false && stripos($c, 'ondemand') === false;
+  }));
+  if (!empty($recCols)) {
+    $sets = [];
+    foreach ($recCols as $c) $sets[] = "`$c` = '" . $db->real_escape_string($mode) . "'";
+    if (in_array('recording_priority', $userCols, true)) $sets[] = "`recording_priority` = 15";
+    if ($db->query("UPDATE `users` SET " . implode(', ', $sets))) {
+      $applied['extensions_updated'] = $db->affected_rows;
+      $applied['extension_columns'] = $recCols;
+    } else {
+      $errors[] = 'users güncellenemedi: ' . $db->error;
+    }
+  } else {
+    $errors[] = 'users tablosunda kayıt (recording_*) kolonu bulunamadı';
+  }
+
+  // 2) Gelen yönlendirmeler (incoming tablosu): danışan bize aradığında
+  //    yapılan görüşmenin de kaydedilmesi için.
+  $incCols = $cols('incoming');
+  $incRec = array_values(array_filter($incCols, function ($c) {
+    return stripos($c, 'record') !== false;
+  }));
+  if (!empty($incRec)) {
+    $sets = [];
+    foreach ($incRec as $c) $sets[] = "`$c` = '" . $db->real_escape_string($mode) . "'";
+    if ($db->query("UPDATE `incoming` SET " . implode(', ', $sets))) {
+      $applied['inbound_routes_updated'] = $db->affected_rows;
+      $applied['inbound_columns'] = $incRec;
+    } else {
+      $errors[] = 'incoming güncellenemedi: ' . $db->error;
+    }
+  }
+
+  $db->close();
+
+  // 3) Değişikliğin canlı dialplan'a geçmesi için reload (arka planda).
+  if (is_executable($FWCONSOLE)) {
+    @shell_exec('sudo ' . escapeshellarg($FWCONSOLE) . ' reload > /tmp/freepbx-recording-reload.log 2>&1 &');
+    $applied['reload'] = 'başlatıldı';
+  }
+
+  // 4) Kayıt klasörü durumu (bugün kaç dosya oluştu?)
+  $monitor = '/var/spool/asterisk/monitor';
+  $todayDir = $monitor . '/' . date('Y') . '/' . date('m') . '/' . date('d');
+  $applied['monitor_dir'] = is_dir($monitor) ? $monitor : 'bulunamadı';
+  $applied['today_dir'] = is_dir($todayDir) ? $todayDir : 'henüz oluşmadı';
+  $applied['today_file_count'] = is_dir($todayDir) ? max(0, count(@scandir($todayDir) ?: []) - 2) : 0;
+  $applied['monitor_writable'] = is_dir($monitor) ? is_writable($monitor) : false;
+
+  json_response([
+    'success' => empty($errors),
+    'mode' => $mode,
+    'applied' => $applied,
+    'errors' => $errors,
+    'note' => 'Kayıt yalnızca bu işlemden sonra yapılan çağrılar için oluşur.',
+  ]);
+}
+
 if ($action === 'bulk_recording' || $action === 'enable_recording') {
+
   if (!is_executable($FWCONSOLE)) {
     json_response(['success' => false, 'error' => 'fwconsole bulunamadı veya çalıştırılamıyor'], 500);
   }
