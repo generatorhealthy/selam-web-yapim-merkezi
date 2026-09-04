@@ -159,97 +159,6 @@ const DISPOSITION_TR: Record<string, string> = {
 
 const dispositionTr = (v: string) => DISPOSITION_TR[(v || "").toUpperCase()] ?? (v || "Bilinmiyor");
 
-// Çağrı kaydı oynatıcı: FreePBX sunucusundaki ses dosyasını edge function
-// üzerinden base64 olarak çeker ve tarayıcıda blob URL ile çalar.
-const RecordingPlayer = ({
-  file,
-  date,
-}: {
-  file?: string | null;
-  date?: string;
-}) => {
-  const [loading, setLoading] = useState(false);
-  const [url, setUrl] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [url]);
-
-  if (!file) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-        <MicOff className="h-3.5 w-3.5" /> Kayıt yok
-      </span>
-    );
-  }
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
-        body: { action: "recording_file", file, date: (date || "").slice(0, 10) },
-      });
-      if (error) throw error;
-      if (!data?.base64) throw new Error(data?.error || "Kayıt bulunamadı");
-      const bytes = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
-      const blobUrl = URL.createObjectURL(new Blob([bytes], { type: data.mime || "audio/wav" }));
-      setUrl(blobUrl);
-      setTimeout(() => {
-        audioRef.current?.play().catch(() => undefined);
-      }, 50);
-    } catch (e) {
-      toast({
-        title: "Kayıt dinlenemedi",
-        description: e instanceof Error ? e.message : "Ses dosyası alınamadı.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (url) {
-    return (
-      <div className="flex items-center gap-2">
-        <Button
-          size="icon"
-          variant="outline"
-          className="h-8 w-8"
-          onClick={() => {
-            const a = audioRef.current;
-            if (!a) return;
-            if (a.paused) a.play().catch(() => undefined);
-            else a.pause();
-          }}
-        >
-          {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
-        <audio
-          ref={audioRef}
-          src={url}
-          controls
-          preload="auto"
-          className="h-8 max-w-[190px]"
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={load} disabled={loading}>
-      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-      Dinle
-    </Button>
-  );
-};
-
 const fmtMinutes = (totalMin: number) => {
   const h = Math.floor(totalMin / 60);
   const m = Math.round(totalMin % 60);
@@ -741,9 +650,6 @@ export const PbxCallStats = () => {
                                 <TableCell className="text-right text-sm font-medium">
                                   {isOpen ? fmtMinutes(num(t.sure) / 60) : <span className="text-muted-foreground">—</span>}
                                 </TableCell>
-                                <TableCell>
-                                  <RecordingPlayer file={t.recordingfile} date={t.calldate} />
-                                </TableCell>
                               </TableRow>
                             );
                           })}
@@ -823,9 +729,6 @@ export const PbxCallStats = () => {
                               >
                                 {dispositionTr(r.disposition)}
                               </span>
-                            </TableCell>
-                            <TableCell>
-                              <RecordingPlayer file={r.recordingfile} date={r.calldate} />
                             </TableCell>
                           </TableRow>
                         );
