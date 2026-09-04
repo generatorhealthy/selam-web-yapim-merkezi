@@ -14,7 +14,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { AdminTopBar } from "@/components/AdminTopBar";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, Users, Edit2, Save, X, Plus, PhoneForwarded, Search, BarChart3, Hash, Server, CheckCircle2, Sparkles, Mic } from "lucide-react";
+import { Phone, Users, Edit2, Save, X, Plus, PhoneForwarded, Search, BarChart3, Hash, Server, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { PbxCallStats } from "@/components/admin/PbxCallStats";
 
@@ -42,55 +42,6 @@ const PbxManagement = () => {
   });
   const [bulkLoading, setBulkLoading] = useState(false);
   const [trunkLoading, setTrunkLoading] = useState(false);
-  const [recordingLoading, setRecordingLoading] = useState(false);
-
-  // Tüm dahililerde çağrı kaydını (force) açar; yeni dahililer zaten kayıtlı oluşur.
-  // Önce FreePBX veritabanına kalıcı olarak yazar (santral yeniden yüklenince silinmesin),
-  // ardından canlı dialplan için AstDB politikalarını uygular.
-  const handleBulkRecording = async () => {
-    if (!confirm("Tüm çağrılarda (gelen/giden, danışan görüşmeleri dahil) ses kaydı kalıcı olarak açılacak. Devam edilsin mi?")) return;
-    setRecordingLoading(true);
-    try {
-      let permanentNote = "";
-      const { data: setupData, error: setupError } = await supabase.functions.invoke("freepbx-create-extension", {
-        body: { action: "recording_setup", mode: "force" },
-      });
-      if (setupError || setupData?.success === false) {
-        permanentNote = "Kalıcı ayar yazılamadı, geçici ayar uygulandı.";
-      } else {
-        const extCount = setupData?.applied?.extensions_updated ?? 0;
-        const inCount = setupData?.applied?.inbound_routes_updated ?? 0;
-        permanentNote = `Kalıcı ayar yazıldı (${extCount} dahili, ${inCount} gelen yönlendirme).`;
-      }
-
-      const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
-        body: { action: "bulk_recording", mode: "force" },
-      });
-      if (error) {
-        const message = await getFunctionErrorMessage(error, "Çağrı kaydı açılamadı.");
-        throw new Error(message);
-      }
-      const count =
-        data?.extension_count ?? data?.updated ?? (Array.isArray(data?.extensions) ? data.extensions.length : 0);
-      if (data?.success === false) {
-        throw new Error(data?.error || "Çağrı kaydı açılamadı.");
-      }
-      toast({
-        title: "Çağrı Kaydı Açıldı",
-        description: `${count} dahilide kayıt aktif edildi. ${permanentNote} Kayıt yalnızca bundan sonraki çağrılar için oluşur.`,
-      });
-
-    } catch (error) {
-      console.error("Bulk recording error:", error);
-      toast({
-        title: "Hata",
-        description: error instanceof Error ? error.message : "Çağrı kaydı açılamadı.",
-        variant: "destructive",
-      });
-    } finally {
-      setRecordingLoading(false);
-    }
-  };
   const [creatingExtId, setCreatingExtId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -663,15 +614,6 @@ const PbxManagement = () => {
                       >
                         <Server className="h-4 w-4" />
                         {trunkLoading ? "Uygulanıyor..." : "Trunk & Rota Ayarını Uygula"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={handleBulkRecording}
-                        disabled={recordingLoading}
-                      >
-                        <Mic className="h-4 w-4" />
-                        {recordingLoading ? "Açılıyor..." : "Tüm Çağrı Kayıtlarını Aç"}
                       </Button>
                       {addDialog}
                     </div>
