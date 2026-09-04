@@ -500,24 +500,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psikolog-yaren-korkmazer-ile-online-danismanlikta-bilimsel-ve-cok-yonlu-yaklasim</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psk-nisa-hazan-canbolat-ile-bireysel-ve-online-psikolojik-destek</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psk-nisa-nur-kulahcioglu-ile-cocuk-ergen-ve-yetiskinlere-profesyonel-destek</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/psk-ruken-esen-ile-cocuk-ve-genclere-profesyonel-destek</loc>
     <lastmod>2025-09-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -550,6 +532,24 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/sevinc-kanat-ile-cocuk-ve-ailelere-butuncul-destek</loc>
     <lastmod>2025-09-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikolog-yaren-korkmazer-ile-online-danismanlikta-bilimsel-ve-cok-yonlu-yaklasim</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psk-nisa-hazan-canbolat-ile-bireysel-ve-online-psikolojik-destek</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psk-nisa-nur-kulahcioglu-ile-cocuk-ergen-ve-yetiskinlere-profesyonel-destek</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7778,6 +7778,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/canakkale-psikolog-nesibe-tugce-sahin</loc>
+    <lastmod>2026-09-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/psikoonkoloji-uzmani-ne-is-yapar</loc>
     <lastmod>2026-05-15</lastmod>
     <changefreq>weekly</changefreq>
@@ -9778,14 +9784,20 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/klinik-psikolog/basak-tiras-bilgili</loc>
+    <lastmod>2026-05-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/psikolog/zeynep-caner</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/klinik-psikolog/basak-tiras-bilgili</loc>
-    <lastmod>2026-05-16</lastmod>
+    <loc>https://doktorumol.com.tr/psikolog/nesibe-tugce-sahin</loc>
+    <lastmod>2026-09-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
