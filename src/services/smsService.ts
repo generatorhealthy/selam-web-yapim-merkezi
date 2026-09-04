@@ -1,10 +1,17 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { isBlockedPhone } from "@/utils/blockedNumbers";
 
 // Verimor SMS API ile SMS gönderme
 export const sendSms = async (phone: string, message: string) => {
   try {
+    if (isBlockedPhone(phone)) {
+      console.warn(`[smsService] Engellenmiş numara, SMS gönderilmedi: ${phone}`);
+      return { success: false, blocked: true, error: "Bu numara engellenmiş listede" } as any;
+    }
+
     console.log(`Sending SMS to ${phone}: ${message}`);
+
     
     // Statik IP proxy kullanarak Edge function'ı çağır (öncelikli)
     const tryInvoke = async (fnName: string) => {
