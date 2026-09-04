@@ -509,6 +509,39 @@ if ($action === 'recording_setup') {
     }
   } else {
     $errors[] = 'users tablosunda kayıt (recording_*) kolonu bulunamadı';
+    // Bu FreePBX sürümü kayıt politikasını başka bir tabloda tutuyor olabilir.
+    // Adayları otomatik keşfet ve raporla.
+    $candidates = [];
+    $q = $db->query(
+      "SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = '" . $db->real_escape_string($dbname) . "'
+         AND COLUMN_NAME LIKE '%record%'
+       ORDER BY TABLE_NAME, COLUMN_NAME"
+    );
+    if ($q) {
+      while ($row = $q->fetch_assoc()) {
+        $candidates[$row['TABLE_NAME']][] = $row['COLUMN_NAME'];
+      }
+      $q->free();
+    }
+    $applied['recording_column_candidates'] = $candidates;
+
+    // kvstore tabloları (FreePBX 16/17) kayıt ayarlarını key/value olarak tutabilir.
+    $kv = [];
+    $q2 = $db->query(
+      "SELECT TABLE_NAME FROM information_schema.TABLES
+       WHERE TABLE_SCHEMA = '" . $db->real_escape_string($dbname) . "'
+         AND (TABLE_NAME LIKE 'kvstore%' OR TABLE_NAME LIKE '%recording%' OR TABLE_NAME LIKE '%callrecord%')
+       ORDER BY TABLE_NAME"
+    );
+    if ($q2) {
+      while ($row = $q2->fetch_assoc()) $kv[] = $row['TABLE_NAME'];
+      $q2->free();
+    }
+    $applied['recording_table_candidates'] = $kv;
+
+    // users tablosunun kolon listesini de raporla (teşhis için).
+    $applied['users_columns'] = $userCols;
   }
 
   // 2) Gelen yönlendirmeler (incoming tablosu): danışan bize aradığında
