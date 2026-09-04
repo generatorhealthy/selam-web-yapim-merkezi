@@ -45,10 +45,24 @@ const PbxManagement = () => {
   const [recordingLoading, setRecordingLoading] = useState(false);
 
   // Tüm dahililerde çağrı kaydını (force) açar; yeni dahililer zaten kayıtlı oluşur.
+  // Önce FreePBX veritabanına kalıcı olarak yazar (santral yeniden yüklenince silinmesin),
+  // ardından canlı dialplan için AstDB politikalarını uygular.
   const handleBulkRecording = async () => {
-    if (!confirm("Tüm dahililerde gelen/giden çağrı kaydı 'force' olarak açılacak. Devam edilsin mi?")) return;
+    if (!confirm("Tüm çağrılarda (gelen/giden, danışan görüşmeleri dahil) ses kaydı kalıcı olarak açılacak. Devam edilsin mi?")) return;
     setRecordingLoading(true);
     try {
+      let permanentNote = "";
+      const { data: setupData, error: setupError } = await supabase.functions.invoke("freepbx-create-extension", {
+        body: { action: "recording_setup", mode: "force" },
+      });
+      if (setupError || setupData?.success === false) {
+        permanentNote = "Kalıcı ayar yazılamadı, geçici ayar uygulandı.";
+      } else {
+        const extCount = setupData?.applied?.extensions_updated ?? 0;
+        const inCount = setupData?.applied?.inbound_routes_updated ?? 0;
+        permanentNote = `Kalıcı ayar yazıldı (${extCount} dahili, ${inCount} gelen yönlendirme).`;
+      }
+
       const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
         body: { action: "bulk_recording", mode: "force" },
       });
@@ -63,8 +77,9 @@ const PbxManagement = () => {
       }
       toast({
         title: "Çağrı Kaydı Açıldı",
-        description: `${count} dahilide kayıt aktif edildi. ${data?.note || "İşlem arka planda sürüyor; sonraki çağrılardan itibaren kayıt alınır."}`,
+        description: `${count} dahilide kayıt aktif edildi. ${permanentNote} Kayıt yalnızca bundan sonraki çağrılar için oluşur.`,
       });
+
     } catch (error) {
       console.error("Bulk recording error:", error);
       toast({
