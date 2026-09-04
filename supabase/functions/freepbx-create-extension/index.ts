@@ -544,7 +544,7 @@ serve(async (req) => {
         throw new Error(`PJSIP dahili oluşturulamadı: ${addResult?.addExtension?.message ?? "bilinmeyen hata"}`);
       }
 
-      const followMeList = `80${phone}#-81${phone}#`;
+      const followMeList = `0${phone}#`;
       await enforceFollowMeRouting(token, extension, followMeList);
       return new Response(JSON.stringify({ success: true, extension, tech: "pjsip", followMeList }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -634,9 +634,9 @@ serve(async (req) => {
         if (d.length < 10) return null;
         // keep last 10 digits (mobile without leading 0)
         d = d.slice(-10);
-        // 80 ilk FCT hattını, 81 ikinci FCT hattını seçer. İlk hat çağrı merkezinin
-        // mevcut görüşmesinde meşgulse Follow-Me ikinci hattan devam eder.
-        return `80${d}#-81${d}#`;
+        // Ön ek kullanmadan (0XXXXXXXXXX#) çıkış: Verimor rotası zorunlu CID ile
+        // uzmanın cebini çaldırır. Bu düzen sahada çalıştığı doğrulanan ayardır.
+        return `0${d}#`;
       };
 
       const onlyExt = (body.extension ?? "").toString().trim();
@@ -855,7 +855,7 @@ serve(async (req) => {
       throw new Error("FREEPBX_BULK_URL secret tanımlı değil. Sunucudaki PHP endpoint adresini ekleyin.");
     }
 
-    // Follow-Me: aramayı uzmanın cep telefonuna iki FCT hattıyla yedekli yönlendir.
+    // Follow-Me: aramayı uzmanın cep telefonuna Verimor rotasıyla yönlendir.
     const buildFollowMe = (raw: string): string => {
       let d = (raw ?? "").replace(/\D/g, "");
       if (!d) return "";
@@ -863,9 +863,9 @@ serve(async (req) => {
       if (d.startsWith("0")) d = d.slice(1);
       if (d.length < 10) return "";
       d = d.slice(-10);
-      // 80 ilk FCT hattını, 81 ikinci FCT hattını seçer. İlk hat doluysa ikinci
-      // hat otomatik denenir; her rota kendi yetkili CID'sini gönderir.
-      return `80${d}#-81${d}#`;
+      // Ön ek kullanmadan (0XXXXXXXXXX#) çıkış: Verimor rotası zorunlu CID ile
+      // uzmanın cebini çaldırır.
+      return `0${d}#`;
     };
     const followMeList = buildFollowMe(phone);
 
