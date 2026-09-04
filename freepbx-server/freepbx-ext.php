@@ -945,6 +945,124 @@ if ($action === 'trunk_config') {
 }
 
 
+/* ============================================================
+ * KAYIT AYARLARINI GERİ AL  (action = recording_revert)
+ * Zorunlu çağrı kaydı (force) sanal dahililerde uzman aktarımını bozuyordu.
+ * Bu işlem tüm dahililerde kayıt politikasını dontcare yapar, gelen rota
+ * kayıt alanlarını temizler ve yönetilen dialplan bloğunu kaldırır.
+ * ============================================================ */
+if ($action === 'recording_revert') {
+  if (!is_executable($FWCONSOLE)) {
+    json_response(['success' => false, 'error' => 'fwconsole bulunamadı veya çalıştırılamıyor'], 500);
+  }
+
+  $applied = [];
+  $errors = [];
+
+  // 1) Dialplan içindeki yönetilen kayıt bloğunu kaldır.
+  $customDialplan = '/etc/asterisk/extensions_custom.conf';
+  $beginMarker = '; BEGIN DOKTORUMOL ALL-CALL RECORDING';
+  $endMarker = '; END DOKTORUMOL ALL-CALL RECORDING';
+  $existingDialplan = @file_get_contents($customDialplan);
+  if ($existingDialplan !== false) {
+    $pattern = '/' . preg_quote($beginMarker, '/') . '.*?' . preg_quote($endMarker, '/') . '\s*/s';
+    $cleaned = preg_replace($pattern, '', $existingDialplan);
+    if ($cleaned !== null && $cleaned !== $existingDialplan) {
+      @file_put_contents($customDialplan, rtrim($cleaned) . "\n", LOCK_EX);
+      $applied['dialplan_hook'] = 'kaldırıldı';
+    } else {
+      $applied['dialplan_hook'] = 'yoktu';
+    }
+  }
+
+  // 2) Tüm dahililerin AstDB kayıt politikalarını dontcare yap.
+  $extList = [];
+  $show = trim((string)shell_exec('sudo ' . escapeshellarg($FWCONSOLE)
+    . ' asterisk -rx ' . escapeshellarg('database show AMPUSER') . ' 2>&1'));
+  if (preg_match_all('#/AMPUSER/(\d{3,4})/recording/#', $show, $m)) {
+    $extList = array_values(array_unique($m[1]));
+  }
+
+  if (!empty($extList)) {
+    $ids = implode(' ', array_map('intval', $extList));
+    $script = '/tmp/revert_recording_' . date('Ymd_His') . '.sh';
+    $scriptContent = "#!/bin/bash\n"
+      . "LOG=/tmp/revert_recording.log\n"
+      . ": > \$LOG\n"
+      . "for e in {$ids}; do\n"
+      . "  for p in in/external out/external in/internal out/internal; do\n"
+      . "    sudo " . escapeshellarg($FWCONSOLE) . " asterisk -rx \"database put AMPUSER \${e}/recording/\${p} dontcare\" >> \$LOG 2>&1\n"
+      . "  done\n"
+      . "  sudo " . escapeshellarg($FWCONSOLE) . " asterisk -rx \"database del AMPUSER \${e}/recording/priority\" >> \$LOG 2>&1\n"
+      . "done\n"
+      . "echo 'RECORDING_REVERT_DONE' >> \$LOG\n";
+    if (@file_put_contents($script, $scriptContent) === false) {
+      $errors[] = 'Geri alma komut dosyası oluşturulamadı';
+    } else {
+      @chmod($script, 0755);
+      shell_exec('nohup bash ' . escapeshellarg($script) . ' > /dev/null 2>&1 &');
+      $applied['extensions_reverted'] = count($extList);
+      $applied['log'] = '/tmp/revert_recording.log';
+    }
+  } else {
+    $applied['extensions_reverted'] = 0;
+  }
+
+  // 3) Gelen rotalardaki kayıt alanlarını temizle.
+  $readVal = function($content, $key) {
+    $qk = preg_quote($key, '/');
+    if (preg_match('/\[\s*[\'\"]' . $qk . '[\'\"]\s*\]\s*=\s*[\'\"]([^\'\"]*)[\'\"]/m', $content, $m)) return $m[1];
+    if (preg_match('/^\s*' . $qk . '\s*=\s*[\'\"]?([^\'\"\r\n;#]+)[\'\"]?/m', $content, $m)) return trim($m[1]);
+    return null;
+  };
+  $dbhost = 'localhost'; $dbuser = ''; $dbpass = ''; $dbname = 'asterisk';
+  foreach (['/etc/freepbx.conf', '/etc/amportal.conf'] as $confFile) {
+    $conf = @file_get_contents($confFile);
+    if ($conf === false) continue;
+    $v = $readVal($conf, 'AMPDBHOST'); if ($v) $dbhost = $v;
+    $v = $readVal($conf, 'AMPDBUSER'); if ($v) $dbuser = $v;
+    $v = $readVal($conf, 'AMPDBPASS'); if ($v !== null) $dbpass = $v;
+    $v = $readVal($conf, 'AMPDBNAME'); if ($v) $dbname = $v;
+  }
+  if ($dbuser !== '') {
+    if (function_exists('mysqli_report')) { mysqli_report(MYSQLI_REPORT_OFF); }
+    $db = @new mysqli($dbhost, $dbuser, $dbpass, $dbname);
+    if (!$db->connect_errno) {
+      $db->set_charset('utf8mb4');
+      $incRec = [];
+      $r = $db->query("SHOW COLUMNS FROM `incoming`");
+      if ($r) {
+        while ($row = $r->fetch_assoc()) {
+          if (stripos($row['Field'], 'record') !== false) $incRec[] = $row['Field'];
+        }
+        $r->free();
+      }
+      if (!empty($incRec)) {
+        $sets = [];
+        foreach ($incRec as $c) $sets[] = "`$c` = 'dontcare'";
+        if ($db->query("UPDATE `incoming` SET " . implode(', ', $sets))) {
+          $applied['inbound_routes_reverted'] = $db->affected_rows;
+        } else {
+          $errors[] = 'incoming temizlenemedi: ' . $db->error;
+        }
+      }
+      $db->close();
+    } else {
+      $errors[] = 'FreePBX veritabanına bağlanılamadı: ' . $db->connect_error;
+    }
+  }
+
+  shell_exec('sudo ' . escapeshellarg($FWCONSOLE) . ' reload > /dev/null 2>&1 &');
+  $applied['reload'] = 'arka planda baslatildi';
+
+  json_response([
+    'success' => empty($errors),
+    'applied' => $applied,
+    'errors' => $errors,
+    'note' => 'Çağrı kaydı zorlaması kaldırıldı; aktarım eski çalışan düzenine döndü.',
+  ]);
+}
+
 $ext      = preg_replace('/\D/', '', (string)($in['extension'] ?? ''));
 $name     = trim((string)($in['name'] ?? ''));
 // Çift hat yönlendirmesi için "-" ayırıcısı korunmalı (or. 805xxxxxxxxx#-815xxxxxxxxx#)
