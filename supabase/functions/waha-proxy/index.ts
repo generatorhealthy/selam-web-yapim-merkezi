@@ -1,3 +1,4 @@
+import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
