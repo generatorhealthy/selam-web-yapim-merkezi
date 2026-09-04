@@ -332,6 +332,36 @@ serve(async (req) => {
       });
     }
 
+    // Kayıt zorlamasını geri al (aktarım sorununu çözmek için)
+    if (action === "recording_revert") {
+      if (!BULK_URL || !BULK_SECRET) {
+        throw new Error("FreePBX bağlantısı yapılandırılmamış (BULK_URL/BULK_SECRET).");
+      }
+      const res = await fetchWithTimeout(
+        BULK_URL,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "recording_revert", secret: BULK_SECRET }),
+        },
+        45000,
+      );
+      const text = await res.text();
+      let json: any;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(`Kayıt geri alma yanıtı çözülemedi: ${text}`);
+      }
+      if (!res.ok || json?.success === false) {
+        const detail = json?.errors?.length ? ` (${json.errors.join(" | ")})` : "";
+        throw new Error((json?.error || `Kayıt geri alma başarısız (${res.status})`) + detail);
+      }
+      return new Response(JSON.stringify(json), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "bulk_recording" || action === "enable_recording") {
       if (!BULK_URL || !BULK_SECRET) {
         throw new Error("FreePBX bağlantısı yapılandırılmamış (BULK_URL/BULK_SECRET).");

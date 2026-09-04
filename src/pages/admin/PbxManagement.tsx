@@ -41,6 +41,7 @@ const PbxManagement = () => {
     internal_number: ""
   });
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [revertLoading, setRevertLoading] = useState(false);
   const [trunkLoading, setTrunkLoading] = useState(false);
   const [creatingExtId, setCreatingExtId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,6 +153,36 @@ const PbxManagement = () => {
       });
     } finally {
       setBulkLoading(false);
+    }
+  };
+
+  // Zorunlu çağrı kaydı sanal dahililerde aktarım bacağını bozuyordu; tek tıkla geri al.
+  const handleRecordingRevert = async () => {
+    if (!confirm("Tüm dahililerde zorunlu çağrı kaydı kapatılacak ve aktarma ayarları eski çalışan haline döndürülecek. Devam edilsin mi?")) {
+      return;
+    }
+    setRevertLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("freepbx-create-extension", {
+        body: { action: "recording_revert" },
+      });
+      if (error) {
+        const message = await getFunctionErrorMessage(error, "Kayıt ayarları geri alınamadı.");
+        throw new Error(message);
+      }
+      toast({
+        title: "Kayıt Ayarları Geri Alındı",
+        description: `${data?.applied?.extensions_reverted ?? 0} dahili eski haline döndü. Santral yenileniyor.`,
+      });
+    } catch (error) {
+      console.error("Recording revert error:", error);
+      toast({
+        title: "Hata",
+        description: error instanceof Error ? error.message : "Kayıt ayarları geri alınamadı.",
+        variant: "destructive",
+      });
+    } finally {
+      setRevertLoading(false);
     }
   };
 
@@ -616,6 +647,15 @@ const PbxManagement = () => {
                       >
                         <Server className="h-4 w-4" />
                         {trunkLoading ? "Uygulanıyor..." : "Trunk & Rota Ayarını Uygula"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={handleRecordingRevert}
+                        disabled={revertLoading}
+                      >
+                        <Server className="h-4 w-4" />
+                        {revertLoading ? "Geri alınıyor..." : "Kayıt Ayarlarını Geri Al"}
                       </Button>
                       {addDialog}
                     </div>
