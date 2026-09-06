@@ -1,3 +1,4 @@
+import { isBlockedPhone } from "@/utils/blockedNumbers";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,10 @@ const DanismanlikRandevusuAl = () => {
     const parsed = schema.safeParse({ full_name: fullName, phone, therapy_type: therapyType });
     if (!parsed.success) {
       toast.error(parsed.error.errors[0].message);
+      return;
+    }
+    if (isBlockedPhone(parsed.data.phone)) {
+      toast.error("Bu telefon numarası ile başvuru oluşturulamıyor.");
       return;
     }
     setSubmitting(true);
