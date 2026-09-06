@@ -1,3 +1,4 @@
+import { isBlockedPhone } from "@/utils/blockedNumbers";
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -105,6 +106,11 @@ const BookAppointment = () => {
       return;
     }
     
+    if (isBlockedPhone(formData.patientPhone)) {
+      toast.error('Bu telefon numarası ile randevu oluşturulamıyor.');
+      return;
+    }
+
     if (!formData.appointmentDate) {
       toast.error('Randevu tarihi seçilmelidir');
       return;
