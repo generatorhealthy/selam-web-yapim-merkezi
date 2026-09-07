@@ -554,24 +554,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/fatmanur-gencoglan-ile-cocuk-ergen-ve-yetiskinlere-butuncul-destek</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/meryem-ilke-narin-ile-duygusal-ve-sosyal-gelisimde-butuncul-yaklasim</loc>
-    <lastmod>2025-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/tijen-yucesoy-ile-30-yillik-tecrubeye-dayali-guvenli-rehberlik</loc>
-    <lastmod>2025-09-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/elif-er-ile-birey-ve-toplum-arasinda-bir-yolculuk</loc>
     <lastmod>2025-09-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -616,6 +598,18 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/vucutta-yag-yakimi-nasil-anlasilir</loc>
     <lastmod>2025-10-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/meryem-ilke-narin-ile-duygusal-ve-sosyal-gelisimde-butuncul-yaklasim</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/tijen-yucesoy-ile-30-yillik-tecrubeye-dayali-guvenli-rehberlik</loc>
+    <lastmod>2026-09-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7448,6 +7442,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/fatmanur-gencoglan-ile-cocuk-ergen-ve-yetiskinlere-butuncul-destek</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/burak-ala-ile-bdt-egitimi</loc>
     <lastmod>2026-08-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -9504,12 +9504,6 @@
   <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-muge-oren</loc>
     <lastmod>2026-05-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolog/psk-yaren-zeynep-uguz</loc>
-    <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
