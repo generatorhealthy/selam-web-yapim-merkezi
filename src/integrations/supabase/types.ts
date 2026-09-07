@@ -305,6 +305,7 @@ export type Database = {
           created_at: string | null
           created_by_specialist: boolean | null
           id: string
+          ip_address: string | null
           notes: string | null
           patient_email: string
           patient_name: string
@@ -322,6 +323,7 @@ export type Database = {
           created_at?: string | null
           created_by_specialist?: boolean | null
           id?: string
+          ip_address?: string | null
           notes?: string | null
           patient_email: string
           patient_name: string
@@ -339,6 +341,7 @@ export type Database = {
           created_at?: string | null
           created_by_specialist?: boolean | null
           id?: string
+          ip_address?: string | null
           notes?: string | null
           patient_email?: string
           patient_name?: string
@@ -4253,6 +4256,7 @@ export type Database = {
           external_id: string | null
           full_name: string
           id: string
+          ip_address: string | null
           last_call_date: string | null
           last_called_at: string | null
           lead_date: string | null
@@ -4277,6 +4281,7 @@ export type Database = {
           external_id?: string | null
           full_name: string
           id?: string
+          ip_address?: string | null
           last_call_date?: string | null
           last_called_at?: string | null
           lead_date?: string | null
@@ -4301,6 +4306,7 @@ export type Database = {
           external_id?: string | null
           full_name?: string
           id?: string
+          ip_address?: string | null
           last_call_date?: string | null
           last_called_at?: string | null
           lead_date?: string | null
@@ -7246,6 +7252,7 @@ export type Database = {
       cleanup_expired_otps: { Args: never; Returns: undefined }
       cleanup_old_backups: { Args: never; Returns: undefined }
       cleanup_old_sessions: { Args: never; Returns: undefined }
+      client_ip_from_headers: { Args: never; Returns: string }
       create_full_database_backup: {
         Args: {
           p_backup_type?: string
