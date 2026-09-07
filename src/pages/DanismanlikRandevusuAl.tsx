@@ -1,4 +1,4 @@
-import { isBlockedPhone } from "@/utils/blockedNumbers";
+import { isBlockedPhone, isBlockedVisitor } from "@/utils/blockedNumbers";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -39,8 +39,8 @@ const DanismanlikRandevusuAl = () => {
       toast.error(parsed.error.errors[0].message);
       return;
     }
-    if (isBlockedPhone(parsed.data.phone)) {
-      toast.error("Bu telefon numarası ile başvuru oluşturulamıyor.");
+    if (isBlockedVisitor({ name: parsed.data.full_name, phone: parsed.data.phone })) {
+      toast.error("Bu bilgilerle başvuru oluşturulamıyor.");
       return;
     }
     setSubmitting(true);

@@ -1,4 +1,4 @@
-import { isBlockedPhone } from "@/utils/blockedNumbers";
+import { isBlockedPhone, isBlockedVisitor } from "@/utils/blockedNumbers";
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -106,8 +106,8 @@ const BookAppointment = () => {
       return;
     }
     
-    if (isBlockedPhone(formData.patientPhone)) {
-      toast.error('Bu telefon numarası ile randevu oluşturulamıyor.');
+    if (isBlockedVisitor({ name: formData.patientName, email: formData.patientEmail, phone: formData.patientPhone })) {
+      toast.error('Bu bilgilerle randevu oluşturulamıyor.');
       return;
     }
 

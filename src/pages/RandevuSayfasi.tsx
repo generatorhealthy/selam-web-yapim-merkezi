@@ -1,4 +1,4 @@
-import { isBlockedPhone } from "@/utils/blockedNumbers";
+import { isBlockedPhone, isBlockedVisitor } from "@/utils/blockedNumbers";
 import React, { useState, useEffect } from 'react';
 import { getAvailableSlotsForDate, parseAvailability, DEFAULT_TIME_SLOTS } from "@/utils/availabilityUtils";
 import { supabase } from '@/integrations/supabase/client';
@@ -300,10 +300,10 @@ const RandevuSayfasi = () => {
       return;
     }
 
-    if (isBlockedPhone(formData.patientPhone)) {
+    if (isBlockedVisitor({ name: formData.patientName, email: formData.patientEmail, phone: formData.patientPhone })) {
       toast({
         title: "Randevu oluşturulamadı",
-        description: "Bu telefon numarası ile randevu oluşturulamıyor.",
+        description: "Bu bilgilerle randevu oluşturulamıyor.",
         variant: "destructive",
       });
       return;

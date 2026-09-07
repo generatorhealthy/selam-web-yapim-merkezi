@@ -1,4 +1,4 @@
-import { isBlockedPhone } from "@/utils/blockedNumbers";
+import { isBlockedPhone, isBlockedVisitor } from "@/utils/blockedNumbers";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,8 +89,8 @@ export default function MobileBooking() {
       toast({ title: "Eksik bilgi", description: "Tüm alanları doldurun", variant: "destructive" });
       return;
     }
-    if (isBlockedPhone(phone)) {
-      toast({ title: "Randevu oluşturulamadı", description: "Bu telefon numarası ile randevu oluşturulamıyor.", variant: "destructive" });
+    if (isBlockedVisitor({ name, email, phone })) {
+      toast({ title: "Randevu oluşturulamadı", description: "Bu bilgilerle randevu oluşturulamıyor.", variant: "destructive" });
       return;
     }
     setSubmitting(true);
