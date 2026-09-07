@@ -4,6 +4,7 @@ export const BLOCKED_PHONES: string[] = [
   "905383254444",
   "905308443006",
   "905541582878",
+  "905399572171",
 ];
 
 /** Numarayı 90XXXXXXXXXX biçimine indirger. */

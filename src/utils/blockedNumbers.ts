@@ -1,6 +1,6 @@
 // Kötüye kullanım nedeniyle engellenen numaralar.
 // Bu numaralara hiçbir koşulda SMS / WhatsApp / otomatik arama gönderilmez.
-export const BLOCKED_PHONES = ["905383254444", "905308443006", "905541582878"];
+export const BLOCKED_PHONES = ["905383254444", "905308443006", "905541582878", "905399572171"];
 
 export const normalizeBlockPhone = (raw?: string | null): string => {
   let d = (raw || "").replace(/\D/g, "");
