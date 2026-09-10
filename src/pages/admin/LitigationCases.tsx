@@ -113,12 +113,16 @@ type CollectedEvidence = {
   appointments: any[];
   reviews: any[];
   testResults: any[];
+  profiles: any[];
+  emailLogs: any[];
 };
 
 const emptyCollected: CollectedEvidence = {
   orders: [], blogs: [], sms: [], proceedings: [], consents: [],
   referrals: [], appointments: [], reviews: [], testResults: [],
+  profiles: [], emailLogs: [],
 };
+
 
 export default function LitigationCases() {
   const navigate = useNavigate();
