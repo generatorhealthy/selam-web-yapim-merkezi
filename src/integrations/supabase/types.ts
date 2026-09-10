@@ -4049,6 +4049,131 @@ export type Database = {
         }
         Relationships: []
       }
+      litigation_cases: {
+        Row: {
+          claim_amount: number
+          contract_pdf_url: string | null
+          court_name: string | null
+          created_at: string
+          created_by: string | null
+          defendant_address: string | null
+          defendant_city: string | null
+          defendant_email: string | null
+          defendant_name: string
+          defendant_phone: string | null
+          defendant_tc_no: string | null
+          file_no: string | null
+          id: string
+          invoice_pdf_url: string | null
+          legal_proceeding_id: string | null
+          notes: string | null
+          specialist_id: string | null
+          status: string
+          summary: string | null
+          unpaid_months: number
+          updated_at: string
+        }
+        Insert: {
+          claim_amount?: number
+          contract_pdf_url?: string | null
+          court_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          defendant_address?: string | null
+          defendant_city?: string | null
+          defendant_email?: string | null
+          defendant_name: string
+          defendant_phone?: string | null
+          defendant_tc_no?: string | null
+          file_no?: string | null
+          id?: string
+          invoice_pdf_url?: string | null
+          legal_proceeding_id?: string | null
+          notes?: string | null
+          specialist_id?: string | null
+          status?: string
+          summary?: string | null
+          unpaid_months?: number
+          updated_at?: string
+        }
+        Update: {
+          claim_amount?: number
+          contract_pdf_url?: string | null
+          court_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          defendant_address?: string | null
+          defendant_city?: string | null
+          defendant_email?: string | null
+          defendant_name?: string
+          defendant_phone?: string | null
+          defendant_tc_no?: string | null
+          file_no?: string | null
+          id?: string
+          invoice_pdf_url?: string | null
+          legal_proceeding_id?: string | null
+          notes?: string | null
+          specialist_id?: string | null
+          status?: string
+          summary?: string | null
+          unpaid_months?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      litigation_evidence_items: {
+        Row: {
+          case_id: string
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          file_url: string | null
+          id: string
+          importance: string
+          occurred_at: string | null
+          source_ref: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          importance?: string
+          occurred_at?: string | null
+          source_ref?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          importance?: string
+          occurred_at?: string | null
+          source_ref?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "litigation_evidence_items_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "litigation_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mobile_activity_logs: {
         Row: {
           action_type: string

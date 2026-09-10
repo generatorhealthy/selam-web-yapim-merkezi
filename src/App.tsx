@@ -112,6 +112,7 @@ const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const MapboxSettings = lazy(() => import("./pages/admin/MapboxSettings"));
 const SuccessStatistics = lazy(() => import("./pages/admin/SuccessStatistics"));
 const LegalProceedings = lazy(() => import("./pages/admin/LegalProceedings"));
+const LitigationCases = lazy(() => import("./pages/admin/LitigationCases"));
 const EmployeeSalaryManagement = lazy(() => import("./pages/admin/EmployeeSalaryManagement"));
 const ClientReferrals = lazy(() => import("./pages/admin/ClientReferrals"));
 const MetaLeads = lazy(() => import("./pages/admin/MetaLeads"));
@@ -362,6 +363,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/mapbox" element={<MapboxSettings />} />
               <Route path="/divan_paneli/success-statistics" element={<SuccessStatistics />} />
               <Route path="/divan_paneli/legal-proceedings" element={<LegalProceedings />} />
+              <Route path="/divan_paneli/dava-surecleri" element={<LitigationCases />} />
               <Route path="/divan_paneli/employee-salaries" element={<EmployeeSalaryManagement />} />
               <Route path="/divan_paneli/support-tickets" element={<SupportTickets />} />
               <Route path="/divan_paneli/contracts" element={<ContractManagement />} />
