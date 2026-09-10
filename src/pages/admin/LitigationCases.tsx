@@ -379,9 +379,12 @@ export default function LitigationCases() {
   }
 
   const ipList = Array.from(new Set([
-    ...collected.orders.map((o: any) => o.contract_ip_address).filter(Boolean),
+    ...collected.orders.map((o: any) => o.contract_ip_address || o.ip_address).filter(Boolean),
     ...collected.consents.map((c: any) => c.ip_address).filter(Boolean),
+    ...collected.emailLogs.map((e: any) => e.ip_address).filter(Boolean),
+    ...collected.profiles.flatMap((p: any) => [p.ip_address, p.last_login_ip, p.registration_ip]).filter(Boolean),
   ]));
+
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8 print:p-0 print:bg-background">
