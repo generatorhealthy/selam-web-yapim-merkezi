@@ -355,6 +355,17 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "Dava Süreçleri",
+      description: "Dava dosyaları ve delil arşivi",
+      icon: Scale,
+      gradient: "from-slate-700 via-rose-700 to-red-800",
+      bgGradient: "from-slate-50 to-rose-50",
+      shadowColor: "shadow-rose-900/20",
+      route: "/divan_paneli/dava-surecleri",
+      buttonText: "Dava Dosyalarını Görüntüle",
+      adminOnly: true
+    },
+    {
       title: "Hukuki İşlemler",
       description: "Hukuki süreçleri yönet",
       icon: Scale,
