@@ -207,133 +207,36 @@ export default function LitigationCases() {
   const collectEvidence = async (c: LitigationCase) => {
     setCollecting(true);
     try {
-      const name = c.defendant_name.trim();
-      const email = (c.defendant_email || "").trim();
-      const phone = (c.defendant_phone || "").trim();
-      const last10 = phone.replace(/\D/g, "").slice(-10);
-      const nameLike = `%${name.split(" ").filter(Boolean).join("%")}%`;
-      const dedupe = (rows: any[]) => {
-        const seen = new Set<string>();
-        return rows.filter((r) => {
-          const key = String(r?.id ?? JSON.stringify(r));
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-      };
-
-      // 1) Silinmiş uzmanlar için arşiv (legal_evidence) kayıtlarını bul
-      const { data: archives } = await supabase
-        .from("legal_evidence")
-        .select("*")
-        .or(
-          [
-            `specialist_name.ilike.${nameLike}`,
-            email ? `specialist_email.ilike.%${email}%` : null,
-            last10 ? `specialist_phone.ilike.%${last10}%` : null,
-          ].filter(Boolean).join(",")
-        );
-
-      const archiveRows = (archives || []).filter((a: any) => {
-        const an = (a.specialist_name || "").toLowerCase();
-        const ae = (a.specialist_email || "").toLowerCase();
-        const ap = (a.specialist_phone || "").replace(/\D/g, "");
-        const parts = name.toLowerCase().split(" ").filter(Boolean);
-        const nameHit = parts.length > 0 && parts.every((p) => an.includes(p));
-        const emailHit = !!email && ae === email.toLowerCase();
-        const phoneHit = !!last10 && ap.endsWith(last10);
-        return nameHit || emailHit || phoneHit;
+      const { data, error } = await (supabase as any).rpc("admin_collect_litigation_evidence", {
+        _case_id: c.id,
       });
+      if (error) throw error;
 
-      const specialistIds = Array.from(new Set([
-        c.specialist_id,
-        ...archiveRows.map((a: any) => a.specialist_id),
-      ].filter(Boolean))) as string[];
-
-      const archiveOrders = archiveRows.flatMap((a: any) => a.orders_data || []);
-      const archiveReferrals = archiveRows.flatMap((a: any) => a.referrals_data || []);
-      const archiveEmailLogs = archiveRows.flatMap((a: any) => a.email_logs || []);
-      const profiles = archiveRows.map((a: any) => ({
-        id: a.id,
-        deleted_at: a.created_at,
-        specialist_name: a.specialist_name,
-        specialist_email: a.specialist_email,
-        specialist_phone: a.specialist_phone,
-        specialist_tc_no: a.specialist_tc_no,
-        ...(a.profile_data || {}),
-      }));
-
-      const orderFilters = [
-        email ? `customer_email.ilike.%${email}%` : null,
-        `customer_name.ilike.${nameLike}`,
-        last10 ? `customer_phone.ilike.%${last10}%` : null,
-      ].filter(Boolean).join(",");
-
-      const byIds = <T,>(table: string, select: string, order?: string) =>
-        specialistIds.length
-          ? supabase.from(table as any).select(select).in("specialist_id", specialistIds)
-              .order(order || "created_at", { ascending: true })
-          : Promise.resolve({ data: [] as T[] });
-
-      const queries: any[] = [
-        supabase.from("orders").select("*").or(orderFilters).order("created_at", { ascending: true }),
-        supabase.from("blog_posts").select("id,title,slug,status,published_at,created_at,word_count,author_name")
-          .ilike("author_name", nameLike).order("created_at", { ascending: true }),
-        supabase.from("sms_logs").select("id,created_at,phone,message,status,specialist_name,client_name,client_contact,source")
-          .or([
-            `specialist_name.ilike.${nameLike}`,
-            last10 ? `phone.ilike.%${last10}%` : null,
-          ].filter(Boolean).join(","))
-          .order("created_at", { ascending: true }),
-        supabase.from("legal_proceedings").select("*").ilike("customer_name", nameLike),
-        email
-          ? supabase.from("user_consent_logs").select("*").ilike("email", `%${email}%`).order("accepted_at", { ascending: true })
-          : Promise.resolve({ data: [] }),
-        byIds("client_referrals", "*"),
-        byIds("appointments", "*"),
-        specialistIds.length
-          ? supabase.from("reviews").select("*").in("specialist_id", specialistIds)
-          : Promise.resolve({ data: [] }),
-        specialistIds.length
-          ? supabase.from("test_results").select("id,patient_name,status,created_at").in("specialist_id", specialistIds)
-          : Promise.resolve({ data: [] }),
-        // Silinmiş uzmanların yedek tablolarındaki kayıtları
-        supabase.from("backup_1788969601_orders").select("*").or(orderFilters),
-        supabase.from("backup_1788969601_blog_posts").select("id,title,slug,status,published_at,created_at,word_count,author_name")
-          .ilike("author_name", nameLike),
-        specialistIds.length
-          ? supabase.from("backup_1788969601_client_referrals").select("*").in("specialist_id", specialistIds)
-          : Promise.resolve({ data: [] }),
-        specialistIds.length
-          ? supabase.from("backup_1788969601_appointments").select("*").in("specialist_id", specialistIds)
-          : Promise.resolve({ data: [] }),
-      ];
-
-      const [
-        orders, blogs, sms, proceedings, consents, referrals, appointments, reviews, testResults,
-        bkOrders, bkBlogs, bkReferrals, bkAppointments,
-      ] = await Promise.all(queries);
+      const d = (data || {}) as Record<string, any[]>;
+      const arr = (k: string) => (Array.isArray(d[k]) ? d[k] : []);
+      const profiles = arr("profiles").map((p: any) => ({ ...(p.profile_data || {}), ...p }));
 
       setCollected({
-        orders: dedupe([...(orders?.data || []), ...(bkOrders?.data || []), ...archiveOrders]),
-        blogs: dedupe([...(blogs?.data || []), ...(bkBlogs?.data || [])]),
-        sms: dedupe(sms?.data || []),
-        proceedings: dedupe(proceedings?.data || []),
-        consents: dedupe(consents?.data || []),
-        referrals: dedupe([...(referrals?.data || []), ...(bkReferrals?.data || []), ...archiveReferrals]),
-        appointments: dedupe([...(appointments?.data || []), ...(bkAppointments?.data || [])]),
-        reviews: dedupe(reviews?.data || []),
-        testResults: dedupe(testResults?.data || []),
-        profiles: dedupe(profiles),
-        emailLogs: dedupe(archiveEmailLogs),
+        orders: arr("orders"),
+        blogs: arr("blogs"),
+        sms: arr("sms"),
+        proceedings: arr("proceedings"),
+        consents: arr("consents"),
+        referrals: arr("referrals"),
+        appointments: arr("appointments"),
+        reviews: arr("reviews"),
+        testResults: arr("testResults"),
+        profiles,
+        emailLogs: arr("emailLogs"),
       });
     } catch (e) {
       console.error(e);
-      toast({ title: "Uyarı", description: "Bazı kanıt kaynakları okunamadı.", variant: "destructive" });
+      toast({ title: "Uyarı", description: "Kanıt kayıtları okunamadı.", variant: "destructive" });
     } finally {
       setCollecting(false);
     }
   };
+
 
 
   const submitCase = async () => {
