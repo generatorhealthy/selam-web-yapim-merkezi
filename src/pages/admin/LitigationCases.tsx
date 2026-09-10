@@ -113,12 +113,16 @@ type CollectedEvidence = {
   appointments: any[];
   reviews: any[];
   testResults: any[];
+  profiles: any[];
+  emailLogs: any[];
 };
 
 const emptyCollected: CollectedEvidence = {
   orders: [], blogs: [], sms: [], proceedings: [], consents: [],
   referrals: [], appointments: [], reviews: [], testResults: [],
+  profiles: [], emailLogs: [],
 };
+
 
 export default function LitigationCases() {
   const navigate = useNavigate();
@@ -205,47 +209,123 @@ export default function LitigationCases() {
     try {
       const name = c.defendant_name.trim();
       const email = (c.defendant_email || "").trim();
-      const nameLike = `%${name.split(" ").join("%")}%`;
+      const phone = (c.defendant_phone || "").trim();
+      const last10 = phone.replace(/\D/g, "").slice(-10);
+      const nameLike = `%${name.split(" ").filter(Boolean).join("%")}%`;
+      const dedupe = (rows: any[]) => {
+        const seen = new Set<string>();
+        return rows.filter((r) => {
+          const key = String(r?.id ?? JSON.stringify(r));
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      };
+
+      // 1) Silinmiş uzmanlar için arşiv (legal_evidence) kayıtlarını bul
+      const { data: archives } = await supabase
+        .from("legal_evidence")
+        .select("*")
+        .or(
+          [
+            `specialist_name.ilike.${nameLike}`,
+            email ? `specialist_email.ilike.%${email}%` : null,
+            last10 ? `specialist_phone.ilike.%${last10}%` : null,
+          ].filter(Boolean).join(",")
+        );
+
+      const archiveRows = (archives || []).filter((a: any) => {
+        const an = (a.specialist_name || "").toLowerCase();
+        const ae = (a.specialist_email || "").toLowerCase();
+        const ap = (a.specialist_phone || "").replace(/\D/g, "");
+        const parts = name.toLowerCase().split(" ").filter(Boolean);
+        const nameHit = parts.length > 0 && parts.every((p) => an.includes(p));
+        const emailHit = !!email && ae === email.toLowerCase();
+        const phoneHit = !!last10 && ap.endsWith(last10);
+        return nameHit || emailHit || phoneHit;
+      });
+
+      const specialistIds = Array.from(new Set([
+        c.specialist_id,
+        ...archiveRows.map((a: any) => a.specialist_id),
+      ].filter(Boolean))) as string[];
+
+      const archiveOrders = archiveRows.flatMap((a: any) => a.orders_data || []);
+      const archiveReferrals = archiveRows.flatMap((a: any) => a.referrals_data || []);
+      const archiveEmailLogs = archiveRows.flatMap((a: any) => a.email_logs || []);
+      const profiles = archiveRows.map((a: any) => ({
+        id: a.id,
+        deleted_at: a.created_at,
+        specialist_name: a.specialist_name,
+        specialist_email: a.specialist_email,
+        specialist_phone: a.specialist_phone,
+        specialist_tc_no: a.specialist_tc_no,
+        ...(a.profile_data || {}),
+      }));
+
+      const orderFilters = [
+        email ? `customer_email.ilike.%${email}%` : null,
+        `customer_name.ilike.${nameLike}`,
+        last10 ? `customer_phone.ilike.%${last10}%` : null,
+      ].filter(Boolean).join(",");
+
+      const byIds = <T,>(table: string, select: string, order?: string) =>
+        specialistIds.length
+          ? supabase.from(table as any).select(select).in("specialist_id", specialistIds)
+              .order(order || "created_at", { ascending: true })
+          : Promise.resolve({ data: [] as T[] });
 
       const queries: any[] = [
-        supabase.from("orders").select("*").or(
-          email ? `customer_email.eq.${email},customer_name.ilike.${nameLike}` : `customer_name.ilike.${nameLike}`
-        ).order("created_at", { ascending: true }),
+        supabase.from("orders").select("*").or(orderFilters).order("created_at", { ascending: true }),
         supabase.from("blog_posts").select("id,title,slug,status,published_at,created_at,word_count,author_name")
           .ilike("author_name", nameLike).order("created_at", { ascending: true }),
         supabase.from("sms_logs").select("id,created_at,phone,message,status,specialist_name,client_name,client_contact,source")
-          .ilike("specialist_name", nameLike).order("created_at", { ascending: true }),
+          .or([
+            `specialist_name.ilike.${nameLike}`,
+            last10 ? `phone.ilike.%${last10}%` : null,
+          ].filter(Boolean).join(","))
+          .order("created_at", { ascending: true }),
         supabase.from("legal_proceedings").select("*").ilike("customer_name", nameLike),
         email
-          ? supabase.from("user_consent_logs").select("*").eq("email", email).order("accepted_at", { ascending: true })
+          ? supabase.from("user_consent_logs").select("*").ilike("email", `%${email}%`).order("accepted_at", { ascending: true })
           : Promise.resolve({ data: [] }),
-        c.specialist_id
-          ? supabase.from("client_referrals").select("*").eq("specialist_id", c.specialist_id).order("created_at", { ascending: true })
+        byIds("client_referrals", "*"),
+        byIds("appointments", "*"),
+        specialistIds.length
+          ? supabase.from("reviews").select("*").in("specialist_id", specialistIds)
           : Promise.resolve({ data: [] }),
-        c.specialist_id
-          ? supabase.from("appointments").select("*").eq("specialist_id", c.specialist_id).order("created_at", { ascending: true })
+        specialistIds.length
+          ? supabase.from("test_results").select("id,patient_name,status,created_at").in("specialist_id", specialistIds)
           : Promise.resolve({ data: [] }),
-        c.specialist_id
-          ? supabase.from("reviews").select("*").eq("specialist_id", c.specialist_id)
+        // Silinmiş uzmanların yedek tablolarındaki kayıtları
+        supabase.from("backup_1788969601_orders").select("*").or(orderFilters),
+        supabase.from("backup_1788969601_blog_posts").select("id,title,slug,status,published_at,created_at,word_count,author_name")
+          .ilike("author_name", nameLike),
+        specialistIds.length
+          ? supabase.from("backup_1788969601_client_referrals").select("*").in("specialist_id", specialistIds)
           : Promise.resolve({ data: [] }),
-        c.specialist_id
-          ? supabase.from("test_results").select("id,patient_name,status,created_at").eq("specialist_id", c.specialist_id)
+        specialistIds.length
+          ? supabase.from("backup_1788969601_appointments").select("*").in("specialist_id", specialistIds)
           : Promise.resolve({ data: [] }),
       ];
 
-      const [orders, blogs, sms, proceedings, consents, referrals, appointments, reviews, testResults] =
-        await Promise.all(queries);
+      const [
+        orders, blogs, sms, proceedings, consents, referrals, appointments, reviews, testResults,
+        bkOrders, bkBlogs, bkReferrals, bkAppointments,
+      ] = await Promise.all(queries);
 
       setCollected({
-        orders: orders?.data || [],
-        blogs: blogs?.data || [],
-        sms: sms?.data || [],
-        proceedings: proceedings?.data || [],
-        consents: consents?.data || [],
-        referrals: referrals?.data || [],
-        appointments: appointments?.data || [],
-        reviews: reviews?.data || [],
-        testResults: testResults?.data || [],
+        orders: dedupe([...(orders?.data || []), ...(bkOrders?.data || []), ...archiveOrders]),
+        blogs: dedupe([...(blogs?.data || []), ...(bkBlogs?.data || [])]),
+        sms: dedupe(sms?.data || []),
+        proceedings: dedupe(proceedings?.data || []),
+        consents: dedupe(consents?.data || []),
+        referrals: dedupe([...(referrals?.data || []), ...(bkReferrals?.data || []), ...archiveReferrals]),
+        appointments: dedupe([...(appointments?.data || []), ...(bkAppointments?.data || [])]),
+        reviews: dedupe(reviews?.data || []),
+        testResults: dedupe(testResults?.data || []),
+        profiles: dedupe(profiles),
+        emailLogs: dedupe(archiveEmailLogs),
       });
     } catch (e) {
       console.error(e);
@@ -254,6 +334,7 @@ export default function LitigationCases() {
       setCollecting(false);
     }
   };
+
 
   const submitCase = async () => {
     if (!caseForm.defendant_name.trim()) {
@@ -529,6 +610,37 @@ export default function LitigationCases() {
 
                   <TabsContent value="sistem" className="space-y-4">
                     <EvidenceGroup
+                      title="Profil Arşivi (Silinen Uzman Kaydı)"
+                      rows={collected.profiles}
+                      onAdd={() => addCollectedAsEvidence("PROFIL_KAYDI", "Silinen uzman profil arşivi (sistem)", collected.profiles)}
+                      render={(p: any) => (
+                        <div className="space-y-1">
+                          <div><b>{p.specialist_name}</b> — {p.specialist_email || "-"} — {p.specialist_phone || "-"} {p.specialist_tc_no ? `— T.C.: ${p.specialist_tc_no}` : ""}</div>
+                          <div className="text-muted-foreground">
+                            {p.specialty || "-"} · {p.city || "-"} {p.package_price ? `· Paket: ${fmtMoney(Number(p.package_price))}` : ""}
+                            {p.payment_day ? ` · Ödeme günü: ${p.payment_day}` : ""}
+                            {p.internal_number ? ` · Dahili: ${p.internal_number}` : ""}
+                          </div>
+                          <div className="text-muted-foreground">Kayıt tarihi: {fmtDate(p.created_at)} · Silinme/arşiv: {fmtDate(p.deleted_at)}</div>
+                        </div>
+                      )}
+                    />
+                    <EvidenceGroup
+                      title="Sözleşme / Fatura E-posta Kayıtları"
+                      rows={collected.emailLogs}
+                      onAdd={() => addCollectedAsEvidence("SOZLESME", "Sözleşme ve fatura e-posta kayıtları (sistem)", collected.emailLogs)}
+                      render={(e: any) => (
+                        <div>
+                          {fmtDate(e.sent_at)} — {e.package_name || "-"}
+                          {e.contract_sent ? " — Sözleşme gönderildi" : ""}
+                          {e.invoice_sent ? " — Fatura gönderildi" : ""}
+                          {e.invoice_number ? ` — ${e.invoice_number}` : ""}
+                          {e.ip_address ? ` — IP: ${e.ip_address}` : ""}
+                        </div>
+                      )}
+                    />
+                    <EvidenceGroup
+
                       title="Sipariş ve Ödeme Kayıtları"
                       rows={collected.orders}
                       onAdd={() => addCollectedAsEvidence("ODEME_KAYDI", "Sipariş ve ödeme kayıtları (sistem)", collected.orders)}
