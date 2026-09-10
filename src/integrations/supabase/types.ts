@@ -6541,6 +6541,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_collect_litigation_evidence: {
+        Args: { _case_id: string }
+        Returns: Json
+      }
       admin_get_client_referrals: {
         Args: { p_year: number }
         Returns: {
