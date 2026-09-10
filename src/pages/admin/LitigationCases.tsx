@@ -610,6 +610,37 @@ export default function LitigationCases() {
 
                   <TabsContent value="sistem" className="space-y-4">
                     <EvidenceGroup
+                      title="Profil Arşivi (Silinen Uzman Kaydı)"
+                      rows={collected.profiles}
+                      onAdd={() => addCollectedAsEvidence("PROFIL_KAYDI", "Silinen uzman profil arşivi (sistem)", collected.profiles)}
+                      render={(p: any) => (
+                        <div className="space-y-1">
+                          <div><b>{p.specialist_name}</b> — {p.specialist_email || "-"} — {p.specialist_phone || "-"} {p.specialist_tc_no ? `— T.C.: ${p.specialist_tc_no}` : ""}</div>
+                          <div className="text-muted-foreground">
+                            {p.specialty || "-"} · {p.city || "-"} {p.package_price ? `· Paket: ${fmtMoney(Number(p.package_price))}` : ""}
+                            {p.payment_day ? ` · Ödeme günü: ${p.payment_day}` : ""}
+                            {p.internal_number ? ` · Dahili: ${p.internal_number}` : ""}
+                          </div>
+                          <div className="text-muted-foreground">Kayıt tarihi: {fmtDate(p.created_at)} · Silinme/arşiv: {fmtDate(p.deleted_at)}</div>
+                        </div>
+                      )}
+                    />
+                    <EvidenceGroup
+                      title="Sözleşme / Fatura E-posta Kayıtları"
+                      rows={collected.emailLogs}
+                      onAdd={() => addCollectedAsEvidence("SOZLESME", "Sözleşme ve fatura e-posta kayıtları (sistem)", collected.emailLogs)}
+                      render={(e: any) => (
+                        <div>
+                          {fmtDate(e.sent_at)} — {e.package_name || "-"}
+                          {e.contract_sent ? " — Sözleşme gönderildi" : ""}
+                          {e.invoice_sent ? " — Fatura gönderildi" : ""}
+                          {e.invoice_number ? ` — ${e.invoice_number}` : ""}
+                          {e.ip_address ? ` — IP: ${e.ip_address}` : ""}
+                        </div>
+                      )}
+                    />
+                    <EvidenceGroup
+
                       title="Sipariş ve Ödeme Kayıtları"
                       rows={collected.orders}
                       onAdd={() => addCollectedAsEvidence("ODEME_KAYDI", "Sipariş ve ödeme kayıtları (sistem)", collected.orders)}
