@@ -80,7 +80,7 @@ const CATEGORIES = [
   "DIGER",
 ];
 
-const label = (v: string) => v.replaceAll("_", " ");
+const label = (v: string) => v.split("_").join(" ");
 const fmtDate = (v?: string | null) =>
   v ? new Date(v).toLocaleString("tr-TR") : "-";
 const fmtMoney = (n: number) =>
@@ -207,7 +207,7 @@ export default function LitigationCases() {
       const email = (c.defendant_email || "").trim();
       const nameLike = `%${name.split(" ").join("%")}%`;
 
-      const queries: Promise<any>[] = [
+      const queries: any[] = [
         supabase.from("orders").select("*").or(
           email ? `customer_email.eq.${email},customer_name.ilike.${nameLike}` : `customer_name.ilike.${nameLike}`
         ).order("created_at", { ascending: true }),
