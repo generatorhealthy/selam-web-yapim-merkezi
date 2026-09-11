@@ -105,10 +105,12 @@ export const useUserRole = () => {
             .from("patient_profiles")
             .select("id, full_name, email")
             .eq("user_id", currentUser.id)
-            .maybeSingle()
+            .maybeSingle(),
+          8_000
         );
 
         lastLoadedUserIdRef.current = currentUser.id;
+        cachedUserId = currentUser.id;
         if (patient) {
           updateProfileState({
             role: "patient" as UserRole,
@@ -121,30 +123,37 @@ export const useUserRole = () => {
         }
       } catch (error) {
         console.error("Error in loadUserProfile:", error);
-        updateProfileState(FALLBACK_PROFILE);
+        if (!cachedProfile) updateProfileState(FALLBACK_PROFILE);
       } finally {
         updateLoadingState(false);
       }
     };
 
-    void loadUserProfile();
+    // Profil zaten hafızada ise tekrar sorgulamaya gerek yok.
+    if (!cachedProfile) {
+      void loadUserProfile();
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
 
       if (event === "SIGNED_OUT" || !session?.user) {
         lastLoadedUserIdRef.current = null;
+        cachedUserId = null;
         updateProfileState(null);
         updateLoadingState(false);
         return;
       }
 
-      if (event === "TOKEN_REFRESHED" && lastLoadedUserIdRef.current === session.user.id) {
+      // Aynı kullanıcı için profil zaten yüklü: yeniden yükleme yapma.
+      if (cachedProfile && cachedUserId === session.user.id) {
+        updateLoadingState(false);
         return;
       }
 
       void loadUserProfile(session.user);
     });
+
 
     return () => {
       mounted = false;
