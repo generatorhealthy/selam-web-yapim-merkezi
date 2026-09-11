@@ -229,9 +229,13 @@ export default function LitigationCases() {
         profiles,
         emailLogs: arr("emailLogs"),
       });
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast({ title: "Uyarı", description: "Kanıt kayıtları okunamadı.", variant: "destructive" });
+      toast({
+        title: "Uyarı",
+        description: `Kanıt kayıtları okunamadı: ${e?.message || "bilinmeyen hata"}`,
+        variant: "destructive",
+      });
     } finally {
       setCollecting(false);
     }
