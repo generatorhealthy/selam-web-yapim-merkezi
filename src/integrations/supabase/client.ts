@@ -41,7 +41,6 @@ const getSupabaseFetchTimeout = (input: RequestInfo | URL) => {
       : input.url;
 
   if (url.includes("/functions/v1/meta-ads-manager")) return 120_000;
-  if (url.includes("/rest/v1/rpc/admin_collect_litigation_evidence")) return 120_000;
   if (
     url.includes("/functions/v1/freepbx-create-extension") ||
     url.includes("/functions/v1/freepbx-run-followme")
