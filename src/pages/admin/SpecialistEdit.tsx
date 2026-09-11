@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,6 +118,10 @@ const SpecialistEdit = () => {
 
     fetchSpecialist();
   }, [currentUser, id, navigate, toast]);
+
+  if (!roleLoading && currentUser && (!currentUser.is_approved || !['admin', 'staff'].includes(currentUser.role))) {
+    return <Navigate to="/divan_paneli/dashboard" replace />;
+  }
 
   const generateProfileLink = () => {
     if (!lockedSlug || !lockedSpecialtySlug) return '';

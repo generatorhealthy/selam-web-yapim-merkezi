@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Eye, EyeOff, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import { useUserRole } from "@/hooks/useUserRole";
 
@@ -260,6 +259,10 @@ const UserCreate = () => {
         </div>
       </div>
     );
+  }
+
+  if (!currentUser.is_approved || !['admin', 'staff'].includes(currentUser.role)) {
+    return <Navigate to="/divan_paneli/dashboard" replace />;
   }
 
   return (
