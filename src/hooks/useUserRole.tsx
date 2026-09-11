@@ -37,6 +37,11 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 18_000): Pro
 let cachedUserId: string | null = null;
 let cachedProfile: UserProfile | null = null;
 
+export const primeUserRoleCache = (userId: string, profile: UserProfile) => {
+  cachedUserId = userId;
+  cachedProfile = profile;
+};
+
 export const useUserRole = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(cachedProfile);
   const [loading, setLoading] = useState(!cachedProfile);
@@ -65,7 +70,7 @@ export const useUserRole = () => {
       }
 
       try {
-        const currentUser = user ?? (await withTimeout(supabase.auth.getSession(), 8_000)).data.session?.user ?? null;
+        const currentUser = user ?? (await withTimeout(supabase.auth.getSession(), 5_000)).data.session?.user ?? null;
 
 
         if (!currentUser) {
@@ -81,7 +86,7 @@ export const useUserRole = () => {
             .select("role, is_approved, name, email")
             .eq("user_id", currentUser.id)
             .maybeSingle(),
-          8_000
+          5_000
         );
 
         if (error) {
@@ -106,7 +111,7 @@ export const useUserRole = () => {
             .select("id, full_name, email")
             .eq("user_id", currentUser.id)
             .maybeSingle(),
-          8_000
+          5_000
         );
 
         lastLoadedUserIdRef.current = currentUser.id;
