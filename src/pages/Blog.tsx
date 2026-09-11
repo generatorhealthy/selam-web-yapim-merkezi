@@ -199,16 +199,20 @@ const Blog = () => {
       
       // Tüm yayınlanmış blogları çek (sınır olmadan)
       const [blogsRes, blogPostsRes] = await Promise.all([
-        supabase
-          .from('blogs')
-          .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
-          .eq('status', 'published')
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('blog_posts')
-          .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
-          .eq('status', 'published')
-          .order('published_at', { ascending: false })
+        withRetry(() =>
+          supabase
+            .from('blogs')
+            .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+        ),
+        withRetry(() =>
+          supabase
+            .from('blog_posts')
+            .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
+            .eq('status', 'published')
+            .order('published_at', { ascending: false })
+        )
       ]);
 
       if (blogsRes.error || blogPostsRes.error) {
