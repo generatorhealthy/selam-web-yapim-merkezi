@@ -13,6 +13,7 @@ type Props = {
   defendantPhone?: string | null;
   profiles: any[];
   blogs: any[];
+  savedScreenshots: { url: string; title: string; sourceRef?: string | null }[];
   onSaved: () => void;
 };
 
@@ -27,7 +28,7 @@ const trSlug = (v: string) =>
 const fmt = (v?: string | null) => (v ? new Date(v).toLocaleString("tr-TR") : "-");
 
 export default function ProfileScreenshotEvidence({
-  caseId, defendantName, defendantEmail, defendantPhone, profiles, blogs, onSaved,
+  caseId, defendantName, defendantEmail, defendantPhone, profiles, blogs, savedScreenshots, onSaved,
 }: Props) {
   const { toast } = useToast();
   const [snapshots, setSnapshots] = useState<{ timestamp: string; url: string }[]>([]);
@@ -45,6 +46,15 @@ export default function ProfileScreenshotEvidence({
     }
     return merged;
   }, [profiles]);
+
+  const archivedScreenshots = useMemo(() => {
+    const profileUrls = profiles.flatMap((item) => {
+      const urls = item?.screenshot_urls;
+      return Array.isArray(urls) ? urls.filter((url): url is string => typeof url === "string" && url.length > 0) : [];
+    });
+    const saved = savedScreenshots.map((item) => item.url).filter(Boolean);
+    return Array.from(new Set([...profileUrls, ...saved]));
+  }, [profiles, savedScreenshots]);
 
   const slug = trSlug(defendantName);
 
@@ -207,7 +217,7 @@ export default function ProfileScreenshotEvidence({
             <Badge variant="secondary">{sections.length}</Badge>
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Profil silindiği için arşiv verilerinden yayındaki görünüm yeniden oluşturuldu.
+            Kaydedilmiş görüntüler ve silinmeden önce arşivlenen profil bilgileri birlikte gösterilir.
           </p>
         </div>
         <Button size="sm" variant="outline" className="print:hidden" onClick={captureAll} disabled={!!busy}>
@@ -216,6 +226,39 @@ export default function ProfileScreenshotEvidence({
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
+        {archivedScreenshots.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-xs font-medium">Kaydedilmiş profil ekran görüntüleri</div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {archivedScreenshots.map((url, index) => (
+                <a
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block overflow-hidden rounded-lg border bg-muted/20"
+                >
+                  <img
+                    src={url}
+                    alt={`${defendantName} profil ekran görüntüsü ${index + 1}`}
+                    className="aspect-[4/3] w-full object-contain"
+                    loading="lazy"
+                  />
+                  <div className="flex items-center gap-1 border-t px-3 py-2 text-xs text-primary">
+                    Görüntüyü aç <ExternalLink className="h-3 w-3" />
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {profiles.length === 0 && (
+          <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            Arşiv profil bilgileri yükleniyor. Üstteki yenile düğmesiyle tekrar deneyebilirsiniz.
+          </div>
+        )}
+
         <div className="text-xs space-y-1">
           <div className="font-medium">Yayınlanan profil adresleri:</div>
           {urlCandidates.map((u) => (
@@ -243,7 +286,7 @@ export default function ProfileScreenshotEvidence({
           ))}
         </div>
 
-        <div className="space-y-4">
+        {profiles.length > 0 && <div className="space-y-4">
           {sections.map((s) => (
             <div key={s.key} className="space-y-2">
               <div
@@ -264,7 +307,7 @@ export default function ProfileScreenshotEvidence({
               </div>
             </div>
           ))}
-        </div>
+        </div>}
       </CardContent>
     </Card>
   );

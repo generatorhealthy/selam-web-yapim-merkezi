@@ -528,6 +528,13 @@ export default function LitigationCases() {
                       defendantPhone={selected.defendant_phone}
                       profiles={collected.profiles}
                       blogs={collected.blogs}
+                      savedScreenshots={evidence
+                        .filter((item) => item.category === "PROFIL_GORUNTUSU" && item.file_url)
+                        .map((item) => ({
+                          url: item.file_url as string,
+                          title: item.title,
+                          sourceRef: item.source_ref,
+                        }))}
                       onSaved={() => loadEvidence(selected.id)}
                     />
                     <EvidenceGroup
