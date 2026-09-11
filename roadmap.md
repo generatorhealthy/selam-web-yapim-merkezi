@@ -7,4 +7,4 @@
 - [x] Panel yönlendirmesini ve son derlemeyi doğrula
 - [x] Panel genelindeki tekrarlanan oturum sorgularını tek merkezde birleştir
 - [x] Oturum değişimi sırasında oluşan sorgu kilitlenmesini kaldır
-- [ ] Admin ve uzman ekranlarında hızlı yüklemeyi doğrula
+- [x] Admin ve uzman ekranlarında hızlı yüklemeyi doğrula
