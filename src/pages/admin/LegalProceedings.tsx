@@ -30,7 +30,7 @@ interface LegalProceeding {
 }
 
 const LegalProceedings = () => {
-  const { userProfile } = useUserRole();
+  const { userProfile, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const [proceedings, setProceedings] = useState<LegalProceeding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -215,7 +215,7 @@ const LegalProceedings = () => {
     return result;
   }, [proceedings, statusFilter, searchTerm]);
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
