@@ -32,15 +32,21 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 18_000): Pro
   }
 };
 
+// Oturum boyunca profili hafızada tut: sekme değişiminde / token yenilenmesinde
+// panelin tekrar "Yükleniyor" ekranına dönmesini engeller.
+let cachedUserId: string | null = null;
+let cachedProfile: UserProfile | null = null;
+
 export const useUserRole = () => {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const lastLoadedUserIdRef = useRef<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(cachedProfile);
+  const [loading, setLoading] = useState(!cachedProfile);
+  const lastLoadedUserIdRef = useRef<string | null>(cachedUserId);
 
   useEffect(() => {
     let mounted = true;
 
     const updateProfileState = (profile: UserProfile | null) => {
+      cachedProfile = profile;
       if (mounted) {
         setUserProfile(profile);
       }
@@ -53,10 +59,14 @@ export const useUserRole = () => {
     };
 
     const loadUserProfile = async (user?: User | null) => {
-      updateLoadingState(true);
+      // Elimizde profil varsa arka planda yenile, ekranı bloklamadan.
+      if (!cachedProfile) {
+        updateLoadingState(true);
+      }
 
       try {
-        const currentUser = user ?? (await withTimeout(supabase.auth.getSession())).data.session?.user ?? null;
+        const currentUser = user ?? (await withTimeout(supabase.auth.getSession(), 8_000)).data.session?.user ?? null;
+
 
         if (!currentUser) {
           lastLoadedUserIdRef.current = null;
