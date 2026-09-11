@@ -16,7 +16,6 @@ export function HorizontalNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const { user, userProfile: roleProfile, loading: isLoading } = useUserRole();
   const userRole = roleProfile?.role ?? null;
   const isLoggedIn = Boolean(user);
