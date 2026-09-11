@@ -5,37 +5,6 @@ import type { Database } from './types'
 const supabaseUrl = 'https://irnfwewabogveofwemvg.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs'
 
-const authLocks: Record<string, Promise<unknown>> = {};
-
-const browserSafeAuthLock = async <R,>(name: string, acquireTimeout: number, fn: () => Promise<R>): Promise<R> => {
-  const previousLock = authLocks[name] ?? Promise.resolve();
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-  // A stale refresh request must never hold every later login indefinitely.
-  const safeAcquireTimeout = acquireTimeout < 0
-    ? 5_000
-    : Math.min(Math.max(acquireTimeout, 1_000), 5_000);
-
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error("Oturum işlemi zaman aşımına uğradı")), safeAcquireTimeout);
-  });
-  timeoutPromise.catch(() => {});
-
-  const waitForPrevious = Promise.race([
-    previousLock.catch(() => null),
-    timeoutPromise,
-  ]);
-  const currentLock = waitForPrevious.then(fn);
-  const trackedLock = currentLock.finally(() => {
-    if (authLocks[name] === trackedLock) delete authLocks[name];
-    if (timeoutId) clearTimeout(timeoutId);
-  });
-
-  authLocks[name] = trackedLock;
-
-  return trackedLock;
-};
-
 const getSupabaseFetchTimeout = (input: RequestInfo | URL) => {
   const url = typeof input === "string"
     ? input
@@ -74,7 +43,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    lock: browserSafeAuthLock,
   },
   global: {
     fetch: supabaseFetch,

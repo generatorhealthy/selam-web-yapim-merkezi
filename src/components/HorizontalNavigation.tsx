@@ -10,21 +10,20 @@ import { X, ChevronDown, ChevronRight, User, Stethoscope } from "lucide-react";
 import { AdminTopBar } from "./AdminTopBar";
 import RegistrationForm from "./RegistrationForm";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export function HorizontalNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { user, userProfile: roleProfile, loading: isLoading } = useUserRole();
+  const userRole = roleProfile?.role ?? null;
+  const isLoggedIn = Boolean(user);
   const [userProfile, setUserProfile] = useState<any>(null);
-  
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [currentSession, setCurrentSession] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
-  const [authInitialized, setAuthInitialized] = useState(false);
+  const authInitialized = !isLoading;
   const isMobile = useIsMobile();
 
   const handleLogoError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -42,23 +41,7 @@ export function HorizontalNavigation() {
     try {
       console.log('Fetching profile for user:', userId);
       
-      // Get user role from user_profiles
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
-        
-      if (profileError) {
-        console.log('Profile fetch error:', profileError);
-      }
-        
-      if (profile) {
-        console.log('User role:', profile.role);
-        setUserRole(profile.role);
-        
-        // If user is a specialist, get their profile picture and name
-        if (profile.role === 'specialist') {
+      if (userRole === 'specialist') {
           const { data: specialistProfile } = await supabase
             .from('specialists')
             .select('profile_picture, name')
@@ -68,142 +51,39 @@ export function HorizontalNavigation() {
           if (specialistProfile) {
             setUserProfile(specialistProfile);
           } else {
-            const currentUser = await supabase.auth.getUser();
-            if (currentUser.data.user?.email) {
+            if (user?.email) {
               const { data: specialistByEmail } = await supabase
                 .from('specialists')
                 .select('profile_picture, name')
-                .eq('email', currentUser.data.user.email)
+                .eq('email', user.email)
                 .maybeSingle();
               setUserProfile(specialistByEmail || null);
             }
           }
-        } else {
-          setUserProfile(null);
-        }
-        return;
-      }
-      
-      // No user_profiles row → check patient_profiles
-      const { data: patient } = await supabase
-        .from('patient_profiles')
-        .select('full_name, profile_picture')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      if (patient) {
-        console.log('Patient profile found');
-        setUserRole('patient');
-        setUserProfile({ name: patient.full_name, profile_picture: patient.profile_picture });
+      } else if (userRole === 'patient') {
+        const { data: patient } = await supabase
+          .from('patient_profiles')
+          .select('full_name, profile_picture')
+          .eq('user_id', userId)
+          .maybeSingle();
+        setUserProfile(patient ? { name: patient.full_name, profile_picture: patient.profile_picture } : null);
       } else {
-        console.log('No profile found, defaulting to patient');
-        setUserRole('patient');
         setUserProfile(null);
       }
     } catch (error) {
       console.log('Profile fetch error:', error);
-      setUserRole('patient');
       setUserProfile(null);
     }
   };
 
   useEffect(() => {
-    let mounted = true;
-
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
-        
-        if (!mounted) return;
-        
-        setCurrentSession(session);
-        setCurrentUser(session?.user ?? null);
-        setIsLoggedIn(!!session?.user);
-        
-        if (event === 'SIGNED_OUT') {
-          setUserRole(null);
-          setUserProfile(null);
-          setIsLoading(false);
-          setAuthInitialized(true);
-        } else if (session?.user) {
-          setIsLoading(true);
-          // Defer Supabase calls with setTimeout to prevent deadlock
-          setTimeout(() => {
-            if (mounted) {
-              fetchUserProfile(session.user.id).finally(() => {
-                if (mounted) {
-                  setIsLoading(false);
-                  setAuthInitialized(true);
-                }
-              });
-            }
-          }, 0);
-        } else {
-          setUserRole(null);
-          setUserProfile(null);
-          setIsLoading(false);
-          setAuthInitialized(true);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    const initializeSession = async () => {
-      try {
-        console.log('Initializing session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session error:', error);
-          if (mounted) {
-            setCurrentSession(null);
-            setCurrentUser(null);
-            setIsLoggedIn(false);
-            setUserRole(null);
-            setUserProfile(null);
-            setIsLoading(false);
-            setAuthInitialized(true);
-          }
-          return;
-        }
-
-        if (mounted) {
-          setCurrentSession(session);
-          setCurrentUser(session?.user ?? null);
-          setIsLoggedIn(!!session?.user);
-          
-          if (session?.user) {
-            setIsLoading(true);
-            await fetchUserProfile(session.user.id);
-          } else {
-            setUserRole(null);
-            setUserProfile(null);
-          }
-          setIsLoading(false);
-          setAuthInitialized(true);
-        }
-      } catch (error) {
-        console.error('Session initialization error:', error);
-        if (mounted) {
-          setCurrentSession(null);
-          setCurrentUser(null);
-          setIsLoggedIn(false);
-          setUserRole(null);
-          setUserProfile(null);
-          setIsLoading(false);
-          setAuthInitialized(true);
-        }
-      }
-    };
-
-    initializeSession();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+    if (!user) {
+      setUserProfile(null);
+      return;
+    }
+    void fetchUserProfile(user.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, userRole]);
 
   const isActive = (path: string) => currentPath === path;
 
@@ -219,7 +99,7 @@ export function HorizontalNavigation() {
     if (isLoggedIn && userRole === 'specialist') {
       navigate("/doktor-paneli");
     } else if (isLoggedIn && (userRole === 'admin' || userRole === 'staff')) {
-      navigate("/admin");
+      navigate("/divan_paneli/dashboard");
     } else if (isLoggedIn && userRole === 'patient') {
       navigate("/danisan-paneli");
     } else {

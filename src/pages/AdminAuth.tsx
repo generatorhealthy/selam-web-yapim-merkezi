@@ -260,7 +260,7 @@ const AdminAuth = () => {
         description: `${roleText} olarak yönlendiriliyorsunuz...`,
       });
 
-      primeUserRoleCache(authData.user.id, profile);
+      primeUserRoleCache(authData.user.id, profile, authData.user);
 
       if (profile.role === 'partner') {
         navigate('/partner');
