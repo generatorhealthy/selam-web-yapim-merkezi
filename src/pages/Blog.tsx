@@ -68,6 +68,18 @@ const Blog = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loadingMore, hasMore, searchTerm, page]);
 
+  // Yavaş bağlantılarda tek denemede kopabildiği için istekler birkaç kez denenir
+  const withRetry = async <T,>(run: () => PromiseLike<{ data: T; error: any }>) => {
+    let last: { data: T; error: any } = { data: null as unknown as T, error: null };
+    for (let attempt = 0; attempt < 3; attempt++) {
+      last = await run();
+      if (!last.error) return last;
+      console.warn(`Blog isteği denemesi ${attempt + 1} başarısız:`, last.error.message);
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)));
+    }
+    return last;
+  };
+
   const fetchBlogs = async (pageNum: number = 0, isInitial: boolean = false) => {
     try {
       if (isInitial) {
@@ -81,18 +93,22 @@ const Blog = () => {
 
       // Yayınlanan blogları blogs ve blog_posts tablolarından paralel çek
       const [blogsRes, blogPostsRes] = await Promise.all([
-        supabase
-          .from('blogs')
-          .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
-          .eq('status', 'published')
-          .order('created_at', { ascending: false })
-          .range(from, to),
-        supabase
-          .from('blog_posts')
-          .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
-          .eq('status', 'published')
-          .order('published_at', { ascending: false })
-          .range(from, to)
+        withRetry(() =>
+          supabase
+            .from('blogs')
+            .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+            .range(from, to)
+        ),
+        withRetry(() =>
+          supabase
+            .from('blog_posts')
+            .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
+            .eq('status', 'published')
+            .order('published_at', { ascending: false })
+            .range(from, to)
+        )
       ]);
 
       if (blogsRes.error || blogPostsRes.error) {
@@ -183,16 +199,20 @@ const Blog = () => {
       
       // Tüm yayınlanmış blogları çek (sınır olmadan)
       const [blogsRes, blogPostsRes] = await Promise.all([
-        supabase
-          .from('blogs')
-          .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
-          .eq('status', 'published')
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('blog_posts')
-          .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
-          .eq('status', 'published')
-          .order('published_at', { ascending: false })
+        withRetry(() =>
+          supabase
+            .from('blogs')
+            .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+        ),
+        withRetry(() =>
+          supabase
+            .from('blog_posts')
+            .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
+            .eq('status', 'published')
+            .order('published_at', { ascending: false })
+        )
       ]);
 
       if (blogsRes.error || blogPostsRes.error) {
