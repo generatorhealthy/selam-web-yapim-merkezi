@@ -13,6 +13,7 @@ import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
+import AdminRouteGuard from "@/components/AdminRouteGuard";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -333,6 +334,7 @@ const AppContent = () => {
               
               {/* Admin Routes - MUST be before dynamic catch-all routes */}
               <Route path="/divan_paneli" element={<AdminAuth />} />
+              <Route element={<AdminRouteGuard />}>
               <Route path="/divan_paneli/dashboard" element={<AdminDashboard />} />
               <Route path="/divan_paneli/tests" element={<TestManagement />} />
               <Route path="/divan_paneli/packages" element={<PackageManagement />} />
@@ -394,6 +396,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/seo-content/uzman-bloglari" element={<SpecialistBlogStatus />} />
               <Route path="/divan_paneli/whatsapp-bulk" element={<WhatsappBulkSend />} />
               <Route path="/divan_paneli/whatsapp" element={<WhatsappManagement />} />
+              </Route>
               <Route path="/kariyer" element={<Career />} />
               
                 

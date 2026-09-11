@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -36,22 +36,79 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 18_000): Pro
 // panelin tekrar "Yükleniyor" ekranına dönmesini engeller.
 let cachedUserId: string | null = null;
 let cachedProfile: UserProfile | null = null;
+let cachedAt = 0;
+let profileRequest: Promise<UserProfile | null> | null = null;
+let profileRequestUserId: string | null = null;
+const CACHE_TTL = 60_000;
 
 export const primeUserRoleCache = (userId: string, profile: UserProfile) => {
   cachedUserId = userId;
   cachedProfile = profile;
+  cachedAt = Date.now();
+};
+
+const fetchProfile = async (user: User): Promise<UserProfile | null> => {
+  if (profileRequest && profileRequestUserId === user.id) return profileRequest;
+
+  profileRequestUserId = user.id;
+  profileRequest = (async () => {
+    const { data: profile, error } = await withTimeout(
+      supabase
+        .from("user_profiles")
+        .select("role, is_approved, name, email")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      8_000
+    );
+
+    if (error) throw error;
+    if (profile) return profile;
+
+    const { data: patient, error: patientError } = await withTimeout(
+      supabase
+        .from("patient_profiles")
+        .select("id, full_name, email")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      8_000
+    );
+
+    if (patientError) throw patientError;
+    if (!patient) return FALLBACK_PROFILE;
+
+    return {
+      role: "patient" as UserRole,
+      is_approved: true,
+      name: patient.full_name ?? undefined,
+      email: patient.email ?? undefined,
+    };
+  })().finally(() => {
+    profileRequest = null;
+    profileRequestUserId = null;
+  });
+
+  return profileRequest;
 };
 
 export const useUserRole = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(cachedProfile);
   const [loading, setLoading] = useState(!cachedProfile);
-  const lastLoadedUserIdRef = useRef<string | null>(cachedUserId);
+  const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const retry = useCallback(() => {
+    cachedAt = 0;
+    setError(null);
+    setLoading(true);
+    setRetryCount((value) => value + 1);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
 
     const updateProfileState = (profile: UserProfile | null) => {
       cachedProfile = profile;
+      cachedAt = profile ? Date.now() : 0;
       if (mounted) {
         setUserProfile(profile);
       }
@@ -63,7 +120,7 @@ export const useUserRole = () => {
       }
     };
 
-    const loadUserProfile = async (user?: User | null) => {
+    const loadUserProfile = async (user?: User | null, force = false) => {
       // Elimizde profil varsa arka planda yenile, ekranı bloklamadan.
       if (!cachedProfile) {
         updateLoadingState(true);
@@ -74,89 +131,49 @@ export const useUserRole = () => {
 
 
         if (!currentUser) {
-          lastLoadedUserIdRef.current = null;
           cachedUserId = null;
           updateProfileState(null);
+          if (mounted) setError(null);
           return;
         }
 
-        const { data: profile, error } = await withTimeout(
-          supabase
-            .from("user_profiles")
-            .select("role, is_approved, name, email")
-            .eq("user_id", currentUser.id)
-            .maybeSingle(),
-          5_000
-        );
-
-        if (error) {
-          console.error("Error fetching user profile:", error);
-          // Elde geçerli bir profil varsa onu koru, yetkiyi düşürme.
-          if (!cachedProfile) updateProfileState(FALLBACK_PROFILE);
+        if (!force && cachedProfile && cachedUserId === currentUser.id && Date.now() - cachedAt < CACHE_TTL) {
+          if (mounted) {
+            setUserProfile(cachedProfile);
+            setError(null);
+          }
           return;
         }
 
-        if (profile) {
-          lastLoadedUserIdRef.current = currentUser.id;
-          cachedUserId = currentUser.id;
-          updateProfileState(profile);
-          return;
-        }
-
-
-        // No user_profile row → check if this is a patient
-        const { data: patient } = await withTimeout(
-          supabase
-            .from("patient_profiles")
-            .select("id, full_name, email")
-            .eq("user_id", currentUser.id)
-            .maybeSingle(),
-          5_000
-        );
-
-        lastLoadedUserIdRef.current = currentUser.id;
+        const profile = await fetchProfile(currentUser);
         cachedUserId = currentUser.id;
-        if (patient) {
-          updateProfileState({
-            role: "patient" as UserRole,
-            is_approved: true,
-            name: patient.full_name ?? undefined,
-            email: patient.email ?? undefined,
-          });
-        } else {
-          updateProfileState(FALLBACK_PROFILE);
-        }
+        updateProfileState(profile);
+        if (mounted) setError(null);
       } catch (error) {
         console.error("Error in loadUserProfile:", error);
-        if (!cachedProfile) updateProfileState(FALLBACK_PROFILE);
+        if (mounted && !cachedProfile) {
+          setError(error instanceof Error ? error : new Error("Yetki bilgileri alınamadı"));
+        }
       } finally {
         updateLoadingState(false);
       }
     };
 
-    // Profil zaten hafızada ise tekrar sorgulamaya gerek yok.
-    if (!cachedProfile) {
-      void loadUserProfile();
-    }
+    void loadUserProfile(undefined, retryCount > 0);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
 
       if (event === "SIGNED_OUT" || !session?.user) {
-        lastLoadedUserIdRef.current = null;
         cachedUserId = null;
         updateProfileState(null);
+        setError(null);
         updateLoadingState(false);
         return;
       }
 
-      // Aynı kullanıcı için profil zaten yüklü: yeniden yükleme yapma.
-      if (cachedProfile && cachedUserId === session.user.id) {
-        updateLoadingState(false);
-        return;
-      }
-
-      void loadUserProfile(session.user);
+      const forceRefresh = event === "SIGNED_IN" || event === "USER_UPDATED";
+      void loadUserProfile(session.user, forceRefresh);
     });
 
 
@@ -164,7 +181,7 @@ export const useUserRole = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [retryCount]);
 
-  return { userProfile, loading };
+  return { userProfile, loading, error, retry };
 };

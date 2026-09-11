@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,15 +10,15 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Eye, EyeOff, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
 import { useRateLimit } from "@/hooks/useRateLimit";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const UserCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { userProfile: currentUser, loading: roleLoading } = useUserRole();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -32,49 +32,6 @@ const UserCreate = () => {
     maxAttempts: 5,
     windowMs: 60000 // 1 minute
   });
-
-  // Kullanıcı yetki kontrolü
-  useEffect(() => {
-    const checkCurrentUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile, error } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-          
-          if (error) {
-            console.error('Kullanıcı profili alınırken hata:', error);
-          } else {
-            setCurrentUser(profile);
-            
-            if (!['admin', 'staff'].includes(profile.role) || !profile.is_approved) {
-              toast({
-                title: "Yetki Hatası",
-                description: "Bu sayfaya erişim yetkiniz bulunmamaktadır.",
-                variant: "destructive"
-              });
-              navigate('/');
-              return;
-            }
-          }
-        } else {
-          toast({
-            title: "Giriş Gerekli",
-            description: "Bu sayfaya erişmek için giriş yapmanız gerekiyor.",
-            variant: "destructive"
-          });
-          navigate('/');
-        }
-      } catch (error) {
-        console.error('Kullanıcı kontrol hatası:', error);
-      }
-    };
-
-    checkCurrentUser();
-  }, [navigate, toast]);
 
   const handleInputChange = (field: string, value: string) => {
     // Input sanitization
@@ -293,7 +250,7 @@ const UserCreate = () => {
   };
 
   // Kullanıcı kontrolü henüz tamamlanmadıysa loading göster
-  if (!currentUser) {
+  if (roleLoading || !currentUser) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -302,6 +259,10 @@ const UserCreate = () => {
         </div>
       </div>
     );
+  }
+
+  if (!currentUser.is_approved || !['admin', 'staff'].includes(currentUser.role)) {
+    return <Navigate to="/divan_paneli/dashboard" replace />;
   }
 
   return (

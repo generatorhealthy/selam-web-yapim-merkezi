@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,11 +50,11 @@ const SpecialistEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
-  const { userProfile } = useUserRole();
+  const { userProfile, loading: roleLoading } = useUserRole();
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const currentUser = userProfile;
   const [faqItems, setFaqItems] = useState<FAQItem[]>([{ question: "", answer: "" }]);
   // Profil linki — fetch anında bir kez sabitlenir, ad/uzmanlık değişince güncellenmez
   const [lockedSpecialtySlug, setLockedSpecialtySlug] = useState<string>("");
@@ -63,50 +63,6 @@ const SpecialistEdit = () => {
   const [newSlugInput, setNewSlugInput] = useState("");
   const [newSpecialtyInput, setNewSpecialtyInput] = useState("");
   const [savingSlug, setSavingSlug] = useState(false);
-
-  // Kullanıcı yetki kontrolü
-  useEffect(() => {
-    const checkCurrentUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile, error } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-          
-          if (error) {
-            console.error('Kullanıcı profili alınırken hata:', error);
-          } else {
-            setCurrentUser(profile);
-            
-            // Admin veya staff erişebilir
-            if (!['admin', 'staff'].includes(profile.role) || !profile.is_approved) {
-              toast({
-                title: "Yetki Hatası",
-                description: "Bu sayfaya erişim yetkiniz bulunmamaktadır.",
-                variant: "destructive"
-              });
-              navigate('/divan_paneli/dashboard');
-              return;
-            }
-          }
-        } else {
-          toast({
-            title: "Giriş Gerekli",
-            description: "Bu sayfaya erişmek için giriş yapmanız gerekiyor.",
-            variant: "destructive"
-          });
-          navigate('/divan_paneli/dashboard');
-        }
-      } catch (error) {
-        console.error('Kullanıcı kontrol hatası:', error);
-      }
-    };
-
-    checkCurrentUser();
-  }, [navigate, toast]);
 
   // Uzman bilgilerini yükle
   useEffect(() => {
@@ -162,6 +118,10 @@ const SpecialistEdit = () => {
 
     fetchSpecialist();
   }, [currentUser, id, navigate, toast]);
+
+  if (!roleLoading && currentUser && (!currentUser.is_approved || !['admin', 'staff'].includes(currentUser.role))) {
+    return <Navigate to="/divan_paneli/dashboard" replace />;
+  }
 
   const generateProfileLink = () => {
     if (!lockedSlug || !lockedSpecialtySlug) return '';

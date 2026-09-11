@@ -28,11 +28,9 @@ export const useNetworkRecovery = () => {
           supabase.realtime.disconnect();
           supabase.realtime.connect();
 
-          // 2. Auth oturumunu yenile (stale token'ları temizle)
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            await supabase.auth.refreshSession();
-          }
+          // Auth istemcisi token yenilemeyi kendisi yönetir. Burada zorla yenilemek,
+          // birden fazla sekmede aynı anda refresh yarışı oluşturabilir.
+          await supabase.auth.getSession();
         } catch (e) {
           // Sessizce başarısız ol - kullanıcı sayfayı yenileyebilir
           console.warn("[NetworkRecovery] Recovery failed:", e);

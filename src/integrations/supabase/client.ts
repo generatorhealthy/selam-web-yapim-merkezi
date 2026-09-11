@@ -16,21 +16,24 @@ const browserSafeAuthLock = async <R,>(name: string, acquireTimeout: number, fn:
     ? 5_000
     : Math.min(Math.max(acquireTimeout, 1_000), 5_000);
 
-  const timeoutPromise = new Promise<null>((resolve) => {
-    timeoutId = setTimeout(() => resolve(null), safeAcquireTimeout);
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Oturum işlemi zaman aşımına uğradı")), safeAcquireTimeout);
   });
+  timeoutPromise.catch(() => {});
 
-  const currentLock = Promise.race([
+  const waitForPrevious = Promise.race([
     previousLock.catch(() => null),
     timeoutPromise,
-  ]).then(fn);
-
-  authLocks[name] = currentLock.finally(() => {
-    if (authLocks[name] === currentLock) delete authLocks[name];
+  ]);
+  const currentLock = waitForPrevious.then(fn);
+  const trackedLock = currentLock.finally(() => {
+    if (authLocks[name] === trackedLock) delete authLocks[name];
     if (timeoutId) clearTimeout(timeoutId);
   });
 
-  return currentLock;
+  authLocks[name] = trackedLock;
+
+  return trackedLock;
 };
 
 const getSupabaseFetchTimeout = (input: RequestInfo | URL) => {
