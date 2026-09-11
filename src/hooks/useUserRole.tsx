@@ -70,6 +70,7 @@ export const useUserRole = () => {
 
         if (!currentUser) {
           lastLoadedUserIdRef.current = null;
+          cachedUserId = null;
           updateProfileState(null);
           return;
         }
@@ -79,20 +80,24 @@ export const useUserRole = () => {
             .from("user_profiles")
             .select("role, is_approved, name, email")
             .eq("user_id", currentUser.id)
-            .maybeSingle()
+            .maybeSingle(),
+          8_000
         );
 
         if (error) {
           console.error("Error fetching user profile:", error);
-          updateProfileState(FALLBACK_PROFILE);
+          // Elde geçerli bir profil varsa onu koru, yetkiyi düşürme.
+          if (!cachedProfile) updateProfileState(FALLBACK_PROFILE);
           return;
         }
 
         if (profile) {
           lastLoadedUserIdRef.current = currentUser.id;
+          cachedUserId = currentUser.id;
           updateProfileState(profile);
           return;
         }
+
 
         // No user_profile row → check if this is a patient
         const { data: patient } = await withTimeout(
