@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { SpecialistNotesDialog } from "@/components/admin/SpecialistNotesDialog";
 import { Link } from "react-router-dom";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +72,7 @@ interface Specialist {
 const SpecialistManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { userProfile, loading: roleLoading } = useUserRole();
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [filteredSpecialists, setFilteredSpecialists] = useState<Specialist[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,7 +80,7 @@ const SpecialistManagement = () => {
   const [filterSpecialty, setFilterSpecialty] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [isLoading, setIsLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const currentUser = userProfile;
   const [notesDialog, setNotesDialog] = useState<{ id: string; name: string } | null>(null);
   const [notesCounts, setNotesCounts] = useState<Record<string, number>>({});
   const [latestNotes, setLatestNotes] = useState<Record<string, { note: string; created_by_name: string | null; created_at: string }>>({});
@@ -152,65 +154,6 @@ const SpecialistManagement = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specialists]);
 
-
-  // Kullanıcı yetki kontrolü - basitleştirilmiş ve güvenilir
-  useEffect(() => {
-    const checkCurrentUser = async () => {
-      try {
-        // Önce mevcut session'ı kontrol et
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Session alınırken hata:', sessionError);
-          // Session hatası durumunda yine de devam et
-          setCurrentUser({ role: 'admin', is_approved: true });
-          return;
-        }
-
-        if (session?.user) {
-          // Kullanıcı giriş yapmış, profil bilgilerini almaya çalış
-          const { data: profile, error: profileError } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-          
-          if (profileError) {
-            console.error('Kullanıcı profili alınırken hata:', profileError);
-          }
-          
-          if (profile) {
-            // Admin veya staff erişebilir
-            if (['admin', 'staff'].includes(profile.role) && profile.is_approved) {
-              setCurrentUser(profile);
-            } else {
-              toast({
-                title: "Yetki Hatası",
-                description: "Bu sayfaya erişim yetkiniz bulunmamaktadır.",
-                variant: "destructive"
-              });
-              navigate('/');
-              return;
-            }
-          } else {
-            // Profil bulunamadı ama session var - admin olarak devam et
-            console.log('Profil bulunamadı, varsayılan admin yetkisi veriliyor');
-            setCurrentUser({ role: 'admin', is_approved: true });
-          }
-        } else {
-          // Session yok - ama sayfayı yine de göster (veritabanı RLS'e güven)
-          console.log('Session bulunamadı, varsayılan yetki veriliyor');
-          setCurrentUser({ role: 'admin', is_approved: true });
-        }
-      } catch (error) {
-        console.error('Kullanıcı kontrol hatası:', error);
-        // Hata durumunda da devam et
-        setCurrentUser({ role: 'admin', is_approved: true });
-      }
-    };
-
-    checkCurrentUser();
-  }, [navigate, toast]);
 
   // Uzmanları yükle
   useEffect(() => {
@@ -478,7 +421,7 @@ const SpecialistManagement = () => {
   const uniqueSpecialties = Array.from(new Set(specialists.map(s => s.specialty))).filter(s => s && s.trim() !== '');
 
   // Kullanıcı kontrolü henüz tamamlanmadıysa loading göster
-  if (!currentUser) {
+  if (roleLoading || !currentUser) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
