@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -13,17 +12,39 @@ export interface UserProfile {
   email?: string;
 }
 
-const FALLBACK_PROFILE: UserProfile = {
-  role: "user",
-  is_approved: false,
+interface RoleState {
+  user: User | null;
+  userProfile: UserProfile | null;
+  loading: boolean;
+  error: Error | null;
+}
+
+const FALLBACK_PROFILE: UserProfile = { role: "user", is_approved: false };
+const CACHE_TTL = 60_000;
+
+let state: RoleState = {
+  user: null,
+  userProfile: null,
+  loading: true,
+  error: null,
+};
+let cachedUserId: string | null = null;
+let cachedAt = 0;
+let initialized = false;
+let profileRequest: Promise<void> | null = null;
+const listeners = new Set<() => void>();
+
+const emit = (next: Partial<RoleState>) => {
+  state = { ...state, ...next };
+  listeners.forEach((listener) => listener());
 };
 
-const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 18_000): Promise<T> => {
+const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error("Oturum kontrolü zaman aşımına uğradı")), timeoutMs);
   });
-  timeoutPromise.catch(() => {});
+  timeoutPromise.catch(() => undefined);
 
   try {
     return await Promise.race([Promise.resolve(promise), timeoutPromise]);
@@ -32,156 +53,131 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs = 18_000): Pro
   }
 };
 
-// Oturum boyunca profili hafızada tut: sekme değişiminde / token yenilenmesinde
-// panelin tekrar "Yükleniyor" ekranına dönmesini engeller.
-let cachedUserId: string | null = null;
-let cachedProfile: UserProfile | null = null;
-let cachedAt = 0;
-let profileRequest: Promise<UserProfile | null> | null = null;
-let profileRequestUserId: string | null = null;
-const CACHE_TTL = 60_000;
+const fetchProfile = async (user: User): Promise<UserProfile> => {
+  const { data: profile, error } = await withTimeout(
+    supabase
+      .from("user_profiles")
+      .select("role, is_approved, name, email")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    8_000,
+  );
 
-export const primeUserRoleCache = (userId: string, profile: UserProfile) => {
-  cachedUserId = userId;
-  cachedProfile = profile;
-  cachedAt = Date.now();
+  if (error) throw error;
+  if (profile) return profile;
+
+  const { data: patient, error: patientError } = await withTimeout(
+    supabase
+      .from("patient_profiles")
+      .select("full_name, email")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    8_000,
+  );
+
+  if (patientError) throw patientError;
+  if (!patient) return FALLBACK_PROFILE;
+
+  return {
+    role: "patient",
+    is_approved: true,
+    name: patient.full_name ?? undefined,
+    email: patient.email ?? undefined,
+  };
 };
 
-const fetchProfile = async (user: User): Promise<UserProfile | null> => {
-  if (profileRequest && profileRequestUserId === user.id) return profileRequest;
+const loadRole = async (providedUser?: User | null, force = false) => {
+  if (profileRequest) return profileRequest;
 
-  profileRequestUserId = user.id;
   profileRequest = (async () => {
-    const { data: profile, error } = await withTimeout(
-      supabase
-        .from("user_profiles")
-        .select("role, is_approved, name, email")
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      8_000
-    );
+    if (!state.userProfile) emit({ loading: true, error: null });
 
-    if (error) throw error;
-    if (profile) return profile;
+    try {
+      const user = providedUser === undefined
+        ? (await withTimeout(supabase.auth.getSession(), 5_000)).data.session?.user ?? null
+        : providedUser;
 
-    const { data: patient, error: patientError } = await withTimeout(
-      supabase
-        .from("patient_profiles")
-        .select("id, full_name, email")
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      8_000
-    );
+      if (!user) {
+        cachedUserId = null;
+        cachedAt = 0;
+        emit({ user: null, userProfile: null, loading: false, error: null });
+        return;
+      }
 
-    if (patientError) throw patientError;
-    if (!patient) return FALLBACK_PROFILE;
+      if (!force && state.userProfile && cachedUserId === user.id && Date.now() - cachedAt < CACHE_TTL) {
+        emit({ user, loading: false, error: null });
+        return;
+      }
 
-    return {
-      role: "patient" as UserRole,
-      is_approved: true,
-      name: patient.full_name ?? undefined,
-      email: patient.email ?? undefined,
-    };
+      const profile = await fetchProfile(user);
+      cachedUserId = user.id;
+      cachedAt = Date.now();
+      emit({ user, userProfile: profile, loading: false, error: null });
+    } catch (caught) {
+      console.error("Yetki bilgileri alınamadı:", caught);
+      emit({
+        loading: false,
+        error: caught instanceof Error ? caught : new Error("Yetki bilgileri alınamadı"),
+      });
+    }
   })().finally(() => {
     profileRequest = null;
-    profileRequestUserId = null;
   });
 
   return profileRequest;
 };
 
+const ensureInitialized = () => {
+  if (initialized) return;
+  initialized = true;
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT" || !session?.user) {
+      cachedUserId = null;
+      cachedAt = 0;
+      emit({ user: null, userProfile: null, loading: false, error: null });
+      return;
+    }
+
+    // Supabase çağrısını auth callback tamamlandıktan sonra başlatmak gerekir;
+    // callback içinde sorgu çalıştırmak istemci kilidini bekletebilir.
+    window.setTimeout(() => {
+      void loadRole(session.user, event === "SIGNED_IN" || event === "USER_UPDATED");
+    }, 0);
+  });
+
+  void loadRole();
+};
+
+export const primeUserRoleCache = (userId: string, profile: UserProfile, user?: User) => {
+  cachedUserId = userId;
+  cachedAt = Date.now();
+  emit({
+    user: user ?? state.user,
+    userProfile: profile,
+    loading: false,
+    error: null,
+  });
+};
+
 export const useUserRole = () => {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(cachedProfile);
-  const [loading, setLoading] = useState(!cachedProfile);
-  const [error, setError] = useState<Error | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [snapshot, setSnapshot] = useState(state);
+
+  useEffect(() => {
+    const listener = () => setSnapshot(state);
+    listeners.add(listener);
+    ensureInitialized();
+    listener();
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
 
   const retry = useCallback(() => {
     cachedAt = 0;
-    setError(null);
-    setLoading(true);
-    setRetryCount((value) => value + 1);
+    emit({ loading: !state.userProfile, error: null });
+    void loadRole(state.user, true);
   }, []);
 
-  useEffect(() => {
-    let mounted = true;
-
-    const updateProfileState = (profile: UserProfile | null) => {
-      cachedProfile = profile;
-      cachedAt = profile ? Date.now() : 0;
-      if (mounted) {
-        setUserProfile(profile);
-      }
-    };
-
-    const updateLoadingState = (value: boolean) => {
-      if (mounted) {
-        setLoading(value);
-      }
-    };
-
-    const loadUserProfile = async (user?: User | null, force = false) => {
-      // Elimizde profil varsa arka planda yenile, ekranı bloklamadan.
-      if (!cachedProfile) {
-        updateLoadingState(true);
-      }
-
-      try {
-        const currentUser = user ?? (await withTimeout(supabase.auth.getSession(), 5_000)).data.session?.user ?? null;
-
-
-        if (!currentUser) {
-          cachedUserId = null;
-          updateProfileState(null);
-          if (mounted) setError(null);
-          return;
-        }
-
-        if (!force && cachedProfile && cachedUserId === currentUser.id && Date.now() - cachedAt < CACHE_TTL) {
-          if (mounted) {
-            setUserProfile(cachedProfile);
-            setError(null);
-          }
-          return;
-        }
-
-        const profile = await fetchProfile(currentUser);
-        cachedUserId = currentUser.id;
-        updateProfileState(profile);
-        if (mounted) setError(null);
-      } catch (error) {
-        console.error("Error in loadUserProfile:", error);
-        if (mounted && !cachedProfile) {
-          setError(error instanceof Error ? error : new Error("Yetki bilgileri alınamadı"));
-        }
-      } finally {
-        updateLoadingState(false);
-      }
-    };
-
-    void loadUserProfile(undefined, retryCount > 0);
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-
-      if (event === "SIGNED_OUT" || !session?.user) {
-        cachedUserId = null;
-        updateProfileState(null);
-        setError(null);
-        updateLoadingState(false);
-        return;
-      }
-
-      const forceRefresh = event === "SIGNED_IN" || event === "USER_UPDATED";
-      void loadUserProfile(session.user, forceRefresh);
-    });
-
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [retryCount]);
-
-  return { userProfile, loading, error, retry };
+  return { ...snapshot, retry };
 };

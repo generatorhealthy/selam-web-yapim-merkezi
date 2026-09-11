@@ -22,15 +22,10 @@ export const useNetworkRecovery = () => {
         clearTimeout(recoveryTimerRef.current);
       }
 
-      recoveryTimerRef.current = setTimeout(async () => {
+      recoveryTimerRef.current = setTimeout(() => {
         try {
-          // 1. Realtime kanallarını yeniden bağla
           supabase.realtime.disconnect();
           supabase.realtime.connect();
-
-          // Auth istemcisi token yenilemeyi kendisi yönetir. Burada zorla yenilemek,
-          // birden fazla sekmede aynı anda refresh yarışı oluşturabilir.
-          await supabase.auth.getSession();
         } catch (e) {
           // Sessizce başarısız ol - kullanıcı sayfayı yenileyebilir
           console.warn("[NetworkRecovery] Recovery failed:", e);
@@ -40,31 +35,12 @@ export const useNetworkRecovery = () => {
       }, 1500);
     };
 
-    // Safari'de visibilitychange da ağ sorunlarını tetikleyebilir
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && navigator.onLine) {
-        // Sayfa tekrar görünür olduğunda hafif bir recovery yap
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-            // Token süresi dolmuş olabilir
-            const expiresAt = session.expires_at;
-            if (expiresAt && expiresAt * 1000 < Date.now() + 60_000) {
-              supabase.auth.refreshSession().catch(() => {});
-            }
-          }
-        });
-      }
-    };
-
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-
       if (recoveryTimerRef.current) {
         clearTimeout(recoveryTimerRef.current);
       }
