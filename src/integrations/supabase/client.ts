@@ -11,17 +11,18 @@ const browserSafeAuthLock = async <R,>(name: string, acquireTimeout: number, fn:
   const previousLock = authLocks[name] ?? Promise.resolve();
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  const timeoutPromise = acquireTimeout >= 0
-    ? new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error(`Auth lock timeout: ${name}`)), acquireTimeout || 10_000);
-      })
-    : null;
+  // A stale refresh request must never hold every later login indefinitely.
+  const safeAcquireTimeout = acquireTimeout < 0
+    ? 5_000
+    : Math.min(Math.max(acquireTimeout, 1_000), 5_000);
 
-  timeoutPromise?.catch(() => {});
+  const timeoutPromise = new Promise<null>((resolve) => {
+    timeoutId = setTimeout(() => resolve(null), safeAcquireTimeout);
+  });
 
   const currentLock = Promise.race([
     previousLock.catch(() => null),
-    ...(timeoutPromise ? [timeoutPromise] : []),
+    timeoutPromise,
   ]).then(fn);
 
   authLocks[name] = currentLock.finally(() => {

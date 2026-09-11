@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { primeUserRoleCache } from "@/hooks/useUserRole";
 
 const AdminAuth = () => {
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -37,20 +38,6 @@ const AdminAuth = () => {
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
     }
-  };
-
-  // Retry helper for Safari flakiness (network/ITP intermittent failures)
-  const withRetry = async <T,>(fn: () => Promise<T>, retries = 2, delayMs = 500): Promise<T> => {
-    let lastError: unknown;
-    for (let i = 0; i <= retries; i++) {
-      try {
-        return await fn();
-      } catch (err) {
-        lastError = err;
-        if (i < retries) await new Promise(r => setTimeout(r, delayMs * (i + 1)));
-      }
-    }
-    throw lastError;
   };
 
   // Check if user is blocked when email changes
@@ -120,17 +107,13 @@ const AdminAuth = () => {
     setIsLoading(true);
 
     try {
-      const { data: authData, error: authError } = await withRetry(
-        () => withTimeout(
-          async () => await supabase.auth.signInWithPassword({
-            email: loginData.email,
-            password: loginData.password,
-          }),
-          20000,
-          'Giriş isteği zaman aşımına uğradı'
-        ),
-        2,
-        700
+      const { data: authData, error: authError } = await withTimeout(
+        async () => await supabase.auth.signInWithPassword({
+          email: loginData.email,
+          password: loginData.password,
+        }),
+        12_000,
+        'Giriş isteği zaman aşımına uğradı. Lütfen tekrar deneyin.'
       );
 
       if (authError) {
@@ -197,21 +180,14 @@ const AdminAuth = () => {
         return;
       }
 
-      // Safari: brief wait for session cookie to settle (reduced from 1s to 300ms)
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      const { data: profile, error: profileError } = await withRetry(
-        () => withTimeout(
-          async () => await supabase
-            .from('user_profiles')
-            .select('role, is_approved')
-            .eq('user_id', authData.user.id)
-            .maybeSingle(),
-          15000,
-          'Profil kontrolü zaman aşımına uğradı'
-        ),
-        2,
-        500
+      const { data: profile, error: profileError } = await withTimeout(
+        async () => await supabase
+          .from('user_profiles')
+          .select('role, is_approved, name, email')
+          .eq('user_id', authData.user.id)
+          .maybeSingle(),
+        8_000,
+        'Profil kontrolü zaman aşımına uğradı. Lütfen tekrar deneyin.'
       );
 
       if (profileError) {
@@ -283,6 +259,8 @@ const AdminAuth = () => {
         title: "Giriş Başarılı",
         description: `${roleText} olarak yönlendiriliyorsunuz...`,
       });
+
+      primeUserRoleCache(authData.user.id, profile);
 
       if (profile.role === 'partner') {
         navigate('/partner');
