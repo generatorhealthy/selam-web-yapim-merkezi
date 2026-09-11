@@ -109,12 +109,27 @@ const DoctorList = () => {
   const fetchSpecialists = async () => {
     try {
       setLoading(true);
-      
-      // SECURITY: Use secure function to get specialists without personal contact info
-      const { data: specialistsData, error: specialistsError } = await supabase
-        .rpc('get_public_specialists');
 
-      if (specialistsError) {
+      // SECURITY: Use secure function to get specialists without personal contact info
+      // Yavaş mobil bağlantılarda tek denemede kopabildiği için 3 kez denenir
+      let specialistsData: any[] | null = null;
+      let specialistsError: any = null;
+
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const result = await supabase.rpc('get_public_specialists');
+        if (!result.error) {
+          specialistsData = (result.data as any[]) || [];
+          specialistsError = null;
+          break;
+        }
+        specialistsError = result.error;
+        console.warn(`Uzman listesi denemesi ${attempt + 1} başarısız:`, result.error.message);
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)));
+        }
+      }
+
+      if (specialistsError || !specialistsData) {
         console.error('Uzmanlar çekilirken hata:', specialistsError);
         toast({
           title: "Hata",

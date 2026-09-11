@@ -17,6 +17,7 @@ const getSupabaseFetchTimeout = (input: RequestInfo | URL) => {
     url.includes("/functions/v1/freepbx-create-extension") ||
     url.includes("/functions/v1/freepbx-run-followme")
   ) return 90_000;
+  if (url.includes("/rest/v1/rpc/get_public_specialists")) return 45_000;
   return 25_000;
 };
 
