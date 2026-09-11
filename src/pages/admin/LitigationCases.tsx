@@ -233,11 +233,69 @@ export default function LitigationCases() {
       });
     } catch (e: any) {
       console.error(e);
-      toast({
-        title: "Uyarı",
-        description: `Kanıt kayıtları okunamadı: ${e?.message || "bilinmeyen hata"}`,
-        variant: "destructive",
-      });
+      try {
+        const normalizedPhone = (c.defendant_phone || "").replace(/\D/g, "").slice(-10);
+        const archiveQuery = supabase
+          .from("legal_evidence")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(20);
+        const { data: archiveRows, error: archiveError } = c.defendant_email
+          ? await archiveQuery.ilike("specialist_email", c.defendant_email)
+          : await archiveQuery.ilike("specialist_name", `%${c.defendant_name}%`);
+        if (archiveError) throw archiveError;
+
+        const archives = archiveRows || [];
+        const specialistIds = Array.from(new Set([
+          c.specialist_id,
+          ...archives.map((row: any) => row.specialist_id),
+        ].filter(Boolean))) as string[];
+        const archivedArrays = (key: string) => archives.flatMap((row: any) =>
+          Array.isArray(row[key]) ? row[key] : []
+        );
+
+        const ordersRequest = c.defendant_email
+          ? supabase.from("orders").select("*").ilike("customer_email", c.defendant_email)
+          : supabase.from("orders").select("*").ilike("customer_name", c.defendant_name);
+        const [ordersResult, referralsResult, appointmentsResult, blogsResult, smsResult] = await Promise.all([
+          ordersRequest,
+          specialistIds.length
+            ? supabase.from("client_referrals").select("*").in("specialist_id", specialistIds)
+            : Promise.resolve({ data: [], error: null }),
+          specialistIds.length
+            ? supabase.from("appointments").select("*").in("specialist_id", specialistIds)
+            : Promise.resolve({ data: [], error: null }),
+          specialistIds.length
+            ? supabase.from("blog_posts").select("*").in("specialist_id", specialistIds)
+            : supabase.from("blog_posts").select("*").ilike("author_name", `%${c.defendant_name}%`),
+          normalizedPhone
+            ? supabase.from("sms_logs").select("*").or(`specialist_name.ilike.%${c.defendant_name}%,phone.ilike.%${normalizedPhone}`)
+            : supabase.from("sms_logs").select("*").ilike("specialist_name", `%${c.defendant_name}%`),
+        ]);
+
+        const profiles = archives.map((row: any) => ({ ...(row.profile_data || {}), ...row }));
+        setCollected({
+          ...emptyCollected,
+          profiles,
+          emailLogs: archivedArrays("email_logs"),
+          orders: [...archivedArrays("orders_data"), ...(ordersResult.data || [])],
+          referrals: [...archivedArrays("referrals_data"), ...(referralsResult.data || [])],
+          appointments: appointmentsResult.data || [],
+          blogs: blogsResult.data || [],
+          sms: smsResult.data || [],
+        });
+        toast({
+          title: "Arşiv kayıtları yüklendi",
+          description: "Ana sorgu geciktiği için kayıtlar güvenli yedek yöntemle getirildi.",
+        });
+      } catch (fallbackError: any) {
+        console.error(fallbackError);
+        toast({
+          title: "Uyarı",
+          description: `Kanıt kayıtları okunamadı: ${fallbackError?.message || e?.message || "bilinmeyen hata"}`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setCollecting(false);
     }
