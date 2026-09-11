@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FileUpload from "@/components/FileUpload";
 import AdminBackButton from "@/components/AdminBackButton";
+import ProfileScreenshotEvidence from "./ProfileScreenshotEvidence";
+
 import {
   Gavel, Plus, Loader2, Trash2, Pencil, Download, FileText, Search,
   ShieldCheck, RefreshCw, Paperclip,
@@ -519,7 +521,17 @@ export default function LitigationCases() {
                   </TabsList>
 
                   <TabsContent value="sistem" className="space-y-4">
+                    <ProfileScreenshotEvidence
+                      caseId={selected.id}
+                      defendantName={selected.defendant_name}
+                      defendantEmail={selected.defendant_email}
+                      defendantPhone={selected.defendant_phone}
+                      profiles={collected.profiles}
+                      blogs={collected.blogs}
+                      onSaved={() => loadEvidence(selected.id)}
+                    />
                     <EvidenceGroup
+
                       title="Profil Arşivi (Silinen Uzman Kaydı)"
                       rows={collected.profiles}
                       onAdd={() => addCollectedAsEvidence("PROFIL_KAYDI", "Silinen uzman profil arşivi (sistem)", collected.profiles)}
