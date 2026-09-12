@@ -12,4 +12,5 @@
 - [x] Giriş sonrası yinelenen yetki sorgusunu ve geçici hata ekranını düzelt
 - [x] Uzman ve yönlendirme ekranlarındaki odaklanınca toplu yenilemeyi kaldır
 - [x] Yoğun yönlendirme ve sipariş sorgularına hedefli hız indeksleri ekle
+- [x] Panel yetki sorgusunu engelleyen eksik `user_profiles` okuma iznini tamamla
 - [ ] Admin ve staff hesaplarıyla panel kartlarını gerçek oturumda doğrula
