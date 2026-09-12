@@ -1,6 +1,6 @@
 
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, useDeferredValue } from "react";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,45 @@ interface OrdersPage {
   nextCursor?: string;
 }
 
+const BROWSE_PAGE_SIZE = 50;
+const ORDER_LIST_SELECT = "id, customer_name, customer_email, package_name, amount, status, created_at, customer_phone, customer_address, customer_city, customer_tc_no, company_name, company_tax_no, company_tax_office, package_type, payment_method, customer_type, contract_ip_address, is_first_order, subscription_month, deleted_at, contract_emails_sent, invoice_sent, invoice_number, invoice_date, payment_status, updated_at, approved_by, approved_at, parent_order_id, payment_transaction_id, subscription_reference_code";
+const DELETED_ORDER_SELECT = "id, customer_name, customer_email, package_name, amount, deleted_at";
+const ORDER_STATUSES = ["all", "pending", "approved", "completed", "cancelled"] as const;
+
+const normalizeOrderSearch = (value: string) => value.trim().replace(/[,%()]/g, " ").replace(/\s+/g, " ");
+
+const fetchOrdersPage = async (status: string, search: string, cursor: string | null): Promise<OrdersPage> => {
+  let query = supabase
+    .from("orders")
+    .select(ORDER_LIST_SELECT)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
+
+  if (status !== "all") query = query.eq("status", status);
+
+  const normalizedSearch = normalizeOrderSearch(search);
+  if (normalizedSearch) {
+    const pattern = `%${normalizedSearch}%`;
+    query = query.or(`customer_name.ilike.${pattern},customer_email.ilike.${pattern},package_name.ilike.${pattern},customer_phone.ilike.${pattern}`);
+  }
+
+  if (cursor) query = query.lt("created_at", cursor);
+
+  const { data, error } = await query.limit(BROWSE_PAGE_SIZE + 1);
+  if (error) throw error;
+
+  const fetchedOrders = (data ?? []) as Order[];
+  const hasMore = fetchedOrders.length > BROWSE_PAGE_SIZE;
+  const pageData = hasMore ? fetchedOrders.slice(0, BROWSE_PAGE_SIZE) : fetchedOrders;
+
+  return {
+    data: pageData,
+    hasMore,
+    nextCursor: hasMore ? pageData[pageData.length - 1]?.created_at : undefined,
+  };
+};
+
 
 const OrderManagement = () => {
   const { toast } = useToast();
@@ -74,6 +113,7 @@ const OrderManagement = () => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [activeTab, setActiveTab] = useState("orders");
   const [searchInput, setSearchInput] = useState("");
+  const deferredSearchInput = useDeferredValue(searchInput);
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -206,12 +246,8 @@ const OrderManagement = () => {
     }
   };
 
-  const BROWSE_PAGE_SIZE = 50;
-  const SEARCH_PAGE_SIZE = 250;
-  const isSearchMode = searchInput.trim().length > 0;
-  const normalizedSearchInput = searchInput.trim().toLowerCase();
-  const ORDER_LIST_SELECT = "id, customer_name, customer_email, package_name, amount, status, created_at, customer_phone, customer_address, customer_city, customer_tc_no, company_name, company_tax_no, company_tax_office, package_type, payment_method, customer_type, contract_ip_address, is_first_order, subscription_month, deleted_at, contract_emails_sent, invoice_sent, invoice_number, invoice_date, payment_status, updated_at, approved_by, approved_at, parent_order_id, payment_transaction_id, subscription_reference_code";
-  const DELETED_ORDER_SELECT = "id, customer_name, customer_email, package_name, amount, deleted_at";
+  const normalizedSearchInput = normalizeOrderSearch(deferredSearchInput);
+  const isSearchMode = normalizedSearchInput.length > 0;
 
   // Order stats via RPC (fast aggregation, avoids paginated client-side counts)
   const { data: orderStats } = useQuery({
@@ -328,64 +364,44 @@ const OrderManagement = () => {
     isFetching: isOrdersFetching,
     error: ordersError,
   } = useInfiniteQuery<OrdersPage>({
-    queryKey: ["orders", statusFilter],
+    queryKey: ["orders", statusFilter, normalizedSearchInput],
     queryFn: async ({ pageParam }) => {
       const cursor = pageParam as string | null;
-
-      let query = supabase
-        .from("orders")
-        .select(ORDER_LIST_SELECT)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .order("id", { ascending: false });
-
-      // Durum filtresi
-      if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
-      }
-
-      // Normal mod: cursor tabanlı sayfalama
-      if (cursor) {
-        query = query.lt("created_at", cursor);
-      }
-
-      const pageSize = isSearchMode ? SEARCH_PAGE_SIZE : BROWSE_PAGE_SIZE;
-      const { data, error } = await query.limit(pageSize + 1);
-
-      if (error) throw error;
-
-      const fetchedOrders = (data ?? []) as Order[];
-      const hasMore = fetchedOrders.length > pageSize;
-      const pageData = hasMore ? fetchedOrders.slice(0, pageSize) : fetchedOrders;
-      const nextCursor = hasMore ? pageData[pageData.length - 1]?.created_at : undefined;
-
-      return { data: pageData, hasMore, nextCursor };
+      return fetchOrdersPage(statusFilter, normalizedSearchInput, cursor);
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.nextCursor ?? undefined : undefined,
     initialPageParam: null as string | null,
-    staleTime: 30000, // 30 saniye cache
-    gcTime: 60000, // 1 dakika garbage collection
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   // Flatten pages into single array
   const rawOrders = useMemo(() => ordersData?.pages.flatMap(page => page.data) || [], [ordersData]);
   
-  // Arama modunda DB tarafında filtreleme yapıldığı için sonuçları doğrudan kullan
-  const orders = useMemo(() => {
-    if (!isSearchMode) return rawOrders;
-    if (!normalizedSearchInput) return rawOrders;
-    // Güvenlik için ek client-side filtre (cache yarış durumlarına karşı)
-    return rawOrders.filter(order =>
-      order.customer_name?.toLowerCase().includes(normalizedSearchInput) ||
-      order.customer_email?.toLowerCase().includes(normalizedSearchInput) ||
-      order.package_name?.toLowerCase().includes(normalizedSearchInput) ||
-      order.customer_phone?.toLowerCase().includes(normalizedSearchInput)
-    );
-  }, [rawOrders, isSearchMode, normalizedSearchInput]);
+  const orders = rawOrders;
 
   const totalOrders = orders.length;
   const hasLoadedActiveOrders = rawOrders.length > 0;
-  const isSearchLoadingAllResults = isSearchMode && !ordersError && isOrdersFetching;
+  const isSearchLoadingAllResults = searchInput !== deferredSearchInput || (isSearchMode && !ordersError && isOrdersFetching);
+
+  // İlk liste geldikten sonra durum filtrelerini arka planda hazırla; sonraki seçimler anında açılır.
+  useEffect(() => {
+    if (!ordersData || isSearchMode) return;
+
+    const timer = window.setTimeout(() => {
+      ORDER_STATUSES.filter((status) => status !== statusFilter).forEach((status) => {
+        void queryClient.prefetchInfiniteQuery({
+          queryKey: ["orders", status, ""],
+          queryFn: ({ pageParam }) => fetchOrdersPage(status, "", pageParam as string | null),
+          getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.nextCursor ?? undefined : undefined,
+          initialPageParam: null as string | null,
+          staleTime: 5 * 60 * 1000,
+        });
+      });
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [isSearchMode, ordersData, queryClient, statusFilter]);
 
   const {
     data: deletedOrders,
@@ -558,11 +574,23 @@ const OrderManagement = () => {
     refetchInterval: 30000, // Auto-refresh every 30s to catch sent status
   });
 
+  const orderNotesByOrderId = useMemo(() => {
+    const map = new Map<string, NonNullable<typeof orderNotes>>();
+    (orderNotes ?? []).forEach((note) => map.set(note.order_id, [...(map.get(note.order_id) ?? []), note]));
+    return map;
+  }, [orderNotes]);
+
+  const scheduledSmsByOrderId = useMemo(() => {
+    const map = new Map<string, NonNullable<typeof scheduledSmsData>>();
+    (scheduledSmsData ?? []).forEach((sms) => map.set(sms.order_id, [...(map.get(sms.order_id) ?? []), sms]));
+    return map;
+  }, [scheduledSmsData]);
+
   // Helper: get notes for an order
-  const getOrderNotes = (orderId: string) => orderNotes?.filter(n => n.order_id === orderId) || [];
+  const getOrderNotes = (orderId: string) => orderNotesByOrderId.get(orderId) ?? [];
   
   // Helper: get SMS status for an order
-  const getOrderSmsStatus = (orderId: string) => scheduledSmsData?.filter(s => s.order_id === orderId) || [];
+  const getOrderSmsStatus = (orderId: string) => scheduledSmsByOrderId.get(orderId) ?? [];
 
   // Add note mutation
   const addNoteMutation = useMutation({
@@ -1568,8 +1596,6 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
 
   // Observer for infinite scroll
   useEffect(() => {
-    if (isSearchMode) return;
-
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -1589,13 +1615,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
         observer.unobserve(currentTarget);
       }
     };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isSearchMode]);
-
-  useEffect(() => {
-    if (isSearchMode && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isSearchMode]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   // Filtreleme useMemo'da yapılıyor, burada direkt orders kullanılıyor
   const filteredOrders = orders;

@@ -15,3 +15,4 @@
 - [x] Panel yetki sorgusunu engelleyen eksik `user_profiles` okuma iznini tamamla
 - [x] Danışan yönlendirme ekranındaki arka plan durum kontrolünü çakışmasız ve sessiz tekrar denemeli hale getir
 - [ ] Admin ve staff hesaplarıyla panel kartlarını gerçek oturumda doğrula
+- [x] Sipariş durumu filtrelerini, aramayı ve liste içi not/SMS eşleştirmelerini hızlandır
