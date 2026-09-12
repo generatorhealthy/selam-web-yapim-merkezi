@@ -1,9 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUserRole } from "@/hooks/useUserRole";
-
-const PANEL_ROLES = ["admin", "staff", "legal", "muhasebe"];
+import { PANEL_ROLES, useUserRole } from "@/hooks/useUserRole";
 
 const AdminRouteGuard = () => {
   const location = useLocation();

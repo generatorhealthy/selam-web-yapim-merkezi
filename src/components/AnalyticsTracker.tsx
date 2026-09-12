@@ -1,7 +1,12 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useUserRole } from '@/hooks/useUserRole';
+
+const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
 
 const AnalyticsTracker = () => {
+  const { user } = useUserRole();
+  const lastHeartbeatRef = useRef(0);
   const generateSessionId = () => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
@@ -17,8 +22,7 @@ const AnalyticsTracker = () => {
 
   const trackPageVisit = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return; // Skip analytics if not authenticated
+      if (!user) return;
       
       const sessionId = getOrCreateSessionId();
       const pageUrl = window.location.pathname + window.location.search;
@@ -39,12 +43,15 @@ const AnalyticsTracker = () => {
     } catch (error) {
       // Silently fail - don't log to console for better performance
     }
-  }, []);
+  }, [user]);
 
   const updateLastActive = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!user || document.visibilityState !== 'visible') return;
+
+      const now = Date.now();
+      if (now - lastHeartbeatRef.current < HEARTBEAT_INTERVAL_MS) return;
+      lastHeartbeatRef.current = now;
       
       const sessionId = getOrCreateSessionId();
       await supabase
@@ -54,39 +61,33 @@ const AnalyticsTracker = () => {
     } catch (error) {
       // Silently fail
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     // Track initial page visit
     trackPageVisit();
 
-    // Update last_active every 15 seconds
-    const interval = setInterval(updateLastActive, 15000);
+    // A low-frequency heartbeat is enough. Per-click/scroll writes overloaded
+    // the shared database and delayed authentication and panel queries.
+    const interval = window.setInterval(() => {
+      void updateLastActive();
+    }, HEARTBEAT_INTERVAL_MS);
 
-    // Track when user becomes active again (after being idle)
-    const handleActivity = () => {
-      updateLastActive();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') void updateLastActive();
     };
-
-    // Listen for user activity
-    window.addEventListener('focus', handleActivity);
-    window.addEventListener('click', handleActivity);
-    window.addEventListener('scroll', handleActivity);
-    window.addEventListener('keydown', handleActivity);
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', handleActivity);
-      window.removeEventListener('click', handleActivity);
-      window.removeEventListener('scroll', handleActivity);
-      window.removeEventListener('keydown', handleActivity);
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [trackPageVisit, updateLastActive]);
 
   // Track route changes
   useEffect(() => {
     trackPageVisit();
-  }, [window.location.pathname, trackPageVisit]);
+  }, [trackPageVisit]);
 
   return null; // This component doesn't render anything
 };
