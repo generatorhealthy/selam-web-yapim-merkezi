@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,25 +26,52 @@ export default function AiCallPanel({ testLeadId, testLeadName }: Props) {
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [data, setData] = useState<any>(null);
+  const loadInProgress = useRef(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (notifyOnError = false) => {
+    if (loadInProgress.current) return;
+    loadInProgress.current = true;
     setLoading(true);
     try {
-      const { data: res, error } = await supabase.functions.invoke("ai-call-control", {
-        body: { action: "status" },
-      });
-      if (error) throw error;
-      setData(res);
+      let lastError: Error | null = null;
+
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        if (attempt > 0) {
+          await new Promise((resolve) => window.setTimeout(resolve, 1_000));
+        }
+
+        const { data: res, error } = await supabase.functions.invoke("ai-call-control", {
+          body: { action: "status" },
+        });
+
+        if (!error && res?.success !== false) {
+          setData(res);
+          return;
+        }
+
+        lastError = error ?? new Error(res?.error || "Durum bilgisi alınamadı");
+      }
+
+      throw lastError ?? new Error("Durum bilgisi alınamadı");
     } catch (e: any) {
-      toast({ title: "Durum alınamadı", description: e.message, variant: "destructive" });
+      if (notifyOnError) {
+        toast({
+          title: "Durum alınamadı",
+          description: "Geçici bağlantı sorunu oluştu. Mevcut bilgiler korunuyor; biraz sonra tekrar deneyin.",
+          variant: "destructive",
+        });
+      }
     } finally {
+      loadInProgress.current = false;
       setLoading(false);
     }
   }, [toast]);
 
   useEffect(() => {
-    load();
-    const t = setInterval(load, 30000);
+    void load(false);
+    const t = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load(false);
+    }, 60_000);
     return () => clearInterval(t);
   }, [load]);
 
@@ -60,7 +87,7 @@ export default function AiCallPanel({ testLeadId, testLeadName }: Props) {
           ? "Yapay zekâ 10:00-19:00 arası otomatik arama yapacak."
           : "Otomatik aramalar durduruldu.",
       });
-      load();
+      void load(false);
     } catch (e: any) {
       toast({ title: "Değiştirilemedi", description: e.message, variant: "destructive" });
     }
@@ -79,7 +106,7 @@ export default function AiCallPanel({ testLeadId, testLeadName }: Props) {
       if (error) throw error;
       if (res?.success === false) throw new Error(res.error || "Bilinmeyen hata");
       toast({ title: "Test araması başlatıldı", description: `${testLeadName || ""} — hat ${res.line}` });
-      setTimeout(load, 4000);
+      window.setTimeout(() => void load(false), 4_000);
     } catch (e: any) {
       toast({ title: "Arama başlatılamadı", description: e.message, variant: "destructive" });
     } finally {
@@ -119,7 +146,7 @@ export default function AiCallPanel({ testLeadId, testLeadName }: Props) {
                 {bridge.configured ? (bridge.reachable ? "Santral bağlı" : "Santral erişilemiyor") : "Yapılandırılmadı"}
               </Badge>
             )}
-            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            <Button variant="outline" size="sm" onClick={() => void load(true)} disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
             <Button size="sm" variant="secondary" onClick={testCall} disabled={testing || !bridge?.reachable}>

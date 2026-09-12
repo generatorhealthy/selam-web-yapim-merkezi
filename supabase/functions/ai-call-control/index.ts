@@ -32,14 +32,19 @@ Deno.serve(async (req) => {
       const bridgeSecret = Deno.env.get("AI_BRIDGE_SECRET");
       let bridge: any = { configured: !!(bridgeUrl && bridgeSecret), reachable: false };
       if (bridge.configured) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3_000);
         try {
           const r = await fetch(`${bridgeUrl!.replace(/\/$/, "")}/health`, {
             headers: { "x-bridge-secret": bridgeSecret! },
+            signal: controller.signal,
           });
           bridge.reachable = r.ok;
           bridge.detail = (await r.text()).slice(0, 300);
         } catch (e: any) {
-          bridge.detail = e?.message || String(e);
+          bridge.detail = e?.name === "AbortError" ? "Santral sağlık kontrolü zaman aşımına uğradı" : e?.message || String(e);
+        } finally {
+          clearTimeout(timeout);
         }
       }
       const { data: recent } = await supabase
