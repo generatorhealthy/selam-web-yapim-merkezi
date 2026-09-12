@@ -139,56 +139,49 @@ const DoctorList = () => {
         return;
       }
 
-      // Mevcut ay ve yıl için danışan yönlendirme verilerini çek
-      const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth() + 1;
-
-      let referralData: any[] | null = null;
-      try {
-        const { data, error: referralError } = await supabase
-          .from('client_referrals')
-          .select('specialist_id, referral_count, is_referred')
-          .eq('year', currentYear)
-          .eq('month', currentMonth);
-
-        if (!referralError) {
-          referralData = data;
-        } else {
-          console.warn('Danışan yönlendirme verileri alınamadı (yetki kısıtlaması olabilir):', referralError.message);
-        }
-      } catch {
-        console.warn('Danışan yönlendirme verileri alınamadı');
-      }
-
-      // Uzman verilerini danışan yönlendirme sayıları ile birleştir
-      const specialistsWithReferrals = (specialistsData || []).map(specialist => {
-        const referral = referralData?.find(r => r.specialist_id === specialist.id);
-        const normalizedCount = referral ? (referral.referral_count || (referral.is_referred ? 1 : 0) || 0) : 0;
-        return {
-          ...specialist,
-          referral_count: normalizedCount
-        };
-      });
-
-      // Danışan yönlendirme sayısına göre sırala
-      // Önce 0 danışan yönlendirmesi olanlar (rastgele sıralanır)
-      // Sonra diğerleri danışan sayısına göre artan sırayla (aynı sayıda olanlar rastgele)
-      const zeroReferrals = specialistsWithReferrals
-        .filter(s => s.referral_count === 0)
+      // Liste hemen gösterilir: rastgele sırayla ekrana bas, bekletme yok
+      const shuffled = [...(specialistsData || [])]
+        .map((s) => ({ ...s, referral_count: 0 }))
         .sort(() => Math.random() - 0.5);
-      
-      const nonZeroReferrals = specialistsWithReferrals
-        .filter(s => s.referral_count > 0)
-        .sort((a, b) => {
-          if (a.referral_count === b.referral_count) {
-            return Math.random() - 0.5; // Aynı sayıda olanları rastgele sırala
-          }
-          return a.referral_count - b.referral_count; // Artan sırayla
-        });
+      setSpecialists(shuffled);
+      setLoading(false);
 
-      const sortedSpecialists = [...zeroReferrals, ...nonZeroReferrals];
-      setSpecialists(sortedSpecialists);
-      
+      // Yönlendirme sayıları yalnızca giriş yapmış kullanıcılar için ve arka planda
+      void (async () => {
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (!sessionData.session) return;
+
+          const currentYear = new Date().getFullYear();
+          const currentMonth = new Date().getMonth() + 1;
+
+          const { data: referralData, error: referralError } = await supabase
+            .from('client_referrals')
+            .select('specialist_id, referral_count, is_referred')
+            .eq('year', currentYear)
+            .eq('month', currentMonth);
+
+          if (referralError || !referralData) return;
+
+          const counts = new Map<string, number>();
+          for (const r of referralData as any[]) {
+            const inc = r.referral_count || (r.is_referred ? 1 : 0) || 0;
+            counts.set(r.specialist_id, (counts.get(r.specialist_id) || 0) + inc);
+          }
+
+          setSpecialists((prev) => {
+            const withCounts = prev.map((s) => ({ ...s, referral_count: counts.get(s.id) || 0 }));
+            const zero = withCounts.filter((s) => (s.referral_count || 0) === 0);
+            const nonZero = withCounts
+              .filter((s) => (s.referral_count || 0) > 0)
+              .sort((a, b) => (a.referral_count || 0) - (b.referral_count || 0));
+            return [...zero, ...nonZero];
+          });
+        } catch {
+          // sessizce yoksay
+        }
+      })();
+
     } catch (error) {
       console.error('Beklenmeyen hata:', error);
       toast({
@@ -200,6 +193,7 @@ const DoctorList = () => {
       setLoading(false);
     }
   };
+
 
   const filterSpecialists = () => {
     let filtered = [...specialists];
