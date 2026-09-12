@@ -7412,6 +7412,15 @@ export type Database = {
       generate_unique_referral_code: { Args: never; Returns: string }
       get_current_user_role: { Args: never; Returns: string }
       get_default_time_slots: { Args: never; Returns: Json }
+      get_my_panel_access: {
+        Args: never
+        Returns: {
+          email: string
+          is_approved: boolean
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+        }[]
+      }
       get_my_referral_summary: {
         Args: never
         Returns: {
