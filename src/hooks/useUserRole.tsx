@@ -5,6 +5,8 @@ import { Database } from "@/integrations/supabase/types";
 
 type UserRole = Database["public"]["Enums"]["user_role"];
 
+export const PANEL_ROLES: UserRole[] = ["admin", "staff", "legal", "muhasebe"];
+
 export interface UserProfile {
   role: UserRole;
   is_approved: boolean;
@@ -94,7 +96,7 @@ const loadRole = async (providedUser?: User | null, force = false) => {
 
     try {
       const user = providedUser === undefined
-        ? (await withTimeout(supabase.auth.getSession(), 5_000)).data.session?.user ?? null
+        ? (await supabase.auth.getSession()).data.session?.user ?? null
         : providedUser;
 
       if (!user) {
@@ -142,7 +144,17 @@ const ensureInitialized = () => {
     // Supabase çağrısını auth callback tamamlandıktan sonra başlatmak gerekir;
     // callback içinde sorgu çalıştırmak istemci kilidini bekletebilir.
     window.setTimeout(() => {
-      void loadRole(session.user, event === "SIGNED_IN" || event === "USER_UPDATED");
+      const hasFreshProfile =
+        cachedUserId === session.user.id &&
+        Boolean(state.userProfile) &&
+        Date.now() - cachedAt < CACHE_TTL;
+
+      if (event === "SIGNED_IN" && hasFreshProfile) {
+        emit({ user: session.user, loading: false, error: null });
+        return;
+      }
+
+      void loadRole(session.user, event === "USER_UPDATED");
     }, 0);
   });
 

@@ -608,18 +608,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psikolojik-danisman-elif-camci-kaya-ile-cocuk-ve-ergenlere-yonelik-destek</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psikolojik-danisman-ayse-akcayol-ile-guvenli-bir-yolculuk</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/ayse-tetik-ile-evlilik-ve-iliski-danismanligi</loc>
     <lastmod>2026-09-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -650,8 +638,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/sevinc-yesilyurt-ile-guvenli-ve-donusturucu-bir-yolculuk</loc>
-    <lastmod>2025-09-26</lastmod>
+    <loc>https://doktorumol.com.tr/blog/psikolojik-danisman-elif-camci-kaya-ile-cocuk-ve-ergenlere-yonelik-destek</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikolojik-danisman-ayse-akcayol-ile-guvenli-bir-yolculuk</loc>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7444,6 +7438,12 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/sara-tekin-ile-evlilik-ve-iliski-danismanligi</loc>
     <lastmod>2026-09-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/sevinc-yesilyurt-ile-guvenli-ve-donusturucu-bir-yolculuk</loc>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
