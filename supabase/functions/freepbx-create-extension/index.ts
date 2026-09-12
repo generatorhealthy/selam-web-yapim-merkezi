@@ -942,9 +942,18 @@ serve(async (req) => {
     // ayırıcısını kaldırabiliyor veya virtual dahiliyi ringallv2prim ile
     // oluşturabiliyor. Import sonrasında GraphQL üzerinden doğru listeyi ve
     // doğrudan cep telefonunu çaldıran stratejiyi kesin olarak uygula.
-    const token = await getToken();
-    await enforceFollowMeRouting(token, extStr, followMeList);
+    // Telefon numarası yoksa Follow-Me yazılamaz (GraphQL boş liste ile hata veriyor).
+    // Dahili yine oluşturulur, uzmanın numarası eklendiğinde Follow-Me güncellenir.
+    let followMeWarning: string | null = null;
+    if (followMeList) {
+      const token = await getToken();
+      await enforceFollowMeRouting(token, extStr, followMeList);
+    } else {
+      followMeWarning = "Uzmanın cep telefonu kayıtlı olmadığı için yönlendirme (Follow-Me) ayarlanamadı. Telefon numarasını ekleyip 'Follow-Me Toplu Güncelle' ile tamamlayın.";
+      console.warn("Follow-Me atlandı: telefon yok", { extension: extStr, name });
+    }
     const usedTech: "virtual" = "virtual";
+
 
 
     // Record in DB
@@ -980,12 +989,12 @@ serve(async (req) => {
         success: true,
         extension: extStr,
         tech: usedTech,
-        message: usedTech === "virtual"
-          ? `Dahili oluşturuldu: ${extStr} (${name})`
-          : `FreePBX virtual desteklemedi; PJSIP dahili oluşturuldu: ${extStr} (${name})`,
+        warning: followMeWarning,
+        message: `Dahili oluşturuldu: ${extStr} (${name})${followMeWarning ? " — " + followMeWarning : ""}`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
+
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Bilinmeyen hata";
     console.error("freepbx-create-extension error:", msg);
