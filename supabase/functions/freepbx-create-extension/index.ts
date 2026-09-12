@@ -989,12 +989,12 @@ serve(async (req) => {
         success: true,
         extension: extStr,
         tech: usedTech,
-        message: usedTech === "virtual"
-          ? `Dahili oluşturuldu: ${extStr} (${name})`
-          : `FreePBX virtual desteklemedi; PJSIP dahili oluşturuldu: ${extStr} (${name})`,
+        warning: followMeWarning,
+        message: `Dahili oluşturuldu: ${extStr} (${name})${followMeWarning ? " — " + followMeWarning : ""}`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
+
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Bilinmeyen hata";
     console.error("freepbx-create-extension error:", msg);
