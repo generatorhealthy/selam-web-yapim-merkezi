@@ -55,6 +55,8 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number): Prom
   }
 };
 
+const wait = (timeoutMs: number) => new Promise((resolve) => setTimeout(resolve, timeoutMs));
+
 const fetchProfile = async (user: User): Promise<UserProfile> => {
   const { data: panelProfiles, error } = await withTimeout(
     supabase.rpc("get_my_panel_access"),
@@ -114,7 +116,14 @@ const loadRole = async (providedUser?: User | null, force = false) => {
         return;
       }
 
-      const profile = await fetchProfile(user);
+      let profile: UserProfile;
+      try {
+        profile = await fetchProfile(user);
+      } catch (firstError) {
+        console.warn("Yetki bilgisi ilk denemede alınamadı, yeniden deneniyor:", firstError);
+        await wait(1_000);
+        profile = await fetchProfile(user);
+      }
       cachedUserId = user.id;
       cachedAt = Date.now();
       emit({ user, userProfile: profile, loading: false, error: null });
