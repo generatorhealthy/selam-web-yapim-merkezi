@@ -13,4 +13,5 @@
 - [x] Uzman ve yönlendirme ekranlarındaki odaklanınca toplu yenilemeyi kaldır
 - [x] Yoğun yönlendirme ve sipariş sorgularına hedefli hız indeksleri ekle
 - [x] Panel yetki sorgusunu engelleyen eksik `user_profiles` okuma iznini tamamla
+- [x] Danışan yönlendirme ekranındaki arka plan durum kontrolünü çakışmasız ve sessiz tekrar denemeli hale getir
 - [ ] Admin ve staff hesaplarıyla panel kartlarını gerçek oturumda doğrula
