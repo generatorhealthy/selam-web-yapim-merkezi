@@ -1,0 +1,1 @@
+ALTER FUNCTION public.get_my_panel_access() SECURITY INVOKER;
