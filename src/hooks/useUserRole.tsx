@@ -56,16 +56,13 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number): Prom
 };
 
 const fetchProfile = async (user: User): Promise<UserProfile> => {
-  const { data: profile, error } = await withTimeout(
-    supabase
-      .from("user_profiles")
-      .select("role, is_approved, name, email")
-      .eq("user_id", user.id)
-      .maybeSingle(),
-    8_000,
+  const { data: panelProfiles, error } = await withTimeout(
+    supabase.rpc("get_my_panel_access"),
+    12_000,
   );
 
   if (error) throw error;
+  const profile = panelProfiles?.[0];
   if (profile) return profile;
 
   const { data: patient, error: patientError } = await withTimeout(
