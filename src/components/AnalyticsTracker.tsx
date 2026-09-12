@@ -1,11 +1,13 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useLocation } from 'react-router-dom';
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
 
 const AnalyticsTracker = () => {
   const { user } = useUserRole();
+  const location = useLocation();
   const lastHeartbeatRef = useRef(0);
   const generateSessionId = () => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -25,7 +27,7 @@ const AnalyticsTracker = () => {
       if (!user) return;
       
       const sessionId = getOrCreateSessionId();
-      const pageUrl = window.location.pathname + window.location.search;
+      const pageUrl = location.pathname + location.search;
       const referrer = document.referrer || null;
       const userAgent = navigator.userAgent;
 
@@ -43,7 +45,7 @@ const AnalyticsTracker = () => {
     } catch (error) {
       // Silently fail - don't log to console for better performance
     }
-  }, [user]);
+  }, [location.pathname, location.search, user]);
 
   const updateLastActive = useCallback(async () => {
     try {
