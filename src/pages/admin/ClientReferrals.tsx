@@ -574,16 +574,68 @@ const ClientReferrals = () => {
     });
 
     setFilteredSpecialists(sorted);
-    
-    // Fetch client details for all filtered specialists for all months with count > 0
-    sorted.forEach(spec => {
-      spec.referrals.forEach(ref => {
-        if (ref.count > 0) {
-          fetchClientReferralDetails(spec.id, ref.month);
-        }
-      });
-    });
   }, [specialists, searchTerm, selectedMonth, currentYear]);
+
+  // Seçili ay için tüm uzmanların danışan detaylarını TEK sorguda getir.
+  // Önceden her uzman + her ay için ayrı sorgu atılıyordu (107 uzman × 12 ay =
+  // yüzlerce istek), bu da veritabanını 503 zaman aşımına sürüklüyordu.
+  useEffect(() => {
+    if (!specialists.length) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('client_referrals')
+          .select('id, specialist_id, client_name, client_surname, client_contact, referred_at, referral_count, is_referred, consultation_type')
+          .eq('year', currentYear)
+          .eq('month', selectedMonth)
+          .eq('is_referred', true)
+          .not('client_name', 'is', null)
+          .order('referred_at', { ascending: false });
+
+        if (error) {
+          console.error('❌ [CLIENT-DETAILS-BATCH] Error:', error);
+          return;
+        }
+        if (cancelled) return;
+
+        // Seçili aya ait detayları specialist_id'ye göre grupla
+        const grouped: Record<string, ClientReferralDetail[]> = {};
+        (data || []).forEach((row: any) => {
+          const key = `${row.specialist_id}-${selectedMonth}`;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push({
+            id: row.id,
+            client_name: row.client_name,
+            client_surname: row.client_surname,
+            client_contact: row.client_contact,
+            referred_at: row.referred_at,
+            referral_count: row.referral_count,
+            is_referred: row.is_referred,
+            sms_sent: row.sms_sent,
+            consultation_type: row.consultation_type,
+          });
+        });
+
+        // Seçili ayın detaylarını güncelle, diğer ayları koru
+        setClientReferralDetails(prev => {
+          const next = { ...prev };
+          Object.keys(next).forEach(k => {
+            if (k.endsWith(`-${selectedMonth}`)) delete next[k];
+          });
+          Object.assign(next, grouped);
+          return next;
+        });
+      } catch (error) {
+        console.error('❌ [CLIENT-DETAILS-BATCH] Exception:', error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [specialists, selectedMonth, currentYear]);
 
   const updateReferralCount = async (
     specialistId: string, 
