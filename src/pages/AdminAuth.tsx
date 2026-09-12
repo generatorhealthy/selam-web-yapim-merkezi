@@ -183,15 +183,12 @@ const AdminAuth = () => {
         return;
       }
 
-      const { data: profile, error: profileError } = await withTimeout(
-        async () => await supabase
-          .from('user_profiles')
-          .select('role, is_approved, name, email')
-          .eq('user_id', authData.user.id)
-          .maybeSingle(),
-        8_000,
+      const { data: panelProfiles, error: profileError } = await withTimeout(
+        async () => await supabase.rpc('get_my_panel_access'),
+        12_000,
         'Profil kontrolü zaman aşımına uğradı. Lütfen tekrar deneyin.'
       );
+      const profile = panelProfiles?.[0];
 
       if (profileError) {
         console.error('Profil sorgu hatası:', profileError);
