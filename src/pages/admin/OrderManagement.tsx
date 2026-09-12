@@ -403,18 +403,6 @@ const OrderManagement = () => {
     return () => window.clearTimeout(timer);
   }, [isSearchMode, ordersData, queryClient, statusFilter]);
 
-  const orderNotesByOrderId = useMemo(() => {
-    const map = new Map<string, NonNullable<typeof orderNotes>>();
-    (orderNotes ?? []).forEach((note) => map.set(note.order_id, [...(map.get(note.order_id) ?? []), note]));
-    return map;
-  }, [orderNotes]);
-
-  const scheduledSmsByOrderId = useMemo(() => {
-    const map = new Map<string, NonNullable<typeof scheduledSmsData>>();
-    (scheduledSmsData ?? []).forEach((sms) => map.set(sms.order_id, [...(map.get(sms.order_id) ?? []), sms]));
-    return map;
-  }, [scheduledSmsData]);
-
   const {
     data: deletedOrders,
     isLoading: isDeletedOrdersLoading,
@@ -585,6 +573,18 @@ const OrderManagement = () => {
     staleTime: 15000,
     refetchInterval: 30000, // Auto-refresh every 30s to catch sent status
   });
+
+  const orderNotesByOrderId = useMemo(() => {
+    const map = new Map<string, NonNullable<typeof orderNotes>>();
+    (orderNotes ?? []).forEach((note) => map.set(note.order_id, [...(map.get(note.order_id) ?? []), note]));
+    return map;
+  }, [orderNotes]);
+
+  const scheduledSmsByOrderId = useMemo(() => {
+    const map = new Map<string, NonNullable<typeof scheduledSmsData>>();
+    (scheduledSmsData ?? []).forEach((sms) => map.set(sms.order_id, [...(map.get(sms.order_id) ?? []), sms]));
+    return map;
+  }, [scheduledSmsData]);
 
   // Helper: get notes for an order
   const getOrderNotes = (orderId: string) => orderNotesByOrderId.get(orderId) ?? [];
