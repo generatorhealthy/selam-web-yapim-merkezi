@@ -598,30 +598,22 @@ const ClientReferrals = () => {
     try {
       const specialist = specialists.find((s) => s.id === specialistId);
       const specName = specialistName || specialist?.specialist.name || 'Unknown';
-      
-      // Resolve phone preferring orders (contracts), fallback to specialists.phone
-      console.log('🔍 [RESOLVE] Starting phone resolution for:', specName);
-      const resolvedPhone = await resolveSpecialistSmsPhone((specialist?.specialist as any) || {});
-      console.log('🔍 [RESOLVE] resolveSpecialistSmsPhone returned:', resolvedPhone);
-      const paramPhone = specialistPhone && !isCentralNumber(specialistPhone)
-        ? normalizePhoneForSms(specialistPhone)
-        : '';
-      console.log('🔍 [RESOLVE] paramPhone:', paramPhone);
-      const phoneToUse = paramPhone || resolvedPhone;
-      console.log('🔍 [RESOLVE] FINAL phoneToUse:', phoneToUse);
-      console.log('🔍 [SMS-DEBUG] Specialist Info:', {
-        specialistId,
-        specialistName: specName,
-        phoneFromTable: specialist?.specialist.phone,
-        phoneFromParams: specialistPhone,
-        paramPhone,
-        resolvedPhone,
-        phoneToUse,
-        hasClientData: !!clientData
-      });
-      console.log(`🔄 [UPDATE] ${specName} (${specialistId}) year=${currentYear} month=${month} -> ${newCount}`);
 
-      // Danışan bilgisi varsa yeni kayıt ekle
+      const applyOptimistic = () => {
+        setSpecialists((prev) =>
+          prev.map((spec) =>
+            spec.id === specialistId
+              ? {
+                  ...spec,
+                  referrals: spec.referrals.map((ref) =>
+                    ref.month === month ? { ...ref, count: newCount } : ref
+                  ),
+                }
+              : spec
+          )
+        );
+      };
+
       if (clientData) {
         // Mevcut notları al
         const { data: existingNotes } = await supabase
@@ -633,18 +625,10 @@ const ClientReferrals = () => {
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        
-        console.log('📝 [INSERT] Danışan bilgisi ile yeni kayıt ekleniyor...', {
-          specialist_id: specialistId,
-          year: currentYear,
-          month,
-          client_name: clientData.client_name,
-          client_surname: clientData.client_surname,
-          client_contact: clientData.client_contact
-        });
-        
-        // Yeni danışan kaydı ekle (notları koru)
-        const { data: insertResult, error: insertError } = await supabase
+
+        const { data: authUser } = await supabase.auth.getUser();
+
+        const { error: insertError } = await supabase
           .from('client_referrals')
           .insert({
             specialist_id: specialistId,
@@ -657,234 +641,158 @@ const ClientReferrals = () => {
             consultation_type: clientData.consultation_type || 'online',
             is_referred: true,
             referred_at: new Date().toISOString(),
-            referred_by: (await supabase.auth.getUser()).data.user?.id || null,
-            notes: existingNotes?.notes || '', // Mevcut notları koru
+            referred_by: authUser.user?.id || null,
+            notes: existingNotes?.notes || '',
           })
-          .select('id, referral_count, updated_at');
+          .select('id');
 
-        if (insertError) {
-          console.error('❌ [INSERT] Danışan bilgisi ekleme hatası:', insertError);
-          throw insertError;
-        }
-        console.log('✅ [INSERT] Danışan bilgisi başarıyla eklendi:', insertResult);
+        if (insertError) throw insertError;
 
-        // Danışana bilgilendirme + değerlendirme linki (SMS + WhatsApp) — uzman telefonu açsın ya da açmasın
-        try {
-          const notifyRes = await supabase.functions.invoke('notify-referred-client', {
-            body: {
-              specialistId,
-              clientName: clientData.client_name,
-              clientSurname: clientData.client_surname,
-              clientContact: clientData.client_contact,
-              consultationType: clientData.consultation_type || 'online',
-            },
-          });
-          console.log('📨 [CLIENT-NOTIFY] notify-referred-client response:', notifyRes);
-          const res: any = notifyRes.data || {};
-          if (notifyRes.error || res.success === false) {
-            toast({
-              title: 'Danışan bilgilendirmesi gönderilemedi',
-              description: notifyRes.error?.message || res.error || 'Bilinmeyen hata',
-              variant: 'default',
-            });
-          } else {
-            toast({
-              title: 'Danışan bilgilendirildi',
-              description: `${clientData.client_name} kişisine ${[res.smsSent ? 'SMS' : null, res.waSent ? 'WhatsApp' : null].filter(Boolean).join(' + ')} ile uzman bilgisi ve değerlendirme linki iletildi.`,
-            });
-          }
-        } catch (notifyEx) {
-          console.error('❌ [CLIENT-NOTIFY] Exception:', notifyEx);
-        }
-      } else {
-        // Sayı azaltma - en son kaydı sil
-        const { data: existingRecords, error: fetchError } = await supabase
-          .from('client_referrals')
-          .select('id')
-          .eq('specialist_id', specialistId)
-          .eq('year', currentYear)
-          .eq('month', month)
-          .order('created_at', { ascending: false })
-          .limit(1);
+        // UI'yi hemen güncelle — bildirimler arka planda devam eder
+        applyOptimistic();
+        void fetchClientReferralDetails(specialistId, month);
+        toast({
+          title: 'Yönlendirme kaydedildi',
+          description: `${specName} - ${monthNames[month - 1]} ayına eklendi. Bildirimler arka planda gönderiliyor.`,
+        });
 
-        if (fetchError) throw fetchError;
-
-        if (existingRecords && existingRecords.length > 0) {
-          const { error: deleteError } = await supabase
-            .from('client_referrals')
-            .delete()
-            .eq('id', existingRecords[0].id);
-
-          if (deleteError) throw deleteError;
-          console.log('✅ [UPDATE] Client referral deleted');
-        }
-      }
-      
-      // Send SMS to specialist with client info if phone and client data provided
-      console.log('📱 [SMS] Checking SMS requirements:', {
-        hasPhone: !!phoneToUse,
-        hasClientData: !!clientData,
-        newCount,
-        specialistName: specName,
-        phoneNumber: phoneToUse
-      });
-
-      if (phoneToUse && clientData && newCount > 0) {
-        console.log('✅ [SMS] Koşullar sağlandı - SMS gönderiliyor...');
-        try {
-          console.log('📱 [SMS] Preparing to send SMS with details:', {
-            specialist: specName,
-            phone: phoneToUse,
-            clientName: `${clientData.client_name} ${clientData.client_surname}`,
-            clientContact: clientData.client_contact
-          });
-          
-          const consultationLabel = clientData.consultation_type === 'face_to_face' ? 'Yüz Yüze Danışmanlık' : 'Online Danışmanlık';
-          const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\nDanışmanlık Türü: ${consultationLabel}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
-          
-          console.log('📱 [SMS] Message content:', message);
-          console.log('📱 [SMS] Calling edge function send-sms-via-static-proxy...');
-          
-          // Primary attempt via static proxy (preferred)
-          let usedFunction = 'send-sms-via-static-proxy';
-          let lastError: any | undefined = undefined;
-          let resultData: any | undefined = undefined;
-          
-          const tryInvoke = async (fnName: string) => {
-            const { data, error } = await supabase.functions.invoke(fnName, {
-              body: { phone: phoneToUse, message }
-            });
-            console.log(`📱 [SMS] ${fnName} response:`, { data, error });
-            return { data, error };
-          };
-
-          const primary = await tryInvoke('send-sms-via-static-proxy');
-          resultData = primary.data; lastError = primary.error;
-          
-          // Fallback to alternative function(s) if primary failed or returned unsuccessful
-          if (lastError || (resultData && resultData.success === false)) {
-            console.warn('⚠️ [SMS] Primary failed. Trying fallbacks...');
-            const fallbacks = ['send-sms-via-proxy', 'send-verimor-sms'];
-            for (const fn of fallbacks) {
-              const res = await tryInvoke(fn);
-              if (!res.error && (!res.data || res.data.success !== false)) {
-                usedFunction = fn;
-                resultData = res.data;
-                lastError = undefined;
-                break;
-              }
-              lastError = res.error || new Error(res.data?.error || 'Unknown fallback error');
-            }
-          }
-          
-          // Log SMS result to database
-          const currentUser = await supabase.auth.getUser();
-          const smsLogStatus = lastError ? 'error' : 'success';
-          await supabase.from('sms_logs').insert({
-            phone: phoneToUse,
-            message,
-            status: smsLogStatus,
-            used_function: usedFunction,
-            error: lastError?.message || null,
-            response: resultData || null,
-            triggered_by: currentUser.data.user?.id || null,
-            source: 'client_referrals',
-            specialist_id: specialistId,
-            specialist_name: specName,
-            client_name: `${clientData.client_name} ${clientData.client_surname}`,
-            client_contact: clientData.client_contact
-          });
-          
-          if (lastError) {
-            console.error('❌ [SMS] Gönderim hatası:', lastError);
-            toast({
-              title: "Uyarı",
-              description: `Yönlendirme kaydedildi ancak SMS gönderilemedi. Hata: ${lastError.message || 'Bilinmeyen hata'}`,
-              variant: "default",
-            });
-          } else {
-            console.log(`✅ [SMS] Başarıyla gönderildi (${usedFunction}). Telefon:`, phoneToUse, 'Yanıt:', resultData);
-            toast({
-              title: "Başarılı",
-              description: `Yönlendirme kaydedildi ve ${phoneToUse} numarasına SMS gönderildi. (${usedFunction})`,
-            });
-          }
-
-          // Doki WhatsApp bildirimi (paralel kanal, SMS başarısından bağımsız)
+        // ---- Arka plan bildirimleri (beklemeden) ----
+        void (async () => {
           try {
-            console.log('💬 [WA] Doki WhatsApp bildirimi gönderiliyor...');
-            const waInvoke = await supabase.functions.invoke('send-referral-whatsapp', {
-              body: {
-                specialistName: specName,
-                specialistPhone: phoneToUse,
-                clientName: clientData.client_name,
-                clientSurname: clientData.client_surname,
-                clientContact: clientData.client_contact,
-                consultationType: clientData.consultation_type === 'face_to_face' ? 'Yüz Yüze Danışmanlık' : 'Online Danışmanlık',
-              },
-            });
-            console.log('💬 [WA] send-referral-whatsapp response:', waInvoke);
-            if (waInvoke.error || (waInvoke.data as any)?.success === false) {
+            const resolvedPhone = await resolveSpecialistSmsPhone((specialist?.specialist as any) || {});
+            const paramPhone = specialistPhone && !isCentralNumber(specialistPhone)
+              ? normalizePhoneForSms(specialistPhone)
+              : '';
+            const phoneToUse = paramPhone || resolvedPhone;
+
+            // Danışana bilgilendirme
+            void supabase.functions
+              .invoke('notify-referred-client', {
+                body: {
+                  specialistId,
+                  clientName: clientData.client_name,
+                  clientSurname: clientData.client_surname,
+                  clientContact: clientData.client_contact,
+                  consultationType: clientData.consultation_type || 'online',
+                },
+              })
+              .catch((e) => console.error('❌ [CLIENT-NOTIFY]', e));
+
+            if (!phoneToUse) {
               toast({
-                title: 'WhatsApp uyarısı',
-                description: `WhatsApp gönderilemedi: ${waInvoke.error?.message || (waInvoke.data as any)?.error || 'bilinmeyen hata'}`,
+                title: 'Uyarı',
+                description: 'Uzman için geçerli bir telefon numarası bulunamadı, SMS gönderilemedi.',
+                variant: 'default',
+              });
+              return;
+            }
+
+            const consultationLabel = clientData.consultation_type === 'face_to_face' ? 'Yüz Yüze Danışmanlık' : 'Online Danışmanlık';
+            const message = `${specName} merhaba,\n\nTarafınıza bir danışan yönlendirmesi yapılmıştır.\n\nDanışan Bilgileri:\nAd Soyad: ${clientData.client_name} ${clientData.client_surname}\nİletişim: ${clientData.client_contact}\nDanışmanlık Türü: ${consultationLabel}\n\nDanışanla iletişime geçerek gerekli bilgilendirmeyi sağlayabilirsiniz.\n\nDoktorumol.com.tr`;
+
+            // WhatsApp'ı SMS'i beklemeden başlat
+            void supabase.functions
+              .invoke('send-referral-whatsapp', {
+                body: {
+                  specialistName: specName,
+                  specialistPhone: phoneToUse,
+                  clientName: clientData.client_name,
+                  clientSurname: clientData.client_surname,
+                  clientContact: clientData.client_contact,
+                  consultationType: consultationLabel,
+                },
+              })
+              .catch((e) => console.error('❌ [WA]', e));
+
+            const tryInvoke = async (fnName: string) => {
+              const { data, error } = await supabase.functions.invoke(fnName, {
+                body: { phone: phoneToUse, message },
+              });
+              return { data, error };
+            };
+
+            let usedFunction = 'send-sms-via-static-proxy';
+            const primary = await tryInvoke(usedFunction);
+            let resultData: any = primary.data;
+            let lastError: any = primary.error;
+
+            if (lastError || (resultData && resultData.success === false)) {
+              for (const fn of ['send-sms-via-proxy', 'send-verimor-sms']) {
+                const res = await tryInvoke(fn);
+                if (!res.error && (!res.data || res.data.success !== false)) {
+                  usedFunction = fn;
+                  resultData = res.data;
+                  lastError = undefined;
+                  break;
+                }
+                lastError = res.error || new Error(res.data?.error || 'Unknown fallback error');
+              }
+            }
+
+            void supabase.from('sms_logs').insert({
+              phone: phoneToUse,
+              message,
+              status: lastError ? 'error' : 'success',
+              used_function: usedFunction,
+              error: lastError?.message || null,
+              response: resultData || null,
+              triggered_by: authUser.user?.id || null,
+              source: 'client_referrals',
+              specialist_id: specialistId,
+              specialist_name: specName,
+              client_name: `${clientData.client_name} ${clientData.client_surname}`,
+              client_contact: clientData.client_contact,
+            });
+
+            if (lastError) {
+              toast({
+                title: 'Uyarı',
+                description: `Yönlendirme kaydedildi ancak SMS gönderilemedi: ${lastError.message || 'bilinmeyen hata'}`,
                 variant: 'default',
               });
             } else {
               toast({
-                title: 'WhatsApp gönderildi',
-                description: `Doki üzerinden ${phoneToUse} numarasına WhatsApp bildirimi iletildi.`,
+                title: 'SMS gönderildi',
+                description: `${phoneToUse} numarasına bilgilendirme iletildi.`,
               });
             }
-          } catch (waEx) {
-            console.error('❌ [WA] Exception:', waEx);
+          } catch (bgEx) {
+            console.error('❌ [BG-NOTIFY]', bgEx);
           }
-        } catch (smsEx) {
-          console.error('❌ [SMS] Exception:', smsEx);
-          toast({
-            title: "Uyarı",
-            description: `SMS gönderilirken hata oluştu: ${(smsEx as Error).message}`,
-            variant: "default",
-          });
-        }
-      } else {
-        console.warn('⚠️ [SMS] SMS gönderimi ATLANACAK. Nedenler:', {
-          phoneToUse_exists: !!phoneToUse,
-          phoneToUse_value: phoneToUse,
-          clientData_exists: !!clientData,
-          newCount_positive: newCount > 0,
-          newCount_value: newCount
-        });
-        if (!phoneToUse) {
-          toast({
-            title: "Uyarı",
-            description: "Yönlendirme kaydedildi ancak uzman için geçerli bir telefon numarası bulunamadı. Orders tablosunda onaylı siparişi var mı kontrol edin.",
-            variant: "default",
-          });
-        }
-      }
-      // Optimistic local update for immediate UI feedback
-      setSpecialists((prev) =>
-        prev.map((spec) =>
-          spec.id === specialistId
-            ? {
-                ...spec,
-                referrals: spec.referrals.map((ref) =>
-                  ref.month === month ? { ...ref, count: newCount } : ref
-                ),
-              }
-            : spec
-        )
-      );
+        })();
 
-      // Danışan detaylarını yenile
-      await fetchClientReferralDetails(specialistId, month);
-      await fetchSpecialistsAndReferrals();
+        return;
+      }
+
+      // Sayı azaltma - en son kaydı sil
+      const { data: existingRecords, error: fetchError } = await supabase
+        .from('client_referrals')
+        .select('id')
+        .eq('specialist_id', specialistId)
+        .eq('year', currentYear)
+        .eq('month', month)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (fetchError) throw fetchError;
+
+      if (existingRecords && existingRecords.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('client_referrals')
+          .delete()
+          .eq('id', existingRecords[0].id);
+
+        if (deleteError) throw deleteError;
+      }
+
+      applyOptimistic();
+      void fetchClientReferralDetails(specialistId, month);
 
       toast({
         title: 'Başarılı',
-        description: `${specialistName} - ${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
+        description: `${specName} - ${monthNames[month - 1]} ayı yönlendirme sayısı güncellendi`,
       });
+
     } catch (error) {
       console.error('❌ [UPDATE] Error:', error);
       toast({
