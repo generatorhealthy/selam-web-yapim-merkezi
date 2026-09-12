@@ -106,6 +106,12 @@ const loadRole = async (providedUser?: User | null, force = false) => {
         return;
       }
 
+      if (cachedUserId && cachedUserId !== user.id) {
+        cachedUserId = null;
+        cachedAt = 0;
+        emit({ user, userProfile: null, loading: true, error: null });
+      }
+
       if (!force && state.userProfile && cachedUserId === user.id && Date.now() - cachedAt < CACHE_TTL) {
         emit({ user, loading: false, error: null });
         return;
@@ -117,6 +123,12 @@ const loadRole = async (providedUser?: User | null, force = false) => {
       emit({ user, userProfile: profile, loading: false, error: null });
     } catch (caught) {
       console.error("Yetki bilgileri alınamadı:", caught);
+
+      if (state.userProfile && state.user && cachedUserId === state.user.id) {
+        emit({ loading: false, error: null });
+        return;
+      }
+
       emit({
         loading: false,
         error: caught instanceof Error ? caught : new Error("Yetki bilgileri alınamadı"),

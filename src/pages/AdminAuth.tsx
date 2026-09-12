@@ -119,7 +119,10 @@ const AdminAuth = () => {
       if (authError) {
         console.error('Giriş hatası:', authError);
         
+        const isCredentialError = authError.message.includes('Invalid login credentials');
+
         try {
+          if (!isCredentialError) throw new Error('Geçici bağlantı hatası kilit sayacına eklenmedi');
           const { data: blockData } = await withTimeout(
             async () => await supabase.rpc('record_failed_admin_login', {
               p_email: loginData.email,
@@ -146,7 +149,7 @@ const AdminAuth = () => {
             }
           }
         } catch (blockError) {
-          console.error('Başarısız giriş kaydı hatası:', blockError);
+          if (isCredentialError) console.error('Başarısız giriş kaydı hatası:', blockError);
         }
         
         if (authError.message.includes('Email not confirmed')) {

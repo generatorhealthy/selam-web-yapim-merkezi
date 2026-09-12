@@ -456,18 +456,6 @@ const ClientReferrals = () => {
     }
   }, [currentYear, canAccess]);
 
-  // Sayfa odağa geldiğinde verileri yenile (yalnızca yetki varsa)
-  useEffect(() => {
-    const handleFocus = () => {
-      if (canAccess) {
-        fetchSpecialistsAndReferrals();
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [currentYear, canAccess]);
-
   // Santral (FreePBX) çağrı kayıtlarından uzmanın telefonu açıp açmadığını çek
   useEffect(() => {
     if (!canAccess) return;
