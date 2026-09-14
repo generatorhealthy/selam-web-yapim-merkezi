@@ -579,63 +579,113 @@ const ClientReferrals = () => {
   // Seçili ay için tüm uzmanların danışan detaylarını TEK sorguda getir.
   // Önceden her uzman + her ay için ayrı sorgu atılıyordu (107 uzman × 12 ay =
   // yüzlerce istek), bu da veritabanını 503 zaman aşımına sürüklüyordu.
-  useEffect(() => {
-    if (!specialists.length) return;
-    let cancelled = false;
+  const loadMonthDetails = useCallback(async (month: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('client_referrals')
+        .select('id, specialist_id, client_name, client_surname, client_contact, referred_at, referral_count, is_referred, consultation_type')
+        .eq('year', currentYear)
+        .eq('month', month)
+        .eq('is_referred', true)
+        .not('client_name', 'is', null)
+        .order('referred_at', { ascending: false });
 
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from('client_referrals')
-          .select('id, specialist_id, client_name, client_surname, client_contact, referred_at, referral_count, is_referred, consultation_type')
-          .eq('year', currentYear)
-          .eq('month', selectedMonth)
-          .eq('is_referred', true)
-          .not('client_name', 'is', null)
-          .order('referred_at', { ascending: false });
-
-        if (error) {
-          console.error('❌ [CLIENT-DETAILS-BATCH] Error:', error);
-          return;
-        }
-        if (cancelled) return;
-
-        // Seçili aya ait detayları specialist_id'ye göre grupla
-        const grouped: Record<string, ClientReferralDetail[]> = {};
-        (data || []).forEach((row: any) => {
-          const key = `${row.specialist_id}-${selectedMonth}`;
-          if (!grouped[key]) grouped[key] = [];
-          grouped[key].push({
-            id: row.id,
-            client_name: row.client_name,
-            client_surname: row.client_surname,
-            client_contact: row.client_contact,
-            referred_at: row.referred_at,
-            referral_count: row.referral_count,
-            is_referred: row.is_referred,
-            sms_sent: row.sms_sent,
-            consultation_type: row.consultation_type,
-          });
-        });
-
-        // Seçili ayın detaylarını güncelle, diğer ayları koru
-        setClientReferralDetails(prev => {
-          const next = { ...prev };
-          Object.keys(next).forEach(k => {
-            if (k.endsWith(`-${selectedMonth}`)) delete next[k];
-          });
-          Object.assign(next, grouped);
-          return next;
-        });
-      } catch (error) {
-        console.error('❌ [CLIENT-DETAILS-BATCH] Exception:', error);
+      if (error) {
+        console.error('❌ [CLIENT-DETAILS-BATCH] Error:', error);
+        return;
       }
-    })();
+
+      // Seçili aya ait detayları specialist_id'ye göre grupla
+      const grouped: Record<string, ClientReferralDetail[]> = {};
+      (data || []).forEach((row: any) => {
+        const key = `${row.specialist_id}-${month}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push({
+          id: row.id,
+          client_name: row.client_name,
+          client_surname: row.client_surname,
+          client_contact: row.client_contact,
+          referred_at: row.referred_at,
+          referral_count: row.referral_count,
+          is_referred: row.is_referred,
+          sms_sent: row.sms_sent,
+          consultation_type: row.consultation_type,
+        });
+      });
+
+      // Seçili ayın detaylarını güncelle, diğer ayları koru
+      setClientReferralDetails(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(k => {
+          if (k.endsWith(`-${month}`)) delete next[k];
+        });
+        Object.assign(next, grouped);
+        return next;
+      });
+    } catch (error) {
+      console.error('❌ [CLIENT-DETAILS-BATCH] Exception:', error);
+    }
+  }, [currentYear]);
+
+  // Bir uzmanın seçili ay sayacını veritabanından tazele
+  const refreshSpecialistMonthCount = useCallback(async (specialistId: string, month: number) => {
+    try {
+      const { count, error } = await supabase
+        .from('client_referrals')
+        .select('id', { count: 'exact', head: true })
+        .eq('specialist_id', specialistId)
+        .eq('year', currentYear)
+        .eq('month', month)
+        .eq('is_referred', true);
+      if (error || count === null) return;
+      setSpecialists(prev =>
+        prev.map(spec =>
+          spec.id === specialistId
+            ? {
+                ...spec,
+                referrals: spec.referrals.map(ref =>
+                  ref.month === month ? { ...ref, count } : ref
+                ),
+              }
+            : spec
+        )
+      );
+    } catch (e) {
+      console.warn('Sayaç tazelenemedi', e);
+    }
+  }, [currentYear]);
+
+  const hasSpecialists = specialists.length > 0;
+  useEffect(() => {
+    if (!hasSpecialists) return;
+    void loadMonthDetails(selectedMonth);
+  }, [hasSpecialists, selectedMonth, loadMonthDetails]);
+
+  // Anlık güncelleme: yeni yönlendirme eklendiğinde/silindiğinde sayfa yenilemeye gerek kalmasın
+  const selectedMonthRef = useRef(selectedMonth);
+  selectedMonthRef.current = selectedMonth;
+  useEffect(() => {
+    if (!canAccess) return;
+    const channel = supabase
+      .channel('client-referrals-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'client_referrals' },
+        (payload: any) => {
+          const row = (payload.new || payload.old) as any;
+          if (!row) return;
+          if (Number(row.year) !== currentYear) return;
+          const month = Number(row.month);
+          if (row.specialist_id) void refreshSpecialistMonthCount(row.specialist_id, month);
+          if (month === selectedMonthRef.current) void loadMonthDetails(month);
+        }
+      )
+      .subscribe();
 
     return () => {
-      cancelled = true;
+      supabase.removeChannel(channel);
     };
-  }, [specialists, selectedMonth, currentYear]);
+  }, [canAccess, currentYear, loadMonthDetails, refreshSpecialistMonthCount]);
 
   const updateReferralCount = async (
     specialistId: string, 
