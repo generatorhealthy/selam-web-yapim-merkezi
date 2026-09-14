@@ -889,7 +889,8 @@ const ClientReferrals = () => {
       }
 
       applyOptimistic();
-      void fetchClientReferralDetails(specialistId, month);
+      void loadMonthDetails(month);
+      void refreshSpecialistMonthCount(specialistId, month);
 
       toast({
         title: 'Başarılı',
