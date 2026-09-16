@@ -181,18 +181,19 @@ async function retryPayment(
   const uriPath = "/v2/subscription/operation/retry";
   const requestBody = JSON.stringify({ referenceCode: orderReferenceCode });
 
-  const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath, requestBody);
-
-  const response = await fetch(`${baseUrl}${uriPath}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: authorization,
-      "x-iyzi-rnd": randomKey,
-    },
-    body: requestBody,
-  });
+  const response = await fetchWithRetry(
+    `${baseUrl}${uriPath}`,
+    { method: "POST", body: requestBody },
+    async () => {
+      const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath, requestBody);
+      return {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: authorization,
+        "x-iyzi-rnd": randomKey,
+      };
+    }
+  );
 
   const result = await response.json();
 
