@@ -149,16 +149,14 @@ async function getUnpaidSubscriptions(
   const uriPathForSign = "/v2/subscription/subscriptions";
   const requestUrl = `${baseUrl}${uriPathForSign}?subscriptionStatus=UNPAID&page=1&count=100`;
 
-  const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPathForSign);
-
-  const response = await fetch(requestUrl, {
-    method: "GET",
-    headers: {
+  const response = await fetchWithRetry(requestUrl, { method: "GET" }, async () => {
+    const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPathForSign);
+    return {
       "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: authorization,
       "x-iyzi-rnd": randomKey,
-    },
+    };
   });
 
   const result = await response.json();
