@@ -73,6 +73,34 @@ async function sendSuccessNotificationSms(
   }
 }
 
+// iyzico bazen bağlantıyı aniden kapatıyor (connection reset). Kısa beklemelerle tekrar dene.
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  buildHeaders?: () => Promise<Record<string, string>>,
+  attempts = 4
+): Promise<Response> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const headers = buildHeaders ? await buildHeaders() : (init.headers as Record<string, string>);
+      const res = await fetch(url, { ...init, headers });
+      if (res.status >= 500 && i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+        continue;
+      }
+      return res;
+    } catch (e) {
+      lastError = e;
+      console.warn(`iyzico isteği başarısız (deneme ${i + 1}/${attempts}):`, e instanceof Error ? e.message : String(e));
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+  throw new Error(
+    `iyzico sunucusuna ulaşılamadı: ${lastError instanceof Error ? lastError.message : String(lastError)}`
+  );
+}
+
 async function generateIyzicoAuth(
   apiKey: string,
   secretKey: string,
@@ -121,16 +149,14 @@ async function getUnpaidSubscriptions(
   const uriPathForSign = "/v2/subscription/subscriptions";
   const requestUrl = `${baseUrl}${uriPathForSign}?subscriptionStatus=UNPAID&page=1&count=100`;
 
-  const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPathForSign);
-
-  const response = await fetch(requestUrl, {
-    method: "GET",
-    headers: {
+  const response = await fetchWithRetry(requestUrl, { method: "GET" }, async () => {
+    const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPathForSign);
+    return {
       "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: authorization,
       "x-iyzi-rnd": randomKey,
-    },
+    };
   });
 
   const result = await response.json();
@@ -155,18 +181,19 @@ async function retryPayment(
   const uriPath = "/v2/subscription/operation/retry";
   const requestBody = JSON.stringify({ referenceCode: orderReferenceCode });
 
-  const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath, requestBody);
-
-  const response = await fetch(`${baseUrl}${uriPath}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: authorization,
-      "x-iyzi-rnd": randomKey,
-    },
-    body: requestBody,
-  });
+  const response = await fetchWithRetry(
+    `${baseUrl}${uriPath}`,
+    { method: "POST", body: requestBody },
+    async () => {
+      const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath, requestBody);
+      return {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: authorization,
+        "x-iyzi-rnd": randomKey,
+      };
+    }
+  );
 
   const result = await response.json();
 

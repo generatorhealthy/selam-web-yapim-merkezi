@@ -100,7 +100,14 @@ const IyzicoPayments = () => {
       setLastChecked(checkedAt);
 
       if (error) {
-        const msg = error.message || "Ödeme kontrolü sırasında bir hata oluştu";
+        let msg = error.message || "Ödeme kontrolü sırasında bir hata oluştu";
+        try {
+          const res = (error as any)?.context;
+          if (res && typeof res.json === "function") {
+            const body = await res.json();
+            if (body?.message || body?.error) msg = body.message || body.error;
+          }
+        } catch { /* gövde okunamadıysa varsayılan mesaj kalır */ }
         setLastResult({
           status: "error",
           message: msg,
