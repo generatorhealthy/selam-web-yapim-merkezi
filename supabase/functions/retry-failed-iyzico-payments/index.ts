@@ -73,6 +73,34 @@ async function sendSuccessNotificationSms(
   }
 }
 
+// iyzico bazen bağlantıyı aniden kapatıyor (connection reset). Kısa beklemelerle tekrar dene.
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  buildHeaders?: () => Promise<Record<string, string>>,
+  attempts = 4
+): Promise<Response> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const headers = buildHeaders ? await buildHeaders() : (init.headers as Record<string, string>);
+      const res = await fetch(url, { ...init, headers });
+      if (res.status >= 500 && i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+        continue;
+      }
+      return res;
+    } catch (e) {
+      lastError = e;
+      console.warn(`iyzico isteği başarısız (deneme ${i + 1}/${attempts}):`, e instanceof Error ? e.message : String(e));
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+  throw new Error(
+    `iyzico sunucusuna ulaşılamadı: ${lastError instanceof Error ? lastError.message : String(lastError)}`
+  );
+}
+
 async function generateIyzicoAuth(
   apiKey: string,
   secretKey: string,
