@@ -663,7 +663,7 @@ const ClientReferrals = () => {
 
   // Anlık güncelleme: yeni yönlendirme eklendiğinde/silindiğinde sayfa yenilemeye gerek kalmasın
   const selectedMonthRef = useRef(selectedMonth);
-  const realtimeRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const realtimeRefreshTimerRef = useRef<number | null>(null);
   const realtimeSpecialistsRef = useRef<Set<string>>(new Set());
   const realtimeMonthsRef = useRef<Set<number>>(new Set());
   selectedMonthRef.current = selectedMonth;
