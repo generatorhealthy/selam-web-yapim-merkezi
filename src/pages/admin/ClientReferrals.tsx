@@ -663,6 +663,9 @@ const ClientReferrals = () => {
 
   // Anlık güncelleme: yeni yönlendirme eklendiğinde/silindiğinde sayfa yenilemeye gerek kalmasın
   const selectedMonthRef = useRef(selectedMonth);
+  const realtimeRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const realtimeSpecialistsRef = useRef<Set<string>>(new Set());
+  const realtimeMonthsRef = useRef<Set<number>>(new Set());
   selectedMonthRef.current = selectedMonth;
   useEffect(() => {
     if (!canAccess) return;
@@ -676,13 +679,41 @@ const ClientReferrals = () => {
           if (!row) return;
           if (Number(row.year) !== currentYear) return;
           const month = Number(row.month);
-          if (row.specialist_id) void refreshSpecialistMonthCount(row.specialist_id, month);
-          if (month === selectedMonthRef.current) void loadMonthDetails(month);
+          if (row.specialist_id) realtimeSpecialistsRef.current.add(`${row.specialist_id}|${month}`);
+          realtimeMonthsRef.current.add(month);
+
+          // One user action can emit several realtime events. Merge that burst into
+          // one refresh so every browser does not repeat the same database queries.
+          if (realtimeRefreshTimerRef.current) window.clearTimeout(realtimeRefreshTimerRef.current);
+          realtimeRefreshTimerRef.current = window.setTimeout(() => {
+            const specialistMonths = Array.from(realtimeSpecialistsRef.current);
+            const changedMonths = new Set(realtimeMonthsRef.current);
+            realtimeSpecialistsRef.current.clear();
+            realtimeMonthsRef.current.clear();
+            realtimeRefreshTimerRef.current = null;
+
+            specialistMonths.forEach((key) => {
+              const [specialistId, monthValue] = key.split('|');
+              const parsedMonth = Number(monthValue);
+              if (specialistId && Number.isFinite(parsedMonth)) {
+                void refreshSpecialistMonthCount(specialistId, parsedMonth);
+              }
+            });
+            if (changedMonths.has(selectedMonthRef.current)) {
+              void loadMonthDetails(selectedMonthRef.current);
+            }
+          }, 400);
         }
       )
       .subscribe();
 
     return () => {
+      if (realtimeRefreshTimerRef.current) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+        realtimeRefreshTimerRef.current = null;
+      }
+      realtimeSpecialistsRef.current.clear();
+      realtimeMonthsRef.current.clear();
       supabase.removeChannel(channel);
     };
   }, [canAccess, currentYear, loadMonthDetails, refreshSpecialistMonthCount]);

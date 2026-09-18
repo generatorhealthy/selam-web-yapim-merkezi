@@ -64,10 +64,6 @@ const RegistrationAnalyticsTracker = ({ currentStep, completed = false }: Regist
       y: e.clientY,
     });
 
-    // Batch update every 5 clicks
-    if (clickEvents.current.length % 5 === 0) {
-      updateAnalytics();
-    }
   }, []);
 
   const updateAnalytics = useCallback(async () => {
@@ -131,8 +127,10 @@ const RegistrationAnalyticsTracker = ({ currentStep, completed = false }: Regist
     // Click tracking
     document.addEventListener('click', trackClick);
 
-    // Activity updates every 10 seconds
-    const interval = setInterval(updateAnalytics, 10000);
+    // A minute-level heartbeat is sufficient; step changes are still saved immediately.
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') void updateAnalytics();
+    }, 60000);
 
     // Track page leave
     const handleBeforeUnload = () => {
