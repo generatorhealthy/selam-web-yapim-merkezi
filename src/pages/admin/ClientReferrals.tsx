@@ -783,8 +783,6 @@ const ClientReferrals = () => {
 
         // UI'yi hemen güncelle — bildirimler arka planda devam eder
         applyOptimistic();
-        void loadMonthDetails(month);
-        void refreshSpecialistMonthCount(specialistId, month);
         toast({
           title: 'Yönlendirme kaydedildi',
           description: `${specName} - ${monthNames[month - 1]} ayına eklendi. Bildirimler arka planda gönderiliyor.`,
@@ -920,8 +918,6 @@ const ClientReferrals = () => {
       }
 
       applyOptimistic();
-      void loadMonthDetails(month);
-      void refreshSpecialistMonthCount(specialistId, month);
 
       toast({
         title: 'Başarılı',
