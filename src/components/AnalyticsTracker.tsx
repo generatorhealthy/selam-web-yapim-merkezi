@@ -66,9 +66,6 @@ const AnalyticsTracker = () => {
   }, [user]);
 
   useEffect(() => {
-    // Track initial page visit
-    trackPageVisit();
-
     // A low-frequency heartbeat is enough. Per-click/scroll writes overloaded
     // the shared database and delayed authentication and panel queries.
     const interval = window.setInterval(() => {
@@ -84,7 +81,7 @@ const AnalyticsTracker = () => {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [trackPageVisit, updateLastActive]);
+  }, [updateLastActive]);
 
   // Track route changes
   useEffect(() => {
