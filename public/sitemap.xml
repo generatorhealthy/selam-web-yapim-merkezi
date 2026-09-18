@@ -692,24 +692,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismani-zeynep-aydin-ile-bireysel-ve-aile-destekleri</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismani-zehra-nur-kor-ile-saglikli-iliskiler</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/uzm-psk-sinem-erusta-ile-birey-ve-aile-destekleri</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/psikolog-kl-psk-tugba-hasaltin-ile-bilimsel-ve-yenilikci-destek</loc>
     <lastmod>2026-09-15</lastmod>
     <changefreq>weekly</changefreq>
@@ -734,20 +716,20 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismani-derya-akguc-cin-ile-saglikli-iliskiler</loc>
-    <lastmod>2025-09-26</lastmod>
+    <loc>https://doktorumol.com.tr/blog/aile-danismani-zeynep-aydin-ile-bireysel-ve-aile-destekleri</loc>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/elif-polat-ile-birey-ve-aile-destekleri</loc>
-    <lastmod>2025-09-26</lastmod>
+    <loc>https://doktorumol.com.tr/blog/aile-danismani-zehra-nur-kor-ile-saglikli-iliskiler</loc>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psk-tanya-simsir-ile-saglikli-iliskiler-ve-bireysel-gelisim</loc>
-    <lastmod>2025-09-26</lastmod>
+    <loc>https://doktorumol.com.tr/blog/uzm-psk-sinem-erusta-ile-birey-ve-aile-destekleri</loc>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -784,6 +766,18 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/ayse-dolek-kerbel-ile-cocuk-ve-aile-iliskilerinde-guclu-baglar</loc>
     <lastmod>2025-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/elif-polat-ile-birey-ve-aile-destekleri</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psk-tanya-simsir-ile-saglikli-iliskiler-ve-bireysel-gelisim</loc>
+    <lastmod>2026-09-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7448,6 +7442,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/aile-danismani-derya-akguc-cin-ile-saglikli-iliskiler</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/burak-ala-ile-bdt-egitimi</loc>
     <lastmod>2026-08-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -9448,6 +9448,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/aile-ve-i-liski-danismani/kubra-simsek</loc>
+    <lastmod>2026-04-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-ferhat-arslan</loc>
     <lastmod>2026-06-06</lastmod>
     <changefreq>monthly</changefreq>
@@ -9480,12 +9486,6 @@
   <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-umit-akdag</loc>
     <lastmod>2026-04-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/aile-ve-i-liski-danismani/kubra-simsek</loc>
-    <lastmod>2026-04-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -9742,14 +9742,14 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolog/burcu-kara</loc>
-    <lastmod>2026-07-06</lastmod>
+    <loc>https://doktorumol.com.tr/psikolog/zeynep-sule-dundar</loc>
+    <lastmod>2026-07-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolog/zeynep-sule-dundar</loc>
-    <lastmod>2026-07-02</lastmod>
+    <loc>https://doktorumol.com.tr/psikolog/burcu-kara</loc>
+    <lastmod>2026-07-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -9760,7 +9760,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlik-ve-mentorluk/gulsen-bayram</loc>
+    <loc>https://doktorumol.com.tr/evlilik-i-liski-danismani-kisisel-gelisim-uzmani-ve-yonetici-mentor/gulsen-bayram</loc>
     <lastmod>2026-04-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -9832,7 +9832,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolog/nesibe-tugce-sahin</loc>
+    <loc>https://doktorumol.com.tr/psikolojik-danisman/nesibe-tugce-sahin</loc>
     <lastmod>2026-09-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
