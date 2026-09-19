@@ -15,6 +15,7 @@ import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import AdminRouteGuard from "@/components/AdminRouteGuard";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { Button } from "@/components/ui/button";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -194,13 +195,9 @@ const PageLoader = () => {
         <div className="max-w-sm text-center">
           <p className="mb-2 font-semibold text-foreground">Sayfa bağlantısı gecikti</p>
           <p className="mb-4 text-sm text-muted-foreground">İnternetiniz çalışıyor olsa da panel dosyası alınamadı.</p>
-          <button
-            type="button"
-            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-            onClick={() => window.location.reload()}
-          >
+          <Button type="button" onClick={() => window.location.reload()}>
             Tekrar Dene
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
