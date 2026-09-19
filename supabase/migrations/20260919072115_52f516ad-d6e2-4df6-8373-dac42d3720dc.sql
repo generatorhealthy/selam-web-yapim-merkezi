@@ -1,0 +1,1 @@
+SELECT cron.alter_job(job_id := 56, schedule := '*/5 * * * *');
