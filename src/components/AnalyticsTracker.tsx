@@ -7,8 +7,10 @@ const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
 
 const AnalyticsTracker = () => {
   const { user } = useUserRole();
+  const userId = user?.id ?? null;
   const location = useLocation();
   const lastHeartbeatRef = useRef(0);
+  const lastTrackedRef = useRef<{ key: string; at: number }>({ key: '', at: 0 });
   const generateSessionId = () => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
@@ -22,12 +24,25 @@ const AnalyticsTracker = () => {
     return sessionId;
   };
 
+  const pageKey = location.pathname + location.search;
+
   const trackPageVisit = useCallback(async () => {
     try {
-      if (!user) return;
-      
+      if (!userId) return;
+
+      // Aynı sayfa için tekrarlanan yazmaları engelle. Önceden `user` nesnesinin
+      // kimliği her render'da değiştiği için bu istek saniyede birkaç kez
+      // tekrarlanıyor ve veritabanını gereksiz yere meşgul ediyordu.
+      const now = Date.now();
+      if (
+        lastTrackedRef.current.key === pageKey &&
+        now - lastTrackedRef.current.at < 60 * 1000
+      ) {
+        return;
+      }
+      lastTrackedRef.current = { key: pageKey, at: now };
+
       const sessionId = getOrCreateSessionId();
-      const pageUrl = location.pathname + location.search;
       const referrer = document.referrer || null;
       const userAgent = navigator.userAgent;
 
@@ -35,7 +50,7 @@ const AnalyticsTracker = () => {
         .from('website_analytics')
         .upsert({
           session_id: sessionId,
-          page_url: pageUrl,
+          page_url: pageKey,
           referrer: referrer,
           user_agent: userAgent,
           last_active: new Date().toISOString()
@@ -45,7 +60,8 @@ const AnalyticsTracker = () => {
     } catch (error) {
       // Silently fail - don't log to console for better performance
     }
-  }, [location.pathname, location.search, user]);
+  }, [pageKey, userId]);
+
 
   const updateLastActive = useCallback(async () => {
     try {
