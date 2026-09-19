@@ -63,6 +63,10 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
+          // Bundle the complete Divan panel together. Once the dashboard has
+          // opened, card navigation no longer depends on dozens of separate
+          // page downloads that Safari can leave pending after a deployment.
+          if (id.includes('/src/pages/admin/')) return 'admin-panel';
           // Isolate heavy PDF/document libraries into their own chunks
           if (id.includes('node_modules/jspdf')) return 'pdf';
           if (id.includes('node_modules/html2canvas')) return 'html2canvas';
