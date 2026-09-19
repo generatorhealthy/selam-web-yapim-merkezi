@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,13 +7,37 @@ import { PANEL_ROLES, useUserRole } from "@/hooks/useUserRole";
 const AdminRouteGuard = () => {
   const location = useLocation();
   const { userProfile, loading, error, retry } = useUserRole();
+  const [stalled, setStalled] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setStalled(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setStalled(true), 15_000);
+    return () => window.clearTimeout(timer);
+  }, [loading]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center text-muted-foreground">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md text-center text-muted-foreground">
           <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-primary" />
           <p>Panel bilgileri alınıyor...</p>
+          {stalled && (
+            <div className="mt-5">
+              <p className="mb-4 text-sm">Bağlantı beklenenden uzun sürdü. Tekrar denemek ister misiniz?</p>
+              <Button
+                onClick={() => {
+                  setStalled(false);
+                  retry();
+                }}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Tekrar Dene
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );
