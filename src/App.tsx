@@ -16,6 +16,7 @@ import { useNativeApp } from "@/hooks/useNativeApp";
 import AdminRouteGuard from "@/components/AdminRouteGuard";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
+import { reloadWithFreshBundle } from "@/utils/bundleRecovery";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -114,6 +115,9 @@ function lazyWithTimeout<T extends ComponentType<unknown>>(
         return await Promise.race([importer(), timeout]);
       } catch (error) {
         lastError = error;
+        if (reloadWithFreshBundle(error)) {
+          return await new Promise<never>(() => undefined);
+        }
         if (attempt === 0) {
           await new Promise((resolve) => window.setTimeout(resolve, 1_000));
         }
