@@ -734,24 +734,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psk-oyku-turhan-ile-butuncul-psikolojik-destek</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/murat-ekinci-ile-butuncul-aile-ve-bireysel-destek</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/meryem-hotan-ile-bireysel-ve-aile-desteginde-guvenli-yolculuk</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/filiz-akman-ile-aile-ve-bireysel-destekte-guvenli-yolculuk</loc>
     <lastmod>2025-09-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -778,6 +760,24 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/psk-tanya-simsir-ile-saglikli-iliskiler-ve-bireysel-gelisim</loc>
     <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psk-oyku-turhan-ile-butuncul-psikolojik-destek</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/murat-ekinci-ile-butuncul-aile-ve-bireysel-destek</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/meryem-hotan-ile-bireysel-ve-aile-desteginde-guvenli-yolculuk</loc>
+    <lastmod>2026-09-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
