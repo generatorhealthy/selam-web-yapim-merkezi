@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, type ComponentType } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -106,7 +106,41 @@ const CustomerManagement = lazy(() => import("./pages/admin/CustomerManagement")
 const ReviewManagement = lazy(() => import("./pages/admin/ReviewManagement"));
 const PaymentManagement = lazy(() => import("./pages/admin/PaymentManagement"));
 const NewOrder = lazy(() => import("./pages/admin/NewOrder"));
-const OrderManagement = lazy(() => import("./pages/admin/OrderManagement"));
+const lazyWithRecovery = <T extends ComponentType<unknown>>(
+  importer: () => Promise<{ default: T }>,
+  recoveryKey: string,
+) => lazy(async () => {
+  let timeoutId: number | undefined;
+
+  try {
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(
+        () => reject(new Error("Sayfa dosyası zamanında yüklenemedi")),
+        15_000,
+      );
+    });
+
+    const module = await Promise.race([importer(), timeout]);
+    sessionStorage.removeItem(recoveryKey);
+    return module;
+  } catch (error) {
+    if (!sessionStorage.getItem(recoveryKey)) {
+      sessionStorage.setItem(recoveryKey, "1");
+      window.location.reload();
+      return new Promise<never>(() => undefined);
+    }
+
+    sessionStorage.removeItem(recoveryKey);
+    throw error;
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  }
+});
+
+const OrderManagement = lazyWithRecovery(
+  () => import("./pages/admin/OrderManagement"),
+  "orders-page-load-recovery",
+);
 const BankTransferNotifications = lazy(() => import("./pages/admin/BankTransferNotifications"));
 const Reports = lazy(() => import("./pages/admin/Reports"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
@@ -159,9 +193,14 @@ const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
 // Doctor pages
 const DoctorDashboard = lazy(() => import("./pages/doctor/DoctorDashboard"));
 
-// Ultra-minimal loading fallback — empty div so navigation feels instant.
-// Real content paints immediately when the (already-prefetched) chunk resolves.
-const PageLoader = () => <div style={{ minHeight: '50vh' }} />;
+const PageLoader = () => (
+  <div className="flex min-h-[50vh] items-center justify-center bg-background" role="status" aria-live="polite">
+    <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+      <span className="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-primary" aria-hidden="true" />
+      Sayfa yükleniyor...
+    </div>
+  </div>
+);
 
 // Create QueryClient outside of component to prevent re-creation on renders.
 // Aggressive caching = clicks return cached data instantly, refetch happens in background.
@@ -357,7 +396,7 @@ const AppContent = () => {
               <Route path="/divan_paneli/reviews" element={<ReviewManagement />} />
               <Route path="/divan_paneli/payments" element={<PaymentManagement />} />
               <Route path="/divan_paneli/orders/new" element={<NewOrder />} />
-              <Route path="/divan_paneli/orders" element={<OrderManagement />} />
+               <Route path="/divan_paneli/orders" element={<ErrorBoundary><OrderManagement /></ErrorBoundary>} />
               <Route path="/divan_paneli/banka-havalesi-bildirimleri" element={<BankTransferNotifications />} />
               <Route path="/divan_paneli/analytics" element={<Analytics />} />
               <Route path="/divan_paneli/reports" element={<Reports />} />
