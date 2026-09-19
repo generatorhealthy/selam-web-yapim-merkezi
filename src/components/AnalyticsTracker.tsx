@@ -65,7 +65,7 @@ const AnalyticsTracker = () => {
 
   const updateLastActive = useCallback(async () => {
     try {
-      if (!user || document.visibilityState !== 'visible') return;
+      if (!userId || document.visibilityState !== 'visible') return;
 
       const now = Date.now();
       if (now - lastHeartbeatRef.current < HEARTBEAT_INTERVAL_MS) return;
@@ -79,7 +79,7 @@ const AnalyticsTracker = () => {
     } catch (error) {
       // Silently fail
     }
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     // A low-frequency heartbeat is enough. Per-click/scroll writes overloaded
