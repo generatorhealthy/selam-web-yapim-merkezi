@@ -1,6 +1,14 @@
 RewriteEngine On
 RewriteBase /
 
+# HTML and panel routes must always load the current application bundle.
+SetEnvIf Request_URI "^/divan_paneli(?:/|$)" ADMIN_PANEL_ROUTE=1
+<IfModule mod_headers.c>
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" env=ADMIN_PANEL_ROUTE
+    Header always set Pragma "no-cache" env=ADMIN_PANEL_ROUTE
+    Header always set Expires "0" env=ADMIN_PANEL_ROUTE
+</IfModule>
+
 # Canonical domain redirect (www -> non-www)
 RewriteCond %{HTTP_HOST} ^www\.doktorumol\.com\.tr$ [NC]
 RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
@@ -85,6 +93,9 @@ RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
     # HTML dosyaları
     <FilesMatch "\.html$">
         Header always set Content-Type "text/html; charset=UTF-8"
+        Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header always set Pragma "no-cache"
+        Header always set Expires "0"
     </FilesMatch>
     
     # CSS dosyaları

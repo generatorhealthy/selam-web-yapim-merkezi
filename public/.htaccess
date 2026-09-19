@@ -2,13 +2,11 @@ RewriteEngine On
 RewriteBase /
 
 # Admin panel pages must always start with the current application bundle.
-# Clears only the browser HTTP cache; login cookies and local storage are preserved.
 SetEnvIf Request_URI "^/divan_paneli(?:/|$)" ADMIN_PANEL_ROUTE=1
 <IfModule mod_headers.c>
     Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" env=ADMIN_PANEL_ROUTE
     Header always set Pragma "no-cache" env=ADMIN_PANEL_ROUTE
     Header always set Expires "0" env=ADMIN_PANEL_ROUTE
-    Header always set Clear-Site-Data '"cache"' env=ADMIN_PANEL_ROUTE
 </IfModule>
 
 # Canonical domain redirect (www -> non-www)
@@ -71,13 +69,13 @@ RewriteRule ^rss\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/gen
     ExpiresByType application/font-woff "access plus 1 year"
     ExpiresByType application/font-woff2 "access plus 1 year"
     
-    # CSS and JavaScript - 1 month
-    ExpiresByType text/css "access plus 1 month"
-    ExpiresByType application/javascript "access plus 1 month"
-    ExpiresByType text/javascript "access plus 1 month"
+    # Versioned CSS and JavaScript filenames can be cached permanently
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
     
-    # HTML - 1 hour
-    ExpiresByType text/html "access plus 1 hour"
+    # HTML must always be revalidated so it cannot reference an old bundle
+    ExpiresByType text/html "access plus 0 seconds"
     
     # JSON, XML - 1 day
     ExpiresByType application/json "access plus 1 day"
@@ -97,17 +95,17 @@ RewriteRule ^rss\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/gen
         Header set Cache-Control "max-age=31536000, public, immutable"
     </FilesMatch>
     
-    # Cache CSS and JS for 1 month
+    # Vite filenames are content-hashed and safe to cache permanently
     <FilesMatch "\.(css|js)$">
-        Header set Cache-Control "max-age=2628000, public"
+        Header set Cache-Control "max-age=31536000, public, immutable"
     </FilesMatch>
     
     # Don't cache HTML
     # HTML should never be cached aggressively in SPA deployments
     <FilesMatch "\.(html|htm)$">
-        Header set Cache-Control "no-cache, no-store, must-revalidate"
-        Header set Pragma "no-cache"
-        Header set Expires "0"
+        Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header always set Pragma "no-cache"
+        Header always set Expires "0"
     </FilesMatch>
 </IfModule>
 
