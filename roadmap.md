@@ -19,4 +19,5 @@
 - [x] Danışan yönlendirme ekranındaki uzman×ay başına sorgu fırtınasını tek sorguya indir (503 zaman aşımları)
 - [x] Genel ziyaret kaydındaki çift yazmayı ve uzman kayıt ekranındaki 10 saniyelik yazma döngüsünü azalt
 - [x] Danışan yönlendirme canlı olaylarını kısa süreli gruplayarak tekrarlanan sorguları azalt
+- [x] Chrome ve Safari'de paneli aralıklı durduran tarayıcı oturum kilidini ve sayfa dosyası indirme hatasını dayanıklı hale getir
 - [ ] Eski Akbank ve İyzico görevlerini Supabase sahibi yetkisiyle pasifleştir (mevcut yönetim yetkisi `cron.job` değişikliğini reddediyor)
