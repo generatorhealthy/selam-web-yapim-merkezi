@@ -110,7 +110,7 @@ const lazyWithRecovery = <T extends ComponentType<unknown>>(
   importer: () => Promise<{ default: T }>,
   recoveryKey: string,
 ) => lazy(async () => {
-  let timeoutId: ReturnType<typeof window.setTimeout> | undefined;
+  let timeoutId: number | undefined;
 
   try {
     const timeout = new Promise<never>((_, reject) => {
