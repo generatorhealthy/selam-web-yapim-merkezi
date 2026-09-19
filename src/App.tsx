@@ -1,4 +1,4 @@
-import { Suspense, lazy, type ComponentType } from "react";
+import { Suspense, lazy, useEffect, useState, type ComponentType } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +14,7 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import AdminRouteGuard from "@/components/AdminRouteGuard";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -91,8 +92,8 @@ const PartnerDashboard = lazy(() => import("./pages/partner/PartnerDashboard"));
 const PartnerManagement = lazy(() => import("./pages/admin/PartnerManagement"));
 
 // Admin pages - lazy loaded (never needed on initial visit)
-const AdminAuth = lazy(() => import("./pages/AdminAuth"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminAuth = lazyWithTimeout(() => import("./pages/AdminAuth"));
+const AdminDashboard = lazyWithTimeout(() => import("./pages/admin/AdminDashboard"));
 const InstagramPosts = lazy(() => import("./pages/admin/InstagramPosts"));
 const UserCreate = lazy(() => import("./pages/admin/UserCreate"));
 const QuickRegister = lazy(() => import("./pages/admin/QuickRegister"));
@@ -106,10 +107,10 @@ const CustomerManagement = lazy(() => import("./pages/admin/CustomerManagement")
 const ReviewManagement = lazy(() => import("./pages/admin/ReviewManagement"));
 const PaymentManagement = lazy(() => import("./pages/admin/PaymentManagement"));
 const NewOrder = lazy(() => import("./pages/admin/NewOrder"));
-const lazyWithRecovery = <T extends ComponentType<unknown>>(
+function lazyWithTimeout<T extends ComponentType<unknown>>(
   importer: () => Promise<{ default: T }>,
-  recoveryKey: string,
-) => lazy(async () => {
+) {
+  return lazy(async () => {
   let timeoutId: number | undefined;
 
   try {
@@ -121,26 +122,14 @@ const lazyWithRecovery = <T extends ComponentType<unknown>>(
     });
 
     const module = await Promise.race([importer(), timeout]);
-    sessionStorage.removeItem(recoveryKey);
     return module;
-  } catch (error) {
-    if (!sessionStorage.getItem(recoveryKey)) {
-      sessionStorage.setItem(recoveryKey, "1");
-      window.location.reload();
-      return new Promise<never>(() => undefined);
-    }
-
-    sessionStorage.removeItem(recoveryKey);
-    throw error;
   } finally {
     if (timeoutId) window.clearTimeout(timeoutId);
   }
-});
+  });
+}
 
-const OrderManagement = lazyWithRecovery(
-  () => import("./pages/admin/OrderManagement"),
-  "orders-page-load-recovery",
-);
+const OrderManagement = lazyWithTimeout(() => import("./pages/admin/OrderManagement"));
 const BankTransferNotifications = lazy(() => import("./pages/admin/BankTransferNotifications"));
 const Reports = lazy(() => import("./pages/admin/Reports"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
@@ -188,19 +177,40 @@ const SpecialistBlogStatus = lazy(() => import("./pages/admin/SpecialistBlogStat
 const WhatsappBulkSend = lazy(() => import("./pages/admin/WhatsappBulkSend"));
 const WhatsappManagement = lazy(() => import("./pages/admin/WhatsappManagement"));
 
-const ErrorBoundary = lazy(() => import("./components/ErrorBoundary"));
-
 // Doctor pages
 const DoctorDashboard = lazy(() => import("./pages/doctor/DoctorDashboard"));
 
-const PageLoader = () => (
-  <div className="flex min-h-[50vh] items-center justify-center bg-background" role="status" aria-live="polite">
-    <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-      <span className="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-primary" aria-hidden="true" />
-      Sayfa yükleniyor...
+const PageLoader = () => {
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setTimedOut(true), 12_000);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center bg-background px-4" role="status" aria-live="polite">
+      {timedOut ? (
+        <div className="max-w-sm text-center">
+          <p className="mb-2 font-semibold text-foreground">Sayfa bağlantısı gecikti</p>
+          <p className="mb-4 text-sm text-muted-foreground">İnternetiniz çalışıyor olsa da panel dosyası alınamadı.</p>
+          <button
+            type="button"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+            onClick={() => window.location.reload()}
+          >
+            Tekrar Dene
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-primary" aria-hidden="true" />
+          Sayfa yükleniyor...
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 // Create QueryClient outside of component to prevent re-creation on renders.
 // Aggressive caching = clicks return cached data instantly, refetch happens in background.
@@ -238,8 +248,9 @@ const AppContent = () => {
       <AnalyticsTracker />
       <CookieConsent />
       <FloatingWhatsAppButton />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
           <Route path="/doki-logos" element={<DokiLogos />} />
           {/* Mobile Routes */}
           {isNative && (
@@ -457,8 +468,9 @@ const AppContent = () => {
               <Route path="*" element={<NotFound />} />
             </>
           )}
-        </Routes>
-      </Suspense>
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </>
   );
 };
