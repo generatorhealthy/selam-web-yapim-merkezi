@@ -181,19 +181,35 @@ async function retryPayment(
   const uriPath = "/v2/subscription/operation/retry";
   const requestBody = JSON.stringify({ referenceCode: orderReferenceCode });
 
-  const response = await fetchWithRetry(
-    `${baseUrl}${uriPath}`,
-    { method: "POST", body: requestBody },
-    async () => {
-      const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath, requestBody);
-      return {
+  // ÖNEMLİ: Bu istek para çeker. Mükerrer tahsilat riski olduğu için ASLA otomatik
+  // tekrar denenmez (idempotency anahtarı yok). Tek denemede ne olursa o.
+  const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath, requestBody);
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}${uriPath}`, {
+      method: "POST",
+      body: requestBody,
+      headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
         Authorization: authorization,
         "x-iyzi-rnd": randomKey,
-      };
-    }
-  );
+      },
+    });
+  } catch (e) {
+    // Bağlantı koptu: ödeme geçmiş olabilir. Tekrar denemiyoruz, belirsiz olarak bildiriyoruz.
+    return {
+      success: false,
+      message: `Sonuç belirsiz: iyzico yanıtı alınamadı (${e instanceof Error ? e.message : String(e)}). Ödeme geçmiş olabilir, iyzico panelinden kontrol edin. Otomatik tekrar denenmedi.`,
+    };
+  }
+
+  if (response.status >= 500) {
+    return {
+      success: false,
+      message: `Sonuç belirsiz: iyzico sunucu hatası (${response.status}). Ödeme geçmiş olabilir, iyzico panelinden kontrol edin. Otomatik tekrar denenmedi.`,
+    };
+  }
 
   const result = await response.json();
 
