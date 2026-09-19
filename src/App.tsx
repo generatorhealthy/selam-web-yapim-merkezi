@@ -95,81 +95,92 @@ const PartnerManagement = lazy(() => import("./pages/admin/PartnerManagement"));
 // Admin pages - lazy loaded (never needed on initial visit)
 const AdminAuth = lazyWithTimeout(() => import("./pages/AdminAuth"));
 const AdminDashboard = lazyWithTimeout(() => import("./pages/admin/AdminDashboard"));
-const InstagramPosts = lazy(() => import("./pages/admin/InstagramPosts"));
-const UserCreate = lazy(() => import("./pages/admin/UserCreate"));
-const QuickRegister = lazy(() => import("./pages/admin/QuickRegister"));
-const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
-const SpecialistAdd = lazy(() => import("./pages/admin/SpecialistAdd"));
-const SpecialistManagement = lazy(() => import("./pages/admin/SpecialistManagement"));
-const SpecialistEdit = lazy(() => import("./pages/admin/SpecialistEdit"));
-const AppointmentManagement = lazy(() => import("./pages/admin/AppointmentManagement"));
-const BlogManagement = lazy(() => import("./pages/admin/BlogManagement"));
-const CustomerManagement = lazy(() => import("./pages/admin/CustomerManagement"));
-const ReviewManagement = lazy(() => import("./pages/admin/ReviewManagement"));
-const PaymentManagement = lazy(() => import("./pages/admin/PaymentManagement"));
-const NewOrder = lazy(() => import("./pages/admin/NewOrder"));
 function lazyWithTimeout<T extends ComponentType<unknown>>(
   importer: () => Promise<{ default: T }>,
 ) {
   return lazy(async () => {
-  let timeoutId: number | undefined;
+    let lastError: unknown;
 
-  try {
-    const timeout = new Promise<never>((_, reject) => {
-      timeoutId = window.setTimeout(
-        () => reject(new Error("Sayfa dosyası zamanında yüklenemedi")),
-        15_000,
-      );
-    });
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      let timeoutId: number | undefined;
+      try {
+        const timeout = new Promise<never>((_, reject) => {
+          timeoutId = window.setTimeout(
+            () => reject(new Error("Sayfa dosyası zamanında yüklenemedi")),
+            30_000,
+          );
+        });
 
-    const module = await Promise.race([importer(), timeout]);
-    return module;
-  } finally {
-    if (timeoutId) window.clearTimeout(timeoutId);
-  }
+        return await Promise.race([importer(), timeout]);
+      } catch (error) {
+        lastError = error;
+        if (attempt === 0) {
+          await new Promise((resolve) => window.setTimeout(resolve, 1_000));
+        }
+      } finally {
+        if (timeoutId) window.clearTimeout(timeoutId);
+      }
+    }
+
+    throw lastError instanceof Error
+      ? lastError
+      : new Error("Sayfa dosyası yüklenemedi");
   });
 }
 
+const InstagramPosts = lazyWithTimeout(() => import("./pages/admin/InstagramPosts"));
+const UserCreate = lazyWithTimeout(() => import("./pages/admin/UserCreate"));
+const QuickRegister = lazyWithTimeout(() => import("./pages/admin/QuickRegister"));
+const UserManagement = lazyWithTimeout(() => import("./pages/admin/UserManagement"));
+const SpecialistAdd = lazyWithTimeout(() => import("./pages/admin/SpecialistAdd"));
+const SpecialistManagement = lazyWithTimeout(() => import("./pages/admin/SpecialistManagement"));
+const SpecialistEdit = lazyWithTimeout(() => import("./pages/admin/SpecialistEdit"));
+const AppointmentManagement = lazyWithTimeout(() => import("./pages/admin/AppointmentManagement"));
+const BlogManagement = lazyWithTimeout(() => import("./pages/admin/BlogManagement"));
+const CustomerManagement = lazyWithTimeout(() => import("./pages/admin/CustomerManagement"));
+const ReviewManagement = lazyWithTimeout(() => import("./pages/admin/ReviewManagement"));
+const PaymentManagement = lazyWithTimeout(() => import("./pages/admin/PaymentManagement"));
+const NewOrder = lazyWithTimeout(() => import("./pages/admin/NewOrder"));
 const OrderManagement = lazyWithTimeout(() => import("./pages/admin/OrderManagement"));
-const BankTransferNotifications = lazy(() => import("./pages/admin/BankTransferNotifications"));
-const Reports = lazy(() => import("./pages/admin/Reports"));
-const Analytics = lazy(() => import("./pages/admin/Analytics"));
-const MapboxSettings = lazy(() => import("./pages/admin/MapboxSettings"));
-const SuccessStatistics = lazy(() => import("./pages/admin/SuccessStatistics"));
-const LegalProceedings = lazy(() => import("./pages/admin/LegalProceedings"));
-const EmployeeSalaryManagement = lazy(() => import("./pages/admin/EmployeeSalaryManagement"));
-const ClientReferrals = lazy(() => import("./pages/admin/ClientReferrals"));
-const MetaLeads = lazy(() => import("./pages/admin/MetaLeads"));
-const UzmanApplications = lazy(() => import("./pages/admin/UzmanApplications"));
-const ClientCalendar = lazy(() => import("./pages/admin/ClientCalendar"));
-const WhatsappBotManagement = lazy(() => import("./pages/admin/WhatsappBotManagement"));
-const PreInfoFormManagement = lazy(() => import("./pages/admin/PreInfoFormManagement"));
-const PackageManagement = lazy(() => import("./pages/admin/PackageManagement"));
-const TestManagement = lazy(() => import("./pages/admin/TestManagement"));
-const SupportTickets = lazy(() => import("./pages/admin/SupportTickets"));
-const ContractManagement = lazy(() => import("./pages/admin/ContractManagement"));
-const SmsManagement = lazy(() => import("./pages/admin/SmsManagement"));
-const PbxManagement = lazy(() => import("./pages/admin/PbxManagement"));
-const ProspectiveRegistrations = lazy(() => import("./pages/admin/ProspectiveRegistrations"));
-const LogManagement = lazy(() => import("./pages/admin/LogManagement"));
-const SitemapManagement = lazy(() => import("./pages/admin/SitemapManagement"));
-const ImageConverter = lazy(() => import("./pages/admin/ImageConverter"));
-const SocialMediaManagement = lazy(() => import("./pages/admin/SocialMediaManagement"));
-const DatabaseBackup = lazy(() => import("./pages/admin/DatabaseBackup"));
-const AccountingDocuments = lazy(() => import("./pages/admin/AccountingDocuments"));
-const CallReports = lazy(() => import("./pages/admin/CallReports"));
-const IyzicoPayments = lazy(() => import("./pages/admin/IyzicoPayments"));
-const LegalEvidenceManagement = lazy(() => import("./pages/admin/LegalEvidenceManagement"));
-const CancellationFees = lazy(() => import("./pages/admin/CancellationFees"));
-const SpecialistApplications = lazy(() => import("./pages/admin/SpecialistApplications"));
-const StaffAttendance = lazy(() => import("./pages/admin/StaffAttendance"));
-const AdminActivityLogs = lazy(() => import("./pages/admin/AdminActivityLogs"));
-const MobileActivityLogs = lazy(() => import("./pages/admin/MobileActivityLogs"));
-const AdminAIAssistant = lazy(() => import("./pages/admin/AdminAIAssistant"));
-const EmailLogs = lazy(() => import("./pages/admin/EmailLogs"));
-const RegistrationAnalytics = lazy(() => import("./pages/admin/RegistrationAnalytics"));
-const ConsentLogs = lazy(() => import("./pages/admin/ConsentLogs"));
-const BulkEmail = lazy(() => import("./pages/admin/BulkEmail"));
+const BankTransferNotifications = lazyWithTimeout(() => import("./pages/admin/BankTransferNotifications"));
+const Reports = lazyWithTimeout(() => import("./pages/admin/Reports"));
+const Analytics = lazyWithTimeout(() => import("./pages/admin/Analytics"));
+const MapboxSettings = lazyWithTimeout(() => import("./pages/admin/MapboxSettings"));
+const SuccessStatistics = lazyWithTimeout(() => import("./pages/admin/SuccessStatistics"));
+const LegalProceedings = lazyWithTimeout(() => import("./pages/admin/LegalProceedings"));
+const EmployeeSalaryManagement = lazyWithTimeout(() => import("./pages/admin/EmployeeSalaryManagement"));
+const ClientReferrals = lazyWithTimeout(() => import("./pages/admin/ClientReferrals"));
+const MetaLeads = lazyWithTimeout(() => import("./pages/admin/MetaLeads"));
+const UzmanApplications = lazyWithTimeout(() => import("./pages/admin/UzmanApplications"));
+const ClientCalendar = lazyWithTimeout(() => import("./pages/admin/ClientCalendar"));
+const WhatsappBotManagement = lazyWithTimeout(() => import("./pages/admin/WhatsappBotManagement"));
+const PreInfoFormManagement = lazyWithTimeout(() => import("./pages/admin/PreInfoFormManagement"));
+const PackageManagement = lazyWithTimeout(() => import("./pages/admin/PackageManagement"));
+const TestManagement = lazyWithTimeout(() => import("./pages/admin/TestManagement"));
+const SupportTickets = lazyWithTimeout(() => import("./pages/admin/SupportTickets"));
+const ContractManagement = lazyWithTimeout(() => import("./pages/admin/ContractManagement"));
+const SmsManagement = lazyWithTimeout(() => import("./pages/admin/SmsManagement"));
+const PbxManagement = lazyWithTimeout(() => import("./pages/admin/PbxManagement"));
+const ProspectiveRegistrations = lazyWithTimeout(() => import("./pages/admin/ProspectiveRegistrations"));
+const LogManagement = lazyWithTimeout(() => import("./pages/admin/LogManagement"));
+const SitemapManagement = lazyWithTimeout(() => import("./pages/admin/SitemapManagement"));
+const ImageConverter = lazyWithTimeout(() => import("./pages/admin/ImageConverter"));
+const SocialMediaManagement = lazyWithTimeout(() => import("./pages/admin/SocialMediaManagement"));
+const DatabaseBackup = lazyWithTimeout(() => import("./pages/admin/DatabaseBackup"));
+const AccountingDocuments = lazyWithTimeout(() => import("./pages/admin/AccountingDocuments"));
+const CallReports = lazyWithTimeout(() => import("./pages/admin/CallReports"));
+const IyzicoPayments = lazyWithTimeout(() => import("./pages/admin/IyzicoPayments"));
+const LegalEvidenceManagement = lazyWithTimeout(() => import("./pages/admin/LegalEvidenceManagement"));
+const CancellationFees = lazyWithTimeout(() => import("./pages/admin/CancellationFees"));
+const SpecialistApplications = lazyWithTimeout(() => import("./pages/admin/SpecialistApplications"));
+const StaffAttendance = lazyWithTimeout(() => import("./pages/admin/StaffAttendance"));
+const AdminActivityLogs = lazyWithTimeout(() => import("./pages/admin/AdminActivityLogs"));
+const MobileActivityLogs = lazyWithTimeout(() => import("./pages/admin/MobileActivityLogs"));
+const AdminAIAssistant = lazyWithTimeout(() => import("./pages/admin/AdminAIAssistant"));
+const EmailLogs = lazyWithTimeout(() => import("./pages/admin/EmailLogs"));
+const RegistrationAnalytics = lazyWithTimeout(() => import("./pages/admin/RegistrationAnalytics"));
+const ConsentLogs = lazyWithTimeout(() => import("./pages/admin/ConsentLogs"));
+const BulkEmail = lazyWithTimeout(() => import("./pages/admin/BulkEmail"));
 const Career = lazy(() => import("./pages/Career"));
 const CareerApplications = lazy(() => import("./pages/admin/CareerApplications"));
 const SEOContentManagement = lazy(() => import("./pages/admin/SEOContentManagement"));
