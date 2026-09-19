@@ -115,9 +115,7 @@ function lazyWithTimeout<T extends ComponentType<unknown>>(
         return await Promise.race([importer(), timeout]);
       } catch (error) {
         lastError = error;
-        if (reloadWithFreshBundle(error)) {
-          return await new Promise<never>(() => undefined);
-        }
+        reloadWithFreshBundle(error);
         if (attempt === 0) {
           await new Promise((resolve) => window.setTimeout(resolve, 1_000));
         }
