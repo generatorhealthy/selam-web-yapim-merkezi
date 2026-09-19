@@ -1,6 +1,16 @@
 RewriteEngine On
 RewriteBase /
 
+# Admin panel pages must always start with the current application bundle.
+# Clears only the browser HTTP cache; login cookies and local storage are preserved.
+SetEnvIf Request_URI "^/divan_paneli(?:/|$)" ADMIN_PANEL_ROUTE=1
+<IfModule mod_headers.c>
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" env=ADMIN_PANEL_ROUTE
+    Header always set Pragma "no-cache" env=ADMIN_PANEL_ROUTE
+    Header always set Expires "0" env=ADMIN_PANEL_ROUTE
+    Header always set Clear-Site-Data '"cache"' env=ADMIN_PANEL_ROUTE
+</IfModule>
+
 # Canonical domain redirect (www -> non-www)
 RewriteCond %{HTTP_HOST} ^www\.doktorumol\.com\.tr$ [NC]
 RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
