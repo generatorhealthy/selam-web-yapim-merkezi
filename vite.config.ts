@@ -63,22 +63,24 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Bundle the complete Divan panel together. Once the dashboard has
-          // opened, card navigation no longer depends on dozens of separate
-          // page downloads that Safari can leave pending after a deployment.
-          if (id.includes('/src/pages/admin/')) return 'admin-panel';
           // Isolate heavy PDF/document libraries into their own chunks
           if (id.includes('node_modules/jspdf')) return 'pdf';
           if (id.includes('node_modules/html2canvas')) return 'html2canvas';
           if (id.includes('node_modules/docx')) return 'docx';
-          // Keep react vendor separate
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) return 'react-vendor';
+          // Keep React and every React-dependent UI library in ONE chunk.
+          // Splitting Radix out caused "forwardRef of undefined" at startup
+          // because the UI chunk could evaluate before React was ready.
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/scheduler/') ||
+            id.includes('node_modules/@radix-ui/')
+          ) return 'react-vendor';
           // Supabase in its own chunk
           if (id.includes('node_modules/@supabase/')) return 'supabase';
-          // Radix UI in its own chunk
-          if (id.includes('node_modules/@radix-ui/')) return 'radix-ui';
           return undefined;
         },
+
       },
     },
     commonjsOptions: {
