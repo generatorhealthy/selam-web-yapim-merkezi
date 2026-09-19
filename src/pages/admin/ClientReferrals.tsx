@@ -308,9 +308,10 @@ const ClientReferrals = () => {
         const from = page * pageSize;
         const to = from + pageSize - 1;
         
+        // Sadece ekranda kullanılan kolonlar çekiliyor (veritabanı yükünü düşürür)
         const { data: pageData, error: pageError } = await supabase
           .from('client_referrals')
-          .select('*')
+          .select('specialist_id, month, is_referred, notes, updated_at, created_at')
           .eq('year', currentYear)
           .range(from, to);
         
@@ -323,25 +324,13 @@ const ClientReferrals = () => {
           allReferrals = [...allReferrals, ...pageData];
           hasMore = pageData.length === pageSize;
           page++;
-          console.log(`📊 [FETCH] Page ${page}: ${pageData.length} records, total: ${allReferrals.length}`);
         } else {
           hasMore = false;
         }
       }
       
       const referralsError = null;
-      
-      // DEBUG: Spesifik uzman için kayıtları kontrol et
-      const testSpecId = 'e67a51fa-7db6-4932-9b55-6c695949d635';
-      const testSpecRecords = allReferrals?.filter((r: any) => r.specialist_id === testSpecId) || [];
-      const testSpecDecRecords = testSpecRecords.filter((r: any) => Number(r.month) === 12);
-      console.log('📊 [FETCH] All referrals result:', {
-        totalCount: allReferrals?.length || 0,
-        testSpecAllRecords: testSpecRecords.length,
-        testSpecDecemberRecords: testSpecDecRecords.length,
-        testSpecDecemberReferred: testSpecDecRecords.filter((r: any) => r.is_referred === true).length,
-        sampleDecember: testSpecDecRecords.slice(0, 3)
-      });
+
 
       if (specialistsError) {
         console.error('❌ Specialists fetch error:', specialistsError);
@@ -353,16 +342,7 @@ const ClientReferrals = () => {
         // Referral hatası olsa bile devam et
       }
 
-      console.log("✅ Specialists fetched:", specialistsData?.length || 0);
-      console.log("✅ Referrals fetched:", allReferrals?.length || 0);
-      
-      // Debug: internal_number değerlerini logla
-      specialistsData?.forEach(specialist => {
-        console.log(`🔍 Specialist ${specialist.name}: internal_number = "${specialist.internal_number}"`);
-      });
-
       if (!specialistsData || specialistsData.length === 0) {
-        console.log("⚠️ No specialists found");
         setSpecialists([]);
         setFilteredSpecialists([]);
         return;
@@ -370,25 +350,12 @@ const ClientReferrals = () => {
 
       // Referral verilerini specialist_id'ye göre grupla (daha hızlı)
       const referralsBySpecialist = new Map();
-      console.log('📊 [DEBUG] Raw referrals count:', allReferrals?.length || 0);
-      
+
       allReferrals?.forEach(referral => {
         if (!referralsBySpecialist.has(referral.specialist_id)) {
           referralsBySpecialist.set(referral.specialist_id, []);
         }
         referralsBySpecialist.get(referral.specialist_id).push(referral);
-      });
-      
-      console.log('📊 [DEBUG] Unique specialists with referrals:', referralsBySpecialist.size);
-      
-      // Debug: Nermin İbiş için kontrol et
-      const testSpecialistId = 'e67a51fa-7db6-4932-9b55-6c695949d635';
-      const testData = referralsBySpecialist.get(testSpecialistId);
-      console.log('📊 [DEBUG] Test specialist referrals:', {
-        id: testSpecialistId,
-        found: !!testData,
-        count: testData?.length || 0,
-        data: testData?.slice(0, 3) // İlk 3 kaydı göster
       });
 
       // Her uzman için 12 aylık veriyi oluştur (batch processing)
