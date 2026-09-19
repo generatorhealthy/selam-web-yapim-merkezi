@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION cron.alter_job(bigint, text, text, text, text, boolean) FROM supabase_read_only_user;
