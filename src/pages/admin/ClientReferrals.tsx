@@ -308,9 +308,10 @@ const ClientReferrals = () => {
         const from = page * pageSize;
         const to = from + pageSize - 1;
         
+        // Sadece ekranda kullanılan kolonlar çekiliyor (veritabanı yükünü düşürür)
         const { data: pageData, error: pageError } = await supabase
           .from('client_referrals')
-          .select('*')
+          .select('specialist_id, month, is_referred, notes, updated_at, created_at')
           .eq('year', currentYear)
           .range(from, to);
         
@@ -323,25 +324,13 @@ const ClientReferrals = () => {
           allReferrals = [...allReferrals, ...pageData];
           hasMore = pageData.length === pageSize;
           page++;
-          console.log(`📊 [FETCH] Page ${page}: ${pageData.length} records, total: ${allReferrals.length}`);
         } else {
           hasMore = false;
         }
       }
       
       const referralsError = null;
-      
-      // DEBUG: Spesifik uzman için kayıtları kontrol et
-      const testSpecId = 'e67a51fa-7db6-4932-9b55-6c695949d635';
-      const testSpecRecords = allReferrals?.filter((r: any) => r.specialist_id === testSpecId) || [];
-      const testSpecDecRecords = testSpecRecords.filter((r: any) => Number(r.month) === 12);
-      console.log('📊 [FETCH] All referrals result:', {
-        totalCount: allReferrals?.length || 0,
-        testSpecAllRecords: testSpecRecords.length,
-        testSpecDecemberRecords: testSpecDecRecords.length,
-        testSpecDecemberReferred: testSpecDecRecords.filter((r: any) => r.is_referred === true).length,
-        sampleDecember: testSpecDecRecords.slice(0, 3)
-      });
+
 
       if (specialistsError) {
         console.error('❌ Specialists fetch error:', specialistsError);
