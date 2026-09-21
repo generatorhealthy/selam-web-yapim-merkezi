@@ -138,7 +138,7 @@ const PageLoader = () => {
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setTimedOut(true), 8_000);
+    const timeoutId = window.setTimeout(() => setTimedOut(true), 15_000);
     return () => window.clearTimeout(timeoutId);
   }, []);
 
