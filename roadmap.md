@@ -22,4 +22,5 @@
 - [x] Chrome ve Safari'de paneli aralıklı durduran tarayıcı oturum kilidini ve sayfa dosyası indirme hatasını dayanıklı hale getir
 - [x] Safari eski panel dosyasına takıldığında güncel sürümü tek seferlik otomatik yükle
 - [x] Divan paneli kartlarını tek panel paketiyle açarak kart geçişlerindeki sonsuz yüklemeyi kaldır
+- [x] Divan paneli ana ekranını parça indirme hatalarından bağımsız, doğrudan açılır hale getir
 - [ ] Eski Akbank ve İyzico görevlerini Supabase sahibi yetkisiyle pasifleştir (mevcut yönetim yetkisi `cron.job` değişikliğini reddediyor)

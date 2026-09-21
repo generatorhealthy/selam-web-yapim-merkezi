@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { forceFreshBundleReload, reloadWithFreshBundle } from "@/utils/bundleRecovery";
+import { forceFreshBundleReload, isBundleLoadError, reloadWithFreshBundle } from "@/utils/bundleRecovery";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -25,7 +25,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error for debugging in production
     console.error('[ErrorBoundary] Caught error in route:', error, errorInfo);
-    reloadWithFreshBundle(error);
+    if (isBundleLoadError(error)) reloadWithFreshBundle(error);
   }
 
   render() {

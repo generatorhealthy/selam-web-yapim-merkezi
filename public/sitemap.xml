@@ -734,24 +734,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/filiz-akman-ile-aile-ve-bireysel-destekte-guvenli-yolculuk</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/fadime-acar-ile-aile-ve-bireysel-destekte-bilimsel-yaklasim</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/ayse-dolek-kerbel-ile-cocuk-ve-aile-iliskilerinde-guclu-baglar</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/elif-polat-ile-birey-ve-aile-destekleri</loc>
     <lastmod>2026-09-18</lastmod>
     <changefreq>weekly</changefreq>
@@ -782,20 +764,20 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/nurdan-yurduseven-ile-travma-ve-psikolojik-destekte-derinlesen-yaklasim</loc>
-    <lastmod>2025-09-26</lastmod>
+    <loc>https://doktorumol.com.tr/blog/filiz-akman-ile-aile-ve-bireysel-destekte-guvenli-yolculuk</loc>
+    <lastmod>2026-09-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/uzm-psk-senay-esen-ile-26-yillik-psikolojik-destek</loc>
-    <lastmod>2025-09-26</lastmod>
+    <loc>https://doktorumol.com.tr/blog/fadime-acar-ile-aile-ve-bireysel-destekte-bilimsel-yaklasim</loc>
+    <lastmod>2026-09-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psk-ozge-larcin-ile-cift-ve-ailelerde-saglikli-iliskiler-kurmak</loc>
-    <lastmod>2025-09-26</lastmod>
+    <loc>https://doktorumol.com.tr/blog/ayse-dolek-kerbel-ile-cocuk-ve-aile-iliskilerinde-guclu-baglar</loc>
+    <lastmod>2026-09-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -838,6 +820,18 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/evlilikte-duygusal-tatminin-azalmasinin-nedenleri</loc>
     <lastmod>2025-11-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/uzm-psk-senay-esen-ile-26-yillik-psikolojik-destek</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psk-ozge-larcin-ile-cift-ve-ailelerde-saglikli-iliskiler-kurmak</loc>
+    <lastmod>2026-09-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7444,6 +7438,12 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/aile-danismani-derya-akguc-cin-ile-saglikli-iliskiler</loc>
     <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/nurdan-yurduseven-ile-travma-ve-psikolojik-destekte-derinlesen-yaklasim</loc>
+    <lastmod>2026-09-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
