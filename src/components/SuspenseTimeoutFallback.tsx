@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { forceFreshBundleReload } from "@/utils/bundleRecovery";
 
 interface SuspenseTimeoutFallbackProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   timeoutMs?: number;
 }
 

@@ -15,13 +15,6 @@ window.addEventListener('unhandledrejection', (event) => {
   reloadWithFreshBundle(event.reason);
 });
 
-// Safari and Chrome may restore a suspended tab together with stale module and
-// auth promises. A one-time fresh navigation avoids reviving that frozen state.
-window.addEventListener('pageshow', (event) => {
-  if (!event.persisted) return;
-  reloadWithFreshBundle();
-});
-
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Uygulama başlangıç alanı bulunamadı");
 

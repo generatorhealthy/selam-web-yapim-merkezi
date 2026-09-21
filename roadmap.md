@@ -35,3 +35,4 @@
 - [x] Safari'nin `Load failed` dosya hatasını tanıyıp uygulama önbelleğini temizleyerek güncel sürüme otomatik geçir
 - [x] Tüm sayfa parçalarına güvenli yeniden deneme, hash'li dosya adları ve görünür güncelleme kurtarması ekle
 - [x] Safari ve Chrome'da reddedilmeden askıda kalan sayfa dosyalarına kesin süre sınırı ve sürüm bazlı döngüsüz kurtarma ekle
+- [x] Safari'nin askıdaki sekmeyi geri getirirken hatasız sayfayı gereksiz yeniden başlatmasını kaldır
