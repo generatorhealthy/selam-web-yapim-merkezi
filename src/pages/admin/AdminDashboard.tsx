@@ -54,6 +54,14 @@ const AdminDashboard = () => {
   const [newOrderCount, setNewOrderCount] = useState(0);
   const [newApplicationCount, setNewApplicationCount] = useState(0);
 
+  const openPanelPage = (route: string, openInNewTab = false) => {
+    if (openInNewTab) {
+      window.open(route, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    window.location.assign(route);
+  };
+
   // Fetch new specialist application count
   useEffect(() => {
     if (!userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'staff')) return;
@@ -103,7 +111,7 @@ const AdminDashboard = () => {
             duration: 10000,
             action: {
               label: "Siparişleri Görüntüle",
-              onClick: () => navigate("/divan_paneli/orders")
+              onClick: () => openPanelPage("/divan_paneli/orders")
             }
           });
         }
@@ -827,11 +835,7 @@ const AdminDashboard = () => {
                         <button
                           key={item.route}
                           onClick={(e) => {
-                            if (e.ctrlKey || e.metaKey) {
-                              window.open(item.route, '_blank');
-                            } else {
-                              navigate(item.route);
-                            }
+                            openPanelPage(item.route, e.ctrlKey || e.metaKey);
                           }}
                           className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r ${item.gradient} text-white font-medium text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 ${(item as any).badge > 0 ? 'animate-[shake_0.8s_ease-in-out_infinite]' : ''}`}
                         >
@@ -862,11 +866,7 @@ const AdminDashboard = () => {
                       key={card.route}
                       className="group relative overflow-hidden border-0 bg-white/80 backdrop-blur-xl hover:bg-white/95 transition-all duration-500 cursor-pointer hover:scale-[1.05] hover:-translate-y-3 shadow-xl hover:shadow-2xl rounded-3xl animate-fade-in"
                       onClick={(e) => {
-                        if (e.ctrlKey || e.metaKey) {
-                          window.open(card.route, '_blank');
-                        } else {
-                          navigate(card.route);
-                        }
+                        openPanelPage(card.route, e.ctrlKey || e.metaKey);
                       }}
                       style={{
                         animationDelay: `${index * 120}ms`,
