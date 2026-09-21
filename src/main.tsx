@@ -2,17 +2,17 @@
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { forceFreshBundleReload, isBundleLoadError } from './utils/bundleRecovery';
+import { isBundleLoadError, reloadWithFreshBundle } from './utils/bundleRecovery';
 
 window.addEventListener('vite:preloadError', (event) => {
   event.preventDefault();
-  forceFreshBundleReload();
+  reloadWithFreshBundle();
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   if (!isBundleLoadError(event.reason)) return;
   event.preventDefault();
-  forceFreshBundleReload();
+  reloadWithFreshBundle(event.reason);
 });
 
 const rootElement = document.getElementById("root");

@@ -27,4 +27,5 @@
 - [x] Divan paneli kartlarını sayfayı yeniden yüklemeden uygulama içinde doğrudan aç
 - [x] Divan panelini tek seferde yüklenen çalışma alanına ayırarak kartlardaki parça indirme hatalarını kaldır
 - [x] Panel yüklemesini 10 saniyede zorla kesen hatalı zaman aşımını ve paneldeki gereksiz ziyaret kaydı 403 hatasını kaldır
+- [x] Eski dosya hatasında oluşan sınırsız yenileme döngüsünü ve aşırı büyük panel indirmesini kaldır
 - [ ] Eski Akbank ve İyzico görevlerini Supabase sahibi yetkisiyle pasifleştir (mevcut yönetim yetkisi `cron.job` değişikliğini reddediyor)
