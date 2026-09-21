@@ -23,6 +23,7 @@ interface RoleState {
 
 const FALLBACK_PROFILE: UserProfile = { role: "user", is_approved: false };
 const CACHE_TTL = 60_000;
+const PROFILE_RETRY_DELAYS = [0, 750, 2_000];
 
 let state: RoleState = {
   user: null,
@@ -56,6 +57,12 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number): Prom
 };
 
 const wait = (timeoutMs: number) => new Promise((resolve) => setTimeout(resolve, timeoutMs));
+
+const getSessionUser = async () => {
+  const { data, error } = await withTimeout(supabase.auth.getSession(), 8_000);
+  if (error) throw error;
+  return data.session?.user ?? null;
+};
 
 const fetchProfile = async (user: User): Promise<UserProfile> => {
   const { data: panelProfiles, error } = await withTimeout(
@@ -94,9 +101,7 @@ const loadRole = async (providedUser?: User | null, force = false) => {
     if (!state.userProfile) emit({ loading: true, error: null });
 
     try {
-      const user = providedUser === undefined
-        ? (await supabase.auth.getSession()).data.session?.user ?? null
-        : providedUser;
+      const user = providedUser === undefined ? await getSessionUser() : providedUser;
 
       if (!user) {
         cachedUserId = null;
@@ -116,14 +121,19 @@ const loadRole = async (providedUser?: User | null, force = false) => {
         return;
       }
 
-      let profile: UserProfile;
-      try {
-        profile = await fetchProfile(user);
-      } catch (firstError) {
-        console.warn("Yetki bilgisi ilk denemede alınamadı, yeniden deneniyor:", firstError);
-        await wait(1_000);
-        profile = await fetchProfile(user);
+      let profile: UserProfile | null = null;
+      let lastError: unknown;
+      for (const delay of PROFILE_RETRY_DELAYS) {
+        if (delay) await wait(delay);
+        try {
+          profile = await fetchProfile(user);
+          break;
+        } catch (attemptError) {
+          lastError = attemptError;
+          console.warn("Yetki bilgisi geçici olarak alınamadı, yeniden deneniyor:", attemptError);
+        }
       }
+      if (!profile) throw lastError instanceof Error ? lastError : new Error("Yetki bilgileri alınamadı");
       cachedUserId = user.id;
       cachedAt = Date.now();
       emit({ user, userProfile: profile, loading: false, error: null });
