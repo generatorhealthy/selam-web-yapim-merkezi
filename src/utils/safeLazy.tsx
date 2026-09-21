@@ -4,6 +4,21 @@ import { reloadWithFreshBundle } from "./bundleRecovery";
 type Loader<T> = () => Promise<{ default: ComponentType<T> } | undefined | null>;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const MODULE_LOAD_TIMEOUT_MS = 8_000;
+
+const loadWithTimeout = <T,>(loader: Loader<T>) => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error("Sayfa modülü yüklenemedi: indirme zaman aşımı")),
+      MODULE_LOAD_TIMEOUT_MS,
+    );
+  });
+
+  return Promise.race([loader(), timeout]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
+};
 
 const createPageModuleError = (error: unknown) => {
   const pageModuleError = new Error("Sayfa modülü yüklenemedi");
@@ -26,7 +41,7 @@ export function safeLazy<T>(loader: Loader<T>) {
   return lazy(async () => {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
-        const mod = await loader();
+        const mod = await loadWithTimeout(loader);
         if (mod && typeof mod === "object" && mod.default) {
           return { default: mod.default };
         }

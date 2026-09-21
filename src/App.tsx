@@ -15,6 +15,7 @@ import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import ErrorBoundary from "./components/ErrorBoundary";
 import AdminWorkspace from "./pages/admin/AdminWorkspace";
+import SuspenseTimeoutFallback from "@/components/SuspenseTimeoutFallback";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -146,7 +147,7 @@ const AppContent = () => {
       <CookieConsent />
       <FloatingWhatsAppButton />
       <ErrorBoundary>
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<SuspenseTimeoutFallback><PageLoader /></SuspenseTimeoutFallback>}>
           <Routes>
           <Route path="/doki-logos" element={<DokiLogos />} />
           {/* Mobile Routes */}
