@@ -14,6 +14,7 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import ErrorBoundary from "./components/ErrorBoundary";
+import AdminWorkspace from "./pages/admin/AdminWorkspace";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -89,10 +90,6 @@ const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PartnerLogin = lazy(() => import("./pages/PartnerLogin"));
 const PartnerDashboard = lazy(() => import("./pages/partner/PartnerDashboard"));
-// The panel is a large, self-contained workspace. Never reject its import with
-// an artificial timer: Safari can still be downloading it on slower devices.
-// Real module failures are handled globally by the vite:preloadError listener.
-const AdminWorkspace = lazy(() => import("./pages/admin/AdminWorkspace"));
 const Career = lazy(() => import("./pages/Career"));
 
 // Doctor pages
