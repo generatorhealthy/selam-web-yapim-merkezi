@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,7 +14,6 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { Button } from "@/components/ui/button";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -99,33 +98,8 @@ const Career = lazy(() => import("./pages/Career"));
 // Doctor pages
 const DoctorDashboard = lazy(() => import("./pages/doctor/DoctorDashboard"));
 
-const PageLoader = () => {
-  const [timedOut, setTimedOut] = useState(false);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setTimedOut(true), 15_000);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  return (
-    <div className="flex min-h-[50vh] items-center justify-center bg-background px-4" role="status" aria-live="polite">
-      {timedOut ? (
-        <div className="max-w-sm text-center">
-          <p className="mb-2 font-semibold text-foreground">Sayfa bağlantısı gecikti</p>
-          <p className="mb-4 text-sm text-muted-foreground">İnternetiniz çalışıyor olsa da panel dosyası alınamadı.</p>
-          <Button type="button" onClick={() => window.location.reload()}>
-            Tekrar Dene
-          </Button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-primary" aria-hidden="true" />
-          Sayfa yükleniyor...
-        </div>
-      )}
-    </div>
-  );
-};
+// Sayfa geçişlerinde ekranda hiçbir "yükleniyor" uyarısı gösterilmez.
+const PageLoader = () => null;
 
 // Create QueryClient outside of component to prevent re-creation on renders.
 // Aggressive caching = clicks return cached data instantly, refetch happens in background.

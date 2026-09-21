@@ -66,14 +66,8 @@ const WhatsappBotManagement = lazy(() => import("./WhatsappBotManagement"));
 const WhatsappBulkSend = lazy(() => import("./WhatsappBulkSend"));
 const WhatsappManagement = lazy(() => import("./WhatsappManagement"));
 
-const PanelLoader = () => (
-  <div className="flex min-h-[50vh] items-center justify-center bg-background" role="status">
-    <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-      <span className="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-primary" aria-hidden="true" />
-      Sayfa yükleniyor...
-    </div>
-  </div>
-);
+// Panel kartları arasında geçişte "yükleniyor" ekranı gösterilmez.
+const PanelLoader = () => null;
 
 const AdminWorkspace = () => (
   <ErrorBoundary>
