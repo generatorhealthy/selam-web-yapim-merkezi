@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
@@ -48,7 +47,6 @@ import {
 } from "lucide-react";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
   useAdminActivityTracker(userProfile);
   const [newOrderCount, setNewOrderCount] = useState(0);
@@ -121,7 +119,7 @@ const AdminDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userProfile, navigate]);
+  }, [userProfile]);
 
   // Always call all hooks first, then handle conditional rendering
   const isAdmin = userProfile?.role === 'admin';
