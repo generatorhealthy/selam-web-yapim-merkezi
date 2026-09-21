@@ -9,6 +9,7 @@ const AnalyticsTracker = () => {
   const { user } = useUserRole();
   const userId = user?.id ?? null;
   const location = useLocation();
+  const isPanelRoute = location.pathname.startsWith('/divan_paneli');
   const lastHeartbeatRef = useRef(0);
   const lastTrackedRef = useRef<{ key: string; at: number }>({ key: '', at: 0 });
   const generateSessionId = () => {
@@ -28,7 +29,7 @@ const AnalyticsTracker = () => {
 
   const trackPageVisit = useCallback(async () => {
     try {
-      if (!userId) return;
+      if (!userId || isPanelRoute) return;
 
       // Aynı sayfa için tekrarlanan yazmaları engelle. Önceden `user` nesnesinin
       // kimliği her render'da değiştiği için bu istek saniyede birkaç kez
@@ -60,12 +61,12 @@ const AnalyticsTracker = () => {
     } catch (error) {
       // Silently fail - don't log to console for better performance
     }
-  }, [pageKey, userId]);
+  }, [isPanelRoute, pageKey, userId]);
 
 
   const updateLastActive = useCallback(async () => {
     try {
-      if (!userId || document.visibilityState !== 'visible') return;
+      if (!userId || isPanelRoute || document.visibilityState !== 'visible') return;
 
       const now = Date.now();
       if (now - lastHeartbeatRef.current < HEARTBEAT_INTERVAL_MS) return;
@@ -79,7 +80,7 @@ const AnalyticsTracker = () => {
     } catch (error) {
       // Silently fail
     }
-  }, [userId]);
+  }, [isPanelRoute, userId]);
 
   useEffect(() => {
     // A low-frequency heartbeat is enough. Per-click/scroll writes overloaded

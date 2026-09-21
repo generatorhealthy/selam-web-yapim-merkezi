@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState, type ComponentType } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,7 +15,6 @@ import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
-import { isBundleLoadError, reloadWithFreshBundle } from "@/utils/bundleRecovery";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -91,44 +90,10 @@ const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PartnerLogin = lazy(() => import("./pages/PartnerLogin"));
 const PartnerDashboard = lazy(() => import("./pages/partner/PartnerDashboard"));
-function lazyWithTimeout<T extends ComponentType<unknown>>(
-  importer: () => Promise<{ default: T }>,
-) {
-  return lazy(async () => {
-    let lastError: unknown;
-
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      let timeoutId: number | undefined;
-      try {
-        const timeout = new Promise<never>((_, reject) => {
-          timeoutId = window.setTimeout(
-            () => reject(new Error("Sayfa dosyası zamanında yüklenemedi")),
-            10_000,
-          );
-        });
-
-        return await Promise.race([importer(), timeout]);
-      } catch (error) {
-        lastError = error;
-        const bundleLoadFailed = isBundleLoadError(error);
-        if (bundleLoadFailed) reloadWithFreshBundle(error);
-        if (attempt === 0 && bundleLoadFailed) {
-          await new Promise((resolve) => window.setTimeout(resolve, 1_000));
-        } else {
-          break;
-        }
-      } finally {
-        if (timeoutId) window.clearTimeout(timeoutId);
-      }
-    }
-
-    throw lastError instanceof Error
-      ? lastError
-      : new Error("Sayfa dosyası yüklenemedi");
-  });
-}
-
-const AdminWorkspace = lazyWithTimeout(() => import("./pages/admin/AdminWorkspace"));
+// The panel is a large, self-contained workspace. Never reject its import with
+// an artificial timer: Safari can still be downloading it on slower devices.
+// Real module failures are handled globally by the vite:preloadError listener.
+const AdminWorkspace = lazy(() => import("./pages/admin/AdminWorkspace"));
 const Career = lazy(() => import("./pages/Career"));
 
 // Doctor pages
