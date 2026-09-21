@@ -14,6 +14,7 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import AdminRouteGuard from "@/components/AdminRouteGuard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { reloadWithFreshBundle } from "@/utils/bundleRecovery";
@@ -95,7 +96,6 @@ const PartnerManagement = lazy(() => import("./pages/admin/PartnerManagement"));
 
 // Admin pages - lazy loaded (never needed on initial visit)
 const AdminAuth = lazyWithTimeout(() => import("./pages/AdminAuth"));
-const AdminDashboard = lazyWithTimeout(() => import("./pages/admin/AdminDashboard"));
 function lazyWithTimeout<T extends ComponentType<unknown>>(
   importer: () => Promise<{ default: T }>,
 ) {
