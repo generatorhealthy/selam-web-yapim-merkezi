@@ -1,5 +1,6 @@
 const RECOVERY_KEY = "doktorumol_bundle_recovery";
 const RECOVERY_WINDOW_MS = 5 * 60 * 1000;
+const RELOAD_FALLBACK_MS = 1_500;
 
 const clearApplicationCaches = async () => {
   try {
@@ -24,7 +25,7 @@ const clearApplicationCaches = async () => {
 export const isBundleLoadError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error ?? "");
 
-  return /chunkloaderror|loading chunk|dynamically imported module|importing a module script failed|error loading dynamically imported module|failed to fetch dynamically imported module|unable to preload css|preload css|load failed|sayfa dosyası/i.test(
+  return /chunkloaderror|loading chunk|dynamically imported module|importing a module script failed|error loading dynamically imported module|failed to fetch dynamically imported module|unable to preload css|preload css|load failed|sayfa (dosyası|modülü).*yüklenemedi|sayfa modülü eksik/i.test(
     message,
   );
 };
@@ -39,7 +40,15 @@ export const reloadWithFreshBundle = (error?: unknown) => {
     window.sessionStorage.setItem(RECOVERY_KEY, String(Date.now()));
     const freshUrl = new URL(window.location.href);
     freshUrl.searchParams.set("__app_refresh", String(Date.now()));
+
+    // Cache cleanup APIs can remain pending in Safari. Never let them block the
+    // navigation: the timer guarantees a full reload even in that case.
+    const reloadFallback = window.setTimeout(() => {
+      window.location.reload();
+    }, RELOAD_FALLBACK_MS);
+
     void clearApplicationCaches().finally(() => {
+      window.clearTimeout(reloadFallback);
       window.location.replace(freshUrl.toString());
     });
     return true;

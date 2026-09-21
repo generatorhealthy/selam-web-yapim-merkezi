@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import AdminRouteGuard from "@/components/AdminRouteGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";

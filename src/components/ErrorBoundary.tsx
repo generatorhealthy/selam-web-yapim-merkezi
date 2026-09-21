@@ -10,43 +10,49 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
+  recoveryStarted: boolean;
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private recoveryStarted = false;
-
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, recoveryStarted: false };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+    return { hasError: true, error, recoveryStarted: false };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error for debugging in production
     console.error('[ErrorBoundary] Caught error in route:', error, errorInfo);
     if (isBundleLoadError(error)) {
-      this.recoveryStarted = reloadWithFreshBundle(error);
+      const recoveryStarted = reloadWithFreshBundle(error);
+      if (recoveryStarted) this.setState({ recoveryStarted: true });
     }
   }
 
   render() {
     if (this.state.hasError) {
-      if (this.recoveryStarted) {
-        return <div className="min-h-screen bg-background" aria-hidden="true" />;
-      }
       if (this.props.fallback) return <>{this.props.fallback}</>;
+      const isUpdateError = isBundleLoadError(this.state.error);
       return (
         <div className="min-h-screen grid place-items-center bg-background p-4">
           <div className="rounded-lg border border-border bg-card shadow-lg p-6 max-w-md text-center">
-            <h2 className="text-lg font-semibold text-foreground mb-2">Sayfa yüklenirken bir hata oluştu</h2>
-            <p className="text-sm text-muted-foreground mb-4">Lütfen sayfayı yenileyin veya biraz sonra tekrar deneyin.</p>
+            <h2 className="text-lg font-semibold text-foreground mb-2">
+              {isUpdateError ? "Yeni bir güncelleme mevcut" : "Sayfa yüklenirken bir hata oluştu"}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              {this.state.recoveryStarted
+                ? "Güncel sürüm otomatik olarak açılıyor."
+                : isUpdateError
+                  ? "Devam etmek için sayfayı güncel sürümle yeniden açın."
+                  : "Lütfen sayfayı yenileyin veya biraz sonra tekrar deneyin."}
+            </p>
             <Button
               onClick={forceFreshBundleReload}
             >
-              Güncel Sürümü Aç
+              {this.state.recoveryStarted ? "Şimdi Yenile" : "Güncel Sürümü Aç"}
             </Button>
           </div>
         </div>

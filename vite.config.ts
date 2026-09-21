@@ -27,6 +27,13 @@ export default defineConfig(({ mode }) => ({
       transformMixedEsModules: true,
       defaultIsModuleExports: "auto",
     },
+    rollupOptions: {
+      output: {
+        entryFileNames: "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
+      },
+    },
   },
   optimizeDeps: {
     include: ["react-dropzone", "attr-accept"],

@@ -1,6 +1,7 @@
 import { Outlet, NavLink } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useMobileActivityTracker } from "@/hooks/useMobileActivityTracker";
+import { reloadWithFreshBundle } from "@/utils/bundleRecovery";
 
 // Map each tab route to its lazy import so we can prefetch on touch/hover.
 const ROUTE_PREFETCH: Record<string, () => Promise<unknown>> = {
@@ -18,7 +19,10 @@ const prefetched = new Set<string>();
 const prefetch = (to: string) => {
   if (prefetched.has(to)) return;
   prefetched.add(to);
-  ROUTE_PREFETCH[to]?.().catch(() => prefetched.delete(to));
+  ROUTE_PREFETCH[to]?.().catch((error) => {
+    prefetched.delete(to);
+    reloadWithFreshBundle(error);
+  });
 };
 
 // === Filled (solid) icons — premium iOS / referans görsel stili ===
