@@ -13,6 +13,8 @@ interface ErrorBoundaryState {
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private recoveryStarted = false;
+
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -25,11 +27,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error for debugging in production
     console.error('[ErrorBoundary] Caught error in route:', error, errorInfo);
-    if (isBundleLoadError(error)) reloadWithFreshBundle(error);
+    if (isBundleLoadError(error)) {
+      this.recoveryStarted = reloadWithFreshBundle(error);
+    }
   }
 
   render() {
     if (this.state.hasError) {
+      if (this.recoveryStarted) {
+        return <div className="min-h-screen bg-background" aria-hidden="true" />;
+      }
       if (this.props.fallback) return <>{this.props.fallback}</>;
       return (
         <div className="min-h-screen grid place-items-center bg-background p-4">
