@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,7 @@ import {
 } from "lucide-react";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const { userProfile, loading } = useUserRole();
   useAdminActivityTracker(userProfile);
   const [newOrderCount, setNewOrderCount] = useState(0);
@@ -57,7 +59,7 @@ const AdminDashboard = () => {
       window.open(route, '_blank', 'noopener,noreferrer');
       return;
     }
-    window.location.assign(route);
+    navigate(route);
   };
 
   // Fetch new specialist application count
@@ -84,7 +86,7 @@ const AdminDashboard = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [userProfile]);
+  }, [userProfile, navigate]);
 
   // Listen for new orders
   useEffect(() => {
