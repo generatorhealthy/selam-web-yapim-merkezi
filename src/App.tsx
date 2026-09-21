@@ -13,8 +13,6 @@ import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
-import AdminRouteGuard from "@/components/AdminRouteGuard";
-import AdminDashboard from "./pages/admin/AdminDashboard";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { isBundleLoadError, reloadWithFreshBundle } from "@/utils/bundleRecovery";
@@ -92,10 +90,6 @@ const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PartnerLogin = lazy(() => import("./pages/PartnerLogin"));
 const PartnerDashboard = lazy(() => import("./pages/partner/PartnerDashboard"));
-const PartnerManagement = lazy(() => import("./pages/admin/PartnerManagement"));
-
-// Admin pages - lazy loaded (never needed on initial visit)
-const AdminAuth = lazyWithTimeout(() => import("./pages/AdminAuth"));
 function lazyWithTimeout<T extends ComponentType<unknown>>(
   importer: () => Promise<{ default: T }>,
 ) {
@@ -133,66 +127,8 @@ function lazyWithTimeout<T extends ComponentType<unknown>>(
   });
 }
 
-const InstagramPosts = lazyWithTimeout(() => import("./pages/admin/InstagramPosts"));
-const UserCreate = lazyWithTimeout(() => import("./pages/admin/UserCreate"));
-const QuickRegister = lazyWithTimeout(() => import("./pages/admin/QuickRegister"));
-const UserManagement = lazyWithTimeout(() => import("./pages/admin/UserManagement"));
-const SpecialistAdd = lazyWithTimeout(() => import("./pages/admin/SpecialistAdd"));
-const SpecialistManagement = lazyWithTimeout(() => import("./pages/admin/SpecialistManagement"));
-const SpecialistEdit = lazyWithTimeout(() => import("./pages/admin/SpecialistEdit"));
-const AppointmentManagement = lazyWithTimeout(() => import("./pages/admin/AppointmentManagement"));
-const BlogManagement = lazyWithTimeout(() => import("./pages/admin/BlogManagement"));
-const CustomerManagement = lazyWithTimeout(() => import("./pages/admin/CustomerManagement"));
-const ReviewManagement = lazyWithTimeout(() => import("./pages/admin/ReviewManagement"));
-const PaymentManagement = lazyWithTimeout(() => import("./pages/admin/PaymentManagement"));
-const NewOrder = lazyWithTimeout(() => import("./pages/admin/NewOrder"));
-const OrderManagement = lazyWithTimeout(() => import("./pages/admin/OrderManagement"));
-const BankTransferNotifications = lazyWithTimeout(() => import("./pages/admin/BankTransferNotifications"));
-const Reports = lazyWithTimeout(() => import("./pages/admin/Reports"));
-const Analytics = lazyWithTimeout(() => import("./pages/admin/Analytics"));
-const MapboxSettings = lazyWithTimeout(() => import("./pages/admin/MapboxSettings"));
-const SuccessStatistics = lazyWithTimeout(() => import("./pages/admin/SuccessStatistics"));
-const LegalProceedings = lazyWithTimeout(() => import("./pages/admin/LegalProceedings"));
-const EmployeeSalaryManagement = lazyWithTimeout(() => import("./pages/admin/EmployeeSalaryManagement"));
-const ClientReferrals = lazyWithTimeout(() => import("./pages/admin/ClientReferrals"));
-const MetaLeads = lazyWithTimeout(() => import("./pages/admin/MetaLeads"));
-const UzmanApplications = lazyWithTimeout(() => import("./pages/admin/UzmanApplications"));
-const ClientCalendar = lazyWithTimeout(() => import("./pages/admin/ClientCalendar"));
-const WhatsappBotManagement = lazyWithTimeout(() => import("./pages/admin/WhatsappBotManagement"));
-const PreInfoFormManagement = lazyWithTimeout(() => import("./pages/admin/PreInfoFormManagement"));
-const PackageManagement = lazyWithTimeout(() => import("./pages/admin/PackageManagement"));
-const TestManagement = lazyWithTimeout(() => import("./pages/admin/TestManagement"));
-const SupportTickets = lazyWithTimeout(() => import("./pages/admin/SupportTickets"));
-const ContractManagement = lazyWithTimeout(() => import("./pages/admin/ContractManagement"));
-const SmsManagement = lazyWithTimeout(() => import("./pages/admin/SmsManagement"));
-const PbxManagement = lazyWithTimeout(() => import("./pages/admin/PbxManagement"));
-const ProspectiveRegistrations = lazyWithTimeout(() => import("./pages/admin/ProspectiveRegistrations"));
-const LogManagement = lazyWithTimeout(() => import("./pages/admin/LogManagement"));
-const SitemapManagement = lazyWithTimeout(() => import("./pages/admin/SitemapManagement"));
-const ImageConverter = lazyWithTimeout(() => import("./pages/admin/ImageConverter"));
-const SocialMediaManagement = lazyWithTimeout(() => import("./pages/admin/SocialMediaManagement"));
-const DatabaseBackup = lazyWithTimeout(() => import("./pages/admin/DatabaseBackup"));
-const AccountingDocuments = lazyWithTimeout(() => import("./pages/admin/AccountingDocuments"));
-const CallReports = lazyWithTimeout(() => import("./pages/admin/CallReports"));
-const IyzicoPayments = lazyWithTimeout(() => import("./pages/admin/IyzicoPayments"));
-const LegalEvidenceManagement = lazyWithTimeout(() => import("./pages/admin/LegalEvidenceManagement"));
-const CancellationFees = lazyWithTimeout(() => import("./pages/admin/CancellationFees"));
-const SpecialistApplications = lazyWithTimeout(() => import("./pages/admin/SpecialistApplications"));
-const StaffAttendance = lazyWithTimeout(() => import("./pages/admin/StaffAttendance"));
-const AdminActivityLogs = lazyWithTimeout(() => import("./pages/admin/AdminActivityLogs"));
-const MobileActivityLogs = lazyWithTimeout(() => import("./pages/admin/MobileActivityLogs"));
-const AdminAIAssistant = lazyWithTimeout(() => import("./pages/admin/AdminAIAssistant"));
-const EmailLogs = lazyWithTimeout(() => import("./pages/admin/EmailLogs"));
-const RegistrationAnalytics = lazyWithTimeout(() => import("./pages/admin/RegistrationAnalytics"));
-const ConsentLogs = lazyWithTimeout(() => import("./pages/admin/ConsentLogs"));
-const BulkEmail = lazyWithTimeout(() => import("./pages/admin/BulkEmail"));
+const AdminWorkspace = lazyWithTimeout(() => import("./pages/admin/AdminWorkspace"));
 const Career = lazy(() => import("./pages/Career"));
-const CareerApplications = lazy(() => import("./pages/admin/CareerApplications"));
-const SEOContentManagement = lazy(() => import("./pages/admin/SEOContentManagement"));
-const SEOPublishedHistory = lazy(() => import("./pages/admin/SEOPublishedHistory"));
-const SpecialistBlogStatus = lazy(() => import("./pages/admin/SpecialistBlogStatus"));
-const WhatsappBulkSend = lazy(() => import("./pages/admin/WhatsappBulkSend"));
-const WhatsappManagement = lazy(() => import("./pages/admin/WhatsappManagement"));
 
 // Doctor pages
 const DoctorDashboard = lazy(() => import("./pages/doctor/DoctorDashboard"));
@@ -395,71 +331,8 @@ const AppContent = () => {
               <Route path="/partner" element={<PartnerDashboard />} />
               
               
-              {/* Admin Routes - MUST be before dynamic catch-all routes */}
-              <Route path="/divan_paneli" element={<AdminAuth />} />
-              <Route element={<AdminRouteGuard />}>
-              <Route path="/divan_paneli/dashboard" element={<AdminDashboard />} />
-              <Route path="/divan_paneli/tests" element={<TestManagement />} />
-              <Route path="/divan_paneli/packages" element={<PackageManagement />} />
-              <Route path="/divan_paneli/pre-info-form" element={<PreInfoFormManagement />} />
-              <Route path="/divan_paneli/users/create" element={<UserCreate />} />
-              <Route path="/divan_paneli/quick-register" element={<QuickRegister />} />
-              <Route path="/divan_paneli/users" element={<UserManagement />} />
-              <Route path="/divan_paneli/partners" element={<PartnerManagement />} />
-              <Route path="/divan_paneli/specialists/add" element={<SpecialistAdd />} />
-              <Route path="/divan_paneli/specialists" element={<SpecialistManagement />} />
-              <Route path="/divan_paneli/specialists/edit/:id" element={<SpecialistEdit />} />
-              <Route path="/divan_paneli/client-referrals" element={<ClientReferrals />} />
-              <Route path="/divan_paneli/meta-leads" element={<MetaLeads />} />
-              <Route path="/divan_paneli/uzman-basvurulari" element={<UzmanApplications />} />
-              <Route path="/divan_paneli/client-calendar" element={<ClientCalendar />} />
-              <Route path="/divan_paneli/whatsapp-bot" element={<WhatsappBotManagement />} />
-              <Route path="/divan_paneli/appointments" element={<AppointmentManagement />} />
-              <Route path="/divan_paneli/blog" element={<BlogManagement />} />
-              <Route path="/divan_paneli/customers" element={<CustomerManagement />} />
-              <Route path="/divan_paneli/reviews" element={<ReviewManagement />} />
-              <Route path="/divan_paneli/payments" element={<PaymentManagement />} />
-              <Route path="/divan_paneli/orders/new" element={<NewOrder />} />
-               <Route path="/divan_paneli/orders" element={<ErrorBoundary><OrderManagement /></ErrorBoundary>} />
-              <Route path="/divan_paneli/banka-havalesi-bildirimleri" element={<BankTransferNotifications />} />
-              <Route path="/divan_paneli/analytics" element={<Analytics />} />
-              <Route path="/divan_paneli/reports" element={<Reports />} />
-              <Route path="/divan_paneli/mapbox" element={<MapboxSettings />} />
-              <Route path="/divan_paneli/success-statistics" element={<SuccessStatistics />} />
-              <Route path="/divan_paneli/legal-proceedings" element={<LegalProceedings />} />
-              <Route path="/divan_paneli/employee-salaries" element={<EmployeeSalaryManagement />} />
-              <Route path="/divan_paneli/support-tickets" element={<SupportTickets />} />
-              <Route path="/divan_paneli/contracts" element={<ContractManagement />} />
-              <Route path="/divan_paneli/sms-management" element={<Suspense fallback={<PageLoader />}><ErrorBoundary><SmsManagement /></ErrorBoundary></Suspense>} />
-              <Route path="/divan_paneli/pbx-management" element={<PbxManagement />} />
-              <Route path="/divan_paneli/prospective-registrations" element={<ProspectiveRegistrations />} />
-              <Route path="/divan_paneli/log-management" element={<LogManagement />} />
-              <Route path="/divan_paneli/sitemap" element={<SitemapManagement />} />
-              <Route path="/divan_paneli/image-converter" element={<ImageConverter />} />
-              <Route path="/divan_paneli/accounting" element={<AccountingDocuments />} />
-              <Route path="/divan_paneli/social-media" element={<SocialMediaManagement />} />
-              <Route path="/divan_paneli/database-backup" element={<DatabaseBackup />} />
-              <Route path="/divan_paneli/call-reports" element={<CallReports />} />
-              <Route path="/divan_paneli/iyzico-payments" element={<IyzicoPayments />} />
-              <Route path="/divan_paneli/legal-evidence" element={<LegalEvidenceManagement />} />
-              <Route path="/divan_paneli/specialist-applications" element={<SpecialistApplications />} />
-              <Route path="/divan_paneli/staff-attendance" element={<StaffAttendance />} />
-              <Route path="/divan_paneli/instagram-posts" element={<Suspense fallback={<PageLoader />}><ErrorBoundary><InstagramPosts /></ErrorBoundary></Suspense>} />
-              <Route path="/divan_paneli/cancellation-fees" element={<CancellationFees />} />
-              <Route path="/divan_paneli/admin-activity-logs" element={<AdminActivityLogs />} />
-              <Route path="/divan_paneli/mobile-activity-logs" element={<MobileActivityLogs />} />
-              <Route path="/divan_paneli/ai-assistant" element={<AdminAIAssistant />} />
-              <Route path="/divan_paneli/email-logs" element={<EmailLogs />} />
-              <Route path="/divan_paneli/registration-analytics" element={<RegistrationAnalytics />} />
-              <Route path="/divan_paneli/consent-logs" element={<ConsentLogs />} />
-              <Route path="/divan_paneli/bulk-email" element={<BulkEmail />} />
-              <Route path="/divan_paneli/career-applications" element={<CareerApplications />} />
-              <Route path="/divan_paneli/seo-content" element={<SEOContentManagement />} />
-              <Route path="/divan_paneli/seo-content/yayinlananlar" element={<SEOPublishedHistory />} />
-              <Route path="/divan_paneli/seo-content/uzman-bloglari" element={<SpecialistBlogStatus />} />
-              <Route path="/divan_paneli/whatsapp-bulk" element={<WhatsappBulkSend />} />
-              <Route path="/divan_paneli/whatsapp" element={<WhatsappManagement />} />
-              </Route>
+              {/* Panel is one self-contained workspace; cards never fetch another page chunk. */}
+              <Route path="/divan_paneli/*" element={<AdminWorkspace />} />
               <Route path="/kariyer" element={<Career />} />
               
                 
