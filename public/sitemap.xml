@@ -9430,12 +9430,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolog/damla-aydemir</loc>
-    <lastmod>2026-07-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-gulsah-afsar</loc>
     <lastmod>2026-05-05</lastmod>
     <changefreq>monthly</changefreq>
@@ -9468,6 +9462,12 @@
   <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-mahmut-marasli</loc>
     <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/psikolog/damla-aydemir</loc>
+    <lastmod>2026-07-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

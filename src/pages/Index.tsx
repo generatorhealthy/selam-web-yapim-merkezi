@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
 import AppointmentWizard from "@/components/AppointmentWizard";
 import AppDownloadSheet from "@/components/AppDownloadSheet";
+import { safeLazy } from "@/utils/safeLazy";
 
 // Lazy load below-fold content (reviews, how it works, specialists, footer)
-const IndexBelowFold = lazy(() => import("@/components/IndexBelowFold"));
+const IndexBelowFold = safeLazy(() => import("@/components/IndexBelowFold"));
 
 const popularSpecialties = [
   { name: "Psikolog", slug: "psikolog" },

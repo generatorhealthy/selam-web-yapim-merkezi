@@ -1,9 +1,17 @@
 import { lazy, type ComponentType } from "react";
-import { isBundleLoadError, reloadWithFreshBundle } from "./bundleRecovery";
+import { reloadWithFreshBundle } from "./bundleRecovery";
 
 type Loader<T> = () => Promise<{ default: ComponentType<T> } | undefined | null>;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const createPageModuleError = (error: unknown) => {
+  const pageModuleError = new Error("Sayfa modülü yüklenemedi");
+  if (error instanceof Error) {
+    pageModuleError.stack = `${pageModuleError.stack ?? pageModuleError.message}\nCaused by: ${error.stack ?? error.message}`;
+  }
+  return pageModuleError;
+};
 
 /**
  * React.lazy sarmalayıcısı.
@@ -28,13 +36,12 @@ export function safeLazy<T>(loader: Loader<T>) {
           await wait(300);
           continue;
         }
-        if (isBundleLoadError(error) || error instanceof Error) {
-          reloadWithFreshBundle(error);
-        }
-        throw error;
+        const pageModuleError = createPageModuleError(error);
+        reloadWithFreshBundle(pageModuleError);
+        throw pageModuleError;
       }
     }
-    throw new Error("Sayfa yüklenemedi");
+    throw createPageModuleError(undefined);
   });
 }
 
