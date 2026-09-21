@@ -66,7 +66,7 @@ const Packages = lazy(() => import("./pages/Packages"));
 const CampaignPackage = lazy(() => import("./pages/CampaignPackage"));
 const CampaignPremiumPackage = lazy(() => import("./pages/CampaignPremiumPackage"));
 const SpecialOffer = lazy(() => import("./pages/SpecialOffer"));
-const SpecialOfferNew = lazy(() => import("./pages/SpecialOfferNew"));
+// Reklam trafiği gelen kampanya sayfası: ayrı dosya beklemesin diye ana pakette
 const Checkout = lazy(() => import("./pages/Checkout"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const Privacy = lazy(() => import("./pages/Privacy"));
