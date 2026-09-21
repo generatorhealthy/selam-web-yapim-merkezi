@@ -18,10 +18,10 @@ export default defineConfig(({ mode }) => ({
     minify: "esbuild",
     sourcemap: false,
     emptyOutDir: true,
-    // Safari can keep an old HTML document alive while individual route chunks
-    // have already been replaced during a deployment. Ship one versioned app
-    // file so refreshes never depend on a stale/missing secondary chunk.
-    cssCodeSplit: false,
+    // Keep the startup payload small. Inlining every admin/public screen into a
+    // single file makes Safari spend too long downloading and compiling before
+    // React can show its recovery UI.
+    cssCodeSplit: true,
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
@@ -32,7 +32,6 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
-        inlineDynamicImports: true,
         entryFileNames: "assets/[name]-[hash].js",
         chunkFileNames: "assets/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]",

@@ -14,7 +14,6 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import ErrorBoundary from "./components/ErrorBoundary";
-import AdminWorkspace from "./pages/admin/AdminWorkspace";
 import SuspenseTimeoutFallback from "@/components/SuspenseTimeoutFallback";
 
 // Critical pages - eagerly loaded
@@ -22,6 +21,7 @@ import Index from "./pages/Index";
 import SpecialOfferNew from "./pages/SpecialOfferNew";
 import { safeLazy } from "@/utils/safeLazy";
 const DokiLogos = safeLazy(() => import("./pages/DokiLogos"));
+const AdminWorkspace = safeLazy(() => import("./pages/admin/AdminWorkspace"));
 
 // Lazy loaded pages - reduces initial bundle significantly
 const MobileHome = safeLazy(() => import("./pages/mobile/MobileHome"));
