@@ -31,3 +31,4 @@
 - [ ] Eski Akbank ve İyzico görevlerini Supabase sahibi yetkisiyle pasifleştir (mevcut yönetim yetkisi `cron.job` değişikliğini reddediyor)
 - [x] Divan panelindeki aralıklı Safari yetki isteği kesintisini ve kart açılışındaki parça indirmelerini kalıcı olarak kaldır
 - [x] Divan paneli yenilemesinde Safari'yi kilitleyen 1,7 MB'lık tek açılış dosyasını sayfa bazında küçült
+- [x] Safari ve Chrome'da takılan HTTP/3 bağlantı önbelleğini temizle, panel başlangıcındaki ikinci dosya beklemesini kaldır ve oturum kilidine kesin süre sınırı ekle

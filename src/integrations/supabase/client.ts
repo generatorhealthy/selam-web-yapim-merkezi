@@ -10,9 +10,36 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 // serialized in this tab without letting a stale browser lock block the panel.
 let authLockTail: Promise<void> = Promise.resolve();
 
+const waitForAuthLock = async (pending: Promise<void>, timeoutMs: number) => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<void>((resolve) => {
+    timeoutId = setTimeout(resolve, timeoutMs);
+  });
+
+  try {
+    await Promise.race([pending, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
+const runAuthOperation = async <R,>(operation: () => Promise<R>, timeoutMs: number): Promise<R> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Oturum işlemi zaman aşımına uğradı")), timeoutMs);
+  });
+  timeout.catch(() => undefined);
+
+  try {
+    return await Promise.race([operation(), timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 const browserSafeAuthLock = async <R,>(
   _name: string,
-  _acquireTimeout: number,
+  acquireTimeout: number,
   operation: () => Promise<R>,
 ): Promise<R> => {
   const previousOperation = authLockTail.catch(() => undefined);
@@ -21,9 +48,13 @@ const browserSafeAuthLock = async <R,>(
     release = resolve;
   });
 
-  await previousOperation;
+  // A suspended Chrome/Safari tab must never keep the next auth call waiting
+  // forever. Supabase passes a negative timeout for calls that normally wait;
+  // cap both queue acquisition and execution so the UI can recover.
+  const lockTimeout = acquireTimeout > 0 ? Math.min(acquireTimeout, 8_000) : 8_000;
+  await waitForAuthLock(previousOperation, lockTimeout);
   try {
-    return await operation();
+    return await runAuthOperation(operation, 20_000);
   } finally {
     release?.();
   }

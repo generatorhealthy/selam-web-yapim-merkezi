@@ -4,6 +4,9 @@ RewriteBase /
 # HTML and panel routes must always load the current application bundle.
 SetEnvIf Request_URI "^/divan_paneli(?:/|$)" ADMIN_PANEL_ROUTE=1
 <IfModule mod_headers.c>
+    # Chrome/Safari can retain a broken HTTP/3 alternative route while Firefox
+    # continues over HTTP/2. Clear that browser cache on every document response.
+    Header always set Alt-Svc "clear" "expr=%{CONTENT_TYPE} =~ m#^text/html#"
     Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" env=ADMIN_PANEL_ROUTE
     Header always set Pragma "no-cache" env=ADMIN_PANEL_ROUTE
     Header always set Expires "0" env=ADMIN_PANEL_ROUTE
@@ -81,7 +84,7 @@ RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
     <FilesMatch "\.(js|mjs)$">
         Header always set Content-Type "application/javascript; charset=utf-8"
         Header always set X-Content-Type-Options nosniff
-        Header always set Cache-Control "public, max-age=31536000"
+        Header always set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
     
     # Assets klasöründeki dosyalar için özel JS kural
@@ -101,7 +104,7 @@ RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
     # CSS dosyaları
     <FilesMatch "\.css$">
         Header always set Content-Type "text/css; charset=utf-8"
-        Header always set Cache-Control "public, max-age=31536000"
+        Header always set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
     
     # Resim dosyaları
