@@ -4,7 +4,7 @@ const RECOVERY_WINDOW_MS = 5 * 60 * 1000;
 export const isBundleLoadError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error ?? "");
 
-  return /chunkloaderror|dynamically imported module|importing a module script failed|failed to fetch dynamically imported module|sayfa dosyası/i.test(
+  return /chunkloaderror|loading chunk|dynamically imported module|importing a module script failed|error loading dynamically imported module|failed to fetch dynamically imported module|unable to preload css|preload css|sayfa dosyası/i.test(
     message,
   );
 };

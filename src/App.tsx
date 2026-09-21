@@ -17,7 +17,7 @@ import AdminRouteGuard from "@/components/AdminRouteGuard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
-import { reloadWithFreshBundle } from "@/utils/bundleRecovery";
+import { isBundleLoadError, reloadWithFreshBundle } from "@/utils/bundleRecovery";
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
@@ -115,9 +115,12 @@ function lazyWithTimeout<T extends ComponentType<unknown>>(
         return await Promise.race([importer(), timeout]);
       } catch (error) {
         lastError = error;
-        reloadWithFreshBundle(error);
-        if (attempt === 0) {
+        const bundleLoadFailed = isBundleLoadError(error);
+        if (bundleLoadFailed) reloadWithFreshBundle(error);
+        if (attempt === 0 && bundleLoadFailed) {
           await new Promise((resolve) => window.setTimeout(resolve, 1_000));
+        } else {
+          break;
         }
       } finally {
         if (timeoutId) window.clearTimeout(timeoutId);
