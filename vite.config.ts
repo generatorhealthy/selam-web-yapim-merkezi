@@ -78,9 +78,6 @@ export default defineConfig(({ mode }) => ({
           ) return 'react-vendor';
           // Supabase in its own chunk
           if (id.includes('node_modules/@supabase/')) return 'supabase';
-          // Keep every Divan panel page in the already-loaded panel bundle.
-          // Card navigation then never waits for a second page file download.
-          if (id.includes('/src/pages/admin/')) return 'admin-panel';
           return undefined;
         },
 
