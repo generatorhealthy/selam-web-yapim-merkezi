@@ -5,6 +5,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import AdminAuth from "@/pages/AdminAuth";
 import AdminDashboard from "./AdminDashboard";
 import { safeLazy } from "@/utils/safeLazy";
+import SuspenseTimeoutFallback from "@/components/SuspenseTimeoutFallback";
 const AccountingDocuments = safeLazy(() => import("./AccountingDocuments"));
 const AdminAIAssistant = safeLazy(() => import("./AdminAIAssistant"));
 const AdminActivityLogs = safeLazy(() => import("./AdminActivityLogs"));
@@ -82,7 +83,7 @@ const PanelPageFallback = () => (
 
 const AdminWorkspace = () => (
   <ErrorBoundary>
-    <Suspense fallback={<PanelPageFallback />}>
+    <Suspense fallback={<SuspenseTimeoutFallback><PanelPageFallback /></SuspenseTimeoutFallback>}>
       <Routes>
         <Route index element={<AdminAuth />} />
         <Route element={<AdminRouteGuard />}>

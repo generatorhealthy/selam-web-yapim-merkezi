@@ -2,6 +2,42 @@ const RECOVERY_KEY = "doktorumol_bundle_recovery";
 const RECOVERY_WINDOW_MS = 5 * 60 * 1000;
 const RELOAD_FALLBACK_MS = 1_500;
 
+interface RecoveryRecord {
+  version: string;
+  recoveredAt: number;
+}
+
+const getBundleVersion = () => {
+  const entryScript = document.querySelector<HTMLScriptElement>('script[type="module"][src]');
+  if (!entryScript?.src) return "unknown";
+
+  try {
+    const pathname = new URL(entryScript.src, window.location.href).pathname;
+    return pathname.split("/").pop() ?? pathname;
+  } catch {
+    return entryScript.src;
+  }
+};
+
+const readRecoveryRecord = (): RecoveryRecord | null => {
+  const rawRecord = window.sessionStorage.getItem(RECOVERY_KEY);
+  if (!rawRecord) return null;
+
+  try {
+    const parsed = JSON.parse(rawRecord) as Partial<RecoveryRecord>;
+    if (typeof parsed.version === "string" && typeof parsed.recoveredAt === "number") {
+      return { version: parsed.version, recoveredAt: parsed.recoveredAt };
+    }
+  } catch {
+    const legacyTimestamp = Number(rawRecord);
+    if (Number.isFinite(legacyTimestamp)) {
+      return { version: "legacy", recoveredAt: legacyTimestamp };
+    }
+  }
+
+  return null;
+};
+
 const clearApplicationCaches = async () => {
   try {
     if ("caches" in window) {
@@ -34,10 +70,17 @@ export const reloadWithFreshBundle = (error?: unknown) => {
   if (error && !isBundleLoadError(error)) return false;
 
   try {
-    const previousRecovery = Number(window.sessionStorage.getItem(RECOVERY_KEY) ?? "0");
-    if (Date.now() - previousRecovery < RECOVERY_WINDOW_MS) return false;
+    const bundleVersion = getBundleVersion();
+    const previousRecovery = readRecoveryRecord();
+    const alreadyRecoveredCurrentVersion =
+      previousRecovery?.version === bundleVersion &&
+      Date.now() - previousRecovery.recoveredAt < RECOVERY_WINDOW_MS;
+    if (alreadyRecoveredCurrentVersion) return false;
 
-    window.sessionStorage.setItem(RECOVERY_KEY, String(Date.now()));
+    window.sessionStorage.setItem(
+      RECOVERY_KEY,
+      JSON.stringify({ version: bundleVersion, recoveredAt: Date.now() } satisfies RecoveryRecord),
+    );
     const freshUrl = new URL(window.location.href);
     freshUrl.searchParams.set("__app_refresh", String(Date.now()));
 
