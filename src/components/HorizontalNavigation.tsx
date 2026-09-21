@@ -74,8 +74,10 @@ export function HorizontalNavigation() {
   };
 
   useEffect(() => {
-    if (!user) {
-      setUserProfile(null);
+    // Yalnızca avatar gösterilen rollerde profil çekilir; diğer rollerde
+    // (admin, staff, muhasebe...) gereksiz sorgu ve re-render oluşmaz.
+    if (!user || (userRole !== 'specialist' && userRole !== 'patient')) {
+      setUserProfile((prev: any) => (prev === null ? prev : null));
       return;
     }
     void fetchUserProfile(user.id);
@@ -85,13 +87,11 @@ export function HorizontalNavigation() {
   const isActive = (path: string) => currentPath === path;
 
   const handleProfileClick = () => {
-    console.log('Profile clicked - isLoggedIn:', isLoggedIn, 'userRole:', userRole, 'authInitialized:', authInitialized, 'isLoading:', isLoading);
-    
     // Auth tam initialize olmamışsa veya loading devam ediyorsa işlem yapma
     if (!authInitialized || isLoading) {
-      console.log('Auth not ready yet, ignoring click');
       return;
     }
+    
     
     if (isLoggedIn && userRole === 'specialist') {
       navigate("/doktor-paneli");
@@ -115,14 +115,6 @@ export function HorizontalNavigation() {
   // Show specialist profile if conditions are met
   const shouldShowSpecialistProfile = authInitialized && !isLoading && isLoggedIn && userRole === 'specialist';
 
-  console.log('Render state:', { 
-    authInitialized, 
-    isLoading, 
-    isLoggedIn, 
-    userRole, 
-    shouldShowSpecialistProfile,
-    userProfile: userProfile?.name 
-  });
 
   const navigationItems = [
     { path: "/", label: "Anasayfa" },
