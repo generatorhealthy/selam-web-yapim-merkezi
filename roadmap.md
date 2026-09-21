@@ -25,4 +25,5 @@
 - [x] Divan paneli ana ekranını parça indirme hatalarından bağımsız, doğrudan açılır hale getir
 - [x] Açık panel sekmesinin yayın sonrası eski sayfa dosyasına takılmasını tam sayfa geçişi ve otomatik sürüm yenilemeyle kaldır
 - [x] Divan paneli kartlarını sayfayı yeniden yüklemeden uygulama içinde doğrudan aç
+- [x] Divan panelini tek seferde yüklenen çalışma alanına ayırarak kartlardaki parça indirme hatalarını kaldır
 - [ ] Eski Akbank ve İyzico görevlerini Supabase sahibi yetkisiyle pasifleştir (mevcut yönetim yetkisi `cron.job` değişikliğini reddediyor)
