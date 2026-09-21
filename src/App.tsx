@@ -108,7 +108,7 @@ function lazyWithTimeout<T extends ComponentType<unknown>>(
         const timeout = new Promise<never>((_, reject) => {
           timeoutId = window.setTimeout(
             () => reject(new Error("Sayfa dosyası zamanında yüklenemedi")),
-            30_000,
+            10_000,
           );
         });
 
@@ -201,7 +201,7 @@ const PageLoader = () => {
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setTimedOut(true), 12_000);
+    const timeoutId = window.setTimeout(() => setTimedOut(true), 8_000);
     return () => window.clearTimeout(timeoutId);
   }, []);
 
