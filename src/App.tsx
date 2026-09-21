@@ -19,6 +19,7 @@ import { isBundleLoadError, reloadWithFreshBundle } from "@/utils/bundleRecovery
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
+import SpecialOfferNew from "./pages/SpecialOfferNew";
 const DokiLogos = lazy(() => import("./pages/DokiLogos"));
 
 // Lazy loaded pages - reduces initial bundle significantly
@@ -66,7 +67,7 @@ const Packages = lazy(() => import("./pages/Packages"));
 const CampaignPackage = lazy(() => import("./pages/CampaignPackage"));
 const CampaignPremiumPackage = lazy(() => import("./pages/CampaignPremiumPackage"));
 const SpecialOffer = lazy(() => import("./pages/SpecialOffer"));
-const SpecialOfferNew = lazy(() => import("./pages/SpecialOfferNew"));
+// Reklam trafiği gelen kampanya sayfası: ayrı dosya beklemesin diye ana pakette
 const Checkout = lazy(() => import("./pages/Checkout"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -137,7 +138,7 @@ const PageLoader = () => {
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setTimedOut(true), 8_000);
+    const timeoutId = window.setTimeout(() => setTimedOut(true), 15_000);
     return () => window.clearTimeout(timeoutId);
   }, []);
 
