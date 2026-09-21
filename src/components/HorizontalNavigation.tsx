@@ -38,8 +38,6 @@ export function HorizontalNavigation() {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      console.log('Fetching profile for user:', userId);
-      
       if (userRole === 'specialist') {
           const { data: specialistProfile } = await supabase
             .from('specialists')
