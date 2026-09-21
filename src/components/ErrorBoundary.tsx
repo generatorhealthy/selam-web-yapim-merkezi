@@ -32,14 +32,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     if (this.state.hasError) {
       if (this.props.fallback) return <>{this.props.fallback}</>;
       return (
-        <div
-          className="min-h-screen grid place-items-center bg-background p-4"
-          style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "16px", background: "#f8fafc" }}
-        >
-          <div
-            className="rounded-lg border border-border bg-card shadow-lg p-6 max-w-md text-center"
-            style={{ maxWidth: "448px", padding: "24px", textAlign: "center", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px" }}
-          >
+        <div className="min-h-screen grid place-items-center bg-background p-4">
+          <div className="rounded-lg border border-border bg-card shadow-lg p-6 max-w-md text-center">
             <h2 className="text-lg font-semibold text-foreground mb-2">Sayfa yüklenirken bir hata oluştu</h2>
             <p className="text-sm text-muted-foreground mb-4">Lütfen sayfayı yenileyin veya biraz sonra tekrar deneyin.</p>
             <Button
