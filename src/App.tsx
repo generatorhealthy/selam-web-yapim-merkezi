@@ -98,8 +98,18 @@ const Career = lazy(() => import("./pages/Career"));
 // Doctor pages
 const DoctorDashboard = lazy(() => import("./pages/doctor/DoctorDashboard"));
 
-// Sayfa geçişlerinde ekranda hiçbir "yükleniyor" uyarısı gösterilmez.
-const PageLoader = () => null;
+// İlk panel dosyası hazırlanırken boş sayfa yerine sabit bir panel iskeleti gösterilir.
+// Kart geçişleri AdminWorkspace içinde statiktir ve bu görünümü tekrar açmaz.
+const PageLoader = () => (
+  <div className="min-h-screen bg-background" aria-label="Sayfa hazırlanıyor">
+    <div className="h-16 border-b border-border bg-card" />
+    <div className="mx-auto grid max-w-7xl gap-5 px-6 py-8 sm:grid-cols-2 lg:grid-cols-4">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div key={index} className="h-40 animate-pulse rounded-lg border border-border bg-muted" />
+      ))}
+    </div>
+  </div>
+);
 
 // Create QueryClient outside of component to prevent re-creation on renders.
 // Aggressive caching = clicks return cached data instantly, refetch happens in background.

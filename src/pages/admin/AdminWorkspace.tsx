@@ -1,78 +1,72 @@
-import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import AdminRouteGuard from "@/components/AdminRouteGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AdminAuth from "@/pages/AdminAuth";
 import AdminDashboard from "./AdminDashboard";
-
-const AccountingDocuments = lazy(() => import("./AccountingDocuments"));
-const AdminAIAssistant = lazy(() => import("./AdminAIAssistant"));
-const AdminActivityLogs = lazy(() => import("./AdminActivityLogs"));
-const Analytics = lazy(() => import("./Analytics"));
-const AppointmentManagement = lazy(() => import("./AppointmentManagement"));
-const BankTransferNotifications = lazy(() => import("./BankTransferNotifications"));
-const BlogManagement = lazy(() => import("./BlogManagement"));
-const BulkEmail = lazy(() => import("./BulkEmail"));
-const CancellationFees = lazy(() => import("./CancellationFees"));
-const CallReports = lazy(() => import("./CallReports"));
-const CareerApplications = lazy(() => import("./CareerApplications"));
-const ClientCalendar = lazy(() => import("./ClientCalendar"));
-const ClientReferrals = lazy(() => import("./ClientReferrals"));
-const ConsentLogs = lazy(() => import("./ConsentLogs"));
-const ContractManagement = lazy(() => import("./ContractManagement"));
-const CustomerManagement = lazy(() => import("./CustomerManagement"));
-const DatabaseBackup = lazy(() => import("./DatabaseBackup"));
-const EmailLogs = lazy(() => import("./EmailLogs"));
-const EmployeeSalaryManagement = lazy(() => import("./EmployeeSalaryManagement"));
-const ImageConverter = lazy(() => import("./ImageConverter"));
-const InstagramPosts = lazy(() => import("./InstagramPosts"));
-const IyzicoPayments = lazy(() => import("./IyzicoPayments"));
-const LegalEvidenceManagement = lazy(() => import("./LegalEvidenceManagement"));
-const LegalProceedings = lazy(() => import("./LegalProceedings"));
-const LogManagement = lazy(() => import("./LogManagement"));
-const MapboxSettings = lazy(() => import("./MapboxSettings"));
-const MetaLeads = lazy(() => import("./MetaLeads"));
-const MobileActivityLogs = lazy(() => import("./MobileActivityLogs"));
-const NewOrder = lazy(() => import("./NewOrder"));
-const OrderManagement = lazy(() => import("./OrderManagement"));
-const PackageManagement = lazy(() => import("./PackageManagement"));
-const PartnerManagement = lazy(() => import("./PartnerManagement"));
-const PaymentManagement = lazy(() => import("./PaymentManagement"));
-const PbxManagement = lazy(() => import("./PbxManagement"));
-const PreInfoFormManagement = lazy(() => import("./PreInfoFormManagement"));
-const ProspectiveRegistrations = lazy(() => import("./ProspectiveRegistrations"));
-const QuickRegister = lazy(() => import("./QuickRegister"));
-const RegistrationAnalytics = lazy(() => import("./RegistrationAnalytics"));
-const Reports = lazy(() => import("./Reports"));
-const ReviewManagement = lazy(() => import("./ReviewManagement"));
-const SEOContentManagement = lazy(() => import("./SEOContentManagement"));
-const SEOPublishedHistory = lazy(() => import("./SEOPublishedHistory"));
-const SitemapManagement = lazy(() => import("./SitemapManagement"));
-const SmsManagement = lazy(() => import("./SmsManagement"));
-const SocialMediaManagement = lazy(() => import("./SocialMediaManagement"));
-const SpecialistAdd = lazy(() => import("./SpecialistAdd"));
-const SpecialistApplications = lazy(() => import("./SpecialistApplications"));
-const SpecialistBlogStatus = lazy(() => import("./SpecialistBlogStatus"));
-const SpecialistEdit = lazy(() => import("./SpecialistEdit"));
-const SpecialistManagement = lazy(() => import("./SpecialistManagement"));
-const StaffAttendance = lazy(() => import("./StaffAttendance"));
-const SuccessStatistics = lazy(() => import("./SuccessStatistics"));
-const SupportTickets = lazy(() => import("./SupportTickets"));
-const TestManagement = lazy(() => import("./TestManagement"));
-const UserCreate = lazy(() => import("./UserCreate"));
-const UserManagement = lazy(() => import("./UserManagement"));
-const UzmanApplications = lazy(() => import("./UzmanApplications"));
-const WhatsappBotManagement = lazy(() => import("./WhatsappBotManagement"));
-const WhatsappBulkSend = lazy(() => import("./WhatsappBulkSend"));
-const WhatsappManagement = lazy(() => import("./WhatsappManagement"));
-
-// Panel kartları arasında geçişte "yükleniyor" ekranı gösterilmez.
-const PanelLoader = () => null;
+import AccountingDocuments from "./AccountingDocuments";
+import AdminAIAssistant from "./AdminAIAssistant";
+import AdminActivityLogs from "./AdminActivityLogs";
+import Analytics from "./Analytics";
+import AppointmentManagement from "./AppointmentManagement";
+import BankTransferNotifications from "./BankTransferNotifications";
+import BlogManagement from "./BlogManagement";
+import BulkEmail from "./BulkEmail";
+import CancellationFees from "./CancellationFees";
+import CallReports from "./CallReports";
+import CareerApplications from "./CareerApplications";
+import ClientCalendar from "./ClientCalendar";
+import ClientReferrals from "./ClientReferrals";
+import ConsentLogs from "./ConsentLogs";
+import ContractManagement from "./ContractManagement";
+import CustomerManagement from "./CustomerManagement";
+import DatabaseBackup from "./DatabaseBackup";
+import EmailLogs from "./EmailLogs";
+import EmployeeSalaryManagement from "./EmployeeSalaryManagement";
+import ImageConverter from "./ImageConverter";
+import InstagramPosts from "./InstagramPosts";
+import IyzicoPayments from "./IyzicoPayments";
+import LegalEvidenceManagement from "./LegalEvidenceManagement";
+import LegalProceedings from "./LegalProceedings";
+import LogManagement from "./LogManagement";
+import MapboxSettings from "./MapboxSettings";
+import MetaLeads from "./MetaLeads";
+import MobileActivityLogs from "./MobileActivityLogs";
+import NewOrder from "./NewOrder";
+import OrderManagement from "./OrderManagement";
+import PackageManagement from "./PackageManagement";
+import PartnerManagement from "./PartnerManagement";
+import PaymentManagement from "./PaymentManagement";
+import PbxManagement from "./PbxManagement";
+import PreInfoFormManagement from "./PreInfoFormManagement";
+import ProspectiveRegistrations from "./ProspectiveRegistrations";
+import QuickRegister from "./QuickRegister";
+import RegistrationAnalytics from "./RegistrationAnalytics";
+import Reports from "./Reports";
+import ReviewManagement from "./ReviewManagement";
+import SEOContentManagement from "./SEOContentManagement";
+import SEOPublishedHistory from "./SEOPublishedHistory";
+import SitemapManagement from "./SitemapManagement";
+import SmsManagement from "./SmsManagement";
+import SocialMediaManagement from "./SocialMediaManagement";
+import SpecialistAdd from "./SpecialistAdd";
+import SpecialistApplications from "./SpecialistApplications";
+import SpecialistBlogStatus from "./SpecialistBlogStatus";
+import SpecialistEdit from "./SpecialistEdit";
+import SpecialistManagement from "./SpecialistManagement";
+import StaffAttendance from "./StaffAttendance";
+import SuccessStatistics from "./SuccessStatistics";
+import SupportTickets from "./SupportTickets";
+import TestManagement from "./TestManagement";
+import UserCreate from "./UserCreate";
+import UserManagement from "./UserManagement";
+import UzmanApplications from "./UzmanApplications";
+import WhatsappBotManagement from "./WhatsappBotManagement";
+import WhatsappBulkSend from "./WhatsappBulkSend";
+import WhatsappManagement from "./WhatsappManagement";
 
 const AdminWorkspace = () => (
   <ErrorBoundary>
-    <Suspense fallback={<PanelLoader />}>
-      <Routes>
+    <Routes>
         <Route index element={<AdminAuth />} />
         <Route element={<AdminRouteGuard />}>
       <Route path="dashboard" element={<AdminDashboard />} />
@@ -137,8 +131,7 @@ const AdminWorkspace = () => (
       <Route path="whatsapp-bulk" element={<WhatsappBulkSend />} />
       <Route path="whatsapp" element={<WhatsappManagement />} />
         </Route>
-      </Routes>
-    </Suspense>
+    </Routes>
   </ErrorBoundary>
 );
 
