@@ -19,6 +19,7 @@ import { isBundleLoadError, reloadWithFreshBundle } from "@/utils/bundleRecovery
 
 // Critical pages - eagerly loaded
 import Index from "./pages/Index";
+import SpecialOfferNew from "./pages/SpecialOfferNew";
 const DokiLogos = lazy(() => import("./pages/DokiLogos"));
 
 // Lazy loaded pages - reduces initial bundle significantly
