@@ -4,21 +4,11 @@ import { reloadWithFreshBundle } from "./bundleRecovery";
 type Loader<T> = () => Promise<{ default: ComponentType<T> } | undefined | null>;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const MODULE_LOAD_TIMEOUT_MS = 8_000;
 
-const loadWithTimeout = <T,>(loader: Loader<T>) => {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(
-      () => reject(new Error("Sayfa modülü yüklenemedi: indirme zaman aşımı")),
-      MODULE_LOAD_TIMEOUT_MS,
-    );
-  });
+// Yavaş/dalgalı mobil bağlantılarda indirme dakikalar sürebilir; bu yüzden
+// süre sınırı YOK. Sadece gerçek ağ/paket hatalarında tekrar deniyoruz.
+const RETRY_DELAYS_MS = [400, 1_200, 3_000];
 
-  return Promise.race([loader(), timeout]).finally(() => {
-    if (timeoutId) clearTimeout(timeoutId);
-  });
-};
 
 const createPageModuleError = (error: unknown) => {
   const pageModuleError = new Error("Sayfa modülü yüklenemedi");
