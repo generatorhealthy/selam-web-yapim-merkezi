@@ -23,7 +23,6 @@ interface RoleState {
 
 const FALLBACK_PROFILE: UserProfile = { role: "user", is_approved: false };
 const CACHE_TTL = 60_000;
-const PROFILE_RETRY_DELAYS = [0, 750, 2_000];
 const MIN_RETRY_INTERVAL = 2_000;
 
 let state: RoleState = {
@@ -139,22 +138,9 @@ const loadRole = async (providedUser?: User | null, force = false) => {
       }
 
       lastAttemptAt = Date.now();
-      let profile: UserProfile | null = null;
-      let lastError: unknown;
-      for (const delay of PROFILE_RETRY_DELAYS) {
-        if (delay) await wait(delay);
-        try {
-          profile = await fetchProfile(user);
-          break;
-        } catch (attemptError) {
-          lastError = attemptError;
-          console.warn("Yetki bilgisi geçici olarak alınamadı, yeniden deneniyor:", attemptError);
-          // Eğer ağ koptuysa retroları iptal et
-          if (typeof navigator !== "undefined" && !navigator.onLine) break;
-        }
-      }
-      
-      if (!profile) throw lastError instanceof Error ? lastError : new Error("Yetki bilgileri alınamadı");
+      // Do not retry this RPC inside the same load. Safari can leave the first
+      // CORS request pending; retries then overlap and amplify the failure.
+      const profile = await fetchProfile(user);
       
       cachedUserId = user.id;
       cachedAt = Date.now();
