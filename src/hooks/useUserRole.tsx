@@ -24,6 +24,7 @@ interface RoleState {
 const FALLBACK_PROFILE: UserProfile = { role: "user", is_approved: false };
 const CACHE_TTL = 60_000;
 const MIN_RETRY_INTERVAL = 2_000;
+const PROFILE_REQUEST_TIMEOUT = 15_000;
 
 let state: RoleState = {
   user: null,
@@ -64,21 +65,29 @@ const getSessionUser = async () => {
 };
 
 const fetchProfile = async (user: User): Promise<UserProfile> => {
-  // The shared Supabase fetch already owns cancellation. Wrapping this in a
-  // shorter Promise timeout leaves the original fetch alive and lets a later
-  // retry overlap it; Safari reports those aborted/overlapping requests as
-  // access-control failures.
-  const { data: panelProfiles, error } = await supabase.rpc("get_my_panel_access");
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), PROFILE_REQUEST_TIMEOUT);
+
+  const { data: panelProfiles, error } = await supabase
+    .rpc("get_my_panel_access")
+    .abortSignal(controller.signal);
+
+  window.clearTimeout(timeoutId);
 
   if (error) throw error;
   const profile = panelProfiles?.[0];
   if (profile) return profile;
 
+  const patientController = new AbortController();
+  const patientTimeoutId = window.setTimeout(() => patientController.abort(), PROFILE_REQUEST_TIMEOUT);
   const { data: patient, error: patientError } = await supabase
     .from("patient_profiles")
     .select("full_name, email")
     .eq("user_id", user.id)
+    .abortSignal(patientController.signal)
     .maybeSingle();
+
+  window.clearTimeout(patientTimeoutId);
 
   if (patientError) throw patientError;
   if (!patient) return FALLBACK_PROFILE;
@@ -193,15 +202,6 @@ const ensureInitialized = () => {
       void loadRole(session.user, event === "USER_UPDATED");
     }, 0);
   });
-
-  // Ağ geri geldiğinde otomatik yenile
-  if (typeof window !== "undefined") {
-    window.addEventListener("online", () => {
-      if (state.error || (!state.userProfile && state.user)) {
-        void loadRole(state.user, true);
-      }
-    });
-  }
 
   void loadRole();
 };
