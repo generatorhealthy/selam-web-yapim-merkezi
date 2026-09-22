@@ -28,14 +28,33 @@ const waitForReachableOrigin = async () => {
   }
 };
 
-const rejectWhenModuleStalls = async (): Promise<never> => {
-  await wait(STALLED_MODULE_CHECK_MS);
-  await waitForReachableOrigin();
-  throw new Error(STALLED_MODULE_ERROR);
-};
-
 const loadWithStallRecovery = async <T,>(loader: Loader<T>) => {
-  return Promise.race([loader(), rejectWhenModuleStalls()]);
+  return new Promise<Awaited<ReturnType<Loader<T>>>>((resolve, reject) => {
+    let settled = false;
+    const stallTimer = window.setTimeout(() => {
+      void (async () => {
+        await waitForReachableOrigin();
+        if (settled) return;
+        settled = true;
+        reject(new Error(STALLED_MODULE_ERROR));
+      })();
+    }, STALLED_MODULE_CHECK_MS);
+
+    void loader().then(
+      (module) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(stallTimer);
+        resolve(module);
+      },
+      (error: unknown) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(stallTimer);
+        reject(error);
+      },
+    );
+  });
 };
 
 /**
