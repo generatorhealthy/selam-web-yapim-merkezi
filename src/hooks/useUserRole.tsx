@@ -57,8 +57,6 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number): Prom
   }
 };
 
-const wait = (timeoutMs: number) => new Promise((resolve) => setTimeout(resolve, timeoutMs));
-
 const getSessionUser = async () => {
   const { data, error } = await withTimeout(supabase.auth.getSession(), 8_000);
   if (error) throw error;
@@ -66,23 +64,21 @@ const getSessionUser = async () => {
 };
 
 const fetchProfile = async (user: User): Promise<UserProfile> => {
-  const { data: panelProfiles, error } = await withTimeout(
-    supabase.rpc("get_my_panel_access"),
-    12_000,
-  );
+  // The shared Supabase fetch already owns cancellation. Wrapping this in a
+  // shorter Promise timeout leaves the original fetch alive and lets a later
+  // retry overlap it; Safari reports those aborted/overlapping requests as
+  // access-control failures.
+  const { data: panelProfiles, error } = await supabase.rpc("get_my_panel_access");
 
   if (error) throw error;
   const profile = panelProfiles?.[0];
   if (profile) return profile;
 
-  const { data: patient, error: patientError } = await withTimeout(
-    supabase
-      .from("patient_profiles")
-      .select("full_name, email")
-      .eq("user_id", user.id)
-      .maybeSingle(),
-    8_000,
-  );
+  const { data: patient, error: patientError } = await supabase
+    .from("patient_profiles")
+    .select("full_name, email")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   if (patientError) throw patientError;
   if (!patient) return FALLBACK_PROFILE;

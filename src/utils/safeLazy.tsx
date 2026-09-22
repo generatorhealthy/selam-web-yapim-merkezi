@@ -4,6 +4,7 @@ import { isApplicationOriginReachable, reloadWithFreshBundle } from "./bundleRec
 type Loader<T> = () => Promise<{ default: ComponentType<T> } | undefined | null>;
 
 const STALLED_MODULE_CHECK_MS = 30_000;
+const OFFLINE_RECHECK_MS = 5_000;
 
 const STALLED_MODULE_ERROR = "Sayfa modülü yüklenemedi: bağlantı yanıt vermiyor";
 
@@ -16,14 +17,21 @@ const createPageModuleError = (error: unknown) => {
   return pageModuleError;
 };
 
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+const waitForReachableOrigin = async () => {
+  while (!(await isApplicationOriginReachable())) {
+    await wait(OFFLINE_RECHECK_MS);
+  }
+};
+
 const loadWithStallRecovery = async <T,>(loader: Loader<T>) => {
   return new Promise<Awaited<ReturnType<Loader<T>>>>((resolve, reject) => {
     let settled = false;
     const stallTimer = window.setTimeout(() => {
       void (async () => {
-        const originReachable = await isApplicationOriginReachable();
+        await waitForReachableOrigin();
         if (settled) return;
-        if (!originReachable) return;
         settled = true;
         reject(new Error(STALLED_MODULE_ERROR));
       })();
