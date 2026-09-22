@@ -194,15 +194,6 @@ const ensureInitialized = () => {
     }, 0);
   });
 
-  // Ağ geri geldiğinde otomatik yenile
-  if (typeof window !== "undefined") {
-    window.addEventListener("online", () => {
-      if (state.error || (!state.userProfile && state.user)) {
-        void loadRole(state.user, true);
-      }
-    });
-  }
-
   void loadRole();
 };
 

@@ -38,3 +38,4 @@
 - [x] Safari'nin askıdaki sekmeyi geri getirirken hatasız sayfayı gereksiz yeniden başlatmasını kaldır
 - [x] Safari'de askıda kalan sayfa dosyasını aynı alan adı erişim kontrolüyle otomatik kurtar
 - [x] Yeni Safari konsol görüntüsündeki devam hatasını aynı kalıcı sayfa-dosyası düzeltmesine dahil et.
+- [x] Eski çalışan paneldeki tek paketli kart açılışını geri getirerek tarayıcıdan bağımsız iskelet donmasını kaldır

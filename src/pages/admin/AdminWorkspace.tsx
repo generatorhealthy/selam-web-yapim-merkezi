@@ -1,90 +1,72 @@
-import { Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import AdminRouteGuard from "@/components/AdminRouteGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AdminAuth from "@/pages/AdminAuth";
 import AdminDashboard from "./AdminDashboard";
-import { safeLazy } from "@/utils/safeLazy";
-import SuspenseTimeoutFallback from "@/components/SuspenseTimeoutFallback";
-const QuickRegister = safeLazy(() => import("./QuickRegister"));
-const AccountingDocuments = safeLazy(() => import("./AccountingDocuments"));
-const AdminAIAssistant = safeLazy(() => import("./AdminAIAssistant"));
-const AdminActivityLogs = safeLazy(() => import("./AdminActivityLogs"));
-const Analytics = safeLazy(() => import("./Analytics"));
-const AppointmentManagement = safeLazy(() => import("./AppointmentManagement"));
-const BankTransferNotifications = safeLazy(() => import("./BankTransferNotifications"));
-const BlogManagement = safeLazy(() => import("./BlogManagement"));
-const BulkEmail = safeLazy(() => import("./BulkEmail"));
-const CancellationFees = safeLazy(() => import("./CancellationFees"));
-const CallReports = safeLazy(() => import("./CallReports"));
-const CareerApplications = safeLazy(() => import("./CareerApplications"));
-const ClientCalendar = safeLazy(() => import("./ClientCalendar"));
-const ClientReferrals = safeLazy(() => import("./ClientReferrals"));
-const ConsentLogs = safeLazy(() => import("./ConsentLogs"));
-const ContractManagement = safeLazy(() => import("./ContractManagement"));
-const CustomerManagement = safeLazy(() => import("./CustomerManagement"));
-const DatabaseBackup = safeLazy(() => import("./DatabaseBackup"));
-const EmailLogs = safeLazy(() => import("./EmailLogs"));
-const EmployeeSalaryManagement = safeLazy(() => import("./EmployeeSalaryManagement"));
-const ImageConverter = safeLazy(() => import("./ImageConverter"));
-const InstagramPosts = safeLazy(() => import("./InstagramPosts"));
-const IyzicoPayments = safeLazy(() => import("./IyzicoPayments"));
-const LegalEvidenceManagement = safeLazy(() => import("./LegalEvidenceManagement"));
-const LegalProceedings = safeLazy(() => import("./LegalProceedings"));
-const LogManagement = safeLazy(() => import("./LogManagement"));
-const MapboxSettings = safeLazy(() => import("./MapboxSettings"));
-const MetaLeads = safeLazy(() => import("./MetaLeads"));
-const MobileActivityLogs = safeLazy(() => import("./MobileActivityLogs"));
-const NewOrder = safeLazy(() => import("./NewOrder"));
-const OrderManagement = safeLazy(() => import("./OrderManagement"));
-const PackageManagement = safeLazy(() => import("./PackageManagement"));
-const PartnerManagement = safeLazy(() => import("./PartnerManagement"));
-const PaymentManagement = safeLazy(() => import("./PaymentManagement"));
-const PbxManagement = safeLazy(() => import("./PbxManagement"));
-const PreInfoFormManagement = safeLazy(() => import("./PreInfoFormManagement"));
-const ProspectiveRegistrations = safeLazy(() => import("./ProspectiveRegistrations"));
-const RegistrationAnalytics = safeLazy(() => import("./RegistrationAnalytics"));
-const Reports = safeLazy(() => import("./Reports"));
-const ReviewManagement = safeLazy(() => import("./ReviewManagement"));
-const SEOContentManagement = safeLazy(() => import("./SEOContentManagement"));
-const SEOPublishedHistory = safeLazy(() => import("./SEOPublishedHistory"));
-const SitemapManagement = safeLazy(() => import("./SitemapManagement"));
-const SmsManagement = safeLazy(() => import("./SmsManagement"));
-const SocialMediaManagement = safeLazy(() => import("./SocialMediaManagement"));
-const SpecialistAdd = safeLazy(() => import("./SpecialistAdd"));
-const SpecialistApplications = safeLazy(() => import("./SpecialistApplications"));
-const SpecialistBlogStatus = safeLazy(() => import("./SpecialistBlogStatus"));
-const SpecialistEdit = safeLazy(() => import("./SpecialistEdit"));
-const SpecialistManagement = safeLazy(() => import("./SpecialistManagement"));
-const StaffAttendance = safeLazy(() => import("./StaffAttendance"));
-const SuccessStatistics = safeLazy(() => import("./SuccessStatistics"));
-const SupportTickets = safeLazy(() => import("./SupportTickets"));
-const TestManagement = safeLazy(() => import("./TestManagement"));
-const UserCreate = safeLazy(() => import("./UserCreate"));
-const UserManagement = safeLazy(() => import("./UserManagement"));
-const UzmanApplications = safeLazy(() => import("./UzmanApplications"));
-const WhatsappBotManagement = safeLazy(() => import("./WhatsappBotManagement"));
-const WhatsappBulkSend = safeLazy(() => import("./WhatsappBulkSend"));
-const WhatsappManagement = safeLazy(() => import("./WhatsappManagement"));
-
-const PanelPageFallback = () => (
-  <div className="min-h-screen bg-background">
-    <div className="h-16 border-b border-border bg-card" />
-    <div className="mx-auto max-w-7xl px-6 py-8">
-      <div className="mb-6 h-24 animate-pulse rounded-lg bg-muted" />
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="h-48 animate-pulse rounded-lg border border-border bg-card" />
-        ))}
-      </div>
-    </div>
-  </div>
-);
+import QuickRegister from "./QuickRegister";
+import AccountingDocuments from "./AccountingDocuments";
+import AdminAIAssistant from "./AdminAIAssistant";
+import AdminActivityLogs from "./AdminActivityLogs";
+import Analytics from "./Analytics";
+import AppointmentManagement from "./AppointmentManagement";
+import BankTransferNotifications from "./BankTransferNotifications";
+import BlogManagement from "./BlogManagement";
+import BulkEmail from "./BulkEmail";
+import CancellationFees from "./CancellationFees";
+import CallReports from "./CallReports";
+import CareerApplications from "./CareerApplications";
+import ClientCalendar from "./ClientCalendar";
+import ClientReferrals from "./ClientReferrals";
+import ConsentLogs from "./ConsentLogs";
+import ContractManagement from "./ContractManagement";
+import CustomerManagement from "./CustomerManagement";
+import DatabaseBackup from "./DatabaseBackup";
+import EmailLogs from "./EmailLogs";
+import EmployeeSalaryManagement from "./EmployeeSalaryManagement";
+import ImageConverter from "./ImageConverter";
+import InstagramPosts from "./InstagramPosts";
+import IyzicoPayments from "./IyzicoPayments";
+import LegalEvidenceManagement from "./LegalEvidenceManagement";
+import LegalProceedings from "./LegalProceedings";
+import LogManagement from "./LogManagement";
+import MapboxSettings from "./MapboxSettings";
+import MetaLeads from "./MetaLeads";
+import MobileActivityLogs from "./MobileActivityLogs";
+import NewOrder from "./NewOrder";
+import OrderManagement from "./OrderManagement";
+import PackageManagement from "./PackageManagement";
+import PartnerManagement from "./PartnerManagement";
+import PaymentManagement from "./PaymentManagement";
+import PbxManagement from "./PbxManagement";
+import PreInfoFormManagement from "./PreInfoFormManagement";
+import ProspectiveRegistrations from "./ProspectiveRegistrations";
+import RegistrationAnalytics from "./RegistrationAnalytics";
+import Reports from "./Reports";
+import ReviewManagement from "./ReviewManagement";
+import SEOContentManagement from "./SEOContentManagement";
+import SEOPublishedHistory from "./SEOPublishedHistory";
+import SitemapManagement from "./SitemapManagement";
+import SmsManagement from "./SmsManagement";
+import SocialMediaManagement from "./SocialMediaManagement";
+import SpecialistAdd from "./SpecialistAdd";
+import SpecialistApplications from "./SpecialistApplications";
+import SpecialistBlogStatus from "./SpecialistBlogStatus";
+import SpecialistEdit from "./SpecialistEdit";
+import SpecialistManagement from "./SpecialistManagement";
+import StaffAttendance from "./StaffAttendance";
+import SuccessStatistics from "./SuccessStatistics";
+import SupportTickets from "./SupportTickets";
+import TestManagement from "./TestManagement";
+import UserCreate from "./UserCreate";
+import UserManagement from "./UserManagement";
+import UzmanApplications from "./UzmanApplications";
+import WhatsappBotManagement from "./WhatsappBotManagement";
+import WhatsappBulkSend from "./WhatsappBulkSend";
+import WhatsappManagement from "./WhatsappManagement";
 
 const AdminWorkspace = () => (
   <ErrorBoundary>
-    <Suspense fallback={<SuspenseTimeoutFallback><PanelPageFallback /></SuspenseTimeoutFallback>}>
-      <Routes>
+    <Routes>
         <Route index element={<AdminAuth />} />
         <Route element={<AdminRouteGuard />}>
       <Route path="dashboard" element={<AdminDashboard />} />
@@ -149,8 +131,7 @@ const AdminWorkspace = () => (
       <Route path="whatsapp-bulk" element={<WhatsappBulkSend />} />
       <Route path="whatsapp" element={<WhatsappManagement />} />
         </Route>
-      </Routes>
-    </Suspense>
+    </Routes>
   </ErrorBoundary>
 );
 
