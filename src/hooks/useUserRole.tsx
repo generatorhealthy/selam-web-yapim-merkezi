@@ -24,6 +24,7 @@ interface RoleState {
 const FALLBACK_PROFILE: UserProfile = { role: "user", is_approved: false };
 const CACHE_TTL = 60_000;
 const PROFILE_RETRY_DELAYS = [0, 750, 2_000];
+const MIN_RETRY_INTERVAL = 2_000;
 
 let state: RoleState = {
   user: null,
@@ -33,6 +34,7 @@ let state: RoleState = {
 };
 let cachedUserId: string | null = null;
 let cachedAt = 0;
+let lastAttemptAt = 0;
 let initialized = false;
 let profileRequest: Promise<void> | null = null;
 const listeners = new Set<() => void>();
@@ -95,9 +97,14 @@ const fetchProfile = async (user: User): Promise<UserProfile> => {
 };
 
 const loadRole = async (providedUser?: User | null, force = false) => {
-  if (profileRequest) return profileRequest;
+  // force=true ise mevcut isteği beklemeden yeni bir tane başlatabiliriz, 
+  // ancak singleton Promise yapısını korumak için önceki bitene kadar beklemek daha güvenlidir.
+  // Burada force=true ise ve bir istek varsa, o isteğin bitmesini bekleyip hemen sonrasında 
+  // yeni bir tane başlatmak yerine, sadece mevcut olanı döndürüyoruz. 
+  // ANCAK: Eğer mevcut istek çok eskiyse (stalled) veya force=true ise kilidi kırıyoruz.
+  if (profileRequest && !force) return profileRequest;
 
-  profileRequest = (async () => {
+  const currentRequest = (async () => {
     if (!state.userProfile) emit({ loading: true, error: null });
 
     try {
@@ -121,6 +128,17 @@ const loadRole = async (providedUser?: User | null, force = false) => {
         return;
       }
 
+      // Hızlı hata döngülerini engelle
+      if (!force && !state.userProfile && state.error && Date.now() - lastAttemptAt < MIN_RETRY_INTERVAL) {
+        return;
+      }
+
+      // Çevrimdışı isek deneme
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        throw new Error("İnternet bağlantısı yok");
+      }
+
+      lastAttemptAt = Date.now();
       let profile: UserProfile | null = null;
       let lastError: unknown;
       for (const delay of PROFILE_RETRY_DELAYS) {
@@ -131,9 +149,13 @@ const loadRole = async (providedUser?: User | null, force = false) => {
         } catch (attemptError) {
           lastError = attemptError;
           console.warn("Yetki bilgisi geçici olarak alınamadı, yeniden deneniyor:", attemptError);
+          // Eğer ağ koptuysa retroları iptal et
+          if (typeof navigator !== "undefined" && !navigator.onLine) break;
         }
       }
+      
       if (!profile) throw lastError instanceof Error ? lastError : new Error("Yetki bilgileri alınamadı");
+      
       cachedUserId = user.id;
       cachedAt = Date.now();
       emit({ user, userProfile: profile, loading: false, error: null });
@@ -150,11 +172,19 @@ const loadRole = async (providedUser?: User | null, force = false) => {
         error: caught instanceof Error ? caught : new Error("Yetki bilgileri alınamadı"),
       });
     }
-  })().finally(() => {
-    profileRequest = null;
-  });
+  })();
 
-  return profileRequest;
+  profileRequest = currentRequest;
+  
+  try {
+    await currentRequest;
+  } finally {
+    if (profileRequest === currentRequest) {
+      profileRequest = null;
+    }
+  }
+
+  return currentRequest;
 };
 
 const ensureInitialized = () => {
@@ -169,8 +199,6 @@ const ensureInitialized = () => {
       return;
     }
 
-    // Supabase çağrısını auth callback tamamlandıktan sonra başlatmak gerekir;
-    // callback içinde sorgu çalıştırmak istemci kilidini bekletebilir.
     window.setTimeout(() => {
       const hasFreshProfile =
         cachedUserId === session.user.id &&
@@ -185,6 +213,15 @@ const ensureInitialized = () => {
       void loadRole(session.user, event === "USER_UPDATED");
     }, 0);
   });
+
+  // Ağ geri geldiğinde otomatik yenile
+  if (typeof window !== "undefined") {
+    window.addEventListener("online", () => {
+      if (state.error || (!state.userProfile && state.user)) {
+        void loadRole(state.user, true);
+      }
+    });
+  }
 
   void loadRole();
 };
