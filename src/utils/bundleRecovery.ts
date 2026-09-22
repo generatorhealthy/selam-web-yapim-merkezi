@@ -1,6 +1,5 @@
 const RECOVERY_KEY = "doktorumol_bundle_recovery";
 const RECOVERY_WINDOW_MS = 5 * 60 * 1000;
-const RELOAD_FALLBACK_MS = 1_500;
 
 interface RecoveryRecord {
   version: string;
@@ -84,16 +83,11 @@ export const reloadWithFreshBundle = (error?: unknown) => {
     const freshUrl = new URL(window.location.href);
     freshUrl.searchParams.set("__app_refresh", String(Date.now()));
 
-    // Cache cleanup APIs can remain pending in Safari. Never let them block the
-    // navigation: the timer guarantees a full reload even in that case.
-    const reloadFallback = window.setTimeout(() => {
-      window.location.reload();
-    }, RELOAD_FALLBACK_MS);
-
-    void clearApplicationCaches().finally(() => {
-      window.clearTimeout(reloadFallback);
-      window.location.replace(freshUrl.toString());
-    });
+    // Chrome/Safari cache cleanup calls can remain pending. Navigate first with
+    // a unique document URL so the browser cannot reuse the stale HTML/module
+    // graph; cleanup is intentionally best-effort and never blocks recovery.
+    void clearApplicationCaches();
+    window.location.replace(freshUrl.toString());
     return true;
   } catch {
     window.location.reload();
@@ -103,5 +97,14 @@ export const reloadWithFreshBundle = (error?: unknown) => {
 
 export const forceFreshBundleReload = () => {
   window.sessionStorage.removeItem(RECOVERY_KEY);
-  return reloadWithFreshBundle();
+  try {
+    const freshUrl = new URL(window.location.href);
+    freshUrl.searchParams.set("__app_refresh", String(Date.now()));
+    void clearApplicationCaches();
+    window.location.replace(freshUrl.toString());
+    return true;
+  } catch {
+    window.location.reload();
+    return true;
+  }
 };
