@@ -29,25 +29,38 @@ const createPageModuleError = (error: unknown) => {
  */
 export function safeLazy<T>(loader: Loader<T>) {
   return lazy(async () => {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    const maxAttempts = RETRY_DELAYS_MS.length + 1;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       try {
-        const mod = await loadWithTimeout(loader);
+        const mod = await loader();
         if (mod && typeof mod === "object" && mod.default) {
           return { default: mod.default };
         }
         throw new Error("Sayfa modülü eksik yüklendi");
       } catch (error) {
-        if (attempt === 0) {
-          await wait(300);
+        const isLastAttempt = attempt === maxAttempts - 1;
+
+        if (!isLastAttempt) {
+          // Bağlantı kopmuşsa geri gelmesini bekle, sayfayı yenileme.
+          if (typeof navigator !== "undefined" && navigator.onLine === false) {
+            await new Promise<void>((resolve) => {
+              window.addEventListener("online", () => resolve(), { once: true });
+            });
+          }
+          await wait(RETRY_DELAYS_MS[attempt]);
           continue;
         }
+
         const pageModuleError = createPageModuleError(error);
         reloadWithFreshBundle(pageModuleError);
         throw pageModuleError;
       }
     }
+
     throw createPageModuleError(undefined);
   });
 }
+
 
 export default safeLazy;
