@@ -1,10 +1,9 @@
 const RECOVERY_KEY = "doktorumol_bundle_recovery";
-const RECOVERY_WINDOW_MS = 5 * 60 * 1000;
 const ORIGIN_PROBE_TIMEOUT_MS = 8_000;
 
 interface RecoveryRecord {
   version: string;
-  recoveredAt: number;
+  path: string;
 }
 
 const getBundleVersion = () => {
@@ -25,14 +24,11 @@ const readRecoveryRecord = (): RecoveryRecord | null => {
 
   try {
     const parsed = JSON.parse(rawRecord) as Partial<RecoveryRecord>;
-    if (typeof parsed.version === "string" && typeof parsed.recoveredAt === "number") {
-      return { version: parsed.version, recoveredAt: parsed.recoveredAt };
+    if (typeof parsed.version === "string" && typeof parsed.path === "string") {
+      return { version: parsed.version, path: parsed.path };
     }
   } catch {
-    const legacyTimestamp = Number(rawRecord);
-    if (Number.isFinite(legacyTimestamp)) {
-      return { version: "legacy", recoveredAt: legacyTimestamp };
-    }
+    // Ignore records written by older recovery implementations.
   }
 
   return null;
@@ -97,15 +93,16 @@ export const reloadWithFreshBundle = (error?: unknown) => {
 
   try {
     const bundleVersion = getBundleVersion();
+    const path = window.location.pathname;
     const previousRecovery = readRecoveryRecord();
     const alreadyRecoveredCurrentVersion =
       previousRecovery?.version === bundleVersion &&
-      Date.now() - previousRecovery.recoveredAt < RECOVERY_WINDOW_MS;
+      previousRecovery.path === path;
     if (alreadyRecoveredCurrentVersion) return false;
 
     window.sessionStorage.setItem(
       RECOVERY_KEY,
-      JSON.stringify({ version: bundleVersion, recoveredAt: Date.now() } satisfies RecoveryRecord),
+      JSON.stringify({ version: bundleVersion, path } satisfies RecoveryRecord),
     );
     const freshUrl = new URL(window.location.href);
     freshUrl.searchParams.set("__app_refresh", String(Date.now()));

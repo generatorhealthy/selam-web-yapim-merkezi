@@ -23,7 +23,6 @@ interface RoleState {
 
 const FALLBACK_PROFILE: UserProfile = { role: "user", is_approved: false };
 const CACHE_TTL = 60_000;
-const PROFILE_RETRY_DELAYS = [0, 750, 2_000];
 const MIN_RETRY_INTERVAL = 2_000;
 
 let state: RoleState = {
@@ -58,8 +57,6 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number): Prom
   }
 };
 
-const wait = (timeoutMs: number) => new Promise((resolve) => setTimeout(resolve, timeoutMs));
-
 const getSessionUser = async () => {
   const { data, error } = await withTimeout(supabase.auth.getSession(), 8_000);
   if (error) throw error;
@@ -67,23 +64,21 @@ const getSessionUser = async () => {
 };
 
 const fetchProfile = async (user: User): Promise<UserProfile> => {
-  const { data: panelProfiles, error } = await withTimeout(
-    supabase.rpc("get_my_panel_access"),
-    12_000,
-  );
+  // The shared Supabase fetch already owns cancellation. Wrapping this in a
+  // shorter Promise timeout leaves the original fetch alive and lets a later
+  // retry overlap it; Safari reports those aborted/overlapping requests as
+  // access-control failures.
+  const { data: panelProfiles, error } = await supabase.rpc("get_my_panel_access");
 
   if (error) throw error;
   const profile = panelProfiles?.[0];
   if (profile) return profile;
 
-  const { data: patient, error: patientError } = await withTimeout(
-    supabase
-      .from("patient_profiles")
-      .select("full_name, email")
-      .eq("user_id", user.id)
-      .maybeSingle(),
-    8_000,
-  );
+  const { data: patient, error: patientError } = await supabase
+    .from("patient_profiles")
+    .select("full_name, email")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   if (patientError) throw patientError;
   if (!patient) return FALLBACK_PROFILE;
@@ -97,12 +92,10 @@ const fetchProfile = async (user: User): Promise<UserProfile> => {
 };
 
 const loadRole = async (providedUser?: User | null, force = false) => {
-  // force=true ise mevcut isteği beklemeden yeni bir tane başlatabiliriz, 
-  // ancak singleton Promise yapısını korumak için önceki bitene kadar beklemek daha güvenlidir.
-  // Burada force=true ise ve bir istek varsa, o isteğin bitmesini bekleyip hemen sonrasında 
-  // yeni bir tane başlatmak yerine, sadece mevcut olanı döndürüyoruz. 
-  // ANCAK: Eğer mevcut istek çok eskiyse (stalled) veya force=true ise kilidi kırıyoruz.
-  if (profileRequest && !force) return profileRequest;
+  // Never overlap permission requests. Safari reports aborted or competing
+  // cross-origin requests as access-control failures; callers share this one
+  // request and may start a fresh one only after it settles.
+  if (profileRequest) return profileRequest;
 
   const currentRequest = (async () => {
     if (!state.userProfile) emit({ loading: true, error: null });
@@ -139,22 +132,9 @@ const loadRole = async (providedUser?: User | null, force = false) => {
       }
 
       lastAttemptAt = Date.now();
-      let profile: UserProfile | null = null;
-      let lastError: unknown;
-      for (const delay of PROFILE_RETRY_DELAYS) {
-        if (delay) await wait(delay);
-        try {
-          profile = await fetchProfile(user);
-          break;
-        } catch (attemptError) {
-          lastError = attemptError;
-          console.warn("Yetki bilgisi geçici olarak alınamadı, yeniden deneniyor:", attemptError);
-          // Eğer ağ koptuysa retroları iptal et
-          if (typeof navigator !== "undefined" && !navigator.onLine) break;
-        }
-      }
-      
-      if (!profile) throw lastError instanceof Error ? lastError : new Error("Yetki bilgileri alınamadı");
+      // Do not retry this RPC inside the same load. Safari can leave the first
+      // CORS request pending; retries then overlap and amplify the failure.
+      const profile = await fetchProfile(user);
       
       cachedUserId = user.id;
       cachedAt = Date.now();

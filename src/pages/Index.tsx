@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
 import AppointmentWizard from "@/components/AppointmentWizard";
 import AppDownloadSheet from "@/components/AppDownloadSheet";
-import { safeLazy } from "@/utils/safeLazy";
-
-// Lazy load below-fold content (reviews, how it works, specialists, footer)
-const IndexBelowFold = safeLazy(() => import("@/components/IndexBelowFold"));
+import IndexBelowFold from "@/components/IndexBelowFold";
 
 const popularSpecialties = [
   { name: "Psikolog", slug: "psikolog" },
@@ -359,15 +356,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Below fold - lazy loaded */}
-      <Suspense fallback={
-        <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="animate-pulse bg-muted rounded-xl" style={{ height: '200px' }}></div>
-          <div className="animate-pulse bg-muted rounded-xl" style={{ height: '300px' }}></div>
-        </div>
-      }>
-        <IndexBelowFold onSearch={handleSearch} />
-      </Suspense>
+      <IndexBelowFold onSearch={handleSearch} />
 
       <AppointmentWizard 
         open={wizardOpen} 
