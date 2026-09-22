@@ -1,5 +1,6 @@
 const RECOVERY_KEY = "doktorumol_bundle_recovery";
 const RECOVERY_WINDOW_MS = 5 * 60 * 1000;
+const ORIGIN_PROBE_TIMEOUT_MS = 8_000;
 
 interface RecoveryRecord {
   version: string;
@@ -54,6 +55,32 @@ const clearApplicationCaches = async () => {
     }
   } catch {
     // A service worker cleanup failure must not prevent the fresh navigation.
+  }
+};
+
+/**
+ * Checks the application origin itself, independently from Supabase and other
+ * third-party requests. A cache-busted HEAD request is enough to distinguish a
+ * genuinely offline browser from Safari's stalled dynamic-module connection.
+ */
+export const isApplicationOriginReachable = async () => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), ORIGIN_PROBE_TIMEOUT_MS);
+
+  try {
+    const probeUrl = new URL("/", window.location.origin);
+    probeUrl.searchParams.set("__connection_check", String(Date.now()));
+    const response = await fetch(probeUrl, {
+      method: "HEAD",
+      cache: "no-store",
+      credentials: "same-origin",
+      signal: controller.signal,
+    });
+    return response.ok || response.type === "opaque";
+  } catch {
+    return false;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 };
 
