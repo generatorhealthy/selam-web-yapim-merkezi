@@ -92,12 +92,10 @@ const fetchProfile = async (user: User): Promise<UserProfile> => {
 };
 
 const loadRole = async (providedUser?: User | null, force = false) => {
-  // force=true ise mevcut isteği beklemeden yeni bir tane başlatabiliriz, 
-  // ancak singleton Promise yapısını korumak için önceki bitene kadar beklemek daha güvenlidir.
-  // Burada force=true ise ve bir istek varsa, o isteğin bitmesini bekleyip hemen sonrasında 
-  // yeni bir tane başlatmak yerine, sadece mevcut olanı döndürüyoruz. 
-  // ANCAK: Eğer mevcut istek çok eskiyse (stalled) veya force=true ise kilidi kırıyoruz.
-  if (profileRequest && !force) return profileRequest;
+  // Never overlap permission requests. Safari reports aborted or competing
+  // cross-origin requests as access-control failures; callers share this one
+  // request and may start a fresh one only after it settles.
+  if (profileRequest) return profileRequest;
 
   const currentRequest = (async () => {
     if (!state.userProfile) emit({ loading: true, error: null });
