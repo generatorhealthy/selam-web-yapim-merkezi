@@ -782,24 +782,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/lefke-tezcan-ile-online-psikolojik-destek</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/by-yildiz-gunel-pozitif-yasam-akademisi-ile-pozitif-destek</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/kadriye-erdogan-butuncul-danismanlik-ve-psikolojik-destek</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/busra-demir-online-aile-ve-psikolojik-destek</loc>
     <lastmod>2025-09-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -832,6 +814,24 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/psk-ozge-larcin-ile-cift-ve-ailelerde-saglikli-iliskiler-kurmak</loc>
     <lastmod>2026-09-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/lefke-tezcan-ile-online-psikolojik-destek</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/by-yildiz-gunel-pozitif-yasam-akademisi-ile-pozitif-destek</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/kadriye-erdogan-butuncul-danismanlik-ve-psikolojik-destek</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
