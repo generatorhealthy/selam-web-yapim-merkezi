@@ -230,7 +230,8 @@
       <div id="boot-recovery" hidden style="min-height:100vh;display:none;place-items:center;padding:24px;box-sizing:border-box;background:#f8fafc;color:#0f172a;text-align:center">
         <div>
           <strong style="display:block;margin-bottom:8px;font-size:18px">Sayfa bağlantısı yenileniyor</strong>
-          <span style="font-size:14px;color:#64748b">Tarayıcı güncel sürüme bağlanıyor.</span>
+          <span style="display:block;margin-bottom:16px;font-size:14px;color:#64748b">Tarayıcı güncel sürüme bağlanıyor.</span>
+          <button type="button" onclick="sessionStorage.removeItem('doktorumol_boot_recovery');location.reload()" style="border:1px solid #cbd5e1;border-radius:8px;background:white;padding:10px 16px;color:#0f172a;cursor:pointer">Tekrar Dene</button>
         </div>
       </div>
     </div>
@@ -244,13 +245,14 @@
         function recover() {
           if (!marker || !marker.isConnected) return;
           var path = location.pathname;
-          var previous = sessionStorage.getItem(key);
+          var previous = null;
+          try { previous = sessionStorage.getItem(key); } catch (_) {}
           if (previous === path) {
             marker.hidden = false;
             marker.style.display = 'grid';
             return;
           }
-          sessionStorage.setItem(key, path);
+          try { sessionStorage.setItem(key, path); } catch (_) {}
           var url = new URL(location.href);
           url.searchParams.set('__boot_refresh', Date.now().toString());
           location.replace(url.toString());

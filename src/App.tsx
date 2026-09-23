@@ -99,7 +99,6 @@ const Career = safeLazy(() => import("./pages/Career"));
 const DoctorDashboard = safeLazy(() => import("./pages/doctor/DoctorDashboard"));
 
 // İlk panel dosyası hazırlanırken boş sayfa yerine sabit bir panel iskeleti gösterilir.
-// Kart geçişleri AdminWorkspace içinde statiktir ve bu görünümü tekrar açmaz.
 const PageLoader = () => (
   <div className="min-h-screen bg-background" aria-label="Sayfa hazırlanıyor">
     <div className="h-16 border-b border-border bg-card" />
