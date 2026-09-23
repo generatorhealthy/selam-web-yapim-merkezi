@@ -16,10 +16,11 @@ import { useNativeApp } from "@/hooks/useNativeApp";
 import ErrorBoundary from "./components/ErrorBoundary";
 import SuspenseTimeoutFallback from "@/components/SuspenseTimeoutFallback";
 
-// Critical pages - eagerly loaded
-import Index from "./pages/Index";
-import SpecialOfferNew from "./pages/SpecialOfferNew";
 import { safeLazy } from "@/utils/safeLazy";
+// Route payloads must not be bundled into the shared startup file. Otherwise
+// opening Divan Paneli also downloads and compiles the full public homepage.
+const Index = safeLazy(() => import("./pages/Index"));
+const SpecialOfferNew = safeLazy(() => import("./pages/SpecialOfferNew"));
 const DokiLogos = safeLazy(() => import("./pages/DokiLogos"));
 const AdminWorkspace = safeLazy(() => import("./pages/admin/AdminWorkspace"));
 
@@ -98,7 +99,6 @@ const Career = safeLazy(() => import("./pages/Career"));
 const DoctorDashboard = safeLazy(() => import("./pages/doctor/DoctorDashboard"));
 
 // İlk panel dosyası hazırlanırken boş sayfa yerine sabit bir panel iskeleti gösterilir.
-// Kart geçişleri AdminWorkspace içinde statiktir ve bu görünümü tekrar açmaz.
 const PageLoader = () => (
   <div className="min-h-screen bg-background" aria-label="Sayfa hazırlanıyor">
     <div className="h-16 border-b border-border bg-card" />
