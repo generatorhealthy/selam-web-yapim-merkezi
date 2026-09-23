@@ -2,6 +2,7 @@
 // send automatic WhatsApp notifications to BOTH the specialist and the client.
 // Idempotent: each transfer is notified only once (tracked in pbx_missed_transfer_notifications).
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
