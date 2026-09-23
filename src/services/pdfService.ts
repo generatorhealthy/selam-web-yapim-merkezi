@@ -354,7 +354,7 @@ export const generatePreInfoWord = async (
     .from('form_contents')
     .select('content')
     .eq('form_type', 'pre_info')
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Form içeriği alınamadı:', error);

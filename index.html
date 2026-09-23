@@ -231,37 +231,26 @@
         <div>
           <strong style="display:block;margin-bottom:8px;font-size:18px">Sayfa bağlantısı yenileniyor</strong>
           <span style="display:block;margin-bottom:16px;font-size:14px;color:#64748b">Tarayıcı güncel sürüme bağlanıyor.</span>
-          <button type="button" onclick="sessionStorage.removeItem('doktorumol_boot_recovery');location.reload()" style="border:1px solid #cbd5e1;border-radius:8px;background:white;padding:10px 16px;color:#0f172a;cursor:pointer">Tekrar Dene</button>
+          <button type="button" onclick="location.reload()" style="border:1px solid #cbd5e1;border-radius:8px;background:white;padding:10px 16px;color:#0f172a;cursor:pointer">Tekrar Dene</button>
         </div>
       </div>
     </div>
 
-    <!-- This runs before the application bundle. It also covers the only case
-         React cannot catch: the entry file itself stalls and leaves a blank page. -->
+    <!-- If the single entry file cannot load, show a controlled retry without
+         entering an automatic reload loop. -->
     <script>
       (function () {
         var marker = document.getElementById('boot-recovery');
-        var key = 'doktorumol_boot_recovery';
-        function recover() {
+        function showRecovery() {
           if (!marker || !marker.isConnected) return;
-          var path = location.pathname;
-          var previous = null;
-          try { previous = sessionStorage.getItem(key); } catch (_) {}
-          if (previous === path) {
-            marker.hidden = false;
-            marker.style.display = 'grid';
-            return;
-          }
-          try { sessionStorage.setItem(key, path); } catch (_) {}
-          var url = new URL(location.href);
-          url.searchParams.set('__boot_refresh', Date.now().toString());
-          location.replace(url.toString());
+          marker.hidden = false;
+          marker.style.display = 'grid';
         }
         window.addEventListener('error', function (event) {
           var target = event.target;
-          if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) recover();
+          if (target && target.tagName === 'SCRIPT') showRecovery();
         }, true);
-        window.setTimeout(recover, 30000);
+        window.setTimeout(showRecovery, 30000);
       })();
     </script>
     
