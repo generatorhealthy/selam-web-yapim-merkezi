@@ -1,3 +1,4 @@
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 // Tarayıcı WebRTC istemcisi için kısa ömürlü OpenAI Realtime client secret üretir.
 // OPENAI_API_KEY asla tarayıcıya gönderilmez; yalnızca "ek_..." kısa ömürlü anahtar döner.
 const corsHeaders = {
@@ -61,6 +62,16 @@ const TOOLS = [
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // SECURITY: only trusted callers may trigger this handler.
+  const authCheck = await verifyAdminOrCron(req);
+  if (!authCheck.ok) {
+    return new Response(JSON.stringify({ error: authCheck.error }), {
+      status: authCheck.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
 
   try {
     const apiKey = Deno.env.get("OPENAI_API_KEY");
