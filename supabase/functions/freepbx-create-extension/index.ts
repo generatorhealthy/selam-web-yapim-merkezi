@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -204,26 +205,14 @@ serve(async (req) => {
   // Server-to-server calls (e.g. from quick-register-specialist) authenticate
   // with the service role key and are allowed without a user session.
   if (action !== "test") {
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const token = authHeader.replace("Bearer ", "").trim();
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const isServiceCall = !!token && token === serviceRoleKey;
-
-    if (!authHeader.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Yetkisiz" }), {
-        status: 401,
+    // Privileged PBX operations (extension create/update, Asterisk restart) require an
+    // approved admin/staff session, or a trusted server-to-server call.
+    const auth = await verifyAdminOrCron(req);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    }
-
-    if (!isServiceCall) {
-      const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
-      if (userErr || !userData?.user) {
-        return new Response(JSON.stringify({ error: "Geçersiz oturum" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
     }
   }
 
