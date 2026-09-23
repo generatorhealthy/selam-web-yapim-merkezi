@@ -1,29 +1,6 @@
 import { Outlet, NavLink } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useMobileActivityTracker } from "@/hooks/useMobileActivityTracker";
-import { reloadWithFreshBundle } from "@/utils/bundleRecovery";
-
-// Map each tab route to its lazy import so we can prefetch on touch/hover.
-const ROUTE_PREFETCH: Record<string, () => Promise<unknown>> = {
-  "/mobile/home": () => import("@/pages/mobile/MobileHome"),
-  "/mobile/search": () => import("@/pages/mobile/MobileSearch"),
-  "/mobile/appointments": () => import("@/pages/mobile/MobileAppointments"),
-  "/mobile/profile": () => import("@/pages/mobile/MobileProfile"),
-  "/mobile/dashboard": () => import("@/pages/mobile/MobileDashboard"),
-  "/mobile/specialist-appointments": () => import("@/pages/mobile/MobileSpecialistAppointments"),
-  "/mobile/specialist-clients": () => import("@/pages/mobile/MobileSpecialistClients"),
-  "/mobile/specialist-profile": () => import("@/pages/mobile/MobileSpecialistProfile"),
-};
-
-const prefetched = new Set<string>();
-const prefetch = (to: string) => {
-  if (prefetched.has(to)) return;
-  prefetched.add(to);
-  ROUTE_PREFETCH[to]?.().catch((error) => {
-    prefetched.delete(to);
-    reloadWithFreshBundle(error);
-  });
-};
 
 // === Filled (solid) icons — premium iOS / referans görsel stili ===
 type IconProps = { active?: boolean; className?: string };
@@ -144,9 +121,6 @@ export const MobileLayout = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                onPointerEnter={() => prefetch(item.to)}
-                onTouchStart={() => prefetch(item.to)}
-                onFocus={() => prefetch(item.to)}
                 aria-label={item.label}
                 className="relative flex items-center justify-center h-12 rounded-full m-pressable transition-all duration-300 ease-out overflow-hidden"
                 style={({ isActive }) => ({
