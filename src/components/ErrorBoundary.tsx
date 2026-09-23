@@ -34,6 +34,11 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render() {
     if (this.state.hasError) {
+      // A missing chunk after a new deploy is recovered silently: the fresh
+      // document is already loading, so never show a broken screen.
+      if (this.state.recoveryStarted) {
+        return <div className="min-h-screen bg-background" aria-hidden="true" />;
+      }
       if (this.props.fallback) return <>{this.props.fallback}</>;
       const isUpdateError = isBundleLoadError(this.state.error);
       return (
