@@ -23,6 +23,8 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
 import { useUserRole } from "@/hooks/useUserRole";
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface Order {
   id: string;
@@ -1439,10 +1441,6 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
 </div>
 `;
 
-      // HTML'yi PDF'e çevir
-      const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
-      
       // Geçici div oluştur
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = distanceSalesContent;

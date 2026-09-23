@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Camera, Check, Loader2, ExternalLink, AlertCircle, User } from "lucide-react";
+import html2canvas from 'html2canvas';
 
 interface CaptureEvidenceDialogProps {
   isOpen: boolean;
@@ -97,9 +98,6 @@ const CaptureEvidenceDialog = ({
     setProgress(10);
 
     try {
-      // Import html2canvas dynamically
-      const html2canvas = (await import('html2canvas')).default;
-      
       setProgress(30);
 
       // Capture the profile preview element

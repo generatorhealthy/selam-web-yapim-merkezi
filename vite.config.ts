@@ -18,9 +18,8 @@ export default defineConfig(({ mode }) => ({
     minify: "esbuild",
     sourcemap: false,
     emptyOutDir: true,
-    // Keep the startup payload small. Inlining every admin/public screen into a
-    // single file makes Safari spend too long downloading and compiling before
-    // React can show its recovery UI.
+    // Keep the application in one stable JavaScript file. This intentionally
+    // trades a larger first download for zero route-chunk requests after deploys.
     cssCodeSplit: true,
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
@@ -32,8 +31,9 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
-        entryFileNames: "assets/[name]-[hash].js",
-        chunkFileNames: "assets/[name]-[hash].js",
+        inlineDynamicImports: true,
+        entryFileNames: "assets/app.js",
+        chunkFileNames: "assets/app.js",
         assetFileNames: "assets/[name]-[hash][extname]",
       },
     },
