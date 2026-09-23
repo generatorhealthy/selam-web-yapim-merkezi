@@ -72,6 +72,42 @@ async function getCustomerFromIyzico(customerReferenceCode: string): Promise<str
   return null;
 }
 
+// SECURITY: the callback body's "success" status can be forged. Before approving an
+// order we ask Iyzico whether the subscription really is active/paid.
+async function isSubscriptionActiveAtIyzico(subscriptionReferenceCode: string): Promise<boolean> {
+  const apiKey = Deno.env.get("IYZICO_API_KEY");
+  const secretKey = Deno.env.get("IYZICO_SECRET_KEY");
+  const baseUrl = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
+
+  if (!apiKey || !secretKey) return false;
+
+  const uriPath = `/v2/subscription/subscriptions/${subscriptionReferenceCode}`;
+  const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath);
+
+  try {
+    const response = await fetch(`${baseUrl}${uriPath}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: authorization,
+        "x-iyzi-rnd": randomKey,
+      },
+    });
+
+    const result = await response.json();
+    console.log("Iyzico subscription verification result:", JSON.stringify(result));
+
+    if (result.status !== "success") return false;
+
+    const subscriptionStatus = (result.data?.subscriptionStatus || "").toUpperCase();
+    return subscriptionStatus === "ACTIVE" || subscriptionStatus === "PENDING";
+  } catch (err) {
+    console.error("Iyzico subscription verification error:", err);
+    return false;
+  }
+}
+
 serve(async (req) => {
   console.log("=== Iyzico Callback Received ===");
   console.log("Method:", req.method);
