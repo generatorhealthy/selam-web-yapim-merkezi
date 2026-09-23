@@ -1,4 +1,6 @@
-// No top-level imports for jspdf/docx - they are dynamically imported to avoid bloating shared chunks
+import { createClient } from '@supabase/supabase-js';
+import jsPDF from 'jspdf';
+import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
 
 interface CustomerData {
   name: string;
@@ -25,8 +27,6 @@ export const generatePreInfoPDF = async (orderId: string) => {
   console.log('🔄 PDF oluşturma başlatıldı, Order ID:', orderId);
   
   try {
-    // Import supabase here to avoid issues
-    const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       'https://irnfwewabogveofwemvg.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs'
@@ -81,9 +81,6 @@ export const generatePreInfoPDF = async (orderId: string) => {
 
     const formContent = formData?.content || 'DOKTORUM OL ÜYELİK SÖZLEŞMESİ';
     console.log('📝 Form içeriği alındı, uzunluk:', formContent.length);
-
-    const jsPDFModule = await import('jspdf');
-    const jsPDF = jsPDFModule.default;
 
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -325,8 +322,6 @@ export const generateDistanceSalesPDF = async (
   _customerType: string,
   _clientIP: string
 ) => {
-  const jsPDFModule = await import('jspdf');
-  const jsPDF = jsPDFModule.default;
   // Basit bir mesafeli satış PDF'i oluşturma fonksiyonu
   const pdf = new jsPDF();
   
@@ -349,10 +344,6 @@ export const generatePreInfoWord = async (
   customerType: string,
   clientIP: string
 ) => {
-  // Dynamic import docx to avoid bundling into shared chunks
-  const { Document, Packer, Paragraph, TextRun, AlignmentType } = await import('docx');
-  // Import supabase here to avoid issues
-  const { createClient } = await import('@supabase/supabase-js');
   const supabase = createClient(
     'https://zqtfqekmtxltaydbxrkv.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxdGZxZWttdHhsdGF5ZGJ4cmt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2NjI2NTcsImV4cCI6MjA1MTIzODY1N30.hs4VbGklGdwZe5KEFrvPOGhGm8BnHk2zfCJRlwFxazM'
@@ -363,7 +354,7 @@ export const generatePreInfoWord = async (
     .from('form_contents')
     .select('content')
     .eq('form_type', 'pre_info')
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Form içeriği alınamadı:', error);

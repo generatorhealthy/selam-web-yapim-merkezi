@@ -7,8 +7,7 @@ on:
 
 concurrency:
   group: hostinger-deploy-main
-  # Never interrupt an FTP publish midway. A partial publish can expose new
-  # index.html while some of its hashed page files are still missing.
+  # Never interrupt an FTP publish midway.
   cancel-in-progress: false
 
 env:
@@ -54,9 +53,8 @@ jobs:
           console.log(`Verified ${refs.length} entry assets before publish.`);
           NODE
 
-      # Hashed files are uploaded first. The document that references them is
-      # uploaded last, so visitors can never receive an index for missing files.
-      - name: Deploy versioned assets
+      # The single application file and styles are uploaded before index.html.
+      - name: Deploy application assets
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}

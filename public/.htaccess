@@ -101,10 +101,17 @@ RewriteRule ^rss\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/gen
         Header set Cache-Control "max-age=31536000, public, immutable"
     </FilesMatch>
     
-    # Vite filenames are content-hashed and safe to cache permanently
-    <FilesMatch "\.(css|js)$">
+    # Hashed styles can be cached permanently.
+    <FilesMatch "\.css$">
         Header set Cache-Control "max-age=31536000, public, immutable"
     </FilesMatch>
+
+    # The application uses one stable filename and is replaced on every release.
+    <Files "app.js">
+        Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header always set Pragma "no-cache"
+        Header always set Expires "0"
+    </Files>
     
     # Don't cache HTML
     # HTML should never be cached aggressively in SPA deployments

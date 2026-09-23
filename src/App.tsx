@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,101 +13,78 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import ErrorBoundary from "./components/ErrorBoundary";
-import SuspenseTimeoutFallback from "@/components/SuspenseTimeoutFallback";
-
-import { safeLazy } from "@/utils/safeLazy";
-// Route payloads must not be bundled into the shared startup file. Otherwise
-// opening Divan Paneli also downloads and compiles the full public homepage.
-const Index = safeLazy(() => import("./pages/Index"));
-const SpecialOfferNew = safeLazy(() => import("./pages/SpecialOfferNew"));
-const DokiLogos = safeLazy(() => import("./pages/DokiLogos"));
-const AdminWorkspace = safeLazy(() => import("./pages/admin/AdminWorkspace"));
-
-// Lazy loaded pages - reduces initial bundle significantly
-const MobileHome = safeLazy(() => import("./pages/mobile/MobileHome"));
-const MobileSearch = safeLazy(() => import("./pages/mobile/MobileSearch"));
-const MobileProfile = safeLazy(() => import("./pages/mobile/MobileProfile"));
-const MobileSpecialistDetail = safeLazy(() => import("./pages/mobile/MobileSpecialistDetail"));
-const MobileBooking = safeLazy(() => import("./pages/mobile/MobileBooking"));
-const MobileAppointments = safeLazy(() => import("./pages/mobile/MobileAppointments"));
-const MobileTests = safeLazy(() => import("./pages/mobile/MobileTests"));
-const MobileTestTaker = safeLazy(() => import("./pages/mobile/MobileTestTaker"));
-const MobileLogin = safeLazy(() => import("./pages/mobile/MobileLogin"));
-const MobileSignup = safeLazy(() => import("./pages/mobile/MobileSignup"));
-const MobileDashboard = safeLazy(() => import("./pages/mobile/MobileDashboard"));
-const MobilePatientDashboard = safeLazy(() => import("./pages/mobile/MobilePatientDashboard"));
-const MobilePatientAppointments = safeLazy(() => import("./pages/mobile/MobilePatientAppointments"));
-const MobilePatientFavorites = safeLazy(() => import("./pages/mobile/MobilePatientFavorites"));
-const MobilePatientProfile = safeLazy(() => import("./pages/mobile/MobilePatientProfile"));
-const MobilePatientTests = safeLazy(() => import("./pages/mobile/MobilePatientTests"));
-const MobileSpecialistAppointments = safeLazy(() => import("./pages/mobile/MobileSpecialistAppointments"));
-const MobileSpecialistNewAppointment = safeLazy(() => import("./pages/mobile/MobileSpecialistNewAppointment"));
-const MobileSpecialistClients = safeLazy(() => import("./pages/mobile/MobileSpecialistClients"));
-const MobileSpecialistProfile = safeLazy(() => import("./pages/mobile/MobileSpecialistProfile"));
-const MobileSpecialistBlog = safeLazy(() => import("./pages/mobile/MobileSpecialistBlog"));
-const MobileSpecialistContracts = safeLazy(() => import("./pages/mobile/MobileSpecialistContracts"));
-const MobileSpecialistSupport = safeLazy(() => import("./pages/mobile/MobileSpecialistSupport"));
-const MobileSpecialistSubscription = safeLazy(() => import("./pages/mobile/MobileSpecialistSubscription"));
-const MobileSpecialistReferrals = safeLazy(() => import("./pages/mobile/MobileSpecialistReferrals"));
-const MobileSpecialistPortfolio = safeLazy(() => import("./pages/mobile/MobileSpecialistPortfolio"));
-const MobileBlogDetail = safeLazy(() => import("./pages/mobile/MobileBlogDetail"));
-const MobileBlog = safeLazy(() => import("./pages/mobile/MobileBlog"));
-const About = safeLazy(() => import("./pages/About"));
-const Contact = safeLazy(() => import("./pages/Contact"));
-const Blog = safeLazy(() => import("./pages/Blog"));
-const BlogDetail = safeLazy(() => import("./pages/BlogDetail"));
-
-const DoctorList = safeLazy(() => import("./pages/DoctorList"));
-const DoctorProfile = safeLazy(() => import("./pages/DoctorProfile"));
-const SpecialistReviewPage = safeLazy(() => import("./pages/SpecialistReviewPage"));
-const BookAppointment = safeLazy(() => import("./pages/BookAppointment"));
-const DanismanlikRandevusuAl = safeLazy(() => import("./pages/DanismanlikRandevusuAl"));
-const RandevuSayfasi = safeLazy(() => import("./pages/RandevuSayfasi"));
-const SpecialtyPage = safeLazy(() => import("./pages/SpecialtyPage"));
-const Packages = safeLazy(() => import("./pages/Packages"));
-const CampaignPackage = safeLazy(() => import("./pages/CampaignPackage"));
-const CampaignPremiumPackage = safeLazy(() => import("./pages/CampaignPremiumPackage"));
-const SpecialOffer = safeLazy(() => import("./pages/SpecialOffer"));
-// Reklam trafiği gelen kampanya sayfası: ayrı dosya beklemesin diye ana pakette
-const Checkout = safeLazy(() => import("./pages/Checkout"));
-const PaymentSuccess = safeLazy(() => import("./pages/PaymentSuccess"));
-const Privacy = safeLazy(() => import("./pages/Privacy"));
-const DisclosureText = safeLazy(() => import("./pages/DisclosureText"));
-const ExplicitConsent = safeLazy(() => import("./pages/ExplicitConsent"));
-const DistanceSalesContract = safeLazy(() => import("./pages/DistanceSalesContract"));
-const VisitorConsultantAgreement = safeLazy(() => import("./pages/VisitorConsultantAgreement"));
-const CommentRules = safeLazy(() => import("./pages/CommentRules"));
-const SSS = safeLazy(() => import("./pages/SSS"));
-const NotFound = safeLazy(() => import("./pages/NotFound"));
-const Landing = safeLazy(() => import("./pages/Landing"));
-const LoginPage = safeLazy(() => import("./pages/LoginPage"));
-const TestInterface = safeLazy(() => import("./components/TestInterface"));
-const TestTaking = safeLazy(() => import("./components/TestTaking"));
-const TestResult = safeLazy(() => import("./pages/TestResult"));
-const SpecialistRegistration = safeLazy(() => import("./pages/SpecialistRegistration"));
-const VoiceAssistant = safeLazy(() => import("./pages/VoiceAssistant"));
-const PatientSignup = safeLazy(() => import("./pages/PatientSignup"));
-const PatientLogin = safeLazy(() => import("./pages/PatientLogin"));
-const PatientDashboard = safeLazy(() => import("./pages/PatientDashboard"));
-const ResetPassword = safeLazy(() => import("./pages/ResetPassword"));
-const PartnerLogin = safeLazy(() => import("./pages/PartnerLogin"));
-const PartnerDashboard = safeLazy(() => import("./pages/partner/PartnerDashboard"));
-const Career = safeLazy(() => import("./pages/Career"));
-
-// Doctor pages
-const DoctorDashboard = safeLazy(() => import("./pages/doctor/DoctorDashboard"));
-
-// İlk panel dosyası hazırlanırken boş sayfa yerine sabit bir panel iskeleti gösterilir.
-const PageLoader = () => (
-  <div className="min-h-screen bg-background" aria-label="Sayfa hazırlanıyor">
-    <div className="h-16 border-b border-border bg-card" />
-    <div className="mx-auto grid max-w-7xl gap-5 px-6 py-8 sm:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 8 }).map((_, index) => (
-        <div key={index} className="h-40 animate-pulse rounded-lg border border-border bg-muted" />
-      ))}
-    </div>
-  </div>
-);
+import Index from "./pages/Index";
+import SpecialOfferNew from "./pages/SpecialOfferNew";
+import DokiLogos from "./pages/DokiLogos";
+import AdminWorkspace from "./pages/admin/AdminWorkspace";
+import MobileHome from "./pages/mobile/MobileHome";
+import MobileSearch from "./pages/mobile/MobileSearch";
+import MobileProfile from "./pages/mobile/MobileProfile";
+import MobileSpecialistDetail from "./pages/mobile/MobileSpecialistDetail";
+import MobileBooking from "./pages/mobile/MobileBooking";
+import MobileAppointments from "./pages/mobile/MobileAppointments";
+import MobileTests from "./pages/mobile/MobileTests";
+import MobileTestTaker from "./pages/mobile/MobileTestTaker";
+import MobileLogin from "./pages/mobile/MobileLogin";
+import MobileSignup from "./pages/mobile/MobileSignup";
+import MobileDashboard from "./pages/mobile/MobileDashboard";
+import MobilePatientDashboard from "./pages/mobile/MobilePatientDashboard";
+import MobilePatientAppointments from "./pages/mobile/MobilePatientAppointments";
+import MobilePatientFavorites from "./pages/mobile/MobilePatientFavorites";
+import MobilePatientProfile from "./pages/mobile/MobilePatientProfile";
+import MobilePatientTests from "./pages/mobile/MobilePatientTests";
+import MobileSpecialistAppointments from "./pages/mobile/MobileSpecialistAppointments";
+import MobileSpecialistNewAppointment from "./pages/mobile/MobileSpecialistNewAppointment";
+import MobileSpecialistClients from "./pages/mobile/MobileSpecialistClients";
+import MobileSpecialistProfile from "./pages/mobile/MobileSpecialistProfile";
+import MobileSpecialistBlog from "./pages/mobile/MobileSpecialistBlog";
+import MobileSpecialistContracts from "./pages/mobile/MobileSpecialistContracts";
+import MobileSpecialistSupport from "./pages/mobile/MobileSpecialistSupport";
+import MobileSpecialistSubscription from "./pages/mobile/MobileSpecialistSubscription";
+import MobileSpecialistReferrals from "./pages/mobile/MobileSpecialistReferrals";
+import MobileSpecialistPortfolio from "./pages/mobile/MobileSpecialistPortfolio";
+import MobileBlogDetail from "./pages/mobile/MobileBlogDetail";
+import MobileBlog from "./pages/mobile/MobileBlog";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Blog from "./pages/Blog";
+import BlogDetail from "./pages/BlogDetail";
+import DoctorList from "./pages/DoctorList";
+import DoctorProfile from "./pages/DoctorProfile";
+import SpecialistReviewPage from "./pages/SpecialistReviewPage";
+import BookAppointment from "./pages/BookAppointment";
+import DanismanlikRandevusuAl from "./pages/DanismanlikRandevusuAl";
+import RandevuSayfasi from "./pages/RandevuSayfasi";
+import SpecialtyPage from "./pages/SpecialtyPage";
+import Packages from "./pages/Packages";
+import CampaignPackage from "./pages/CampaignPackage";
+import CampaignPremiumPackage from "./pages/CampaignPremiumPackage";
+import SpecialOffer from "./pages/SpecialOffer";
+import Checkout from "./pages/Checkout";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import Privacy from "./pages/Privacy";
+import DisclosureText from "./pages/DisclosureText";
+import ExplicitConsent from "./pages/ExplicitConsent";
+import DistanceSalesContract from "./pages/DistanceSalesContract";
+import VisitorConsultantAgreement from "./pages/VisitorConsultantAgreement";
+import CommentRules from "./pages/CommentRules";
+import SSS from "./pages/SSS";
+import NotFound from "./pages/NotFound";
+import Landing from "./pages/Landing";
+import LoginPage from "./pages/LoginPage";
+import TestInterface from "./components/TestInterface";
+import TestTaking from "./components/TestTaking";
+import TestResult from "./pages/TestResult";
+import SpecialistRegistration from "./pages/SpecialistRegistration";
+import VoiceAssistant from "./pages/VoiceAssistant";
+import PatientSignup from "./pages/PatientSignup";
+import PatientLogin from "./pages/PatientLogin";
+import PatientDashboard from "./pages/PatientDashboard";
+import ResetPassword from "./pages/ResetPassword";
+import PartnerLogin from "./pages/PartnerLogin";
+import PartnerDashboard from "./pages/partner/PartnerDashboard";
+import Career from "./pages/Career";
+import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 
 // Create QueryClient outside of component to prevent re-creation on renders.
 // Aggressive caching = clicks return cached data instantly, refetch happens in background.
@@ -147,8 +123,7 @@ const AppContent = () => {
       <CookieConsent />
       <FloatingWhatsAppButton />
       <ErrorBoundary>
-        <Suspense fallback={<SuspenseTimeoutFallback><PageLoader /></SuspenseTimeoutFallback>}>
-          <Routes>
+        <Routes>
           <Route path="/doki-logos" element={<DokiLogos />} />
           {/* Mobile Routes */}
           {isNative && (
@@ -303,8 +278,7 @@ const AppContent = () => {
               <Route path="*" element={<NotFound />} />
             </>
           )}
-          </Routes>
-        </Suspense>
+        </Routes>
       </ErrorBoundary>
     </>
   );

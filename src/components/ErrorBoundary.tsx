@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { forceFreshBundleReload, isBundleLoadError, reloadWithFreshBundle } from "@/utils/bundleRecovery";
+import { forceFreshBundleReload, isBundleLoadError } from "@/utils/bundleRecovery";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -10,35 +10,25 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
-  recoveryStarted: boolean;
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, recoveryStarted: false };
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error, recoveryStarted: false };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error for debugging in production
     console.error('[ErrorBoundary] Caught error in route:', error, errorInfo);
-    if (isBundleLoadError(error)) {
-      const recoveryStarted = reloadWithFreshBundle(error);
-      if (recoveryStarted) this.setState({ recoveryStarted: true });
-    }
   }
 
   render() {
     if (this.state.hasError) {
-      // A missing chunk after a new deploy is recovered silently: the fresh
-      // document is already loading, so never show a broken screen.
-      if (this.state.recoveryStarted) {
-        return <div className="min-h-screen bg-background" aria-hidden="true" />;
-      }
       if (this.props.fallback) return <>{this.props.fallback}</>;
       const isUpdateError = isBundleLoadError(this.state.error);
       return (
@@ -48,16 +38,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               {isUpdateError ? "Yeni bir güncelleme mevcut" : "Sayfa yüklenirken bir hata oluştu"}
             </h2>
             <p className="text-sm text-muted-foreground mb-4">
-              {this.state.recoveryStarted
-                ? "Güncel sürüm otomatik olarak açılıyor."
-                : isUpdateError
+              {isUpdateError
                   ? "Devam etmek için sayfayı güncel sürümle yeniden açın."
                   : "Lütfen sayfayı yenileyin veya biraz sonra tekrar deneyin."}
             </p>
             <Button
               onClick={forceFreshBundleReload}
             >
-              {this.state.recoveryStarted ? "Şimdi Yenile" : "Güncel Sürümü Aç"}
+              {isUpdateError ? "Güncel Sürümü Aç" : "Tekrar Dene"}
             </Button>
           </div>
         </div>

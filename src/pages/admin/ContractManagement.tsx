@@ -28,6 +28,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ContractOrder {
   id: string;
@@ -173,9 +175,6 @@ const ContractManagement = () => {
 
       // Wait for rendering
       await new Promise(resolve => setTimeout(resolve, 500));
-
-      const { default: html2canvas } = await import('html2canvas');
-      const { default: jsPDF } = await import('jspdf');
 
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
