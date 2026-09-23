@@ -65,30 +65,47 @@ const getSessionUser = async () => {
   return data.session?.user ?? null;
 };
 
-const fetchProfile = async (user: User): Promise<UserProfile> => {
+const timedSignal = (timeoutMs: number, parent?: AbortSignal) => {
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), PROFILE_REQUEST_TIMEOUT);
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  const onParentAbort = () => controller.abort();
+
+  if (parent) {
+    if (parent.aborted) controller.abort();
+    else parent.addEventListener("abort", onParentAbort);
+  }
+
+  return {
+    signal: controller.signal,
+    release: () => {
+      window.clearTimeout(timeoutId);
+      parent?.removeEventListener("abort", onParentAbort);
+    },
+  };
+};
+
+const fetchProfile = async (user: User, parentSignal?: AbortSignal): Promise<UserProfile> => {
+  const panel = timedSignal(PROFILE_REQUEST_TIMEOUT, parentSignal);
 
   const { data: panelProfiles, error } = await supabase
     .rpc("get_my_panel_access")
-    .abortSignal(controller.signal);
+    .abortSignal(panel.signal);
 
-  window.clearTimeout(timeoutId);
+  panel.release();
 
   if (error) throw error;
   const profile = panelProfiles?.[0];
   if (profile) return profile;
 
-  const patientController = new AbortController();
-  const patientTimeoutId = window.setTimeout(() => patientController.abort(), PROFILE_REQUEST_TIMEOUT);
+  const patientReq = timedSignal(PROFILE_REQUEST_TIMEOUT, parentSignal);
   const { data: patient, error: patientError } = await supabase
     .from("patient_profiles")
     .select("full_name, email")
     .eq("user_id", user.id)
-    .abortSignal(patientController.signal)
+    .abortSignal(patientReq.signal)
     .maybeSingle();
 
-  window.clearTimeout(patientTimeoutId);
+  patientReq.release();
 
   if (patientError) throw patientError;
   if (!patient) return FALLBACK_PROFILE;
@@ -104,8 +121,17 @@ const fetchProfile = async (user: User): Promise<UserProfile> => {
 const loadRole = async (providedUser?: User | null, force = false) => {
   // Never overlap permission requests. Safari reports aborted or competing
   // cross-origin requests as access-control failures; callers share this one
-  // request and may start a fresh one only after it settles.
-  if (profileRequest) return profileRequest;
+  // request. A forced reload (kullanıcı "Tekrar Dene") cancels the stuck one
+  // first, so the panel can never stay in a permanent loading state.
+  if (profileRequest) {
+    if (!force) return profileRequest;
+    activeAbort?.abort();
+    profileRequest = null;
+  }
+
+  const abortController = new AbortController();
+  activeAbort = abortController;
+
 
   const currentRequest = (async () => {
     if (!state.userProfile) emit({ loading: true, error: null });
