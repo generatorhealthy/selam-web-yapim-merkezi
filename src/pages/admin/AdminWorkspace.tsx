@@ -1,6 +1,5 @@
 import { Route, Routes } from "react-router-dom";
 import AdminRouteGuard from "@/components/AdminRouteGuard";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import AdminAuth from "@/pages/AdminAuth";
 import AdminDashboard from "./AdminDashboard";
 import QuickRegister from "./QuickRegister";
@@ -65,7 +64,6 @@ import WhatsappBulkSend from "./WhatsappBulkSend";
 import WhatsappManagement from "./WhatsappManagement";
 
 const AdminWorkspace = () => (
-  <ErrorBoundary>
     <Routes>
       <Route index element={<AdminAuth />} />
       <Route element={<AdminRouteGuard />}>
@@ -91,7 +89,7 @@ const AdminWorkspace = () => (
       <Route path="reviews" element={<ReviewManagement />} />
       <Route path="payments" element={<PaymentManagement />} />
       <Route path="orders/new" element={<NewOrder />} />
-      <Route path="orders" element={<ErrorBoundary><OrderManagement /></ErrorBoundary>} />
+      <Route path="orders" element={<OrderManagement />} />
       <Route path="banka-havalesi-bildirimleri" element={<BankTransferNotifications />} />
       <Route path="analytics" element={<Analytics />} />
       <Route path="reports" element={<Reports />} />
@@ -132,7 +130,6 @@ const AdminWorkspace = () => (
       <Route path="whatsapp" element={<WhatsappManagement />} />
       </Route>
     </Routes>
-  </ErrorBoundary>
 );
 
 export default AdminWorkspace;

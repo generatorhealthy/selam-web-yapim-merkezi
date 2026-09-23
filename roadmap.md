@@ -42,3 +42,4 @@
 - [x] Yavaş sayfa dosyalarını süreyle kesmeyi kaldır, tüm uygulamayı hata korumasına al ve yayın ana dosyasını en son gönder
 - [x] Divan Paneli kartlarını statik importlarla tek panel paketinde birleştir; kart geçişlerindeki parça dosyası isteklerini kaldır
 - [x] Tüm uygulama yollarını tek, sabit adlı ve önbelleksiz JavaScript paketinde birleştir; otomatik yenileme döngüsünü kaldır
+- [x] Açılış kurtarma ekranını ve uygulama geneli yenileme düğmelerini kaldır; HTML önbelleğini hem belge hem sunucu düzeyinde kapat
