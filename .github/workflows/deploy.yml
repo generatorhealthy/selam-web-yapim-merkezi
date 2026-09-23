@@ -42,6 +42,18 @@ jobs:
           rm -rf .deploy-shell/assets .deploy-shell/index.html
           cp dist/index.html .deploy-index/index.html
 
+      - name: Verify every generated page asset exists
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const html = fs.readFileSync('dist/index.html', 'utf8');
+          const refs = [...html.matchAll(/(?:src|href)="\/?(assets\/[^"]+)"/g)].map((m) => m[1]);
+          const missing = refs.filter((ref) => !fs.existsSync(path.join('dist', ref)));
+          if (missing.length) throw new Error(`Missing release assets: ${missing.join(', ')}`);
+          console.log(`Verified ${refs.length} entry assets before publish.`);
+          NODE
+
       # Hashed files are uploaded first. The document that references them is
       # uploaded last, so visitors can never receive an index for missing files.
       - name: Deploy versioned assets

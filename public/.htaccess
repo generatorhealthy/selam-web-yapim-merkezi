@@ -8,6 +8,7 @@ SetEnvIf Request_URI "^/divan_paneli(?:/|$)" ADMIN_PANEL_ROUTE=1
     # continues over HTTP/2. Clear it on documents and every subresource so a
     # cached JS/CSS response cannot keep Safari pinned to the broken route.
     Header always set Alt-Svc "clear"
+    Header always unset Alt-Svc
     Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" env=ADMIN_PANEL_ROUTE
     Header always set Pragma "no-cache" env=ADMIN_PANEL_ROUTE
     Header always set Expires "0" env=ADMIN_PANEL_ROUTE
