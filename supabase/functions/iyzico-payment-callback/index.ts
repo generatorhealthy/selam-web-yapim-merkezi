@@ -176,6 +176,21 @@ serve(async (req) => {
       const customerRef = body.customerReferenceCode || body.customer_reference_code;
       let customerEmail: string | null = null;
 
+      // The subscription itself must be verified as active at Iyzico; otherwise a forged
+      // "success" body could approve an order that was never paid.
+      const subscriptionRef = body.subscriptionReferenceCode || body.subscription_reference_code;
+      const paymentVerified = subscriptionRef
+        ? await isSubscriptionActiveAtIyzico(subscriptionRef)
+        : false;
+
+      if (!paymentVerified) {
+        console.warn("Callback rejected: payment could not be verified at Iyzico.");
+        return new Response(JSON.stringify({ status: "rejected", reason: "payment_not_verified" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       if (customerRef) {
         console.log("Verifying customer via Iyzico API with customerRef:", customerRef);
         customerEmail = await getCustomerFromIyzico(customerRef);
