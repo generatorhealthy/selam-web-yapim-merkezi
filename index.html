@@ -185,7 +185,23 @@
     }
     </script>
 
+    <!-- Eski tarayıcı önbelleğini temizle: kayıtlı service worker varsa kaldır -->
+    <script>
+      (function () {
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (reg) { reg.unregister(); });
+        }).catch(function () {});
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (keys) {
+            keys.forEach(function (key) { caches.delete(key); });
+          }).catch(function () {});
+        }
+      })();
+    </script>
+
     <!-- Main app script loaded as module -->
+    
     
     <!-- Google tag (gtag.js) - Google Analytics & Ads -->
     <!-- Apple App Store guideline 5.1.2(i): native uygulamada (Capacitor) tracking yükleme -->
