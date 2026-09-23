@@ -782,24 +782,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/busra-demir-online-aile-ve-psikolojik-destek</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psikolog-su-ayhan-bireysel-ve-cift-danismani</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psikolog-gokce-uruk-bireysel-ve-cift-danismani</loc>
-    <lastmod>2025-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/evlilikte-duygusal-tatminin-azalmasinin-nedenleri</loc>
     <lastmod>2025-11-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -832,6 +814,24 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/kadriye-erdogan-butuncul-danismanlik-ve-psikolojik-destek</loc>
     <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/busra-demir-online-aile-ve-psikolojik-destek</loc>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikolog-su-ayhan-bireysel-ve-cift-danismani</loc>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikolog-gokce-uruk-bireysel-ve-cift-danismani</loc>
+    <lastmod>2026-09-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -7580,6 +7580,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/hatice-mutlu-aile-danismani-istanbul</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/deniz-pacin-aile-ve-bireysel-danismanlikta-guvenilir-bir-rehber</loc>
     <lastmod>2026-08-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -9545,6 +9551,12 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/klinik-psikolog/sezi-tuganalp</loc>
+    <lastmod>2026-09-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/aile-danismani/hatice-mutlu</loc>
     <lastmod>2026-09-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
