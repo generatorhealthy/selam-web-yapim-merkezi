@@ -42,25 +42,35 @@ const createPageModuleError = (error: unknown) => {
  * düşürüyor. Burada modülü doğruluyor, bir kez tekrar deniyor ve hâlâ
  * başarısızsa güncel paketle sayfayı yeniliyoruz.
  */
+const RETRY_DELAYS_MS = [400, 1_200];
+
+const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
 export function safeLazy<T>(loader: Loader<T>) {
   return lazy(async () => {
-    try {
-      // Browsers cache a rejected import() for the lifetime of the document.
-      // Calling the same loader repeatedly cannot recover Safari and only
-      // produces overlapping requests, so recover with one fresh document.
-      // A progressing download must never be rejected by an arbitrary timer.
-      // Chrome and Safari can need longer on an unstable connection; only an
-      // actual import rejection is a reliable signal that recovery is needed.
-      const mod = await waitForModule(loader);
-      if (mod && typeof mod === "object" && mod.default) {
-        return { default: mod.default };
+    let lastError: unknown;
+
+    // A progressing download must never be rejected by an arbitrary timer, but
+    // a genuine network/chunk failure is retried twice in the background before
+    // we fall back to a fresh document.
+    for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+      try {
+        const mod = await waitForModule(loader);
+        if (mod && typeof mod === "object" && mod.default) {
+          return { default: mod.default };
+        }
+        throw new Error("Sayfa modülü eksik yüklendi");
+      } catch (error) {
+        lastError = error;
+        const nextDelay = RETRY_DELAYS_MS[attempt];
+        if (nextDelay === undefined) break;
+        await delay(nextDelay);
       }
-      throw new Error("Sayfa modülü eksik yüklendi");
-    } catch (error) {
-      const pageModuleError = createPageModuleError(error);
-      reloadWithFreshBundle(pageModuleError);
-      throw pageModuleError;
     }
+
+    const pageModuleError = createPageModuleError(lastError);
+    reloadWithFreshBundle(pageModuleError);
+    throw pageModuleError;
   });
 }
 
