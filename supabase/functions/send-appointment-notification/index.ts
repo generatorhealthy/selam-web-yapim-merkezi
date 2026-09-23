@@ -165,7 +165,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const {
+    let {
       appointmentId,
       patientName,
       patientEmail,
@@ -180,6 +180,50 @@ const handler = async (req: Request): Promise<Response> => {
     } = payload as AppointmentNotificationRequest;
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // SECURITY: the notification must describe a real appointment and may only be
+    // delivered to the specialist stored on that appointment. Everything that decides
+    // the recipient or the content is re-read from the database, so a caller cannot
+    // send made-up appointment mails to an address of their choosing.
+    const { data: appointmentRow, error: appointmentLookupError } = await supabase
+      .from('appointments')
+      .select('id, specialist_id, patient_name, patient_email, patient_phone, appointment_date, appointment_time, appointment_type, notes')
+      .eq('id', appointmentId)
+      .maybeSingle();
+
+    if (appointmentLookupError || !appointmentRow) {
+      console.error('Appointment not found for notification:', appointmentId, appointmentLookupError);
+      return new Response(
+        JSON.stringify({ error: 'Randevu bulunamadı' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    const { data: specialistRecord } = await supabase
+      .from('specialists')
+      .select('name, email, phone')
+      .eq('id', appointmentRow.specialist_id)
+      .maybeSingle();
+
+    if (!specialistRecord?.email) {
+      console.error('Specialist e-mail missing for appointment:', appointmentId);
+      return new Response(
+        JSON.stringify({ error: 'Uzman e-posta adresi bulunamadı' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    specialistEmail = specialistRecord.email;
+    specialistName = specialistRecord.name ?? specialistName;
+    specialistPhone = specialistRecord.phone ?? specialistPhone;
+    patientName = appointmentRow.patient_name ?? patientName;
+    patientEmail = appointmentRow.patient_email ?? patientEmail;
+    patientPhone = appointmentRow.patient_phone ?? patientPhone;
+    appointmentDate = appointmentRow.appointment_date ?? appointmentDate;
+    appointmentTime = (appointmentRow.appointment_time ?? appointmentTime)?.toString().slice(0, 5);
+    appointmentType = appointmentRow.appointment_type ?? appointmentType;
+    notes = appointmentRow.notes ?? notes;
+
 
     console.log('Appointment notification request received:', {
       appointmentId,
