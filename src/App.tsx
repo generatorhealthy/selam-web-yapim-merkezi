@@ -12,7 +12,6 @@ import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
-import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import SpecialOfferNew from "./pages/SpecialOfferNew";
 import DokiLogos from "./pages/DokiLogos";
@@ -122,7 +121,6 @@ const AppContent = () => {
       <AnalyticsTracker />
       <CookieConsent />
       <FloatingWhatsAppButton />
-      <ErrorBoundary>
         <Routes>
           <Route path="/doki-logos" element={<DokiLogos />} />
           {/* Mobile Routes */}
@@ -169,10 +167,10 @@ const AppContent = () => {
           {/* Native: ödeme & yasal sayfalara erişim (kayıt akışı için gerekli) */}
           {isNative && (
             <>
-              <Route path="/odeme/:packageType" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
-              <Route path="/odeme-sayfasi" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
-              <Route path="/checkout" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
-              <Route path="/checkout/:packageType" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
+              <Route path="/odeme/:packageType" element={<Checkout />} />
+              <Route path="/odeme-sayfasi" element={<Checkout />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/checkout/:packageType" element={<Checkout />} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
@@ -223,10 +221,10 @@ const AppContent = () => {
               <Route path="/indirimli-paket" element={<Navigate to="/ozel-firsat" replace />} />
               <Route path="/bu-aya-ozel" element={<SpecialOffer />} />
               <Route path="/ozel-firsat" element={<SpecialOfferNew />} />
-              <Route path="/odeme/:packageType" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
-              <Route path="/odeme-sayfasi" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
-              <Route path="/checkout" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
-              <Route path="/checkout/:packageType" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
+              <Route path="/odeme/:packageType" element={<Checkout />} />
+              <Route path="/odeme-sayfasi" element={<Checkout />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/checkout/:packageType" element={<Checkout />} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
@@ -279,26 +277,23 @@ const AppContent = () => {
             </>
           )}
         </Routes>
-      </ErrorBoundary>
     </>
   );
 };
 
 function App() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-          </TooltipProvider>
-        </HelmetProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </HelmetProvider>
+    </QueryClientProvider>
   );
 }
 
