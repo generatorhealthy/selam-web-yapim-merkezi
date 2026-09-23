@@ -7,8 +7,9 @@ SetEnvIf Request_URI "^/divan_paneli(?:/|$)" ADMIN_PANEL_ROUTE=1
     # Chrome/Safari can retain a broken HTTP/3 alternative route while Firefox
     # continues over HTTP/2. Clear it on documents and every subresource so a
     # cached JS/CSS response cannot keep Safari pinned to the broken route.
+    # Hostinger's edge adds an HTTP/3 advertisement after Apache processing.
+    # Sending `clear` here is still useful where the origin header wins.
     Header always set Alt-Svc "clear"
-    Header always unset Alt-Svc
     Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" env=ADMIN_PANEL_ROUTE
     Header always set Pragma "no-cache" env=ADMIN_PANEL_ROUTE
     Header always set Expires "0" env=ADMIN_PANEL_ROUTE
