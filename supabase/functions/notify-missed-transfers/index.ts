@@ -2,6 +2,7 @@
 // send automatic WhatsApp notifications to BOTH the specialist and the client.
 // Idempotent: each transfer is notified only once (tracked in pbx_missed_transfer_notifications).
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,6 +30,16 @@ function firstName(name?: string | null): string {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Only the scheduled job (shared cron secret / service role) or an admin/staff
+  // user may start this outbound notification run.
+  const auth = await verifyAdminOrCron(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
