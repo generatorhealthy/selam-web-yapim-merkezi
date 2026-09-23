@@ -120,6 +120,24 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Alıcıyı gerçek bir kayıtla bağla: son 24 saat içinde bu telefonla
+    // oluşturulmuş bir uzman kaydı yoksa mesaj gönderilmez.
+    const last10 = waPhone.slice(-10);
+    const { data: recentSpecialist } = await supabase
+      .from("specialists")
+      .select("id")
+      .ilike("phone", `%${last10}%`)
+      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .limit(1)
+      .maybeSingle();
+
+    if (!recentSpecialist) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Bu numara için yeni bir kayıt bulunamadı" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const waMessage =
       `🎉 *Doktorumol.com.tr'ye Hoş Geldiniz!*\n\n` +
       `Sayın *${name}*,\n\n` +
