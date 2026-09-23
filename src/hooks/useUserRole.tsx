@@ -37,6 +37,7 @@ let cachedAt = 0;
 let lastAttemptAt = 0;
 let initialized = false;
 let profileRequest: Promise<void> | null = null;
+let activeAbort: AbortController | null = null;
 const listeners = new Set<() => void>();
 
 const emit = (next: Partial<RoleState>) => {
