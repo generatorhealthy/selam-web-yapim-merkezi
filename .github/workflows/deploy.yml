@@ -35,36 +35,47 @@ jobs:
         env:
           CI: false
 
-      - name: Deploy to Hostinger
-        id: deploy
-        continue-on-error: true
+      - name: Prepare ordered release
+        run: |
+          mkdir -p .deploy-shell .deploy-index
+          cp -a dist/. .deploy-shell/
+          rm -rf .deploy-shell/assets .deploy-shell/index.html
+          cp dist/index.html .deploy-index/index.html
+
+      # Hashed files are uploaded first. The document that references them is
+      # uploaded last, so visitors can never receive an index for missing files.
+      - name: Deploy versioned assets
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
-          server-dir: /
-          # Use a new manifest for each release. The FTP action otherwise
-          # deletes hashed files from the previous release, breaking Safari
-          # tabs that still reference those valid files.
-          state-name: .ftp-deploy-sync-state-${{ github.run_id }}.json
+          local-dir: ./dist/assets/
+          server-dir: /assets/
+          state-name: .ftp-assets-${{ github.run_id }}.json
           timeout: 120000
           log-level: minimal
 
-      - name: Wait before retry
-        if: steps.deploy.outcome == 'failure'
-        run: sleep 45
-
-      - name: Deploy to Hostinger (retry)
-        if: steps.deploy.outcome == 'failure'
+      - name: Deploy supporting files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
+          local-dir: ./.deploy-shell/
           server-dir: /
-          state-name: .ftp-deploy-sync-state-${{ github.run_id }}.json
+          state-name: .ftp-shell-${{ github.run_id }}.json
+          timeout: 120000
+          log-level: minimal
+
+      - name: Activate release
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./.deploy-index/
+          server-dir: /
+          state-name: .ftp-index-${{ github.run_id }}.json
           timeout: 120000
           log-level: minimal

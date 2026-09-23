@@ -1,13 +1,7 @@
 import { lazy, type ComponentType } from "react";
-import { isApplicationOriginReachable, reloadWithFreshBundle } from "./bundleRecovery";
+import { reloadWithFreshBundle } from "./bundleRecovery";
 
 type Loader<T> = () => Promise<{ default: ComponentType<T> } | undefined | null>;
-
-const STALLED_MODULE_CHECK_MS = 30_000;
-const OFFLINE_RECHECK_MS = 5_000;
-
-const STALLED_MODULE_ERROR = "Sayfa modülü yüklenemedi: bağlantı yanıt vermiyor";
-
 
 const createPageModuleError = (error: unknown) => {
   const pageModuleError = new Error("Sayfa modülü yüklenemedi");
@@ -15,43 +9,6 @@ const createPageModuleError = (error: unknown) => {
     pageModuleError.stack = `${pageModuleError.stack ?? pageModuleError.message}\nCaused by: ${error.stack ?? error.message}`;
   }
   return pageModuleError;
-};
-
-const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
-
-const waitForReachableOrigin = async () => {
-  while (!(await isApplicationOriginReachable())) {
-    await wait(OFFLINE_RECHECK_MS);
-  }
-};
-
-const loadWithStallRecovery = async <T,>(loader: Loader<T>) => {
-  return new Promise<Awaited<ReturnType<Loader<T>>>>((resolve, reject) => {
-    let settled = false;
-    const stallTimer = window.setTimeout(() => {
-      void (async () => {
-        await waitForReachableOrigin();
-        if (settled) return;
-        settled = true;
-        reject(new Error(STALLED_MODULE_ERROR));
-      })();
-    }, STALLED_MODULE_CHECK_MS);
-
-    void loader().then(
-      (module) => {
-        if (settled) return;
-        settled = true;
-        window.clearTimeout(stallTimer);
-        resolve(module);
-      },
-      (error: unknown) => {
-        if (settled) return;
-        settled = true;
-        window.clearTimeout(stallTimer);
-        reject(error);
-      },
-    );
-  });
 };
 
 /**
@@ -69,7 +26,10 @@ export function safeLazy<T>(loader: Loader<T>) {
       // Browsers cache a rejected import() for the lifetime of the document.
       // Calling the same loader repeatedly cannot recover Safari and only
       // produces overlapping requests, so recover with one fresh document.
-      const mod = await loadWithStallRecovery(loader);
+      // A progressing download must never be rejected by an arbitrary timer.
+      // Chrome and Safari can need longer on an unstable connection; only an
+      // actual import rejection is a reliable signal that recovery is needed.
+      const mod = await loader();
       if (mod && typeof mod === "object" && mod.default) {
         return { default: mod.default };
       }
