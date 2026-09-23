@@ -1,3 +1,4 @@
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -66,6 +67,16 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
 
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // SECURITY: only trusted callers may trigger this handler.
+  const authCheck = await verifyAdminOrCron(req);
+  if (!authCheck.ok) {
+    return new Response(JSON.stringify({ error: authCheck.error }), {
+      status: authCheck.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
 
   try {
     const SA_JSON = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");

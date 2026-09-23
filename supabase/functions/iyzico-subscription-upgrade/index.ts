@@ -1,3 +1,4 @@
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -55,6 +56,16 @@ async function iyzicoRequest(method: "GET" | "POST", uriPath: string, body?: unk
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // SECURITY: only trusted callers may trigger this handler.
+  const authCheck = await verifyAdminOrCron(req);
+  if (!authCheck.ok) {
+    return new Response(JSON.stringify({ error: authCheck.error }), {
+      status: authCheck.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
 
   try {
     const {

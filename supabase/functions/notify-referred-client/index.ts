@@ -1,5 +1,6 @@
 // Notify a referred client via SMS + WhatsApp that they were matched with a specialist,
 // including a dedicated review link for that specialist.
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -49,6 +50,16 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // SECURITY: only trusted callers may trigger this handler.
+  const authCheck = await verifyAdminOrCron(req);
+  if (!authCheck.ok) {
+    return new Response(JSON.stringify({ error: authCheck.error }), {
+      status: authCheck.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
 
   try {
     const { specialistId, clientName, clientSurname, clientContact, consultationType } =
