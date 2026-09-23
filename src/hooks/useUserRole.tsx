@@ -170,12 +170,17 @@ const loadRole = async (providedUser?: User | null, force = false) => {
       lastAttemptAt = Date.now();
       // Do not retry this RPC inside the same load. Safari can leave the first
       // CORS request pending; retries then overlap and amplify the failure.
-      const profile = await fetchProfile(user);
-      
+      const profile = await fetchProfile(user, abortController.signal);
+
+      if (abortController.signal.aborted) return;
+
       cachedUserId = user.id;
       cachedAt = Date.now();
       emit({ user, userProfile: profile, loading: false, error: null });
     } catch (caught) {
+      // A newer forced request replaced this one; let that one report state.
+      if (abortController.signal.aborted) return;
+
       console.error("Yetki bilgileri alınamadı:", caught);
 
       if (state.userProfile && state.user && cachedUserId === state.user.id) {
@@ -188,6 +193,7 @@ const loadRole = async (providedUser?: User | null, force = false) => {
         error: caught instanceof Error ? caught : new Error("Yetki bilgileri alınamadı"),
       });
     }
+
   })();
 
   profileRequest = currentRequest;
