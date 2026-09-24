@@ -121,6 +121,7 @@ const AppContent = () => {
       <AnalyticsTracker />
       <CookieConsent />
       <FloatingWhatsAppButton />
+        <ErrorBoundary>
         <Routes>
           <Route path="/doki-logos" element={<DokiLogos />} />
           {/* Mobile Routes */}
