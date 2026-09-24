@@ -106,12 +106,12 @@ RewriteRule ^rss\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/gen
         Header set Cache-Control "max-age=31536000, public, immutable"
     </FilesMatch>
 
-    # The application uses one stable filename and is replaced on every release.
-    <Files "app.js">
-        Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
-        Header always set Pragma "no-cache"
-        Header always set Expires "0"
-    </Files>
+    # Versioned application file (app-<hash>.js): content never changes, so the
+    # browser keeps it and hard refresh does not re-download 4+ MB. Old
+    # versions stay on the server because deploys never delete files.
+    <FilesMatch "^app-[A-Za-z0-9_-]+\.js$">
+        Header always set Cache-Control "max-age=31536000, public, immutable"
+    </FilesMatch>
     
     # Don't cache HTML
     # HTML should never be cached aggressively in SPA deployments
