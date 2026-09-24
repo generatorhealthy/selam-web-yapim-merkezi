@@ -10,6 +10,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import CookieConsent from "@/components/CookieConsent";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import Index from "./pages/Index";
@@ -121,6 +122,7 @@ const AppContent = () => {
       <AnalyticsTracker />
       <CookieConsent />
       <FloatingWhatsAppButton />
+        <ErrorBoundary>
         <Routes>
           <Route path="/doki-logos" element={<DokiLogos />} />
           {/* Mobile Routes */}
@@ -277,6 +279,7 @@ const AppContent = () => {
             </>
           )}
         </Routes>
+        </ErrorBoundary>
     </>
   );
 };

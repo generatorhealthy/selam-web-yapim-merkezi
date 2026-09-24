@@ -122,14 +122,19 @@ Deno.serve(async (req) => {
 
     // Alıcıyı gerçek bir kayıtla bağla: son 24 saat içinde bu telefonla
     // oluşturulmuş bir uzman kaydı yoksa mesaj gönderilmez.
+    // Kayıtlı telefon boşluk/tire içerebilir ("0532 123 45 67"), bu yüzden
+    // son 24 saatin kayıtlarını çekip rakamları normalize ederek karşılaştırıyoruz.
     const last10 = waPhone.slice(-10);
-    const { data: recentSpecialist } = await supabase
+    const { data: recentSpecialists } = await supabase
       .from("specialists")
-      .select("id")
-      .ilike("phone", `%${last10}%`)
+      .select("id, phone")
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .limit(1)
-      .maybeSingle();
+      .limit(200);
+
+    const recentSpecialist = (recentSpecialists || []).find((s: { id: string; phone: string | null }) => {
+      const digits = (s.phone || "").replace(/\D/g, "");
+      return digits.length >= 10 && digits.slice(-10) === last10;
+    });
 
     if (!recentSpecialist) {
       return new Response(
