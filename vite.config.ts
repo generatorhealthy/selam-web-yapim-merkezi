@@ -32,8 +32,8 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         inlineDynamicImports: true,
-        entryFileNames: "assets/app.js",
-        chunkFileNames: "assets/app.js",
+        entryFileNames: "assets/app-[hash].js",
+        chunkFileNames: "assets/app-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]",
       },
     },
