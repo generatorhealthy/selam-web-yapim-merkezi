@@ -244,6 +244,7 @@ RewriteRule ^([^/]+)/?$ /blog/$1 [R=301,L]
 
 # Handle React Router (catch all) - En sonda olmalı
 # Ön-render edilmiş blog sayfaları (Google için tam içerik)
+RewriteCond %{THE_REQUEST} \s/blog\.html
 RewriteRule ^blog\.html$ /blog [R=301,L]
 RewriteCond %{THE_REQUEST} \s/blog/[^/\s]+\.html
 RewriteRule ^blog/([A-Za-z0-9_-]+)\.html$ /blog/$1 [R=301,L]
