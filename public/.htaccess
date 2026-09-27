@@ -243,6 +243,15 @@ RewriteRule ^([^/]+)/?$ /blog/$1 [R=301,L]
 </IfModule>
 
 # Handle React Router (catch all) - En sonda olmalı
+# Ön-render edilmiş blog sayfaları (Google için tam içerik)
+RewriteRule ^blog\.html$ /blog [R=301,L]
+RewriteCond %{THE_REQUEST} \s/blog/[^/\s]+\.html
+RewriteRule ^blog/([A-Za-z0-9_-]+)\.html$ /blog/$1 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/blog.html -f
+RewriteRule ^blog/?$ /blog.html [L]
+RewriteCond %{DOCUMENT_ROOT}/blog/$1.html -f
+RewriteRule ^blog/([A-Za-z0-9_-]+)/?$ /blog/$1.html [L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/assets/
