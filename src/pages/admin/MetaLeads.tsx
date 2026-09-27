@@ -152,12 +152,14 @@ const MetaLeads = () => {
   const [bulkSmsLoading, setBulkSmsLoading] = useState(false);
 
   const sendReapplyBulkSms = async () => {
-    const targetStatus = statusFilter === "no_answer" ? "no_answer" : "wrong";
-    const label = targetStatus === "no_answer" ? "Açmayanlar" : "Yanlış Ulaşanlar";
+    const targetStatus = statusFilter === "no_answer" ? "no_answer" : statusFilter === "transferred" ? "transferred" : "wrong";
+    const label = targetStatus === "no_answer" ? "Açmayanlar" : targetStatus === "transferred" ? "Aktarıldı" : "Yanlış Ulaşanlar";
     const count = leads.filter((l) => l.status === targetStatus).length;
     const confirmed = window.confirm(
       `${count} adet "${label}" kaydına SMS gönderilecek.\n\n` +
-      `Mesaj: /danismanlik-randevusu-al linki üzerinden tekrar başvuru davetiyesi.\n\n` +
+      (targetStatus === "transferred"
+        ? `Mesaj: Daha önce uzmana yönlendirilen kişilere, görüşme gerçekleşmediyse /danismanlik-randevusu-al linki üzerinden tekrar başvuru davetiyesi.\n\n`
+        : `Mesaj: /danismanlik-randevusu-al linki üzerinden tekrar başvuru davetiyesi.\n\n`) +
       `Devam edilsin mi?`
     );
     if (!confirmed) return;
@@ -358,7 +360,7 @@ const MetaLeads = () => {
               <PhoneForwarded className={`h-4 w-4 mr-2 ${planLoading ? "animate-pulse" : ""}`} />
               {planLoading ? "Hesaplanıyor..." : "Test Yönlendirme Planı"}
             </Button>
-            {(statusFilter === "wrong" || statusFilter === "no_answer") && (
+            {(statusFilter === "wrong" || statusFilter === "no_answer" || statusFilter === "transferred") && (
               <Button
                 onClick={sendReapplyBulkSms}
                 disabled={bulkSmsLoading}

@@ -12,9 +12,21 @@ const corsHeaders = {
 };
 
 // GSM-7 friendly (no Turkish accents) so datacoding=0 keeps 1 SMS per message where possible.
-function buildMessage(firstName: string): string {
+function buildMessage(firstName: string, status: string): string {
   const nm = (firstName || "").trim().split(/\s+/)[0] || "";
   const hi = nm ? `Sayin ${nm},` : "Merhaba,";
+  if (status === "transferred") {
+    return `${hi}
+
+Doktorumol.com.tr olarak sizi daha once bir uzmanimiza yonlendirmistik.
+
+Gorusmenizi gerceklestiremediyseniz veya desteginizi yenilemek isterseniz, asagidaki formu doldurarak tekrar basvurabilirsiniz. Ekibimiz sizi ihtiyaciniza en uygun uzmana yeniden yonlendirecektir.
+
+Basvuru Formu:
+https://doktorumol.com.tr/danismanlik-randevusu-al
+
+Saglikli gunler dileriz.`;
+  }
   return `${hi}
 
 Doktorumol.com.tr olarak sizlerle daha once gorusme saglamistik.
@@ -109,7 +121,7 @@ serve(async (req) => {
         if (b && typeof b.status === "string") bodyStatus = b.status;
       }
     } catch { /* ignore */ }
-    const ALLOWED_STATUSES = new Set(["wrong", "no_answer"]);
+    const ALLOWED_STATUSES = new Set(["wrong", "no_answer", "transferred"]);
     const targetStatus = bodyStatus && ALLOWED_STATUSES.has(bodyStatus) ? bodyStatus : "wrong";
 
     const supabase = createClient(
@@ -173,7 +185,7 @@ serve(async (req) => {
           skippedCount: skipped.length,
           sample: recipients.slice(0, 3).map((r) => ({
             phone: r.phone,
-            preview: toGsm7(buildMessage(r.name)),
+            preview: toGsm7(buildMessage(r.name, targetStatus)),
           })),
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -202,7 +214,7 @@ serve(async (req) => {
         send_at: "",
         datacoding_lock: "0",
         messages: chunk.map((r) => ({
-          msg: toGsm7(buildMessage(r.name)),
+          msg: toGsm7(buildMessage(r.name, targetStatus)),
           dest: r.phone,
         })),
       };
