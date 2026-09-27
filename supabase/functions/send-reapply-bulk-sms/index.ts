@@ -121,7 +121,7 @@ serve(async (req) => {
         if (b && typeof b.status === "string") bodyStatus = b.status;
       }
     } catch { /* ignore */ }
-    const ALLOWED_STATUSES = new Set(["wrong", "no_answer"]);
+    const ALLOWED_STATUSES = new Set(["wrong", "no_answer", "transferred"]);
     const targetStatus = bodyStatus && ALLOWED_STATUSES.has(bodyStatus) ? bodyStatus : "wrong";
 
     const supabase = createClient(
