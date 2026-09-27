@@ -1,0 +1,1 @@
+- Blog SEO: scripts/prerender-blog.mjs (postbuild) writes dist/blog/<slug>.html + dist/blog.html with per-post meta and full text; .htaccess serves them for /blog/<slug> — crawlers need real HTML on this SPA.
