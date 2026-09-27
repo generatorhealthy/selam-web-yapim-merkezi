@@ -12,9 +12,21 @@ const corsHeaders = {
 };
 
 // GSM-7 friendly (no Turkish accents) so datacoding=0 keeps 1 SMS per message where possible.
-function buildMessage(firstName: string): string {
+function buildMessage(firstName: string, status: string): string {
   const nm = (firstName || "").trim().split(/\s+/)[0] || "";
   const hi = nm ? `Sayin ${nm},` : "Merhaba,";
+  if (status === "transferred") {
+    return `${hi}
+
+Doktorumol.com.tr olarak sizi daha once bir uzmanimiza yonlendirmistik.
+
+Gorusmenizi gerceklestiremediyseniz veya desteginizi yenilemek isterseniz, asagidaki formu doldurarak tekrar basvurabilirsiniz. Ekibimiz sizi ihtiyaciniza en uygun uzmana yeniden yonlendirecektir.
+
+Basvuru Formu:
+https://doktorumol.com.tr/danismanlik-randevusu-al
+
+Saglikli gunler dileriz.`;
+  }
   return `${hi}
 
 Doktorumol.com.tr olarak sizlerle daha once gorusme saglamistik.
