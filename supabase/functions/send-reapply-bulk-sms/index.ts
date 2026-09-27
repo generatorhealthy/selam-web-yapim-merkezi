@@ -185,7 +185,7 @@ serve(async (req) => {
           skippedCount: skipped.length,
           sample: recipients.slice(0, 3).map((r) => ({
             phone: r.phone,
-            preview: toGsm7(buildMessage(r.name)),
+            preview: toGsm7(buildMessage(r.name, targetStatus)),
           })),
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -214,7 +214,7 @@ serve(async (req) => {
         send_at: "",
         datacoding_lock: "0",
         messages: chunk.map((r) => ({
-          msg: toGsm7(buildMessage(r.name)),
+          msg: toGsm7(buildMessage(r.name, targetStatus)),
           dest: r.phone,
         })),
       };
