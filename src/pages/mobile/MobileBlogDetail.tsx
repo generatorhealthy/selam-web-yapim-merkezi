@@ -96,7 +96,7 @@ export default function MobileBlogDetail() {
 
   const onShare = async () => {
     if (!blog) return;
-    const url = window.location.href;
+    const url = `https://doktorumol.com.tr/blog/${blog.slug || slug}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: blog.title, text: blog.excerpt || "", url });
