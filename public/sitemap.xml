@@ -890,24 +890,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/sukran-kocas-ile-aile-ve-iliski-danismanliginda-25-yillik-deneyim</loc>
-    <lastmod>2025-10-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psikolog-zeynep-yildirim-ile-danismanlik-surecinde-guven-ve-deneyim</loc>
-    <lastmod>2025-10-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/rektal-spekulum-nedir-ne-ise-yarar</loc>
-    <lastmod>2025-10-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/cocuk-gastroenterolojisi-hangi-tahlilleri-yapar</loc>
     <lastmod>2025-10-02</lastmod>
     <changefreq>weekly</changefreq>
@@ -934,6 +916,24 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/sude-akyuz-butuncul-yaklasimla-psikolojik-destek</loc>
     <lastmod>2026-09-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/sukran-kocas-ile-aile-ve-iliski-danismanliginda-25-yillik-deneyim</loc>
+    <lastmod>2026-09-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikolog-zeynep-yildirim-ile-danismanlik-surecinde-guven-ve-deneyim</loc>
+    <lastmod>2026-09-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/rektal-spekulum-nedir-ne-ise-yarar</loc>
+    <lastmod>2026-09-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -9700,6 +9700,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/aile-danismani/dilan-miray-yilmaz</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/psikolog/melisa-sude-kav</loc>
     <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
@@ -9756,12 +9762,6 @@
   <url>
     <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-nermin-ibis</loc>
     <lastmod>2026-04-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/aile-danismani/dilan-miray-yilmaz</loc>
-    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
