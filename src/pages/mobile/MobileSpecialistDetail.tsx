@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getCachedPublicSpecialists, setCachedPublicSpecialists } from "@/lib/mobileSpecialistsCache";
 import WhatsAppContactDialog from "@/components/WhatsAppContactDialog";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 
 interface Specialist {
   id: string;
@@ -607,7 +608,7 @@ export default function MobileSpecialistDetail() {
         onOpenChange={setWaOpen}
         specialistName={specialist.name}
         specialistSpecialty={specialist.specialty}
-        specialistUrl={typeof window !== "undefined" ? window.location.href : ""}
+        specialistUrl={(specialist as any).slug ? `https://doktorumol.com.tr/${createSpecialtySlug(specialist.specialty || "")}/${(specialist as any).slug}` : "https://doktorumol.com.tr/uzmanlar"}
       />
     </div>
   );
