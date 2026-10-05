@@ -14,7 +14,7 @@ const BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
 async function iyzicoRequest(method: "GET" | "POST", uriPath: string, body?: unknown) {
   const jsonString = body ? JSON.stringify(body) : "";
   const randomString = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
-  const dataToEncrypt = randomString + uriPath + jsonString;
+  const dataToEncrypt = randomString + uriPath.split("?")[0] + jsonString;
 
   const encoder = new TextEncoder();
   const cryptoKey = await crypto.subtle.importKey(
@@ -133,7 +133,7 @@ serve(async (req) => {
     // 3) Aynı fiyatta plan var mı? Yoksa yeni plan oluştur
     const plansList = await iyzicoRequest(
       "GET",
-      `/v2/subscription/products/${productRef}?page=1&count=100`,
+      `/v2/subscription/products/${productRef}/pricing-plans?page=1&count=100`,
     );
     const existingPlans: any[] =
       plansList?.data?.pricingPlans?.items || plansList?.data?.pricingPlans || [];
