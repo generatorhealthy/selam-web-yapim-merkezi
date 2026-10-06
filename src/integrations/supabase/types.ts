@@ -137,6 +137,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_ad_recommendations: {
+        Row: {
+          campaign_id: string | null
+          campaign_name: string | null
+          confidence: string
+          created_at: string
+          created_by: string | null
+          decision: string
+          id: string
+          metrics: Json
+          period_days: number
+          reason: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          campaign_name?: string | null
+          confidence: string
+          created_at?: string
+          created_by?: string | null
+          decision: string
+          id?: string
+          metrics?: Json
+          period_days: number
+          reason: string
+        }
+        Update: {
+          campaign_id?: string | null
+          campaign_name?: string | null
+          confidence?: string
+          created_at?: string
+          created_by?: string | null
+          decision?: string
+          id?: string
+          metrics?: Json
+          period_days?: number
+          reason?: string
+        }
+        Relationships: []
+      }
       ai_call_queue: {
         Row: {
           attempt_no: number
@@ -4312,6 +4351,78 @@ export type Database = {
           },
         ]
       }
+      meta_daily_metrics: {
+        Row: {
+          ad_id: string
+          ad_name: string | null
+          adset_id: string | null
+          adset_name: string | null
+          campaign_id: string | null
+          campaign_name: string | null
+          clicks: number
+          date: string
+          impressions: number
+          meta_leads: number
+          spend: number
+          synced_at: string
+        }
+        Insert: {
+          ad_id: string
+          ad_name?: string | null
+          adset_id?: string | null
+          adset_name?: string | null
+          campaign_id?: string | null
+          campaign_name?: string | null
+          clicks?: number
+          date: string
+          impressions?: number
+          meta_leads?: number
+          spend?: number
+          synced_at?: string
+        }
+        Update: {
+          ad_id?: string
+          ad_name?: string | null
+          adset_id?: string | null
+          adset_name?: string | null
+          campaign_id?: string | null
+          campaign_name?: string | null
+          clicks?: number
+          date?: string
+          impressions?: number
+          meta_leads?: number
+          spend?: number
+          synced_at?: string
+        }
+        Relationships: []
+      }
+      meta_purchase_reports: {
+        Row: {
+          amount: number
+          event_id: string
+          order_id: string
+          response: string | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          event_id: string
+          order_id: string
+          response?: string | null
+          sent_at?: string
+          status: string
+        }
+        Update: {
+          amount?: number
+          event_id?: string
+          order_id?: string
+          response?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       mobile_activity_logs: {
         Row: {
           action_type: string
@@ -6863,6 +6974,22 @@ export type Database = {
       extract_first_int: { Args: { p_text: string }; Returns: number }
       generate_specialist_slug: { Args: { p_name: string }; Returns: string }
       generate_unique_referral_code: { Args: never; Returns: string }
+      get_ad_performance: {
+        Args: { p_days?: number }
+        Returns: {
+          campaign_id: string
+          campaign_name: string
+          checkouts: number
+          clicks: number
+          impressions: number
+          leads: number
+          meta_leads: number
+          paid: number
+          registrations: number
+          revenue: number
+          spend: number
+        }[]
+      }
       get_current_user_role: { Args: never; Returns: string }
       get_default_time_slots: { Args: never; Returns: Json }
       get_incomplete_registrations: {
