@@ -53,6 +53,57 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_intel_settings: {
+        Row: {
+          ad_account_id: string | null
+          ad_account_name: string | null
+          connection_source: string | null
+          id: number
+          last_error: string | null
+          last_sync_at: string | null
+          last_sync_status: string | null
+          min_days_active: number
+          min_leads_for_decision: number
+          min_purchases_for_scale: number
+          min_spend_for_pause: number
+          qualified_threshold: number
+          target_cac: number
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id?: string | null
+          ad_account_name?: string | null
+          connection_source?: string | null
+          id?: number
+          last_error?: string | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          min_days_active?: number
+          min_leads_for_decision?: number
+          min_purchases_for_scale?: number
+          min_spend_for_pause?: number
+          qualified_threshold?: number
+          target_cac?: number
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string | null
+          ad_account_name?: string | null
+          connection_source?: string | null
+          id?: number
+          last_error?: string | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          min_days_active?: number
+          min_leads_for_decision?: number
+          min_purchases_for_scale?: number
+          min_spend_for_pause?: number
+          qualified_threshold?: number
+          target_cac?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_activity_logs: {
         Row: {
           action_type: string
@@ -145,7 +196,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           decision: string
+          entity_id: string | null
+          entity_name: string | null
           id: string
+          level: string
           metrics: Json
           period_days: number
           reason: string
@@ -157,7 +211,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           decision: string
+          entity_id?: string | null
+          entity_name?: string | null
           id?: string
+          level?: string
           metrics?: Json
           period_days: number
           reason: string
@@ -169,7 +226,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           decision?: string
+          entity_id?: string | null
+          entity_name?: string | null
           id?: string
+          level?: string
           metrics?: Json
           period_days?: number
           reason?: string
@@ -345,6 +405,7 @@ export type Database = {
           fbc: string | null
           fbp: string | null
           id: string
+          is_test: boolean
           meta_ad_id: string | null
           meta_adset_id: string | null
           meta_campaign_id: string | null
@@ -362,6 +423,7 @@ export type Database = {
           fbc?: string | null
           fbp?: string | null
           id?: string
+          is_test?: boolean
           meta_ad_id?: string | null
           meta_adset_id?: string | null
           meta_campaign_id?: string | null
@@ -379,6 +441,7 @@ export type Database = {
           fbc?: string | null
           fbp?: string | null
           id?: string
+          is_test?: boolean
           meta_ad_id?: string | null
           meta_adset_id?: string | null
           meta_campaign_id?: string | null
@@ -4044,6 +4107,7 @@ export type Database = {
           first_touch: Json
           first_visit_at: string
           id: string
+          is_test: boolean
           last_touch: Json
           last_visit_at: string
           user_id: string | null
@@ -4054,6 +4118,7 @@ export type Database = {
           first_touch?: Json
           first_visit_at?: string
           id?: string
+          is_test?: boolean
           last_touch?: Json
           last_visit_at?: string
           user_id?: string | null
@@ -4064,6 +4129,7 @@ export type Database = {
           first_touch?: Json
           first_visit_at?: string
           id?: string
+          is_test?: boolean
           last_touch?: Json
           last_visit_at?: string
           user_id?: string | null
@@ -4351,6 +4417,84 @@ export type Database = {
           },
         ]
       }
+      meta_ad_creatives: {
+        Row: {
+          ad_id: string
+          ad_name: string | null
+          creative_id: string | null
+          effective_status: string | null
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_id: string
+          ad_name?: string | null
+          creative_id?: string | null
+          effective_status?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string
+          ad_name?: string | null
+          creative_id?: string | null
+          effective_status?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meta_capi_events: {
+        Row: {
+          attempts: number
+          created_at: string
+          event_id: string
+          event_key: string
+          event_name: string
+          id: string
+          is_test: boolean
+          last_error: string | null
+          order_id: string | null
+          payload: Json | null
+          sent_at: string | null
+          status: string
+          user_id: string | null
+          value: number | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          event_id: string
+          event_key: string
+          event_name: string
+          id?: string
+          is_test?: boolean
+          last_error?: string | null
+          order_id?: string | null
+          payload?: Json | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string | null
+          value?: number | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          event_id?: string
+          event_key?: string
+          event_name?: string
+          id?: string
+          is_test?: boolean
+          last_error?: string | null
+          order_id?: string | null
+          payload?: Json | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       meta_daily_metrics: {
         Row: {
           ad_id: string
@@ -4360,9 +4504,15 @@ export type Database = {
           campaign_id: string | null
           campaign_name: string | null
           clicks: number
+          cpc: number | null
+          cpm: number | null
+          ctr: number | null
           date: string
+          frequency: number | null
           impressions: number
+          link_clicks: number | null
           meta_leads: number
+          reach: number | null
           spend: number
           synced_at: string
         }
@@ -4374,9 +4524,15 @@ export type Database = {
           campaign_id?: string | null
           campaign_name?: string | null
           clicks?: number
+          cpc?: number | null
+          cpm?: number | null
+          ctr?: number | null
           date: string
+          frequency?: number | null
           impressions?: number
+          link_clicks?: number | null
           meta_leads?: number
+          reach?: number | null
           spend?: number
           synced_at?: string
         }
@@ -4388,9 +4544,15 @@ export type Database = {
           campaign_id?: string | null
           campaign_name?: string | null
           clicks?: number
+          cpc?: number | null
+          cpm?: number | null
+          ctr?: number | null
           date?: string
+          frequency?: number | null
           impressions?: number
+          link_clicks?: number | null
           meta_leads?: number
+          reach?: number | null
           spend?: number
           synced_at?: string
         }
@@ -6970,24 +7132,55 @@ export type Database = {
         Args: { p_specialist_id: string; p_user_id: string }
         Returns: undefined
       }
+      create_test_ad_visit: { Args: never; Returns: string }
       current_partner_id: { Args: never; Returns: string }
       extract_first_int: { Args: { p_text: string }; Returns: number }
       generate_specialist_slug: { Args: { p_name: string }; Returns: string }
       generate_unique_referral_code: { Args: never; Returns: string }
       get_ad_performance: {
-        Args: { p_days?: number }
+        Args: {
+          p_from: string
+          p_level?: string
+          p_parent?: string
+          p_to: string
+        }
         Returns: {
+          active_days: number
           campaign_id: string
-          campaign_name: string
           checkouts: number
           clicks: number
+          creative_id: string
+          entity_id: string
+          entity_name: string
           impressions: number
           leads: number
+          link_clicks: number
           meta_leads: number
           paid: number
+          parent_id: string
+          profiles: number
+          qualified: number
           registrations: number
           revenue: number
           spend: number
+          thumbnail_url: string
+        }[]
+      }
+      get_attribution_debug: {
+        Args: never
+        Returns: {
+          ad_id: string
+          adset_id: string
+          campaign_id: string
+          has_fbc: boolean
+          has_fbclid: boolean
+          has_fbp: boolean
+          is_test: boolean
+          purchased: boolean
+          registered: boolean
+          utm_campaign: string
+          utm_source: string
+          visit_at: string
         }[]
       }
       get_current_user_role: { Args: never; Returns: string }

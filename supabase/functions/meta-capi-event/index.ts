@@ -1,4 +1,5 @@
 // Meta (Facebook) Conversions API — sunucu taraflı olay gönderimi
+import { createClient } from "npm:@supabase/supabase-js@2";
 // Veri Seti Kodu: 1053321257408384
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,22 +78,28 @@ Deno.serve(async (req) => {
     };
     Object.keys(user_data).forEach((k) => user_data[k] === undefined && delete user_data[k]);
 
-    const payload: Record<string, unknown> = {
-      data: [
-        {
-          event_name,
-          event_time: Math.floor(Date.now() / 1000),
-          event_id: event_id || crypto.randomUUID(),
-          action_source: "system_generated",
-          event_source_url: event_source_url || undefined,
-          custom_data: {
-            event_source: "crm",
-            lead_event_source,
-          },
-          user_data,
-        },
-      ],
+    // Aynı kişi + aynı olay için sabit olay kimliği → Meta tekrarları birleştirir, kuyrukta ikinci gönderim engellenir
+    const stableId = event_id || (external_id ? `${String(event_name).toLowerCase()}_${external_id}` : crypto.randomUUID());
+    const eventKey = external_id && !test_event_code ? `${String(event_name).toLowerCase()}_${external_id}` : null;
+    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    if (eventKey) {
+      const { data: prev } = await db.from("meta_capi_events").select("status").eq("event_key", eventKey).maybeSingle();
+      if (prev?.status === "sent") {
+        return new Response(JSON.stringify({ success: true, deduplicated: true }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+    const event = {
+      event_name,
+      event_time: Math.floor(Date.now() / 1000),
+      event_id: stableId,
+      action_source: "website",
+      event_source_url: event_source_url || "https://doktorumol.com.tr/kayit-ol",
+      custom_data: { event_source: "crm", lead_event_source },
+      user_data,
     };
+    const payload: Record<string, unknown> = { data: [event] };
     if (test_event_code) payload.test_event_code = test_event_code;
 
     const res = await fetch(
@@ -105,6 +112,17 @@ Deno.serve(async (req) => {
     );
     const result = await res.json();
     if (!res.ok) console.error("Meta CAPI error:", JSON.stringify(result));
+
+    if (eventKey) {
+      // user_data zaten hash'li; başarısızsa kuyruk tekrar dener
+      await db.from("meta_capi_events").upsert({
+        event_key: eventKey, event_name, event_id: stableId,
+        user_id: /^[0-9a-f-]{36}$/i.test(String(external_id)) ? external_id : null,
+        payload: { prebuilt: event }, status: res.ok ? "sent" : "retrying", attempts: 1,
+        last_error: res.ok ? null : String(result?.error?.message || "").slice(0, 400),
+        sent_at: res.ok ? new Date().toISOString() : null,
+      }, { onConflict: "event_key" });
+    }
 
     return new Response(JSON.stringify({ success: res.ok, result }), {
       status: 200,
