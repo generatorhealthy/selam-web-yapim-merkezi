@@ -19,7 +19,7 @@ import { translateAuthError } from "@/utils/authErrors";
 import { trackMetaLead } from "@/lib/metaCapi";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
-  Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard
+  Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard, Calculator
 } from "lucide-react";
 
 const PRIORITY_SPECIALTIES = [
@@ -165,6 +165,12 @@ const SpecialistRegistration = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [referralCode, setReferralCode] = useState("");
 
+  // Kapasite Öngörü Aracı — yalnızca kullanıcının kendi girdileriyle hesaplanır
+  const [calcFee, setCalcFee] = useState("");
+  const [calcSessions, setCalcSessions] = useState("");
+  const monthlyCapacity = (parseInt(calcSessions) || 0) * 4;
+  const monthlyTotal = monthlyCapacity * (parseInt(calcFee) || 0);
+
   // Checkout sırasında girilen davet kodunu otomatik doldur
   useEffect(() => {
     try {
@@ -199,7 +205,7 @@ const SpecialistRegistration = () => {
           setCreatedUserEmail(session.user.email || profile.email || "");
           if (profile.email) setEmail(profile.email);
           if (profile.phone) setPhone(profile.phone);
-          setCurrentStep(2);
+          setCurrentStep(3);
           toast.success("Kaldığınız yerden devam ediyorsunuz.");
         }
       } catch (e) { /* sessiz geç */ }
@@ -218,12 +224,16 @@ const SpecialistRegistration = () => {
 
   const steps = [
     { num: 1, label: "Hesap", icon: User },
-    { num: 2, label: "Bilgiler", icon: Stethoscope },
-    { num: 3, label: "Profil", icon: Camera },
-    { num: 4, label: "Profil Yayınlama", icon: Check },
+    { num: 2, label: "Kapasite", icon: Calculator },
+    { num: 3, label: "Bilgiler", icon: Stethoscope },
+    { num: 4, label: "Profil", icon: Camera },
+    { num: 5, label: "Profil Yayınlama", icon: Check },
   ];
 
   const displayStep = currentStep;
+
+  // Huni analitiği 4 adımlı geçmiş veriyle uyumlu kalsın: Kapasite sekmesi hesap öncesi kabul edilir.
+  const analyticsStep = currentStep <= 2 ? 1 : currentStep - 1;
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -386,7 +396,7 @@ const SpecialistRegistration = () => {
       toast.info("Yapay zeka içerikleri oluşturulamadı, manuel olarak düzenleyebilirsiniz.");
     } finally {
       setIsGeneratingAI(false);
-      setCurrentStep(3);
+      setCurrentStep(4);
 
     }
   };
@@ -443,7 +453,7 @@ const SpecialistRegistration = () => {
         external_id: createdUserId,
         lead_event_source: "Doktorumol Uzman Profil Tamamlandı",
       });
-      setCurrentStep(4);
+      setCurrentStep(5);
 
       // E-posta gönder (arka planda)
       try {
@@ -504,7 +514,7 @@ const SpecialistRegistration = () => {
 
   return (
     <>
-      <RegistrationAnalyticsTracker currentStep={currentStep} completed={currentStep === 4} />
+      <RegistrationAnalyticsTracker currentStep={analyticsStep} completed={currentStep === 5} />
       <Helmet>
         <title>Uzman Kayıt Ol - Doktorum Ol</title>
         <meta name="description" content="Doktorum Ol platformuna uzman olarak kayıt olun. Profesyonel profilinizi oluşturun ve danışanlarınıza ulaşın." />
@@ -530,7 +540,7 @@ const SpecialistRegistration = () => {
           className="container mx-auto px-4 py-6 md:py-12 max-w-lg"
           style={{ paddingBottom: "calc(120px + env(safe-area-inset-bottom, 0px))" }}
         >
-          {currentStep !== 4 && (
+          {currentStep !== 5 && (
             <div className="flex items-center justify-center gap-2 mb-10">
               {steps.map((step, index) => (
                 <div key={step.num} className="flex items-center gap-2">
