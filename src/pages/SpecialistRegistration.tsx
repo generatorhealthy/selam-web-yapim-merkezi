@@ -677,6 +677,77 @@ const SpecialistRegistration = () => {
           {currentStep === 2 && (
             <div className="space-y-8">
               <div className="text-center space-y-2">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Kapasite Öngörü Aracı</h2>
+                <p className="text-muted-foreground text-sm">Kendi ücret ve çalışma planınızla aylık kapasitenizi hesaplayın</p>
+              </div>
+
+              <div className="rounded-3xl border border-primary/15 bg-primary/5 p-5 space-y-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Calculator className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Seans ücretiniz ve haftalık planınız</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground font-normal">Seans Ücretiniz (₺)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={calcFee}
+                      onChange={(e) => setCalcFee(e.target.value)}
+                      placeholder="800"
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground font-normal">Haftalık Seans Sayınız</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="60"
+                      value={calcSessions}
+                      onChange={(e) => setCalcSessions(e.target.value)}
+                      placeholder="10"
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-background border border-border/60 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/60">
+                    <span className="text-sm text-muted-foreground">Aylık Seans Kapasitesi</span>
+                    <span className="text-sm font-semibold text-foreground">{monthlyCapacity.toLocaleString("tr-TR")} seans</span>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <span className="text-sm text-muted-foreground">Kendi Ücretinizle Toplam</span>
+                    <span className="text-lg font-bold text-primary">{monthlyTotal.toLocaleString("tr-TR")} ₺</span>
+                  </div>
+                </div>
+
+                {monthlyCapacity > 0 && (
+                  <p className="text-[11px] text-center text-muted-foreground/70">
+                    {(parseInt(calcSessions) || 0).toLocaleString("tr-TR")} seans/hafta × 4 hafta × {monthlyTotal / monthlyCapacity} ₺
+                  </p>
+                )}
+                <p className="text-[11px] italic text-center text-muted-foreground/70 leading-relaxed">
+                  Bu hesaplama yalnızca girdiğiniz ücret ve saatlere dayalı bir gösterimdir; Doktorumol tarafından verilmiş herhangi bir kazanç taahhüdü veya danışan garantisi içermez.
+                </p>
+              </div>
+
+              <Button
+                onClick={() => setCurrentStep(3)}
+                className="w-full h-14 text-base font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-all"
+              >
+                Devam Et
+              </Button>
+            </div>
+          )}
+
+          {currentStep === 3 && (
+            <div className="space-y-8">
+              <div className="text-center space-y-2">
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Temel Bilgiler</h2>
                 <p className="text-muted-foreground text-sm">Uzman profiliniz için gerekli bilgileri doldurun</p>
               </div>
