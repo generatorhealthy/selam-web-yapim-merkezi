@@ -123,7 +123,7 @@ const RegistrationAnalyticsTracker = ({ currentStep, completed = false }: Regist
     const handleBeforeUnload = () => {
       const timeOnPage = Math.round((Date.now() - startTime.current) / 1000);
       const SUPABASE_URL = 'https://irnfwewabogveofwemvg.supabase.co';
-      const SUPABASE_ANON = (supabase as any).supabaseKey as string;
+      const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs";
       try {
         fetch(`${SUPABASE_URL}/rest/v1/rpc/update_registration_analytics`, {
           method: 'POST',
