@@ -733,6 +733,17 @@ const AdminDashboard = () => {
       buttonText: "Listeyi Aç",
       adminOnly: true
     },
+    {
+      title: "AI Reklam Merkezi",
+      description: "Reklamdan gelen uzmanların puanı, satış aşaması ve kampanya bazında gerçek ödeme sonuçları",
+      icon: Phone,
+      gradient: "from-sky-500 via-blue-500 to-indigo-500",
+      bgGradient: "from-sky-50 to-indigo-50",
+      shadowColor: "shadow-blue-500/20",
+      route: "/divan_paneli/lead-intelligence",
+      buttonText: "Merkezi Aç",
+      adminOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
