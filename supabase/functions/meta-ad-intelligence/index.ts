@@ -12,7 +12,7 @@ const QUEUE_START = "2026-10-07T00:00:00Z"; // bu tarihten önceki olaylar Meta'
 const MAX_ATTEMPTS = 5;
 
 const Body = z.object({
-  action: z.enum(["status", "test", "listAccounts", "selectAccount", "sync", "analyze"]),
+  action: z.enum(["status", "test", "listAccounts", "selectAccount", "sync", "analyze", "diag"]),
   days: z.number().int().min(1).max(90).optional(),
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -28,8 +28,9 @@ const json = (d: unknown, status = 200) =>
 type MetaErr = { http_status: number; code?: number; subcode?: number; type?: string; message: string; fbtrace_id?: string };
 class MetaError extends Error { constructor(public info: MetaErr) { super(info.message); } }
 
+const clean = (v?: string | null) => (v || "").trim().replace(/^Bearer\s+/i, "").replace(/^["']|["']$/g, "").trim();
 function token(): string | undefined {
-  return Deno.env.get("META_ACCESS_TOKEN") || Deno.env.get("META_ADS_ACCESS_TOKEN") || undefined;
+  return clean(Deno.env.get("META_ACCESS_TOKEN")) || clean(Deno.env.get("META_ADS_ACCESS_TOKEN")) || undefined;
 }
 function source() {
   if (Deno.env.get("META_ACCESS_TOKEN")) return "META_ACCESS_TOKEN";
@@ -313,6 +314,22 @@ Deno.serve(async (req) => {
     if (b.action === "status") {
       return json({ source: source(), ad_account_id: settings.ad_account_id ? `•••${String(settings.ad_account_id).slice(-4)}` : null,
         ad_account_name: settings.ad_account_name, last_sync_at: settings.last_sync_at, last_sync_status: settings.last_sync_status, last_error: settings.last_error });
+    }
+    if (b.action === "diag") {
+      const fp = async (name: string) => {
+        const raw = Deno.env.get(name); if (!raw) return { name, present: false };
+        const c = clean(raw);
+        const h = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(c)))).slice(0, 4).map((x) => x.toString(16).padStart(2, "0")).join("");
+        return { name, present: true, length: c.length, raw_length: raw.length, starts_EAA: c.startsWith("EAA"), had_whitespace_or_quotes: raw !== c, sha_prefix: h };
+      };
+      const results: any[] = [];
+      const acc = (Deno.env.get("META_AD_ACCOUNT_ID") || "").replace(/^act_/, "");
+      for (const path of ["/me?fields=id,name", "/me/adaccounts?fields=id,name,account_status,currency", `/act_${acc}/insights?fields=spend,impressions,clicks,cpc,cpm,ctr&date_preset=last_7d`]) {
+        const t = token() || "";
+        const r = await fetch(`https://graph.facebook.com/${API_V()}${path}${path.includes("?") ? "&" : "?"}access_token=${encodeURIComponent(t)}`);
+        results.push({ path, status: r.status, body: JSON.parse(await r.text()) });
+      }
+      return json({ api_version: API_V(), account_env: acc, settings_account: settings.ad_account_id, source: source(), tokens: [await fp("META_ACCESS_TOKEN"), await fp("META_ADS_ACCESS_TOKEN")], results });
     }
     if (b.action === "test") {
       const steps: { name: string; ok: boolean; detail?: string }[] = [];
