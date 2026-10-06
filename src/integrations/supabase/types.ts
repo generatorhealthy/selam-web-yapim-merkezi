@@ -5725,6 +5725,30 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_followups: {
+        Row: {
+          note: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          note?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          note?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       registration_reminders: {
         Row: {
           channel: string
@@ -7432,6 +7456,20 @@ export type Database = {
       generate_unique_referral_code: { Args: never; Returns: string }
       get_current_user_role: { Args: never; Returns: string }
       get_default_time_slots: { Args: never; Returns: Json }
+      get_incomplete_registrations: {
+        Args: { p_days?: number }
+        Returns: {
+          created_at: string
+          email: string
+          followup_updated_at: string
+          name: string
+          note: string
+          phone: string
+          reminders_sent: number
+          status: string
+          user_id: string
+        }[]
+      }
       get_my_panel_access: {
         Args: never
         Returns: {
