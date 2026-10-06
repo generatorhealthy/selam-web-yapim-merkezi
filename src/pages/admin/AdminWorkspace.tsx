@@ -40,6 +40,7 @@ import PbxManagement from "./PbxManagement";
 import PreInfoFormManagement from "./PreInfoFormManagement";
 import ProspectiveRegistrations from "./ProspectiveRegistrations";
 import RegistrationAnalytics from "./RegistrationAnalytics";
+import IncompleteRegistrations from "./IncompleteRegistrations";
 import Reports from "./Reports";
 import ReviewManagement from "./ReviewManagement";
 import SEOContentManagement from "./SEOContentManagement";
@@ -120,6 +121,7 @@ const AdminWorkspace = () => (
       <Route path="ai-assistant" element={<AdminAIAssistant />} />
       <Route path="email-logs" element={<EmailLogs />} />
       <Route path="registration-analytics" element={<RegistrationAnalytics />} />
+      <Route path="incomplete-registrations" element={<IncompleteRegistrations />} />
       <Route path="consent-logs" element={<ConsentLogs />} />
       <Route path="bulk-email" element={<BulkEmail />} />
       <Route path="career-applications" element={<CareerApplications />} />

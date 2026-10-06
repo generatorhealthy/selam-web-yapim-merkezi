@@ -722,6 +722,17 @@ const AdminDashboard = () => {
       buttonText: "Analizi Görüntüle",
       adminOnly: true
     },
+    {
+      title: "Kaydı Yarım Kalanlar",
+      description: "Telefonunu bırakıp kaydını/ödemesini tamamlamayan uzmanlar — aranacaklar listesi",
+      icon: Phone,
+      gradient: "from-amber-500 via-orange-500 to-red-500",
+      bgGradient: "from-amber-50 to-red-50",
+      shadowColor: "shadow-orange-500/20",
+      route: "/divan_paneli/incomplete-registrations",
+      buttonText: "Listeyi Aç",
+      adminOnly: true
+    },
   ];
 
   const visibleCards = adminCards.filter(card => {
