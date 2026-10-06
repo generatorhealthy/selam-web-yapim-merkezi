@@ -572,58 +572,6 @@ const SpecialistRegistration = () => {
 
           {currentStep === 1 && (
             <div className="space-y-8">
-              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h2 className="mb-4 text-sm font-semibold tracking-tight text-foreground">Aylık Çalışma Kapasitesi</h2>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
-                      Seans ücretiniz (₺)
-                    </Label>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={100000}
-                      value={calcPrice}
-                      onChange={(e) => setCalcPrice(e.target.value)}
-                      className="h-11 rounded-xl bg-background text-sm font-medium"
-                    />
-                  </div>
-                  <div>
-                    <Label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
-                      Haftalık planlanan seans
-                    </Label>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={80}
-                      value={calcHours}
-                      onChange={(e) => setCalcHours(e.target.value)}
-                      className="h-11 rounded-xl bg-background text-sm font-medium"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-5 border-t border-border pt-4">
-                  <div className="text-[11px] font-medium text-muted-foreground">Aylık brüt hizmet kapasitesi</div>
-                  <div className="text-2xl font-bold tabular-nums tracking-tight text-foreground">
-                    ₺{monthlyTotal.toLocaleString("tr-TR")}
-                  </div>
-                  <div className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
-                    {calcHoursNum.toLocaleString("tr-TR")} seans/hafta × 4 hafta × ₺{calcPriceNum.toLocaleString("tr-TR")}
-                  </div>
-                </div>
-
-                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                  Bu hesaplama yalnızca sizin girdiğiniz seans ücreti ve çalışma kapasitesine göre oluşturulan
-                  matematiksel bir gösterimdir. Doktorum Ol tarafından gelir, kazanç, danışan sayısı, randevu veya
-                  hizmet satın alımı garantisi niteliğinde değildir. Gerçekleşen sonuçlar çalışma koşullarına,
-                  danışan taleplerine ve diğer faktörlere göre değişebilir.
-                </p>
-              </section>
-
               <div className="text-center space-y-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Uzman Profili Oluşturun</h1>
                 <p className="text-muted-foreground text-sm">Platformumuza katılmak için bilgilerinizi girin</p>
