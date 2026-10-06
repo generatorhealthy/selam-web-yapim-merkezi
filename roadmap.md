@@ -43,5 +43,5 @@
 - [x] Divan Paneli kartlarını statik importlarla tek panel paketinde birleştir; kart geçişlerindeki parça dosyası isteklerini kaldır
 - [x] Tüm uygulama yollarını tek, sabit adlı ve önbelleksiz JavaScript paketinde birleştir; otomatik yenileme döngüsünü kaldır
 - [x] Açılış kurtarma ekranını ve uygulama geneli yenileme düğmelerini kaldır; HTML önbelleğini hem belge hem sunucu düzeyinde kapat
-- [x] Kazanç hesaplayıcı eklendi, kullanıcı beğenmedi → kayıt sayfasından tamamen kaldırıldı (tekrar eklenmesin)
+- [x] Kazanç hesaplayıcı: kullanıcı istedi → minimal renkli tasarım olarak kayıt sihirbazının 2. sekmesi "Kapasite" olarak yeniden eklendi (2026-10-06)
 - [ ] "Danışan yönlendirme garantisi"nin tam olarak neyi taahhüt ettiğini kullanıcıdan netleştir ve tüm sayfalardaki metinleri bu sınıra göre yaz
