@@ -66,9 +66,6 @@ const SpecialistRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [createdUserId, setCreatedUserId] = useState("");
   const [createdUserEmail, setCreatedUserEmail] = useState("");
-  // Kapasite öngörü aracı: yalnızca uzmanın KENDİ girdiği ücret ve saat kullanılır.
-  const [calcPrice, setCalcPrice] = useState("800");
-  const [calcHours, setCalcHours] = useState("20");
   const referralCodeRef = useRef<string | null>(null);
 
   useEffect(() => {
