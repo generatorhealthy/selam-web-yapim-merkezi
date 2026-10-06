@@ -43,5 +43,5 @@
 - [x] Divan Paneli kartlarını statik importlarla tek panel paketinde birleştir; kart geçişlerindeki parça dosyası isteklerini kaldır
 - [x] Tüm uygulama yollarını tek, sabit adlı ve önbelleksiz JavaScript paketinde birleştir; otomatik yenileme döngüsünü kaldır
 - [x] Açılış kurtarma ekranını ve uygulama geneli yenileme düğmelerini kaldır; HTML önbelleğini hem belge hem sunucu düzeyinde kapat
-- [x] Uzman kayıt sayfasına kazanç hesaplayıcı ekle — yalnızca uzmanın kendi girdiği seans ücreti ve kendi çalışma saatine dayalı, gelir taahhüdü içermeyen, ekranda açık uyarı satırı olan hukuka uygun tasarımla
+- [x] Kazanç hesaplayıcı eklendi, kullanıcı beğenmedi → kayıt sayfasından tamamen kaldırıldı (tekrar eklenmesin)
 - [ ] "Danışan yönlendirme garantisi"nin tam olarak neyi taahhüt ettiğini kullanıcıdan netleştir ve tüm sayfalardaki metinleri bu sınıra göre yaz
