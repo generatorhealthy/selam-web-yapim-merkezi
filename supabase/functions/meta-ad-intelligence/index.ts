@@ -71,11 +71,11 @@ async function graphPaged(first: string, maxPages = 20) {
 }
 function diagnose(i: MetaErr): string {
   if (i.http_status === 0) return "Meta bağlantısı kurulmamış.";
+  if (/API access blocked/i.test(i.message)) return "Meta, bu erişim anahtarının bağlı olduğu uygulamanın API erişimini engellemiş (uygulama kısıtlanmış/devre dışı veya inceleme gerekiyor). Eski anahtar yerine Lovable Meta Ads bağlantısı kurulmalı.";
   if (i.code === 190) return "Erişim anahtarı geçersiz veya süresi dolmuş — Meta bağlantısını yenileyin.";
   if (i.code === 200 || i.code === 10 || (i.code && i.code >= 200 && i.code < 300)) return "İzin eksik (ads_read) veya bu reklam hesabına erişim verilmemiş.";
   if (i.code === 100) return "Reklam hesabı kimliği yanlış ya da bu bağlantı o hesabı göremiyor.";
   if (i.code === 17 || i.code === 4 || i.code === 613 || i.code === 80004) return "Meta istek sınırı — birkaç dakika sonra tekrar deneyin.";
-  if (/API access blocked/i.test(i.message)) return "Meta, bu erişim anahtarının bağlı olduğu uygulamanın API erişimini engellemiş (uygulama kısıtlanmış/devre dışı veya inceleme gerekiyor). Eski anahtar yerine Lovable Meta Ads bağlantısı kurulmalı.";
   return "Meta isteği reddetti.";
 }
 
