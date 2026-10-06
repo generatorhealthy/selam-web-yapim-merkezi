@@ -7648,6 +7648,18 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      update_registration_analytics: {
+        Args: {
+          p_click_events: Json
+          p_completed: boolean
+          p_current_step: number
+          p_left?: boolean
+          p_session_id: string
+          p_step_timestamps: Json
+          p_time_on_page: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role:
