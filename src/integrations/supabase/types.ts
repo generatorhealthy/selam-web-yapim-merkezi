@@ -296,6 +296,60 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_events: {
+        Row: {
+          anonymous_session_id: string | null
+          created_at: string
+          event_id: string | null
+          event_name: string
+          event_properties: Json
+          fbc: string | null
+          fbp: string | null
+          id: string
+          meta_ad_id: string | null
+          meta_adset_id: string | null
+          meta_campaign_id: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          anonymous_session_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          event_name: string
+          event_properties?: Json
+          fbc?: string | null
+          fbp?: string | null
+          id?: string
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          anonymous_session_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          event_name?: string
+          event_properties?: Json
+          fbc?: string | null
+          fbp?: string | null
+          id?: string
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -3944,6 +3998,90 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_attribution: {
+        Row: {
+          anonymous_session_id: string
+          created_at: string
+          first_touch: Json
+          first_visit_at: string
+          id: string
+          last_touch: Json
+          last_visit_at: string
+          user_id: string | null
+        }
+        Insert: {
+          anonymous_session_id: string
+          created_at?: string
+          first_touch?: Json
+          first_visit_at?: string
+          id?: string
+          last_touch?: Json
+          last_visit_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          anonymous_session_id?: string
+          created_at?: string
+          first_touch?: Json
+          first_visit_at?: string
+          id?: string
+          last_touch?: Json
+          last_visit_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      lead_pipeline: {
+        Row: {
+          manual: boolean
+          stage: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          manual?: boolean
+          stage?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          manual?: boolean
+          stage?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lead_stage_history: {
+        Row: {
+          change_source: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_stage: string
+          previous_stage: string | null
+          user_id: string
+        }
+        Insert: {
+          change_source?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_stage: string
+          previous_stage?: string | null
+          user_id: string
+        }
+        Update: {
+          change_source?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_stage?: string
+          previous_stage?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       legal_evidence: {
         Row: {
           created_at: string
@@ -5095,6 +5233,42 @@ export type Database = {
           scheduled_at?: string
           sent_at?: string | null
           status?: string
+        }
+        Relationships: []
+      }
+      scoring_rules: {
+        Row: {
+          category: string
+          description: string | null
+          enabled: boolean
+          id: string
+          max_points: number | null
+          points: number
+          rule_key: string
+          rule_name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          max_points?: number | null
+          points?: number
+          rule_key: string
+          rule_name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          max_points?: number | null
+          points?: number
+          rule_key?: string
+          rule_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -6705,6 +6879,33 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_lead_intelligence: {
+        Args: { p_days?: number }
+        Returns: {
+          capacity: number
+          city: string
+          created_at: string
+          email: string
+          intent: number
+          lead_class: string
+          meta_ad_id: string
+          meta_adset_id: string
+          meta_campaign_id: string
+          name: string
+          paid: boolean
+          phone: string
+          professional: number
+          revenue: number
+          score: number
+          signals: string[]
+          specialty: string
+          stage: string
+          user_id: string
+          utm_campaign: string
+          utm_content: string
+          utm_source: string
+        }[]
+      }
       get_my_panel_access: {
         Args: never
         Returns: {
@@ -6945,6 +7146,16 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      track_lead_event: {
+        Args: {
+          p_event_id?: string
+          p_event_name: string
+          p_properties?: Json
+          p_session_id: string
+          p_touch?: Json
+        }
+        Returns: undefined
+      }
       update_registration_analytics: {
         Args: {
           p_click_events: Json

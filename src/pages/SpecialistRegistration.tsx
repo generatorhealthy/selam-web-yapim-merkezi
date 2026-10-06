@@ -17,6 +17,7 @@ import { hasSuggestedInterests, getSuggestedInterests } from "@/lib/specialistIn
 import { sendSms } from "@/services/smsService";
 import { translateAuthError } from "@/utils/authErrors";
 import { trackMetaLead } from "@/lib/metaCapi";
+import { trackLeadEvent } from "@/lib/leadTracking";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard, Calculator
@@ -339,6 +340,7 @@ const SpecialistRegistration = () => {
         void registerPartnerReferral(data.user.id, email);
         toast.success("Hesabınız oluşturuldu!");
         void trackMetaLead({ email, phone, external_id: data.user.id });
+        trackLeadEvent("registration_started");
         setCurrentStep(2);
       }
     } catch (err: any) {
@@ -453,6 +455,8 @@ const SpecialistRegistration = () => {
         external_id: createdUserId,
         lead_event_source: "Doktorumol Uzman Profil Tamamlandı",
       });
+      trackLeadEvent("registration_completed");
+      trackLeadEvent("profile_completed", { city: formData.city });
       setCurrentStep(5);
 
       // E-posta gönder (arka planda)
@@ -737,7 +741,7 @@ const SpecialistRegistration = () => {
               </div>
 
               <Button
-                onClick={() => setCurrentStep(3)}
+                onClick={() => { if (calcSessions) trackLeadEvent("capacity_entered", { sessions: parseInt(calcSessions) || 0 }); setCurrentStep(3); }}
                 className="w-full h-14 text-base font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-all"
               >
                 Devam Et
