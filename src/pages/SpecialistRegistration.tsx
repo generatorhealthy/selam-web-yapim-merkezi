@@ -572,6 +572,59 @@ const SpecialistRegistration = () => {
 
           {currentStep === 1 && (
             <div className="space-y-8">
+              <section className="rounded-2xl border border-primary/15 bg-primary/5 p-5">
+                <h2 className="mb-4 text-[13px] font-bold text-foreground">Kapasite Öngörü Aracı</h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Seans Ücretiniz (₺)
+                    </Label>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={100000}
+                      value={calcPrice}
+                      onChange={(e) => setCalcPrice(e.target.value)}
+                      className="h-11 rounded-lg border-primary/20 bg-background text-sm font-medium"
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Haftalık Çalışma Saatiniz
+                    </Label>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={80}
+                      value={calcHours}
+                      onChange={(e) => setCalcHours(e.target.value)}
+                      className="h-11 rounded-lg border-primary/20 bg-background text-sm font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-5 flex items-end justify-between border-t border-primary/15 pt-4">
+                  <div>
+                    <div className="text-[11px] text-muted-foreground">Aylık Seans Kapasitesi</div>
+                    <div className="text-xl font-bold tabular-nums text-foreground">{monthlySessions} Seans</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] text-muted-foreground">Kendi Ücretinizle Toplam</div>
+                    <div className="text-xl font-bold tabular-nums text-primary">
+                      {monthlyTotal.toLocaleString("tr-TR")} ₺
+                    </div>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-[10px] italic leading-relaxed text-muted-foreground">
+                  * Bu hesaplama yalnızca girdiğiniz ücret ve saatlere dayalı bir gösterimdir;
+                  Doktorumol tarafından verilmiş herhangi bir kazanç taahhüdü veya danışan garantisi içermez.
+                </p>
+              </section>
+
               <div className="text-center space-y-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Uzman Profili Oluşturun</h1>
                 <p className="text-muted-foreground text-sm">Platformumuza katılmak için bilgilerinizi girin</p>
