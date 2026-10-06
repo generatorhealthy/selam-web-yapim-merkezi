@@ -69,27 +69,14 @@ const RegistrationAnalyticsTracker = ({ currentStep, completed = false }: Regist
   const updateAnalytics = useCallback(async () => {
     try {
       const timeOnPage = Math.round((Date.now() - startTime.current) / 1000);
-      const SUPABASE_URL = 'https://irnfwewabogveofwemvg.supabase.co';
-      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs';
-      await fetch(`${SUPABASE_URL}/rest/v1/registration_analytics?session_id=eq.${sessionId.current}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: SUPABASE_ANON,
-          Authorization: `Bearer ${SUPABASE_ANON}`,
-          'x-session-id': sessionId.current,
-          Prefer: 'return=minimal',
-        },
-        body: JSON.stringify({
-          current_step: currentStep,
-          max_step_reached: currentStep,
-          step_timestamps: stepTimestamps.current,
-          click_events: clickEvents.current.slice(-50),
-          time_on_page: timeOnPage,
-          last_activity_at: new Date().toISOString(),
-          completed,
-        }),
-        keepalive: true,
+      await supabase.rpc('update_registration_analytics' as any, {
+        p_session_id: sessionId.current,
+        p_current_step: currentStep,
+        p_step_timestamps: stepTimestamps.current,
+        p_click_events: clickEvents.current.slice(-50),
+        p_time_on_page: timeOnPage,
+        p_completed: completed,
+        p_left: false,
       });
     } catch {}
   }, [currentStep, completed]);
@@ -136,21 +123,14 @@ const RegistrationAnalyticsTracker = ({ currentStep, completed = false }: Regist
     const handleBeforeUnload = () => {
       const timeOnPage = Math.round((Date.now() - startTime.current) / 1000);
       const SUPABASE_URL = 'https://irnfwewabogveofwemvg.supabase.co';
-      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmZ3ZXdhYm9ndmVvZndlbXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjUzMTAsImV4cCI6MjA2NzAwMTMxMH0.yK3oE_n2a4Y7RcHbeOC2_T_OE-jXcCip2C9QLweRJqs';
+      const SUPABASE_ANON = (supabase as any).supabaseKey as string;
       try {
-        fetch(`${SUPABASE_URL}/rest/v1/registration_analytics?session_id=eq.${sessionId.current}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: SUPABASE_ANON,
-            Authorization: `Bearer ${SUPABASE_ANON}`,
-            'x-session-id': sessionId.current,
-            Prefer: 'return=minimal',
-          },
+        fetch(`${SUPABASE_URL}/rest/v1/rpc/update_registration_analytics`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` },
           body: JSON.stringify({
-            time_on_page: timeOnPage,
-            left_at: new Date().toISOString(),
-            click_events: clickEvents.current.slice(-50),
+            p_session_id: sessionId.current, p_current_step: null, p_step_timestamps: null,
+            p_click_events: clickEvents.current.slice(-50), p_time_on_page: timeOnPage, p_completed: false, p_left: true,
           }),
           keepalive: true,
         });
