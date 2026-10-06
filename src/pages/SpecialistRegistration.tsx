@@ -173,6 +173,41 @@ const SpecialistRegistration = () => {
     } catch (e) { /* ignore */ }
   }, []);
 
+  // Hatırlatma linkindeki ?email= parametresini otomatik doldur
+  useEffect(() => {
+    try {
+      const fromUrl = searchParams.get("email");
+      if (fromUrl) setEmail(fromUrl.trim());
+    } catch { /* ignore */ }
+  }, [searchParams]);
+
+  // Açık oturum varsa ve uzman henüz onaylanmamışsa kaldığı yerden (2. adım) devam et
+  useEffect(() => {
+    let cancelled = false;
+    const resumeIncompleteRegistration = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user || cancelled) return;
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('is_approved, role, email, phone')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        if (cancelled || !profile) return;
+        if (profile.role === 'specialist' && !profile.is_approved) {
+          setCreatedUserId(session.user.id);
+          setCreatedUserEmail(session.user.email || profile.email || "");
+          if (profile.email) setEmail(profile.email);
+          if (profile.phone) setPhone(profile.phone);
+          setCurrentStep(2);
+          toast.success("Kaldığınız yerden devam ediyorsunuz.");
+        }
+      } catch (e) { /* sessiz geç */ }
+    };
+    void resumeIncompleteRegistration();
+    return () => { cancelled = true; };
+  }, []);
+
   // Uzmanlık alanı seçildiğinde önerilen ilgi alanlarını otomatik seç
   useEffect(() => {
     if (!formData.specialty) return;
