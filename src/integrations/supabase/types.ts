@@ -5725,6 +5725,30 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_reminders: {
+        Row: {
+          channel: string
+          id: string
+          reminder_no: number
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          id?: string
+          reminder_no: number
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          id?: string
+          reminder_no?: number
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string
