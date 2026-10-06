@@ -1,2 +1,3 @@
 - Blog SEO: scripts/prerender-blog.mjs (postbuild) writes dist/blog/<slug>.html + dist/blog.html with per-post meta and full text; .htaccess serves them for /blog/<slug> — crawlers need real HTML on this SPA.
 - Registration WhatsApp login details must use the authenticated account's server-read email and matching recent specialist phone; compose app links in the same welcome message to avoid a separate announcement and never send passwords.
+- Meta ad spend sync, Purchase reporting to Meta CAPI and AI campaign recommendations live in the meta-ad-intelligence edge function (hourly cron); Purchase dedupe via meta_purchase_reports so orders are never reported twice.
