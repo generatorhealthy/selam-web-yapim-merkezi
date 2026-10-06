@@ -4497,6 +4497,7 @@ export type Database = {
       }
       meta_daily_metrics: {
         Row: {
+          account_id: string | null
           ad_id: string
           ad_name: string | null
           adset_id: string | null
@@ -4504,19 +4505,24 @@ export type Database = {
           campaign_id: string | null
           campaign_name: string | null
           clicks: number
+          cost_per_link_click: number | null
           cpc: number | null
           cpm: number | null
           ctr: number | null
           date: string
+          date_stop: string | null
           frequency: number | null
           impressions: number
           link_clicks: number | null
           meta_leads: number
+          raw_action_values: Json | null
+          raw_actions: Json | null
           reach: number | null
           spend: number
           synced_at: string
         }
         Insert: {
+          account_id?: string | null
           ad_id: string
           ad_name?: string | null
           adset_id?: string | null
@@ -4524,19 +4530,24 @@ export type Database = {
           campaign_id?: string | null
           campaign_name?: string | null
           clicks?: number
+          cost_per_link_click?: number | null
           cpc?: number | null
           cpm?: number | null
           ctr?: number | null
           date: string
+          date_stop?: string | null
           frequency?: number | null
           impressions?: number
           link_clicks?: number | null
           meta_leads?: number
+          raw_action_values?: Json | null
+          raw_actions?: Json | null
           reach?: number | null
           spend?: number
           synced_at?: string
         }
         Update: {
+          account_id?: string | null
           ad_id?: string
           ad_name?: string | null
           adset_id?: string | null
@@ -4544,14 +4555,18 @@ export type Database = {
           campaign_id?: string | null
           campaign_name?: string | null
           clicks?: number
+          cost_per_link_click?: number | null
           cpc?: number | null
           cpm?: number | null
           ctr?: number | null
           date?: string
+          date_stop?: string | null
           frequency?: number | null
           impressions?: number
           link_clicks?: number | null
           meta_leads?: number
+          raw_action_values?: Json | null
+          raw_actions?: Json | null
           reach?: number | null
           spend?: number
           synced_at?: string
