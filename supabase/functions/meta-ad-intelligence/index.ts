@@ -28,24 +28,21 @@ const json = (d: unknown, status = 200) =>
 type MetaErr = { http_status: number; code?: number; subcode?: number; type?: string; message: string; fbtrace_id?: string };
 class MetaError extends Error { constructor(public info: MetaErr) { super(info.message); } }
 
+function token(): string | undefined {
+  return Deno.env.get("META_ACCESS_TOKEN") || Deno.env.get("META_ADS_ACCESS_TOKEN") || undefined;
+}
 function source() {
-  if (Deno.env.get("META_ADS_API_KEY") && Deno.env.get("LOVABLE_API_KEY")) return "lovable_connector";
-  if (Deno.env.get("META_ADS_ACCESS_TOKEN")) return "legacy_token";
+  if (Deno.env.get("META_ACCESS_TOKEN")) return "META_ACCESS_TOKEN";
+  if (Deno.env.get("META_ADS_ACCESS_TOKEN")) return "META_ADS_ACCESS_TOKEN";
   return "none";
 }
+const API_V = () => (Deno.env.get("META_API_VERSION") || V).replace(/^\/?/, "");
 async function graph(pathAndQuery: string): Promise<any> {
-  const src = source();
-  let res: Response;
-  if (src === "lovable_connector") {
-    res = await fetch(`https://connector-gateway.lovable.dev/meta_ads/${V}${pathAndQuery}`, {
-      headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`, "X-Connection-Api-Key": Deno.env.get("META_ADS_API_KEY")! },
-    });
-  } else if (src === "legacy_token") {
-    const sep = pathAndQuery.includes("?") ? "&" : "?";
-    res = await fetch(`https://graph.facebook.com/${V}${pathAndQuery}${sep}access_token=${encodeURIComponent(Deno.env.get("META_ADS_ACCESS_TOKEN")!)}`);
-  } else {
-    throw new MetaError({ http_status: 0, message: "Meta reklam hesabı bağlı değil." });
-  }
+  const t = token();
+  if (!t) throw new MetaError({ http_status: 0, message: "Meta reklam hesabı bağlı değil." });
+  const sep = pathAndQuery.includes("?") ? "&" : "?";
+  // Doğrudan Meta Marketing API — yalnızca GET (okuma)
+  const res = await fetch(`https://graph.facebook.com/${API_V()}${pathAndQuery}${sep}access_token=${encodeURIComponent(t)}`, { method: "GET" });
   const text = await res.text();
   let body: any; try { body = JSON.parse(text); } catch { body = { raw: text.slice(0, 300) }; }
   if (!res.ok || body?.error) {
@@ -95,20 +92,21 @@ const ymd = (d: Date) => d.toISOString().slice(0, 10);
 
 async function getSettings(admin: any) {
   const { data } = await admin.from("ad_intel_settings").select("*").eq("id", 1).maybeSingle();
-  return data || {};
+  const envAcc = (Deno.env.get("META_AD_ACCOUNT_ID") || "").replace(/^act_/, "");
+  return { ...(data || {}), ad_account_id: (data?.ad_account_id || envAcc || null) };
 }
 
 // ---- Insights senkronu (okuma) ----
 async function syncInsights(admin: any, accountId: string, days: number) {
   const since = ymd(new Date(Date.now() - (days - 1) * 864e5));
   const until = ymd(new Date());
-  const fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,spend,impressions,reach,frequency,clicks,inline_link_clicks,ctr,cpc,cpm,actions";
+  const fields = "date_start,date_stop,account_id,campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,spend,impressions,reach,frequency,clicks,inline_link_clicks,cost_per_inline_link_click,ctr,cpc,cpm,actions,action_values";
   const rows = await graphPaged(
     `/act_${accountId}/insights?level=ad&time_increment=1&limit=500&fields=${fields}&time_range=${encodeURIComponent(JSON.stringify({ since, until }))}`,
   );
   const num = (v: any) => (v === undefined || v === null || v === "" ? null : Number(v));
   const data = rows.map((r: any) => ({
-    date: r.date_start, ad_id: r.ad_id, ad_name: r.ad_name, adset_id: r.adset_id, adset_name: r.adset_name,
+    date: r.date_start, date_stop: r.date_stop, account_id: r.account_id, cost_per_link_click: num(r.cost_per_inline_link_click), raw_actions: r.actions ?? null, raw_action_values: r.action_values ?? null, ad_id: r.ad_id, ad_name: r.ad_name, adset_id: r.adset_id, adset_name: r.adset_name,
     campaign_id: r.campaign_id, campaign_name: r.campaign_name,
     spend: Number(r.spend || 0), impressions: Number(r.impressions || 0), clicks: Number(r.clicks || 0),
     reach: num(r.reach), frequency: num(r.frequency), link_clicks: num(r.inline_link_clicks),
