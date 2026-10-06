@@ -1,146 +1,358 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowUpDown, CheckCircle2, ChevronRight, RefreshCw, Sparkles, XCircle, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 
+type Level = "campaign" | "adset" | "ad";
 type Row = {
-  campaign_id: string; campaign_name: string | null; spend: number; impressions: number; clicks: number;
-  meta_leads: number; leads: number; registrations: number; checkouts: number; paid: number; revenue: number;
+  entity_id: string; entity_name: string | null; parent_id: string | null; campaign_id: string | null;
+  spend: number; impressions: number; clicks: number; link_clicks: number; meta_leads: number; active_days: number;
+  leads: number; qualified: number; registrations: number; profiles: number; checkouts: number; paid: number; revenue: number;
+  thumbnail_url: string | null; creative_id: string | null;
 };
-type Rec = { campaign_id: string; campaign_name: string | null; decision: string; confidence: string; reason: string; created_at?: string };
+type Rec = { level: string; entity_id: string; decision: string; confidence: string; reason: string };
+type Status = { source: string; ad_account_id: string | null; ad_account_name: string | null; last_sync_at: string | null; last_sync_status: string | null; last_error: string | null };
+type Settings = { qualified_threshold: number; min_leads_for_decision: number; min_purchases_for_scale: number; min_spend_for_pause: number; min_days_active: number; target_cac: number };
 
 const DECISION: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  BUYUT: { label: "BÜYÜT", variant: "default" },
-  KORU: { label: "KORU", variant: "secondary" },
-  IZLE: { label: "İZLE", variant: "outline" },
-  AZALT: { label: "AZALT", variant: "destructive" },
-  DURDUR: { label: "DURDUR", variant: "destructive" },
-  YETERSIZ_VERI: { label: "YETERSİZ VERİ", variant: "outline" },
+  BUYUT: { label: "BÜYÜT", variant: "default" }, KORU: { label: "KORU", variant: "secondary" },
+  IZLE: { label: "İZLE", variant: "outline" }, AZALT: { label: "AZALT", variant: "destructive" },
+  DURDUR: { label: "DURDUR", variant: "destructive" }, YETERSIZ_VERI: { label: "YETERSİZ VERİ", variant: "outline" },
 };
-const CONF: Record<string, string> = { DUSUK: "Düşük güven", ORTA: "Orta güven", YUKSEK: "Yüksek güven" };
+const CONF: Record<string, string> = { DUSUK: "Düşük", ORTA: "Orta", YUKSEK: "Yüksek" };
+const PERIODS = [
+  { v: "today", l: "Bugün" }, { v: "yesterday", l: "Dün" }, { v: "7", l: "Son 7 gün" }, { v: "14", l: "Son 14 gün" }, { v: "30", l: "Son 30 gün" },
+];
+const LEVEL_LABEL: Record<Level, string> = { campaign: "Kampanyalar", adset: "Reklam Setleri", ad: "Reklamlar" };
 
-const tl = (n: number) => `₺${Math.round(n).toLocaleString("tr-TR")}`;
-const ratio = (a: number, b: number) => (b > 0 ? a / b : null);
+const ymd = (d: Date) => d.toISOString().slice(0, 10);
+const range = (p: string) => {
+  const now = new Date();
+  if (p === "today") return { from: ymd(now), to: ymd(now) };
+  if (p === "yesterday") { const y = new Date(Date.now() - 864e5); return { from: ymd(y), to: ymd(y) }; }
+  return { from: ymd(new Date(Date.now() - (parseInt(p) - 1) * 864e5)), to: ymd(now) };
+};
+const div = (a: number, b: number) => (b > 0 ? a / b : null);
+const tl = (n: number | null) => (n == null ? "N/A" : `₺${Math.round(n).toLocaleString("tr-TR")}`);
+const pct = (n: number | null) => (n == null ? "N/A" : `%${n.toFixed(1)}`);
+const x2 = (n: number | null) => (n == null ? "N/A" : `${n.toFixed(2)}x`);
+const errText = async (e: unknown) => (e instanceof FunctionsHttpError ? await e.context.text() : (e as Error)?.message);
 
-async function errText(error: unknown) {
-  return error instanceof FunctionsHttpError ? await error.context.text() : (error as Error)?.message;
-}
+const kpi = (r: Row) => ({
+  ctr: div(r.clicks * 100, r.impressions), cpc: div(r.spend, r.clicks), cpl: div(r.spend, r.leads), cpql: div(r.spend, r.qualified),
+  cpr: div(r.spend, r.registrations), cac: div(r.spend, r.paid), roas: div(r.revenue, r.spend),
+  l2q: div(r.qualified * 100, r.leads), l2r: div(r.registrations * 100, r.leads), r2c: div(r.checkouts * 100, r.registrations),
+  c2p: div(r.paid * 100, r.checkouts), l2p: div(r.paid * 100, r.leads),
+});
 
-export default function AdPerformancePanel({ days }: { days: number }) {
+const invoke = (body: Record<string, unknown>) => supabase.functions.invoke("meta-ad-intelligence", { body });
+
+export default function AdPerformancePanel(_: { days?: number }) {
+  const [status, setStatus] = useState<Status | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [period, setPeriod] = useState("30");
+  const [level, setLevel] = useState<Level>("campaign");
+  const [parent, setParent] = useState<{ id: string; name: string; level: Level }[]>([]);
   const [rows, setRows] = useState<Row[]>([]);
   const [recs, setRecs] = useState<Rec[]>([]);
+  const [sort, setSort] = useState<{ k: string; d: 1 | -1 }>({ k: "spend", d: -1 });
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [test, setTest] = useState<{ ok: boolean; steps: { name: string; ok: boolean; detail?: string }[]; diagnosis?: string; error?: any } | null>(null);
+  const [accounts, setAccounts] = useState<{ id: string; name: string; currency: string }[] | null>(null);
+  const [events, setEvents] = useState<{ event_name: string; status: string }[]>([]);
+  const [debug, setDebug] = useState<any[]>([]);
 
-  const load = async () => {
+  const { from, to } = range(period);
+  const connected = status && status.source !== "none" && status.last_sync_status === "ok";
+
+  const loadStatus = async () => {
+    const [{ data }, s, ev, dbg] = await Promise.all([
+      invoke({ action: "status" }),
+      supabase.from("ad_intel_settings" as any).select("*").eq("id", 1).maybeSingle(),
+      supabase.from("meta_capi_events" as any).select("event_name,status").gte("created_at", new Date(Date.now() - 864e5).toISOString()).limit(1000),
+      supabase.rpc("get_attribution_debug" as any),
+    ]);
+    setStatus(data as Status); setSettings(s.data as any); setEvents((ev.data as any) || []); setDebug((dbg.data as any) || []);
+  };
+  const loadRows = async () => {
     setLoading(true);
+    const p = parent[parent.length - 1];
     const [{ data, error }, r] = await Promise.all([
-      supabase.rpc("get_ad_performance" as any, { p_days: days }),
-      supabase.from("ai_ad_recommendations" as any).select("campaign_id,campaign_name,decision,confidence,reason,created_at")
-        .order("created_at", { ascending: false }).limit(60),
+      supabase.rpc("get_ad_performance" as any, { p_from: from, p_to: to, p_level: level, p_parent: p?.id ?? null }),
+      supabase.from("ai_ad_recommendations" as any).select("level,entity_id,decision,confidence,reason,created_at").eq("level", level).order("created_at", { ascending: false }).limit(200),
     ]);
     if (error) toast.error(error.message);
-    setRows(((data as any) || []).map((x: any) => ({ ...x, spend: Number(x.spend), revenue: Number(x.revenue) })));
+    setRows(((data as any) || []).map((x: any) => ({ ...x, spend: Number(x.spend), revenue: Number(x.revenue),
+      ...Object.fromEntries(["impressions", "clicks", "link_clicks", "meta_leads", "active_days", "leads", "qualified", "registrations", "profiles", "checkouts", "paid"].map((k) => [k, Number(x[k] || 0)])) })));
     const seen = new Set<string>();
-    setRecs(((r.data as any) || []).filter((x: Rec) => (seen.has(x.campaign_id) ? false : (seen.add(x.campaign_id), true))));
+    setRecs(((r.data as any) || []).filter((x: Rec) => (seen.has(x.entity_id) ? false : (seen.add(x.entity_id), true))));
     setLoading(false);
   };
-  useEffect(() => { load(); }, [days]);
+  useEffect(() => { loadStatus(); }, []);
+  useEffect(() => { loadRows(); }, [period, level, parent]);
 
-  const sync = async () => {
-    setSyncing(true);
-    const { data, error } = await supabase.functions.invoke("meta-ad-intelligence", { body: { action: "sync" } });
-    setSyncing(false);
-    if (error) return toast.error(await errText(error));
-    if (data?.metricError) toast.error(`Meta: ${data.metricError}`);
-    else toast.success(`Meta verisi güncellendi (${data?.metricRows ?? 0} satır, ${data?.purchasesSent ?? 0} ödeme bildirildi)`);
-    load();
+  const run = async (name: string, body: Record<string, unknown>) => {
+    setBusy(name);
+    const { data, error } = await invoke(body);
+    setBusy(null);
+    if (error) { toast.error(await errText(error)); return null; }
+    return data;
   };
-  const analyze = async () => {
-    setAnalyzing(true);
-    const { data, error } = await supabase.functions.invoke("meta-ad-intelligence", { body: { action: "analyze", days } });
-    setAnalyzing(false);
-    if (error) return toast.error(await errText(error));
-    if (data?.note) toast.info(data.note);
-    else toast.success("Öneriler hazır");
-    load();
+  const doTest = async () => { const d = await run("test", { action: "test" }); if (d) setTest(d); };
+  const doAccounts = async () => {
+    const d = await run("acc", { action: "listAccounts" });
+    if (!d) return;
+    if (d.error) toast.error(d.diagnosis || d.error.message);
+    setAccounts(d.accounts || []);
+  };
+  const pick = async (id: string) => {
+    const a = accounts?.find((x) => x.id === id);
+    if (await run("pick", { action: "selectAccount", accountId: id, accountName: a?.name })) { toast.success("Reklam hesabı kaydedildi"); loadStatus(); }
+  };
+  const doSync = async () => {
+    const d = await run("sync", { action: "sync", days: 30 });
+    if (!d) return;
+    if (d.metricError) toast.error(d.diagnosis || d.metricError);
+    else toast.success(`Meta verisi güncellendi (${d.metricRows} satır)`);
+    loadStatus(); loadRows();
+  };
+  const doAnalyze = async () => {
+    const d = await run("ai", { action: "analyze", from, to, level });
+    if (!d) return;
+    d.note ? toast.info(d.note) : toast.success("AI önerileri hazır");
+    loadRows();
+  };
+  const doTestVisit = async () => {
+    const { error } = await supabase.rpc("create_test_ad_visit" as any);
+    error ? toast.error(error.message) : toast.success("Test ziyareti oluşturuldu (raporlara dahil edilmez)");
+    loadStatus();
+  };
+  const saveSettings = async () => {
+    if (!settings) return;
+    const { error } = await supabase.from("ad_intel_settings" as any).update({ ...settings, updated_at: new Date().toISOString() }).eq("id", 1);
+    error ? toast.error(error.message) : toast.success("Ayarlar kaydedildi");
   };
 
-  const t = rows.reduce((a, r) => ({
-    spend: a.spend + r.spend, leads: a.leads + Number(r.leads), reg: a.reg + Number(r.registrations),
-    paid: a.paid + Number(r.paid), rev: a.rev + r.revenue,
-  }), { spend: 0, leads: 0, reg: 0, paid: 0, rev: 0 });
-  const recBy = new Map(recs.map((r) => [r.campaign_id, r]));
-  const kpis = [
-    ["Harcama", tl(t.spend)],
-    ["CPL", ratio(t.spend, t.leads) != null ? tl(ratio(t.spend, t.leads)!) : "—"],
-    ["Kayıt başı maliyet", ratio(t.spend, t.reg) != null ? tl(ratio(t.spend, t.reg)!) : "—"],
-    ["CAC", ratio(t.spend, t.paid) != null ? tl(ratio(t.spend, t.paid)!) : "—"],
-    ["Gelir", tl(t.rev)],
-    ["ROAS", ratio(t.rev, t.spend) != null ? `${ratio(t.rev, t.spend)!.toFixed(2)}x` : "—"],
-  ];
+  const recBy = useMemo(() => new Map(recs.map((r) => [r.entity_id, r])), [recs]);
+  const sorted = useMemo(() => {
+    const val = (r: Row) => { const k = kpi(r) as any; return (r as any)[sort.k] ?? k[sort.k] ?? -Infinity; };
+    return [...rows].sort((a, b) => ((val(a) ?? -Infinity) > (val(b) ?? -Infinity) ? 1 : -1) * sort.d);
+  }, [rows, sort]);
+  const tot = rows.reduce((a, r) => ({ spend: a.spend + r.spend, imp: a.imp + r.impressions, clk: a.clk + r.clicks, leads: a.leads + r.leads, q: a.q + r.qualified, reg: a.reg + r.registrations, chk: a.chk + r.checkouts, paid: a.paid + r.paid, rev: a.rev + r.revenue }),
+    { spend: 0, imp: 0, clk: 0, leads: 0, q: 0, reg: 0, chk: 0, paid: 0, rev: 0 });
+
+  const insights = useMemo(() => {
+    if (!settings || !rows.length) return [];
+    const avgCpl = div(tot.spend, tot.leads), avgCtr = div(tot.clk * 100, tot.imp), avgL2p = div(tot.paid * 100, tot.leads);
+    const out: { tone: "bad" | "good" | "mixed"; title: string; name: string; text: string }[] = [];
+    for (const r of rows) {
+      const k = kpi(r), n = r.entity_name || r.entity_id;
+      if (r.spend >= settings.min_spend_for_pause && r.paid === 0) out.push({ tone: "bad", title: "Yüksek harcama / satış yok", name: n, text: `${tl(r.spend)} harcandı, 0 ücretli üye.` });
+      if (avgCpl && k.cpl && k.cpl > avgCpl * 1.5 && r.paid >= 2) out.push({ tone: "mixed", title: "Pahalı lead / iyi satış", name: n, text: `CPL ${tl(k.cpl)} ama ${r.paid} ücretli üye.` });
+      if (avgCpl && k.cpl && k.cpl < avgCpl * 0.6 && r.leads >= settings.min_leads_for_decision && (k.l2p ?? 0) < (avgL2p ?? 0) * 0.5) out.push({ tone: "bad", title: "Ucuz lead / zayıf satış", name: n, text: `CPL ${tl(k.cpl)}, lead→ücretli ${pct(k.l2p)}.` });
+      if (k.roas && k.roas >= 3 && r.paid >= settings.min_purchases_for_scale) out.push({ tone: "good", title: "Yüksek ROAS", name: n, text: `ROAS ${x2(k.roas)}, ${r.paid} ücretli üye.` });
+      if (k.cac && k.cac <= settings.target_cac * 0.7 && r.paid >= settings.min_purchases_for_scale) out.push({ tone: "good", title: "Düşük CAC", name: n, text: `CAC ${tl(k.cac)} (hedef ${tl(settings.target_cac)}).` });
+      if (k.l2q && k.l2q >= 50 && r.leads >= settings.min_leads_for_decision) out.push({ tone: "good", title: "Yüksek nitelikli oran", name: n, text: `Leadlerin ${pct(k.l2q)}'i nitelikli.` });
+      if (avgCtr && k.ctr && k.ctr > avgCtr * 1.3 && r.leads >= settings.min_leads_for_decision && r.paid === 0) out.push({ tone: "mixed", title: "İyi CTR / kötü dönüşüm", name: n, text: `CTR ${pct(k.ctr)} ama satış yok.` });
+      if (avgCtr && k.ctr && k.ctr < avgCtr * 0.7 && r.paid >= 2) out.push({ tone: "mixed", title: "Düşük CTR / iyi dönüşüm", name: n, text: `CTR ${pct(k.ctr)}, ${r.paid} ücretli üye.` });
+    }
+    return out.slice(0, 12);
+  }, [rows, settings]);
+
+  const evStats = useMemo(() => {
+    const m = new Map<string, Record<string, number>>();
+    events.forEach((e) => { const s = m.get(e.event_name) || {}; s[e.status] = (s[e.status] || 0) + 1; m.set(e.event_name, s); });
+    return [...m.entries()];
+  }, [events]);
+
+  const SortH = ({ k, label }: { k: string; label: string }) => (
+    <th className="px-2 py-2 text-left font-medium whitespace-nowrap cursor-pointer select-none" onClick={() => setSort((s) => ({ k, d: s.k === k ? (s.d === 1 ? -1 : 1) : -1 }))}>
+      <span className="inline-flex items-center gap-1">{label}<ArrowUpDown className="w-3 h-3 opacity-50" /></span>
+    </th>
+  );
+  const drill = (r: Row) => {
+    if (level === "ad") return;
+    setParent((p) => [...p, { id: r.entity_id, name: r.entity_name || r.entity_id, level }]);
+    setLevel(level === "campaign" ? "adset" : "ad");
+  };
+  const goLevel = (l: Level) => { setParent([]); setLevel(l); };
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={sync} disabled={syncing}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`} />Meta verisini güncelle
-        </Button>
-        <Button size="sm" onClick={analyze} disabled={analyzing || !rows.length}>
-          <Sparkles className={`w-4 h-4 mr-2 ${analyzing ? "animate-pulse" : ""}`} />AI önerisi al
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-        {kpis.map(([k, v]) => (
-          <Card key={k}><CardContent className="p-3">
-            <div className="text-xs text-muted-foreground">{k}</div>
-            <div className="text-lg font-semibold text-foreground">{v}</div>
-          </CardContent></Card>
-        ))}
-      </div>
-
+      {/* Meta Bağlantısı */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Kampanyalar</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {loading && <div className="h-20 rounded bg-muted animate-pulse" />}
-          {!loading && !rows.length && (
-            <p className="text-sm text-muted-foreground">Henüz reklam harcaması verisi yok. "Meta verisini güncelle"ye basın; sistem ayrıca her gün otomatik çeker.</p>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Meta Bağlantısı</CardTitle></CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div><div className="text-xs text-muted-foreground">Bağlantı</div>
+              <Badge variant={!status ? "outline" : status.source === "none" ? "outline" : connected ? "default" : "destructive"}>
+                {!status ? "…" : status.source === "none" ? "DISCONNECTED" : connected ? "CONNECTED" : "ERROR"}</Badge></div>
+            <div><div className="text-xs text-muted-foreground">Reklam hesabı</div><div className="text-foreground">{status?.ad_account_name || "Seçilmedi"}</div></div>
+            <div><div className="text-xs text-muted-foreground">Hesap ID</div><div className="text-foreground">{status?.ad_account_id || "—"}</div></div>
+            <div><div className="text-xs text-muted-foreground">Son güncelleme</div><div className="text-foreground">{status?.last_sync_at ? new Date(status.last_sync_at).toLocaleString("tr-TR") : "Hiç"}</div></div>
+            <div><div className="text-xs text-muted-foreground">API durumu</div><div className="text-foreground">{status?.last_sync_status === "ok" ? "Healthy" : status?.last_sync_status === "error" ? "Error" : "—"}</div></div>
+          </div>
+          {status?.last_error && <p className="text-xs text-destructive">Son hata: {status.last_error}</p>}
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={doTest} disabled={busy === "test"}>Bağlantıyı Test Et</Button>
+            <Button size="sm" variant="outline" onClick={doAccounts} disabled={busy === "acc"}>Reklam Hesaplarını Listele</Button>
+            <Button size="sm" onClick={doSync} disabled={busy === "sync"}><RefreshCw className={`w-4 h-4 mr-2 ${busy === "sync" ? "animate-spin" : ""}`} />Meta Verilerini Şimdi Güncelle</Button>
+          </div>
+          {accounts && (accounts.length ? (
+            <Select onValueChange={pick}><SelectTrigger className="max-w-md"><SelectValue placeholder="Doktorum Ol reklam hesabını seçin" /></SelectTrigger>
+              <SelectContent>{accounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} (•••{a.id.slice(-4)}, {a.currency})</SelectItem>)}</SelectContent></Select>
+          ) : <p className="text-xs text-muted-foreground">Reklam hesabı listelenemedi — Meta bağlantısı yenilenmeli.</p>)}
+          {test && (
+            <div className="rounded-md border border-border p-3 space-y-1">
+              {test.steps.map((s, i) => (
+                <div key={i} className="flex items-start gap-2">{s.ok ? <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" /> : <XCircle className="w-4 h-4 text-destructive mt-0.5" />}
+                  <span className="text-foreground">{s.name}{s.detail ? <span className="text-muted-foreground"> — {s.detail}</span> : null}</span></div>
+              ))}
+              {test.diagnosis && <p className="text-xs text-destructive pt-1">Teşhis: {test.diagnosis}</p>}
+              {test.error && <p className="text-xs text-muted-foreground">HTTP {test.error.http_status} · kod {test.error.code ?? "—"} · alt kod {test.error.subcode ?? "—"} · {test.error.type ?? "—"} · fbtrace {test.error.fbtrace_id ?? "—"}</p>}
+            </div>
           )}
-          {rows.map((r) => {
-            const rec = recBy.get(r.campaign_id);
-            const noSale = r.spend >= 1000 && Number(r.paid) === 0;
-            return (
-              <div key={r.campaign_id} className={`rounded-lg border p-3 ${noSale ? "border-destructive/50 bg-destructive/5" : "border-border"}`}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="font-medium text-foreground">{r.campaign_name || r.campaign_id}</div>
-                  {rec && <Badge variant={DECISION[rec.decision]?.variant || "outline"}>{DECISION[rec.decision]?.label || rec.decision}</Badge>}
-                </div>
-                <div className="mt-2 grid grid-cols-3 md:grid-cols-8 gap-2 text-xs text-muted-foreground">
-                  <span>Harcama <b className="text-foreground">{tl(r.spend)}</b></span>
-                  <span>Tıklama <b className="text-foreground">{r.clicks}</b></span>
-                  <span>Lead <b className="text-foreground">{r.leads}</b></span>
-                  <span>Kayıt <b className="text-foreground">{r.registrations}</b></span>
-                  <span>Ücretli <b className="text-foreground">{r.paid}</b></span>
-                  <span>Gelir <b className="text-foreground">{tl(r.revenue)}</b></span>
-                  <span>CAC <b className="text-foreground">{Number(r.paid) ? tl(r.spend / Number(r.paid)) : "—"}</b></span>
-                  <span>ROAS <b className="text-foreground">{r.spend ? `${(r.revenue / r.spend).toFixed(2)}x` : "—"}</b></span>
-                </div>
-                {noSale && <p className="mt-2 text-xs text-destructive">Çok harcadı, hiç ücretli üye yok.</p>}
-                {rec && <p className="mt-2 text-sm text-foreground">{rec.reason} <span className="text-xs text-muted-foreground">({CONF[rec.confidence] || rec.confidence})</span></p>}
-              </div>
-            );
-          })}
+          {status && !connected && (
+            <p className="text-xs text-muted-foreground">Meta Marketing API bağlantısını yenilemek için sohbette "Meta hesabımı bağla" yazın; güvenli Meta giriş kartı açılır. Bu ekrandaki tüm reklam işlemleri yalnızca okumadır.</p>
+          )}
         </CardContent>
       </Card>
-      <p className="text-xs text-muted-foreground">
-        Reklamdan gelenlerin doğru kampanyaya bağlanması için Meta reklam bağlantılarına şu parametreleri ekleyin:
-        utm_source=facebook&utm_campaign={"{{campaign.name}}"}&meta_campaign_id={"{{campaign.id}}"}&meta_adset_id={"{{adset.id}}"}&meta_ad_id={"{{ad.id}}"}
+
+      {/* Dönem + seviye + KPI */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={period} onValueChange={setPeriod}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>{PERIODS.map((p) => <SelectItem key={p.v} value={p.v}>{p.l}</SelectItem>)}</SelectContent></Select>
+        {(["campaign", "adset", "ad"] as Level[]).map((l) => (
+          <Button key={l} size="sm" variant={level === l ? "default" : "outline"} onClick={() => goLevel(l)}>{LEVEL_LABEL[l]}</Button>
+        ))}
+        <Button size="sm" variant="secondary" onClick={doAnalyze} disabled={busy === "ai" || !rows.length}>
+          <Sparkles className={`w-4 h-4 mr-2 ${busy === "ai" ? "animate-pulse" : ""}`} />AI önerisi al ({LEVEL_LABEL[level]})
+        </Button>
+      </div>
+      {parent.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+          <button className="underline" onClick={() => goLevel("campaign")}>Tüm kampanyalar</button>
+          {parent.map((p, i) => (<span key={p.id} className="inline-flex items-center gap-1"><ChevronRight className="w-3 h-3" />
+            <button className="underline" onClick={() => { setParent(parent.slice(0, i + 1)); setLevel(p.level === "campaign" ? "adset" : "ad"); }}>{p.name}</button></span>))}
+        </div>
+      )}
+
+      {!rows.length && !loading ? (
+        <Card><CardContent className="p-4 text-sm text-muted-foreground">
+          {connected ? "Bu dönemde reklam harcaması yok." : "Meta reklam hesabı bağlı değil. Reklam harcaması verisi alınamıyor; CAC ve ROAS hesaplanamaz (N/A)."}
+        </CardContent></Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            {[["Harcama", tl(tot.spend)], ["CPL", tl(div(tot.spend, tot.leads))], ["CPQL", tl(div(tot.spend, tot.q))], ["CAC", tl(div(tot.spend, tot.paid))], ["Gelir", tl(tot.rev)], ["ROAS", x2(div(tot.rev, tot.spend))],
+              ["Lead→Nitelikli", pct(div(tot.q * 100, tot.leads))], ["Lead→Kayıt", pct(div(tot.reg * 100, tot.leads))], ["Kayıt→Ödeme ekranı", pct(div(tot.chk * 100, tot.reg))], ["Ödeme ekranı→Ücretli", pct(div(tot.paid * 100, tot.chk))], ["Lead→Ücretli", pct(div(tot.paid * 100, tot.leads))], ["Kayıt başı", tl(div(tot.spend, tot.reg))]]
+              .map(([k, v]) => (<Card key={k}><CardContent className="p-3"><div className="text-xs text-muted-foreground">{k}</div><div className="text-lg font-semibold text-foreground">{v}</div></CardContent></Card>))}
+          </div>
+
+          {insights.length > 0 && (
+            <div className="grid md:grid-cols-3 gap-3">
+              {insights.map((i, n) => (
+                <Card key={n} className={i.tone === "bad" ? "border-destructive/50 bg-destructive/5" : i.tone === "good" ? "border-primary/30 bg-primary/5" : "border-border"}>
+                  <CardContent className="p-3"><div className="text-xs font-semibold text-foreground">{i.title}</div><div className="text-sm text-foreground truncate">{i.name}</div><div className="text-xs text-muted-foreground">{i.text}</div></CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          <Card><CardContent className="p-0 overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/50 text-muted-foreground"><tr>
+                <th className="px-2 py-2 text-left font-medium">Ad</th>
+                <SortH k="spend" label="Harcama" /><SortH k="impressions" label="Gösterim" /><SortH k="ctr" label="CTR" /><SortH k="cpc" label="CPC" />
+                <SortH k="leads" label="Lead" /><SortH k="cpl" label="CPL" /><SortH k="qualified" label="Nitelikli" /><SortH k="cpql" label="CPQL" />
+                <SortH k="registrations" label="Kayıt" /><SortH k="checkouts" label="Ödeme ekr." /><SortH k="paid" label="Ücretli" /><SortH k="revenue" label="Gelir" />
+                <SortH k="cac" label="CAC" /><SortH k="roas" label="ROAS" /><SortH k="l2p" label="Lead→Ücretli" />
+                <th className="px-2 py-2 text-left font-medium">AI</th><th className="px-2 py-2 text-left font-medium">Güven</th>
+              </tr></thead>
+              <tbody>
+                {sorted.map((r) => { const k = kpi(r); const rec = recBy.get(r.entity_id); return (
+                  <tr key={r.entity_id} className="border-t border-border align-top">
+                    <td className="px-2 py-2 min-w-[180px]">
+                      <div className="flex items-center gap-2">
+                        {r.thumbnail_url && <img src={r.thumbnail_url} alt="" className="w-8 h-8 rounded object-cover" loading="lazy" onError={(e) => (e.currentTarget.style.display = "none")} />}
+                        <button className={`text-left text-foreground ${level !== "ad" ? "underline" : ""}`} onClick={() => drill(r)}>{r.entity_name || r.entity_id}</button>
+                      </div>
+                      {rec && <div className="text-muted-foreground mt-1 max-w-xs">{rec.reason}</div>}
+                    </td>
+                    <td className="px-2 py-2">{tl(r.spend)}</td><td className="px-2 py-2">{r.impressions.toLocaleString("tr-TR")}</td><td className="px-2 py-2">{pct(k.ctr)}</td><td className="px-2 py-2">{tl(k.cpc)}</td>
+                    <td className="px-2 py-2">{r.leads}</td><td className="px-2 py-2">{tl(k.cpl)}</td><td className="px-2 py-2">{r.qualified}</td><td className="px-2 py-2">{tl(k.cpql)}</td>
+                    <td className="px-2 py-2">{r.registrations}</td><td className="px-2 py-2">{r.checkouts}</td><td className="px-2 py-2">{r.paid}</td><td className="px-2 py-2">{tl(r.revenue)}</td>
+                    <td className="px-2 py-2">{tl(k.cac)}</td><td className="px-2 py-2">{x2(k.roas)}</td><td className="px-2 py-2">{pct(k.l2p)}</td>
+                    <td className="px-2 py-2">{rec ? <Badge variant={DECISION[rec.decision]?.variant || "outline"}>{DECISION[rec.decision]?.label || rec.decision}</Badge> : "—"}</td>
+                    <td className="px-2 py-2">{rec ? CONF[rec.confidence] || rec.confidence : "—"}</td>
+                  </tr>); })}
+              </tbody>
+            </table>
+          </CardContent></Card>
+        </>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Meta Events */}
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Meta Olayları (son 24 saat)</CardTitle></CardHeader>
+          <CardContent className="text-sm space-y-1">
+            {!evStats.length && <p className="text-muted-foreground">Son 24 saatte olay yok.</p>}
+            {evStats.map(([name, s]) => (
+              <div key={name} className="flex justify-between gap-2"><span className="text-foreground">{name}</span>
+                <span className="text-muted-foreground">{s.sent || 0} gönderildi · {s.pending || 0} bekliyor · {s.retrying || 0} tekrar · {s.failed || 0} başarısız</span></div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Ayarlar */}
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">AI Karar Ayarları</CardTitle></CardHeader>
+          <CardContent className="grid grid-cols-2 gap-2 text-xs">
+            {settings && ([
+              ["qualified_threshold", "Nitelikli lead puan eşiği"], ["target_cac", "Hedef CAC (₺)"], ["min_leads_for_decision", "Karar için min. lead"],
+              ["min_purchases_for_scale", "Büyütme için min. satış"], ["min_spend_for_pause", "Durdurma için min. harcama (₺)"], ["min_days_active", "Min. aktif gün"],
+            ] as [keyof Settings, string][]).map(([k, l]) => (
+              <label key={k} className="space-y-1"><span className="text-muted-foreground">{l}</span>
+                <Input type="number" value={settings[k] as any} onChange={(e) => setSettings({ ...settings, [k]: Number(e.target.value) })} /></label>
+            ))}
+            <Button size="sm" className="col-span-2" onClick={saveSettings}>Ayarları Kaydet</Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Attribution Debugger */}
+      <Card>
+        <CardHeader className="pb-2 flex-row items-center justify-between"><CardTitle className="text-base">Attribution Debugger (son 20 reklam ziyareti)</CardTitle>
+          <Button size="sm" variant="outline" onClick={doTestVisit}><FlaskConical className="w-4 h-4 mr-2" />Test Reklam Ziyareti Oluştur</Button></CardHeader>
+        <CardContent className="p-0 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/50 text-muted-foreground"><tr>{["Zaman", "Kampanya ID", "Set ID", "Reklam ID", "Kaynak", "UTM Kampanya", "fbclid", "fbc", "fbp", "Kayıt", "Ödeme", ""].map((h) => <th key={h} className="px-2 py-2 text-left font-medium">{h}</th>)}</tr></thead>
+            <tbody>
+              {!debug.length && <tr><td colSpan={12} className="px-2 py-3 text-muted-foreground">Henüz reklam parametreli ziyaret yok.</td></tr>}
+              {debug.map((d, i) => (
+                <tr key={i} className="border-t border-border">
+                  <td className="px-2 py-1 whitespace-nowrap">{new Date(d.visit_at).toLocaleString("tr-TR")}</td>
+                  <td className="px-2 py-1">{d.campaign_id || "—"}</td><td className="px-2 py-1">{d.adset_id || "—"}</td><td className="px-2 py-1">{d.ad_id || "—"}</td>
+                  <td className="px-2 py-1">{d.utm_source || "—"}</td><td className="px-2 py-1">{d.utm_campaign || "—"}</td>
+                  {[d.has_fbclid, d.has_fbc, d.has_fbp, d.registered, d.purchased].map((v: boolean, j: number) => <td key={j} className="px-2 py-1">{v ? "✓" : "—"}</td>)}
+                  <td className="px-2 py-1">{d.is_test && <Badge variant="outline">TEST</Badge>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      <p className="text-xs text-muted-foreground break-all">
+        Meta reklam URL parametreleri: utm_source=facebook&utm_medium=paid&utm_campaign={"{{campaign.name}}"}&utm_content={"{{ad.name}}"}&meta_campaign_id={"{{campaign.id}}"}&meta_adset_id={"{{adset.id}}"}&meta_ad_id={"{{ad.id}}"}
       </p>
     </div>
   );
