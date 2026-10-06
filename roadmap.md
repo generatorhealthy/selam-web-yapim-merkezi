@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Kayıt sonrası WhatsApp'a güvenli giriş bilgileri ve mobil uygulama bağlantılarını ekle; ayrı kayıt duyurusunu kaldır ve doğrula
+- [x] Kayıt sonrası WhatsApp'a güvenli giriş bilgileri ve mobil uygulama bağlantıları tek mesajda eklendi; ayrı otomatik kayıt duyurusu bulunmadı, 4 test geçti ve canlıda yetkisiz erişim 401 doğrulandı (gerçek alıcıya gönderim yapılmadı)
 
 - [x] `user_profiles` erişim izinlerini doğrula ve tamamla
 - [x] Ortak panel yetki kontrolünü ekle
