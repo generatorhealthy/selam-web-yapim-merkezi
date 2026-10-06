@@ -19,7 +19,7 @@ import { translateAuthError } from "@/utils/authErrors";
 import { trackMetaLead } from "@/lib/metaCapi";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
-  Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard
+  Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard, Calculator
 } from "lucide-react";
 
 const PRIORITY_SPECIALTIES = [
@@ -165,6 +165,12 @@ const SpecialistRegistration = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [referralCode, setReferralCode] = useState("");
 
+  // Kapasite Öngörü Aracı — yalnızca kullanıcının kendi girdileriyle hesaplanır
+  const [calcFee, setCalcFee] = useState("");
+  const [calcSessions, setCalcSessions] = useState("");
+  const monthlyCapacity = (parseInt(calcSessions) || 0) * 4;
+  const monthlyTotal = monthlyCapacity * (parseInt(calcFee) || 0);
+
   // Checkout sırasında girilen davet kodunu otomatik doldur
   useEffect(() => {
     try {
@@ -199,7 +205,7 @@ const SpecialistRegistration = () => {
           setCreatedUserEmail(session.user.email || profile.email || "");
           if (profile.email) setEmail(profile.email);
           if (profile.phone) setPhone(profile.phone);
-          setCurrentStep(2);
+          setCurrentStep(3);
           toast.success("Kaldığınız yerden devam ediyorsunuz.");
         }
       } catch (e) { /* sessiz geç */ }
@@ -218,12 +224,16 @@ const SpecialistRegistration = () => {
 
   const steps = [
     { num: 1, label: "Hesap", icon: User },
-    { num: 2, label: "Bilgiler", icon: Stethoscope },
-    { num: 3, label: "Profil", icon: Camera },
-    { num: 4, label: "Profil Yayınlama", icon: Check },
+    { num: 2, label: "Kapasite", icon: Calculator },
+    { num: 3, label: "Bilgiler", icon: Stethoscope },
+    { num: 4, label: "Profil", icon: Camera },
+    { num: 5, label: "Profil Yayınlama", icon: Check },
   ];
 
   const displayStep = currentStep;
+
+  // Huni analitiği 4 adımlı geçmiş veriyle uyumlu kalsın: Kapasite sekmesi hesap öncesi kabul edilir.
+  const analyticsStep = currentStep <= 2 ? 1 : currentStep - 1;
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -386,7 +396,7 @@ const SpecialistRegistration = () => {
       toast.info("Yapay zeka içerikleri oluşturulamadı, manuel olarak düzenleyebilirsiniz.");
     } finally {
       setIsGeneratingAI(false);
-      setCurrentStep(3);
+      setCurrentStep(4);
 
     }
   };
@@ -443,7 +453,7 @@ const SpecialistRegistration = () => {
         external_id: createdUserId,
         lead_event_source: "Doktorumol Uzman Profil Tamamlandı",
       });
-      setCurrentStep(4);
+      setCurrentStep(5);
 
       // E-posta gönder (arka planda)
       try {
@@ -504,7 +514,7 @@ const SpecialistRegistration = () => {
 
   return (
     <>
-      <RegistrationAnalyticsTracker currentStep={currentStep} completed={currentStep === 4} />
+      <RegistrationAnalyticsTracker currentStep={analyticsStep} completed={currentStep === 5} />
       <Helmet>
         <title>Uzman Kayıt Ol - Doktorum Ol</title>
         <meta name="description" content="Doktorum Ol platformuna uzman olarak kayıt olun. Profesyonel profilinizi oluşturun ve danışanlarınıza ulaşın." />
@@ -530,7 +540,7 @@ const SpecialistRegistration = () => {
           className="container mx-auto px-4 py-6 md:py-12 max-w-lg"
           style={{ paddingBottom: "calc(120px + env(safe-area-inset-bottom, 0px))" }}
         >
-          {currentStep !== 4 && (
+          {currentStep !== 5 && (
             <div className="flex items-center justify-center gap-2 mb-10">
               {steps.map((step, index) => (
                 <div key={step.num} className="flex items-center gap-2">
@@ -665,6 +675,77 @@ const SpecialistRegistration = () => {
           )}
 
           {currentStep === 2 && (
+            <div className="space-y-8">
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Kapasite Öngörü Aracı</h2>
+                <p className="text-muted-foreground text-sm">Kendi ücret ve çalışma planınızla aylık kapasitenizi hesaplayın</p>
+              </div>
+
+              <div className="rounded-3xl border border-primary/15 bg-primary/5 p-5 space-y-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Calculator className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Seans ücretiniz ve haftalık planınız</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground font-normal">Seans Ücretiniz (₺)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={calcFee}
+                      onChange={(e) => setCalcFee(e.target.value)}
+                      placeholder="800"
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground font-normal">Haftalık Seans Sayınız</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="60"
+                      value={calcSessions}
+                      onChange={(e) => setCalcSessions(e.target.value)}
+                      placeholder="10"
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-background border border-border/60 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/60">
+                    <span className="text-sm text-muted-foreground">Aylık Seans Kapasitesi</span>
+                    <span className="text-sm font-semibold text-foreground">{monthlyCapacity.toLocaleString("tr-TR")} seans</span>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <span className="text-sm text-muted-foreground">Kendi Ücretinizle Toplam</span>
+                    <span className="text-lg font-bold text-primary">{monthlyTotal.toLocaleString("tr-TR")} ₺</span>
+                  </div>
+                </div>
+
+                {monthlyCapacity > 0 && (
+                  <p className="text-[11px] text-center text-muted-foreground/70">
+                    {(parseInt(calcSessions) || 0).toLocaleString("tr-TR")} seans/hafta × 4 hafta × {monthlyTotal / monthlyCapacity} ₺
+                  </p>
+                )}
+                <p className="text-[11px] italic text-center text-muted-foreground/70 leading-relaxed">
+                  Bu hesaplama yalnızca girdiğiniz ücret ve saatlere dayalı bir gösterimdir; Doktorumol tarafından verilmiş herhangi bir kazanç taahhüdü veya danışan garantisi içermez.
+                </p>
+              </div>
+
+              <Button
+                onClick={() => setCurrentStep(3)}
+                className="w-full h-14 text-base font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-all"
+              >
+                Devam Et
+              </Button>
+            </div>
+          )}
+
+          {currentStep === 3 && (
             <div className="space-y-8">
               <div className="text-center space-y-2">
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Temel Bilgiler</h2>
@@ -836,7 +917,7 @@ const SpecialistRegistration = () => {
             </div>
           )}
 
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <div className="space-y-8">
               <div className="text-center space-y-2">
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Profil Detayları</h2>
@@ -955,7 +1036,7 @@ const SpecialistRegistration = () => {
                 <div className="flex gap-3 pt-2">
                   <Button
                     variant="outline"
-                    onClick={() => setCurrentStep(2)}
+                    onClick={() => setCurrentStep(3)}
                     className="h-14 rounded-2xl px-6 border-muted"
                   >
                     <ChevronLeft className="w-5 h-5" />
@@ -976,7 +1057,7 @@ const SpecialistRegistration = () => {
             </div>
           )}
 
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <div className="space-y-8">
               <div className="text-center space-y-3">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
