@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import AdPerformancePanel from "@/components/admin/AdPerformancePanel";
 
 type Lead = {
   user_id: string; name: string | null; email: string | null; phone: string | null; created_at: string;
@@ -151,6 +152,7 @@ const LeadIntelligence = () => {
 
       <Tabs defaultValue="funnel">
         <TabsList>
+          <TabsTrigger value="ads">Reklam Performansı & AI</TabsTrigger>
           <TabsTrigger value="funnel">Huni & Kaynak</TabsTrigger>
           <TabsTrigger value="leads">Leadler</TabsTrigger>
           <TabsTrigger value="rules">Puan Kuralları</TabsTrigger>
@@ -227,6 +229,10 @@ const LeadIntelligence = () => {
                   </div>))}
               </div>))}
           </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="ads">
+          <AdPerformancePanel days={parseInt(days)} />
         </TabsContent>
       </Tabs>
 
