@@ -732,7 +732,7 @@ const SpecialistRegistration = () => {
                   </p>
                 )}
                 <p className="text-[11px] italic text-center text-muted-foreground/70 leading-relaxed">
-                  Bu hesaplama yalnızca girdiğiniz ücret ve saatlere dayalı bir gösterimdir; Doktorumol tarafından verilmiş herhangi bir kazanç taahhüdü veya danışan garantisi içermez.
+                  Bu hesaplama yalnızca girdiğiniz ücret ve saatlere dayalı bir gösterimdir; Doktorumol tarafından verilmiş herhangi bir kazanç taahhüdü içermez.
                 </p>
               </div>
 
