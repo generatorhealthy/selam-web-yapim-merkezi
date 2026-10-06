@@ -1,3 +1,4 @@
+import { trackLeadEvent } from "@/lib/leadTracking";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -350,6 +351,8 @@ const handleCreditCardPayment = async () => {
     };
 
     const subscriptionReferenceCode = getSubscriptionReferenceCode(selectedPackage.type);
+
+    trackLeadEvent("checkout_started", { package: selectedPackage.type });
 
     const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
       body: {

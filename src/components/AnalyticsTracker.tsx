@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { captureAttribution, trackLeadEvent } from '@/lib/leadTracking';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useLocation } from 'react-router-dom';
 
@@ -99,6 +100,14 @@ const AnalyticsTracker = () => {
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [updateLastActive]);
+
+  useEffect(() => {
+    captureAttribution();
+    if (isPanelRoute) return;
+    const p = location.pathname;
+    if (p === "/ozel-firsat" || p.startsWith("/paket") || p.includes("kampanya")) trackLeadEvent("pricing_page_view", { path: p });
+    else if (p === "/kayit-ol") trackLeadEvent("landing_page_view", { path: p });
+  }, [location.pathname, isPanelRoute]);
 
   // Track route changes
   useEffect(() => {
