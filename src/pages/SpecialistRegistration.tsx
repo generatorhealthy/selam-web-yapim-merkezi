@@ -66,9 +66,6 @@ const SpecialistRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [createdUserId, setCreatedUserId] = useState("");
   const [createdUserEmail, setCreatedUserEmail] = useState("");
-  // Kapasite öngörü aracı: yalnızca uzmanın KENDİ girdiği ücret ve saat kullanılır.
-  const [calcPrice, setCalcPrice] = useState("800");
-  const [calcHours, setCalcHours] = useState("20");
   const referralCodeRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -503,11 +500,6 @@ const SpecialistRegistration = () => {
 
   const inputClass = "h-12 rounded-2xl border-muted bg-muted/40 px-4 text-base placeholder:text-muted-foreground/60 focus:bg-background focus:border-primary/40 transition-all";
 
-  // Girdiler boşken veya geçersizken hesap 0'a düşer, asla uydurma rakam üretmez.
-  const calcPriceNum = Math.max(0, Number(calcPrice) || 0);
-  const calcHoursNum = Math.min(80, Math.max(0, Number(calcHours) || 0));
-  const monthlySessions = Math.round(calcHoursNum * 4);
-  const monthlyTotal = Math.round(calcPriceNum * monthlySessions);
   const selectTriggerClass = "h-12 rounded-2xl border-muted bg-muted/40 px-4 text-base focus:bg-background focus:border-primary/40 transition-all";
 
   return (
@@ -572,58 +564,6 @@ const SpecialistRegistration = () => {
 
           {currentStep === 1 && (
             <div className="space-y-8">
-              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h2 className="mb-4 text-sm font-semibold tracking-tight text-foreground">Aylık Çalışma Kapasitesi</h2>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
-                      Seans ücretiniz (₺)
-                    </Label>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={100000}
-                      value={calcPrice}
-                      onChange={(e) => setCalcPrice(e.target.value)}
-                      className="h-11 rounded-xl bg-background text-sm font-medium"
-                    />
-                  </div>
-                  <div>
-                    <Label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
-                      Haftalık planlanan seans
-                    </Label>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={80}
-                      value={calcHours}
-                      onChange={(e) => setCalcHours(e.target.value)}
-                      className="h-11 rounded-xl bg-background text-sm font-medium"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-5 border-t border-border pt-4">
-                  <div className="text-[11px] font-medium text-muted-foreground">Aylık brüt hizmet kapasitesi</div>
-                  <div className="text-2xl font-bold tabular-nums tracking-tight text-foreground">
-                    ₺{monthlyTotal.toLocaleString("tr-TR")}
-                  </div>
-                  <div className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
-                    {calcHoursNum.toLocaleString("tr-TR")} seans/hafta × 4 hafta × ₺{calcPriceNum.toLocaleString("tr-TR")}
-                  </div>
-                </div>
-
-                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                  Bu hesaplama yalnızca sizin girdiğiniz seans ücreti ve çalışma kapasitesine göre oluşturulan
-                  matematiksel bir gösterimdir. Doktorum Ol tarafından gelir, kazanç, danışan sayısı, randevu veya
-                  hizmet satın alımı garantisi niteliğinde değildir. Gerçekleşen sonuçlar çalışma koşullarına,
-                  danışan taleplerine ve diğer faktörlere göre değişebilir.
-                </p>
-              </section>
-
               <div className="text-center space-y-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Uzman Profili Oluşturun</h1>
                 <p className="text-muted-foreground text-sm">Platformumuza katılmak için bilgilerinizi girin</p>
