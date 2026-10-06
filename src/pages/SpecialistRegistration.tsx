@@ -572,13 +572,13 @@ const SpecialistRegistration = () => {
 
           {currentStep === 1 && (
             <div className="space-y-8">
-              <section className="rounded-2xl border border-primary/15 bg-primary/5 p-5">
-                <h2 className="mb-4 text-[13px] font-bold text-foreground">Kapasite Öngörü Aracı</h2>
+              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <h2 className="mb-4 text-sm font-semibold tracking-tight text-foreground">Aylık Çalışma Kapasitesi</h2>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      Seans Ücretiniz (₺)
+                    <Label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+                      Seans ücretiniz (₺)
                     </Label>
                     <Input
                       type="number"
@@ -587,12 +587,12 @@ const SpecialistRegistration = () => {
                       max={100000}
                       value={calcPrice}
                       onChange={(e) => setCalcPrice(e.target.value)}
-                      className="h-11 rounded-lg border-primary/20 bg-background text-sm font-medium"
+                      className="h-11 rounded-xl bg-background text-sm font-medium"
                     />
                   </div>
                   <div>
-                    <Label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      Haftalık Çalışma Saatiniz
+                    <Label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+                      Haftalık planlanan seans
                     </Label>
                     <Input
                       type="number"
@@ -601,27 +601,26 @@ const SpecialistRegistration = () => {
                       max={80}
                       value={calcHours}
                       onChange={(e) => setCalcHours(e.target.value)}
-                      className="h-11 rounded-lg border-primary/20 bg-background text-sm font-medium"
+                      className="h-11 rounded-xl bg-background text-sm font-medium"
                     />
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-end justify-between border-t border-primary/15 pt-4">
-                  <div>
-                    <div className="text-[11px] text-muted-foreground">Aylık Seans Kapasitesi</div>
-                    <div className="text-xl font-bold tabular-nums text-foreground">{monthlySessions} Seans</div>
+                <div className="mt-5 border-t border-border pt-4">
+                  <div className="text-[11px] font-medium text-muted-foreground">Aylık brüt hizmet kapasitesi</div>
+                  <div className="text-2xl font-bold tabular-nums tracking-tight text-foreground">
+                    ₺{monthlyTotal.toLocaleString("tr-TR")}
                   </div>
-                  <div className="text-right">
-                    <div className="text-[11px] text-muted-foreground">Kendi Ücretinizle Toplam</div>
-                    <div className="text-xl font-bold tabular-nums text-primary">
-                      {monthlyTotal.toLocaleString("tr-TR")} ₺
-                    </div>
+                  <div className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
+                    {calcHoursNum.toLocaleString("tr-TR")} seans/hafta × 4 hafta × ₺{calcPriceNum.toLocaleString("tr-TR")}
                   </div>
                 </div>
 
-                <p className="mt-3 text-[10px] italic leading-relaxed text-muted-foreground">
-                  * Bu hesaplama yalnızca girdiğiniz ücret ve saatlere dayalı bir gösterimdir;
-                  Doktorumol tarafından verilmiş herhangi bir kazanç taahhüdü veya danışan garantisi içermez.
+                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                  Bu hesaplama yalnızca sizin girdiğiniz seans ücreti ve çalışma kapasitesine göre oluşturulan
+                  matematiksel bir gösterimdir. Doktorum Ol tarafından gelir, kazanç, danışan sayısı, randevu veya
+                  hizmet satın alımı garantisi niteliğinde değildir. Gerçekleşen sonuçlar çalışma koşullarına,
+                  danışan taleplerine ve diğer faktörlere göre değişebilir.
                 </p>
               </section>
 
