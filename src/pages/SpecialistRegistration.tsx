@@ -503,11 +503,6 @@ const SpecialistRegistration = () => {
 
   const inputClass = "h-12 rounded-2xl border-muted bg-muted/40 px-4 text-base placeholder:text-muted-foreground/60 focus:bg-background focus:border-primary/40 transition-all";
 
-  // Girdiler boşken veya geçersizken hesap 0'a düşer, asla uydurma rakam üretmez.
-  const calcPriceNum = Math.max(0, Number(calcPrice) || 0);
-  const calcHoursNum = Math.min(80, Math.max(0, Number(calcHours) || 0));
-  const monthlySessions = Math.round(calcHoursNum * 4);
-  const monthlyTotal = Math.round(calcPriceNum * monthlySessions);
   const selectTriggerClass = "h-12 rounded-2xl border-muted bg-muted/40 px-4 text-base focus:bg-background focus:border-primary/40 transition-all";
 
   return (
