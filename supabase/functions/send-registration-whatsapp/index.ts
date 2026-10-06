@@ -1,32 +1,20 @@
 // Send WhatsApp welcome message to newly registered specialist via WAHA
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { z } from "npm:zod@3";
+import { buildWelcomeMessage, canReceiveWelcome, normalizePhoneToWa } from "./welcome.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
-
-interface Payload {
-  name: string;
-  phone: string;
-}
+const PayloadSchema = z.object({
+  name: z.string().trim().min(1).max(255),
+  phone: z.string().min(10).max(40),
+  userId: z.string().uuid().optional(),
+});
 
 interface WhatsappLine {
   id: string;
   phone_number: string | null;
   is_active: boolean;
   sort_order: number | null;
-}
-
-// Normalize TR phone to 90XXXXXXXXXX (WhatsApp chatId format)
-function normalizePhoneToWa(raw: string): string | null {
-  if (!raw) return null;
-  const digits = raw.replace(/\D/g, "");
-  if (digits.startsWith("90") && digits.length === 12) return digits;
-  if (digits.startsWith("0") && digits.length === 11) return "9" + digits;
-  if (digits.length === 10) return "90" + digits;
-  return null;
 }
 
 function getSessionNameForLineId(lineId: string) {
@@ -98,14 +86,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { name, phone } = (await req.json()) as Payload;
-
-    if (!name || !phone) {
+    const parsed = PayloadSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ success: false, error: "Eksik alan" }),
+        JSON.stringify({ success: false, error: parsed.error.flatten().fieldErrors }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const { phone, userId: requestedUserId } = parsed.data;
 
     const waPhone = normalizePhoneToWa(phone);
     if (!waPhone) {
@@ -120,21 +109,30 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Alıcıyı gerçek bir kayıtla bağla: son 24 saat içinde bu telefonla
-    // oluşturulmuş bir uzman kaydı yoksa mesaj gönderilmez.
-    // Kayıtlı telefon boşluk/tire içerebilir ("0532 123 45 67"), bu yüzden
-    // son 24 saatin kayıtlarını çekip rakamları normalize ederek karşılaştırıyoruz.
-    const last10 = waPhone.slice(-10);
-    const { data: recentSpecialists } = await supabase
+    // Login details must belong to the authenticated specialist, never to a
+    // client-supplied phone alone. Trusted server calls must name the owner.
+    const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+    let ownerId: string | undefined;
+    if (token && token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+      ownerId = requestedUserId;
+    } else if (token) {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (!error && user) ownerId = user.id;
+    }
+    if (!ownerId) {
+      return new Response(JSON.stringify({ success: false, error: "Geçerli oturum gerekli" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: recentSpecialists, error: specialistError } = await supabase
       .from("specialists")
-      .select("id, phone")
+      .select("id, user_id, name, email, phone, created_at")
+      .eq("user_id", ownerId)
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .limit(200);
-
-    const recentSpecialist = (recentSpecialists || []).find((s: { id: string; phone: string | null }) => {
-      const digits = (s.phone || "").replace(/\D/g, "");
-      return digits.length >= 10 && digits.slice(-10) === last10;
-    });
+    if (specialistError) throw specialistError;
+    const recentSpecialist = (recentSpecialists || []).find((s) => canReceiveWelcome(s, ownerId, phone));
 
     if (!recentSpecialist) {
       return new Response(
@@ -143,19 +141,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const waMessage =
-      `🎉 *Doktorumol.com.tr'ye Hoş Geldiniz!*\n\n` +
-      `Sayın *${name}*,\n\n` +
-      `Uzman profiliniz başarıyla oluşturulmuştur. ✅\n\n` +
-      `Profilinizin yayına alınması ve hastalarla buluşmaya başlamanız için son bir adım kaldı: üyelik ödemenizin tamamlanması.\n\n` +
-      `🔗 *Ödeme & Aktivasyon:*\n` +
-      `https://doktorumol.com.tr/ozel-firsat\n\n` +
-      `📌 *Sizi neler bekliyor?*\n` +
-      `• Binlerce hastaya ulaşma imkânı\n` +
-      `• Online randevu ve danışmanlık altyapısı\n` +
-      `• Profesyonel uzman profil sayfası\n\n` +
-      `Saygılarımızla,\n` +
-      `*Doktorumol.com.tr Ekibi* 👨‍⚕️👩‍⚕️`;
+    const { data: account, error: accountError } = await supabase.auth.admin.getUserById(ownerId);
+    if (accountError || !account.user?.email) throw new Error("Giriş e-postası okunamadı");
+    const waMessage = buildWelcomeMessage(recentSpecialist.name, account.user.email);
 
     const { sessionName, error: sessionError } = await getWorkingSessionName(supabase);
     if (!sessionName) {
