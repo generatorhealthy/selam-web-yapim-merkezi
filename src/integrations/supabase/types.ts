@@ -7446,6 +7446,16 @@ export type Database = {
           referrer_name: string
         }[]
       }
+      get_registration_funnel: {
+        Args: { p_cohort?: string; p_dim?: string }
+        Returns: {
+          grp: string
+          measurable: boolean
+          n: number
+          stage: string
+          stage_order: number
+        }[]
+      }
       get_specialist_basic_info: {
         Args: never
         Returns: {
