@@ -59,13 +59,17 @@ export type Database = {
           ad_account_name: string | null
           attribution_started_at: string | null
           connection_source: string | null
+          high_conf_min_paid: number
           id: number
           last_error: string | null
           last_sync_at: string | null
           last_sync_status: string | null
+          min_attribution_completeness: number
           min_days_active: number
           min_leads_for_decision: number
           min_purchases_for_scale: number
+          min_roas_for_keep: number
+          min_roas_for_scale: number
           min_spend_for_pause: number
           qualified_threshold: number
           target_cac: number
@@ -76,13 +80,17 @@ export type Database = {
           ad_account_name?: string | null
           attribution_started_at?: string | null
           connection_source?: string | null
+          high_conf_min_paid?: number
           id?: number
           last_error?: string | null
           last_sync_at?: string | null
           last_sync_status?: string | null
+          min_attribution_completeness?: number
           min_days_active?: number
           min_leads_for_decision?: number
           min_purchases_for_scale?: number
+          min_roas_for_keep?: number
+          min_roas_for_scale?: number
           min_spend_for_pause?: number
           qualified_threshold?: number
           target_cac?: number
@@ -93,13 +101,17 @@ export type Database = {
           ad_account_name?: string | null
           attribution_started_at?: string | null
           connection_source?: string | null
+          high_conf_min_paid?: number
           id?: number
           last_error?: string | null
           last_sync_at?: string | null
           last_sync_status?: string | null
+          min_attribution_completeness?: number
           min_days_active?: number
           min_leads_for_decision?: number
           min_purchases_for_scale?: number
+          min_roas_for_keep?: number
+          min_roas_for_scale?: number
           min_spend_for_pause?: number
           qualified_threshold?: number
           target_cac?: number
@@ -196,9 +208,11 @@ export type Database = {
           campaign_id: string | null
           campaign_name: string | null
           confidence: string
+          confidence_factors: Json | null
           created_at: string
           created_by: string | null
           decision: string
+          decision_reason_metrics: string | null
           entity_id: string | null
           entity_name: string | null
           id: string
@@ -211,9 +225,11 @@ export type Database = {
           campaign_id?: string | null
           campaign_name?: string | null
           confidence: string
+          confidence_factors?: Json | null
           created_at?: string
           created_by?: string | null
           decision: string
+          decision_reason_metrics?: string | null
           entity_id?: string | null
           entity_name?: string | null
           id?: string
@@ -226,9 +242,11 @@ export type Database = {
           campaign_id?: string | null
           campaign_name?: string | null
           confidence?: string
+          confidence_factors?: Json | null
           created_at?: string
           created_by?: string | null
           decision?: string
+          decision_reason_metrics?: string | null
           entity_id?: string | null
           entity_name?: string | null
           id?: string
@@ -7179,6 +7197,19 @@ export type Database = {
       extract_first_int: { Args: { p_text: string }; Returns: number }
       generate_specialist_slug: { Args: { p_name: string }; Returns: string }
       generate_unique_referral_code: { Args: never; Returns: string }
+      get_ad_attribution_completeness: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          attributed_leads: number
+          attributed_paid: number
+          attributed_registrations: number
+          attributed_visits: number
+          eligible_leads: number
+          eligible_paid: number
+          eligible_registrations: number
+          eligible_visits: number
+        }[]
+      }
       get_ad_attribution_coverage: {
         Args: {
           p_from: string
@@ -7210,6 +7241,7 @@ export type Database = {
           creative_id: string
           entity_id: string
           entity_name: string
+          gross_revenue: number
           impressions: number
           leads: number
           link_clicks: number
@@ -7218,10 +7250,13 @@ export type Database = {
           parent_id: string
           profiles: number
           qualified: number
+          qualified_paid: number
+          refund_amount: number
           registrations: number
           revenue: number
           spend: number
           thumbnail_url: string
+          visits: number
         }[]
       }
       get_attribution_debug: {
