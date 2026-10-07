@@ -50,6 +50,8 @@ const RegistrationAnalyticsTracker = ({ currentStep, completed = false }: Regist
   const stepTimestamps = useRef<Record<string, string>>({});
 
   const trackClick = useCallback((e: MouseEvent) => {
+    // Tarayıcı/bot kaynaklı sahte tıklamaları (isTrusted=false veya 0,0 konumlu programatik click) sayma
+    if (!e.isTrusted || (e.clientX === 0 && e.clientY === 0 && e.detail === 0)) return;
     const target = e.target as HTMLElement;
     const text = target.textContent?.slice(0, 50) || '';
     const tag = target.tagName;
