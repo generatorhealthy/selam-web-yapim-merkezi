@@ -107,7 +107,11 @@ export default function AdPerformancePanel(_: { days?: number }) {
       attribution_started_at: c.attribution_started_at, tracked_visits: Number(c.tracked_visits),
       tracked_spend: Number(c.tracked_spend), tracked_active_days: Number(c.tracked_active_days),
     }]));
-    setRows(((data as any) || []).map((x: any) => ({ ...x, ...byId.get(x.entity_id), spend: Number(x.spend), revenue: Number(x.revenue), gross_revenue: Number(x.gross_revenue || 0), refund_amount: Number(x.refund_amount || 0),
+    // Bihter kampanyaları ayrı projeye ait: bu panelde (tablo + toplamlar) gösterilmez. Veri silinmez.
+    const hidden = await supabase.from("meta_daily_metrics" as any).select("campaign_id").ilike("campaign_name", "%bihter%").limit(1000);
+    const hiddenIds = new Set<string>(((hidden.data as any[]) || []).map((h) => String(h.campaign_id)));
+    const isHidden = (x: any) => /bihter/i.test(x.entity_name || "") || hiddenIds.has(String(x.campaign_id ?? "")) || (level === "campaign" && hiddenIds.has(String(x.entity_id)));
+    setRows(((data as any) || []).filter((x: any) => !isHidden(x)).map((x: any) => ({ ...x, ...byId.get(x.entity_id), spend: Number(x.spend), revenue: Number(x.revenue), gross_revenue: Number(x.gross_revenue || 0), refund_amount: Number(x.refund_amount || 0),
       ...Object.fromEntries(["impressions", "clicks", "link_clicks", "meta_leads", "active_days", "visits", "leads", "qualified", "qualified_paid", "registrations", "profiles", "checkouts", "paid"].map((k) => [k, Number(x[k] || 0)])) })));
     const seen = new Set<string>();
     setRecs(((r.data as any) || []).filter((x: Rec) => (seen.has(x.entity_id) ? false : (seen.add(x.entity_id), true))));
