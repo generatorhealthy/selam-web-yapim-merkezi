@@ -67,7 +67,8 @@ export default function AdPerformancePanel(_: { days?: number }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [test, setTest] = useState<{ ok: boolean; steps: { name: string; ok: boolean; detail?: string }[]; diagnosis?: string; error?: any } | null>(null);
   const [accounts, setAccounts] = useState<{ id: string; name: string; currency: string }[] | null>(null);
-  const [events, setEvents] = useState<{ event_name: string; status: string }[]>([]);
+  const [events, setEvents] = useState<{ id: string; event_name: string; status: string; meta_status: string | null; event_time: string | null;
+    http_status: number | null; events_received: number | null; fbtrace_id: string | null; attempts: number; last_error: string | null }[]>([]);
   const [debug, setDebug] = useState<any[]>([]);
   const [model, setModel] = useState<"last" | "first">("last");
 
@@ -78,7 +79,8 @@ export default function AdPerformancePanel(_: { days?: number }) {
     const [{ data }, s, ev, dbg] = await Promise.all([
       invoke({ action: "status" }),
       supabase.from("ad_intel_settings" as any).select("*").eq("id", 1).maybeSingle(),
-      supabase.from("meta_capi_events" as any).select("event_name,status").gte("created_at", new Date(Date.now() - 864e5).toISOString()).limit(1000),
+      supabase.from("meta_capi_events" as any).select("id,event_name,status,meta_status,event_time,http_status,events_received,fbtrace_id,attempts,last_error")
+        .eq("is_test", false).gte("created_at", new Date(Date.now() - 7 * 864e5).toISOString()).order("created_at", { ascending: false }).limit(200),
       supabase.rpc("get_attribution_debug" as any),
     ]);
     setStatus(data as Status); setSettings(s.data as any); setEvents((ev.data as any) || []); setDebug((dbg.data as any) || []);
@@ -176,7 +178,7 @@ export default function AdPerformancePanel(_: { days?: number }) {
 
   const evStats = useMemo(() => {
     const m = new Map<string, Record<string, number>>();
-    events.forEach((e) => { const s = m.get(e.event_name) || {}; s[e.status] = (s[e.status] || 0) + 1; m.set(e.event_name, s); });
+    events.forEach((e) => { const k = e.meta_status || e.status; const s = m.get(e.event_name) || {}; s[k] = (s[k] || 0) + 1; m.set(e.event_name, s); });
     return [...m.entries()];
   }, [events]);
 
@@ -320,13 +322,26 @@ export default function AdPerformancePanel(_: { days?: number }) {
       <div className="grid md:grid-cols-2 gap-4">
         {/* Meta Events */}
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Meta Olayları (son 24 saat)</CardTitle></CardHeader>
-          <CardContent className="text-sm space-y-1">
-            {!evStats.length && <p className="text-muted-foreground">Son 24 saatte olay yok.</p>}
+          <CardHeader className="pb-2"><CardTitle className="text-base">Meta CAPI Durumu (gerçek olaylar, son 7 gün)</CardTitle></CardHeader>
+          <CardContent className="text-sm space-y-2">
             {evStats.map(([name, s]) => (
               <div key={name} className="flex justify-between gap-2"><span className="text-foreground">{name}</span>
-                <span className="text-muted-foreground">{s.sent || 0} gönderildi · {s.pending || 0} bekliyor · {s.retrying || 0} tekrar · {s.failed || 0} başarısız</span></div>
+                <span className="text-muted-foreground">{s.META_ACCEPTED || 0} kabul · {s.META_RESPONSE_UNVERIFIED || 0} doğrulanamadı · {s.META_REJECTED || 0} red · {s.pending || 0} bekliyor</span></div>
             ))}
+            {!events.length && <p className="text-muted-foreground">Son 7 günde gerçek olay yok.</p>}
+            <div className="max-h-64 overflow-auto border-t border-border pt-2 space-y-1">
+              {events.map((e) => (
+                <div key={e.id} className="text-xs flex flex-wrap gap-x-2 gap-y-0.5 items-center">
+                  <Badge variant={e.meta_status === "META_ACCEPTED" ? "default" : e.meta_status === "META_REJECTED" ? "destructive" : "secondary"}>
+                    {e.meta_status || "BEKLİYOR"}</Badge>
+                  <span className="text-foreground">{e.event_name}</span>
+                  <span className="text-muted-foreground">{e.event_time ? new Date(e.event_time).toLocaleString("tr-TR") : "—"}</span>
+                  <span className="text-muted-foreground">HTTP {e.http_status ?? "—"} · alınan {e.events_received ?? "—"} · deneme {e.attempts}</span>
+                  {e.fbtrace_id && <span className="text-muted-foreground font-mono">{e.fbtrace_id}</span>}
+                  {e.last_error && <span className="text-destructive">{e.last_error}</span>}
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 

@@ -6,6 +6,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { attributedRoas, hasTrackedSample } from "../_shared/adAttribution.ts";
+import { classifyCapiResponse } from "../_shared/capiResponse.ts";
 
 const DATASET_ID = "1053321257408384";
 const V = "v26.0";
@@ -182,7 +183,7 @@ async function sendQueue(admin: any) {
     .in("status", ["pending", "retrying"]).lt("attempts", MAX_ATTEMPTS).order("created_at").limit(50);
   let sent = 0, failed = 0;
   for (const it of items || []) {
-    if (it.is_test) { await admin.from("meta_capi_events").update({ status: "sent", last_error: "test — Meta'ya gönderilmedi", sent_at: new Date().toISOString() }).eq("id", it.id); continue; }
+    if (it.is_test) { await admin.from("meta_capi_events").update({ status: "sent", meta_status: "TEST_NOT_SENT", last_error: "test — Meta'ya gönderilmedi", sent_at: new Date().toISOString() }).eq("id", it.id); continue; }
     let email = it.payload?.email as string | undefined, phone: string | undefined, fbc: string | undefined, fbp: string | undefined;
     let fullName: string | undefined, city: string | undefined, ip: string | undefined;
     if (it.order_id) {
@@ -228,13 +229,20 @@ async function sendQueue(admin: any) {
     const res = await fetch(`https://graph.facebook.com/${V}/${DATASET_ID}/events?access_token=${token}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: [event] }),
     });
-    const text = await res.text();
+    const r = classifyCapiResponse(res.status, await res.text());
     const attempts = it.attempts + 1;
-    if (res.ok) { sent++; await admin.from("meta_capi_events").update({ status: "sent", attempts, last_error: null, sent_at: new Date().toISOString() }).eq("id", it.id); }
-    else {
+    const now = new Date().toISOString();
+    const evidence = {
+      meta_status: r.meta_status, http_status: r.http_status, events_received: r.events_received,
+      meta_messages: r.meta_messages, fbtrace_id: r.fbtrace_id, dataset_id: DATASET_ID,
+      event_time: new Date(Number(event.event_time) * 1000).toISOString(), last_attempt_at: now, attempts,
+    };
+    if (r.meta_status !== "META_REJECTED") {
+      sent++;
+      await admin.from("meta_capi_events").update({ ...evidence, status: "sent", last_error: null, sent_at: now }).eq("id", it.id);
+    } else {
       failed++;
-      let msg = text.slice(0, 400); try { msg = JSON.parse(text)?.error?.message || msg; } catch { /* */ }
-      await admin.from("meta_capi_events").update({ status: attempts >= MAX_ATTEMPTS ? "failed" : "retrying", attempts, last_error: `[${res.status}] ${msg}` }).eq("id", it.id);
+      await admin.from("meta_capi_events").update({ ...evidence, status: attempts >= MAX_ATTEMPTS ? "failed" : "retrying", last_error: r.error }).eq("id", it.id);
     }
   }
   return { sent, failed };
