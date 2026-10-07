@@ -57,6 +57,7 @@ export type Database = {
         Row: {
           ad_account_id: string | null
           ad_account_name: string | null
+          attribution_started_at: string | null
           connection_source: string | null
           id: number
           last_error: string | null
@@ -73,6 +74,7 @@ export type Database = {
         Insert: {
           ad_account_id?: string | null
           ad_account_name?: string | null
+          attribution_started_at?: string | null
           connection_source?: string | null
           id?: number
           last_error?: string | null
@@ -89,6 +91,7 @@ export type Database = {
         Update: {
           ad_account_id?: string | null
           ad_account_name?: string | null
+          attribution_started_at?: string | null
           connection_source?: string | null
           id?: number
           last_error?: string | null
@@ -7152,6 +7155,21 @@ export type Database = {
       extract_first_int: { Args: { p_text: string }; Returns: number }
       generate_specialist_slug: { Args: { p_name: string }; Returns: string }
       generate_unique_referral_code: { Args: never; Returns: string }
+      get_ad_attribution_coverage: {
+        Args: {
+          p_from: string
+          p_level?: string
+          p_parent?: string
+          p_to: string
+        }
+        Returns: {
+          attribution_started_at: string
+          entity_id: string
+          tracked_active_days: number
+          tracked_spend: number
+          tracked_visits: number
+        }[]
+      }
       get_ad_performance: {
         Args: {
           p_from: string
