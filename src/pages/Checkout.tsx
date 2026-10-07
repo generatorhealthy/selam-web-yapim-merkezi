@@ -1,4 +1,5 @@
-import { trackLeadEvent } from "@/lib/leadTracking";
+import { trackLeadEvent, getLeadSessionId } from "@/lib/leadTracking";
+import { trackPixelEvent, capiCheckoutEventId } from "@/lib/metaPixel";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -353,6 +354,8 @@ const handleCreditCardPayment = async () => {
     const subscriptionReferenceCode = getSubscriptionReferenceCode(selectedPackage.type);
 
     trackLeadEvent("checkout_started", { package: selectedPackage.type });
+    // Sunucu kuyruğu aynı oturum için event_id = checkout_<oturum> üretir
+    trackPixelEvent("InitiateCheckout", capiCheckoutEventId(getLeadSessionId()), { currency: "TRY" });
 
     const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
       body: {

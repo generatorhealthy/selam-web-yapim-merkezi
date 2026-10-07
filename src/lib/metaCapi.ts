@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { trackPixelEvent, capiEventIdForUser } from "@/lib/metaPixel";
 
 const getCookie = (name: string): string | undefined => {
   const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
@@ -31,6 +32,11 @@ export interface MetaCapiEvent {
 
 /** Meta Conversions API'ye sunucu taraflı olay gönderir (hata durumunda sessiz kalır). */
 export const trackMetaLead = async (event: MetaCapiEvent): Promise<void> => {
+  // Tarayıcı Pixel: sunucunun üreteceği event_id ile aynı (dedup). external_id yoksa Pixel gönderilmez.
+  const name = (event.event_name ?? "Lead") as "Lead" | "CompleteRegistration";
+  if (event.external_id && (name === "Lead" || name === "CompleteRegistration")) {
+    try { trackPixelEvent(name, capiEventIdForUser(name, event.external_id)); } catch { /* ignore */ }
+  }
   try {
     await supabase.functions.invoke("meta-capi-event", {
       body: {

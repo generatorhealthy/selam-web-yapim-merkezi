@@ -26,6 +26,7 @@ const CookieConsent = () => {
   const handleAccept = () => {
     localStorage.setItem('cookie-consent', 'accepted');
     setShowBanner(false);
+    try { window.dispatchEvent(new Event('cookie-consent-change')); } catch { /* ignore */ }
   };
 
   const handleReject = () => {

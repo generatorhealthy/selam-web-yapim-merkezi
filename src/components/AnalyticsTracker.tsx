@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { captureAttribution, trackLeadEvent } from '@/lib/leadTracking';
+import { trackPixelPageView } from '@/lib/metaPixel';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useLocation } from 'react-router-dom';
 
@@ -107,6 +108,15 @@ const AnalyticsTracker = () => {
     const p = location.pathname;
     if (p === "/ozel-firsat" || p.startsWith("/paket") || p.includes("kampanya")) trackLeadEvent("pricing_page_view", { path: p });
     else if (p === "/kayit-ol") trackLeadEvent("landing_page_view", { path: p });
+  }, [location.pathname, isPanelRoute]);
+
+  // Meta Pixel PageView — yalnız production + çerez onayı; panelde yok; aynı rota tekrarlanmaz
+  useEffect(() => {
+    if (isPanelRoute) return;
+    const fire = () => trackPixelPageView(location.pathname);
+    fire();
+    window.addEventListener('cookie-consent-change', fire);
+    return () => window.removeEventListener('cookie-consent-change', fire);
   }, [location.pathname, isPanelRoute]);
 
   // Track route changes
