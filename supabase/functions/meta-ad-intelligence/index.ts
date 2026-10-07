@@ -184,19 +184,35 @@ async function sendQueue(admin: any) {
   for (const it of items || []) {
     if (it.is_test) { await admin.from("meta_capi_events").update({ status: "sent", last_error: "test — Meta'ya gönderilmedi", sent_at: new Date().toISOString() }).eq("id", it.id); continue; }
     let email = it.payload?.email as string | undefined, phone: string | undefined, fbc: string | undefined, fbp: string | undefined;
+    let fullName: string | undefined, city: string | undefined, ip: string | undefined;
+    if (it.order_id) {
+      // Siparişteki gerçek müşteri bilgileri (yalnız eşleştirme için, hash'lenerek)
+      const { data: o } = await admin.from("orders").select("customer_name, customer_phone, customer_city, contract_ip_address").eq("id", it.order_id).maybeSingle();
+      fullName = o?.customer_name || undefined; phone = o?.customer_phone || undefined;
+      city = o?.customer_city || undefined; ip = o?.contract_ip_address || undefined;
+    }
     if (it.user_id) {
-      const { data: p } = await admin.from("user_profiles").select("email, phone").eq("user_id", it.user_id).limit(1).maybeSingle();
-      email = email || p?.email; phone = p?.phone;
+      const { data: p } = await admin.from("user_profiles").select("email, phone, name").eq("user_id", it.user_id).limit(1).maybeSingle();
+      email = email || p?.email; phone = phone || p?.phone;
       const { data: a } = await admin.from("lead_attribution").select("first_touch,last_touch").eq("user_id", it.user_id).order("last_visit_at", { ascending: false }).limit(1).maybeSingle();
       fbc = a?.last_touch?.fbc || a?.first_touch?.fbc; fbp = a?.last_touch?.fbp || a?.first_touch?.fbp;
+      if (!fbc || !fbp) {
+        const { data: ev } = await admin.from("analytics_events").select("fbc,fbp").eq("user_id", it.user_id).or("fbc.not.is.null,fbp.not.is.null").order("created_at", { ascending: false }).limit(1).maybeSingle();
+        fbc = fbc || ev?.fbc || undefined; fbp = fbp || ev?.fbp || undefined;
+      }
     }
     // Hazır (hash'lenmiş) yük varsa onu kullan — tarayıcıdan gelip başarısız olan Lead/CompleteRegistration tekrarları
     let event = it.payload?.prebuilt;
     if (!event) {
       const em = String(email || "").trim().toLowerCase(), ph = normPhone(phone);
+      const parts = String(fullName || "").trim().toLocaleLowerCase("tr").split(/\s+/).filter(Boolean);
+      const fn = parts[0], ln = parts.length > 1 ? parts[parts.length - 1] : undefined;
+      const ct = String(city || "").toLocaleLowerCase("tr").replace(/[^a-zçğıöşü]/g, "");
       const user_data: Record<string, unknown> = {
         em: em ? [await sha256(em)] : undefined, ph: ph ? [await sha256(ph)] : undefined,
-        country: [await sha256("tr")], external_id: it.user_id ? [await sha256(it.user_id)] : undefined, fbc, fbp,
+        fn: fn ? [await sha256(fn)] : undefined, ln: ln ? [await sha256(ln)] : undefined, ct: ct ? [await sha256(ct)] : undefined,
+        country: [await sha256("tr")], external_id: it.user_id ? [await sha256(it.user_id)] : undefined,
+        fbc, fbp, client_ip_address: ip,
       };
       Object.keys(user_data).forEach((k) => user_data[k] === undefined && delete user_data[k]);
       const t = it.payload?.event_time ? new Date(it.payload.event_time) : new Date(it.created_at);
