@@ -4451,12 +4451,20 @@ export type Database = {
         Row: {
           attempts: number
           created_at: string
+          dataset_id: string | null
           event_id: string
           event_key: string
           event_name: string
+          event_time: string | null
+          events_received: number | null
+          fbtrace_id: string | null
+          http_status: number | null
           id: string
           is_test: boolean
+          last_attempt_at: string | null
           last_error: string | null
+          meta_messages: Json | null
+          meta_status: string | null
           order_id: string | null
           payload: Json | null
           sent_at: string | null
@@ -4467,12 +4475,20 @@ export type Database = {
         Insert: {
           attempts?: number
           created_at?: string
+          dataset_id?: string | null
           event_id: string
           event_key: string
           event_name: string
+          event_time?: string | null
+          events_received?: number | null
+          fbtrace_id?: string | null
+          http_status?: number | null
           id?: string
           is_test?: boolean
+          last_attempt_at?: string | null
           last_error?: string | null
+          meta_messages?: Json | null
+          meta_status?: string | null
           order_id?: string | null
           payload?: Json | null
           sent_at?: string | null
@@ -4483,12 +4499,20 @@ export type Database = {
         Update: {
           attempts?: number
           created_at?: string
+          dataset_id?: string | null
           event_id?: string
           event_key?: string
           event_name?: string
+          event_time?: string | null
+          events_received?: number | null
+          fbtrace_id?: string | null
+          http_status?: number | null
           id?: string
           is_test?: boolean
+          last_attempt_at?: string | null
           last_error?: string | null
+          meta_messages?: Json | null
+          meta_status?: string | null
           order_id?: string | null
           payload?: Json | null
           sent_at?: string | null
