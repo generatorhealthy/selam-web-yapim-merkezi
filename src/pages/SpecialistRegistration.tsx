@@ -225,7 +225,19 @@ const SpecialistRegistration = () => {
   }, [formData.specialty]);
 
   useEffect(() => {
-    if (currentStep === 1) trackLeadEventOnce("registration_form_view", "registration_form_view", { device: window.innerWidth < 768 ? "mobile" : "desktop" });
+    if (currentStep === 1) {
+      // Yalnız kaba teknik sınıflar (kişisel veri yok): cihaz, tarayıcı, uygulama içi kaynak, bot/ön yükleme sinyalleri
+      const ua = navigator.userAgent || "";
+      const app = /Instagram/i.test(ua) ? "instagram" : /FBAN|FBAV|FB_IAB/i.test(ua) ? "facebook" : "none";
+      const browser = app !== "none" ? `${app}_inapp` : /Edg\//.test(ua) ? "edge" : /CriOS|Chrome\//.test(ua) ? "chrome" : /Firefox|FxiOS/.test(ua) ? "firefox" : /Safari/.test(ua) ? "safari" : "other";
+      const os = /iPhone|iPad|iPod/.test(ua) ? "ios" : /Android/.test(ua) ? "android" : /Windows/.test(ua) ? "windows" : /Mac OS/.test(ua) ? "macos" : "other";
+      trackLeadEventOnce("registration_form_view", "registration_form_view", {
+        device: window.innerWidth < 768 ? "mobile" : "desktop",
+        os, browser, app,
+        visibility: document.visibilityState,
+        webdriver: !!(navigator as any).webdriver,
+      });
+    }
     if (currentStep === 2) trackLeadEventOnce("step_2_view", "step_2_view");
   }, [currentStep]);
 
