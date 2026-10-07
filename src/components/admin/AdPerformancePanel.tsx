@@ -9,6 +9,7 @@ import { ArrowUpDown, CheckCircle2, ChevronRight, RefreshCw, Sparkles, XCircle, 
 import { toast } from "sonner";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { DECISION_LABEL, CONFIDENCE_LABEL } from "../../../supabase/functions/_shared/adDecision";
+import { isOtherProjectRow } from "../../../supabase/functions/_shared/adExclusions";
 import { attributedRoas, canWarnNoSales, hasTrackedSample, type Coverage } from "../../../supabase/functions/_shared/adAttribution";
 
 type Level = "campaign" | "adset" | "ad";
@@ -110,7 +111,7 @@ export default function AdPerformancePanel(_: { days?: number }) {
     // Bihter kampanyaları ayrı projeye ait: bu panelde (tablo + toplamlar) gösterilmez. Veri silinmez.
     const hidden = await supabase.from("meta_daily_metrics" as any).select("campaign_id").ilike("campaign_name", "%bihter%").limit(1000);
     const hiddenIds = new Set<string>(((hidden.data as any[]) || []).map((h) => String(h.campaign_id)));
-    const isHidden = (x: any) => /bihter/i.test(x.entity_name || "") || hiddenIds.has(String(x.campaign_id ?? "")) || (level === "campaign" && hiddenIds.has(String(x.entity_id)));
+    const isHidden = (x: any) => isOtherProjectRow(x, hiddenIds, level);
     setRows(((data as any) || []).filter((x: any) => !isHidden(x)).map((x: any) => ({ ...x, ...byId.get(x.entity_id), spend: Number(x.spend), revenue: Number(x.revenue), gross_revenue: Number(x.gross_revenue || 0), refund_amount: Number(x.refund_amount || 0),
       ...Object.fromEntries(["impressions", "clicks", "link_clicks", "meta_leads", "active_days", "visits", "leads", "qualified", "qualified_paid", "registrations", "profiles", "checkouts", "paid"].map((k) => [k, Number(x[k] || 0)])) })));
     const seen = new Set<string>();
