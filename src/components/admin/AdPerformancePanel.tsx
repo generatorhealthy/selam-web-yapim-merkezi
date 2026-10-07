@@ -68,6 +68,7 @@ export default function AdPerformancePanel(_: { days?: number }) {
   const [accounts, setAccounts] = useState<{ id: string; name: string; currency: string }[] | null>(null);
   const [events, setEvents] = useState<{ event_name: string; status: string }[]>([]);
   const [debug, setDebug] = useState<any[]>([]);
+  const [model, setModel] = useState<"last" | "first">("last");
 
   const { from, to } = range(period);
   const connected = status && status.source !== "none" && status.last_sync_status === "ok";
@@ -85,7 +86,7 @@ export default function AdPerformancePanel(_: { days?: number }) {
     setLoading(true);
     const p = parent[parent.length - 1];
     const [{ data, error }, r] = await Promise.all([
-      supabase.rpc("get_ad_performance" as any, { p_from: from, p_to: to, p_level: level, p_parent: p?.id ?? null }),
+      supabase.rpc("get_ad_performance" as any, { p_from: from, p_to: to, p_level: level, p_parent: p?.id ?? null, p_model: model }),
       supabase.from("ai_ad_recommendations" as any).select("level,entity_id,decision,confidence,reason,created_at").eq("level", level).order("created_at", { ascending: false }).limit(200),
     ]);
     if (error) toast.error(error.message);
@@ -96,7 +97,7 @@ export default function AdPerformancePanel(_: { days?: number }) {
     setLoading(false);
   };
   useEffect(() => { loadStatus(); }, []);
-  useEffect(() => { loadRows(); }, [period, level, parent]);
+  useEffect(() => { loadRows(); }, [period, level, parent, model]);
 
   const run = async (name: string, body: Record<string, unknown>) => {
     setBusy(name);
@@ -232,6 +233,8 @@ export default function AdPerformancePanel(_: { days?: number }) {
         {(["campaign", "adset", "ad"] as Level[]).map((l) => (
           <Button key={l} size="sm" variant={level === l ? "default" : "outline"} onClick={() => goLevel(l)}>{LEVEL_LABEL[l]}</Button>
         ))}
+        <Select value={model} onValueChange={(v) => setModel(v as "last" | "first")}><SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="last">Atıf: Son ücretli temas</SelectItem><SelectItem value="first">Atıf: İlk temas</SelectItem></SelectContent></Select>
         <Button size="sm" variant="secondary" onClick={doAnalyze} disabled={busy === "ai" || !rows.length}>
           <Sparkles className={`w-4 h-4 mr-2 ${busy === "ai" ? "animate-pulse" : ""}`} />AI önerisi al ({LEVEL_LABEL[level]})
         </Button>
@@ -334,25 +337,27 @@ export default function AdPerformancePanel(_: { days?: number }) {
           <Button size="sm" variant="outline" onClick={doTestVisit}><FlaskConical className="w-4 h-4 mr-2" />Test Reklam Ziyareti Oluştur</Button></CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="bg-muted/50 text-muted-foreground"><tr>{["Zaman", "Kampanya ID", "Set ID", "Reklam ID", "Kaynak", "UTM Kampanya", "fbclid", "fbc", "fbp", "Kayıt", "Ödeme", ""].map((h) => <th key={h} className="px-2 py-2 text-left font-medium">{h}</th>)}</tr></thead>
+            <thead className="bg-muted/50 text-muted-foreground"><tr>{["Zaman", "İlk kaynak", "Son kaynak", "Kampanya ID", "Set ID", "Reklam ID", "Kampanya", "Reklam", "fbclid", "fbc", "fbp", "Kullanıcı", "Kayıt", "Ödeme ekr.", "Ödeme", "Tutar", ""].map((h) => <th key={h} className="px-2 py-2 text-left font-medium">{h}</th>)}</tr></thead>
             <tbody>
-              {!debug.length && <tr><td colSpan={12} className="px-2 py-3 text-muted-foreground">Henüz reklam parametreli ziyaret yok.</td></tr>}
-              {debug.map((d, i) => (
+              {!debug.length && <tr><td colSpan={17} className="px-2 py-3 text-muted-foreground">Henüz reklam parametreli ziyaret yok.</td></tr>}
+              {debug.map((d, i) => { const t = (v?: string) => (v ? new Date(v).toLocaleString("tr-TR") : "—"); return (
                 <tr key={i} className="border-t border-border">
-                  <td className="px-2 py-1 whitespace-nowrap">{new Date(d.visit_at).toLocaleString("tr-TR")}</td>
+                  <td className="px-2 py-1 whitespace-nowrap">{t(d.visit_at)}</td>
+                  <td className="px-2 py-1">{d.first_source || "—"}</td><td className="px-2 py-1">{d.last_source || "—"}</td>
                   <td className="px-2 py-1">{d.campaign_id || "—"}</td><td className="px-2 py-1">{d.adset_id || "—"}</td><td className="px-2 py-1">{d.ad_id || "—"}</td>
-                  <td className="px-2 py-1">{d.utm_source || "—"}</td><td className="px-2 py-1">{d.utm_campaign || "—"}</td>
-                  {[d.has_fbclid, d.has_fbc, d.has_fbp, d.registered, d.purchased].map((v: boolean, j: number) => <td key={j} className="px-2 py-1">{v ? "✓" : "—"}</td>)}
+                  <td className="px-2 py-1">{d.campaign_name || "—"}</td><td className="px-2 py-1">{d.ad_name || "—"}</td>
+                  {[d.has_fbclid, d.has_fbc, d.has_fbp, d.user_linked].map((v: boolean, j: number) => <td key={j} className="px-2 py-1">{v ? "✓" : "—"}</td>)}
+                  <td className="px-2 py-1 whitespace-nowrap">{t(d.registered_at)}</td><td className="px-2 py-1 whitespace-nowrap">{t(d.checkout_at)}</td><td className="px-2 py-1 whitespace-nowrap">{t(d.paid_at)}</td>
+                  <td className="px-2 py-1">{d.paid_amount != null ? tl(Number(d.paid_amount)) : "—"}</td>
                   <td className="px-2 py-1">{d.is_test && <Badge variant="outline">TEST</Badge>}</td>
-                </tr>
-              ))}
+                </tr>); })}
             </tbody>
           </table>
         </CardContent>
       </Card>
 
       <p className="text-xs text-muted-foreground break-all">
-        Meta reklam URL parametreleri: utm_source=facebook&utm_medium=paid&utm_campaign={"{{campaign.name}}"}&utm_content={"{{ad.name}}"}&meta_campaign_id={"{{campaign.id}}"}&meta_adset_id={"{{adset.id}}"}&meta_ad_id={"{{ad.id}}"}
+        Meta reklam URL parametreleri: utm_source=meta&utm_medium=paid&utm_campaign={"{{campaign.name}}"}&utm_content={"{{ad.name}}"}&meta_campaign_id={"{{campaign.id}}"}&meta_adset_id={"{{adset.id}}"}&meta_ad_id={"{{ad.id}}"}
       </p>
     </div>
   );
