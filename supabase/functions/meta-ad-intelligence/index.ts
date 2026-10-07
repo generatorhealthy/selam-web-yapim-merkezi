@@ -5,6 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
+import { attributedRoas, hasTrackedSample } from "../_shared/adAttribution.ts";
 
 const DATASET_ID = "1053321257408384";
 const V = "v26.0";
@@ -242,12 +243,17 @@ async function analyze(admin: any, from: string, to: string, level: string) {
   const { data: perf, error } = await admin.rpc("get_ad_performance", { p_from: from, p_to: to, p_level: level, p_parent: null, p_model: "last" });
   if (error) throw new Error(error.message);
   if (!perf?.length) return { recommendations: [], note: "Bu dönemde gerçek Meta reklam verisi yok; öneri üretilmedi." };
+  const { data: coverage, error: coverageError } = await admin.rpc("get_ad_attribution_coverage", { p_from: from, p_to: to, p_level: level, p_parent: null });
+  if (coverageError) throw new Error(coverageError.message);
+  const coverageById = new Map((coverage || []).map((r: any) => [r.entity_id, r]));
   const rows = perf.slice(0, 40).map((r: any) => {
     const sp = Number(r.spend), L = Number(r.leads), Q = Number(r.qualified), R = Number(r.registrations), C = Number(r.checkouts), P = Number(r.paid), rev = Number(r.revenue);
-    return { entity_id: r.entity_id, name: r.entity_name, spend_try: sp, impressions: Number(r.impressions), clicks: Number(r.clicks),
+    const c: any = coverageById.get(r.entity_id);
+    const tracked = { attribution_started_at: c?.attribution_started_at, tracked_visits: Number(c?.tracked_visits || 0), tracked_spend: Number(c?.tracked_spend || 0), tracked_active_days: Number(c?.tracked_active_days || 0) };
+    return { ...tracked, has_tracked_sample: hasTrackedSample(tracked, s), entity_id: r.entity_id, name: r.entity_name, spend_try: sp, impressions: Number(r.impressions), clicks: Number(r.clicks),
       ctr_pct: div(Number(r.clicks) * 100, Number(r.impressions)), active_days: Number(r.active_days),
       leads: L, qualified: Q, registrations: R, checkouts: C, paid: P, revenue_try: rev,
-      cpl: div(sp, L), cpql: div(sp, Q), cac: div(sp, P), roas: div(rev, sp), lead_to_paid_pct: div(P * 100, L) };
+      cpl: div(sp, L), cpql: div(sp, Q), cac: div(sp, P), roas: attributedRoas(rev, sp, P), lead_to_paid_pct: div(P * 100, L) };
   });
   const rules = {
     target_cac_try: Number(s.target_cac), min_leads_for_decision: s.min_leads_for_decision, min_purchases_for_scale: s.min_purchases_for_scale,
@@ -265,7 +271,7 @@ async function analyze(admin: any, from: string, to: string, level: string) {
         "Her satır için karar: BUYUT, KORU, IZLE, AZALT, DURDUR, YETERSIZ_VERI. Sinyal sırası: (1) paid + revenue_try + cac (hedef CAC ile kıyasla) + roas birincil; " +
         "(2) yeterli satış yoksa qualified + cpql ikincil; (3) bunlar da yetersizse registrations + cpl/cpc/ctr yalnız yardımcı sinyal. " +
         "Yüksek CTR veya düşük CPC tek başına asla BUYUT gerekçesi değildir; ucuz lead tek başına başarı değildir. Hiçbir Meta değişikliği yapılmaz, yalnızca öneridir. " +
-        "Kurallar: BUYUT için paid >= min_purchases_for_scale ve active_days >= min_days_active şart. AZALT/DURDUR için spend >= min_spend_for_pause_try veya leads >= min_leads_for_decision şart. Aksi halde IZLE veya YETERSIZ_VERI ve güven DUSUK. " +
+        "Kurallar: BUYUT için paid >= min_purchases_for_scale ve active_days >= min_days_active şart. AZALT/DURDUR için has_tracked_sample=true ve tracked_spend >= min_spend_for_pause_try şart. spend_try geçmiş takip öncesi harcamayı da içerir; bunu satışsızlık kanıtı sayma. has_tracked_sample=false ise satış yok diye olumsuz karar verme, YETERSIZ_VERI ve güven DUSUK kullan. " +
         "reason: sade Türkçe, en fazla 2 cümle, gerçek rakamlarla (ör. 'CAC 642 TL, hedef 1.000 TL'nin %35,8 altında; 14 ücretli üye').",
       input: `Seviye: ${level}. Dönem: ${from} – ${to}. Kurallar: ${JSON.stringify(rules)}\nVeri: ${JSON.stringify(rows)}`,
       text: { format: { type: "json_schema", name: "ad_recs", strict: true, schema: RecSchema } },
@@ -294,9 +300,10 @@ async function analyze(admin: any, from: string, to: string, level: string) {
     // Sunucu tarafı güvenlik kemeri: alt sınırların altında kesin karar verilmez
     let decision = r.decision, confidence = r.confidence;
     if (decision === "BUYUT" && (m.paid < rules.min_purchases_for_scale || m.active_days < rules.min_days_active)) { decision = "IZLE"; confidence = "DUSUK"; }
-    if ((decision === "DURDUR" || decision === "AZALT") && m.spend_try < rules.min_spend_for_pause_try && m.leads < rules.min_leads_for_decision) { decision = "YETERSIZ_VERI"; confidence = "DUSUK"; }
+    const insufficient = !m.has_tracked_sample || m.tracked_spend < rules.min_spend_for_pause_try;
+    if ((decision === "DURDUR" || decision === "AZALT") && insufficient) { decision = "YETERSIZ_VERI"; confidence = "DUSUK"; }
     return { level, entity_id: r.entity_id, entity_name: m.name, campaign_id: level === "campaign" ? r.entity_id : null, campaign_name: level === "campaign" ? m.name : null,
-      decision, confidence, reason: r.reason, metrics: m, period_days: Math.max(1, Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1) };
+      decision, confidence, reason: decision === "YETERSIZ_VERI" && insufficient ? "Takip sonrası yeterli veri oluşmadı; geçmiş harcama satışsızlık kanıtı değildir." : r.reason, metrics: m, period_days: Math.max(1, Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1) };
   });
   if (recs.length) await admin.from("ai_ad_recommendations").insert(recs);
   return { recommendations: recs };

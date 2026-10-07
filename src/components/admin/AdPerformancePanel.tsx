@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowUpDown, CheckCircle2, ChevronRight, RefreshCw, Sparkles, XCircle, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
 import { FunctionsHttpError } from "@supabase/supabase-js";
+import { attributedRoas, canWarnNoSales, hasTrackedSample, type Coverage } from "../../../supabase/functions/_shared/adAttribution";
 
 type Level = "campaign" | "adset" | "ad";
-type Row = {
+type Row = Coverage & {
   entity_id: string; entity_name: string | null; parent_id: string | null; campaign_id: string | null;
   spend: number; impressions: number; clicks: number; link_clicks: number; meta_leads: number; active_days: number;
   leads: number; qualified: number; registrations: number; profiles: number; checkouts: number; paid: number; revenue: number;
@@ -46,7 +47,7 @@ const errText = async (e: unknown) => (e instanceof FunctionsHttpError ? await e
 
 const kpi = (r: Row) => ({
   ctr: div(r.clicks * 100, r.impressions), cpc: div(r.spend, r.clicks), cpl: div(r.spend, r.leads), cpql: div(r.spend, r.qualified),
-  cpr: div(r.spend, r.registrations), cac: div(r.spend, r.paid), roas: div(r.revenue, r.spend),
+  cpr: div(r.spend, r.registrations), cac: div(r.spend, r.paid), roas: attributedRoas(r.revenue, r.spend, r.paid),
   l2q: div(r.qualified * 100, r.leads), l2r: div(r.registrations * 100, r.leads), r2c: div(r.checkouts * 100, r.registrations),
   c2p: div(r.paid * 100, r.checkouts), l2p: div(r.paid * 100, r.leads),
 });
@@ -85,12 +86,18 @@ export default function AdPerformancePanel(_: { days?: number }) {
   const loadRows = async () => {
     setLoading(true);
     const p = parent[parent.length - 1];
-    const [{ data, error }, r] = await Promise.all([
+    const [{ data, error }, r, coverage] = await Promise.all([
       supabase.rpc("get_ad_performance" as any, { p_from: from, p_to: to, p_level: level, p_parent: p?.id ?? null, p_model: model }),
       supabase.from("ai_ad_recommendations" as any).select("level,entity_id,decision,confidence,reason,created_at").eq("level", level).order("created_at", { ascending: false }).limit(200),
+      supabase.rpc("get_ad_attribution_coverage" as any, { p_from: from, p_to: to, p_level: level, p_parent: p?.id ?? null }),
     ]);
     if (error) toast.error(error.message);
-    setRows(((data as any) || []).map((x: any) => ({ ...x, spend: Number(x.spend), revenue: Number(x.revenue),
+    if (coverage.error) toast.error("Atıf kapsamı alınamadı; satışsız harcama uyarıları gösterilmiyor.");
+    const byId = new Map<string, Coverage>(((coverage.data as any[]) || []).map((c) => [c.entity_id, {
+      attribution_started_at: c.attribution_started_at, tracked_visits: Number(c.tracked_visits),
+      tracked_spend: Number(c.tracked_spend), tracked_active_days: Number(c.tracked_active_days),
+    }]));
+    setRows(((data as any) || []).map((x: any) => ({ ...x, ...byId.get(x.entity_id), spend: Number(x.spend), revenue: Number(x.revenue),
       ...Object.fromEntries(["impressions", "clicks", "link_clicks", "meta_leads", "active_days", "leads", "qualified", "registrations", "profiles", "checkouts", "paid"].map((k) => [k, Number(x[k] || 0)])) })));
     const seen = new Set<string>();
     setRecs(((r.data as any) || []).filter((x: Rec) => (seen.has(x.entity_id) ? false : (seen.add(x.entity_id), true))));
@@ -155,13 +162,13 @@ export default function AdPerformancePanel(_: { days?: number }) {
     const out: { tone: "bad" | "good" | "mixed"; title: string; name: string; text: string }[] = [];
     for (const r of rows) {
       const k = kpi(r), n = r.entity_name || r.entity_id;
-      if (r.spend >= settings.min_spend_for_pause && r.paid === 0) out.push({ tone: "bad", title: "Yüksek harcama / satış yok", name: n, text: `${tl(r.spend)} harcandı, 0 ücretli üye.` });
+      if (canWarnNoSales(r, settings)) out.push({ tone: "bad", title: "Yüksek harcama / satış yok", name: n, text: `Takip sonrası ${tl(Number(r.tracked_spend))} harcandı, 0 ücretli üye.` });
       if (avgCpl && k.cpl && k.cpl > avgCpl * 1.5 && r.paid >= 2) out.push({ tone: "mixed", title: "Pahalı lead / iyi satış", name: n, text: `CPL ${tl(k.cpl)} ama ${r.paid} ücretli üye.` });
-      if (avgCpl && k.cpl && k.cpl < avgCpl * 0.6 && r.leads >= settings.min_leads_for_decision && (k.l2p ?? 0) < (avgL2p ?? 0) * 0.5) out.push({ tone: "bad", title: "Ucuz lead / zayıf satış", name: n, text: `CPL ${tl(k.cpl)}, lead→ücretli ${pct(k.l2p)}.` });
+      if (hasTrackedSample(r, settings) && avgCpl && k.cpl && k.cpl < avgCpl * 0.6 && r.leads >= settings.min_leads_for_decision && (k.l2p ?? 0) < (avgL2p ?? 0) * 0.5) out.push({ tone: "bad", title: "Ucuz lead / zayıf satış", name: n, text: `CPL ${tl(k.cpl)}, lead→ücretli ${pct(k.l2p)}.` });
       if (k.roas && k.roas >= 3 && r.paid >= settings.min_purchases_for_scale) out.push({ tone: "good", title: "Yüksek ROAS", name: n, text: `ROAS ${x2(k.roas)}, ${r.paid} ücretli üye.` });
       if (k.cac && k.cac <= settings.target_cac * 0.7 && r.paid >= settings.min_purchases_for_scale) out.push({ tone: "good", title: "Düşük CAC", name: n, text: `CAC ${tl(k.cac)} (hedef ${tl(settings.target_cac)}).` });
       if (k.l2q && k.l2q >= 50 && r.leads >= settings.min_leads_for_decision) out.push({ tone: "good", title: "Yüksek nitelikli oran", name: n, text: `Leadlerin ${pct(k.l2q)}'i nitelikli.` });
-      if (avgCtr && k.ctr && k.ctr > avgCtr * 1.3 && r.leads >= settings.min_leads_for_decision && r.paid === 0) out.push({ tone: "mixed", title: "İyi CTR / kötü dönüşüm", name: n, text: `CTR ${pct(k.ctr)} ama satış yok.` });
+      if (hasTrackedSample(r, settings) && avgCtr && k.ctr && k.ctr > avgCtr * 1.3 && r.leads >= settings.min_leads_for_decision && r.paid === 0) out.push({ tone: "mixed", title: "İyi CTR / kötü dönüşüm", name: n, text: `CTR ${pct(k.ctr)} ama satış yok.` });
       if (avgCtr && k.ctr && k.ctr < avgCtr * 0.7 && r.paid >= 2) out.push({ tone: "mixed", title: "Düşük CTR / iyi dönüşüm", name: n, text: `CTR ${pct(k.ctr)}, ${r.paid} ücretli üye.` });
     }
     return out.slice(0, 12);
@@ -227,6 +234,11 @@ export default function AdPerformancePanel(_: { days?: number }) {
       </Card>
 
       {/* Dönem + seviye + KPI */}
+      <div className="space-y-1">
+        <h2 className="text-base font-semibold text-foreground">Meta Reklamlarına Atfedilen Performans</h2>
+        <p className="text-xs text-muted-foreground">Yalnızca reklam kimliğiyle eşleştirilebilen ziyaret, kayıt ve ödemeler bu bölümde Meta reklamlarına atfedilir. İzleme sistemi devreye alınmadan önceki dönüşümler reklam bazında eşleştirilemez.</p>
+        <p className="text-xs text-muted-foreground">ROAS, reklam kimliğiyle eşleşmiş ilk başarılı ödemeden sonra hesaplanır. Satışsız harcama uyarıları yalnızca takip edilebilir reklamların ilk ziyaretinden sonraki tam günleri ve minimum veri eşiklerini dikkate alır.</p>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <Select value={period} onValueChange={setPeriod}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>{PERIODS.map((p) => <SelectItem key={p.v} value={p.v}>{p.l}</SelectItem>)}</SelectContent></Select>
@@ -254,7 +266,7 @@ export default function AdPerformancePanel(_: { days?: number }) {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-            {[["Harcama", tl(tot.spend)], ["CPL", tl(div(tot.spend, tot.leads))], ["CPQL", tl(div(tot.spend, tot.q))], ["CAC", tl(div(tot.spend, tot.paid))], ["Gelir", tl(tot.rev)], ["ROAS", x2(div(tot.rev, tot.spend))],
+            {[["Harcama", tl(tot.spend)], ["CPL", tl(div(tot.spend, tot.leads))], ["CPQL", tl(div(tot.spend, tot.q))], ["CAC", tl(div(tot.spend, tot.paid))], ["Gelir", tl(tot.rev)], ["ROAS", x2(attributedRoas(tot.rev, tot.spend, tot.paid))],
               ["Lead→Nitelikli", pct(div(tot.q * 100, tot.leads))], ["Lead→Kayıt", pct(div(tot.reg * 100, tot.leads))], ["Kayıt→Ödeme ekranı", pct(div(tot.chk * 100, tot.reg))], ["Ödeme ekranı→Ücretli", pct(div(tot.paid * 100, tot.chk))], ["Lead→Ücretli", pct(div(tot.paid * 100, tot.leads))], ["Kayıt başı", tl(div(tot.spend, tot.reg))]]
               .map(([k, v]) => (<Card key={k}><CardContent className="p-3"><div className="text-xs text-muted-foreground">{k}</div><div className="text-lg font-semibold text-foreground">{v}</div></CardContent></Card>))}
           </div>
@@ -280,7 +292,10 @@ export default function AdPerformancePanel(_: { days?: number }) {
                 <th className="px-2 py-2 text-left font-medium">AI</th><th className="px-2 py-2 text-left font-medium">Güven</th>
               </tr></thead>
               <tbody>
-                {sorted.map((r) => { const k = kpi(r); const rec = recBy.get(r.entity_id); return (
+                {sorted.map((r) => { const k = kpi(r); const savedRec = recBy.get(r.entity_id);
+                  const rec = savedRec && settings && !hasTrackedSample(r, settings) && ["AZALT", "DURDUR"].includes(savedRec.decision)
+                    ? { ...savedRec, decision: "YETERSIZ_VERI", confidence: "DUSUK", reason: "Takip sonrası yeterli veri oluşmadı; geçmiş harcama satışsızlık kanıtı değildir." } : savedRec;
+                  return (
                   <tr key={r.entity_id} className="border-t border-border align-top">
                     <td className="px-2 py-2 min-w-[180px]">
                       <div className="flex items-center gap-2">

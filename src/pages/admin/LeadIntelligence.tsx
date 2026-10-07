@@ -140,6 +140,7 @@ const LeadIntelligence = () => {
         </div>
       </div>
 
+      <h2 className="text-sm font-semibold text-foreground">Tüm Kaynaklar</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {[["Lead", stats.total], ["Nitelikli", stats.qualified], ["Kayıt", stats.registered], ["Profil", stats.profile],
           ["Ödeme Başlatan", stats.checkout], ["Ücretli Üye", stats.paid], ["Gelir", fmtTL(stats.revenue)]].map(([k, v]) => (

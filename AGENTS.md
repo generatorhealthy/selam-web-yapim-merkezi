@@ -1,3 +1,4 @@
 - Blog SEO: scripts/prerender-blog.mjs (postbuild) writes dist/blog/<slug>.html + dist/blog.html with per-post meta and full text; .htaccess serves them for /blog/<slug> — crawlers need real HTML on this SPA.
 - Registration WhatsApp login details must use the authenticated account's server-read email and matching recent specialist phone; compose app links in the same welcome message to avoid a separate announcement and never send passwords.
 - Meta ad performance is read directly from the Meta Marketing API (GET only, META_ACCESS_TOKEN / META_AD_ACCOUNT_ID / META_API_VERSION secrets) by meta-ad-intelligence (sync-meta-ads is a thin entry); no Lovable Ads connector. CAPI events go through the meta_capi_events queue keyed by event_key so each event is sent once.
+- Share attribution ROAS and warning eligibility rules between the UI and AI analysis; query coverage separately from unmodified Meta metrics so historical spend cannot imply untracked sales failure.
