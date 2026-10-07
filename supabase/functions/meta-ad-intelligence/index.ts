@@ -183,7 +183,7 @@ async function sendQueue(admin: any) {
     .in("status", ["pending", "retrying"]).lt("attempts", MAX_ATTEMPTS).order("created_at").limit(50);
   let sent = 0, failed = 0;
   for (const it of items || []) {
-    if (it.is_test) { await admin.from("meta_capi_events").update({ status: "sent", last_error: "test — Meta'ya gönderilmedi", sent_at: new Date().toISOString() }).eq("id", it.id); continue; }
+    if (it.is_test) { await admin.from("meta_capi_events").update({ status: "sent", meta_status: "TEST_NOT_SENT", last_error: "test — Meta'ya gönderilmedi", sent_at: new Date().toISOString() }).eq("id", it.id); continue; }
     let email = it.payload?.email as string | undefined, phone: string | undefined, fbc: string | undefined, fbp: string | undefined;
     let fullName: string | undefined, city: string | undefined, ip: string | undefined;
     if (it.order_id) {

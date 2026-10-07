@@ -1,5 +1,6 @@
 // Meta (Facebook) Conversions API — sunucu taraflı olay gönderimi
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { classifyCapiResponse } from "../_shared/capiResponse.ts";
 // Veri Seti Kodu: 1053321257408384
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -110,21 +111,28 @@ Deno.serve(async (req) => {
         body: JSON.stringify(payload),
       }
     );
-    const result = await res.json();
-    if (!res.ok) console.error("Meta CAPI error:", JSON.stringify(result));
+    const r = classifyCapiResponse(res.status, await res.text());
+    if (r.meta_status === "META_REJECTED") console.error("Meta CAPI error:", r.error);
+    const accepted = r.meta_status !== "META_REJECTED";
 
     if (eventKey) {
-      // user_data zaten hash'li; başarısızsa kuyruk tekrar dener
+      // user_data zaten hash'li; reddedilirse kuyruk tekrar dener. Kanıt alanlarında kişisel veri yok.
+      const now = new Date().toISOString();
       await db.from("meta_capi_events").upsert({
         event_key: eventKey, event_name, event_id: stableId,
         user_id: /^[0-9a-f-]{36}$/i.test(String(external_id)) ? external_id : null,
-        payload: { prebuilt: event }, status: res.ok ? "sent" : "retrying", attempts: 1,
-        last_error: res.ok ? null : String(result?.error?.message || "").slice(0, 400),
-        sent_at: res.ok ? new Date().toISOString() : null,
+        payload: { prebuilt: event }, status: accepted ? "sent" : "retrying", attempts: 1,
+        last_error: r.error, sent_at: accepted ? now : null,
+        meta_status: r.meta_status, http_status: r.http_status, events_received: r.events_received,
+        meta_messages: r.meta_messages, fbtrace_id: r.fbtrace_id, dataset_id: DATASET_ID,
+        event_time: new Date(event.event_time * 1000).toISOString(), last_attempt_at: now,
       }, { onConflict: "event_key" });
     }
 
-    return new Response(JSON.stringify({ success: res.ok, result }), {
+    return new Response(JSON.stringify({
+      success: r.meta_status === "META_ACCEPTED", meta_status: r.meta_status,
+      result: { events_received: r.events_received, messages: r.meta_messages, fbtrace_id: r.fbtrace_id },
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
