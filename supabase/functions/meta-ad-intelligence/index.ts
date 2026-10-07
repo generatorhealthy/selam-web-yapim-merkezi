@@ -8,6 +8,7 @@ import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { attributedRoas, hasTrackedSample } from "../_shared/adAttribution.ts";
 import { classifyCapiResponse } from "../_shared/capiResponse.ts";
 import { decide, reasonLine } from "../_shared/adDecision.ts";
+import { isOtherProjectRow } from "../_shared/adExclusions.ts";
 
 const DATASET_ID = "1053321257408384";
 const V = "v26.0";
@@ -265,8 +266,12 @@ async function analyze(admin: any, from: string, to: string, level: string) {
   const ds = { target_cac: Number(s.target_cac), min_leads_for_decision: Number(s.min_leads_for_decision), min_purchases_for_scale: Number(s.min_purchases_for_scale),
     min_spend_for_pause: Number(s.min_spend_for_pause), min_days_active: Number(s.min_days_active), min_roas_for_scale: Number(s.min_roas_for_scale ?? 1.5),
     min_roas_for_keep: Number(s.min_roas_for_keep ?? 1), high_conf_min_paid: Number(s.high_conf_min_paid ?? 5), min_attribution_completeness: Number(s.min_attribution_completeness ?? 60) };
-  const { data: perf, error } = await admin.rpc("get_ad_performance", { p_from: from, p_to: to, p_level: level, p_parent: null, p_model: "last" });
+  let { data: perf, error } = await admin.rpc("get_ad_performance", { p_from: from, p_to: to, p_level: level, p_parent: null, p_model: "last" });
   if (error) throw new Error(error.message);
+  // Ayrı projeye ait kampanyalar (Bihter) AI analizine girmez; veri silinmez
+  const { data: other } = await admin.from("meta_daily_metrics").select("campaign_id").ilike("campaign_name", "%bihter%").limit(1000);
+  const otherIds = new Set<string>((other || []).map((o: any) => String(o.campaign_id)));
+  perf = (perf || []).filter((r: any) => !isOtherProjectRow(r, otherIds, level));
   if (!perf?.length) return { recommendations: [], note: "Bu dönemde gerçek Meta reklam verisi yok; öneri üretilmedi." };
   const [{ data: coverage, error: coverageError }, { data: compRows }] = await Promise.all([
     admin.rpc("get_ad_attribution_coverage", { p_from: from, p_to: to, p_level: level, p_parent: null }),
