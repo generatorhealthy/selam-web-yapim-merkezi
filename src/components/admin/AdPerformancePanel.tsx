@@ -293,7 +293,7 @@ export default function AdPerformancePanel(_: { days?: number }) {
               </tr></thead>
               <tbody>
                 {sorted.map((r) => { const k = kpi(r); const savedRec = recBy.get(r.entity_id);
-                  const rec = savedRec && settings && !hasTrackedSample(r, settings) && ["AZALT", "DURDUR"].includes(savedRec.decision)
+                  const rec = savedRec && (!settings || !hasTrackedSample(r, settings) || Number(r.tracked_spend || 0) < settings.min_spend_for_pause) && ["AZALT", "DURDUR"].includes(savedRec.decision)
                     ? { ...savedRec, decision: "YETERSIZ_VERI", confidence: "DUSUK", reason: "Takip sonrası yeterli veri oluşmadı; geçmiş harcama satışsızlık kanıtı değildir." } : savedRec;
                   return (
                   <tr key={r.entity_id} className="border-t border-border align-top">
