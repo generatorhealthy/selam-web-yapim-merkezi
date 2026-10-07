@@ -8,25 +8,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowUpDown, CheckCircle2, ChevronRight, RefreshCw, Sparkles, XCircle, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
 import { FunctionsHttpError } from "@supabase/supabase-js";
+import { DECISION_LABEL, CONFIDENCE_LABEL } from "../../../supabase/functions/_shared/adDecision";
 import { attributedRoas, canWarnNoSales, hasTrackedSample, type Coverage } from "../../../supabase/functions/_shared/adAttribution";
 
 type Level = "campaign" | "adset" | "ad";
 type Row = Coverage & {
   entity_id: string; entity_name: string | null; parent_id: string | null; campaign_id: string | null;
   spend: number; impressions: number; clicks: number; link_clicks: number; meta_leads: number; active_days: number;
-  leads: number; qualified: number; registrations: number; profiles: number; checkouts: number; paid: number; revenue: number;
+  visits: number; leads: number; qualified: number; qualified_paid: number; registrations: number; profiles: number; checkouts: number; paid: number;
+  gross_revenue: number; refund_amount: number; revenue: number;
   thumbnail_url: string | null; creative_id: string | null;
 };
-type Rec = { level: string; entity_id: string; decision: string; confidence: string; reason: string };
+type Rec = { level: string; entity_id: string; decision: string; confidence: string; reason: string; decision_reason_metrics: string | null };
+type Completeness = { eligible_visits: number; attributed_visits: number; eligible_leads: number; attributed_leads: number; eligible_registrations: number; attributed_registrations: number; eligible_paid: number; attributed_paid: number };
 type Status = { source: string; ad_account_id: string | null; ad_account_name: string | null; last_sync_at: string | null; last_sync_status: string | null; last_error: string | null };
-type Settings = { qualified_threshold: number; min_leads_for_decision: number; min_purchases_for_scale: number; min_spend_for_pause: number; min_days_active: number; target_cac: number };
+type Settings = { qualified_threshold: number; min_leads_for_decision: number; min_purchases_for_scale: number; min_spend_for_pause: number; min_days_active: number; target_cac: number;
+  min_roas_for_scale: number; min_roas_for_keep: number; high_conf_min_paid: number; min_attribution_completeness: number };
 
 const DECISION: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  BUYUT: { label: "BÜYÜT", variant: "default" }, KORU: { label: "KORU", variant: "secondary" },
-  IZLE: { label: "İZLE", variant: "outline" }, AZALT: { label: "AZALT", variant: "destructive" },
-  DURDUR: { label: "DURDUR", variant: "destructive" }, YETERSIZ_VERI: { label: "YETERSİZ VERİ", variant: "outline" },
+  BUYUT: { label: DECISION_LABEL.BUYUT, variant: "default" }, KORU: { label: DECISION_LABEL.KORU, variant: "secondary" },
+  IZLE: { label: DECISION_LABEL.IZLE, variant: "outline" }, AZALT: { label: DECISION_LABEL.AZALT, variant: "destructive" },
+  DURDUR: { label: DECISION_LABEL.DURDUR, variant: "destructive" }, YETERSIZ_VERI: { label: DECISION_LABEL.YETERSIZ_VERI, variant: "outline" },
 };
-const CONF: Record<string, string> = { DUSUK: "Düşük", ORTA: "Orta", YUKSEK: "Yüksek" };
+const CONF: Record<string, string> = CONFIDENCE_LABEL;
 const PERIODS = [
   { v: "today", l: "Bugün" }, { v: "yesterday", l: "Dün" }, { v: "7", l: "Son 7 gün" }, { v: "14", l: "Son 14 gün" }, { v: "30", l: "Son 30 gün" },
 ];
@@ -49,7 +53,7 @@ const kpi = (r: Row) => ({
   ctr: div(r.clicks * 100, r.impressions), cpc: div(r.spend, r.clicks), cpl: div(r.spend, r.leads), cpql: div(r.spend, r.qualified),
   cpr: div(r.spend, r.registrations), cac: div(r.spend, r.paid), roas: attributedRoas(r.revenue, r.spend, r.paid),
   l2q: div(r.qualified * 100, r.leads), l2r: div(r.registrations * 100, r.leads), r2c: div(r.checkouts * 100, r.registrations),
-  c2p: div(r.paid * 100, r.checkouts), l2p: div(r.paid * 100, r.leads),
+  c2p: div(r.paid * 100, r.checkouts), l2p: div(r.paid * 100, r.leads), q2p: div(r.qualified_paid * 100, r.qualified),
 });
 
 const invoke = (body: Record<string, unknown>) => supabase.functions.invoke("meta-ad-intelligence", { body });
@@ -90,17 +94,20 @@ export default function AdPerformancePanel(_: { days?: number }) {
     const p = parent[parent.length - 1];
     const [{ data, error }, r, coverage] = await Promise.all([
       supabase.rpc("get_ad_performance" as any, { p_from: from, p_to: to, p_level: level, p_parent: p?.id ?? null, p_model: model }),
-      supabase.from("ai_ad_recommendations" as any).select("level,entity_id,decision,confidence,reason,created_at").eq("level", level).order("created_at", { ascending: false }).limit(200),
+      supabase.from("ai_ad_recommendations" as any).select("level,entity_id,decision,confidence,reason,decision_reason_metrics,created_at").eq("level", level).order("created_at", { ascending: false }).limit(200),
       supabase.rpc("get_ad_attribution_coverage" as any, { p_from: from, p_to: to, p_level: level, p_parent: p?.id ?? null }),
     ]);
+    const cmp = await supabase.rpc("get_ad_attribution_completeness" as any, { p_from: from, p_to: to });
+    const c0: any = ((cmp.data as any[]) || [])[0];
+    setCompleteness(c0 ? (Object.fromEntries(Object.entries(c0).map(([k, v]) => [k, Number(v)])) as Completeness) : null);
     if (error) toast.error(error.message);
     if (coverage.error) toast.error("Atıf kapsamı alınamadı; satışsız harcama uyarıları gösterilmiyor.");
     const byId = new Map<string, Coverage>(((coverage.data as any[]) || []).map((c) => [c.entity_id, {
       attribution_started_at: c.attribution_started_at, tracked_visits: Number(c.tracked_visits),
       tracked_spend: Number(c.tracked_spend), tracked_active_days: Number(c.tracked_active_days),
     }]));
-    setRows(((data as any) || []).map((x: any) => ({ ...x, ...byId.get(x.entity_id), spend: Number(x.spend), revenue: Number(x.revenue),
-      ...Object.fromEntries(["impressions", "clicks", "link_clicks", "meta_leads", "active_days", "leads", "qualified", "registrations", "profiles", "checkouts", "paid"].map((k) => [k, Number(x[k] || 0)])) })));
+    setRows(((data as any) || []).map((x: any) => ({ ...x, ...byId.get(x.entity_id), spend: Number(x.spend), revenue: Number(x.revenue), gross_revenue: Number(x.gross_revenue || 0), refund_amount: Number(x.refund_amount || 0),
+      ...Object.fromEntries(["impressions", "clicks", "link_clicks", "meta_leads", "active_days", "visits", "leads", "qualified", "qualified_paid", "registrations", "profiles", "checkouts", "paid"].map((k) => [k, Number(x[k] || 0)])) })));
     const seen = new Set<string>();
     setRecs(((r.data as any) || []).filter((x: Rec) => (seen.has(x.entity_id) ? false : (seen.add(x.entity_id), true))));
     setLoading(false);
@@ -241,6 +248,19 @@ export default function AdPerformancePanel(_: { days?: number }) {
         <p className="text-xs text-muted-foreground">Yalnızca reklam kimliğiyle eşleştirilebilen ziyaret, kayıt ve ödemeler bu bölümde Meta reklamlarına atfedilir. İzleme sistemi devreye alınmadan önceki dönüşümler reklam bazında eşleştirilemez.</p>
         <p className="text-xs text-muted-foreground">ROAS, reklam kimliğiyle eşleşmiş ilk başarılı ödemeden sonra hesaplanır. Satışsız harcama uyarıları yalnızca takip edilebilir reklamların ilk ziyaretinden sonraki tam günleri ve minimum veri eşiklerini dikkate alır.</p>
       </div>
+      <Card><CardContent className="p-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+        {(completeness ? [
+          ["Takip kapsamı (ziyaret)", completeness.attributed_visits, completeness.eligible_visits],
+          ["Atıf tamlığı · Lead", completeness.attributed_leads, completeness.eligible_leads],
+          ["Atıf tamlığı · Kayıt", completeness.attributed_registrations, completeness.eligible_registrations],
+          ["Atıf tamlığı · Ücretli", completeness.attributed_paid, completeness.eligible_paid],
+        ] as [string, number, number][] : []).map(([l, a, e]) => (
+          <div key={l}><div className="text-muted-foreground">{l}</div>
+            <div className="text-sm font-semibold text-foreground">{a} / {e} <span className="text-muted-foreground font-normal">{e > 0 ? `(%${((a / e) * 100).toFixed(1)})` : "(N/A)"}</span></div></div>
+        ))}
+        {!completeness && <div className="text-muted-foreground col-span-4">Atıf tamlığı hesaplanamadı.</div>}
+        <div className="col-span-2 md:col-span-4 text-muted-foreground">Kapsam = geçerli reklam kimliği taşıyan kayıtlar / dönemdeki tüm kayıtlar. Dönüşüm oranı değildir. Kısmi iade tutarı sistemde tutulmadığı için iade yalnızca tam iade edilen siparişlerden hesaplanır.</div>
+      </CardContent></Card>
       <div className="flex flex-wrap items-center gap-2">
         <Select value={period} onValueChange={setPeriod}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>{PERIODS.map((p) => <SelectItem key={p.v} value={p.v}>{p.l}</SelectItem>)}</SelectContent></Select>
@@ -289,14 +309,13 @@ export default function AdPerformancePanel(_: { days?: number }) {
                 <th className="px-2 py-2 text-left font-medium">Ad</th>
                 <SortH k="spend" label="Harcama" /><SortH k="impressions" label="Gösterim" /><SortH k="ctr" label="CTR" /><SortH k="cpc" label="CPC" />
                 <SortH k="leads" label="Lead" /><SortH k="cpl" label="CPL" /><SortH k="qualified" label="Nitelikli" /><SortH k="cpql" label="CPQL" />
-                <SortH k="registrations" label="Kayıt" /><SortH k="checkouts" label="Ödeme ekr." /><SortH k="paid" label="Ücretli" /><SortH k="revenue" label="Gelir" />
-                <SortH k="cac" label="CAC" /><SortH k="roas" label="ROAS" /><SortH k="l2p" label="Lead→Ücretli" />
+                <SortH k="registrations" label="Kayıt" /><SortH k="checkouts" label="Ödeme ekr." /><SortH k="paid" label="Ücretli" /><SortH k="revenue" label="Net ciro" /><th className="px-2 py-2 text-left font-medium">Brüt / İade</th>
+                <SortH k="cac" label="CAC" /><SortH k="roas" label="Net ROAS" /><SortH k="l2p" label="Lead→Ücretli" /><SortH k="q2p" label="Nitelikli→Ücretli" />
                 <th className="px-2 py-2 text-left font-medium">AI</th><th className="px-2 py-2 text-left font-medium">Güven</th>
               </tr></thead>
               <tbody>
                 {sorted.map((r) => { const k = kpi(r); const savedRec = recBy.get(r.entity_id);
-                  const rec = savedRec && (!settings || !hasTrackedSample(r, settings) || Number(r.tracked_spend || 0) < settings.min_spend_for_pause) && ["AZALT", "DURDUR"].includes(savedRec.decision)
-                    ? { ...savedRec, decision: "YETERSIZ_VERI", confidence: "DUSUK", reason: "Takip sonrası yeterli veri oluşmadı; geçmiş harcama satışsızlık kanıtı değildir." } : savedRec;
+                  const rec = savedRec; // karar sunucuda kural tabanlı hesaplanır, burada değiştirilmez
                   return (
                   <tr key={r.entity_id} className="border-t border-border align-top">
                     <td className="px-2 py-2 min-w-[180px]">
@@ -304,12 +323,14 @@ export default function AdPerformancePanel(_: { days?: number }) {
                         {r.thumbnail_url && <img src={r.thumbnail_url} alt="" className="w-8 h-8 rounded object-cover" loading="lazy" onError={(e) => (e.currentTarget.style.display = "none")} />}
                         <button className={`text-left text-foreground ${level !== "ad" ? "underline" : ""}`} onClick={() => drill(r)}>{r.entity_name || r.entity_id}</button>
                       </div>
-                      {rec && <div className="text-muted-foreground mt-1 max-w-xs">{rec.reason}</div>}
+                      {rec?.decision_reason_metrics && <div className="text-foreground mt-1 max-w-xs font-medium">{rec.decision_reason_metrics}</div>}
+                      {rec && rec.reason !== rec.decision_reason_metrics && <div className="text-muted-foreground mt-1 max-w-xs">{rec.reason}</div>}
+                      <div className="text-muted-foreground mt-1">Huni: {r.visits} ziyaret → {r.leads} lead → {r.qualified} nitelikli → {r.registrations} kayıt → {r.profiles} profil → {r.checkouts} ödeme ekr. → {r.paid} ücretli</div>
                     </td>
                     <td className="px-2 py-2">{tl(r.spend)}</td><td className="px-2 py-2">{r.impressions.toLocaleString("tr-TR")}</td><td className="px-2 py-2">{pct(k.ctr)}</td><td className="px-2 py-2">{tl(k.cpc)}</td>
                     <td className="px-2 py-2">{r.leads}</td><td className="px-2 py-2">{tl(k.cpl)}</td><td className="px-2 py-2">{r.qualified}</td><td className="px-2 py-2">{tl(k.cpql)}</td>
-                    <td className="px-2 py-2">{r.registrations}</td><td className="px-2 py-2">{r.checkouts}</td><td className="px-2 py-2">{r.paid}</td><td className="px-2 py-2">{tl(r.revenue)}</td>
-                    <td className="px-2 py-2">{tl(k.cac)}</td><td className="px-2 py-2">{x2(k.roas)}</td><td className="px-2 py-2">{pct(k.l2p)}</td>
+                    <td className="px-2 py-2">{r.registrations}</td><td className="px-2 py-2">{r.checkouts}</td><td className="px-2 py-2">{r.paid}</td><td className="px-2 py-2">{tl(r.revenue)}</td><td className="px-2 py-2">{tl(r.gross_revenue)} / {tl(r.refund_amount)}</td>
+                    <td className="px-2 py-2">{tl(k.cac)}</td><td className="px-2 py-2">{x2(k.roas)}</td><td className="px-2 py-2">{pct(k.l2p)}</td><td className="px-2 py-2">{pct(k.q2p)}</td>
                     <td className="px-2 py-2">{rec ? <Badge variant={DECISION[rec.decision]?.variant || "outline"}>{DECISION[rec.decision]?.label || rec.decision}</Badge> : "—"}</td>
                     <td className="px-2 py-2">{rec ? CONF[rec.confidence] || rec.confidence : "—"}</td>
                   </tr>); })}
@@ -351,7 +372,7 @@ export default function AdPerformancePanel(_: { days?: number }) {
           <CardContent className="grid grid-cols-2 gap-2 text-xs">
             {settings && ([
               ["qualified_threshold", "Nitelikli lead puan eşiği"], ["target_cac", "Hedef CAC (₺)"], ["min_leads_for_decision", "Karar için min. lead"],
-              ["min_purchases_for_scale", "Büyütme için min. satış"], ["min_spend_for_pause", "Durdurma için min. harcama (₺)"], ["min_days_active", "Min. aktif gün"],
+              ["min_purchases_for_scale", "Büyütme için min. satış"], ["min_spend_for_pause", "Durdurma için min. harcama (₺)"], ["min_days_active", "Min. aktif gün"], ["min_roas_for_scale", "Büyütme için min. net ROAS"], ["min_roas_for_keep", "Koruma için min. net ROAS"], ["high_conf_min_paid", "Yüksek güven için min. ücretli"], ["min_attribution_completeness", "Min. atıf tamlığı (%)"],
             ] as [keyof Settings, string][]).map(([k, l]) => (
               <label key={k} className="space-y-1"><span className="text-muted-foreground">{l}</span>
                 <Input type="number" value={settings[k] as any} onChange={(e) => setSettings({ ...settings, [k]: Number(e.target.value) })} /></label>
