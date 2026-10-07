@@ -7,6 +7,7 @@ import { z } from "npm:zod";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { attributedRoas, hasTrackedSample } from "../_shared/adAttribution.ts";
 import { classifyCapiResponse } from "../_shared/capiResponse.ts";
+import { decide, reasonLine } from "../_shared/adDecision.ts";
 
 const DATASET_ID = "1053321257408384";
 const V = "v26.0";
@@ -249,86 +250,83 @@ async function sendQueue(admin: any) {
 }
 
 // ---- AI analizi ----
+// Karar backend'de deterministik hesaplanır (_shared/adDecision.ts); AI yalnız açıklama yazar.
 const RecSchema = {
-  type: "object", additionalProperties: false, required: ["recommendations"],
-  properties: { recommendations: { type: "array", items: { type: "object", additionalProperties: false,
-    required: ["entity_id", "decision", "confidence", "reason"],
-    properties: {
-      entity_id: { type: "string" },
-      decision: { type: "string", enum: ["BUYUT", "KORU", "IZLE", "AZALT", "DURDUR", "YETERSIZ_VERI"] },
-      confidence: { type: "string", enum: ["DUSUK", "ORTA", "YUKSEK"] },
-      reason: { type: "string" },
-    } } } },
+  type: "object", additionalProperties: false, required: ["explanations"],
+  properties: { explanations: { type: "array", items: { type: "object", additionalProperties: false,
+    required: ["entity_id", "explanation"],
+    properties: { entity_id: { type: "string" }, explanation: { type: "string" } } } } },
 };
 const div = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) / 100 : null);
+const pctOf = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 1000) / 10 : null);
 
 async function analyze(admin: any, from: string, to: string, level: string) {
   const s = await getSettings(admin);
+  const ds = { target_cac: Number(s.target_cac), min_leads_for_decision: Number(s.min_leads_for_decision), min_purchases_for_scale: Number(s.min_purchases_for_scale),
+    min_spend_for_pause: Number(s.min_spend_for_pause), min_days_active: Number(s.min_days_active), min_roas_for_scale: Number(s.min_roas_for_scale ?? 1.5),
+    min_roas_for_keep: Number(s.min_roas_for_keep ?? 1), high_conf_min_paid: Number(s.high_conf_min_paid ?? 5), min_attribution_completeness: Number(s.min_attribution_completeness ?? 60) };
   const { data: perf, error } = await admin.rpc("get_ad_performance", { p_from: from, p_to: to, p_level: level, p_parent: null, p_model: "last" });
   if (error) throw new Error(error.message);
   if (!perf?.length) return { recommendations: [], note: "Bu dönemde gerçek Meta reklam verisi yok; öneri üretilmedi." };
-  const { data: coverage, error: coverageError } = await admin.rpc("get_ad_attribution_coverage", { p_from: from, p_to: to, p_level: level, p_parent: null });
+  const [{ data: coverage, error: coverageError }, { data: compRows }] = await Promise.all([
+    admin.rpc("get_ad_attribution_coverage", { p_from: from, p_to: to, p_level: level, p_parent: null }),
+    admin.rpc("get_ad_attribution_completeness", { p_from: from, p_to: to }),
+  ]);
   if (coverageError) throw new Error(coverageError.message);
+  const comp: any = (compRows || [])[0] || {};
+  const completeness = pctOf(Number(comp.attributed_leads || 0), Number(comp.eligible_leads || 0));
   const coverageById = new Map((coverage || []).map((r: any) => [r.entity_id, r]));
   const rows = perf.slice(0, 40).map((r: any) => {
-    const sp = Number(r.spend), L = Number(r.leads), Q = Number(r.qualified), R = Number(r.registrations), C = Number(r.checkouts), P = Number(r.paid), rev = Number(r.revenue);
     const c: any = coverageById.get(r.entity_id);
     const tracked = { attribution_started_at: c?.attribution_started_at, tracked_visits: Number(c?.tracked_visits || 0), tracked_spend: Number(c?.tracked_spend || 0), tracked_active_days: Number(c?.tracked_active_days || 0) };
-    return { ...tracked, has_tracked_sample: hasTrackedSample(tracked, s), entity_id: r.entity_id, name: r.entity_name, spend_try: sp, impressions: Number(r.impressions), clicks: Number(r.clicks),
-      ctr_pct: div(Number(r.clicks) * 100, Number(r.impressions)), active_days: Number(r.active_days),
-      leads: L, qualified: Q, registrations: R, checkouts: C, paid: P, revenue_try: rev,
-      cpl: div(sp, L), cpql: div(sp, Q), cac: div(sp, P), roas: attributedRoas(rev, sp, P), lead_to_paid_pct: div(P * 100, L) };
+    const input = { spend: Number(r.spend), leads: Number(r.leads), qualified: Number(r.qualified), registrations: Number(r.registrations), profiles: Number(r.profiles),
+      checkouts: Number(r.checkouts), paid: Number(r.paid), net_revenue: Number(r.revenue), active_days: Number(r.active_days),
+      tracked_visits: tracked.tracked_visits, tracked_spend: tracked.tracked_spend, has_tracked_sample: hasTrackedSample(tracked, s), attribution_completeness_pct: completeness };
+    const d = decide(input, ds);
+    return { entity_id: r.entity_id, name: r.entity_name, input, decision: d.decision, confidence: d.confidence, basis: d.basis, factors: d.factors, reason_line: reasonLine(input),
+      metrics: { ...input, gross_revenue: Number(r.gross_revenue), refund_amount: Number(r.refund_amount), qualified_paid: Number(r.qualified_paid), visits: Number(r.visits),
+        impressions: Number(r.impressions), clicks: Number(r.clicks), link_clicks: Number(r.link_clicks), ctr_pct: div(Number(r.clicks) * 100, Number(r.impressions)),
+        cpl: div(input.spend, input.leads), cpql: div(input.spend, input.qualified), cac: div(input.spend, input.paid), net_roas: attributedRoas(input.net_revenue, input.spend, input.paid) } };
   });
-  const rules = {
-    target_cac_try: Number(s.target_cac), min_leads_for_decision: s.min_leads_for_decision, min_purchases_for_scale: s.min_purchases_for_scale,
-    min_spend_for_pause_try: Number(s.min_spend_for_pause), min_days_active: s.min_days_active,
-  };
+  // AI açıklaması isteğe bağlı: hata olursa karar ve gerekçe satırı yine kaydedilir
+  const explain = new Map<string, string>();
   const key = Deno.env.get("LOVABLE_API_KEY");
-  if (!key) throw new Error("LOVABLE_API_KEY yok");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch" },
-    body: JSON.stringify({
-      model: "openai/gpt-6-astra", stream: true, store: false, reasoning: { effort: "low" },
-      instructions:
-        "Sen Doktorumol.com.tr'nin (uzman üyelik platformu) Meta reklam analistisin. Yalnızca verilen gerçek verileri kullan, asla tahmin/uydurma rakam üretme; null değer 'N/A' demektir. " +
-        "Her satır için karar: BUYUT, KORU, IZLE, AZALT, DURDUR, YETERSIZ_VERI. Sinyal sırası: (1) paid + revenue_try + cac (hedef CAC ile kıyasla) + roas birincil; " +
-        "(2) yeterli satış yoksa qualified + cpql ikincil; (3) bunlar da yetersizse registrations + cpl/cpc/ctr yalnız yardımcı sinyal. " +
-        "Yüksek CTR veya düşük CPC tek başına asla BUYUT gerekçesi değildir; ucuz lead tek başına başarı değildir. Hiçbir Meta değişikliği yapılmaz, yalnızca öneridir. " +
-        "Kurallar: BUYUT için paid >= min_purchases_for_scale ve active_days >= min_days_active şart. AZALT/DURDUR için has_tracked_sample=true ve tracked_spend >= min_spend_for_pause_try şart. spend_try geçmiş takip öncesi harcamayı da içerir; bunu satışsızlık kanıtı sayma. has_tracked_sample=false ise satış yok diye olumsuz karar verme, YETERSIZ_VERI ve güven DUSUK kullan. " +
-        "reason: sade Türkçe, en fazla 2 cümle, gerçek rakamlarla (ör. 'CAC 642 TL, hedef 1.000 TL'nin %35,8 altında; 14 ücretli üye').",
-      input: `Seviye: ${level}. Dönem: ${from} – ${to}. Kurallar: ${JSON.stringify(rules)}\nVeri: ${JSON.stringify(rows)}`,
-      text: { format: { type: "json_schema", name: "ad_recs", strict: true, schema: RecSchema } },
-    }),
-  });
-  if (!res.ok || !res.body) {
-    const t = await res.text();
-    throw new Error(res.status === 429 ? "Yapay zekâ şu an yoğun, biraz sonra tekrar deneyin." : res.status === 402 ? "Yapay zekâ kredisi bitti." : `AI [${res.status}]: ${t}`);
+  if (key) {
+    try {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch" },
+        body: JSON.stringify({
+          model: "openai/gpt-6-astra", stream: true, store: false, reasoning: { effort: "low" },
+          instructions:
+            "Sen Doktorumol.com.tr'nin Meta reklam analistisin. Her satırın kararı (decision) ve güveni (confidence) sistem tarafından hesaplandı; bunları DEĞİŞTİREMEZ, sorgulayamazsın. " +
+            "Görevin yalnızca kararın nedenini sade Türkçe ile en fazla 2 cümlede açıklamak. Yalnız verilen sayıları kullan, yeni rakam üretme, hesap yapma; null değer 'N/A' demektir. " +
+            "basis alanı kararın dayanağını belirtir (paid, qualified, registrations, insufficient). CTR/CPC'yi yalnız yardımcı bilgi olarak anabilirsin.",
+          input: `Seviye: ${level}. Dönem: ${from} – ${to}. Eşikler: ${JSON.stringify(ds)}\nSatırlar: ${JSON.stringify(rows.map((r: any) => ({ entity_id: r.entity_id, name: r.name, decision: r.decision, confidence: r.confidence, basis: r.basis, reason_line: r.reason_line, factors: r.factors })))}`,
+          text: { format: { type: "json_schema", name: "ad_explanations", strict: true, schema: RecSchema } },
+        }),
+      });
+      if (res.ok && res.body) {
+        const reader = res.body.getReader(); const dec = new TextDecoder();
+        let buf = "", out = "";
+        while (true) {
+          const { done, value } = await reader.read(); if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split("\n"); buf = lines.pop() || "";
+          for (const l of lines) {
+            if (!l.startsWith("data:")) continue;
+            const d = l.slice(5).trim(); if (!d || d === "[DONE]") continue;
+            try { const ev = JSON.parse(d); if (ev.type === "response.output_text.delta") out += ev.delta || ""; } catch { /* */ }
+          }
+        }
+        for (const e of (JSON.parse(out || '{"explanations":[]}').explanations || [])) explain.set(e.entity_id, String(e.explanation).slice(0, 600));
+      } else console.error("AI açıklama hatası", res.status);
+    } catch (e) { console.error("AI açıklama hatası", (e as Error).message); }
   }
-  const reader = res.body.getReader(); const dec = new TextDecoder();
-  let buf = "", out = "";
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    buf += dec.decode(value, { stream: true });
-    const lines = buf.split("\n"); buf = lines.pop() || "";
-    for (const l of lines) {
-      if (!l.startsWith("data:")) continue;
-      const d = l.slice(5).trim(); if (!d || d === "[DONE]") continue;
-      try { const ev = JSON.parse(d); if (ev.type === "response.output_text.delta") out += ev.delta || ""; } catch { /* */ }
-    }
-  }
-  const parsed = JSON.parse(out || '{"recommendations":[]}');
-  const byId = new Map(rows.map((r: any) => [r.entity_id, r]));
-  const recs = (parsed.recommendations || []).filter((r: any) => byId.has(r.entity_id)).map((r: any) => {
-    const m: any = byId.get(r.entity_id);
-    // Sunucu tarafı güvenlik kemeri: alt sınırların altında kesin karar verilmez
-    let decision = r.decision, confidence = r.confidence;
-    if (decision === "BUYUT" && (m.paid < rules.min_purchases_for_scale || m.active_days < rules.min_days_active)) { decision = "IZLE"; confidence = "DUSUK"; }
-    const insufficient = !m.has_tracked_sample || m.tracked_spend < rules.min_spend_for_pause_try;
-    if ((decision === "DURDUR" || decision === "AZALT") && insufficient) { decision = "YETERSIZ_VERI"; confidence = "DUSUK"; }
-    return { level, entity_id: r.entity_id, entity_name: m.name, campaign_id: level === "campaign" ? r.entity_id : null, campaign_name: level === "campaign" ? m.name : null,
-      decision, confidence, reason: decision === "YETERSIZ_VERI" && insufficient ? "Takip sonrası yeterli veri oluşmadı; geçmiş harcama satışsızlık kanıtı değildir." : r.reason, metrics: m, period_days: Math.max(1, Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1) };
-  });
+  const recs = rows.map((m: any) => ({
+    level, entity_id: m.entity_id, entity_name: m.name, campaign_id: level === "campaign" ? m.entity_id : null, campaign_name: level === "campaign" ? m.name : null,
+    decision: m.decision, confidence: m.confidence, reason: explain.get(m.entity_id) || m.reason_line, decision_reason_metrics: m.reason_line,
+    confidence_factors: { ...m.factors, basis: m.basis }, metrics: m.metrics, period_days: Math.max(1, Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1) }));
   if (recs.length) await admin.from("ai_ad_recommendations").insert(recs);
   return { recommendations: recs };
 }
