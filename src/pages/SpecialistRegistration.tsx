@@ -674,26 +674,29 @@ const SpecialistRegistration = () => {
                   </button>
                 )}
 
+                {/* CTA her zaman görünür: çerez bandı açıksa onun hemen üstünde durur (bant yüksekliği --cookie-banner-h) */}
+                <div className="h-24" aria-hidden="true" />
                 <div
-                  className="sticky z-40 pt-2 bg-background"
-                  style={{ bottom: "calc(var(--cookie-banner-h, 0px) + env(safe-area-inset-bottom, 0px))" }}
+                  className="fixed inset-x-0 z-[55] border-t border-border/40 bg-background/95 backdrop-blur px-4 pt-2 pb-2"
+                  style={{ bottom: "var(--cookie-banner-h, 0px)", paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0px))" }}
                 >
-                  <Button
-                    onClick={handleCreateAccount}
-                    disabled={isLoading}
-                    className="w-full h-14 text-base font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-all"
-                  >
-                    {isLoading ? (
-                      <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Hesap Oluşturuluyor...</>
-                    ) : (
-                      "Devam Et"
-                    )}
-                  </Button>
+                  <div className="mx-auto max-w-lg space-y-1.5">
+                    <Button
+                      onClick={handleCreateAccount}
+                      disabled={isLoading}
+                      className="w-full h-14 text-base font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-all"
+                    >
+                      {isLoading ? (
+                        <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Hesap Oluşturuluyor...</>
+                      ) : (
+                        "Devam Et"
+                      )}
+                    </Button>
+                    <p className="text-center text-xs text-muted-foreground/70">
+                      Kayıt olarak <Link to="/gizlilik-politikasi" className="underline hover:text-foreground transition-colors">Gizlilik Politikası</Link>'nı kabul etmiş olursunuz.
+                    </p>
+                  </div>
                 </div>
-
-                <p className="text-center text-xs text-muted-foreground/70">
-                  Kayıt olarak <Link to="/gizlilik-politikasi" className="underline hover:text-foreground transition-colors">Gizlilik Politikası</Link>'nı kabul etmiş olursunuz.
-                </p>
               </div>
             </div>
           )}
