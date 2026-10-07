@@ -7156,6 +7156,7 @@ export type Database = {
         Args: {
           p_from: string
           p_level?: string
+          p_model?: string
           p_parent?: string
           p_to: string
         }
@@ -7185,16 +7186,22 @@ export type Database = {
         Args: never
         Returns: {
           ad_id: string
+          ad_name: string
           adset_id: string
           campaign_id: string
+          campaign_name: string
+          checkout_at: string
+          first_source: string
           has_fbc: boolean
           has_fbclid: boolean
           has_fbp: boolean
           is_test: boolean
-          purchased: boolean
-          registered: boolean
-          utm_campaign: string
-          utm_source: string
+          last_source: string
+          paid_amount: number
+          paid_at: string
+          registered_at: string
+          session_id: string
+          user_linked: boolean
           visit_at: string
         }[]
       }
@@ -7428,6 +7435,14 @@ export type Database = {
       notify_search_engines_async: {
         Args: { _id?: string; _slug?: string; _type: string }
         Returns: undefined
+      }
+      paid_revenue_by_email: {
+        Args: never
+        Returns: {
+          amt: number
+          em: string
+          first_paid_at: string
+        }[]
       }
       record_failed_admin_login: {
         Args: { p_email: string; p_ip_address?: string }

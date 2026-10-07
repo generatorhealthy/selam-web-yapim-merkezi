@@ -239,7 +239,7 @@ const div = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) / 100 :
 
 async function analyze(admin: any, from: string, to: string, level: string) {
   const s = await getSettings(admin);
-  const { data: perf, error } = await admin.rpc("get_ad_performance", { p_from: from, p_to: to, p_level: level, p_parent: null });
+  const { data: perf, error } = await admin.rpc("get_ad_performance", { p_from: from, p_to: to, p_level: level, p_parent: null, p_model: "last" });
   if (error) throw new Error(error.message);
   if (!perf?.length) return { recommendations: [], note: "Bu dönemde gerçek Meta reklam verisi yok; öneri üretilmedi." };
   const rows = perf.slice(0, 40).map((r: any) => {
@@ -262,7 +262,9 @@ async function analyze(admin: any, from: string, to: string, level: string) {
       model: "openai/gpt-6-astra", stream: true, store: false, reasoning: { effort: "low" },
       instructions:
         "Sen Doktorumol.com.tr'nin (uzman üyelik platformu) Meta reklam analistisin. Yalnızca verilen gerçek verileri kullan, asla tahmin/uydurma rakam üretme; null değer 'N/A' demektir. " +
-        "Her satır için karar: BUYUT, KORU, IZLE, AZALT, DURDUR, YETERSIZ_VERI. Öncelik: ücretli üye, CAC (hedef CAC ile kıyasla), gelir, ROAS. Ucuz lead tek başına başarı değildir. " +
+        "Her satır için karar: BUYUT, KORU, IZLE, AZALT, DURDUR, YETERSIZ_VERI. Sinyal sırası: (1) paid + revenue_try + cac (hedef CAC ile kıyasla) + roas birincil; " +
+        "(2) yeterli satış yoksa qualified + cpql ikincil; (3) bunlar da yetersizse registrations + cpl/cpc/ctr yalnız yardımcı sinyal. " +
+        "Yüksek CTR veya düşük CPC tek başına asla BUYUT gerekçesi değildir; ucuz lead tek başına başarı değildir. Hiçbir Meta değişikliği yapılmaz, yalnızca öneridir. " +
         "Kurallar: BUYUT için paid >= min_purchases_for_scale ve active_days >= min_days_active şart. AZALT/DURDUR için spend >= min_spend_for_pause_try veya leads >= min_leads_for_decision şart. Aksi halde IZLE veya YETERSIZ_VERI ve güven DUSUK. " +
         "reason: sade Türkçe, en fazla 2 cümle, gerçek rakamlarla (ör. 'CAC 642 TL, hedef 1.000 TL'nin %35,8 altında; 14 ücretli üye').",
       input: `Seviye: ${level}. Dönem: ${from} – ${to}. Kurallar: ${JSON.stringify(rules)}\nVeri: ${JSON.stringify(rows)}`,
