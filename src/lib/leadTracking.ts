@@ -64,3 +64,20 @@ export const trackLeadEvent = (eventName: string, properties: Record<string, unk
     }).then(() => undefined, () => undefined);
   } catch { /* ignore */ }
 };
+
+/** Kayıt formu sürümü: değişiklik öncesi/sonrası cohort ayrımı için olaylara eklenir. */
+export const REGISTRATION_FORM_VERSION = "v2_2026-10-07";
+
+/**
+ * Aynı oturumda aynı anahtarla yalnız bir kez olay üretir (ör. 10 kez odaklanma → 1 olay).
+ * Yalnız Doktorum Ol'un kendi analitiğine yazar; Meta'ya hiçbir şey göndermez.
+ * properties içine kullanıcının yazdığı değer (e-posta, telefon, ad) KONULMAZ.
+ */
+export const trackLeadEventOnce = (eventName: string, dedupeKey: string, properties: Record<string, unknown> = {}) => {
+  const k = `dko_once_${getLeadSessionId()}_${dedupeKey}`;
+  try {
+    if (sessionStorage.getItem(k)) return;
+    sessionStorage.setItem(k, "1");
+  } catch { /* sessionStorage yoksa yine de bir kez göndermeye çalış */ }
+  trackLeadEvent(eventName, { form_version: REGISTRATION_FORM_VERSION, ...properties });
+};
