@@ -66,6 +66,7 @@ export default function AdPerformancePanel(_: { days?: number }) {
   const [parent, setParent] = useState<{ id: string; name: string; level: Level }[]>([]);
   const [rows, setRows] = useState<Row[]>([]);
   const [recs, setRecs] = useState<Rec[]>([]);
+  const [completeness, setCompleteness] = useState<Completeness | null>(null);
   const [sort, setSort] = useState<{ k: string; d: 1 | -1 }>({ k: "spend", d: -1 });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
