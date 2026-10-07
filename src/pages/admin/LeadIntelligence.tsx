@@ -12,6 +12,7 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import AdPerformancePanel from "@/components/admin/AdPerformancePanel";
+import RegistrationFunnelPanel from "@/components/admin/RegistrationFunnelPanel";
 
 type Lead = {
   user_id: string; name: string | null; email: string | null; phone: string | null; created_at: string;
@@ -155,6 +156,7 @@ const LeadIntelligence = () => {
         <TabsList>
           <TabsTrigger value="ads">Reklam Performansı & AI</TabsTrigger>
           <TabsTrigger value="funnel">Huni & Kaynak</TabsTrigger>
+          <TabsTrigger value="regfunnel">Kayıt Hunisi (v1/v2)</TabsTrigger>
           <TabsTrigger value="leads">Leadler</TabsTrigger>
           <TabsTrigger value="rules">Puan Kuralları</TabsTrigger>
         </TabsList>
@@ -230,6 +232,10 @@ const LeadIntelligence = () => {
                   </div>))}
               </div>))}
           </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="regfunnel">
+          <RegistrationFunnelPanel />
         </TabsContent>
 
         <TabsContent value="ads">
