@@ -17,7 +17,8 @@ import { hasSuggestedInterests, getSuggestedInterests } from "@/lib/specialistIn
 import { sendSms } from "@/services/smsService";
 import { translateAuthError } from "@/utils/authErrors";
 import { trackMetaLead } from "@/lib/metaCapi";
-import { trackLeadEvent } from "@/lib/leadTracking";
+import { trackLeadEvent, trackLeadEventOnce } from "@/lib/leadTracking";
+import { isValidEmail, normalizeTrMobile } from "@/lib/registrationForm";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard, Calculator
@@ -142,7 +143,7 @@ const SpecialistRegistration = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showReferralInput, setShowReferralInput] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -223,6 +224,11 @@ const SpecialistRegistration = () => {
     setInterests(prev => (prev && prev.length > 0 ? prev : suggested));
   }, [formData.specialty]);
 
+  useEffect(() => {
+    if (currentStep === 1) trackLeadEventOnce("registration_form_view", "registration_form_view", { device: window.innerWidth < 768 ? "mobile" : "desktop" });
+    if (currentStep === 2) trackLeadEventOnce("step_2_view", "step_2_view");
+  }, [currentStep]);
+
   const steps = [
     { num: 1, label: "Hesap", icon: User },
     { num: 2, label: "Kapasite", icon: Calculator },
@@ -241,29 +247,25 @@ const SpecialistRegistration = () => {
   };
 
   const handleCreateAccount = async () => {
-    if (!email || !phone || !password || !passwordConfirm) {
-      toast.error("Lütfen tüm alanları doldurun.");
-      return;
-    }
-    // Telefon validasyonu
-    const phoneClean = phone.replace(/\s/g, '');
-    if (!/^0[5]\d{9}$/.test(phoneClean) && !/^\+90[5]\d{9}$/.test(phoneClean)) {
-      toast.error("Geçerli bir telefon numarası girin (05XX XXX XX XX).");
-      return;
-    }
-    if (password !== passwordConfirm) {
-      toast.error("Şifreler eşleşmiyor.");
-      return;
-    }
-    if (password.length < 6) {
-      toast.error("Şifre en az 6 karakter olmalıdır.");
-      return;
-    }
+    const dev = typeof window !== "undefined" && window.innerWidth < 768 ? "mobile" : "desktop";
+    trackLeadEvent("step_1_submit_attempt", { form_version: "v2_2026-10-07", device: dev });
+    const fail = (field: string, type: string, msg: string) => {
+      trackLeadEvent("validation_error", { form_version: "v2_2026-10-07", field_name: field, error_type: type, step: 1 });
+      toast.error(msg);
+    };
+    if (!email.trim()) return fail("email", "required", "Lütfen e-posta adresinizi girin.");
+    if (!isValidEmail(email)) return fail("email", "invalid_format", "Geçerli bir e-posta adresi girin.");
+    if (!phone.trim()) return fail("phone", "required", "Lütfen telefon numaranızı girin.");
+    const phoneNorm = normalizeTrMobile(phone);
+    if (!phoneNorm) return fail("phone", "invalid_format", "Geçerli bir cep telefonu girin (örn. 0532 123 45 67).");
+    if (!password) return fail("password", "required", "Lütfen bir şifre belirleyin.");
+    if (password.length < 6) return fail("password", "too_short", "Şifre en az 6 karakter olmalıdır.");
+    setPhone(phoneNorm);
 
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo: window.location.origin,
@@ -303,7 +305,7 @@ const SpecialistRegistration = () => {
             setCreatedUserEmail(email);
             void registerPartnerReferral(signInData.user.id, email);
             toast.success("Mevcut hesabınızla devam ediliyor.");
-            void trackMetaLead({ email, phone, external_id: signInData.user.id });
+            void trackMetaLead({ email, phone: phoneNorm, external_id: signInData.user.id });
             setCurrentStep(2);
           }
           return;
@@ -327,10 +329,10 @@ const SpecialistRegistration = () => {
         }
         
         // Update phone separately to ensure it's saved
-        if (phone) {
+        if (phoneNorm) {
           const { error: phoneError } = await supabase
             .from('user_profiles')
-            .update({ phone } as any)
+            .update({ phone: phoneNorm } as any)
             .eq('user_id', data.user.id);
           if (phoneError) console.error('Phone update error:', phoneError);
         }
@@ -339,7 +341,7 @@ const SpecialistRegistration = () => {
         setCreatedUserEmail(email);
         void registerPartnerReferral(data.user.id, email);
         toast.success("Hesabınız oluşturuldu!");
-        void trackMetaLead({ email, phone, external_id: data.user.id });
+        void trackMetaLead({ email, phone: phoneNorm, external_id: data.user.id });
         trackLeadEvent("registration_started");
         setCurrentStep(2);
       }
@@ -545,7 +547,7 @@ const SpecialistRegistration = () => {
           style={{ paddingBottom: "calc(120px + env(safe-area-inset-bottom, 0px))" }}
         >
           {currentStep !== 5 && (
-            <div className="flex items-center justify-center gap-2 mb-10">
+            <div className={`${currentStep === 1 ? "hidden md:flex" : "flex"} items-center justify-center gap-2 mb-10`}>
               {steps.map((step, index) => (
                 <div key={step.num} className="flex items-center gap-2">
                   <div className={`flex items-center gap-1.5 transition-all ${
@@ -577,24 +579,32 @@ const SpecialistRegistration = () => {
           )}
 
           {currentStep === 1 && (
-            <div className="space-y-8">
+            <div className="space-y-5 md:space-y-8" onFocusCapture={() => trackLeadEventOnce("first_field_focus", "first_field_focus")}>
               <div className="text-center space-y-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Uzman Profili Oluşturun</h1>
-                <p className="text-muted-foreground text-sm">Platformumuza katılmak için bilgilerinizi girin</p>
+                <h1 className="text-[22px] leading-tight md:text-3xl font-bold text-foreground tracking-tight">Uzman profilinizi oluşturun, danışanların sizi keşfetmesini kolaylaştırın.</h1>
+                <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1 pt-1 text-xs md:text-sm text-muted-foreground">
+                  {["Danışan yönlendirme", "Google'da görünür uzman profili", "Online randevu"].map((b) => (
+                    <li key={b} className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5 text-primary" />{b}</li>
+                  ))}
+                </ul>
               </div>
 
-              <div className="space-y-5">
+              <div className="space-y-4 md:space-y-5">
                 <div className="space-y-2">
-                  <Label className="text-sm text-muted-foreground font-normal">E-posta adresiniz</Label>
+                  <Label className="text-sm text-muted-foreground font-normal">E-posta adresiniz *</Label>
                   <div className="relative">
                     <Input
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      autoCapitalize="none"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onBlur={() => { if (isValidEmail(email)) trackLeadEventOnce("email_entered", "email_entered"); }}
                       placeholder="ornek@email.com"
-                      className={inputClass}
+                      className={inputClass + " pr-12"}
                     />
-                    {email && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) && (
+                    {isValidEmail(email) && (
                       <Check className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
                     )}
                   </div>
@@ -602,20 +612,29 @@ const SpecialistRegistration = () => {
 
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground font-normal">Telefon numaranız *</Label>
-                  <Input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="05XX XXX XX XX"
-                    className={inputClass}
-                  />
+                  <div className="relative">
+                    <Input
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      onBlur={() => { if (normalizeTrMobile(phone)) trackLeadEventOnce("phone_entered", "phone_entered"); }}
+                      placeholder="05XX XXX XX XX"
+                      className={inputClass + " pr-12"}
+                    />
+                    {normalizeTrMobile(phone) && (
+                      <Check className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm text-muted-foreground font-normal">Şifrenizi belirleyin</Label>
+                  <Label className="text-sm text-muted-foreground font-normal">Şifrenizi belirleyin *</Label>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="En az 6 karakter"
@@ -623,6 +642,7 @@ const SpecialistRegistration = () => {
                     />
                     <button
                       type="button"
+                      aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
                     >
@@ -631,49 +651,52 @@ const SpecialistRegistration = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm text-muted-foreground font-normal">Şifre tekrar</Label>
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={passwordConfirm}
-                    onChange={(e) => setPasswordConfirm(e.target.value)}
-                    placeholder="Şifrenizi tekrar girin"
-                    className={inputClass}
-                  />
-                </div>
+                {showReferralInput || referralCode ? (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground font-normal">
+                      Davet Kodu <span className="text-xs opacity-60">(isteğe bağlı)</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                      placeholder="Örn: A1B2C3D4"
+                      maxLength={8}
+                      className={inputClass}
+                    />
+                    <p className="text-xs text-muted-foreground/70">
+                      Sizi davet eden uzmanın kodunu girerseniz, ilk yıl ödemeniz tamamlandığında o uzmana 2 ay hediye üyelik tanımlanır.
+                    </p>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setShowReferralInput(true)} className="text-sm text-primary underline-offset-2 hover:underline">
+                    Davet kodum var
+                  </button>
+                )}
 
-                <div className="space-y-2">
-                  <Label className="text-sm text-muted-foreground font-normal">
-                    Davet Kodu <span className="text-xs opacity-60">(isteğe bağlı)</span>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={referralCode}
-                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                    placeholder="Örn: A1B2C3D4"
-                    maxLength={8}
-                    className={inputClass}
-                  />
-                  <p className="text-xs text-muted-foreground/70">
-                    Sizi davet eden uzmanın kodunu girerseniz, ilk yıl ödemeniz tamamlandığında o uzmana 2 ay hediye üyelik tanımlanır.
-                  </p>
-                </div>
-
-                <Button
-                  onClick={handleCreateAccount}
-                  disabled={isLoading}
-                  className="w-full h-14 text-base font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-all mt-4"
+                {/* CTA her zaman görünür: çerez bandı açıksa onun hemen üstünde durur (bant yüksekliği --cookie-banner-h) */}
+                <div className="h-24" aria-hidden="true" />
+                <div
+                  className="fixed inset-x-0 z-[55] border-t border-border/40 bg-background/95 backdrop-blur px-4 pt-2 pb-2"
+                  style={{ bottom: "var(--cookie-banner-h, 0px)", paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0px))" }}
                 >
-                  {isLoading ? (
-                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Hesap Oluşturuluyor...</>
-                  ) : (
-                    "Devam Et"
-                  )}
-                </Button>
-
-                <p className="text-center text-xs text-muted-foreground/70">
-                  Kayıt olarak <Link to="/gizlilik-politikasi" className="underline hover:text-foreground transition-colors">Gizlilik Politikası</Link>'nı kabul etmiş olursunuz.
-                </p>
+                  <div className="mx-auto max-w-lg space-y-1.5">
+                    <Button
+                      onClick={handleCreateAccount}
+                      disabled={isLoading}
+                      className="w-full h-14 text-base font-semibold rounded-2xl bg-foreground text-background hover:bg-foreground/90 transition-all"
+                    >
+                      {isLoading ? (
+                        <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Hesap Oluşturuluyor...</>
+                      ) : (
+                        "Devam Et"
+                      )}
+                    </Button>
+                    <p className="text-center text-xs text-muted-foreground/70">
+                      Kayıt olarak <Link to="/gizlilik-politikasi" className="underline hover:text-foreground transition-colors">Gizlilik Politikası</Link>'nı kabul etmiş olursunuz.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}

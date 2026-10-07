@@ -1,10 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Capacitor } from "@capacitor/core";
 
 const CookieConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // Bandın yüksekliğini yayınla: sayfalar (ör. kayıt CTA'sı) bandın üstünde kalabilsin.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!showBanner || !boxRef.current) { root.style.removeProperty("--cookie-banner-h"); return; }
+    const el = boxRef.current;
+    const set = () => root.style.setProperty("--cookie-banner-h", `${Math.ceil(el.getBoundingClientRect().height) + 8}px`);
+    set();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(set) : null;
+    ro?.observe(el);
+    return () => { ro?.disconnect(); root.style.removeProperty("--cookie-banner-h"); };
+  }, [showBanner]);
 
   useEffect(() => {
     // Apple App Store guideline 5.1.2(i): native uygulamada çerez/tracking bildirimi gösterme
@@ -42,14 +55,15 @@ const CookieConsent = () => {
       style={{ contain: "layout paint" }}
     >
       <div
-        className="pointer-events-auto mx-auto mb-2 w-[min(96vw,720px)] rounded-xl border border-border bg-card shadow-lg px-4 py-3 md:px-5 md:py-4"
+        ref={boxRef}
+        className="pointer-events-auto mx-auto mb-2 w-[min(96vw,720px)] rounded-xl border border-border bg-card shadow-lg px-3 py-2 md:px-5 md:py-4"
         role="region"
         aria-label="Çerez tercihleri"
         aria-describedby="cookie-consent-description"
         data-cookie-consent
         style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
       >
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-2 md:gap-3 md:flex-row md:items-center md:justify-between">
           <p
             id="cookie-consent-description"
             className="text-xs md:text-sm text-muted-foreground leading-snug"
