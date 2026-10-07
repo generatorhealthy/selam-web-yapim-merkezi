@@ -1,0 +1,1 @@
+ALTER FUNCTION public.get_ad_attribution_coverage(date,date,text,text) SECURITY INVOKER;
