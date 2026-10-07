@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Reklam Merkezi: tüm kaynaklar ve Meta atıflarını ayır; ROAS veri koşulunu ve takip sonrası satışsız harcama uyarılarını test et; üç kampanyayı gerçek veriden kontrol et.
+
 - [x] Kayıt sonrası WhatsApp'a güvenli giriş bilgileri ve mobil uygulama bağlantıları tek mesajda eklendi; ayrı otomatik kayıt duyurusu bulunmadı, 4 test geçti ve canlıda yetkisiz erişim 401 doğrulandı (gerçek alıcıya gönderim yapılmadı)
 
 - [x] `user_profiles` erişim izinlerini doğrula ve tamamla
