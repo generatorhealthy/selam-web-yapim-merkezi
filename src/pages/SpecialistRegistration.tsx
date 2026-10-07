@@ -17,7 +17,8 @@ import { hasSuggestedInterests, getSuggestedInterests } from "@/lib/specialistIn
 import { sendSms } from "@/services/smsService";
 import { translateAuthError } from "@/utils/authErrors";
 import { trackMetaLead } from "@/lib/metaCapi";
-import { trackLeadEvent } from "@/lib/leadTracking";
+import { trackLeadEvent, trackLeadEventOnce } from "@/lib/leadTracking";
+import { isValidEmail, normalizeTrMobile } from "@/lib/registrationForm";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard, Calculator
@@ -142,7 +143,7 @@ const SpecialistRegistration = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showReferralInput, setShowReferralInput] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -241,29 +242,25 @@ const SpecialistRegistration = () => {
   };
 
   const handleCreateAccount = async () => {
-    if (!email || !phone || !password || !passwordConfirm) {
-      toast.error("Lütfen tüm alanları doldurun.");
-      return;
-    }
-    // Telefon validasyonu
-    const phoneClean = phone.replace(/\s/g, '');
-    if (!/^0[5]\d{9}$/.test(phoneClean) && !/^\+90[5]\d{9}$/.test(phoneClean)) {
-      toast.error("Geçerli bir telefon numarası girin (05XX XXX XX XX).");
-      return;
-    }
-    if (password !== passwordConfirm) {
-      toast.error("Şifreler eşleşmiyor.");
-      return;
-    }
-    if (password.length < 6) {
-      toast.error("Şifre en az 6 karakter olmalıdır.");
-      return;
-    }
+    const dev = typeof window !== "undefined" && window.innerWidth < 768 ? "mobile" : "desktop";
+    trackLeadEvent("step_1_submit_attempt", { form_version: "v2_2026-10-07", device: dev });
+    const fail = (field: string, type: string, msg: string) => {
+      trackLeadEvent("validation_error", { form_version: "v2_2026-10-07", field_name: field, error_type: type, step: 1 });
+      toast.error(msg);
+    };
+    if (!email.trim()) return fail("email", "required", "Lütfen e-posta adresinizi girin.");
+    if (!isValidEmail(email)) return fail("email", "invalid_format", "Geçerli bir e-posta adresi girin.");
+    if (!phone.trim()) return fail("phone", "required", "Lütfen telefon numaranızı girin.");
+    const phoneNorm = normalizeTrMobile(phone);
+    if (!phoneNorm) return fail("phone", "invalid_format", "Geçerli bir cep telefonu girin (örn. 0532 123 45 67).");
+    if (!password) return fail("password", "required", "Lütfen bir şifre belirleyin.");
+    if (password.length < 6) return fail("password", "too_short", "Şifre en az 6 karakter olmalıdır.");
+    setPhone(phoneNorm);
 
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo: window.location.origin,
@@ -303,7 +300,7 @@ const SpecialistRegistration = () => {
             setCreatedUserEmail(email);
             void registerPartnerReferral(signInData.user.id, email);
             toast.success("Mevcut hesabınızla devam ediliyor.");
-            void trackMetaLead({ email, phone, external_id: signInData.user.id });
+            void trackMetaLead({ email, phone: phoneNorm, external_id: signInData.user.id });
             setCurrentStep(2);
           }
           return;
@@ -327,10 +324,10 @@ const SpecialistRegistration = () => {
         }
         
         // Update phone separately to ensure it's saved
-        if (phone) {
+        if (phoneNorm) {
           const { error: phoneError } = await supabase
             .from('user_profiles')
-            .update({ phone } as any)
+            .update({ phone: phoneNorm } as any)
             .eq('user_id', data.user.id);
           if (phoneError) console.error('Phone update error:', phoneError);
         }
@@ -339,7 +336,7 @@ const SpecialistRegistration = () => {
         setCreatedUserEmail(email);
         void registerPartnerReferral(data.user.id, email);
         toast.success("Hesabınız oluşturuldu!");
-        void trackMetaLead({ email, phone, external_id: data.user.id });
+        void trackMetaLead({ email, phone: phoneNorm, external_id: data.user.id });
         trackLeadEvent("registration_started");
         setCurrentStep(2);
       }
