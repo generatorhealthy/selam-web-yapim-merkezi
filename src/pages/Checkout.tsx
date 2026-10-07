@@ -1,4 +1,5 @@
-import { trackLeadEvent } from "@/lib/leadTracking";
+import { trackLeadEvent, getLeadSessionId } from "@/lib/leadTracking";
+import { trackPixelEvent, capiCheckoutEventId } from "@/lib/metaPixel";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
