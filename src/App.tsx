@@ -54,7 +54,7 @@ import SpecialistReviewPage from "./pages/SpecialistReviewPage";
 import BookAppointment from "./pages/BookAppointment";
 import DanismanlikRandevusuAl from "./pages/DanismanlikRandevusuAl";
 import RandevuSayfasi from "./pages/RandevuSayfasi";
-import SpecialtyPage from "./pages/SpecialtyPage";
+import SpecialtyRoute from "./pages/SpecialtyRoute";
 import Packages from "./pages/Packages";
 import CampaignPackage from "./pages/CampaignPackage";
 import CampaignPremiumPackage from "./pages/CampaignPremiumPackage";
@@ -218,7 +218,7 @@ const AppContent = () => {
               <Route path="/:specialtySlug/:doctorName" element={<DoctorProfile />} />
               <Route path="/randevu-al/:specialtySlug/:doctorName" element={<BookAppointment />} />
               <Route path="/randevu-sayfasi" element={<RandevuSayfasi />} />
-              <Route path="/uzmanlik/:specialty" element={<SpecialtyPage />} />
+              <Route path="/uzmanlik/:specialty" element={<SpecialtyRoute />} />
               <Route path="/paketler" element={<Navigate to="/ozel-firsat" replace />} />
               
               <Route path="/kampanyali-paket" element={<CampaignPackage />} />
