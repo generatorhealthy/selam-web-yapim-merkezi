@@ -52,7 +52,6 @@ const LoginPage = () => {
       .from('specialists')
       .select('id')
       .or(`user_id.eq.${userId},email.eq.${email}`)
-      .eq('is_active', true)
       .limit(1);
     if (specialists && specialists.length > 0) return '/doktor-paneli';
 
