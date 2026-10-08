@@ -373,6 +373,8 @@ const DoctorList = () => {
           
         </div>
 
+        <LocalPagesLinks specialists={specialists} className="mb-6 md:mb-8" />
+
         {filteredSpecialists.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600 text-lg">Arama kriterlerinize uygun uzman bulunamadı.</p>

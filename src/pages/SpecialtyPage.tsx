@@ -326,6 +326,8 @@ const SpecialtyPage = () => {
             })}
           </div>
         )}
+
+        <LocalPagesLinks specialists={specialists} heading={`${specialtyName} için şehir seçin`} className="mt-8" />
       </div>
       {waDialog.specialist && (
         <WhatsAppContactDialog
