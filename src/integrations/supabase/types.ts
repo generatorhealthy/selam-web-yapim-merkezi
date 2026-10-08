@@ -3674,6 +3674,7 @@ export type Database = {
         Row: {
           assigned_specialist_id: string | null
           call_attempts: number
+          callback_at: string | null
           consultation_type: string
           created_at: string
           daily_call_count: number
@@ -3699,6 +3700,7 @@ export type Database = {
         Insert: {
           assigned_specialist_id?: string | null
           call_attempts?: number
+          callback_at?: string | null
           consultation_type?: string
           created_at?: string
           daily_call_count?: number
@@ -3724,6 +3726,7 @@ export type Database = {
         Update: {
           assigned_specialist_id?: string | null
           call_attempts?: number
+          callback_at?: string | null
           consultation_type?: string
           created_at?: string
           daily_call_count?: number
