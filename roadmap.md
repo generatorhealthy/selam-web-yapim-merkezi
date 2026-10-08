@@ -60,3 +60,6 @@
 - [ ] Reddetme dosyasını Google Disavow aracına yükleme — Google bunun için API sunmuyor, kullanıcı elle yükler
 - [x] Ziyaretçi sayfaları panelden ayrıldı: ilk yükleme 1,26 MB → 468 KB (sıkıştırılmış)
 - [ ] Şehir/branş açılış sayfaları, yazı iyileştirmeleri, uzman onayı kutusu — gerçek içerik ve fiyat bilgisi kullanıcıdan
+
+- [x] Şehir + branş (39) ve online (4) açılış sayfaları; sitemap ve iç bağlantılar
+- [x] En çok görünen 49 blog yazısına SSS + "ne zaman uzmana başvurmalı" bölümü
