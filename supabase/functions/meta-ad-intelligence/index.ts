@@ -9,6 +9,7 @@ import { attributedRoas, hasTrackedSample } from "../_shared/adAttribution.ts";
 import { classifyCapiResponse } from "../_shared/capiResponse.ts";
 import { decide, reasonLine } from "../_shared/adDecision.ts";
 import { isOtherProjectRow } from "../_shared/adExclusions.ts";
+import { computeQualification, ruleVersion } from "../_shared/qualification.ts";
 
 const DATASET_ID = "1053321257408384";
 const V = "v26.0";
@@ -168,14 +169,67 @@ async function buildQueue(admin: any, settings: any) {
     event_key: `checkout_${e.anonymous_session_id}`, event_name: "InitiateCheckout", event_id: `checkout_${e.anonymous_session_id}`,
     user_id: e.user_id, payload: { event_time: e.created_at }, is_test: e.is_test || tests.has(e.user_id),
   })));
-  // QualifiedLead — eşik geçildiğinde kişi başı bir kez
+  // QualifiedLead — eşik ilk geçildiğinde kişi başı bir kez; gerçek eşik zamanı lead_qualification_history'ye bir kez yazılır
   const thr = Number(settings.qualified_threshold ?? 60);
   const { data: leads, error } = await admin.rpc("get_lead_intelligence", { p_days: 30 });
   if (error) console.error("Puan okunamadı:", error.message);
-  n += await enqueue(admin, (leads || []).filter((l: any) => l.score >= thr && new Date(l.created_at) >= new Date(QUEUE_START)).map((l: any) => ({
-    event_key: `qualified_${l.user_id}`, event_name: "QualifiedLead", event_id: `qualified_${l.user_id}`, user_id: l.user_id,
-    payload: { score: l.score }, is_test: tests.has(l.user_id),
-  })));
+  const cands = (leads || []).filter((l: any) => l.score >= thr && new Date(l.created_at) >= new Date(QUEUE_START));
+  if (cands.length) {
+    const ids = cands.map((l: any) => l.user_id);
+    const [{ data: hist }, { data: sent }, { data: rules }, { data: specs }, { data: evs }] = await Promise.all([
+      admin.from("lead_qualification_history").select("user_id").in("user_id", ids),
+      admin.from("meta_capi_events").select("user_id").eq("event_name", "QualifiedLead").in("user_id", ids),
+      admin.from("scoring_rules").select("rule_key, category, points, enabled"),
+      admin.from("specialists").select("user_id, created_at").in("user_id", ids),
+      admin.from("analytics_events").select("user_id, event_name, created_at, event_properties")
+        .in("user_id", ids).in("event_name", ["pricing_page_view", "package_view", "subscription_page_view", "checkout_started",
+          "payment_failed", "payment_attempted", "capacity_entered", "registration_completed"]).order("created_at").limit(5000),
+    ]);
+    const done = new Set((hist || []).map((h: any) => h.user_id));
+    const legacy = new Set((sent || []).map((s: any) => s.user_id));
+    const version = ruleVersion(rules || [], thr);
+    const now = new Date();
+    for (const l of cands) {
+      if (done.has(l.user_id)) continue; // skor düşüp tekrar yükselse de ikinci kayıt/olay yok
+      const specAt = (specs || []).find((s: any) => s.user_id === l.user_id)?.created_at ?? null;
+      const mine = (evs || []).filter((e: any) => e.user_id === l.user_id);
+      const firstEv = (names: string[], pred: (e: any) => boolean = () => true) =>
+        mine.find((e: any) => names.includes(e.event_name) && pred(e))?.created_at ?? null;
+      const evT: Record<string, string | null> = {
+        pricing_page_view: firstEv(["pricing_page_view", "package_view", "subscription_page_view"]),
+        checkout_started: firstEv(["checkout_started"]),
+        payment_failed: firstEv(["payment_failed", "payment_attempted"]),
+        capacity_entered: firstEv(["capacity_entered"]),
+        capacity_6_plus: firstEv(["capacity_entered"], (e) => Number(e.event_properties?.sessions ?? 0) >= 6),
+      };
+      const signals = (l.signals || []).map((key: string) => {
+        if (key in evT) return { key, at: evT[key], timestamped: true };
+        if (key === "registration_started") return { key, at: l.created_at, timestamped: false };
+        if (key === "registration_completed") {
+          const e = firstEv(["registration_completed"]);
+          const at = [e, specAt].filter(Boolean).sort()[0] ?? null;
+          return { key, at, timestamped: !!e && at === e };
+        }
+        return { key, at: specAt, timestamped: false }; // profil alanları: uzman kaydının oluşma zamanı
+      });
+      const { data: paidRows } = await admin.from("orders").select("approved_at").ilike("customer_email", String(l.email || ""))
+        .in("status", ["approved", "completed"]).is("deleted_at", null).not("approved_at", "is", null).order("approved_at").limit(1);
+      const firstPaidAt = paidRows?.[0]?.approved_at ?? null;
+      const q = computeQualification({ signals, rules: rules || [], threshold: thr, firstPaidAt, now, alreadySent: legacy.has(l.user_id) });
+      if (!q) continue;
+      const { error: hErr } = await admin.from("lead_qualification_history").insert({
+        user_id: l.user_id, qualified_at: q.qualified_at, qualified_at_precision: q.precision, score_at_qualification: q.score,
+        threshold: thr, rule_version: version, trigger_event: q.trigger, first_paid_at: firstPaidAt, decision: q.decision,
+        computed_at: now.toISOString(),
+      });
+      if (hErr) { if (!String(hErr.message).includes("duplicate")) console.error("Eşik geçmişi yazılamadı:", hErr.message); continue; }
+      if (q.decision !== "SEND") continue;
+      n += await enqueue(admin, [{
+        event_key: `qualified_${l.user_id}`, event_name: "QualifiedLead", event_id: `qualified_${l.user_id}`, user_id: l.user_id,
+        payload: { score: q.score, event_time: q.qualified_at }, is_test: tests.has(l.user_id),
+      }]);
+    }
+  }
   return n;
 }
 async function sendQueue(admin: any) {
