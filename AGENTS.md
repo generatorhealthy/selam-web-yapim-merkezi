@@ -4,3 +4,4 @@
 - Share attribution ROAS and warning eligibility rules between the UI and AI analysis; query coverage separately from unmodified Meta metrics so historical spend cannot imply untracked sales failure.
 - Ad recommendations are decided deterministically by supabase/functions/_shared/adDecision.ts (shared by UI and meta-ad-intelligence); the AI only writes explanations and cannot change decision or confidence — keeps decisions reproducible and auditable.
 - Registration funnel reporting reads get_registration_funnel (admin-only SECURITY DEFINER): cohorts split by form_version / first v2 event time, real Meta traffic only, bot/preload filtered — keeps v1 and v2 results from mixing.
+- QualifiedLead threshold crossings are written once to lead_qualification_history (immutable, rule-versioned) via _shared/qualification.ts; the event uses the real crossing time and is never sent if the first crossing came after payment — keeps Meta timing truthful and prevents re-sends.
