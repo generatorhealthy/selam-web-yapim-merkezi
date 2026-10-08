@@ -26,6 +26,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
+// The AI calling module is hidden from this screen for now; flip to true to show it again.
+const SHOW_AI_CALL_PANEL = false;
+
 interface Lead {
   id: string;
   full_name: string;
@@ -404,10 +407,12 @@ const MetaLeads = () => {
           </div>
         </div>
 
-        <AiCallPanel
-          testLeadId={leads.find((l) => l.status === "new" && l.phone)?.id || null}
-          testLeadName={leads.find((l) => l.status === "new" && l.phone)?.full_name || null}
-        />
+        {SHOW_AI_CALL_PANEL && (
+          <AiCallPanel
+            testLeadId={leads.find((l) => l.status === "new" && l.phone)?.id || null}
+            testLeadName={leads.find((l) => l.status === "new" && l.phone)?.full_name || null}
+          />
+        )}
 
 
 
