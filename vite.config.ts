@@ -35,9 +35,9 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         entryFileNames: "assets/app-[hash].js",
-        chunkFileNames: "assets/panel-[hash].js",
-        // Exactly two files: everything the visitor app reaches through static
-        // imports stays in app-*.js; everything reached only through a dynamic
+        chunkFileNames: (chunk) => (chunk.name === "panel" ? "assets/panel-[hash].js" : "assets/app-core-[hash].js"),
+        // Visitor files: app-*.js (tiny entry) + app-core-*.js (everything reached
+        // through static imports). Everything reached only through a dynamic
         // import (panels and their lazy libraries) goes into one panel-*.js.
         manualChunks(id, { getModuleInfo, getModuleIds }) {
           if (!staticFromEntry) {
@@ -51,7 +51,9 @@ export default defineConfig(({ mode }) => ({
               for (const dep of getModuleInfo(m)?.importedIds || []) stack.push(dep);
             }
           }
-          return staticFromEntry.has(id) ? undefined : "panel";
+          // Statik olarak ulaşılan her şey açıkça "core"a atanır; aksi halde Rollup
+          // paylaşılan bağımlılıkları (React vb.) panel dosyasına çeker.
+          return staticFromEntry.has(id) ? "core" : "panel";
         },
         assetFileNames: "assets/[name]-[hash][extname]",
       },
