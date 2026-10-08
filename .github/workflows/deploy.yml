@@ -43,7 +43,7 @@ jobs:
       - name: Restore previous release assets from cache
         uses: actions/cache/restore@v4
         with:
-          path: .prev-release-assets
+          path: .release-assets-cache
           key: release-assets-${{ github.run_id }}
           restore-keys: |
             release-assets-
@@ -57,7 +57,9 @@ jobs:
           set +e
           # Save this release's own assets for the next deploy (before adding kept files,
           # so the folder never grows beyond two releases).
-          rm -rf .own-release-assets && cp -a dist/assets .own-release-assets
+          rm -rf .prev-release-assets
+          [ -d .release-assets-cache ] && mv .release-assets-cache .prev-release-assets
+          cp -a dist/assets .release-assets-cache
           (cd dist/assets && find . -type f ! -name '.release-files.txt' | sed 's|^\./||') > /tmp/own-assets.txt
           kept=0
           if [ -d .prev-release-assets ]; then
@@ -99,7 +101,7 @@ jobs:
       - name: Save this release's assets for the next deploy
         uses: actions/cache/save@v4
         with:
-          path: .own-release-assets
+          path: .release-assets-cache
           key: release-assets-${{ github.run_id }}
 
       - name: Prepare ordered release
