@@ -38,6 +38,7 @@ interface Lead {
   call_attempts: number;
   notes: string | null;
   welcome_sent_at: string | null;
+  callback_at: string | null;
   created_at: string;
 }
 
@@ -210,7 +211,7 @@ const MetaLeads = () => {
     while (true) {
       const { data, error } = await supabase
         .from("danisan_basvurulari")
-        .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, welcome_sent_at, created_at")
+        .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, welcome_sent_at, callback_at, created_at")
         .order("created_at", { ascending: false })
         .range(from, from + pageSize - 1);
       if (error) {
@@ -317,6 +318,28 @@ const MetaLeads = () => {
     }
   };
 
+  const saveCallback = async (id: string, value: string) => {
+    const iso = value ? new Date(value).toISOString() : null;
+    setLeads((p) => p.map((l) => (l.id === id ? { ...l, callback_at: iso } : l)));
+    const { error } = await supabase.from("danisan_basvurulari").update({ callback_at: iso } as any).eq("id", id);
+    if (error) toast({ title: "Hata", description: "Arama saati kaydedilemedi.", variant: "destructive" });
+    else toast({ title: iso ? "Arama saati kaydedildi" : "Arama saati kaldırıldı" });
+  };
+
+  const toLocalInput = (iso: string | null) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const now = Date.now();
+  // Group: 0 = callback time reached (most overdue first), 1 = upcoming callback (soonest first), 2 = others
+  const cbRank = (l: Lead) => {
+    if (!l.callback_at) return 2;
+    return new Date(l.callback_at).getTime() <= now ? 0 : 1;
+  };
+
   const filtered = leads
     .filter((l) => {
       const matchesStatus = statusFilter === "all" || l.status === statusFilter;
@@ -325,6 +348,9 @@ const MetaLeads = () => {
       return matchesStatus && matchesSearch;
     })
     .sort((a, b) => {
+      const ra = cbRank(a), rb = cbRank(b);
+      if (ra !== rb) return ra - rb;
+      if (ra < 2) return new Date(a.callback_at!).getTime() - new Date(b.callback_at!).getTime();
       const da = new Date(a.lead_date || a.created_at).getTime();
       const db = new Date(b.lead_date || b.created_at).getTime();
       return (isNaN(db) ? 0 : db) - (isNaN(da) ? 0 : da);
@@ -494,6 +520,34 @@ const MetaLeads = () => {
 
 
 
+
+                    <div className={`rounded-lg border p-2 ${lead.callback_at && new Date(lead.callback_at).getTime() <= now ? "border-destructive bg-destructive/10" : "bg-background/70"}`}>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                          <PhoneForwarded className="h-3.5 w-3.5" />
+                          Aranmak istediği tarih / saat
+                        </span>
+                        {lead.callback_at && (
+                          <button type="button" className="text-xs text-muted-foreground hover:underline" onClick={() => saveCallback(lead.id, "")}>Temizle</button>
+                        )}
+                      </div>
+                      <Input
+                        type="datetime-local"
+                        className="h-8 text-sm"
+                        defaultValue={toLocalInput(lead.callback_at)}
+                        key={lead.callback_at || "empty"}
+                        onBlur={(e) => {
+                          const v = e.target.value;
+                          if (v !== toLocalInput(lead.callback_at)) saveCallback(lead.id, v);
+                        }}
+                      />
+                      {lead.callback_at && (
+                        <div className={`mt-1 text-xs font-semibold ${new Date(lead.callback_at).getTime() <= now ? "text-destructive" : "text-primary"}`}>
+                          {new Date(lead.callback_at).toLocaleString("tr-TR", { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" })} saatinde aranmak istiyor
+                          {new Date(lead.callback_at).getTime() <= now && " — ARAMA ZAMANI GELDİ"}
+                        </div>
+                      )}
+                    </div>
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">

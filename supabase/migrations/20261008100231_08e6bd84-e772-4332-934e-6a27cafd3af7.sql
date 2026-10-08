@@ -1,0 +1,1 @@
+ALTER TABLE public.danisan_basvurulari ADD COLUMN IF NOT EXISTS callback_at timestamptz;
