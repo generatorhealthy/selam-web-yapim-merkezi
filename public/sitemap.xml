@@ -7754,6 +7754,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/adana-psikolog-gizem-kirpik</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/psk-dan-duhanur-bilici</loc>
     <lastmod>2026-04-30</lastmod>
     <changefreq>weekly</changefreq>
@@ -9930,6 +9936,12 @@
   <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-ozlem-ocak</loc>
     <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/psikolog/gizem-kirpik</loc>
+    <lastmod>2026-10-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
