@@ -15,6 +15,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
+import { buildLocalPages, localTitle, localHeading, localDescription, localFaq } from "../src/lib/localSeo.js";
 
 const SITE = "https://doktorumol.com.tr";
 const SUPABASE_URL = "https://irnfwewabogveofwemvg.supabase.co";
@@ -206,6 +207,9 @@ async function main() {
     .filter((s) => validSlug(s.slug) && s.name && s.specialty)
     .map((s) => ({ ...s, url: `/${slugify(s.specialty)}/${s.slug}` }))
     .filter((s) => /^\/[a-z0-9-]+\/[A-Za-z0-9_-]+$/.test(s.url));
+  const localPages = buildLocalPages(specialists);
+  const localLinks = (list, heading) =>
+    list.length ? `<h2>${esc(heading)}</h2><ul>${list.map((x) => `<li><a href="/uzmanlik/${x.slug}">${esc(localHeading(x))}</a> (${x.list.length})</li>`).join("")}</ul>` : "";
   const sitemap = [];
   const sm = (path, extra = {}) => sitemap.push({ path, ...extra });
 
@@ -303,6 +307,7 @@ async function main() {
       <h1>${esc(p.name)} Uzmanları</h1>
       <p>${esc(description)}</p>
       <ul>${p.list.map(specialistCard).join("")}</ul>
+      ${localLinks(localPages.filter((x) => x.branch.slug === p.slug || x.branch.name === p.name), "Şehre ve online görüşmeye göre")}
       <h2>Diğer Branşlar</h2>
       <ul>${specialtyPages.filter((x) => x !== p).map((x) => `<li><a href="/uzmanlik/${x.slug}">${esc(x.name)}</a></li>`).join("")}</ul>
       ${NAV}`;
@@ -326,6 +331,42 @@ async function main() {
     sm(path, { changefreq: "weekly", priority: "0.8" });
   }
 
+  // ---------- Şehir + branş ve online sayfaları ----------
+  for (const p of localPages) {
+    const path = `/uzmanlik/${p.slug}`;
+    const url = `${SITE}${path}`;
+    const title = clip(localTitle(p), 70);
+    const description = clip(localDescription(p), 158);
+    const faq = localFaq(p);
+    const trail = [["Ana Sayfa", "/"], ["Uzmanlar", "/uzmanlar"], [p.branch.name, `/uzmanlik/${p.branch.slug}`], [localHeading(p), path]];
+    const sameCity = p.city ? localPages.filter((x) => x.city?.slug === p.city.slug && x !== p) : [];
+    const sameBranch = localPages.filter((x) => x.branch.slug === p.branch.slug && x !== p);
+    const body = `
+      ${crumbs(trail.map(([n, u], i) => [n, i < 3 ? u : null]))}
+      <h1>${esc(localHeading(p))}</h1>
+      <p>${esc(description)}</p>
+      <p>${esc(p.branch.about)}</p>
+      <ul>${p.list.map(specialistCard).join("")}</ul>
+      <h2>Sıkça Sorulan Sorular</h2>
+      ${faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}
+      ${localLinks(sameCity, p.city ? `${p.city.name} şehrindeki diğer branşlar` : "")}
+      ${localLinks(sameBranch, `Diğer seçenekler: ${p.branch.name}`)}
+      ${NAV}`;
+    const ld = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "CollectionPage", name: localHeading(p), url, description,
+          mainEntity: { "@type": "ItemList", itemListElement: p.list.map((s, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}${s.url}`, name: s.name.trim() })) },
+        },
+        { "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) },
+        crumbLd(trail),
+      ],
+    };
+    write(`pre${path}.html`, setRoot(setMeta(template, { title, description, url }), body, ldScript(ld)));
+    sm(path, { changefreq: "weekly", priority: p.list.length > 2 ? "0.8" : "0.6" });
+  }
+
   // ---------- /uzmanlar ----------
   {
     const url = `${SITE}/uzmanlar`;
@@ -337,6 +378,7 @@ async function main() {
       <p>${esc(description)}</p>
       <h2>Branşlar</h2>
       <ul>${specialtyPages.map((x) => `<li><a href="/uzmanlik/${x.slug}">${esc(x.name)}</a> (${x.list.length})</li>`).join("")}</ul>
+      ${localLinks(localPages, "Şehre göre uzmanlar")}
       <h2>Tüm Uzmanlar</h2>
       <ul>${specialists.map(specialistCard).join("")}</ul>
       ${NAV}`;
@@ -418,6 +460,7 @@ async function main() {
       <p>${description}</p>
       <h2>Branşlar</h2>
       <ul>${specialtyPages.map((x) => `<li><a href="/uzmanlik/${x.slug}">${esc(x.name)}</a></li>`).join("")}</ul>
+      ${localLinks(localPages, "Şehre göre uzmanlar")}
       <h2>Uzmanlarımız</h2>
       <ul>${specialists.slice(0, 40).map(specialistCard).join("")}</ul>
       <p><a href="/uzmanlar">Tüm uzmanları gör</a></p>
@@ -454,7 +497,7 @@ async function main() {
   ].join("\n");
   if (sitemap.length > 50) writeFileSync(resolve(DIST, "sitemap.xml"), xml, "utf8");
 
-  console.log(`SEO ön-render: ${posts.length} yazı, ${profiles} uzman, ${specialtyPages.length} branş, ${STATIC_PAGES.length + 3} sayfa; sitemap ${sitemap.length + testBlocks.length} URL`);
+  console.log(`SEO ön-render: ${posts.length} yazı, ${profiles} uzman, ${specialtyPages.length} branş, ${localPages.length} şehir/online, ${STATIC_PAGES.length + 3} sayfa; sitemap ${sitemap.length + testBlocks.length} URL`);
 }
 
 main().catch((err) => {
