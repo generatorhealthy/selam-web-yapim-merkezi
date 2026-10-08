@@ -1,6 +1,6 @@
-
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 
@@ -16,6 +16,10 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Sayfa Bulunamadı | Doktorum Ol</title>
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <HorizontalNavigation />
       <div className="flex items-center justify-center py-20 px-4">
         <div className="text-center max-w-md">
