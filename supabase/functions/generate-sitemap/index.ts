@@ -212,8 +212,9 @@ Deno.serve(async (req) => {
 
   <!-- Blog Yazıları -->
 ${blogs.map(blog => `  <url>
-    <loc>https://doktorumol.com.tr/blog/${blog.slug}</loc>
+    <loc>https://doktorumol.com.tr/blog/${generateSlug(blog.slug)}</loc>
     <lastmod>${new Date(blog.updated_at).toISOString().split('T')[0]}</lastmod>
+
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>`).join('\n')}
