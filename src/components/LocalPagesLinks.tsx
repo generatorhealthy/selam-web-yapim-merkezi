@@ -47,18 +47,18 @@ const LocalPagesLinks = <T extends LocalSpecialist>({
     <section className={`rounded-2xl border border-border bg-card p-4 md:p-5 ${className}`}>
       <h2 className="mb-3 text-sm font-semibold text-foreground">{heading}</h2>
       {online.length > 0 && (
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+        <div className="mb-4">
+          <div className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
             <Video className="h-3.5 w-3.5" /> Online
-          </span>
-          {online.map(chip)}
+          </div>
+          <div className="flex flex-wrap gap-2">{online.map(chip)}</div>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+      <div>
+        <div className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
           <MapPin className="h-3.5 w-3.5" /> Şehirler
-        </span>
-        {cities.map(chip)}
+        </div>
+        <div className="flex flex-wrap gap-2">{cities.map(chip)}</div>
       </div>
     </section>
   );
