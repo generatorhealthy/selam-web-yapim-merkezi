@@ -37,8 +37,7 @@ const runAuthOperation = async <R,>(operation: () => Promise<R>, timeoutMs: numb
   }
 };
 
-const browserSafeAuthLock = async <R,>(
-  _name: string,
+const inTabAuthLock = async <R,>(
   acquireTimeout: number,
   operation: () => Promise<R>,
 ): Promise<R> => {
@@ -48,15 +47,42 @@ const browserSafeAuthLock = async <R,>(
     release = resolve;
   });
 
-  // A suspended Chrome/Safari tab must never keep the next auth call waiting
-  // forever. Supabase passes a negative timeout for calls that normally wait;
-  // cap both queue acquisition and execution so the UI can recover.
   const lockTimeout = acquireTimeout > 0 ? Math.min(acquireTimeout, 8_000) : 8_000;
   await waitForAuthLock(previousOperation, lockTimeout);
   try {
     return await runAuthOperation(operation, 20_000);
   } finally {
     release?.();
+  }
+};
+
+// Cross-tab lock: when several panel tabs are opened (Ctrl+click), they must
+// not refresh the same rotating refresh token at the same time — otherwise
+// Supabase revokes the session and new tabs hang until an incognito window is
+// used. Use the browser LockManager across tabs, but never wait forever on a
+// stale lock: after a short timeout fall back to the in-tab queue.
+const browserSafeAuthLock = async <R,>(
+  name: string,
+  acquireTimeout: number,
+  operation: () => Promise<R>,
+): Promise<R> => {
+  const locks = typeof navigator !== "undefined" ? (navigator as Navigator).locks : undefined;
+  if (!locks?.request) return inTabAuthLock(acquireTimeout, operation);
+
+  const waitMs = acquireTimeout > 0 ? Math.min(acquireTimeout, 10_000) : 10_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), waitMs);
+  try {
+    return await locks.request(name, { mode: "exclusive", signal: controller.signal }, async () => {
+      clearTimeout(timer);
+      return await runAuthOperation(operation, 20_000);
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    if ((err as Error)?.name === "AbortError" && controller.signal.aborted) {
+      return inTabAuthLock(acquireTimeout, operation);
+    }
+    throw err;
   }
 };
 

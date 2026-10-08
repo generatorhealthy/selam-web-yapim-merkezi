@@ -59,9 +59,32 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number): Prom
   }
 };
 
+const clearBrokenSession = async () => {
+  try {
+    Object.keys(window.localStorage)
+      .filter((key) => key.startsWith("sb-") && key.includes("auth-token"))
+      .forEach((key) => window.localStorage.removeItem(key));
+  } catch {
+    /* ignore */
+  }
+  try {
+    await withTimeout(supabase.auth.signOut({ scope: "local" }), 3_000);
+  } catch {
+    /* ignore */
+  }
+};
+
 const getSessionUser = async () => {
-  const { data, error } = await withTimeout(supabase.auth.getSession(), 8_000);
-  if (error) throw error;
+  const { data, error } = await withTimeout(supabase.auth.getSession(), 12_000);
+  if (error) {
+    // A revoked/already-used refresh token leaves a dead session in storage;
+    // clear it so the user can sign in again without an incognito window.
+    if (/refresh token|invalid_grant|already used/i.test(error.message ?? "")) {
+      await clearBrokenSession();
+      return null;
+    }
+    throw error;
+  }
   return data.session?.user ?? null;
 };
 
