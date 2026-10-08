@@ -166,13 +166,16 @@ function specialtyMapFromSource() {
   }
 }
 // SpecialtyPage.tsx ile aynı eşleştirme: tam eşleşme, yoksa içerir
+const CORE_SPECIALTIES = new Set(["psikolog", "klinik-psikolog", "aile-danismani", "psikolojik-danismanlik"]);
 function specialistsForSlug(slug, map, specialists) {
   const name = (map[slug] || slug).toLocaleLowerCase("tr");
   const lower = (s) => String(s || "").toLocaleLowerCase("tr");
   const pd = ["psikolojik danışmanlık", "psikolojik danışman"];
-  let list = specialists.filter((s) => lower(s.specialty) === name || (pd.includes(name) && pd.includes(lower(s.specialty))));
-  if (!list.length) list = specialists.filter((s) => lower(s.specialty).includes(name));
-  return list;
+  const list = specialists.filter((s) => lower(s.specialty) === name || (pd.includes(name) && pd.includes(lower(s.specialty))));
+  if (list.length) return list;
+  // Sayfa içerik olarak yine "içerir" eşleşmesi gösterir; ama yarı-kopya branş adresi
+  // üretmemek için bu durumda yalnız ana branşlarda ön-render yapılır.
+  return CORE_SPECIALTIES.has(slug) ? specialists.filter((s) => lower(s.specialty).includes(name)) : [];
 }
 
 const STATIC_PAGES = [
