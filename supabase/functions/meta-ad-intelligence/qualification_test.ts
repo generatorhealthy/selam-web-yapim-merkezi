@@ -50,6 +50,6 @@ Deno.test("Unknown time without payment is not recorded yet", () =>
 Deno.test("Crossing older than Meta window is not shifted, just not sent", () =>
   eq(computeQualification({ ...base, signals: real, firstPaidAt: null, now: new Date("2026-10-20T00:00:00Z") })!.decision, "TOO_OLD_FOR_META"));
 Deno.test("Profile-only crossing is labelled profile_timestamp precision", () => {
-  const r = computeQualification({ ...base, signals: prof, firstPaidAt: null })!;
+  const r = computeQualification({ ...base, threshold: 55, signals: prof, firstPaidAt: null })!;
   eq(r.precision, "profile_timestamp"); eq(r.qualified_at, P);
 });
