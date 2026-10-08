@@ -74,11 +74,6 @@ const DoctorProfileEditor = () => {
       if (!data) {
         console.log('No specialist profile found');
         setLoading(false);
-        toast({
-          title: "Profil Bulunamadı", 
-          description: "Uzman profiliniz bulunamadı. Lütfen admin ile iletişime geçin.",
-          variant: "destructive"
-        });
         return;
       }
 
