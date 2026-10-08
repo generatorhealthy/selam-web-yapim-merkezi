@@ -351,6 +351,10 @@ const DoctorProfile = () => {
   if (!specialist) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>
+        <Helmet>
+          <title>Uzman Bulunamadı | Doktorum Ol</title>
+          <meta name="robots" content="noindex, follow" />
+        </Helmet>
         <HorizontalNavigation />
         <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
           <div className="text-center px-4">
@@ -382,6 +386,8 @@ const DoctorProfile = () => {
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
         <meta name="keywords" content={pageKeywords} />
+        <link rel="canonical" href={`https://doktorumol.com.tr/${specialtySlugForLinks}/${specialist.slug || doctorName}`} />
+        <meta property="og:url" content={`https://doktorumol.com.tr/${specialtySlugForLinks}/${specialist.slug || doctorName}`} />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
         {specialist.profile_picture && <meta property="og:image" content={specialist.profile_picture} />}

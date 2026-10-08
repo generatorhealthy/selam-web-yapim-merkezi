@@ -184,7 +184,7 @@ const SpecialtyPage = () => {
 
   const pageTitle = `${specialtyName} Uzmanları - Online ve Yüz Yüze Randevu | Doktorum Ol`;
   const pageDescription = `${specialtyName} alanında uzmanlaşmış doktor ve danışmanları keşfedin. Doktorum Ol ile online veya yüz yüze ${specialtyName.toLowerCase()} randevunuzu kolayca alın.`.slice(0, 158);
-  const canonicalUrl = `https://www.doktorumol.com.tr/uzmanlik/${specialtySlug}`;
+  const canonicalUrl = `https://doktorumol.com.tr/uzmanlik/${specialtySlug}`;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -196,6 +196,7 @@ const SpecialtyPage = () => {
         <meta property="og:description" content={pageDescription} />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="website" />
+        {!loading && specialists.length === 0 && <meta name="robots" content="noindex, follow" />}
       </Helmet>
       <HorizontalNavigation />
       <div className="container mx-auto px-4 py-8">

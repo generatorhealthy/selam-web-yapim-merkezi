@@ -95,7 +95,7 @@ const About = () => {
           content="Doktorum Ol; psikolog, aile danışmanı, diyetisyen ve daha birçok branşta uzmanı danışanlarla buluşturan danışan yönlendirme ve online randevu platformudur."
         />
         <meta name="keywords" content="hakkımızda, doktorum ol, danışan yönlendirme, online randevu, psikolog, aile danışmanı" />
-        <link rel="canonical" href="https://doktorumol.com.tr/about" />
+        <link rel="canonical" href="https://doktorumol.com.tr/hakkimizda" />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50">

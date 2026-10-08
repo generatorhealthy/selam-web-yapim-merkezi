@@ -50,3 +50,12 @@
 - [x] Açılış kurtarma ekranını ve uygulama geneli yenileme düğmelerini kaldır; HTML önbelleğini hem belge hem sunucu düzeyinde kapat
 - [x] Kazanç hesaplayıcı: kullanıcı istedi → minimal renkli tasarım olarak kayıt sihirbazının 2. sekmesi "Kapasite" olarak yeniden eklendi (2026-10-06)
 - [ ] "Danışan yönlendirme garantisi"nin tam olarak neyi taahhüt ettiğini kullanıcıdan netleştir ve tüm sayfalardaki metinleri bu sınıra göre yaz
+
+## SEO (8 Ekim)
+- [x] Uzman profilleri, branşlar, /uzmanlar, ana sayfa ve kurumsal sayfalar için kendi başlık/açıklama/adres/metinli Google sayfaları
+- [x] Blog yazılarının metni, görseli, ilgili yazı bağlantıları Google'a gidiyor (iki blog tablosu dahil)
+- [x] Gizli başlık kaldırıldı; olmayan sayfalara "dizine ekleme" etiketi; kopya adres yönlendirmeleri; site haritası yeniden üretiliyor
+- [x] Spam bağlantı reddetme dosyası hazırlandı
+- [ ] Google Search Console bağlantısı + reddetme dosyası yükleme — kullanıcı onayı/hesabı gerekiyor
+- [ ] Sitenin ziyaretçi sayfalarını panelden ayırıp hızlandırma — panel kararlılığı nedeniyle ayrı onaylı adım
+- [ ] Şehir/branş açılış sayfaları, yazı iyileştirmeleri, uzman onayı kutusu — gerçek içerik ve fiyat bilgisi kullanıcıdan
