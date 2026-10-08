@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.protect_specialist_activation() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.activate_specialist_on_order_approval() FROM PUBLIC, anon, authenticated;

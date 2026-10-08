@@ -400,6 +400,59 @@ const TestResultsPanel = ({ specialistId }: { specialistId: string }) => {
   );
 };
 
+const MEMBERSHIP_FEATURES = [
+  "Profiliniz uzman listesinde ve aramalarda yayına alınır",
+  "Danışanlar profilinizden online randevu talebi oluşturabilir",
+  "Online ve yüz yüze danışmanlık için iletişim ve adres bilgileriniz görünür",
+  "Danışan yönlendirmeleri ve danışan takibi",
+  "Yapay zekâ destekli blog yazıları ve testler",
+  "SMS hatırlatıcı ve dahili hat tanımlama",
+  "Anlık teknik destek",
+];
+
+const MembershipRequiredBanner = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="mb-6 rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 lg:p-6">
+      <div className="flex flex-col lg:flex-row lg:items-start gap-5">
+        <div className="flex-1 space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Profiliniz henüz yayında değil</p>
+          <h2 className="text-xl font-bold text-foreground">Üyeliğinizi kullanmak için paketi satın almanız gerekiyor</h2>
+          <p className="text-sm text-muted-foreground">
+            Profiliniz oluşturuldu; aşağıdan bilgilerinizi kontrol edip düzenleyebilirsiniz. Danışanların sizi görebilmesi
+            ve randevu alabilmesi için Premium Paket satın alınmalıdır. Kartla ödemeniz onaylandığı anda profiliniz
+            beklemeden otomatik olarak aktif hale gelir.
+          </p>
+          <ul className="grid sm:grid-cols-2 gap-2 pt-1">
+            {MEMBERSHIP_FEATURES.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-sm text-foreground/80">
+                <CheckCircle className="w-4 h-4 mt-0.5 text-primary shrink-0" />{f}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="lg:w-72 rounded-2xl bg-background border p-5 space-y-3">
+          <p className="text-sm font-semibold text-foreground">Premium Paket · 12 Aylık</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm line-through text-muted-foreground">6.500 ₺</span>
+            <span className="text-3xl font-bold text-foreground">4.000 ₺</span>
+            <span className="text-sm text-muted-foreground">/ aylık</span>
+          </div>
+          <p className="text-xs text-muted-foreground">12 ay taahhüt ile 6.500 ₺ yerine 4.000 ₺. Koşullar ödeme sayfasındaki sözleşmelerde yer alır.</p>
+          <Button
+            className="w-full h-12 rounded-xl font-semibold"
+            onClick={() => navigate('/odeme/ozel-firsat', {
+              state: { packageData: { id: 'ozel-firsat', name: 'Premium Paket - Özel Fırsat', price: 4000, originalPrice: 6500, features: MEMBERSHIP_FEATURES } },
+            })}
+          >
+            Paketi Satın Al
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DoctorDashboard = () => {
   const [doctor, setDoctor] = useState<any>(null);
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
@@ -478,7 +531,7 @@ const DoctorDashboard = () => {
           .from('specialists')
           .select('*')
           .or(specialistFilters.join(','))
-          .eq('is_active', true)
+          .order('is_active', { ascending: false })
           .limit(1);
 
         if (specialistError) {
@@ -501,6 +554,7 @@ const DoctorDashboard = () => {
 
         // Set basic state immediately so UI renders, then load extras concurrently
         setDoctor(foundSpecialist);
+        if (!foundSpecialist.is_active) setActiveTab('profile');
         setIsLoading(false);
 
         Promise.allSettled([
@@ -1125,6 +1179,7 @@ const DoctorDashboard = () => {
 
           {/* Content Area */}
           <div className="p-6 lg:p-8">
+            {!doctor.is_active && <MembershipRequiredBanner />}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               {/* Dashboard */}
               <TabsContent value="dashboard" className="mt-0 space-y-6">

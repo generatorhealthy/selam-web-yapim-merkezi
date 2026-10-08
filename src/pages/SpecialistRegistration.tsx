@@ -471,7 +471,8 @@ const SpecialistRegistration = () => {
       });
       trackLeadEvent("registration_completed");
       trackLeadEvent("profile_completed", { city: formData.city });
-      setCurrentStep(5);
+      // Profil oluştu: paket ekranı yerine doğrudan profil düzenleme sayfasına
+      navigate('/doktor-paneli', { replace: true, state: { tab: 'profile', justRegistered: true } });
 
       // E-posta gönder (arka planda)
       try {
