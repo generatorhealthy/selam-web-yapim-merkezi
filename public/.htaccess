@@ -192,6 +192,22 @@ RewriteRule ^ayse-dolek-kerbel/?$ /aile-danismani/ayse-dolek-kerbel [R=301,L]
 # Redirect system/campaign pages that should never live under /blog/
 RewriteRule ^blog/(partner-giris|partner|ozel-firsat|bu-aya-ozel|danismanlik-randevusu-al)/?$ /$1 [R=301,L]
 
+# Kopya adresleri tek adreste birleştir (SEO)
+RewriteCond %{THE_REQUEST} \s/index\.html[\s?]
+RewriteRule ^index\.html$ / [R=301,L]
+RewriteRule ^about/?$ /hakkimizda [R=301,L]
+RewriteRule ^anasayfa/?$ / [R=301,L]
+RewriteRule ^sikca-sorulan-sorular/?$ /sss [R=301,L]
+RewriteRule ^privacy/?$ /gizlilik-politikasi [R=301,L]
+RewriteRule ^disclosure-text/?$ /aydinlatma-metni [R=301,L]
+RewriteRule ^explicit-consent/?$ /acik-riza [R=301,L]
+RewriteRule ^distance-sales-contract/?$ /mesafeli-satis-sozlesmesi [R=301,L]
+RewriteRule ^Blog/(.*)$ /blog/$1 [R=301,L]
+# Sondaki eğik çizgiyi kaldır (/uzmanlar/ -> /uzmanlar); gerçek klasörlere dokunma
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/(api|assets)/
+RewriteRule ^(.+)/$ /$1 [R=301,L]
+
 # Consolidate duplicate legal-page aliases to one canonical URL
 RewriteRule ^visitor-consultant-agreement/?$ /ziyaretci-danisan-sozlesmesi [R=301,L]
 RewriteRule ^comment-rules/?$ /yorum-kurallari [R=301,L]
@@ -204,7 +220,7 @@ RewriteCond %{REQUEST_URI} !^/blog/?$
 RewriteCond %{REQUEST_URI} !^/blog/
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/assets/
-RewriteCond %{REQUEST_URI} !^/(about|hakkimizda|iletisim|uzmanlar|uzmanlik|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|psikolog-paketi|diyetisyen-paketi|fizyoterapist-paketi|aile-danismani-paketi|odeme|odeme-sayfasi|odeme-basarili|privacy|gizlilik-politikasi|disclosure-text|aydinlatma-metni|mesafeli-satis-sozlesmesi|visitor-consultant-agreement|ziyaretci-danisan-sozlesmesi|comment-rules|yorum-kurallari|anasayfa|giris-yap|sifre-sifirla|kayit-ol|test|test-al|test-sonuc|divan_paneli|doktor-paneli|bu-aya-ozel|ozel-firsat|randevu-sayfasi|randevu-al|sss|sikca-sorulan-sorular|partner|partner-giris|danismanlik-randevusu-al)
+RewriteCond %{REQUEST_URI} !^/(about|hakkimizda|iletisim|uzmanlar|uzmanlik|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|psikolog-paketi|diyetisyen-paketi|fizyoterapist-paketi|aile-danismani-paketi|odeme|odeme-sayfasi|odeme-basarili|privacy|gizlilik-politikasi|disclosure-text|aydinlatma-metni|mesafeli-satis-sozlesmesi|visitor-consultant-agreement|ziyaretci-danisan-sozlesmesi|comment-rules|yorum-kurallari|anasayfa|giris-yap|sifre-sifirla|kayit-ol|test|test-al|test-sonuc|divan_paneli|doktor-paneli|bu-aya-ozel|ozel-firsat|randevu-sayfasi|randevu-al|sss|sikca-sorulan-sorular|partner|partner-giris|danismanlik-randevusu-al|acik-riza|explicit-consent|distance-sales-contract|uye-ol|danisan-giris|danisan-paneli|kariyer|sesli-asistan|checkout|payment-success|mobile|pre|doki-logos)
 RewriteCond %{REQUEST_URI} !^/randevu-al/
 RewriteCond %{REQUEST_URI} !^/yazilar/
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -252,6 +268,17 @@ RewriteCond %{DOCUMENT_ROOT}/blog.html -f
 RewriteRule ^blog/?$ /blog.html [L]
 RewriteCond %{DOCUMENT_ROOT}/blog/$1.html -f
 RewriteRule ^blog/([A-Za-z0-9_-]+)/?$ /blog/$1.html [L]
+
+# Ön-render edilmiş diğer sayfalar (ana sayfa, uzmanlar, branşlar, uzman profilleri, kurumsal)
+# /pre/ klasörü doğrudan açılırsa asıl adrese yönlendir (kopya adres olmasın)
+RewriteCond %{THE_REQUEST} \s/pre/home\.html
+RewriteRule ^pre/home\.html$ / [R=301,L]
+RewriteCond %{THE_REQUEST} \s/pre/[^\s]+\.html
+RewriteRule ^pre/(.+)\.html$ /$1 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/pre/home.html -f
+RewriteRule ^$ /pre/home.html [L]
+RewriteCond %{DOCUMENT_ROOT}/pre/$1.html -f
+RewriteRule ^([a-z0-9-]+(?:/[A-Za-z0-9_-]+)?)$ /pre/$1.html [L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
