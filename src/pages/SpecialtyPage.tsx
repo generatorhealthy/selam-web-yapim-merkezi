@@ -196,6 +196,7 @@ const SpecialtyPage = () => {
         <meta property="og:description" content={pageDescription} />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="website" />
+        {!loading && specialists.length === 0 && <meta name="robots" content="noindex, follow" />}
       </Helmet>
       <HorizontalNavigation />
       <div className="container mx-auto px-4 py-8">
