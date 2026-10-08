@@ -46,12 +46,13 @@ const PanelFallback = () => (
   </div>
 );
 
-export function lazyPanel<P extends object>(load: () => Promise<{ default: ComponentType<P> }>) {
+// Panel sayfaları rota üzerinden props almadan açılır.
+export function lazyPanel(load: () => Promise<{ default: ComponentType }>) {
   const Component = lazy(() => withRetry(load));
-  return function PanelRoute(props: P) {
+  return function PanelRoute() {
     return (
       <Suspense fallback={<PanelFallback />}>
-        <Component {...props} />
+        <Component />
       </Suspense>
     );
   };
