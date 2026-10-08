@@ -10,3 +10,5 @@ createRoot(rootElement).render(
   <App />
 );
 
+// index.html'deki açılış kurtarma bekçisine uygulamanın yüklendiğini bildir.
+(window as unknown as { __dkoMarkStarted?: () => void }).__dkoMarkStarted?.();

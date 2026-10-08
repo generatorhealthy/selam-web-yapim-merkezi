@@ -185,6 +185,43 @@
     }
     </script>
 
+    <!-- Hostinger CDN "Checking your browser" koruması bazen uygulama dosyasının
+         yerine 403 kontrol sayfası döndürüyor; script yüklenemezse sayfayı
+         taze bir istekle yeniden aç ki tarayıcı kontrolü tam sayfada geçsin. -->
+    <script>
+      (function () {
+        var KEY = 'dko_boot_recover';
+        var started = false;
+        window.__dkoMarkStarted = function () {
+          started = true;
+          try { sessionStorage.removeItem(KEY); } catch (e) {}
+        };
+        function recover() {
+          if (started) return;
+          var now = Date.now(), info = { n: 0, t: now };
+          try { info = JSON.parse(sessionStorage.getItem(KEY) || '') || info; } catch (e) {}
+          if (now - info.t > 120000) info = { n: 0, t: now };
+          if (info.n >= 2) {
+            var root = document.getElementById('root');
+            if (root) root.innerHTML = '<div style="max-width:420px;margin:20vh auto;padding:24px;text-align:center;font-family:system-ui,sans-serif"><p style="margin-bottom:16px">Sayfa yüklenemedi. Lütfen birkaç saniye sonra tekrar deneyin.</p><button onclick="try{sessionStorage.removeItem(\'' + KEY + '\')}catch(e){};location.reload()" style="padding:10px 18px;border-radius:8px;border:0;background:#2563eb;color:#fff;font-size:15px">Tekrar Dene</button></div>';
+            return;
+          }
+          info.n += 1;
+          try { sessionStorage.setItem(KEY, JSON.stringify(info)); } catch (e) {}
+          var url = new URL(window.location.href);
+          url.searchParams.set('_r', String(now));
+          window.location.replace(url.toString());
+        }
+        window.addEventListener('error', function (ev) {
+          var el = ev && ev.target;
+          if (!el || (el.tagName !== 'SCRIPT' && el.tagName !== 'LINK')) return;
+          var src = el.src || el.href || '';
+          if (src.indexOf('/assets/') !== -1) recover();
+        }, true);
+        window.setTimeout(function () { if (!started) recover(); }, 25000);
+      })();
+    </script>
+
     <!-- Eski tarayıcı önbelleğini temizle: kayıtlı service worker varsa kaldır -->
     <script>
       (function () {
