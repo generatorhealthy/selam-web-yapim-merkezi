@@ -4178,6 +4178,48 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_qualification_history: {
+        Row: {
+          computed_at: string
+          created_at: string
+          decision: string
+          first_paid_at: string | null
+          qualified_at: string | null
+          qualified_at_precision: string
+          rule_version: string
+          score_at_qualification: number | null
+          threshold: number
+          trigger_event: string | null
+          user_id: string
+        }
+        Insert: {
+          computed_at?: string
+          created_at?: string
+          decision: string
+          first_paid_at?: string | null
+          qualified_at?: string | null
+          qualified_at_precision: string
+          rule_version: string
+          score_at_qualification?: number | null
+          threshold: number
+          trigger_event?: string | null
+          user_id: string
+        }
+        Update: {
+          computed_at?: string
+          created_at?: string
+          decision?: string
+          first_paid_at?: string | null
+          qualified_at?: string | null
+          qualified_at_precision?: string
+          rule_version?: string
+          score_at_qualification?: number | null
+          threshold?: number
+          trigger_event?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       lead_stage_history: {
         Row: {
           change_source: string
