@@ -18,8 +18,9 @@ export default defineConfig(({ mode }) => ({
     minify: "esbuild",
     sourcemap: false,
     emptyOutDir: true,
-    // Keep the application in one stable JavaScript file. This intentionally
-    // trades a larger first download for zero route-chunk requests after deploys.
+    // Two stable files: the visitor app and one panel file (admin, specialist,
+    // partner, voice). Visitors never download panel code; deploys keep the
+    // previous release's files so an open panel can still load its file.
     cssCodeSplit: true,
     cssMinify: true,
     chunkSizeWarningLimit: 1000,
@@ -31,9 +32,15 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
-        inlineDynamicImports: true,
         entryFileNames: "assets/app-[hash].js",
-        chunkFileNames: "assets/app-[hash].js",
+        chunkFileNames: "assets/panel-[hash].js",
+        // Ziyaretçi uygulamasının kullanmadığı her şey tek bir panel dosyasında toplanır.
+        manualChunks(id, { getModuleInfo }) {
+          const info = getModuleInfo(id);
+          if (!info || info.isEntry) return undefined;
+          if (info.dynamicImporters.length && !info.importers.length) return "panel";
+          return undefined;
+        },
         assetFileNames: "assets/[name]-[hash][extname]",
       },
     },

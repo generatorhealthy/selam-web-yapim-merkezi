@@ -16,7 +16,6 @@ import { useNativeApp } from "@/hooks/useNativeApp";
 import Index from "./pages/Index";
 import SpecialOfferNew from "./pages/SpecialOfferNew";
 import DokiLogos from "./pages/DokiLogos";
-import AdminWorkspace from "./pages/admin/AdminWorkspace";
 import MobileHome from "./pages/mobile/MobileHome";
 import MobileSearch from "./pages/mobile/MobileSearch";
 import MobileProfile from "./pages/mobile/MobileProfile";
@@ -76,15 +75,19 @@ import TestInterface from "./components/TestInterface";
 import TestTaking from "./components/TestTaking";
 import TestResult from "./pages/TestResult";
 import SpecialistRegistration from "./pages/SpecialistRegistration";
-import VoiceAssistant from "./pages/VoiceAssistant";
 import PatientSignup from "./pages/PatientSignup";
 import PatientLogin from "./pages/PatientLogin";
 import PatientDashboard from "./pages/PatientDashboard";
 import ResetPassword from "./pages/ResetPassword";
 import PartnerLogin from "./pages/PartnerLogin";
-import PartnerDashboard from "./pages/partner/PartnerDashboard";
 import Career from "./pages/Career";
-import DoctorDashboard from "./pages/doctor/DoctorDashboard";
+import { lazyPanel } from "@/lib/lazyPanel";
+
+// Panel ekranları ayrı dosyada: ziyaretçi sayfaları bu kodu indirmez (mobil hız / SEO).
+const AdminWorkspace = lazyPanel(() => import("./pages/admin/AdminWorkspace"));
+const DoctorDashboard = lazyPanel(() => import("./pages/doctor/DoctorDashboard"));
+const PartnerDashboard = lazyPanel(() => import("./pages/partner/PartnerDashboard"));
+const VoiceAssistant = lazyPanel(() => import("./pages/VoiceAssistant"));
 
 // Create QueryClient outside of component to prevent re-creation on renders.
 // Aggressive caching = clicks return cached data instantly, refetch happens in background.
