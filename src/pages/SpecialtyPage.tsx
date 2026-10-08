@@ -327,7 +327,7 @@ const SpecialtyPage = () => {
           </div>
         )}
 
-        <LocalPagesLinks specialists={specialists} heading={`${specialtyName} için şehir seçin`} className="mt-8" />
+        <LocalPagesLinks specialists={specialists} heading={`${specialtyName.charAt(0).toLocaleUpperCase("tr") + specialtyName.slice(1)} için şehir seçin`} className="mt-8" />
       </div>
       {waDialog.specialist && (
         <WhatsAppContactDialog
