@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+let staticFromEntry: Set<string> | null = null;
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -34,6 +36,23 @@ export default defineConfig(({ mode }) => ({
       output: {
         entryFileNames: "assets/app-[hash].js",
         chunkFileNames: "assets/panel-[hash].js",
+        // Exactly two files: everything the visitor app reaches through static
+        // imports stays in app-*.js; everything reached only through a dynamic
+        // import (panels and their lazy libraries) goes into one panel-*.js.
+        manualChunks(id, { getModuleInfo, getModuleIds }) {
+          if (!staticFromEntry) {
+            staticFromEntry = new Set();
+            const entries = [...getModuleIds()].filter((m) => getModuleInfo(m)?.isEntry);
+            const stack = [...entries];
+            while (stack.length) {
+              const m = stack.pop()!;
+              if (staticFromEntry.has(m)) continue;
+              staticFromEntry.add(m);
+              for (const dep of getModuleInfo(m)?.importedIds || []) stack.push(dep);
+            }
+          }
+          return staticFromEntry.has(id) ? undefined : "panel";
+        },
         assetFileNames: "assets/[name]-[hash][extname]",
       },
     },
