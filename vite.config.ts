@@ -34,13 +34,6 @@ export default defineConfig(({ mode }) => ({
       output: {
         entryFileNames: "assets/app-[hash].js",
         chunkFileNames: "assets/panel-[hash].js",
-        // Ziyaretçi uygulamasının kullanmadığı her şey tek bir panel dosyasında toplanır.
-        manualChunks(id, { getModuleInfo }) {
-          const info = getModuleInfo(id);
-          if (!info || info.isEntry) return undefined;
-          if (info.dynamicImporters.length && !info.importers.length) return "panel";
-          return undefined;
-        },
         assetFileNames: "assets/[name]-[hash][extname]",
       },
     },
