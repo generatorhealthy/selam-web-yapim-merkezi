@@ -119,12 +119,33 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${blogs.length} blog posts and ${specialists.length} specialists`)
 
+    // src/utils/doctorUtils.ts içindeki createSpecialtySlug ile birebir aynı olmalı.
+    // Türkçe harfler küçültmeden ÖNCE dönüştürülür; 'İ' → 'i' olur (birleşik nokta
+    // değil), geçersiz harfler tireyle değiştirilmez silinir.
     const generateSlug = (text: string): string => {
-      return text.toLowerCase()
-        .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
-        .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-        .replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+      const turkishCharMap: { [key: string]: string } = {
+        'ğ': 'g', 'Ğ': 'G',
+        'ü': 'u', 'Ü': 'U',
+        'ş': 's', 'Ş': 'S',
+        'ı': 'i', 'I': 'I',
+        'İ': 'i', 'i': 'i',
+        'ö': 'o', 'Ö': 'O',
+        'ç': 'c', 'Ç': 'C'
+      }
+
+      let slug = String(text || '')
+      Object.keys(turkishCharMap).forEach((key) => {
+        slug = slug.replace(new RegExp(key, 'g'), turkishCharMap[key])
+      })
+
+      return slug
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '')
     }
+
 
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
