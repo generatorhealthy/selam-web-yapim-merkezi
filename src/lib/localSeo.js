@@ -102,13 +102,13 @@ export const localDescription = (p) => {
   const n = p.list.length;
   return p.kind === "online"
     ? `Online görüşme yapan ${n} ${p.branch.name.toLocaleLowerCase("tr")} profilini inceleyin. Bulunduğunuz yerden görüntülü görüşmeyle randevu alın.`
-    : `${p.city.name}'da ${n} ${p.branch.name.toLocaleLowerCase("tr")} profilini inceleyin, uzmanlık alanlarını karşılaştırın ve online ya da yüz yüze randevu alın.`;
+    : `${p.city.name} şehrindeki ${n} ${p.branch.name.toLocaleLowerCase("tr")} profilini inceleyin, uzmanlık alanlarını karşılaştırın ve online ya da yüz yüze randevu alın.`;
 };
 
 /** Sayfaya özgü sık sorulan sorular — yalnız platformda doğru olan genel bilgiler. */
 export const localFaq = (p) => {
   const b = p.branch.name.toLocaleLowerCase("tr");
-  const where = p.kind === "online" ? "online" : `${p.city.name}'da`;
+  const where = p.kind === "online" ? "online" : `${p.city.name} şehrinde`;
   return [
     [`${where === "online" ? "Online" : p.city.name} ${b} randevusu nasıl alınır?`, `Listeden uzmanın profilini açın, uzmanlık alanlarını ve görüşme seçeneklerini inceleyin, ardından profildeki randevu adımlarıyla talebinizi iletin.`],
     [`${p.branch.name} ile online görüşme mümkün mü?`, `Profilinde "Online" yazan uzmanlarla görüntülü görüşme yapılabilir. Online görüşme için sessiz bir ortam ve internet bağlantısı yeterlidir.`],
