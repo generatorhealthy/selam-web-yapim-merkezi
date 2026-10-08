@@ -46,14 +46,20 @@ jobs:
         run: |
           set +e
           base="ftp://${FTP_SERVER}/assets"
-          if ! curl -sf --max-time 60 -u "${FTP_USERNAME}:${FTP_PASSWORD}" "${base}/.ftp-assets-state.json" -o /tmp/live-assets-state.json; then
-            echo "No previous asset state found; nothing to keep."
-            exit 0
+          # List of this release's own files (kept files are not added, so the
+          # folder never grows beyond two releases).
+          (cd dist/assets && find . -type f ! -name '.release-files.txt' | sed 's|^\./||') > /tmp/own-assets.txt
+          if curl -sf --max-time 60 -u "${FTP_USERNAME}:${FTP_PASSWORD}" "${base}/.release-files.txt" -o /tmp/live-assets.txt; then
+            echo "Using live release file list."
+          elif curl -sf --max-time 60 -u "${FTP_USERNAME}:${FTP_PASSWORD}" "${base}/.ftp-assets-state.json" -o /tmp/live-assets-state.json; then
+            node -e '
+              const s = JSON.parse(require("fs").readFileSync("/tmp/live-assets-state.json","utf8"));
+              for (const f of s.data || []) if (f.type === "file" && !f.name.startsWith(".")) console.log(f.name);
+            ' > /tmp/live-assets.txt
+          else
+            : > /tmp/live-assets.txt
+            echo "No previous release found; nothing to keep."
           fi
-          node -e '
-            const s = JSON.parse(require("fs").readFileSync("/tmp/live-assets-state.json","utf8"));
-            for (const f of s.data || []) if (f.type === "file") console.log(f.name);
-          ' > /tmp/live-assets.txt
           kept=0
           while IFS= read -r name; do
             [ -z "$name" ] && continue
@@ -66,6 +72,7 @@ jobs:
               echo "Could not keep $name"
             fi
           done < /tmp/live-assets.txt
+          cp /tmp/own-assets.txt dist/assets/.release-files.txt
           echo "Kept $kept files from the live release."
           exit 0
 
