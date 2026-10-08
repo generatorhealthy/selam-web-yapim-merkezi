@@ -307,7 +307,6 @@ async function main() {
       <h1>${esc(p.name)} Uzmanları</h1>
       <p>${esc(description)}</p>
       <ul>${p.list.map(specialistCard).join("")}</ul>
-      ${localLinks(localPages.filter((x) => x.branch.slug === p.slug || x.branch.name === p.name), "Şehre ve online görüşmeye göre")}
       <h2>Diğer Branşlar</h2>
       <ul>${specialtyPages.filter((x) => x !== p).map((x) => `<li><a href="/uzmanlik/${x.slug}">${esc(x.name)}</a></li>`).join("")}</ul>
       ${NAV}`;
@@ -378,7 +377,6 @@ async function main() {
       <p>${esc(description)}</p>
       <h2>Branşlar</h2>
       <ul>${specialtyPages.map((x) => `<li><a href="/uzmanlik/${x.slug}">${esc(x.name)}</a> (${x.list.length})</li>`).join("")}</ul>
-      ${localLinks(localPages, "Şehre göre uzmanlar")}
       <h2>Tüm Uzmanlar</h2>
       <ul>${specialists.map(specialistCard).join("")}</ul>
       ${NAV}`;
@@ -460,7 +458,6 @@ async function main() {
       <p>${description}</p>
       <h2>Branşlar</h2>
       <ul>${specialtyPages.map((x) => `<li><a href="/uzmanlik/${x.slug}">${esc(x.name)}</a></li>`).join("")}</ul>
-      ${localLinks(localPages, "Şehre göre uzmanlar")}
       <h2>Uzmanlarımız</h2>
       <ul>${specialists.slice(0, 40).map(specialistCard).join("")}</ul>
       <p><a href="/uzmanlar">Tüm uzmanları gör</a></p>
