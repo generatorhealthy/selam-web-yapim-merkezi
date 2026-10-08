@@ -38,6 +38,16 @@ jobs:
       # this one. The live index.html still points at the previous app file
       # until the last step, so keep the previous release's assets for one more
       # deploy — otherwise visitors get a missing-file error mid-publish.
+      # Primary source: the previous run's own assets saved in the Actions
+      # cache (no FTP download needed). Fallback: download from FTP.
+      - name: Restore previous release assets from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .release-assets-cache
+          key: release-assets-${{ github.run_id }}
+          restore-keys: |
+            release-assets-
+
       - name: Keep the live release's assets during publish
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
@@ -45,10 +55,23 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
           set +e
-          base="ftp://${FTP_SERVER}/assets"
-          # List of this release's own files (kept files are not added, so the
-          # folder never grows beyond two releases).
+          # Save this release's own assets for the next deploy (before adding kept files,
+          # so the folder never grows beyond two releases).
+          rm -rf .prev-release-assets
+          [ -d .release-assets-cache ] && mv .release-assets-cache .prev-release-assets
+          cp -a dist/assets .release-assets-cache
           (cd dist/assets && find . -type f ! -name '.release-files.txt' | sed 's|^\./||') > /tmp/own-assets.txt
+          kept=0
+          if [ -d .prev-release-assets ]; then
+            while IFS= read -r f; do
+              name="${f#./}"
+              [ -f "dist/assets/$name" ] && continue
+              mkdir -p "$(dirname "dist/assets/$name")"
+              cp ".prev-release-assets/$name" "dist/assets/$name" && kept=$((kept+1))
+            done < <(cd .prev-release-assets && find . -type f ! -name '.release-files.txt')
+            echo "Kept $kept files from cached previous release."
+          fi
+          base="ftp://${FTP_SERVER}/assets"
           if curl -sf --max-time 60 -u "${FTP_USERNAME}:${FTP_PASSWORD}" "${base}/.release-files.txt" -o /tmp/live-assets.txt; then
             echo "Using live release file list."
           elif curl -sf --max-time 60 -u "${FTP_USERNAME}:${FTP_PASSWORD}" "${base}/.ftp-assets-state.json" -o /tmp/live-assets-state.json; then
@@ -58,9 +81,8 @@ jobs:
             ' > /tmp/live-assets.txt
           else
             : > /tmp/live-assets.txt
-            echo "No previous release found; nothing to keep."
+            echo "Could not read live file list over FTP."
           fi
-          kept=0
           while IFS= read -r name; do
             [ -z "$name" ] && continue
             [ -f "dist/assets/$name" ] && continue
@@ -73,8 +95,14 @@ jobs:
             fi
           done < /tmp/live-assets.txt
           cp /tmp/own-assets.txt dist/assets/.release-files.txt
-          echo "Kept $kept files from the live release."
+          echo "Kept $kept files from the live release in total."
           exit 0
+
+      - name: Save this release's assets for the next deploy
+        uses: actions/cache/save@v4
+        with:
+          path: .release-assets-cache
+          key: release-assets-${{ github.run_id }}
 
       - name: Prepare ordered release
         run: |
