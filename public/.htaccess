@@ -189,6 +189,16 @@ RewriteRule ^uzmanlik-alanlari/doktor/([^/]+)/?$ /$1 [R=301,L]
 # Redirect doctor names to specialty-based URLs
 RewriteRule ^ayse-dolek-kerbel/?$ /aile-danismani/ayse-dolek-kerbel [R=301,L]
 
+# Eski bozuk branş yazımlı uzman adresleri → doğru adresler (SEO)
+RewriteRule ^aile-ve-i-liski-danismani/kubra-simsek/?$ /aile-ve-iliski-danismani/kubra-simsek [R=301,L]
+RewriteRule ^evlilik-i-liski-danismani-kisisel-gelisim-uzmani-ve-yonetici-mentor/gulsen-bayram/?$ /evlilikiliski-danismani-kisisel-gelisim-uzmani-ve-yonetici-mentor/gulsen-bayram [R=301,L]
+RewriteRule ^aile-i-liski-danismani/aile-elif-yasemin-yuvaci/?$ /aileiliski-danismani/aile-elif-yasemin-yuvaci [R=301,L]
+
+# Türkçe karakterli eski blog adresi → ASCII kanonik adresi
+RewriteCond %{THE_REQUEST} \s/blog/hangi-vitamin-eksik%C4%9Fli%C4%9Fi-alerji-yapar[\s?] [NC]
+RewriteRule ^ /blog/hangi-vitamin-eksikligi-alerji-yapar [R=301,L]
+
+
 # Redirect system/campaign pages that should never live under /blog/
 RewriteRule ^blog/(partner-giris|partner|ozel-firsat|bu-aya-ozel|danismanlik-randevusu-al)/?$ /$1 [R=301,L]
 
