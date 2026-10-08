@@ -56,6 +56,7 @@
 - [x] Blog yazılarının metni, görseli, ilgili yazı bağlantıları Google'a gidiyor (iki blog tablosu dahil)
 - [x] Gizli başlık kaldırıldı; olmayan sayfalara "dizine ekleme" etiketi; kopya adres yönlendirmeleri; site haritası yeniden üretiliyor
 - [x] Spam bağlantı reddetme dosyası hazırlandı
-- [ ] Google Search Console bağlantısı + reddetme dosyası yükleme — kullanıcı onayı/hesabı gerekiyor
+- [x] Google Search Console bağlandı (site zaten doğrulanmış, site haritası hatasız)
+- [ ] Reddetme dosyasını Google Disavow aracına yükleme — Google bunun için API sunmuyor, kullanıcı elle yükler
 - [x] Ziyaretçi sayfaları panelden ayrıldı: ilk yükleme 1,26 MB → 468 KB (sıkıştırılmış)
 - [ ] Şehir/branş açılış sayfaları, yazı iyileştirmeleri, uzman onayı kutusu — gerçek içerik ve fiyat bilgisi kullanıcıdan
