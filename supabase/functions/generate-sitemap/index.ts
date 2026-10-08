@@ -119,12 +119,33 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${blogs.length} blog posts and ${specialists.length} specialists`)
 
+    // src/utils/doctorUtils.ts içindeki createSpecialtySlug ile birebir aynı olmalı.
+    // Türkçe harfler küçültmeden ÖNCE dönüştürülür; 'İ' → 'i' olur (birleşik nokta
+    // değil), geçersiz harfler tireyle değiştirilmez silinir.
     const generateSlug = (text: string): string => {
-      return text.toLowerCase()
-        .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
-        .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-        .replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+      const turkishCharMap: { [key: string]: string } = {
+        'ğ': 'g', 'Ğ': 'G',
+        'ü': 'u', 'Ü': 'U',
+        'ş': 's', 'Ş': 'S',
+        'ı': 'i', 'I': 'I',
+        'İ': 'i', 'i': 'i',
+        'ö': 'o', 'Ö': 'O',
+        'ç': 'c', 'Ç': 'C'
+      }
+
+      let slug = String(text || '')
+      Object.keys(turkishCharMap).forEach((key) => {
+        slug = slug.replace(new RegExp(key, 'g'), turkishCharMap[key])
+      })
+
+      return slug
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '')
     }
+
 
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -151,19 +172,19 @@ Deno.serve(async (req) => {
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/paketler</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/uzmanlar</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Uzman Kategorileri -->
+  <!-- Uzman Kategorileri: yalnızca gerçekten uzmanı olan branşlar -->
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/aile-danismani</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/uzmanlik/aile-ve-iliski-danismani</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -173,32 +194,7 @@ Deno.serve(async (req) => {
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/dil-ve-konusma-terapisti</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/diyetisyen</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/egitim-danismanligi</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/fizyoterapist</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/iliski-danismani</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/kadin-dogum</loc>
+    <loc>https://doktorumol.com.tr/uzmanlik/klinik-psikolog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -213,10 +209,12 @@ Deno.serve(async (req) => {
     <priority>0.8</priority>
   </url>
 
+
   <!-- Blog Yazıları -->
 ${blogs.map(blog => `  <url>
-    <loc>https://doktorumol.com.tr/blog/${blog.slug}</loc>
+    <loc>https://doktorumol.com.tr/blog/${generateSlug(blog.slug)}</loc>
     <lastmod>${new Date(blog.updated_at).toISOString().split('T')[0]}</lastmod>
+
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>`).join('\n')}
