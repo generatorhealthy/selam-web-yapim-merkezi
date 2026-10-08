@@ -172,19 +172,19 @@ Deno.serve(async (req) => {
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/paketler</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/uzmanlar</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Uzman Kategorileri -->
+  <!-- Uzman Kategorileri: yalnızca gerçekten uzmanı olan branşlar -->
   <url>
     <loc>https://doktorumol.com.tr/uzmanlik/aile-danismani</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/uzmanlik/aile-ve-iliski-danismani</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -194,32 +194,7 @@ Deno.serve(async (req) => {
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/dil-ve-konusma-terapisti</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/diyetisyen</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/egitim-danismanligi</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/fizyoterapist</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/iliski-danismani</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/uzmanlik/kadin-dogum</loc>
+    <loc>https://doktorumol.com.tr/uzmanlik/klinik-psikolog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -233,6 +208,7 @@ Deno.serve(async (req) => {
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+
 
   <!-- Blog Yazıları -->
 ${blogs.map(blog => `  <url>
