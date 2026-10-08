@@ -34,6 +34,41 @@ jobs:
         env:
           CI: false
 
+      # The FTP sync deletes files that were in the previous upload but not in
+      # this one. The live index.html still points at the previous app file
+      # until the last step, so keep the previous release's assets for one more
+      # deploy — otherwise visitors get a missing-file error mid-publish.
+      - name: Keep the live release's assets during publish
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set +e
+          base="ftp://${FTP_SERVER}/assets"
+          if ! curl -sf --max-time 60 -u "${FTP_USERNAME}:${FTP_PASSWORD}" "${base}/.ftp-assets-state.json" -o /tmp/live-assets-state.json; then
+            echo "No previous asset state found; nothing to keep."
+            exit 0
+          fi
+          node -e '
+            const s = JSON.parse(require("fs").readFileSync("/tmp/live-assets-state.json","utf8"));
+            for (const f of s.data || []) if (f.type === "file") console.log(f.name);
+          ' > /tmp/live-assets.txt
+          kept=0
+          while IFS= read -r name; do
+            [ -z "$name" ] && continue
+            [ -f "dist/assets/$name" ] && continue
+            mkdir -p "$(dirname "dist/assets/$name")"
+            if curl -sf --max-time 120 -u "${FTP_USERNAME}:${FTP_PASSWORD}" "${base}/${name}" -o "dist/assets/$name"; then
+              kept=$((kept+1))
+            else
+              rm -f "dist/assets/$name"
+              echo "Could not keep $name"
+            fi
+          done < /tmp/live-assets.txt
+          echo "Kept $kept files from the live release."
+          exit 0
+
       - name: Prepare ordered release
         run: |
           mkdir -p .deploy-shell .deploy-index
