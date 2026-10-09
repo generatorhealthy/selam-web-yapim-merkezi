@@ -84,6 +84,7 @@ export function buildLocalPages(specialists) {
 /** Bir adres yerel sayfa mı? (uzman verisi olmadan biçim kontrolü) */
 export function parseLocalSlug(slug) {
   const s = String(slug || "");
+  if (LOCAL_BRANCHES.some((x) => x.slug === s)) return null; // "klinik-psikolog" bir branş sayfasıdır, şehir değil
   const b = [...LOCAL_BRANCHES].sort((x, y) => y.slug.length - x.slug.length).find((x) => s.endsWith(`-${x.slug}`));
   if (!b) return null;
   const prefix = s.slice(0, -(b.slug.length + 1));
