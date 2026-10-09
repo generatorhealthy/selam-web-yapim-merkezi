@@ -199,8 +199,20 @@ const specialistCard = (s) =>
 async function main() {
   const key = readFileSync(resolve("src/integrations/supabase/client.ts"), "utf8").match(/eyJ[A-Za-z0-9._-]+/)?.[0];
   if (!key) throw new Error("anon key bulunamadı");
-  const template = readFileSync(resolve(DIST, "index.html"), "utf8");
-  if (!ROOT_RE.test(template)) throw new Error("şablonda #root yok");
+  const rawTemplate = readFileSync(resolve(DIST, "index.html"), "utf8");
+  if (!ROOT_RE.test(rawTemplate)) throw new Error("şablonda #root yok");
+  // Ön-render sayfaları sabit /boot.js ve /boot.css'e bağlanır; bu küçük dosyalar her yayında
+  // güncel hash'li dosyaları yükler. Böylece içeriği değişmeyen ~1.700 sayfa her yayında
+  // yeniden FTP'ye yüklenmez (yayın süresi dakikalara iner).
+  const jsSrc = rawTemplate.match(/<script type="module" crossorigin src="(\/assets\/app-[^"]+\.js)"><\/script>/)?.[1];
+  const cssHref = rawTemplate.match(/<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/)?.[1];
+  if (!jsSrc || !cssHref) throw new Error("şablonda uygulama dosyaları bulunamadı");
+  writeFileSync(resolve(DIST, "boot.js"), `import ${JSON.stringify(jsSrc)};\n`, "utf8");
+  writeFileSync(resolve(DIST, "boot.css"), `@import url(${JSON.stringify(cssHref)});\n`, "utf8");
+  const template = rawTemplate
+    .replace(/<link rel="modulepreload"[^>]*>\s*/g, "")
+    .replace(`src="${jsSrc}"`, 'src="/boot.js"')
+    .replace(`href="${cssHref}"`, 'href="/boot.css"');
 
   const [posts, specialistsRaw] = await Promise.all([loadPosts(key), rpc(key, "get_public_specialists")]);
   const specialists = (specialistsRaw || [])
