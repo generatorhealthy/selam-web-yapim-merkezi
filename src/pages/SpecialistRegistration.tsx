@@ -203,6 +203,18 @@ const SpecialistRegistration = () => {
           .maybeSingle();
         if (cancelled || !profile) return;
         if (profile.role === 'specialist' && !profile.is_approved) {
+          const { data: existing } = await supabase
+            .from('specialists')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .limit(1)
+            .maybeSingle();
+          if (cancelled) return;
+          if (existing) {
+            // Profil zaten tamamlanmış: tekrar form doldurtma, panele gönder
+            navigate('/doktor-paneli', { replace: true, state: { tab: 'profile' } });
+            return;
+          }
           setCreatedUserId(session.user.id);
           setCreatedUserEmail(session.user.email || profile.email || "");
           if (profile.email) setEmail(profile.email);
