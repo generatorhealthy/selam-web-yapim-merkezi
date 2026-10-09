@@ -113,6 +113,11 @@ RewriteRule ^rss\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/gen
         Header always set Cache-Control "max-age=31536000, public, immutable"
     </FilesMatch>
     
+    # Stable boot files for prerendered pages point at the current release; never cache.
+    <FilesMatch "^boot\.(js|css)$">
+        Header always set Cache-Control "no-cache, must-revalidate, max-age=0"
+    </FilesMatch>
+
     # Don't cache HTML
     # HTML should never be cached aggressively in SPA deployments
     <FilesMatch "\.(html|htm)$">
