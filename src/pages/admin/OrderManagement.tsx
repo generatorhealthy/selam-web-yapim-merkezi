@@ -179,8 +179,17 @@ const OrderManagement = () => {
         },
       });
 
-      if (error) throw error;
-      if (!(data as any)?.success) throw new Error(JSON.stringify((data as any)?.iyzico || (data as any)?.error));
+      if (error) {
+        // Edge function 4xx gövdesindeki gerçek iyzico mesajını göster
+        let body: any = null;
+        try { body = await (error as any)?.context?.json?.(); } catch { /* yoksay */ }
+        const msg = body?.error || body?.iyzico?.errorMessage;
+        throw new Error(msg || error.message);
+      }
+      if (!(data as any)?.success) {
+        const d = data as any;
+        throw new Error(d?.error || d?.iyzico?.errorMessage || JSON.stringify(d?.iyzico));
+      }
       toast({ title: "Abonelik güncellendi", description: `Yeni aylık tutar: ${price.toLocaleString('tr-TR')} ₺ (müşteri işlem yapmadı)` });
       setUpgradeOrder(null);
       setUpgradeAmount("");
