@@ -65,6 +65,7 @@
 - [x] En çok görünen 49 blog yazısına SSS + "ne zaman uzmana başvurmalı" bölümü
 
 ## 13 Ekim: iki izleme uyarısı
+- [ ] Ödenmemiş iyzico aboneliğinde yeni tutarı ödeme almadan uygulama — desteklenen sağlayıcı yolu ve kayıtlı kartın abonelik/müşteri kapsamı doğrulanıyor; gerçek ödeme tetiklenmeyecek
 - [x] Klinik Psikolog: 9 gerçek uzman, profil bağlantısı ve noindex bulunmadığı tarayıcıda doğrulandı; adres regresyon testleri eklendi
 - [x] Kayıt yeniden giriş ve tamamlama yollarında varlık kontrolü, hata durumunda yazmama ve çift tıklama koruması; 8 test geçti
 - [ ] Tamamlanmış/ödenmemiş hesabın yönlendirmesini gerçek oturumla doğrula — harici Supabase oturumu bu ortamda sağlanamıyor
