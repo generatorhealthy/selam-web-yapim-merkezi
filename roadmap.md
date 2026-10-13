@@ -63,3 +63,7 @@
 
 - [x] Şehir + branş (39) ve online (4) açılış sayfaları; sitemap ve iç bağlantılar
 - [x] En çok görünen 49 blog yazısına SSS + "ne zaman uzmana başvurmalı" bölümü
+
+## 13 Ekim: iki izleme uyarısı
+- [ ] Klinik Psikolog branşını ve Google etiketini doğrula, regresyon testi ekle
+- [ ] Tamamlanmış kaydı tekrar açma ve ikinci profil oluşturma yollarını koru, test et
