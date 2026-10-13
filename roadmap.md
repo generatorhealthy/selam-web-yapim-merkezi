@@ -63,3 +63,8 @@
 
 - [x] Şehir + branş (39) ve online (4) açılış sayfaları; sitemap ve iç bağlantılar
 - [x] En çok görünen 49 blog yazısına SSS + "ne zaman uzmana başvurmalı" bölümü
+
+## 13 Ekim: iki izleme uyarısı
+- [x] Klinik Psikolog: 9 gerçek uzman, profil bağlantısı ve noindex bulunmadığı tarayıcıda doğrulandı; adres regresyon testleri eklendi
+- [x] Kayıt yeniden giriş ve tamamlama yollarında varlık kontrolü, hata durumunda yazmama ve çift tıklama koruması; 8 test geçti
+- [ ] Tamamlanmış/ödenmemiş hesabın yönlendirmesini gerçek oturumla doğrula — harici Supabase oturumu bu ortamda sağlanamıyor

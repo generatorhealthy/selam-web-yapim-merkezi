@@ -19,6 +19,7 @@ import { translateAuthError } from "@/utils/authErrors";
 import { trackMetaLead } from "@/lib/metaCapi";
 import { trackLeadEvent, trackLeadEventOnce } from "@/lib/leadTracking";
 import { isValidEmail, normalizeTrMobile } from "@/lib/registrationForm";
+import { saveSpecialistProfileOnce } from "@/lib/registrationCompletion";
 import {
   User, Mail, Lock, Stethoscope, MapPin, GraduationCap, Camera, Sparkles,
   Check, ChevronRight, ChevronLeft, Shield, Loader2, Eye, EyeOff, CreditCard, Calculator
@@ -69,6 +70,7 @@ const SpecialistRegistration = () => {
   const [createdUserId, setCreatedUserId] = useState("");
   const [createdUserEmail, setCreatedUserEmail] = useState("");
   const referralCodeRef = useRef<string | null>(null);
+  const completingRef = useRef(false);
 
   useEffect(() => {
     // ?ref= parametresi reklam linklerinde kırpılmış/bozuk gelebiliyor.
@@ -203,13 +205,14 @@ const SpecialistRegistration = () => {
           .maybeSingle();
         if (cancelled || !profile) return;
         if (profile.role === 'specialist' && !profile.is_approved) {
-          const { data: existing } = await supabase
+          const { data: existing, error: existingError } = await supabase
             .from('specialists')
             .select('id')
             .eq('user_id', session.user.id)
             .limit(1)
             .maybeSingle();
           if (cancelled) return;
+          if (existingError) throw existingError;
           if (existing) {
             // Profil zaten tamamlanmış: tekrar form doldurtma, panele gönder
             navigate('/doktor-paneli', { replace: true, state: { tab: 'profile' } });
@@ -325,6 +328,18 @@ const SpecialistRegistration = () => {
               return;
             }
 
+            const { data: existing, error: existingError } = await supabase
+              .from('specialists')
+              .select('id')
+              .eq('user_id', signInData.user.id)
+              .limit(1)
+              .maybeSingle();
+            if (existingError) throw existingError;
+            if (existing) {
+              navigate('/doktor-paneli', { replace: true, state: { tab: 'profile' } });
+              return;
+            }
+
             setCreatedUserId(signInData.user.id);
             setCreatedUserEmail(email);
             void registerPartnerReferral(signInData.user.id, email);
@@ -430,15 +445,23 @@ const SpecialistRegistration = () => {
   };
 
   const handleComplete = async () => {
+    if (completingRef.current) return;
+    if (!createdUserId) {
+      toast.error('Lütfen hesabınıza giriş yapıp tekrar deneyin.');
+      return;
+    }
     if (!profilePicture) {
       toast.error("Lütfen profil fotoğrafınızı yükleyin. Profil fotoğrafı zorunludur.");
       return;
     }
+    completingRef.current = true;
     setIsLoading(true);
     try {
       const faqString = faqItems.length > 0 ? JSON.stringify(faqItems) : null;
 
-      const { error } = await supabase.from('specialists').insert({
+      const created = await saveSpecialistProfileOnce(
+        () => supabase.from('specialists').select('id').eq('user_id', createdUserId).limit(1).maybeSingle(),
+        () => supabase.from('specialists').insert({
         name: formData.name,
         specialty: formData.specialty,
         city: formData.city,
@@ -462,11 +485,10 @@ const SpecialistRegistration = () => {
         seo_keywords: seoKeywords || null,
         interests: interests.length > 0 ? interests : [],
         referral_signup_code: referralCode.trim().toUpperCase() || null,
-      } as any);
+      } as any));
 
-      if (error) {
-        console.error("Specialist creation error:", error);
-        toast.error("Uzman profili oluşturulurken hata: " + error.message);
+      if (!created) {
+        navigate('/doktor-paneli', { replace: true, state: { tab: 'profile' } });
         return;
       }
 
@@ -526,6 +548,7 @@ const SpecialistRegistration = () => {
       console.error(err);
       toast.error("Bir hata oluştu.");
     } finally {
+      completingRef.current = false;
       setIsLoading(false);
     }
   };
