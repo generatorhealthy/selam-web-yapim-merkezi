@@ -169,28 +169,44 @@ const OrderManagement = () => {
     }
     setIsUpgrading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('iyzico-subscription-upgrade', {
-        body: {
-          subscriptionReferenceCode: subRef,
-          newPrice: price,
-          orderId: upgradeOrder.id,
-          upgradePeriod,
-          ...(IYZICO_PLAN_REFS[String(price)] ? { pricingPlanReferenceCode: IYZICO_PLAN_REFS[String(price)] } : {}),
-        },
-      });
+      const callUpgrade = async (recreate: boolean) => {
+        const { data, error } = await supabase.functions.invoke('iyzico-subscription-upgrade', {
+          body: {
+            subscriptionReferenceCode: subRef,
+            newPrice: price,
+            orderId: upgradeOrder.id,
+            upgradePeriod,
+            recreate,
+            ...(IYZICO_PLAN_REFS[String(price)] ? { pricingPlanReferenceCode: IYZICO_PLAN_REFS[String(price)] } : {}),
+          },
+        });
+        if (error) {
+          let body: any = null;
+          try { body = await (error as any)?.context?.json?.(); } catch { /* yoksay */ }
+          throw new Error(body?.error || body?.iyzico?.errorMessage || error.message);
+        }
+        return data as any;
+      };
 
-      if (error) {
-        // Edge function 4xx gövdesindeki gerçek iyzico mesajını göster
-        let body: any = null;
-        try { body = await (error as any)?.context?.json?.(); } catch { /* yoksay */ }
-        const msg = body?.error || body?.iyzico?.errorMessage;
-        throw new Error(msg || error.message);
+      let d = await callUpgrade(false);
+      if (!d?.success && d?.needsRecreate) {
+        const ok = window.confirm(
+          `Bu abonelik ödenmemiş (${d.subscriptionStatus}) olduğu için iyzico yükseltmeye izin vermiyor.\n\n` +
+          `Müşterinin kayıtlı kartıyla ${price.toLocaleString('tr-TR')} ₺'lik YENİ abonelik başlatılsın mı?\n` +
+          `• Kart hemen çekilmeye çalışılır.\n• Yeni abonelik başarılı olursa eski abonelik iptal edilir.\n• Başarısız olursa eski abonelik olduğu gibi kalır.`
+        );
+        if (!ok) return;
+        d = await callUpgrade(true);
       }
-      if (!(data as any)?.success) {
-        const d = data as any;
+      if (!d?.success) {
         throw new Error(d?.error || d?.iyzico?.errorMessage || JSON.stringify(d?.iyzico));
       }
-      toast({ title: "Abonelik güncellendi", description: `Yeni aylık tutar: ${price.toLocaleString('tr-TR')} ₺ (müşteri işlem yapmadı)` });
+      toast({
+        title: d.recreated ? "Yeni abonelik başlatıldı" : "Abonelik güncellendi",
+        description: d.recreated
+          ? `Yeni aylık tutar: ${price.toLocaleString('tr-TR')} ₺. ${d.oldCancelled ? 'Eski abonelik iptal edildi.' : `Eski abonelik iptal edilemedi, iyzico panelinden iptal edin: ${d.cancelError || ''}`}`
+          : `Yeni aylık tutar: ${price.toLocaleString('tr-TR')} ₺ (müşteri işlem yapmadı)`,
+      });
       setUpgradeOrder(null);
       setUpgradeAmount("");
       queryClient.invalidateQueries({ queryKey: ['orders'] });

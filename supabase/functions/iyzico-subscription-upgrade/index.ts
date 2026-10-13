@@ -75,7 +75,7 @@ serve(async (req) => {
       planName,
       upgradePeriod = "NOW",
       pricingPlanReferenceCode,
-
+      recreate = false,
       dryRun = false,
     } = await req.json();
 
@@ -102,12 +102,17 @@ serve(async (req) => {
 
     // iyzico yalnızca ACTIVE abonelikleri yükseltebilir (UNPAID/PENDING vb. 201402 döner)
     const subStatus = String(subDetail.data?.subscriptionStatus || "").toUpperCase();
-    if (subStatus && subStatus !== "ACTIVE") {
-      const reason = subStatus === "UNPAID"
-        ? "Müşterinin son ödemesi alınamadığı için abonelik 'ödenmemiş' durumda. iyzico ödenmemiş aboneliğin tutarını değiştirmeye izin vermiyor. Önce müşteri kartını güncellemeli veya ödeme tekrar denenip başarılı olmalı; abonelik aktif olunca tutarı güncelleyebilirsiniz."
-        : `Abonelik durumu '${subStatus}'. iyzico yalnızca aktif aboneliklerin tutarını değiştirebiliyor.`;
+    const isActive = !subStatus || subStatus === "ACTIVE";
+    const customerRef = subDetail.data?.customerReferenceCode;
+    if (!isActive && !recreate && !dryRun) {
       return new Response(
-        JSON.stringify({ success: false, step: "status-check", subscriptionStatus: subStatus, error: reason }),
+        JSON.stringify({
+          success: false,
+          step: "status-check",
+          needsRecreate: true,
+          subscriptionStatus: subStatus,
+          error: `Abonelik '${subStatus}' durumda; iyzico bu aboneliği yükseltmiyor. Eski abonelik iptal edilip kayıtlı kartla yeni tutarda yeni abonelik başlatılabilir.`,
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -188,6 +193,61 @@ serve(async (req) => {
         });
       }
       targetPlanRef = created.data?.referenceCode;
+    }
+
+    // 3b) Aktif olmayan abonelik: önce kayıtlı müşteriyle yeni abonelik başlat, başarılıysa eskisini iptal et
+    if (!isActive && recreate) {
+      if (!customerRef) {
+        return new Response(JSON.stringify({ success: false, error: "iyzico müşteri referansı bulunamadı" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const initRes = await iyzicoRequest("POST", "/v2/subscription/initialize/with-customer", {
+        locale: "tr",
+        conversationId: crypto.randomUUID(),
+        pricingPlanReferenceCode: targetPlanRef,
+        subscriptionInitialStatus: "ACTIVE",
+        customerReferenceCode: customerRef,
+      });
+      const newSubRef = initRes?.data?.referenceCode;
+      if (initRes.status !== "success" || !newSubRef) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            step: "recreate-init",
+            error: `Yeni abonelik başlatılamadı (eski abonelik olduğu gibi duruyor): ${initRes?.errorMessage || "bilinmeyen hata"}`,
+            iyzico: initRes,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const cancelRes = await iyzicoRequest(
+        "POST",
+        `/v2/subscription/subscriptions/${subscriptionReferenceCode}/cancel`,
+        { subscriptionReferenceCode },
+      );
+
+      const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      if (orderId) {
+        await sb.from("orders").update({ amount: price, subscription_reference_code: newSubRef }).eq("id", orderId);
+      }
+      await sb.from("orders").update({ amount: price, subscription_reference_code: newSubRef })
+        .eq("subscription_reference_code", subscriptionReferenceCode).eq("status", "pending");
+      await sb.from("automatic_orders").update({ amount: price, subscription_reference_code: newSubRef })
+        .eq("subscription_reference_code", subscriptionReferenceCode);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          recreated: true,
+          newSubscriptionReferenceCode: newSubRef,
+          newPricingPlanReferenceCode: targetPlanRef,
+          oldCancelled: cancelRes.status === "success",
+          cancelError: cancelRes.status === "success" ? null : cancelRes?.errorMessage,
+          price,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // 4) Aboneliği yeni plana yükselt (kart bilgisi korunur, müşteri işlem yapmaz)
