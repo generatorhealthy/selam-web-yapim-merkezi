@@ -136,7 +136,10 @@ serve(async (req) => {
       `/v2/subscription/products/${productRef}/pricing-plans?page=1&count=100`,
     );
     const existingPlans: any[] =
-      plansList?.data?.pricingPlans?.items || plansList?.data?.pricingPlans || [];
+      plansList?.data?.items ||
+      plansList?.data?.pricingPlans?.items ||
+      plansList?.data?.pricingPlans ||
+      [];
     let targetPlanRef: string | undefined = existingPlans.find(
       (p) =>
         Math.abs(Number(p.price) - price) < 0.01 &&
