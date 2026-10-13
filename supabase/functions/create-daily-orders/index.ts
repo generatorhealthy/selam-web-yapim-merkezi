@@ -213,6 +213,8 @@ serve(async (req) => {
           status: 'pending',
           is_first_order: false,
           subscription_month: maxMonth + 1,
+          // Abonelik referansını taşı — yoksa panelde "Abonelik Tutarını Güncelle" görünmez
+          subscription_reference_code: prev.subscription_reference_code ?? null,
         };
 
 
