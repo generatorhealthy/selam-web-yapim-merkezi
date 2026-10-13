@@ -75,7 +75,7 @@ serve(async (req) => {
       planName,
       upgradePeriod = "NOW",
       pricingPlanReferenceCode,
-
+      recreate = false,
       dryRun = false,
     } = await req.json();
 
@@ -102,12 +102,17 @@ serve(async (req) => {
 
     // iyzico yalnızca ACTIVE abonelikleri yükseltebilir (UNPAID/PENDING vb. 201402 döner)
     const subStatus = String(subDetail.data?.subscriptionStatus || "").toUpperCase();
-    if (subStatus && subStatus !== "ACTIVE") {
-      const reason = subStatus === "UNPAID"
-        ? "Müşterinin son ödemesi alınamadığı için abonelik 'ödenmemiş' durumda. iyzico ödenmemiş aboneliğin tutarını değiştirmeye izin vermiyor. Önce müşteri kartını güncellemeli veya ödeme tekrar denenip başarılı olmalı; abonelik aktif olunca tutarı güncelleyebilirsiniz."
-        : `Abonelik durumu '${subStatus}'. iyzico yalnızca aktif aboneliklerin tutarını değiştirebiliyor.`;
+    const isActive = !subStatus || subStatus === "ACTIVE";
+    const customerRef = subDetail.data?.customerReferenceCode;
+    if (!isActive && !recreate && !dryRun) {
       return new Response(
-        JSON.stringify({ success: false, step: "status-check", subscriptionStatus: subStatus, error: reason }),
+        JSON.stringify({
+          success: false,
+          step: "status-check",
+          needsRecreate: true,
+          subscriptionStatus: subStatus,
+          error: `Abonelik '${subStatus}' durumda; iyzico bu aboneliği yükseltmiyor. Eski abonelik iptal edilip kayıtlı kartla yeni tutarda yeni abonelik başlatılabilir.`,
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
