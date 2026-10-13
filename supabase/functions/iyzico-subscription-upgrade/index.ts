@@ -195,6 +195,61 @@ serve(async (req) => {
       targetPlanRef = created.data?.referenceCode;
     }
 
+    // 3b) Aktif olmayan abonelik: önce kayıtlı müşteriyle yeni abonelik başlat, başarılıysa eskisini iptal et
+    if (!isActive && recreate) {
+      if (!customerRef) {
+        return new Response(JSON.stringify({ success: false, error: "iyzico müşteri referansı bulunamadı" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const initRes = await iyzicoRequest("POST", "/v2/subscription/initialize/with-customer", {
+        locale: "tr",
+        conversationId: crypto.randomUUID(),
+        pricingPlanReferenceCode: targetPlanRef,
+        subscriptionInitialStatus: "ACTIVE",
+        customerReferenceCode: customerRef,
+      });
+      const newSubRef = initRes?.data?.referenceCode;
+      if (initRes.status !== "success" || !newSubRef) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            step: "recreate-init",
+            error: `Yeni abonelik başlatılamadı (eski abonelik olduğu gibi duruyor): ${initRes?.errorMessage || "bilinmeyen hata"}`,
+            iyzico: initRes,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const cancelRes = await iyzicoRequest(
+        "POST",
+        `/v2/subscription/subscriptions/${subscriptionReferenceCode}/cancel`,
+        { subscriptionReferenceCode },
+      );
+
+      const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      if (orderId) {
+        await sb.from("orders").update({ amount: price, subscription_reference_code: newSubRef }).eq("id", orderId);
+      }
+      await sb.from("orders").update({ amount: price, subscription_reference_code: newSubRef })
+        .eq("subscription_reference_code", subscriptionReferenceCode).eq("status", "pending");
+      await sb.from("automatic_orders").update({ amount: price, subscription_reference_code: newSubRef })
+        .eq("subscription_reference_code", subscriptionReferenceCode);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          recreated: true,
+          newSubscriptionReferenceCode: newSubRef,
+          newPricingPlanReferenceCode: targetPlanRef,
+          oldCancelled: cancelRes.status === "success",
+          cancelError: cancelRes.status === "success" ? null : cancelRes?.errorMessage,
+          price,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // 4) Aboneliği yeni plana yükselt (kart bilgisi korunur, müşteri işlem yapmaz)
     const upgraded = await iyzicoRequest(
       "POST",
