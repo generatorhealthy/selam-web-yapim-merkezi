@@ -548,6 +548,7 @@ const SpecialistRegistration = () => {
       console.error(err);
       toast.error("Bir hata oluştu.");
     } finally {
+      completingRef.current = false;
       setIsLoading(false);
     }
   };
