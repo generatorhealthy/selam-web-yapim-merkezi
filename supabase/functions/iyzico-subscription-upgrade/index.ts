@@ -100,6 +100,18 @@ serve(async (req) => {
       });
     }
 
+    // iyzico yalnızca ACTIVE abonelikleri yükseltebilir (UNPAID/PENDING vb. 201402 döner)
+    const subStatus = String(subDetail.data?.subscriptionStatus || "").toUpperCase();
+    if (subStatus && subStatus !== "ACTIVE") {
+      const reason = subStatus === "UNPAID"
+        ? "Müşterinin son ödemesi alınamadığı için abonelik 'ödenmemiş' durumda. iyzico ödenmemiş aboneliğin tutarını değiştirmeye izin vermiyor. Önce müşteri kartını güncellemeli veya ödeme tekrar denenip başarılı olmalı; abonelik aktif olunca tutarı güncelleyebilirsiniz."
+        : `Abonelik durumu '${subStatus}'. iyzico yalnızca aktif aboneliklerin tutarını değiştirebiliyor.`;
+      return new Response(
+        JSON.stringify({ success: false, step: "status-check", subscriptionStatus: subStatus, error: reason }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const currentPlanRef =
       subDetail.data?.pricingPlanReferenceCode || subDetail.data?.pricingPlan?.referenceCode;
     if (!currentPlanRef) {
