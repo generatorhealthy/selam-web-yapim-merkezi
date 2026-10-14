@@ -69,13 +69,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/cinsel-isteksizlik-cozumu-cinsel-istek-nasil-uyandirilir</loc>
-    <lastmod>2025-10-07</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/romatizma-belirtileri</loc>
     <lastmod>2026-10-12</lastmod>
 
@@ -97,15 +90,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/akupunktur-sonrasi-banyo-yapilir-mi</loc>
-    <lastmod>2026-10-08</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/kadin-dogum-doktoruna-ne-sorulur</loc>
-    <lastmod>2026-10-08</lastmod>
+    <loc>https://doktorumol.com.tr/blog/cinsel-isteksizlik-cozumu-cinsel-istek-nasil-uyandirilir</loc>
+    <lastmod>2026-10-14</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -134,6 +120,20 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/androloji-muayenesi-nasil-yapilir</loc>
     <lastmod>2025-10-10</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/akupunktur-sonrasi-banyo-yapilir-mi</loc>
+    <lastmod>2026-10-14</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/kadin-dogum-doktoruna-ne-sorulur</loc>
+    <lastmod>2026-10-14</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -8875,6 +8875,13 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/aysegul-aydemir-psikolojik-danismanlik-istanbul</loc>
+    <lastmod>2026-10-13</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/klinik-psikolog-pelin-gulbayrak-istanbul</loc>
     <lastmod>2026-07-28</lastmod>
 
@@ -9038,13 +9045,6 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/cinsel-denetim-ve-erken-bosalma</loc>
     <lastmod>2026-05-13</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psk-dan-senay-guner-bilincalti</loc>
-    <lastmod>2026-04-30</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -10983,6 +10983,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/psikolojik-danisman/aysegul-aydemir</loc>
+    <lastmod>2026-10-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-gulsah-afsar</loc>
     <lastmod>2026-05-05</lastmod>
     <changefreq>monthly</changefreq>
@@ -11279,12 +11285,6 @@
   <url>
     <loc>https://doktorumol.com.tr/psikolog/kl-psk-gizem-yilmaz</loc>
     <lastmod>2026-04-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-senay-guner</loc>
-    <lastmod>2026-04-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
