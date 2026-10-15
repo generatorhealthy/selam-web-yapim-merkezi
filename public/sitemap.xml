@@ -97,13 +97,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/lazerle-alinan-ben-geri-cikar-mi</loc>
-    <lastmod>2025-10-09</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/vucutta-yag-yakimi-nasil-anlasiilir</loc>
     <lastmod>2025-08-09</lastmod>
 
@@ -134,6 +127,13 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/kadin-dogum-doktoruna-ne-sorulur</loc>
     <lastmod>2026-10-14</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/lazerle-alinan-ben-geri-cikar-mi</loc>
+    <lastmod>2026-10-15</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -644,7 +644,7 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/vucutta-yag-yakimi-nasil-anlasilir</loc>
-    <lastmod>2026-10-08</lastmod>
+    <lastmod>2026-10-15</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -8603,7 +8603,7 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/neye-karsi-alerjim-oldugunu-nasil-anlarim</loc>
-    <lastmod>2026-10-08</lastmod>
+    <lastmod>2026-10-15</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
