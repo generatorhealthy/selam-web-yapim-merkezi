@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Onaylanan 4.000 TL siparişlerin ön bilgilendirme gösteriminde ve indirmesinde taahhüt bilgilendirmesini koru; kayıtlı asıl metinleri değiştirme.
+
 - [x] Reklam Merkezi: kapsam etiketleri, eşleşmiş ödeme öncesi ROAS N/A ve takip sonrası uyarı koşulları eklendi; 9 test geçti; üç kampanyada eşleşmiş takip trafiği bulunmadığı gerçek veriden doğrulandı, Meta verileri değiştirilmedi.
 - [ ] Reklam Merkezi ekranını gerçek yönetici oturumuyla uçtan uca doğrula — harici Supabase nedeniyle bu ortamda yönetici oturumu sağlanamıyor.
 
