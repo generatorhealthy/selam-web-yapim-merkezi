@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Onaylanan 4.000 TL siparişlerin sözleşme listesindeki ön bilgilendirme gösteriminde ve indirmesinde taahhüt bilgilendirmesi korundu; kayıtlı asıl metinler değiştirilmedi; 3 kural testi ve kayıtlı HTML kontrolü geçti.
+- [ ] Onaylanan siparişin ön bilgi penceresini gerçek yönetici oturumunda doğrula — harici Supabase için bu ortamda oturum sağlanamıyor.
+
 - [x] Reklam Merkezi: kapsam etiketleri, eşleşmiş ödeme öncesi ROAS N/A ve takip sonrası uyarı koşulları eklendi; 9 test geçti; üç kampanyada eşleşmiş takip trafiği bulunmadığı gerçek veriden doğrulandı, Meta verileri değiştirilmedi.
 - [ ] Reklam Merkezi ekranını gerçek yönetici oturumuyla uçtan uca doğrula — harici Supabase nedeniyle bu ortamda yönetici oturumu sağlanamıyor.
 

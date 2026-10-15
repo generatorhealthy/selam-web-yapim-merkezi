@@ -30,6 +30,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { withCommitmentDisclosure } from '@/lib/contractDisclosure';
 
 interface ContractOrder {
   id: string;
@@ -146,7 +147,10 @@ const ContractManagement = () => {
   };
 
   const downloadContractAsPDF = async (order: ContractOrder, type: "preInfo" | "distanceSales") => {
-    const htmlContent = type === "preInfo" ? order.pre_info_pdf_content : order.distance_sales_pdf_content;
+    const savedContent = type === "preInfo" ? order.pre_info_pdf_content : order.distance_sales_pdf_content;
+    const htmlContent = type === "preInfo" && savedContent
+      ? withCommitmentDisclosure(savedContent, order.amount)
+      : savedContent;
     
     if (!htmlContent) {
       toast({

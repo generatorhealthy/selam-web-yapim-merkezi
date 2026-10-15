@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
 import { sanitizeRichHtml } from "@/utils/sanitize";
 import { supabase } from "@/integrations/supabase/client";
+import { withCommitmentDisclosure } from "@/lib/contractDisclosure";
 
 interface ContractDialogProps {
   open: boolean;
@@ -61,13 +62,13 @@ useEffect(() => {
         );
       }
       
-      setContractContent(content);
+      setContractContent(withCommitmentDisclosure(content, selectedPackage.price));
       setIsLoading(false);
     } else {
       loadFormContent();
     }
   }
-}, [open, contractType, savedPreInfoHtml]);
+}, [open, contractType, savedPreInfoHtml, selectedPackage.price]);
 
   const loadFormContent = async () => {
     setIsLoading(true);
@@ -76,7 +77,7 @@ useEffect(() => {
         .from('form_contents')
         .select('content')
         .eq('form_type', 'pre_info')
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error loading form content:', error);
