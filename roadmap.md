@@ -72,3 +72,6 @@
 - [x] Klinik Psikolog: 9 gerçek uzman, profil bağlantısı ve noindex bulunmadığı tarayıcıda doğrulandı; adres regresyon testleri eklendi
 - [x] Kayıt yeniden giriş ve tamamlama yollarında varlık kontrolü, hata durumunda yazmama ve çift tıklama koruması; 8 test geçti
 - [ ] Tamamlanmış/ödenmemiş hesabın yönlendirmesini gerçek oturumla doğrula — harici Supabase oturumu bu ortamda sağlanamıyor
+
+- [x] Panel dosyası askıda kaldığında sonsuz iskelet yerine 30 sn'de yeniden deneme, tek tam yenileme ve "Tekrar Dene" ekranı
+- [ ] Hostinger hPanel'de CDN bot korumasını kapat veya ofis IP'sini izinli yap (kullanıcı işlemi; VPN'le düzelmesi IP bazlı engellemeye işaret ediyor)
