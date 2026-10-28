@@ -270,29 +270,53 @@ serve(async (req) => {
       );
     }
 
-    // 5) Veritabanındaki tutarları güncelle
+    // 5) iyzico yükseltmede YENİ bir abonelik referansı üretir; eski referans "UPGRADED" olur.
+    //    Yeni referansı bulup kayıtlara yazmazsak panel eski (artık çekim yapmayan) aboneliğe bakar.
+    let newSubRef: string | undefined =
+      upgraded?.data?.referenceCode && upgraded.data.referenceCode !== subscriptionReferenceCode
+        ? upgraded.data.referenceCode
+        : upgraded?.data?.newReferenceCode;
+    if (!newSubRef && customerRef) {
+      const list = await iyzicoRequest(
+        "GET",
+        `/v2/subscription/subscriptions?customerReferenceCode=${customerRef}&page=1&count=50`,
+      );
+      const candidates: any[] = (list?.data?.items || [])
+        .filter((s: any) =>
+          s.referenceCode !== subscriptionReferenceCode &&
+          s.pricingPlanReferenceCode === targetPlanRef &&
+          ["ACTIVE", "PENDING", "UNPAID"].includes(String(s.subscriptionStatus || "").toUpperCase()),
+        )
+        .sort((a: any, b: any) => Number(b.createdDate || 0) - Number(a.createdDate || 0));
+      newSubRef = candidates[0]?.referenceCode;
+    }
+    const refUpdate: Record<string, unknown> = { amount: price };
+    if (newSubRef) refUpdate.subscription_reference_code = newSubRef;
+
+    // 6) Veritabanındaki tutarları ve abonelik referansını güncelle
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     if (orderId) {
-      await supabase.from("orders").update({ amount: price }).eq("id", orderId);
+      await supabase.from("orders").update(refUpdate).eq("id", orderId);
     }
     await supabase
       .from("orders")
-      .update({ amount: price })
+      .update(refUpdate)
       .eq("subscription_reference_code", subscriptionReferenceCode)
       .eq("status", "pending");
     await supabase
       .from("automatic_orders")
-      .update({ amount: price })
+      .update(refUpdate)
       .eq("subscription_reference_code", subscriptionReferenceCode);
 
     return new Response(
       JSON.stringify({
         success: true,
         newPricingPlanReferenceCode: targetPlanRef,
+        newSubscriptionReferenceCode: newSubRef ?? null,
         price,
         upgradePeriod,
         iyzico: upgraded.data ?? upgraded,
