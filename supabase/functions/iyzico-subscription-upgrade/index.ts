@@ -316,6 +316,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         newPricingPlanReferenceCode: targetPlanRef,
+        newSubscriptionReferenceCode: newSubRef ?? null,
         price,
         upgradePeriod,
         iyzico: upgraded.data ?? upgraded,
