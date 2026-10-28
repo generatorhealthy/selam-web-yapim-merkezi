@@ -125,10 +125,26 @@ serve(async (req) => {
       return "92feac6d-1181-4b78-b0c2-3b5d5742adff";
     };
 
-    const pricingPlanCode = getPricingPlanCode(
+    // Öncelik: mevcut iyzico aboneliğinin kendi fiyat planı (ör. yükseltilmiş 3.889,01 TL planı).
+    // Tutardan tahmin etmek yükseltilmiş müşterileri eski/yanlış plana düşürüyordu.
+    let pricingPlanCode = getPricingPlanCode(
       Number(latestOrder.amount),
       latestOrder.package_type ?? undefined,
     );
+    if (latestOrder.subscription_reference_code) {
+      try {
+        const subPath = `/v2/subscription/subscriptions/${latestOrder.subscription_reference_code}`;
+        const subAuth = await generateIyzicoAuth(IYZICO_API_KEY, IYZICO_SECRET_KEY, subPath, "");
+        const subRes = await fetch(`${IYZICO_BASE_URL}${subPath}`, {
+          headers: { Accept: "application/json", Authorization: subAuth },
+        });
+        const subJson = await subRes.json();
+        const currentPlan = subJson?.data?.pricingPlanReferenceCode;
+        if (subJson?.status === "success" && currentPlan) pricingPlanCode = currentPlan;
+      } catch (e) {
+        console.error("Mevcut abonelik planı okunamadı, tutara göre plan kullanılacak:", e);
+      }
+    }
 
     // Validators (same logic as create-iyzico-payment)
     const validateTC = (tc: string | null) => {
