@@ -152,6 +152,17 @@ export default function KeywordRanker() {
     load();
   };
 
+  const [filling, setFilling] = useState(false);
+  const fillTexts = async () => {
+    setFilling(true);
+    toast.info("Eksik öneri metinleri yazılıyor, 1–2 dakika sürebilir…");
+    const { data, error } = await supabase.functions.invoke("seo-rank-sync", { body: { action: "fill" } });
+    setFilling(false);
+    if (error || data?.error) { toast.error(data?.error || "Metinler yazılamadı"); return; }
+    toast.success(`${data.filled} öneriye metin yazıldı${data.remaining ? `, ${data.remaining} kaldı — tekrar basabilirsiniz` : ""}`);
+    load();
+  };
+
   const prevQ = useMemo(() => prevMap(prev, "query"), [prev]);
   const prevP = useMemo(() => prevMap(prev, "page"), [prev]);
   const segRows = useMemo(() => (seg === "all" ? cur : cur.filter((r) => segment(r.page) === seg)), [cur, seg]);
@@ -558,6 +569,11 @@ export default function KeywordRanker() {
                       </Button>
                       {bulk && <span className="text-sm text-muted-foreground tabular-nums">Uygulanıyor {bulk.done}/{bulk.total}…</span>}
                     </div>
+                  )}
+                  {suggFilter === "pending" && sugg.some((s) => s.status === "pending" && !s.suggested_title) && (
+                    <Button size="sm" variant="outline" disabled={filling} onClick={fillTexts}>
+                      {filling ? "Yazılıyor…" : `Eksik metinleri şimdi yaz (${sugg.filter((s) => s.status === "pending" && !s.suggested_title).length})`}
+                    </Button>
                   )}
                   <p className="w-full text-xs text-muted-foreground">Sistem her 6 saatte bir sayfaları SEO kurallarına göre tarar ve önerileri buraya ekler. Onayladığınız başlık/açıklama bir sonraki yayında Google'a yansır; etkisi 2–4 haftada görülür.</p>
                 </div>

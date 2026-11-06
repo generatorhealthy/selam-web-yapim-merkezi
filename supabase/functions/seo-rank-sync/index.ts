@@ -146,6 +146,29 @@ async function sync(supabase: ReturnType<typeof db>) {
   }
 }
 
+// Metni henüz yazılmamış bekleyen önerileri doldurur (sayfa başına bir kez, 4'lü paralel).
+async function fillMissing(supabase: ReturnType<typeof db>, limit = 24) {
+  const { data } = await supabase.from("seo_suggestions")
+    .select("id,page,main_query,current_title,current_description,issue")
+    .eq("status", "pending").not("target_id", "is", null).is("suggested_title", null)
+    .order("impressions", { ascending: false }).limit(500);
+  const byPage = new Map<string, NonNullable<typeof data>>();
+  for (const s of data ?? []) { const a = byPage.get(s.page) ?? []; a.push(s); byPage.set(s.page, a); }
+  const groups = [...byPage.values()].slice(0, limit);
+  let filled = 0;
+  for (let i = 0; i < groups.length; i += 4) {
+    await Promise.all(groups.slice(i, i + 4).map(async (g) => {
+      const f = g[0];
+      const ai = await aiRewrite(f.page, f.main_query, f.current_title ?? "", f.current_description ?? "", g.map((x) => x.issue));
+      if (!ai) return;
+      const { error } = await supabase.from("seo_suggestions").update({ suggested_title: ai.title, suggested_description: ai.description, updated_at: new Date().toISOString() }).in("id", g.map((x) => x.id));
+      if (!error) filled += g.length;
+    }));
+  }
+  const remaining = Math.max(0, (data?.length ?? 0) - filled);
+  return { ok: true, filled, remaining };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const supabase = db();
@@ -157,13 +180,16 @@ Deno.serve(async (req) => {
       // Zamanlanmış çağrı: yalnızca son 5 saatte başarılı yenileme yoksa çalışır.
       const { data: last } = await supabase.from("seo_sync_runs").select("started_at").gte("started_at", new Date(Date.now() - 5 * 3600e3).toISOString()).limit(1);
       if (last?.length) return json({ skipped: true });
-      return json(await sync(supabase));
+      const res = await sync(supabase);
+      await fillMissing(supabase, 12).catch(() => null);
+      return json(res);
     }
 
     const auth = await verifyAdminOrCron(req);
     if (!auth.ok) return json({ error: auth.error }, auth.status);
 
     if (action === "sync") return json(await sync(supabase));
+    if (action === "fill") return json(await fillMissing(supabase));
 
     if (action === "apply" || action === "dismiss") {
       const id = String(body.id ?? "");
