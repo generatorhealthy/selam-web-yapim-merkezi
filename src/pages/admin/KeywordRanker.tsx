@@ -245,6 +245,29 @@ export default function KeywordRanker() {
     setEdit(null); load();
   };
 
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null);
+  const applicable = useMemo(() => sugg.filter((s) => s.status === "pending" && s.target_type !== "other" && s.suggested_title && s.suggested_description), [sugg]);
+  const togglePick = (id: string) => setPicked((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const bulkApply = async (ids: string[]) => {
+    // Aynı sayfanın birden fazla önerisi tek uygulamada kapanır; sayfa başına bir kez gönder.
+    const seen = new Set<string>();
+    ids = ids.filter((id) => { const pg = sugg.find((s) => s.id === id)?.page ?? id; if (seen.has(pg)) return false; seen.add(pg); return true; });
+    if (!ids.length) return;
+    if (!window.confirm(`${ids.length} öneri onaylanıp uygulanacak. Devam edilsin mi?`)) return;
+    setBulk({ done: 0, total: ids.length });
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+      const { data, error } = await supabase.functions.invoke("seo-rank-sync", { body: { action: "apply", id } });
+      if (error || data?.error) fail++; else ok++;
+      setBulk({ done: ok + fail, total: ids.length });
+    }
+    setBulk(null); setPicked(new Set());
+    if (fail) toast.warning(`${ok} öneri uygulandı, ${fail} öneri uygulanamadı`);
+    else toast.success(`${ok} öneri uygulandı — bir sonraki yayında Google'a yansır`);
+    load();
+  };
+
   const detailRows = useMemo(() => {
     if (!detail) return [];
     return cur.filter((r) => (detail.type === "query" ? r.query === detail.key : r.page === detail.key)).sort((a, b) => b.impressions - a.impressions).slice(0, 100);
@@ -522,13 +545,30 @@ export default function KeywordRanker() {
                     <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="pending">Onay bekleyen</SelectItem><SelectItem value="applied">Uygulananlar</SelectItem><SelectItem value="dismissed">Kapatılanlar</SelectItem></SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">Sistem her 6 saatte bir sayfaları SEO kurallarına göre tarar ve önerileri buraya ekler. Onayladığınız başlık/açıklama bir sonraki yayında Google'a yansır; etkisi 2–4 haftada görülür.</p>
+                  {suggFilter === "pending" && applicable.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setPicked(picked.size === applicable.length ? new Set() : new Set(applicable.map((s) => s.id)))}>
+                        {picked.size === applicable.length ? "Seçimi kaldır" : "Tümünü seç"}
+                      </Button>
+                      <Button size="sm" disabled={!!bulk || picked.size === 0} onClick={() => bulkApply([...picked])}>
+                        <Check className="mr-1 h-4 w-4" />Seçilenleri onayla ({picked.size})
+                      </Button>
+                      <Button size="sm" variant="secondary" disabled={!!bulk} onClick={() => bulkApply(applicable.map((s) => s.id))}>
+                        Tümünü onayla ({applicable.length})
+                      </Button>
+                      {bulk && <span className="text-sm text-muted-foreground tabular-nums">Uygulanıyor {bulk.done}/{bulk.total}…</span>}
+                    </div>
+                  )}
+                  <p className="w-full text-xs text-muted-foreground">Sistem her 6 saatte bir sayfaları SEO kurallarına göre tarar ve önerileri buraya ekler. Onayladığınız başlık/açıklama bir sonraki yayında Google'a yansır; etkisi 2–4 haftada görülür.</p>
                 </div>
                 {sugg.filter((s) => s.status === suggFilter).length === 0 && <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Bu listede öneri yok.</CardContent></Card>}
                 {sugg.filter((s) => s.status === suggFilter).map((s) => (
                   <Card key={s.id}>
                     <CardContent className="space-y-3 p-4">
                       <div className="flex flex-wrap items-start gap-2">
+                        {s.status === "pending" && s.target_type !== "other" && s.suggested_title && (
+                          <input type="checkbox" aria-label="Seç" className="mt-1 h-4 w-4 accent-primary" checked={picked.has(s.id)} onChange={() => togglePick(s.id)} />
+                        )}
                         <Badge variant={s.severity === "high" ? "destructive" : "secondary"}>{s.severity === "high" ? "Yüksek öncelik" : s.severity === "medium" ? "Orta" : "Düşük"}</Badge>
                         <Badge variant="outline">{ISSUE_TR[s.issue] ?? s.issue}</Badge>
                         <a href={s.page} target="_blank" rel="noreferrer" className="inline-flex min-w-0 flex-1 items-center gap-1 truncate text-sm font-medium hover:underline">{pathOf(s.page)}<ExternalLink className="h-3 w-3 shrink-0" /></a>
