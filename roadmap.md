@@ -75,3 +75,6 @@
 
 - [x] Panel dosyası askıda kaldığında sonsuz iskelet yerine 30 sn'de yeniden deneme, tek tam yenileme ve "Tekrar Dene" ekranı
 - [ ] Hostinger hPanel'de CDN bot korumasını kapat veya ofis IP'sini izinli yap (kullanıcı işlemi; VPN'le düzelmesi IP bazlı engellemeye işaret ediyor)
+
+- [x] Divan panelinde Kelime Sıralayıcısı: Search Console kelime/sayfa sıraları, önceki dönem karşılaştırması, sayfa kalma süresi sayacı, fırsatlar ve onayla-uygula SEO düzeltmeleri; 6 saatte bir yenileme; 4 kural testi geçti.
+- [ ] Kelime Sıralayıcısı ekranını gerçek yönetici oturumunda doğrula — harici Supabase oturumu bu ortamda sağlanamıyor.
