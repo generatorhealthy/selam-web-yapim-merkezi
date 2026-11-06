@@ -5686,6 +5686,42 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_keyword_snapshots: {
+        Row: {
+          clicks: number
+          ctr: number
+          fetched_at: string
+          id: string
+          impressions: number
+          page: string
+          period: string
+          position: number
+          query: string
+        }
+        Insert: {
+          clicks?: number
+          ctr?: number
+          fetched_at?: string
+          id?: string
+          impressions?: number
+          page: string
+          period: string
+          position?: number
+          query: string
+        }
+        Update: {
+          clicks?: number
+          ctr?: number
+          fetched_at?: string
+          id?: string
+          impressions?: number
+          page?: string
+          period?: string
+          position?: number
+          query?: string
+        }
+        Relationships: []
+      }
       seo_keywords: {
         Row: {
           blog_post_id: string | null
@@ -5748,6 +5784,129 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seo_page_engagement: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          from_search: boolean
+          id: string
+          path: string
+          referrer_host: string | null
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number
+          from_search?: boolean
+          id?: string
+          path: string
+          referrer_host?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          from_search?: boolean
+          id?: string
+          path?: string
+          referrer_host?: string | null
+          session_id?: string | null
+        }
+        Relationships: []
+      }
+      seo_suggestions: {
+        Row: {
+          applied_at: string | null
+          created_at: string
+          ctr: number
+          current_description: string | null
+          current_title: string | null
+          id: string
+          impressions: number
+          issue: string
+          main_query: string | null
+          page: string
+          position: number
+          severity: string
+          status: string
+          suggested_description: string | null
+          suggested_title: string | null
+          target_id: string | null
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          created_at?: string
+          ctr?: number
+          current_description?: string | null
+          current_title?: string | null
+          id?: string
+          impressions?: number
+          issue: string
+          main_query?: string | null
+          page: string
+          position?: number
+          severity?: string
+          status?: string
+          suggested_description?: string | null
+          suggested_title?: string | null
+          target_id?: string | null
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          created_at?: string
+          ctr?: number
+          current_description?: string | null
+          current_title?: string | null
+          id?: string
+          impressions?: number
+          issue?: string
+          main_query?: string | null
+          page?: string
+          position?: number
+          severity?: string
+          status?: string
+          suggested_description?: string | null
+          suggested_title?: string | null
+          target_id?: string | null
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_sync_runs: {
+        Row: {
+          error: string | null
+          finished_at: string | null
+          id: string
+          rows_fetched: number
+          started_at: string
+          status: string
+          suggestions_created: number
+        }
+        Insert: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          rows_fetched?: number
+          started_at?: string
+          status?: string
+          suggestions_created?: number
+        }
+        Update: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          rows_fetched?: number
+          started_at?: string
+          status?: string
+          suggestions_created?: number
+        }
+        Relationships: []
       }
       sms_logs: {
         Row: {
@@ -7499,6 +7658,17 @@ export type Database = {
           n: number
           stage: string
           stage_order: number
+        }[]
+      }
+      get_seo_page_engagement: {
+        Args: { _days?: number }
+        Returns: {
+          avg_seconds: number
+          bounce_rate: number
+          median_seconds: number
+          path: string
+          search_views: number
+          views: number
         }[]
       }
       get_specialist_basic_info: {
