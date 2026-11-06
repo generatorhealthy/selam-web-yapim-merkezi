@@ -44,7 +44,8 @@ import {
   Smartphone,
   Server,
   Briefcase,
-  Handshake
+  Handshake,
+  TrendingUp
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -742,6 +743,17 @@ const AdminDashboard = () => {
       shadowColor: "shadow-blue-500/20",
       route: "/divan_paneli/lead-intelligence",
       buttonText: "Merkezi Aç",
+      adminOnly: true
+    },
+    {
+      title: "Kelime Sıralayıcısı",
+      description: "Google'daki anahtar kelime sıraları, tıklamalar, sayfa kalma süreleri ve tek tıkla uygulanan SEO düzeltmeleri",
+      icon: TrendingUp,
+      gradient: "from-emerald-500 via-teal-500 to-cyan-500",
+      bgGradient: "from-emerald-50 to-cyan-50",
+      shadowColor: "shadow-teal-500/20",
+      route: "/divan_paneli/kelime-siralayici",
+      buttonText: "Sıralamaları Aç",
       adminOnly: true
     },
   ];

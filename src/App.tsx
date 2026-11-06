@@ -10,6 +10,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import CookieConsent from "@/components/CookieConsent";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import SeoEngagementTracker from "@/components/SeoEngagementTracker";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
@@ -123,6 +124,7 @@ const AppContent = () => {
     <>
       <ScrollToTop />
       <AnalyticsTracker />
+      <SeoEngagementTracker />
       <CookieConsent />
       <FloatingWhatsAppButton />
         <ErrorBoundary>

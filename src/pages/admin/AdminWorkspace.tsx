@@ -42,6 +42,7 @@ import ProspectiveRegistrations from "./ProspectiveRegistrations";
 import RegistrationAnalytics from "./RegistrationAnalytics";
 import IncompleteRegistrations from "./IncompleteRegistrations";
 import LeadIntelligence from "./LeadIntelligence";
+import KeywordRanker from "./KeywordRanker";
 import Reports from "./Reports";
 import ReviewManagement from "./ReviewManagement";
 import SEOContentManagement from "./SEOContentManagement";
@@ -124,6 +125,7 @@ const AdminWorkspace = () => (
       <Route path="registration-analytics" element={<RegistrationAnalytics />} />
       <Route path="incomplete-registrations" element={<IncompleteRegistrations />} />
       <Route path="lead-intelligence" element={<LeadIntelligence />} />
+      <Route path="kelime-siralayici" element={<KeywordRanker />} />
       <Route path="consent-logs" element={<ConsentLogs />} />
       <Route path="bulk-email" element={<BulkEmail />} />
       <Route path="career-applications" element={<CareerApplications />} />
