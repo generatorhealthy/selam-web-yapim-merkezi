@@ -1,0 +1,1 @@
+ALTER FUNCTION public.get_seo_page_engagement(integer) SECURITY INVOKER;
