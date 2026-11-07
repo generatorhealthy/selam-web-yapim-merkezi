@@ -1609,27 +1609,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/evlilikte-iletisim-sorunlari-icin-aile-danismani-destegi</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/bosanma-surecinde-aile-danismani-gorusmesi-neden-onemlidir</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/cocukla-iletisimde-zorluk-yasayan-ebeveynlere-aile-danismani-onerileri</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/aile-danismanligi-nedir-sureci-suresi-ve-etkileri</loc>
     <lastmod>2025-10-11</lastmod>
 
@@ -1653,6 +1632,20 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/aile-danismani-ile-gorusmek-iliskilere-nasil-fayda-saglar</loc>
     <lastmod>2026-11-06</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/bosanma-surecinde-aile-danismani-gorusmesi-neden-onemlidir</loc>
+    <lastmod>2026-11-07</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/cocukla-iletisimde-zorluk-yasayan-ebeveynlere-aile-danismani-onerileri</loc>
+    <lastmod>2026-11-07</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -8693,6 +8686,13 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/evlilikte-iletisim-sorunlari-icin-aile-danismani-destegi</loc>
+    <lastmod>2026-11-07</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/burak-ala-ile-bdt-egitimi</loc>
     <lastmod>2026-08-16</lastmod>
 
@@ -8912,13 +8912,6 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/sule-gokmen-izmir-danismanlik</loc>
     <lastmod>2026-09-30</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/obsesif-kompulsif-bozukluk-dongusunu-anlamak</loc>
-    <lastmod>2026-10-08</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -9254,6 +9247,13 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/enfeksiyon-ve-iltihap-ayni-sey-mi</loc>
+    <lastmod>2026-10-08</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/obsesif-kompulsif-bozukluk-dongusunu-anlamak</loc>
     <lastmod>2026-10-08</lastmod>
 
     <changefreq>weekly</changefreq>
@@ -10156,6 +10156,13 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/bosanma-sonrasi-cinselligi-yeniden-kesfetmek</loc>
+    <lastmod>2026-10-08</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/transseksuellik-kimlik-uyum-sureci</loc>
     <lastmod>2026-05-12</lastmod>
 
@@ -10179,13 +10186,6 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/kapsamli-cinsel-egitim-yol-haritasi</loc>
     <lastmod>2026-05-12</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/bosanma-sonrasi-cinselligi-yeniden-kesfetmek</loc>
-    <lastmod>2026-10-08</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -10982,14 +10982,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/18-yas-alti-kadin-dogum-doktoruna-gidebilir-mi</loc>
+    <loc>https://doktorumol.com.tr/blog/psikiyatri-gecmisi-silinir-mi</loc>
     <lastmod>2026-10-08</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psikiyatri-gecmisi-silinir-mi</loc>
+    <loc>https://doktorumol.com.tr/blog/18-yas-alti-kadin-dogum-doktoruna-gidebilir-mi</loc>
     <lastmod>2026-10-08</lastmod>
 
     <changefreq>weekly</changefreq>
@@ -11525,12 +11525,6 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/psikolog/psk-aytug-erdogan</loc>
-    <lastmod>2026-04-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-bahar-ozcan</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
