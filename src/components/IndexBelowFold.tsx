@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
+import AppPromoSection from "@/components/AppPromoSection";
 
 const specialistTypes = [
   { icon: Brain, title: "Psikolog", description: "Ruh sağlığı uzmanları", color: "from-purple-500 to-purple-600" },
@@ -253,6 +254,8 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
           )}
         </div>
       </div>
+
+      <AppPromoSection />
 
       {/* Specialists Section */}
       <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700 py-16">
