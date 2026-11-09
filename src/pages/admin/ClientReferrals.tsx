@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import { UserCheck, Calendar, Users, Plus, Minus, Search, Hash, Edit3, TrendingUp, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getMonthName } from "@/utils/monthUtils";
 import {
   Popover,
@@ -1462,14 +1463,19 @@ const ClientReferrals = () => {
                       {(() => {
                         // Tüm uzmanların bu aydaki danışan detaylarını birleştir
                         const dailyCounts: Record<number, number> = {};
+                        const dailySpecialists: Record<number, Record<string, number>> = {};
+                        const specialistNames = new Map(specialists.map(({ specialist }) => [specialist.id, specialist.name]));
                         Object.entries(clientReferralDetails).forEach(([key, details]) => {
                           if (!key.endsWith(`-${currentMonth}`)) return;
-                          (details || []).forEach((d: any) => {
+                          const specialistId = key.slice(0, -`-${currentMonth}`.length);
+                          (details || []).forEach((d) => {
                             if (!d.referred_at) return;
                             const dt = new Date(d.referred_at);
                             if (dt.getFullYear() !== currentYear || dt.getMonth() + 1 !== currentMonth) return;
                             const day = dt.getDate();
                             dailyCounts[day] = (dailyCounts[day] || 0) + 1;
+                            dailySpecialists[day] ??= {};
+                            dailySpecialists[day][specialistId] = (dailySpecialists[day][specialistId] || 0) + 1;
                           });
                         });
                         const totalDaily = Object.values(dailyCounts).reduce((a, b) => a + b, 0);
@@ -1488,6 +1494,7 @@ const ClientReferrals = () => {
                               </div>
                             </CardHeader>
                             <CardContent>
+                              <TooltipProvider delayDuration={150}>
                               <div className="grid grid-cols-7 sm:grid-cols-10 md:grid-cols-14 lg:grid-cols-16 gap-2">
                                 {calendarDays.map((day) => {
                                   const count = dailyCounts[day] || 0;
@@ -1496,23 +1503,47 @@ const ClientReferrals = () => {
                                     new Date().getMonth() + 1 === currentMonth &&
                                     new Date().getDate() === day;
                                   return (
-                                    <div
-                                      key={day}
-                                      className={`relative flex flex-col items-center justify-center rounded-lg border p-2 text-center transition-all ${
+                                    <Tooltip key={day}>
+                                    <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      aria-label={`${day} ${monthNames[monthIndex]}: ${count} yönlendirme`}
+                                      className={`relative h-auto min-w-0 flex flex-col items-center justify-center rounded-lg border p-2 text-center transition-all ${
                                         count > 0
-                                          ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
-                                          : 'bg-white/70 text-slate-500 border-slate-200'
-                                      } ${isToday ? 'ring-2 ring-orange-400' : ''}`}
-                                      title={`${day} ${monthNames[monthIndex]}: ${count} yönlendirme`}
+                                          ? 'bg-primary text-primary-foreground border-primary shadow-sm hover:bg-primary/90 hover:text-primary-foreground'
+                                          : 'bg-background text-muted-foreground border-border'
+                                      } ${isToday ? 'ring-2 ring-ring' : ''}`}
                                     >
                                       <span className="text-[10px] opacity-80 leading-none">{day}</span>
-                                      <span className={`text-base font-bold leading-tight ${count > 0 ? 'text-white' : 'text-slate-400'}`}>
+                                      <span className="text-base font-bold leading-tight">
                                         {count}
                                       </span>
-                                    </div>
+                                    </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" collisionPadding={16} className="w-72 max-w-[calc(100vw-2rem)] p-3">
+                                      <p className="font-semibold border-b border-border pb-2 mb-2">
+                                        {day} {monthNames[monthIndex]} {currentYear} · {count} yönlendirme
+                                      </p>
+                                      {count === 0 ? (
+                                        <p className="text-muted-foreground">Bu gün yönlendirme yapılmadı.</p>
+                                      ) : (
+                                        <ul className="max-h-64 overflow-y-auto space-y-2">
+                                          {Object.entries(dailySpecialists[day] || {})
+                                            .sort(([a], [b]) => (specialistNames.get(a) || '').localeCompare(specialistNames.get(b) || '', 'tr'))
+                                            .map(([id, referralCount]) => (
+                                              <li key={id} className="flex items-start justify-between gap-3">
+                                                <span className="min-w-0 break-words">{specialistNames.get(id) || 'Uzman kaydı bulunamadı'}</span>
+                                                <span className="shrink-0 font-semibold tabular-nums">{referralCount}</span>
+                                              </li>
+                                            ))}
+                                        </ul>
+                                      )}
+                                    </TooltipContent>
+                                    </Tooltip>
                                   );
                                 })}
                               </div>
+                              </TooltipProvider>
                               {totalDaily === 0 && (
                                 <p className="text-xs text-slate-500 mt-3 text-center">
                                   Bu ay için tarihli danışan kaydı bulunmuyor.
