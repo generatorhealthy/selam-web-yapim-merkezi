@@ -1609,20 +1609,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismanligi-nedir-sureci-suresi-ve-etkileri</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismani-ile-online-gorusme-avantajlari-ve-dikkat-edilmesi-gerekenler</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/aile-danismani-nedir-hangi-durumlarda-destek-alinir</loc>
     <lastmod>2026-11-06</lastmod>
 
@@ -1651,29 +1637,15 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/evlilikte-guven-sorunlari-nasil-asilir-aile-danismanindan-oneriler</loc>
-    <lastmod>2025-10-11</lastmod>
+    <loc>https://doktorumol.com.tr/blog/aile-danismanligi-nedir-sureci-suresi-ve-etkileri</loc>
+    <lastmod>2026-11-08</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/evlilik-oncesi-aile-danismanligi-saglikli-baslangic-icin-5-neden</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/cift-terapisi-mi-aile-danismani-mi-aralarindaki-farklar</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismani-gorusmesinde-ne-konusulur</loc>
-    <lastmod>2025-10-11</lastmod>
+    <loc>https://doktorumol.com.tr/blog/aile-danismani-ile-online-gorusme-avantajlari-ve-dikkat-edilmesi-gerekenler</loc>
+    <lastmod>2026-11-08</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -1709,6 +1681,27 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/ebeveyn-tutumlari-cocuk-davranislarini-nasil-etkiler</loc>
     <lastmod>2025-10-11</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/evlilik-oncesi-aile-danismanligi-saglikli-baslangic-icin-5-neden</loc>
+    <lastmod>2026-11-09</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/cift-terapisi-mi-aile-danismani-mi-aralarindaki-farklar</loc>
+    <lastmod>2026-11-09</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/aile-danismani-gorusmesinde-ne-konusulur</loc>
+    <lastmod>2026-11-09</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -8688,6 +8681,13 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/evlilikte-iletisim-sorunlari-icin-aile-danismani-destegi</loc>
     <lastmod>2026-11-07</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/evlilikte-guven-sorunlari-nasil-asilir-aile-danismanindan-oneriler</loc>
+    <lastmod>2026-11-08</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
