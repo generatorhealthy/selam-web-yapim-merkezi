@@ -7,11 +7,12 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote, Plus, Trash2, Pencil, UserCheck } from "lucide-react";
+import { Calendar, Check, Users, ChevronLeft, ChevronRight, AlertTriangle, Clock, StickyNote, Plus, Trash2, Pencil, UserCheck, Video, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Helmet } from "react-helmet-async";
 import FaceToFaceReferralsPanel from "@/components/admin/FaceToFaceReferralsPanel";
+import { getSpecialistConsultation } from "@/lib/specialistConsultation";
 
 interface UrgentNote {
   id: string;
@@ -26,6 +27,8 @@ interface Specialist {
   name: string;
   specialty: string;
   city: string;
+  online_consultation: boolean | null;
+  face_to_face_consultation: boolean | null;
   payment_day: number | null;
   internal_number: string | null;
 }
@@ -90,7 +93,7 @@ const ClientCalendar = () => {
 
       const { data: specialistsData, error: specialistsError } = await supabase
         .from('specialists')
-        .select('id, name, specialty, city, payment_day, internal_number, created_at')
+        .select('id, name, specialty, city, online_consultation, face_to_face_consultation, payment_day, internal_number, created_at')
         .eq('is_active', true)
         .not('payment_day', 'is', null)
         .order('payment_day', { ascending: true });
@@ -606,28 +609,47 @@ const ClientCalendar = () => {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-red-800">
-                  {urgentSpecialists.map(specialist => (
+                  {urgentSpecialists.map(specialist => {
+                    const consultation = getSpecialistConsultation(specialist);
+                    return (
                     <div 
                       key={specialist.id} 
                       className="p-5 hover:bg-red-900 transition-all"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+                        <div className="flex items-start gap-4 min-w-0">
+                          <div className="w-12 h-12 shrink-0 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
                             <span className="text-white font-bold text-lg">
                               {specialist.daysUntilPayment}
                             </span>
                           </div>
-                          <div>
+                          <div className="min-w-0 break-words">
                             <p className="font-semibold text-white text-lg">{specialist.name}</p>
                             <p className="text-red-300 text-sm">
                               {specialist.specialty} • {specialist.city}
                               {specialist.internal_number && ` • #${specialist.internal_number}`}
                             </p>
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                              {consultation.online && (
+                                <Badge variant="secondary" className="gap-1.5">
+                                  <Video className="h-3.5 w-3.5 shrink-0" />
+                                  Online
+                                </Badge>
+                              )}
+                              {consultation.faceToFace && (
+                                <Badge variant="secondary" className="gap-1.5 max-w-full whitespace-normal break-words">
+                                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                  <span>Yüz yüze • {consultation.faceToFaceCity || "Şehir belirtilmemiş"}</span>
+                                </Badge>
+                              )}
+                              {!consultation.online && !consultation.faceToFace && (
+                                <Badge variant="secondary">Danışmanlık türü belirtilmemiş</Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2 pl-16 xl:pl-0 xl:justify-end shrink-0">
                           <Badge className="bg-slate-700 text-white border-slate-600 px-3 py-1">
                             Ödeme: Her ayın {specialist.payment_day}'i
                           </Badge>
@@ -694,7 +716,8 @@ const ClientCalendar = () => {
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
