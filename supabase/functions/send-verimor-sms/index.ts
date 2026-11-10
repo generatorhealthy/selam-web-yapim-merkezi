@@ -82,9 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
       ]
     };
 
-    console.log('Sending SMS to:', cleanPhone);
-    console.log('Message:', message);
-    console.log('SMS Data:', JSON.stringify(smsData, null, 2));
+    console.log('SMS gönderiliyor, alıcı sonu:', String(cleanPhone).slice(-4));
 
     const response = await fetch(verimorUrl, {
       method: 'POST',
