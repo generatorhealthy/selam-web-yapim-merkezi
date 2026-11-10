@@ -1651,41 +1651,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/aldatma-sonrasi-aile-danismani-ile-iliskiyi-onarma-sureci</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismanligina-gitmek-utanc-verici-mi</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismani-secerken-nelere-dikkat-edilmeli</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/iletisim-eksikligi-ve-tartismalar-icin-aile-danismanligi-cozum-olur-mu</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/ebeveyn-tutumlari-cocuk-davranislarini-nasil-etkiler</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/evlilik-oncesi-aile-danismanligi-saglikli-baslangic-icin-5-neden</loc>
     <lastmod>2026-11-09</lastmod>
 
@@ -1707,8 +1672,36 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismani-destegiyle-evliligi-yeniden-insa-etmek</loc>
-    <lastmod>2025-10-11</lastmod>
+    <loc>https://doktorumol.com.tr/blog/aldatma-sonrasi-aile-danismani-ile-iliskiyi-onarma-sureci</loc>
+    <lastmod>2026-11-09</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/aile-danismanligina-gitmek-utanc-verici-mi</loc>
+    <lastmod>2026-11-09</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/aile-danismani-secerken-nelere-dikkat-edilmeli</loc>
+    <lastmod>2026-11-09</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/iletisim-eksikligi-ve-tartismalar-icin-aile-danismanligi-cozum-olur-mu</loc>
+    <lastmod>2026-11-10</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/ebeveyn-tutumlari-cocuk-davranislarini-nasil-etkiler</loc>
+    <lastmod>2026-11-10</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -8693,6 +8686,13 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/aile-danismani-destegiyle-evliligi-yeniden-insa-etmek</loc>
+    <lastmod>2026-11-10</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/burak-ala-ile-bdt-egitimi</loc>
     <lastmod>2026-08-16</lastmod>
 
@@ -9330,15 +9330,15 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/iclal-atmaca-psikolojik-degerlendirme</loc>
-    <lastmod>2026-08-11</lastmod>
+    <loc>https://doktorumol.com.tr/blog/uzm-psk-dan-buse-tasdemir</loc>
+    <lastmod>2025-12-13</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/uzm-psk-dan-buse-tasdemir</loc>
-    <lastmod>2025-12-13</lastmod>
+    <loc>https://doktorumol.com.tr/blog/iclal-atmaca-psikolojik-degerlendirme</loc>
+    <lastmod>2026-08-11</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -10156,6 +10156,13 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://doktorumol.com.tr/blog/aile-ici-istismar-ensest-dinamikleri</loc>
+    <lastmod>2026-05-12</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://doktorumol.com.tr/blog/transseksuellik-kimlik-uyum-sureci</loc>
     <lastmod>2026-05-12</lastmod>
 
@@ -10164,13 +10171,6 @@
   </url>
   <url>
     <loc>https://doktorumol.com.tr/blog/aldatma-sonrasi-cinsellik-ve-iliski</loc>
-    <lastmod>2026-05-12</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/aile-ici-istismar-ensest-dinamikleri</loc>
     <lastmod>2026-05-12</lastmod>
 
     <changefreq>weekly</changefreq>
@@ -10226,13 +10226,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/okb-cinsel-icerik</loc>
-    <lastmod>2026-10-08</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/vajinismus-tedavisi-cozumleri</loc>
     <lastmod>2026-05-13</lastmod>
 
@@ -10256,6 +10249,13 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/cinsel-mitler-ve-gercekler</loc>
     <lastmod>2026-05-13</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/okb-cinsel-icerik</loc>
+    <lastmod>2026-10-08</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -10961,14 +10961,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/bir-kadin-gunde-kac-kez-iliskiye-girebilir</loc>
+    <loc>https://doktorumol.com.tr/blog/psikiyatri-ne-gibi-sorular-sorar</loc>
     <lastmod>2026-10-08</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psikiyatri-ne-gibi-sorular-sorar</loc>
+    <loc>https://doktorumol.com.tr/blog/bir-kadin-gunde-kac-kez-iliskiye-girebilir</loc>
     <lastmod>2026-10-08</lastmod>
 
     <changefreq>weekly</changefreq>
@@ -11451,12 +11451,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-buse-tasdemir</loc>
-    <lastmod>2026-01-19</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/psikolojik-danismanlik/psk-pakize-yumuk</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -11529,12 +11523,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/klinik-psikolog/kl-psk-elif-bayindirici</loc>
-    <lastmod>2026-04-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/klinik-psikolog/klinik-psk-gamze-tura-uslu</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -11543,6 +11531,12 @@
   <url>
     <loc>https://doktorumol.com.tr/uzman-psikolog/ozge-soner</loc>
     <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/klinik-psikolog/kl-psk-elif-bayindirici</loc>
+    <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
