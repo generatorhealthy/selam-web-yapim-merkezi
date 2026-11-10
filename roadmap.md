@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Divan paneli tasarım onayı
+- [x] Canlı ödeme özeti, bugünkü ödenmemiş tutar, aktif uzman, yeni danışan/uzman listeleri, günlük santral ve durum bazlı icra tutarlarıyla açık mavi ana ekran taslağı hazırlandı; mevcut 55 kart birebir kontrol edildi. Para simgesi ve kenar boşlukları düzeltilip görsel tekrar incelendi.
 - [x] Gönderilen 10 görsel incelendi; mevcut 55 kartın tamamı ve üç iç sayfa örneği için 7 sayfalık tasarım sunumu hazırlandı; çalışan panel değiştirilmedi.
 - [x] Krem tonlu saydam kartlar, hızlı menü ve iç sayfa örnekleri görsel kontrol edildi; simge eksikleri ve grafik/metin çakışması düzeltildi.
 - [x] Son CRM referansına göre mavi füme cam genel bakış ve uzman kartları yeniden hazırlandı; 55 kart yeni 5 sayfalık sunuma dahil edildi. İlk krem taslak reddedildi; panel değişmedi.
