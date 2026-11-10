@@ -1,5 +1,10 @@
 # Roadmap
 
+## Divan paneli tasarım onayı
+- [x] Gönderilen 10 görsel incelendi; mevcut 55 kartın tamamı ve üç iç sayfa örneği için 7 sayfalık tasarım sunumu hazırlandı; çalışan panel değiştirilmedi.
+- [x] Krem tonlu saydam kartlar, hızlı menü ve iç sayfa örnekleri görsel kontrol edildi; simge eksikleri ve grafik/metin çakışması düzeltildi.
+- [ ] Onaydan sonra tasarımı mevcut veriler, işlemler ve rol sınırları korunarak uygula — kullanıcı tasarım onayı bekleniyor.
+
 - [x] Acil yönlendirme listesine online/yüz yüze türü ve yüz yüze görüşme şehirleri eklendi; yönlendirme sırası korundu; 4 test geçti.
 - [ ] Acil yönlendirme görünümünü gerçek yönetici oturumunda doğrula — harici Supabase oturumu bu ortamda sağlanamıyor.
 
