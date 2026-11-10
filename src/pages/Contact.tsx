@@ -210,7 +210,7 @@ const Contact = () => {
                       <MapPin className="w-5 h-5 text-primary" />
                     </div>
                     <span className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
-                      Ofis
+                      Destek Ekibi
                     </span>
                   </div>
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
