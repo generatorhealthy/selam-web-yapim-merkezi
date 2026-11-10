@@ -1,3 +1,4 @@
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -126,6 +127,14 @@ async function publishToMastodon(status: string): Promise<any> {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const __auth = await verifyAdminOrCron(req);
+  if (!__auth.ok) {
+    return new Response(JSON.stringify({ error: __auth.error }), {
+      status: __auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   console.log('Scheduled Mastodon share started');

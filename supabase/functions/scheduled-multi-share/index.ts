@@ -1,3 +1,4 @@
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 // Birleşik scheduler: Saatte 1 kez çalışır.
 // 1 yayınlanmış blog seçer ve Twitter + LinkedIn + Tumblr'a paralel paylaşır.
 // Her platform için farklı başlık/metin varyasyonu üretir.
@@ -387,6 +388,14 @@ async function saveShareResult(supabase: any, blogId: string, platform: string, 
 // ============= MAIN =============
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const __auth = await verifyAdminOrCron(req);
+  if (!__auth.ok) {
+    return new Response(JSON.stringify({ error: __auth.error }), {
+      status: __auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

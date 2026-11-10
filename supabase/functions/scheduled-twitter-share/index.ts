@@ -1,3 +1,4 @@
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { createHmac } from "node:crypto";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -97,6 +98,14 @@ Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const __auth = await verifyAdminOrCron(req);
+  if (!__auth.ok) {
+    return new Response(JSON.stringify({ error: __auth.error }), {
+      status: __auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   console.log('Scheduled Twitter share started');
