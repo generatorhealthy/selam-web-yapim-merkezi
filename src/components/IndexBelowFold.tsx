@@ -185,6 +185,8 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
         </div>
       </div>
 
+      <AppPromoSection />
+
       {/* Reviews Section */}
       <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 py-16">
         <div className="container mx-auto px-4">
@@ -255,7 +257,6 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
         </div>
       </div>
 
-      <AppPromoSection />
 
       {/* Specialists Section */}
       <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700 py-16">
