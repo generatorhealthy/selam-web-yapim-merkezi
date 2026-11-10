@@ -4915,6 +4915,7 @@ export type Database = {
           code: string
           created_at: string
           expires_at: string
+          failed_attempts: number
           id: string
           is_used: boolean
           phone: string
@@ -4924,6 +4925,7 @@ export type Database = {
           code: string
           created_at?: string
           expires_at?: string
+          failed_attempts?: number
           id?: string
           is_used?: boolean
           phone: string
@@ -4933,6 +4935,7 @@ export type Database = {
           code?: string
           created_at?: string
           expires_at?: string
+          failed_attempts?: number
           id?: string
           is_used?: boolean
           phone?: string

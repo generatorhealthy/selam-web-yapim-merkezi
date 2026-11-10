@@ -144,7 +144,7 @@ serve(async (req) => {
       }
 
       // Generate 6-digit OTP
-      const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+      const otpCode = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
 
       // Save OTP
       await supabase.from('otp_codes').insert({
@@ -182,24 +182,34 @@ serve(async (req) => {
       if (cleaned.startsWith('0')) cleaned = '9' + cleaned;
       if (!cleaned.startsWith('90')) cleaned = '90' + cleaned;
 
-      // Find valid OTP
+      // Find the latest active OTP for this phone (never search by code — that allows guessing)
       const { data: otpData } = await supabase
         .from('otp_codes')
         .select('*')
         .eq('phone', cleaned)
-        .eq('code', code)
         .eq('is_used', false)
         .gte('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (!otpData || otpData.length === 0) {
-        return new Response(JSON.stringify({ success: false, error: 'Geçersiz veya süresi dolmuş kod' }), {
+      const otp = otpData?.[0];
+      const MAX_ATTEMPTS = 5;
+      if (!otp || (otp.failed_attempts ?? 0) >= MAX_ATTEMPTS) {
+        if (otp) await supabase.from('otp_codes').update({ is_used: true }).eq('id', otp.id);
+        return new Response(JSON.stringify({ success: false, error: 'Geçersiz veya süresi dolmuş kod. Yeni kod isteyin.' }), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
-      const otp = otpData[0];
+      if (String(code ?? '').trim() !== String(otp.code)) {
+        const attempts = (otp.failed_attempts ?? 0) + 1;
+        await supabase.from('otp_codes')
+          .update({ failed_attempts: attempts, is_used: attempts >= MAX_ATTEMPTS })
+          .eq('id', otp.id);
+        return new Response(JSON.stringify({ success: false, error: attempts >= MAX_ATTEMPTS ? 'Çok fazla hatalı deneme. Yeni kod isteyin.' : 'Geçersiz veya süresi dolmuş kod' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
 
       // Mark OTP as used
       await supabase.from('otp_codes').update({ is_used: true }).eq('id', otp.id);
