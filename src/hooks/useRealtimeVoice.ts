@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type RealtimeStatus = "idle" | "connecting" | "live" | "error";
 
@@ -121,9 +122,17 @@ export function useRealtimeVoice() {
     setStatus("connecting");
     try {
       // 1) Kısa ömürlü client secret (OPENAI_API_KEY tarayıcıya gelmez).
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (!authSession?.access_token) {
+        throw new Error("Sesli asistanı kullanmak için yönetici hesabıyla giriş yapın");
+      }
       const secretRes = await fetch(`${FUNCTIONS_BASE}/realtime-session`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${ANON_KEY}` },
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON_KEY,
+          Authorization: `Bearer ${authSession.access_token}`,
+        },
         body: JSON.stringify({}),
       });
       const secretData = await secretRes.json();

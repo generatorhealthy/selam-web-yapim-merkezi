@@ -187,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
     // send made-up appointment mails to an address of their choosing.
     const { data: appointmentRow, error: appointmentLookupError } = await supabase
       .from('appointments')
-      .select('id, specialist_id, patient_name, patient_email, patient_phone, appointment_date, appointment_time, appointment_type, notes')
+      .select('id, specialist_id, patient_name, patient_email, patient_phone, appointment_date, appointment_time, appointment_type, notes, created_at')
       .eq('id', appointmentId)
       .maybeSingle();
 
@@ -288,6 +288,19 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
+    // Was this appointment already notified? Then this is a repeat call: do not
+    // text the patient again (prevents using this endpoint to spam a phone).
+    const { data: priorLogs } = await supabase
+      .from('brevo_email_logs')
+      .select('id')
+      .eq('template_name', 'appointment-notification')
+      .contains('metadata', { appointmentId })
+      .limit(1);
+    const isFirstNotification = !priorLogs?.length;
+    const isFreshAppointment = appointmentRow.created_at
+      ? Date.now() - new Date(appointmentRow.created_at).getTime() < 30 * 60 * 1000
+      : false;
+
     const brevoResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
@@ -378,6 +391,19 @@ const handler = async (req: Request): Promise<Response> => {
       }
     } else {
       console.log('No usable specialist phone found in request, specialists or orders; skipping SMS');
+    }
+
+    // Hastaya "randevunuz alındı" SMS'i — yalnızca kayıttaki numaraya, bir kez.
+    if (isFirstNotification && isFreshAppointment && patientPhone) {
+      try {
+        const patientSms = `Randevunuz alindi!\nUzman: ${specialistName}\nTarih: ${formattedDate}\nSaat: ${appointmentTime}\nRandevu Turu: ${appointmentTypeText}`;
+        const { error: pSmsErr } = await supabase.functions.invoke('send-sms-via-static-proxy', {
+          body: { phone: patientPhone, message: patientSms },
+        });
+        if (pSmsErr) console.error('Patient SMS error:', pSmsErr);
+      } catch (e) {
+        console.error('Patient SMS failed:', e);
+      }
     }
 
     // Doki'den uzmana WhatsApp bildirimi (WAHA üzerinden) — hata olursa sessizce geç

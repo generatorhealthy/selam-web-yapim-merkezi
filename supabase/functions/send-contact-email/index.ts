@@ -21,7 +21,19 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, phone, subject, message }: ContactEmailRequest = await req.json();
+    const raw: ContactEmailRequest = await req.json();
+    const esc = (v: unknown, max: number) => String(v ?? "").slice(0, max)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    if (!raw?.name || !raw?.email || !raw?.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(raw.email))) {
+      return new Response(JSON.stringify({ error: "Ad, geçerli e-posta ve mesaj zorunludur" }), {
+        status: 400, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    const name = esc(raw.name, 120);
+    const email = esc(raw.email, 200);
+    const phone = raw.phone ? esc(raw.phone, 40) : "";
+    const subject = esc(raw.subject || "İletişim Formu Mesajı", 200);
+    const message = esc(raw.message, 5000);
 
     // Türkiye saat diliminde tarih formatı (TR: DD.MM.YYYY HH:mm:ss)
     const now = new Date();
@@ -119,77 +131,11 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Admin email failed: ${adminEmailResponse.status} - ${errorText}`);
     }
 
-    // Kullanıcıya otomatik yanıt gönder
-    const userEmailPayload = {
-      sender: {
-        name: "Doktorum Ol",
-        email: "info@doktorumol.com.tr"
-      },
-      to: [
-        {
-          email: email,
-          name: name
-        }
-      ],
-      subject: "Mesajınızı Aldık - Doktorum Ol",
-      htmlContent: `
-        <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white; border-radius: 8px 8px 0 0;">
-            <h1 style="margin: 0; font-size: 24px;">🙏 Teşekkür Ederiz!</h1>
-            <p style="margin: 10px 0 0 0; font-size: 14px;">Mesajınızı başarıyla aldık.</p>
-          </div>
-          
-          <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px;">
-            <div style="background: white; padding: 25px; border-radius: 8px; text-align: center;">
-              <h2 style="margin: 0 0 20px 0; color: #333;">Merhaba ${name}!</h2>
-              
-              <p style="margin: 0 0 20px 0; font-size: 16px; color: #555; line-height: 1.6;">
-                İletişim formunuz başarıyla tarafımıza ulaştı. Mesajınızı inceleyip, 
-                <strong>en kısa sürede</strong> size geri dönüş yapacağız.
-              </p>
-              
-              <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="margin: 0 0 10px 0; color: #1976d2;">📋 Mesaj Özeti</h3>
-                <p style="margin: 5px 0; color: #555;"><strong>Konu:</strong> ${subject}</p>
-                <p style="margin: 5px 0; color: #555;"><strong>Tarih (Türkiye Saati):</strong> ${turkeyTime}</p>
-              </div>
-              
-              <p style="margin: 20px 0 0 0; font-size: 14px; color: #666;">
-                Acil durumlar için: <a href="mailto:info@doktorumol.com.tr" style="color: #667eea; text-decoration: none;">info@doktorumol.com.tr</a>
-              </p>
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e9ecef;">
-              <p style="margin: 0; font-size: 14px; color: #666;">
-                <strong>Doktorum Ol Ekibi</strong><br>
-                doktorumol.com.tr
-              </p>
-            </div>
-          </div>
-        </div>
-      `
-    };
-
-    // Kullanıcıya e-posta gönder
-    const userEmailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "api-key": brevoApiKey,
-        "content-type": "application/json"
-      },
-      body: JSON.stringify(userEmailPayload)
-    });
-
-    if (!userEmailResponse.ok) {
-      const errorText = await userEmailResponse.text();
-      throw new Error(`User email failed: ${userEmailResponse.status} - ${errorText}`);
-    }
-
+    // SECURITY: no auto-reply is sent to the address typed into the form — anyone
+    // could otherwise make us mail arbitrary inboxes. Only our own inbox is notified.
     const adminResult = await adminEmailResponse.json();
-    const userResult = await userEmailResponse.json();
 
-    console.log("Emails sent successfully via Brevo:", { adminResult, userResult });
+    console.log("Contact email sent via Brevo:", adminResult);
 
     // Log emails to database
     try {
@@ -206,15 +152,6 @@ const handler = async (req: Request): Promise<Response> => {
           status: 'sent',
           brevo_message_id: adminResult.messageId || null,
           metadata: { name, email, phone, subject }
-        },
-        {
-          recipient_email: email,
-          recipient_name: name,
-          subject: 'Mesajınızı Aldık - Doktorum Ol',
-          template_name: 'contact-email',
-          status: 'sent',
-          brevo_message_id: userResult.messageId || null,
-          metadata: { type: 'auto-reply' }
         }
       ]);
     } catch (logErr) {
@@ -224,7 +161,6 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify({ 
       success: true, 
       adminEmail: adminResult,
-      userEmail: userResult,
       timestamp: turkeyTime,
       provider: "Brevo"
     }), {

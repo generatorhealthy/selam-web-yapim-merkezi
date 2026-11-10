@@ -2,7 +2,6 @@
 // re-apply template as send-reapply-bulk-sms. Accepts { recipients: [{name, phone}] }.
 import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,10 +88,15 @@ async function sendBatchViaProxy(payload: unknown): Promise<{ status: number; bo
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const __auth = await verifyAdminOrCron(req);
-  if (!__auth.ok) {
-    return new Response(JSON.stringify({ error: __auth.error }), {
-      status: __auth.status,
+  // SECURITY: recipients here come from the request, not from our records, so
+  // only trusted server code / cron may use it — never a signed-in panel user.
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  const bearer = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  const trusted = (cronSecret && req.headers.get("x-cron-secret") === cronSecret) ||
+    (bearer && bearer === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
+  if (!trusted) {
+    return new Response(JSON.stringify({ error: "Bu işlem için yetkiniz yok" }), {
+      status: 403,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -103,7 +107,7 @@ serve(async (req) => {
     const url = new URL(req.url);
     const dryRun = url.searchParams.get("dryRun") === "1";
     const body = await req.json().catch(() => ({}));
-    const inRecipients: { name?: string; phone: string }[] = Array.isArray(body?.recipients) ? body.recipients : [];
+    const inRecipients: { name?: string; phone: string }[] = Array.isArray(body?.recipients) ? body.recipients.slice(0, 2000) : [];
     const template: "danisan" | "uzman" = body?.template === "uzman" ? "uzman" : "danisan";
 
     const recipients: { name: string; phone: string }[] = [];

@@ -72,14 +72,17 @@ async function getCustomerFromIyzico(customerReferenceCode: string): Promise<str
   return null;
 }
 
-// SECURITY: the callback body's "success" status can be forged. Before approving an
-// order we ask Iyzico whether the subscription really is active/paid.
-async function isSubscriptionActiveAtIyzico(subscriptionReferenceCode: string): Promise<boolean> {
+// SECURITY: the callback body can be forged. Before approving an order we ask
+// Iyzico for the subscription itself and only trust what Iyzico returns: it must be
+// ACTIVE, belong to the customer named in the callback, and have a paid order.
+async function getVerifiedSubscription(
+  subscriptionReferenceCode: string,
+): Promise<{ customerReferenceCode: string; subscriptionReferenceCode: string } | null> {
   const apiKey = Deno.env.get("IYZICO_API_KEY");
   const secretKey = Deno.env.get("IYZICO_SECRET_KEY");
   const baseUrl = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
-
-  if (!apiKey || !secretKey) return false;
+  if (!apiKey || !secretKey) return null;
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(subscriptionReferenceCode)) return null;
 
   const uriPath = `/v2/subscription/subscriptions/${subscriptionReferenceCode}`;
   const { authorization, randomKey } = await generateIyzicoAuth(apiKey, secretKey, uriPath);
@@ -94,17 +97,28 @@ async function isSubscriptionActiveAtIyzico(subscriptionReferenceCode: string): 
         "x-iyzi-rnd": randomKey,
       },
     });
-
     const result = await response.json();
-    console.log("Iyzico subscription verification result:", JSON.stringify(result));
+    console.log("Iyzico subscription verification status:", result?.status, result?.data?.subscriptionStatus);
+    if (result.status !== "success") return null;
 
-    if (result.status !== "success") return false;
+    const sub = Array.isArray(result.data?.items) ? result.data.items[0] : result.data;
+    if (!sub) return null;
+    if (String(sub.subscriptionStatus || "").toUpperCase() !== "ACTIVE") return null;
 
-    const subscriptionStatus = (result.data?.subscriptionStatus || "").toUpperCase();
-    return subscriptionStatus === "ACTIVE" || subscriptionStatus === "PENDING";
+    const orders: any[] = Array.isArray(sub.orders) ? sub.orders : [];
+    const hasPaidOrder = orders.length === 0
+      ? true // Iyzico omits orders for some plans; ACTIVE means the first charge succeeded
+      : orders.some((o) => String(o?.orderStatus || "").toUpperCase() === "SUCCESS");
+    if (!hasPaidOrder) return null;
+
+    if (!sub.customerReferenceCode) return null;
+    return {
+      customerReferenceCode: String(sub.customerReferenceCode),
+      subscriptionReferenceCode: String(sub.referenceCode || subscriptionReferenceCode),
+    };
   } catch (err) {
     console.error("Iyzico subscription verification error:", err);
-    return false;
+    return null;
   }
 }
 
@@ -173,17 +187,17 @@ serve(async (req) => {
       // could POST a forged "success" event with an arbitrary customerEmail to approve
       // an unpaid order. The authoritative email MUST be resolved from Iyzico's API
       // using the customerReferenceCode that only a genuine Iyzico callback contains.
-      const customerRef = body.customerReferenceCode || body.customer_reference_code;
+      const claimedCustomerRef = body.customerReferenceCode || body.customer_reference_code;
       let customerEmail: string | null = null;
 
       // The subscription itself must be verified as active at Iyzico; otherwise a forged
       // "success" body could approve an order that was never paid.
       const subscriptionRef = body.subscriptionReferenceCode || body.subscription_reference_code;
-      const paymentVerified = subscriptionRef
-        ? await isSubscriptionActiveAtIyzico(subscriptionRef)
-        : false;
+      const verified = subscriptionRef ? await getVerifiedSubscription(String(subscriptionRef)) : null;
 
-      if (!paymentVerified) {
+      // The subscription must belong to the customer the callback names — otherwise a
+      // real paid subscription of one person could be replayed to approve another's order.
+      if (!verified || (claimedCustomerRef && String(claimedCustomerRef) !== verified.customerReferenceCode)) {
         console.warn("Callback rejected: payment could not be verified at Iyzico.");
         return new Response(JSON.stringify({ status: "rejected", reason: "payment_not_verified" }), {
           status: 200,
@@ -191,13 +205,9 @@ serve(async (req) => {
         });
       }
 
-      if (customerRef) {
-        console.log("Verifying customer via Iyzico API with customerRef:", customerRef);
-        customerEmail = await getCustomerFromIyzico(customerRef);
-        console.log("Email from Iyzico API:", customerEmail);
-      } else {
-        console.warn("Callback rejected: no customerReferenceCode to verify against Iyzico — possible forged request.");
-      }
+      const customerRef = verified.customerReferenceCode;
+      customerEmail = await getCustomerFromIyzico(customerRef);
+      console.log("Email from Iyzico API:", customerEmail);
 
       console.log("Başarılı ödeme - Doğrulanmış email:", customerEmail);
 
@@ -231,19 +241,19 @@ serve(async (req) => {
                 status: 'approved',
                 approved_at: new Date().toISOString(),
                 payment_method: 'credit_card',
-                payment_transaction_id: body.subscriptionReferenceCode || body.paymentId || body.token || null,
-                subscription_reference_code: body.subscriptionReferenceCode || null,
-                iyzico_customer_reference_code: body.customerReferenceCode || null,
+                payment_transaction_id: verified.subscriptionReferenceCode,
+                subscription_reference_code: verified.subscriptionReferenceCode,
+                iyzico_customer_reference_code: customerRef,
               })
               .eq('id', order.id);
 
             // Also propagate sub ref to automatic_orders for future card-change lookups
-            if (body.subscriptionReferenceCode) {
+            {
               await supabaseAdmin
                 .from('automatic_orders')
                 .update({
-                  subscription_reference_code: body.subscriptionReferenceCode,
-                  iyzico_customer_reference_code: body.customerReferenceCode || null,
+                  subscription_reference_code: verified.subscriptionReferenceCode,
+                  iyzico_customer_reference_code: customerRef,
                 })
                 .eq('customer_email', customerEmail)
                 .is('subscription_reference_code', null);
@@ -338,9 +348,10 @@ serve(async (req) => {
       
       // Mark pending orders as payment failed
       if (isFailed) {
-        let failedEmail = (body.customerEmail || body.customer_email || "")?.toLowerCase().trim();
-        if (!failedEmail && body.customerReferenceCode) {
-          failedEmail = await getCustomerFromIyzico(body.customerReferenceCode);
+        // SECURITY: never trust an email in the body; resolve it at Iyzico.
+        let failedEmail: string | null = null;
+        if (body.customerReferenceCode && /^[A-Za-z0-9-]{8,64}$/.test(String(body.customerReferenceCode))) {
+          failedEmail = await getCustomerFromIyzico(String(body.customerReferenceCode));
         }
         if (failedEmail) {
           try {

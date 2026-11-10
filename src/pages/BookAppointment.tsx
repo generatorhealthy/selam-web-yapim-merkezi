@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { sendAppointmentNotification, sendDoctorNotification } from "@/services/notificationService";
+import { sendAppointmentNotification } from "@/services/notificationService";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
 
 const BookAppointment = () => {
@@ -173,11 +173,12 @@ const BookAppointment = () => {
       // (send_appointment_notification_email_trigger) tarafından gönderilir.
       // Tekrar gönderilmemesi için frontend'den invoke kaldırıldı.
 
-      // Hastaya bildirim gönder (mevcut sistem)
+      // Hasta ve uzman SMS'leri sunucuda (send-appointment-notification, DB trigger)
+      // gönderilir; ziyaretçi tarayıcısı SMS servisini doğrudan çağıramaz.
       try {
         await sendAppointmentNotification(
           formData.patientEmail,
-          formData.patientPhone,
+          '',
           {
             date: formData.appointmentDate,
             time: formData.appointmentTime,
@@ -189,25 +190,6 @@ const BookAppointment = () => {
         );
       } catch (notificationError) {
         console.error('Patient notification error (non-critical):', notificationError);
-      }
-
-      // Send SMS notification to specialist
-      try {
-        await sendDoctorNotification(
-          specialist.email || '',
-          specialist.phone || '',
-          {
-            patientName: formData.patientName,
-            patientPhone: formData.patientPhone,
-            patientEmail: formData.patientEmail,
-            appointmentDate: formData.appointmentDate,
-            appointmentTime: formData.appointmentTime,
-            appointmentType: formData.appointmentType === 'face-to-face' ? 'Yüz Yüze' : 'Online',
-            notes: formData.notes
-          }
-        );
-      } catch (doctorNotificationError) {
-        console.error('Doctor notification error (non-critical):', doctorNotificationError);
       }
 
       toast.success('Randevu talebiniz başarıyla gönderildi! Uzman e-posta ile bilgilendirildi.');

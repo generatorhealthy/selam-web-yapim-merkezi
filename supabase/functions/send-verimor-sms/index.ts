@@ -1,3 +1,4 @@
+import { verifySmsCaller } from "../_shared/smsAuth.ts";
 import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
@@ -19,6 +20,20 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { phone, message }: SmsRequest = await req.json();
+
+    if (typeof phone !== 'string' || typeof message !== 'string' || !phone.trim() || !message.trim() || message.length > 2000) {
+      return new Response(JSON.stringify({ success: false, error: 'Geçersiz telefon veya mesaj' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // SECURITY: anonymous visitors must not be able to send SMS on our account.
+    const smsAuth = await verifySmsCaller(req, phone);
+    if (!smsAuth.ok) {
+      return new Response(JSON.stringify({ success: false, error: smsAuth.error }), {
+        status: smsAuth.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     if (isBlockedPhone(phone)) {
       console.warn('Blocked phone, SMS iptal edildi:', phone);

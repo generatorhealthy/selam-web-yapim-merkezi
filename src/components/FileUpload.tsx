@@ -49,8 +49,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
       
       const finalFileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${finalFileExt}`;
-      const filePath = `${fileName}`;
+      // Her kullanıcı yalnızca kendi klasörüne yükleyebilir (depolama kuralı).
+      const { data: { user: uploader } } = await supabase.auth.getUser();
+      if (!uploader) throw new Error('Dosya yüklemek için giriş yapmalısınız');
+      const fileName = `${crypto.randomUUID()}.${finalFileExt}`;
+      const filePath = `${uploader.id}/${fileName}`;
       
       const bucketName = isPdf ? 'legal-documents' : 'profile-pictures';
 

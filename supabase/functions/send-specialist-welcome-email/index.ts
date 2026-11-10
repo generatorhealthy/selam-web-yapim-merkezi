@@ -17,8 +17,36 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email }: WelcomeEmailRequest = await req.json();
-    console.log("Specialist welcome email request:", { name, email });
+    // SECURITY: only a signed-in user can trigger this, and the mail always goes to
+    // that user's own account address — never to an address taken from the request.
+    const authHeader = req.headers.get("Authorization") || "";
+    const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user } } = await userClient.auth.getUser();
+    if (!user?.email) {
+      return new Response(JSON.stringify({ success: false, error: "Yetkilendirme gerekli" }), {
+        status: 401, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    const body: Partial<WelcomeEmailRequest> = await req.json().catch(() => ({}));
+    const email = user.email.toLowerCase();
+    const name = String(body?.name || "").slice(0, 120)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    console.log("Specialist welcome email request:", { email });
+
+    const logClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: alreadySent } = await logClient
+      .from("brevo_email_logs")
+      .select("id")
+      .eq("recipient_email", email)
+      .eq("template_name", "specialist-welcome")
+      .limit(1);
+    if (alreadySent?.length) {
+      return new Response(JSON.stringify({ success: true, skipped: "already_sent" }), {
+        status: 200, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
     const brevoApiKey = Deno.env.get("BREVO_API_KEY");
     if (!brevoApiKey) {
