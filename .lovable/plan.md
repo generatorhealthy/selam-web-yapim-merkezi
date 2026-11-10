@@ -1,12 +1,13 @@
-# Divan Paneli — Krem ve Saydam Tasarım
+# Divan Paneli — Mavi Füme Cam Tasarım
 
 ## Onayınıza sunulan görünüm
-7 sayfalık görsel sunum: genel bakış, mevcut **55 kartın tamamı** (üç sayfa), uzman yönetimi, sipariş görünümü ve Kelime Sıralayıcısı örneği. Bunlar çalışan panelin yerine geçirilmemiş görsel taslaklardır. Örnek isimler ve grafikler gerçek müşteri verisi değildir; çizgilerle gösterilen sayaçlar uydurma değer içermez.
+Önceki krem taslak referansa benzemediği için kullanılmayacak. Son gönderilen CRM görselinin kutu yapısına göre yeni 5 sayfalık sunum: mavi cam genel bakış, uzman kartı örneği ve mevcut **55 kartın tamamı** (üç sayfa). Bunlar çalışan panelin yerine geçirilmemiş görsel taslaklardır. Örnek isimler, takvim ve grafikler gerçek veri değildir. Büyük sayaçlarda uydurma değer yerine çizgi gösterilir.
 
 ## Tasarım dili
-- Açık krem `#F5F3EC` zemin, açık yeşilimsi nötr ikinci yüzey `#ECEFE7`, koyu mürekkep `#263532`, kurumsal mavi `#3769A6` ve ölçülü yeşil `#547D6A`.
-- İnce kenarlı yarı saydam kartlar, sınırlı gölge; arka zeminin kartların altında hafif görünmesi. Saydamlık metni soluklaştırmaz.
-- Instrument Sans başlık ve metin; sayılarda hizalı rakamlar. Küçük simgeler, 8px kart köşeleri, sabit ölçüler ve kısa renk geçişleri.
+- Koyu füme `#07131F` zemin, mavi cam yüzey `#17354D`, buz mavisi `#A9D7FA` vurgu, açık metin `#EAF4FF` ve ikincil metin `#A6BBCE`.
+- Referanstaki gibi arkasını gösteren koyu cam kutular, ince ışıklı kenarlar ve yüzey boyunca ölçülü ışık geçişleri. Beyaz/düz kutular kullanılmaz; saydamlık metni soluklaştırmaz.
+- Instrument Sans başlık ve metin; sayılarda hizalı rakamlar. Cam kutularda referansa uygun 16px köşeler, hap şeklinde üst menü, yüzen dar sol simge menüsü, sabit ölçüler ve kısa renk geçişleri.
+- Genel bakışta farklı boyutlu kutular: dar başvuru kartı, geniş sipariş grafiği, hızlı menü ve takvim alanı. Uygulamada grafiklerin gerçek kaynakları mevcut raporlardan doğrulanır; kaynak yoksa grafik uydurulmaz veya yeni ölçüm eklenmez.
 - Mevcut büyük renkli ikonlar, zıplayan kartlar, uzun sırayla açılış animasyonları ve ziyaretçi üst/alt menüsü yerine panel odaklı çalışma alanı.
 
 ## Onay sonrası yapılacaklar
@@ -31,4 +32,4 @@
 Kart envanteri, bağlantılar ve rol bazlı görünürlük kontrol edilir; ilgili mevcut testler çalıştırılır. Masaüstü ve küçük ekranlarda yazı taşması, saydamlık, menü ve ileti pencereleri incelenir. Gerçek yönetici oturumu bu harici Supabase projesinde ortam tarafından sağlanamıyor; oturum gerektiren işlemler kullanıcı erişimi olmadan doğrulanmış sayılmaz. Ödeme veya mesaj gönderimi tasarım testi için tetiklenmez.
 
 ## Bu aşamada durum
-Çalışan panel ve veriler değiştirilmedi. Görsel taslaklarda eksik simgeler ve bir grafik/metin çakışması bulunup düzeltildi; yedi sayfa yeniden incelendi. Tasarımın uygulanması onayınızı bekliyor.
+Çalışan panel ve veriler değiştirilmedi. Yeni taslakta üretilen tarih ve farklı logo kaldırıldı; genel bakış ve uzman kartları görsel olarak incelendi. 55 kartın envanteri eksiksiz yeni sunuma dahil edildi. Tasarımın uygulanması onayınızı bekliyor.
