@@ -121,7 +121,7 @@ export default function MobileTestTaker() {
         await supabase.functions.invoke("send-test-results-email", {
           body: {
             testResultId: resultData?.id,
-            specialistEmail: specialistData.email,
+            specialistId: finalSpecialistId,
             patientName: name,
             patientPhone: phone,
             testTitle: test?.title || "Test",
