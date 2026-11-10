@@ -218,8 +218,8 @@ const Contact = () => {
                   </h2>
                   <p className="text-muted-foreground leading-relaxed mb-8">
                     Danışan ve uzman memnuniyeti odaklı ekibimiz, tüm soru ve önerileriniz
-                    için destek sağlamaktadır. Ofisimizi ziyaret edebilir veya çevrimiçi
-                    kanallardan bize ulaşabilirsiniz.
+                    için destek sağlamaktadır. Telefon, e-posta veya WhatsApp üzerinden
+                    bize kolayca ulaşabilirsiniz.
                   </p>
                   <Button
                     className="w-fit h-12 px-7 rounded-full bg-foreground text-primary-foreground hover:bg-foreground/90 font-semibold gap-2"
