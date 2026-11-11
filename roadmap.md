@@ -1,5 +1,10 @@
 # Roadmap
 
+## İkinci yıl abonelik tutarı düğmesi
+- [x] İkinci yıl bekleyen havale siparişlerinde tutar düzenleme düğmesini mevcut sipariş düzenlemesine bağla; kartlı abonelik akışını koru.
+- [x] Görünürlük kuralları için 3 test geçti; derleme hatasız.
+- [ ] Zeynep Ergüney siparişinde gerçek oturumla düğmeyi doğrula — harici Supabase oturumu bu ortamda sağlanamıyor.
+
 ## Divan paneli tasarım onayı
 - [x] Canlı ödeme özeti, bugünkü ödenmemiş tutar, aktif uzman, yeni danışan/uzman listeleri, günlük santral ve durum bazlı icra tutarlarıyla açık mavi ana ekran taslağı hazırlandı; mevcut 55 kart birebir kontrol edildi. Para simgesi ve kenar boşlukları düzeltilip görsel tekrar incelendi.
 - [x] Gönderilen 10 görsel incelendi; mevcut 55 kartın tamamı ve üç iç sayfa örneği için 7 sayfalık tasarım sunumu hazırlandı; çalışan panel değiştirilmedi.

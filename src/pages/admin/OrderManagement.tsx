@@ -23,6 +23,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
 import { useUserRole } from "@/hooks/useUserRole";
+import { getSubscriptionPriceAction } from "@/lib/subscriptionPriceAction";
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -48,6 +49,7 @@ interface Order {
   contract_ip_address: string;
   is_first_order: boolean;
   subscription_month: number;
+  subscription_reference_code?: string | null;
   deleted_at?: string | null;
   pre_info_pdf_content?: string | null;
   distance_sales_pdf_content?: string | null;
@@ -1952,13 +1954,17 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                   {order.payment_method === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi'}
                                 </div>
                               </div>
-                              {order.payment_method === 'credit_card' && (order as any).subscription_reference_code && (
+                              {getSubscriptionPriceAction(order) && (
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   className="w-full text-xs"
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (getSubscriptionPriceAction(order) === 'order') {
+                                      setEditingOrder({ ...order, amount: calculateTefeTufeAmount(Number(order.amount) || 0) });
+                                      return;
+                                    }
                                     setUpgradeOrder(order);
                                     setUpgradeAmount(String(calculateTefeTufeAmount(Number(order.amount) || 0)));
                                     setUpgradePeriod('NEXT_PERIOD');
