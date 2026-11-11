@@ -1707,27 +1707,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/aile-danismanligi-ve-psikolojik-danismanlik-arasindaki-farklar</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/aile-ici-siddet-durumlarinda-aile-danismaninin-rolu</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/kiskanclik-sorunlarinda-aile-danismani-nasil-yardimci-olur</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/aile-danismani-ile-cocuklarda-davranis-problemleri-nasil-cozulur</loc>
     <lastmod>2025-10-11</lastmod>
 
@@ -1758,6 +1737,27 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/psikolojik-danisman-nedir-hangi-konularda-destek-sunar</loc>
     <lastmod>2025-10-11</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/aile-danismanligi-ve-psikolojik-danismanlik-arasindaki-farklar</loc>
+    <lastmod>2026-11-11</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/aile-ici-siddet-durumlarinda-aile-danismaninin-rolu</loc>
+    <lastmod>2026-11-11</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/kiskanclik-sorunlarinda-aile-danismani-nasil-yardimci-olur</loc>
+    <lastmod>2026-11-11</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -8688,6 +8688,13 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/aile-danismani-destegiyle-evliligi-yeniden-insa-etmek</loc>
     <lastmod>2026-11-10</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/sosyal-hayatta-anksiyete-ile-basa-cikma-stratejileri</loc>
+    <lastmod>2026-11-02</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
