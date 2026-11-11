@@ -6335,6 +6335,7 @@ export type Database = {
           address: string | null
           available_days: string[] | null
           available_time_slots: Json | null
+          billing_while_passive: boolean
           bio: string | null
           certifications: string | null
           city: string
@@ -6376,6 +6377,7 @@ export type Database = {
           address?: string | null
           available_days?: string[] | null
           available_time_slots?: Json | null
+          billing_while_passive?: boolean
           bio?: string | null
           certifications?: string | null
           city?: string
@@ -6417,6 +6419,7 @@ export type Database = {
           address?: string | null
           available_days?: string[] | null
           available_time_slots?: Json | null
+          billing_while_passive?: boolean
           bio?: string | null
           certifications?: string | null
           city?: string
