@@ -43,7 +43,7 @@ serve(async (req) => {
       .from('specialists')
       .select('id, name, email, payment_day, package_price, specialty, city, phone, user_id')
       .eq('payment_day', dayOfMonth)
-      .eq('is_active', true);
+      .or('is_active.eq.true,billing_while_passive.eq.true');
 
     if (specError) {
       console.error('Error fetching specialists:', specError);
