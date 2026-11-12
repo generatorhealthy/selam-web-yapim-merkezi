@@ -14,6 +14,8 @@
 // ============================================================================
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
+import { confirmReferralOnce } from '../_shared/referralConfirmation.ts';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import {
   Candidate,
   loadCandidates,
@@ -23,12 +25,6 @@ import {
   groupForTherapy,
   publicSpecialtyLabel,
 } from "../_shared/botMatcher.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-cron-secret",
-};
 
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), {
@@ -756,7 +752,10 @@ Deno.serve(async (req) => {
         if (spec) {
           const now = new Date();
           const nameParts = String(existing.client_name || "").trim().split(" ");
-          await supabase.from("client_referrals").insert({
+          try {
+          await confirmReferralOnce(existing.id, spec.id, existing.phone, {
+            insert: async (id) => supabase.from("client_referrals").insert({
+            id,
             specialist_id: spec.id,
             year: now.getFullYear(),
             month: now.getMonth() + 1,
@@ -768,12 +767,22 @@ Deno.serve(async (req) => {
             client_contact: existing.phone,
             consultation_type: answers.online === false ? "Yüz yüze" : "Online",
             notes: "WhatsApp botu üzerinden otomatik yönlendirme",
+          }),
+            read: async (id) => {
+              const { data, error } = await supabase.from('client_referrals').select('specialist_id, client_contact').eq('id',id).maybeSingle();
+              if (error) throw error;
+              return data;
+            },
           });
           if (existing.lead_id) {
-            await supabase
+            const { error: assignmentError } = await supabase
               .from("danisan_basvurulari")
               .update({ status: "yonlendirildi", assigned_specialist_id: spec.id })
               .eq("id", existing.lead_id);
+            if (assignmentError) return json({ success: false, error: 'lead_assignment_pending' },503);
+          }
+          } catch {
+            return json({ success: false, error: 'referral_not_confirmed' },503);
           }
         }
 
