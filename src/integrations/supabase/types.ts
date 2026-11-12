@@ -473,6 +473,30 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_notification_claims: {
+        Row: {
+          appointment_id: string
+          caller: string
+          created_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          caller?: string
+          created_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          caller?: string
+          created_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string

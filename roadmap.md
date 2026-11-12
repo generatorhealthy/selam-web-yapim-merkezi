@@ -156,3 +156,9 @@
 - [ ] BEKLİYOR: WhatsApp hattı 24 saat engelli (12.11.2026) — açılınca QR ile yeniden bağlanacak
 - [ ] Onayla: anahtarı bot + arşiv adresine ekle, deneme mesajıyla doğrula
 - [ ] Son onayla: WAHA_WEBHOOK_ENFORCE=true (anahtarsız istekleri kapat)
+
+## KVKK Aşama 4 — Randevu bildirimi (devam)
+- [x] Yeni bildirim işlevi yayında (uyumluluk kipi, tek-sefer kilidi)
+- [ ] İlk gerçek randevuda doğru uzmana gittiğini doğrula — bekliyor: yeni randevu
+- [ ] Sonra tetikleyiciyi sadeleştir + anonim çağrıları kapat
+- [ ] Aşama 5 — kullanıcı onayı bekliyor

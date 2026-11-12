@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { decideNotification, pickSpecialistPhone, specialistSms, patientSms as buildPatientSms } from '../_shared/appointmentNotify.ts';
+import { classifyCaller, decideNotification, pickSpecialistPhone, specialistSms, patientSms as buildPatientSms } from '../_shared/appointmentNotify.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -67,7 +67,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const payload = await req.json() as Partial<AppointmentNotificationRequest>;
+    // GÜVENLİK: çağıran türü. Güvenilir = sunucu gizli anahtarı veya service role.
+    // Eski tetikleyici (anon anahtarlı) yalnız uyumluluk kipinde ve kısa pencerede kabul edilir.
+    const notifySecret = Deno.env.get('APPOINTMENT_NOTIFY_SECRET') ?? '';
+    const enforce = (Deno.env.get('APPOINTMENT_NOTIFY_ENFORCE') ?? '').toLowerCase() === 'true';
+    const bearer = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+    const caller = classifyCaller({
+      secretHeader: req.headers.get('x-notify-secret'), secret: notifySecret,
+      bearer, serviceKey: supabaseServiceKey, enforce,
+    });
+    if (caller === 'rejected') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const payload = await req.json().catch(() => ({})) as Partial<AppointmentNotificationRequest>;
+    if (typeof payload.appointmentId !== 'string' || !/^[0-9a-f-]{36}$/i.test(payload.appointmentId)) {
+      return new Response(JSON.stringify({ error: 'Invalid appointmentId' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const missingFields = [
       'appointmentId',
     ].filter((field) => !payload[field as keyof AppointmentNotificationRequest]);
@@ -146,7 +164,7 @@ const handler = async (req: Request): Promise<Response> => {
     {
       const { data: prior } = await supabase.from('brevo_email_logs').select('id')
         .eq('template_name', 'appointment-notification').contains('metadata', { appointmentId }).limit(1);
-      const decision = decideNotification({ exists: true, alreadyNotified: !!prior?.length, createdAt: appointmentRow.created_at ?? null, now: Date.now() });
+      const decision = decideNotification({ exists: true, alreadyNotified: !!prior?.length, createdAt: appointmentRow.created_at ?? null, now: Date.now(), caller });
       if (!decision.send) {
         console.log(JSON.stringify({ evt: 'appointment_notify_skipped', reason: decision.reason }));
         return new Response(JSON.stringify({ success: true, skipped: true, reason: decision.reason }),
@@ -155,7 +173,20 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
 
-    console.log(JSON.stringify({ evt: 'appointment_notify', appointmentId }));
+    // GÜVENLİK: atomik tek-sefer kilidi. Eş zamanlı iki istekte yalnız biri kaydı ekleyebilir.
+    {
+      const { error: claimErr } = await supabase.from('appointment_notification_claims')
+        .insert({ appointment_id: appointmentId, caller, status: 'claimed' });
+      if (claimErr) {
+        const dup = (claimErr as any).code === '23505';
+        console.log(JSON.stringify({ evt: 'appointment_notify_skipped', reason: dup ? 'duplicate_claim' : 'claim_error' }));
+        return new Response(JSON.stringify({ success: !dup ? false : true, skipped: true, reason: dup ? 'duplicate' : 'claim_error' }),
+          { status: dup ? 200 : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+    const releaseClaim = () => supabase.from('appointment_notification_claims').delete().eq('appointment_id', appointmentId);
+
+    console.log(JSON.stringify({ evt: 'appointment_notify', appointmentId, caller }));
 
     const appointmentTypeText = appointmentType === 'face-to-face'
       ? 'Yüz Yüze'
@@ -247,18 +278,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!brevoResponse.ok) {
       const errorData = await brevoResponse.text();
-      console.error('Brevo API error:', errorData);
+      console.error('Brevo API error status:', brevoResponse.status, errorData.slice(0, 200));
+      await releaseClaim(); // gönderilemedi: yeniden denemeye izin ver, bildirim kaybolmasın
       throw new Error(`Brevo API error: ${brevoResponse.status}`);
     }
 
     const brevoResult = await brevoResponse.json();
     console.log(JSON.stringify({ evt: 'appointment_email_ok' }));
 
-    const { data: ownOrders } = await supabase.from('orders').select('customer_phone')
-      .eq('customer_email', specialistEmail).not('customer_phone', 'is', null)
-      .order('created_at', { ascending: false }).limit(10);
-    const { phone: resolvedSpecialistPhone, source: smsPhoneSource } =
-      pickSpecialistPhone(specialistRecord.phone, (ownOrders ?? []).map((r: any) => r.customer_phone));
+    // Alıcı telefonu YALNIZ uzmanın kendi kayıtlı numarası.
+    const { phone: resolvedSpecialistPhone, source: smsPhoneSource } = pickSpecialistPhone(specialistRecord.phone);
+    await supabase.from('appointment_notification_claims')
+      .update({ status: 'email_sent', updated_at: new Date().toISOString() }).eq('appointment_id', appointmentId);
 
     console.log(JSON.stringify({ evt: 'appointment_notify_phone', source: smsPhoneSource }));
 
@@ -272,8 +303,6 @@ const handler = async (req: Request): Promise<Response> => {
         brevo_message_id: brevoResult.messageId || null,
         metadata: {
           appointmentId,
-          patientName,
-          patientEmail,
           appointmentDate,
           appointmentTime,
           smsPhoneSource,
@@ -307,7 +336,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.error('SMS sending failed:', smsError);
       }
     } else {
-      console.log('No usable specialist phone found in request, specialists or orders; skipping SMS');
+      console.log('No usable specialist phone found in specialist record; skipping SMS');
     }
 
     // Hastaya "randevunuz alındı" SMS'i — yalnızca kayıttaki numaraya, bir kez.

@@ -7,3 +7,11 @@
 - Kayıtlar: ad, e-posta, telefon loglara yazılmaz.
 - Aracı servisler: SMS → send-sms-via-static-proxy → SMS_RELAY_URL veya ScrapingBee (mesaj içeriğini görür); Verimor; Brevo (e-posta içeriği); WAHA (WhatsApp).
 - Geri alma: eski işlev git'te; tetikleyici tanımı uygulama öncesi yedeklenir.
+
+## Uygulama (12 Kasım 2026)
+- Yayında: send-appointment-notification (uyumluluk kipi). Geri alma: security/stage4/rollback/send-appointment-notification/index.ts aynen yayınlanır; yeni tablo zararsız kalabilir.
+- Tek-sefer kilidi: appointment_notification_claims (birincil anahtar = randevu; eş zamanlı isteklerde yalnız biri gönderir; e-posta başarısızsa kilit bırakılır).
+- Pencere: eski tetikleyici yolu 30 dk, güvenilir sunucu yolu 24 saat.
+- Alıcı telefonu yalnız specialists.phone; sipariş üzerinden telefon arama kaldırıldı.
+- Yayın sonrası testler (gerçek gönderim yok): geçersiz kimlik 400, olmayan randevu 404, eski randevuya 3 eş zamanlı istek → hepsi atlandı, e-posta/SMS/kilit kaydı 0, randevu sayısı 341 değişmedi.
+- Bekleyen: ilk gerçek randevuda kilit kaydı + uzman e-postası doğrulanınca tetikleyici sadeleştirilir, gizli başlık eklenir, APPOINTMENT_NOTIFY_ENFORCE=true yapılır (anon çağrılar 401).
