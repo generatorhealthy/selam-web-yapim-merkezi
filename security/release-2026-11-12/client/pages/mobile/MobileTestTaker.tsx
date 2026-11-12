@@ -1,0 +1,254 @@
+// RELEASE DRAFT — not loaded by the running application.
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { MobileHeader } from "@/components/mobile/MobileHeader";
+import { useToast } from "@/hooks/use-toast";
+import { ChevronRight, Check } from "lucide-react";
+
+import { prepareTest, submitTest, type Operation } from '@/lib/testSubmission';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+
+interface Question {
+  id: string;
+  question_text: string;
+  question_type: string;
+  options: any;
+  step_number: number;
+  is_required: boolean;
+}
+
+// "hicbir_zaman" -> "Hicbir Zaman" gibi okunabilir hale getir
+const prettifyOption = (raw: string) => {
+  if (!raw) return raw;
+  const cleaned = raw.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+  return cleaned.charAt(0).toLocaleUpperCase("tr-TR") + cleaned.slice(1);
+};
+
+export default function MobileTestTaker() {
+  const { testId } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [test, setTest] = useState<any>(null);
+  const operationRef = useRef<Operation | null>(null);
+  const submitLock = useRef(false);
+  const [guestDeclared, setGuestDeclared] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [step, setStep] = useState(0); // 0..N-1 = questions, N = patient info
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: t }, { data: qs }] = await Promise.all([
+        supabase.from("tests").select("*").eq("id", testId).maybeSingle(),
+        supabase.from("test_questions").select("*").eq("test_id", testId).order("step_number"),
+      ]);
+      setTest(t);
+      setQuestions((qs as Question[]) || []);
+      setLoading(false);
+    })();
+  }, [testId]);
+
+  const totalSteps = questions.length + 1; // +1 for patient info at end
+  const isPatientStep = step === questions.length;
+  const currentQ = !isPatientStep && step >= 0 && step < questions.length ? questions[step] : null;
+
+  const setAnswer = (qId: string, value: any) => setAnswers((a) => ({ ...a, [qId]: value }));
+
+  const next = () => {
+    if (currentQ?.is_required && !answers[currentQ.id]) {
+      toast({ title: "Cevap gerekli", variant: "destructive" });
+      return;
+    }
+    setStep((s) => s + 1);
+  };
+
+  const submit = async () => {
+    if (submitLock.current) return;
+    if (!guestDeclared) {
+      toast({title: 'Sağlık verisi izni gerekli', variant: 'destructive'});
+      return;
+    }
+
+    if (!name || !phone) {
+      toast({ title: "Ad Soyad ve telefon gerekli", variant: "destructive" });
+      return;
+    }
+    submitLock.current = true;
+    setSubmitting(true);
+
+    try {
+      if (!testId) throw new Error('Test bulunamadı');
+      let operation = operationRef.current;
+      if (!operation) {
+        operation = await prepareTest(testId, null, guestDeclared);
+        operationRef.current = operation;
+      }
+      await submitTest(operation, name, email || phone, answers);
+    } catch {
+      setSubmitting(false);
+      submitLock.current = false;
+      toast({ title: 'Test kaydedilemedi', variant: 'destructive' });
+      return;
+    }
+    submitLock.current = false;
+
+    setSubmitting(false);
+    toast({ title: "Test gönderildi", description: "Sonuç kaydedildi; bildirim sıraya alındı" });
+    navigate("/mobile/home");
+  };
+
+  if (loading) {
+    return (
+      <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh" }}>
+        <MobileHeader showBack title="Test" />
+        <div className="px-5 space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-20 rounded-2xl animate-pulse" style={{ background: "hsl(var(--m-surface-muted))" }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: "calc(180px + var(--m-safe-bottom))" }}>
+      <MobileHeader showBack title={test?.title || "Test"} />
+
+      {/* Progress */}
+      <div className="px-5 mb-4">
+        <div className="h-1 rounded-full overflow-hidden" style={{ background: "hsl(var(--m-divider))" }}>
+          <div
+            className="h-full transition-all"
+            style={{
+              width: `${((step + 1) / (totalSteps + 1)) * 100}%`,
+              background: "hsl(var(--m-accent))",
+            }}
+          />
+        </div>
+        <div className="text-[12px] mt-2" style={{ color: "hsl(var(--m-text-secondary))" }}>
+          {isPatientStep ? "Son adım" : `Soru ${step + 1} / ${questions.length}`}
+        </div>
+      </div>
+
+      <div className="px-5">
+        {currentQ && (
+          <div className="m-card p-5">
+            <h2 className="text-[18px] font-semibold mb-4" style={{ color: "hsl(var(--m-text-primary))" }}>
+              {currentQ.question_text}
+            </h2>
+            {Array.isArray(currentQ.options) && currentQ.options.length > 0 ? (
+              <div className="space-y-2">
+                {currentQ.options.map((opt: any, i: number) => {
+                  const rawVal = typeof opt === "string" ? opt : opt.text || opt.value || JSON.stringify(opt);
+                  const label = prettifyOption(rawVal);
+                  const sel = answers[currentQ.id] === rawVal;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setAnswer(currentQ.id, rawVal)}
+                      className="w-full p-3 rounded-2xl text-left flex items-center justify-between m-pressable"
+                      style={{
+                        background: sel ? "hsl(var(--m-accent-soft))" : "hsl(var(--m-surface-muted))",
+                        borderWidth: 2,
+                        borderStyle: "solid",
+                        borderColor: sel ? "hsl(var(--m-accent))" : "transparent",
+                      }}
+                    >
+                      <span className="text-[14px]" style={{ color: "hsl(var(--m-text-primary))" }}>{label}</span>
+                      {sel && <Check className="w-5 h-5" style={{ color: "hsl(var(--m-accent))" }} />}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <textarea
+                value={answers[currentQ.id] || ""}
+                onChange={(e) => setAnswer(currentQ.id, e.target.value)}
+                placeholder="Cevabınız..."
+                rows={4}
+                className="w-full p-3 rounded-2xl outline-none text-[14px]"
+                style={{ background: "hsl(var(--m-surface-muted))", color: "hsl(var(--m-text-primary))" }}
+              />
+            )}
+          </div>
+        )}
+
+        {isPatientStep && (
+          <div className="space-y-3">
+            <div className="m-card p-4 text-center">
+              <p className="text-[14px]" style={{ color: "hsl(var(--m-text-secondary))" }}>
+                Sonuçlarınız için bilgilerinizi girin
+              </p>
+            </div>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ad Soyad"
+              className="w-full h-12 px-4 rounded-2xl text-[15px] outline-none"
+              style={{ background: "hsl(var(--m-surface))", color: "hsl(var(--m-text-primary))", boxShadow: "var(--m-shadow)" }}
+            />
+            <input
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Telefon Numarası"
+              className="w-full h-12 px-4 rounded-2xl text-[15px] outline-none"
+              style={{ background: "hsl(var(--m-surface))", color: "hsl(var(--m-text-primary))", boxShadow: "var(--m-shadow)" }}
+            />
+<Label className="flex items-start gap-2">
+                <Checkbox checked={guestDeclared} onCheckedChange={value => setGuestDeclared(value === true)} />
+                <span>Bu test için sağlık verilerimin işlenmesine açık rıza veriyorum.</span>
+              </Label>
+              <a href="/acik-riza" target="_blank" rel="noreferrer">Açık rıza metni</a>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="E-posta (opsiyonel)"
+              className="w-full h-12 px-4 rounded-2xl text-[15px] outline-none"
+              style={{ background: "hsl(var(--m-surface))", color: "hsl(var(--m-text-primary))", boxShadow: "var(--m-shadow)" }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Footer — bottom-nav (96px) üstüne otururnaması için ek margin */}
+      <div
+        className="fixed left-0 right-0 m-glass px-5 pt-3 flex gap-2"
+        style={{
+          bottom: "calc(96px + var(--m-safe-bottom))",
+          paddingBottom: 12,
+          borderTop: "1px solid hsl(var(--m-divider))",
+        }}
+      >
+        {step > 0 && (
+          <button
+            onClick={() => setStep((s) => s - 1)}
+            className="flex-1 h-12 rounded-2xl font-semibold m-pressable"
+            style={{ background: "hsl(var(--m-surface-muted))", color: "hsl(var(--m-text-primary))" }}
+          >
+            Geri
+          </button>
+        )}
+        <button
+          disabled={submitting}
+          onClick={() => (isPatientStep ? submit() : next())}
+          className="flex-[2] h-12 rounded-2xl font-semibold m-pressable disabled:opacity-40 flex items-center justify-center gap-2"
+          style={{ background: "hsl(var(--m-accent))", color: "white" }}
+        >
+          {isPatientStep ? (submitting ? "Gönderiliyor..." : "Gönder") : "İleri"}
+          {!isPatientStep && <ChevronRight className="w-5 h-5" />}
+        </button>
+      </div>
+    </div>
+  );
+}

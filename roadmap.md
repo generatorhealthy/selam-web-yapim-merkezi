@@ -1,5 +1,15 @@
 # Roadmap
 
+## 12 Kasım 16:56 — yalnız hazırlık ve izole test onayı
+- [x] Test hazırlığı: atomik işlem/sonuç/outbox, guest capability ve belge snapshot, üç tam istemci adayı, genel mail worker; TS/Deno ve 9 gerçek yerel SQL test grubu geçti; canlı değişmedi.
+- [ ] Test tam yayın paketi — cevap toplamadan önce izin/işlem, gerçek puanlama eşdeğerliği, misafir kötüye kullanım koruması, gerçek mobil/Brevo E2E ve scheduler secret gerekiyor.
+- [x] Mesaj A/B ayrı modelleri ve 3 mantık testi; WAHA değişmedi.
+- [ ] Mesaj uygulama geçişi — gerçek sağlayıcı/telefon OTP, limit trade-off onayı, güvenilir proxy ve aktif hat doğrulaması gerekiyor.
+- [x] Onay server/client adaptörleri ve katalogdan bağımsız withdrawal SQL; 2 gerçek yerel SQL grubu, 4 yeni mantık testi; 57 kayıt hash aynı.
+- [ ] Onay tam geçiş — pending prepare/finalize ve kayıt ekran entegrasyonları henüz tamam değil; gerçek email/OAuth/eski mobil cihaz testi ve hukuki yayın onayı gerekiyor.
+- [x] Rapor: hazır/yayımlanmadı, canlı/doğrulaması eksik ve hukuki bekleyen ayrımı; tam geçiş olarak gösterilmedi, canlı yayın ayrı onay.
+- [ ] İlk doğal yedek sonrası salt okunur 12 tablo/RLS/cron/temizleme denetimi — sonraki doğal çalışma 13 Kasım 16:00 UTC; şu an yeni çalışma yok.
+
 ## Kritik güvenlik öncelikleri — 12 Kasım 16:43 talimatı
 - [x] Öncelik 1: yedek owner/grant/direct postgres cron 23 ve admin ekranı doğrulandı; eski anon açığı yerel PostgreSQL'de üretildi; güvenli SQL ve rollback 10 test grubuyla doğrulandı.
 - [x] Kullanıcı onayıyla yalnız yedek yetkilendirmesi canlıya alındı; anonim canlı RPC 401/42501 reddedildi, iç admin/server kapısı ve cron 23/24 etkinliği doğrulandı; 57 onay hash aynı, 12 test/341 randevu/36 yedek tablo korundu.

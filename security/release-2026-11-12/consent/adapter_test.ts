@@ -1,0 +1,6 @@
+import {assertEquals} from 'https://deno.land/std@0.224.0/assert/mod.ts';
+import {consentRequest,identityAllowed} from './adapter.ts';
+Deno.test('unverified email cannot create account consent',()=>assertEquals(identityAllowed({id:'u',app_metadata:{provider:'email'}},true),false));
+Deno.test('Google and Apple require fresh explicit reaffirmation',()=>{for(const provider of ['google','apple']){const user={id:'u',email_confirmed_at:'synthetic',app_metadata:{provider}};assertEquals(identityAllowed(user,false),false);assertEquals(identityAllowed(user,true),true);}});
+Deno.test('verified email permitted without treating signup metadata as consent',()=>assertEquals(identityAllowed({id:'u',email_confirmed_at:'synthetic',app_metadata:{provider:'email'}},false),true));
+Deno.test('consent rejects caller user id, IP and document hash',()=>assertEquals(consentRequest.safeParse({operationId:'00000000-0000-4000-8000-000000000001',purpose:'health_test',action:'grant',reaffirmed:true,userId:'fake',ip:'fake',documentHash:'fake'}).success,false));
