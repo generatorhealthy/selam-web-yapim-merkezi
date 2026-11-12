@@ -1,3 +1,12 @@
+# 12 Kasım 2026 20:08 — Son mobil ve KVKK yayın paketi
+- [x] Sunucu başarı/geri çekme yanıtları kesin doğrulanır; 3 yeni kural testi, 13 yayın/katalog testi ve sentetik mobil ölçülü ortak izin akışı geçti. Native ön kontrolü eksik iOS/Android projelerini/araçlarını doğru reddeder.
+- [x] MOBILE_RELEASE.md: gerçek cihaz kabul listesi, imzalı mağaza dağıtımı, mevcut push/destek kanalları ve aşamalı bilgilendirme sırası hazır; gönderim yapılmadı.
+- [x] Tek sayfalık LEGAL_DECISION_TABLE.md ve yalnız bireysel onaylı script-free gerçek HTML çıkaran bağımsız yayın paketi hazır; diğer faaliyetler onaylı belgeyi engellemez.
+- [x] Üç gerçek HTTP kaynağında yeni v8 yok; FTP yayını yapılmadı. B/C/bağlantılar/veriler değiştirilmedi.
+- [ ] İmzalı yeni native sürüm — son mağaza yayınının tam Xcode/Android kaynakları, dağıtım sorumlusunun imzası ve gerçek cihaz kabulü bekler; depoda yalnız iOS Google plist var, Android yok.
+- [ ] Eski INSERT kapatma — yeni sürüm/duyuru kabulünden sonra kullanıcı kesinti kararını bekler; bugün kapatılmadı.
+- [ ] Hukuki içerik onayı ve gerçek FTP erişimi — karar tablosundaki faaliyet bazlı hukuk teyidi; üç sayfa bugün yayımlanmadı.
+
 # 12 Kasım 2026 20:00 — Yayın ve geçişin sonuçlandırılması
 - [x] v7 esaslı temiz v8 kamu adayları, v6/v7 hash koruması ve ayrı hash-onaylı sağlık belge kataloğu paketi; 25 test ve altı ekran kontrolü geçti.
 - [x] doktorumol.com.tr üç HTTP yanıtının tarih/hash kanıtı ve FTP yolu incelendi; yeni belge yayını yok, tarayıcı footer Hostinger engelinde doğrulanamadı.

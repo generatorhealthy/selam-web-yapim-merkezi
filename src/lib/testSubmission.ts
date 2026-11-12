@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import { submissionReceipt, withdrawalReceipt } from './testSubmissionResponse';
 
 const operationSchema = z.object({ operationId: z.string().uuid(), capability: z.string().regex(/^[a-f0-9]{64}$/) });
 const documentsSchema = z.object({
@@ -31,10 +32,13 @@ export async function startTest(testId: string, specialistId: string | null, doc
     disclosureRead: true, healthConsentGranted: true }));
 }
 export async function submitTest(operation: Operation, name: string, contact: string, answers: Record<string, unknown>) {
-  return z.object({ resultId: z.string().uuid(), specialistId: z.string().uuid() }).parse(
-    await invoke({ action: 'submit', ...operation, name, contact, answers }));
+  try {
+    return submissionReceipt(await invoke({ action: 'submit', ...operation, name, contact, answers }));
+  } catch {
+    throw new Error('Sonucun kaydedildiği doğrulanamadı. Yanıtlarınız bu ekranda korunuyor; lütfen ekranı kapatmadan tekrar deneyin.');
+  }
 }
 export async function withdrawTestConsent(operation: Operation) {
-  await invoke({ action: 'withdraw', ...operation });
+  withdrawalReceipt(await invoke({ action: 'withdraw', ...operation }));
 }
 // Capabilities and answers stay in memory; never persist them in URLs, analytics or browser storage.
