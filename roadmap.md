@@ -1,5 +1,10 @@
 # Roadmap
 
+## 12 Kasım 18:20 — Koşullu canlı uygulama onayı
+- [ ] A: zorunlu hukuki bilgi şartı geçmeyen sayfaları yayımlama; mevcut arşiv/onaylar korunur.
+- [ ] B: eski mobil uyumluluğu ve güvenilir sonuç kaynağı doğrulanmadan yayımlama; bildirim durdurma reddi korunur.
+- [ ] C: mevcut trigger taşımasını ve yetkilerini koruyarak yalnız genel içerik kullanan bağımsız düzeltmeyi sentetik SQL ile doğrula, sonra koşullu onay kapsamında uygula ve salt okunur kanıt al.
+
 ## 12 Kasım 18:06 — Koordineli A/B/C hazırlığı (canlı onay yok)
 - [x] A hazırlığı: v4 korundu, v5 ses beyanı/saklama/kamu URL'leri; React sayfa, route/footer/.htaccess diff üretici ve onay kapılı prerender modülü hazır. Hukuk engelleri COORDINATED_RESULTS.md'de; production entegrasyon/yayın tamamlanmadı.
 - [ ] Santral otomatik kayıt/dosya sayımı — readonly helper check TLS doğrulamasında başarısız; TLS atlanmadı, SSH/sağlayıcı erişimi yok, ses dosyasına erişilmedi. Şirket beyanı ayrı kaydedildi.
