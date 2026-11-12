@@ -36,6 +36,8 @@ Mobil kayıt, ödeme, üyelik, sipariş, abonelik, sözleşme ve WhatsApp ayarla
 ## Şirket ve hukuk
 Ticaret unvanı: Doktorum Ol Bilgi ve Teknoloji Hizmetleri Limited Şirketi. MERSİS: 0309075357800001. Adres: Küçükbakkalköy Mahallesi, Selvili Sokak No:4 İç Kapı No:20 Ataşehir/İstanbul. E-posta: info@doktorumol.com.tr. Mevcut taslaklar bu bilgileri zaten taşıyor; imzalı/geçmiş metinler değiştirilmedi. VERBİS numarası veya muafiyet iddiası yok; muafiyet ayrıca doğrulanacak. KEP adresi bildirilmedi, uydurulmadı.
 
+**Sonradan bildirilen şirket bilgisi (12.11.2026):** KEP adresi `doktorumol@hs01.kep.tr` olarak kullanıcı tarafından bildirildi. Yukarıdaki “KEP adresi bildirilmedi” ifadesi raporun ilk hazırlandığı zamana aittir; güncel şirket bilgisinde KEP eksik değildir. Hukuki metinler yayımlanmadı.
+
 Sağlık verisinin faaliyet bazında hukuki şartı, gerçek altyapı ülkeleri ve alt işleyenler, KVKK m.9 aktarım mekanizması, saklama/imha takvimi ve santral kayıtlarının fiilî durumu hukuk/sağlayıcı incelemesi bekler. Önceki rapordaki “sağlık verisi her durumda yalnız açık rıza” ve “tüm ülkeler doğrulanmış” türü kesin genellemeler esas alınmamalıdır.
 
 ## Devam için bağımlılık
