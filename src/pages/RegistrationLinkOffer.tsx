@@ -6,6 +6,7 @@ import { Check, Star, Users, Calendar, Headphones, Globe, Clock, Shield, Award, 
 import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { FeatureBox } from "@/components/FeatureBox";
+import { registrationLinkPricing, registrationLinkDiscountPercent } from "@/lib/registrationLinkPricing";
 
 const RegistrationLinkOffer = () => {
   const handleWhatsAppContact = () => {
@@ -129,11 +130,11 @@ const RegistrationLinkOffer = () => {
                 
                 <div className="text-center mb-6">
                   <div className="flex items-center justify-center gap-3 mb-2">
-                    <span className="text-3xl md:text-4xl font-bold text-primary">5000₺</span>
-                    <span className="text-xl text-muted-foreground line-through">6500₺</span>
+                    <span className="text-3xl md:text-4xl font-bold text-primary">{registrationLinkPricing.price}₺</span>
+                    <span className="text-xl text-muted-foreground line-through">{registrationLinkPricing.originalPrice}₺</span>
                   </div>
                   <Badge className="bg-red-100 text-red-700 border-red-200 text-sm px-3 py-1">
-                    %23 İndirim - Özel Fırsat!
+                    %{registrationLinkDiscountPercent} İndirim - Özel Fırsat!
                   </Badge>
                 </div>
                 
@@ -183,8 +184,7 @@ const RegistrationLinkOffer = () => {
                       packageData: {
                         id: 'kayit-linki',
                         name: "Premium Paket - Özel Fırsat",
-                        price: 5000,
-                        originalPrice: 6500,
+                        ...registrationLinkPricing,
                         features: packageFeatures
                       }
                     }}

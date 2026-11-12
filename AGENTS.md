@@ -15,3 +15,4 @@
 - Time-on-page comes from SeoEngagementTracker (visible time per route, anon insert into seo_page_engagement), not GA4 — the GA connection is a Measurement ID and cannot read reports.
 - Urgent calendar consultation labels derive from explicit specialist availability flags via specialistConsultation; face-to-face cities use the recorded city without guessing availability or location.
 - Subscription price actions use subscriptionPriceAction: linked card subscriptions retain iyzico upgrades, while second-year pending bank-transfer orders open existing order editing; never imply a provider subscription changed through a local order edit.
+- Registration-link offer pricing and its calculated discount use registrationLinkPricing in both the offer display and checkout navigation state to keep displayed amounts consistent.
