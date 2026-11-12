@@ -1,3 +1,11 @@
+# 12 Kasım 2026 20:23 — Karar vericilere tek somut dosya
+- [x] Tek KARAR_DOSYASI.md ve kullanıcıya teslim kopyası: veri/amaç/alıcı, şirket saklama teyidi, hukuk işleme şartı, sağlayıcı kanıtları ve K1/K2/K3 imza alanları önceden dolduruldu; v8 hash'leri ve kopya doğrulandı.
+- [x] Apple API: 1.0.2, 5 Mayıs 2026, BOSPHORUS satıcısı; Google: 29 Nisan 2026, Bosphorus Design, kamu sürüm numarası yok. Kaynak Capacitor WebView; imzalı mağaza eserinin bu depoya köken bağı kanıtlanamadı. store-evidence.json kaydedildi; eksikler tek dosyada.
+- [x] Üç sayfa ve dar kapsamlı bağımsız açıklama seçeneği mobilden bağımsız değerlendirildi; hiçbir belge için mevcut hukuk onayı yok, yeni gerçek yayın yapılmadı.
+- [ ] İlgili sayfanın K1/K2/K3 içerik kararı ve Hostinger dağıtım erişimi — bunlar sağlandığında yalnız o onaylı sayfanın gerçek yayını; genel teknik yayın izni yeniden istenmeyecek.
+- [ ] Dağıtılmış mobil mimarisinin kesin kökeni — dağıtım sorumlusundan son imzalı IPA/AAB, kaynak commit/build eşleşmesi, tam platform dosyaları ve cihaz kabul kanıtı bekliyor.
+- [x] Yeni ortam, bağlantı değişikliği, eski INSERT kapatma ve korunan kayıt/akış değişikliği yapılmayacak.
+
 # 12 Kasım 2026 20:08 — Son mobil ve KVKK yayın paketi
 - [x] Sunucu başarı/geri çekme yanıtları kesin doğrulanır; 3 yeni kural testi, 13 yayın/katalog testi ve sentetik mobil ölçülü ortak izin akışı geçti. Native ön kontrolü eksik iOS/Android projelerini/araçlarını doğru reddeder.
 - [x] MOBILE_RELEASE.md: gerçek cihaz kabul listesi, imzalı mağaza dağıtımı, mevcut push/destek kanalları ve aşamalı bilgilendirme sırası hazır; gönderim yapılmadı.

@@ -1,0 +1,26 @@
+{
+  "checked_at_utc": "2026-11-12T20:27:28.062855+00:00",
+  "apple": {
+    "trackName": "Doktorum Ol",
+    "bundleId": "app.lovable.doktorumol",
+    "version": "1.0.2",
+    "currentVersionReleaseDate": "2026-05-05T19:02:20Z",
+    "releaseDate": "2026-04-25T07:00:00Z",
+    "sellerName": "BOSPHORUS IC VE DIS TICARET LIMITED SIRKETI",
+    "artistName": "Bosphorus Design",
+    "minimumOsVersion": "14.0",
+    "trackViewUrl": "https://apps.apple.com/tr/app/doktorum-ol/id6762599027?uo=4",
+    "releaseNotes": "Page alignment issues have been corrected."
+  },
+  "google": {
+    "url": "https://play.google.com/store/apps/details?id=app.lovable.doktorumol&hl=tr&gl=TR",
+    "name": "Doktorum Ol",
+    "developer": "Bosphorus Design",
+    "updated_display": "29 Nis 2026",
+    "version_name": null,
+    "version_code": null,
+    "notes": "Icon Changed ready now.",
+    "package_id_in_listing_url": "app.lovable.doktorumol"
+  },
+  "provenance": "No signed installed artifact or build-to-source mapping available; store listings do not prove WebView/PWA/native implementation."
+}
