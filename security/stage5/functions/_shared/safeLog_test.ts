@@ -1,0 +1,11 @@
+import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { redact, scrubText } from "./safeLog.ts";
+const s = (v: unknown) => JSON.stringify(redact(v));
+Deno.test("TC kimlik numarası gizlenir", () => assert(!s({ x: "12345678901" }).includes("12345678901")));
+Deno.test("telefon numarası gizlenir, son iki hane kalır", () => { const o = scrubText("0532 111 22 33"); assert(!o.includes("111")); assert(o.includes("33")); });
+Deno.test("e-posta maskelenir", () => assertEquals(scrubText("ali@ornek.com"), "a***@ornek.com"));
+Deno.test("adres, mesaj ve not alanları çıkarılır", () => { const o = s({ address: "Ataşehir", message: "kaygı", notes: "x" }); assert(!/Ataşehir|kaygı/.test(o)); });
+Deno.test("API anahtarı ve token gizlenir", () => { const o = s({ apiKey: "sk-123", headers: { Authorization: "Bearer abc.def" } }); assert(!/sk-123|abc\.def/.test(o)); });
+Deno.test("serbest metindeki Bearer gizlenir", () => assert(!scrubText("Bearer eyJhbGciOi.xyz").includes("eyJ")));
+Deno.test("teknik alanlar korunur", () => assertEquals(redact({ status: 200, orderId: "abc-1", ok: true }), { status: 200, orderId: "abc-1", ok: true }));
+Deno.test("iç içe veri de temizlenir", () => assert(!s({ buyer: { gsmNumber: "+905321112233", identityNumber: "12345678901" } }).match(/5321112233|12345678901/)));

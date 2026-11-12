@@ -1,0 +1,431 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { decideNotification, pickSpecialistPhone, specialistSms, patientSms as buildPatientSms } from '../_shared/appointmentNotify.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface AppointmentNotificationRequest {
+  appointmentId: string;
+  patientName: string;
+  patientEmail: string;
+  patientPhone: string;
+  specialistEmail: string;
+  specialistName: string;
+  specialistPhone?: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  appointmentType: string;
+  notes?: string;
+}
+
+const PLACEHOLDER_PHONE_DIGITS = new Set(['02167060611', '902167060611']);
+
+const normalizePhone = (value?: string | null) => (value ?? '').replace(/\D/g, '');
+
+const isUsablePhone = (value?: string | null) => {
+  const digits = normalizePhone(value);
+  return digits.length >= 10 && !PLACEHOLDER_PHONE_DIGITS.has(digits);
+};
+
+const pickFirstUsablePhone = (values: Array<string | null | undefined>) => {
+  const match = values.find((value) => isUsablePhone(value));
+  return match?.trim() ?? null;
+};
+
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const brevoApiKey = Deno.env.get('BREVO_API_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!brevoApiKey) {
+      console.error('BREVO_API_KEY not found');
+      return new Response(
+        JSON.stringify({ error: 'Email service not configured' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration not found');
+      return new Response(
+        JSON.stringify({ error: 'Supabase service not configured' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const payload = await req.json() as Partial<AppointmentNotificationRequest>;
+    const missingFields = [
+      'appointmentId',
+    ].filter((field) => !payload[field as keyof AppointmentNotificationRequest]);
+
+    if (missingFields.length > 0) {
+      return new Response(
+        JSON.stringify({ error: `Missing required fields: ${missingFields.join(', ')}` }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    let {
+      appointmentId,
+      patientName,
+      patientEmail,
+      patientPhone,
+      specialistEmail,
+      specialistName,
+      specialistPhone,
+      appointmentDate,
+      appointmentTime,
+      appointmentType,
+      notes,
+    } = payload as AppointmentNotificationRequest;
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // SECURITY: the notification must describe a real appointment and may only be
+    // delivered to the specialist stored on that appointment. Everything that decides
+    // the recipient or the content is re-read from the database, so a caller cannot
+    // send made-up appointment mails to an address of their choosing.
+    const { data: appointmentRow, error: appointmentLookupError } = await supabase
+      .from('appointments')
+      .select('id, specialist_id, patient_name, patient_email, patient_phone, appointment_date, appointment_time, appointment_type, created_at')
+      .eq('id', appointmentId)
+      .maybeSingle();
+
+    if (appointmentLookupError || !appointmentRow) {
+      console.error('Appointment not found for notification:', appointmentId, appointmentLookupError);
+      return new Response(
+        JSON.stringify({ error: 'Randevu bulunamadı' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    const { data: specialistRecord } = await supabase
+      .from('specialists')
+      .select('name, email, phone')
+      .eq('id', appointmentRow.specialist_id)
+      .maybeSingle();
+
+    if (!specialistRecord?.email) {
+      console.error('Specialist e-mail missing for appointment:', appointmentId);
+      return new Response(
+        JSON.stringify({ error: 'Uzman e-posta adresi bulunamadı' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    specialistEmail = specialistRecord.email;
+    specialistName = specialistRecord.name ?? specialistName;
+    specialistPhone = specialistRecord.phone ?? specialistPhone;
+    patientName = appointmentRow.patient_name ?? patientName;
+    patientEmail = appointmentRow.patient_email ?? patientEmail;
+    patientPhone = appointmentRow.patient_phone ?? patientPhone;
+    appointmentDate = appointmentRow.appointment_date ?? appointmentDate;
+    appointmentTime = (appointmentRow.appointment_time ?? appointmentTime)?.toString().slice(0, 5);
+    appointmentType = appointmentRow.appointment_type ?? appointmentType;
+    // GÜVENLİK: notlar/danışmanlık konusu hiçbir bildirime girmez.
+    notes = undefined;
+
+    // GÜVENLİK: yalnız gerçek, yeni (30 dk) ve daha önce bildirilmemiş randevu için gönderim.
+    {
+      const { data: prior } = await supabase.from('brevo_email_logs').select('id')
+        .eq('template_name', 'appointment-notification').contains('metadata', { appointmentId }).limit(1);
+      const decision = decideNotification({ exists: true, alreadyNotified: !!prior?.length, createdAt: appointmentRow.created_at ?? null, now: Date.now() });
+      if (!decision.send) {
+        console.log(JSON.stringify({ evt: 'appointment_notify_skipped', reason: decision.reason }));
+        return new Response(JSON.stringify({ success: true, skipped: true, reason: decision.reason }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
+
+    console.log(JSON.stringify({ evt: 'appointment_notify', appointmentId }));
+
+    const appointmentTypeText = appointmentType === 'face-to-face'
+      ? 'Yüz Yüze'
+      : appointmentType === 'online'
+        ? 'Online'
+        : appointmentType;
+
+    const formattedDate = new Date(appointmentDate).toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+    });
+
+    const emailContent = `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+              Yeni Randevu Bildirimi
+            </h2>
+            
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #27ae60; margin-top: 0;">Randevu Detayları</h3>
+              <p><strong>Tarih:</strong> ${formattedDate}</p>
+              <p><strong>Saat:</strong> ${appointmentTime}</p>
+              <p><strong>Randevu Türü:</strong> ${appointmentTypeText}</p>
+            </div>
+
+            <div style="background-color: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+              <h3 style="color: #2c3e50;">Hasta Bilgileri</h3>
+              <p><strong>Adı Soyadı:</strong> ${patientName}</p>
+              <p><strong>E-posta:</strong> ${patientEmail}</p>
+              <p><strong>Telefon:</strong> ${patientPhone}</p>
+            </div>
+
+            <div style="margin-top: 30px; padding: 20px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;">
+              <h4 style="color: #856404; margin-top: 0;">📅 Randevu Yönetimi</h4>
+              <p style="margin: 0; color: #856404;">
+                Randevu durumunu güncellemek ve randevu detaylarını görüntülemek için 
+                <strong>doktorumol.com.tr</strong> uzman panelinize giriş yapabilirsiniz.
+              </p>
+            </div>
+
+            <div style="margin-top: 30px; padding: 20px; background-color: #e8f4f8; border-radius: 8px;">
+              <p style="margin: 0; font-size: 14px; color: #666;">
+                Bu e-posta <strong>doktorumol.com.tr</strong> üzerinden otomatik olarak gönderilmiştir.
+                Randevu ID: ${appointmentId}
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Was this appointment already notified? Then this is a repeat call: do not
+    // text the patient again (prevents using this endpoint to spam a phone).
+    const { data: priorLogs } = await supabase
+      .from('brevo_email_logs')
+      .select('id')
+      .eq('template_name', 'appointment-notification')
+      .contains('metadata', { appointmentId })
+      .limit(1);
+    const isFirstNotification = !priorLogs?.length;
+    const isFreshAppointment = appointmentRow.created_at
+      ? Date.now() - new Date(appointmentRow.created_at).getTime() < 30 * 60 * 1000
+      : false;
+
+    const brevoResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': brevoApiKey,
+      },
+      body: JSON.stringify({
+        sender: {
+          email: 'info@doktorumol.com.tr',
+          name: 'Doktor Umol',
+        },
+        to: [{
+          email: specialistEmail,
+          name: specialistName,
+        }],
+        subject: `Yeni Randevu: ${patientName} - ${formattedDate} ${appointmentTime}`,
+        htmlContent: emailContent,
+      }),
+    });
+
+    if (!brevoResponse.ok) {
+      const errorData = await brevoResponse.text();
+      console.error('Brevo API error:', errorData);
+      throw new Error(`Brevo API error: ${brevoResponse.status}`);
+    }
+
+    const brevoResult = await brevoResponse.json();
+    console.log(JSON.stringify({ evt: 'appointment_email_ok' }));
+
+    const { data: ownOrders } = await supabase.from('orders').select('customer_phone')
+      .eq('customer_email', specialistEmail).not('customer_phone', 'is', null)
+      .order('created_at', { ascending: false }).limit(10);
+    const { phone: resolvedSpecialistPhone, source: smsPhoneSource } =
+      pickSpecialistPhone(specialistRecord.phone, (ownOrders ?? []).map((r: any) => r.customer_phone));
+
+    console.log(JSON.stringify({ evt: 'appointment_notify_phone', source: smsPhoneSource }));
+
+    try {
+      await supabase.from('brevo_email_logs').insert({
+        recipient_email: specialistEmail,
+        recipient_name: specialistName,
+        subject: `Yeni Randevu: ${patientName} - ${formattedDate} ${appointmentTime}`,
+        template_name: 'appointment-notification',
+        status: 'sent',
+        brevo_message_id: brevoResult.messageId || null,
+        metadata: {
+          appointmentId,
+          patientName,
+          patientEmail,
+          appointmentDate,
+          appointmentTime,
+          smsPhoneSource,
+        },
+      });
+    } catch (logErr) {
+      console.error('Email log insert error:', logErr);
+    }
+
+    let smsResult = null;
+    if (resolvedSpecialistPhone) {
+      try {
+        console.log(JSON.stringify({ evt: 'appointment_sms_specialist' }));
+
+        const smsMessage = specialistSms({ patientName, date: formattedDate, time: appointmentTime, type: appointmentTypeText, patientPhone });
+
+        const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
+          body: {
+            phone: resolvedSpecialistPhone,
+            message: smsMessage,
+          },
+        });
+
+        if (smsError) {
+          console.error('SMS sending error:', smsError);
+        } else {
+          console.log(JSON.stringify({ evt: 'appointment_sms_specialist_ok' }));
+          smsResult = smsData;
+        }
+      } catch (smsError) {
+        console.error('SMS sending failed:', smsError);
+      }
+    } else {
+      console.log('No usable specialist phone found in request, specialists or orders; skipping SMS');
+    }
+
+    // Hastaya "randevunuz alındı" SMS'i — yalnızca kayıttaki numaraya, bir kez.
+    if (patientPhone) {
+      try {
+        const patientSms = buildPatientSms({ specialistName, date: formattedDate, time: appointmentTime, type: appointmentTypeText });
+        const { error: pSmsErr } = await supabase.functions.invoke('send-sms-via-static-proxy', {
+          body: { phone: patientPhone, message: patientSms },
+        });
+        if (pSmsErr) console.error('Patient SMS error:', pSmsErr);
+      } catch (e) {
+        console.error('Patient SMS failed:', e);
+      }
+    }
+
+    // Doki'den uzmana WhatsApp bildirimi (WAHA üzerinden) — hata olursa sessizce geç
+    let dokiWaResult: any = null;
+    try {
+      if (resolvedSpecialistPhone) {
+        const normalizePhoneToWa = (raw: string): string | null => {
+          const digits = (raw || '').replace(/\D/g, '');
+          if (digits.startsWith('90') && digits.length === 12) return digits;
+          if (digits.startsWith('0') && digits.length === 11) return '9' + digits;
+          if (digits.length === 10) return '90' + digits;
+          return null;
+        };
+        const getSessionNameForLineId = (lineId: string) =>
+          `line_${lineId.replace(/-/g, '').slice(0, 16)}`;
+
+        const waPhone = normalizePhoneToWa(resolvedSpecialistPhone);
+        if (waPhone) {
+          const { data: activeLines } = await supabase
+            .from('whatsapp_lines')
+            .select('id, phone_number, is_active, sort_order')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+          const lines = (activeLines || []) as any[];
+          const candidates = lines.map((l) => getSessionNameForLineId(l.id));
+          const activePhones = new Set(lines.map((l) => String(l.phone_number || '').replace(/\D/g, '')).filter(Boolean));
+
+          if (candidates.length > 0) {
+            const sessionsRes = await supabase.functions.invoke('waha-proxy', {
+              body: { action: 'sessions.list' },
+            });
+            const sessions = Array.isArray((sessionsRes.data as any)?.data) ? (sessionsRes.data as any).data : [];
+            let sessionName: string | undefined = candidates.find((c) =>
+              sessions.some((s: any) => s?.name === c && String(s?.status || '').toUpperCase() === 'WORKING')
+            );
+            if (!sessionName) {
+              const matched = sessions.find((s: any) => {
+                if (String(s?.status || '').toUpperCase() !== 'WORKING') return false;
+                const mePhone = String(s?.me?.id || '').split('@')[0]?.replace(/\D/g, '') || '';
+                return mePhone && activePhones.has(mePhone);
+              });
+              if (matched) sessionName = matched.name;
+            }
+
+            if (sessionName) {
+              const dokiText =
+                `Merhaba ${specialistName} 👋\n\n` +
+                `Ben *Doki* — Doktorum Ol platformunun yapay zeka asistanıyım.\n\n` +
+                `📅 *Yeni bir randevunuz var!*\n\n` +
+                `👤 *Danışan:* ${patientName}\n` +
+                `📆 *Tarih:* ${formattedDate}\n` +
+                `🕐 *Saat:* ${appointmentTime}\n` +
+                `💼 *Tür:* ${appointmentTypeText}\n` +
+                `📞 *Telefon:* ${patientPhone}` +
+                `\n\n🔗 Randevu detaylarını web sitemizden veya mobil uygulamamızdan kontrol edebilirsiniz:\n` +
+                `https://doktorumol.com.tr\n\n` +
+                `Başarılı bir görüşme dilerim! 💙\n\n` +
+                `— *Doki*\n_Doktorum Ol AI Asistanı_`;
+
+              const waRes = await supabase.functions.invoke('waha-proxy', {
+                body: {
+                  action: 'sendText',
+                  sessionName,
+                  payload: { chatId: `${waPhone}@c.us`, text: dokiText },
+                },
+              });
+              dokiWaResult = waRes.data;
+              console.log(JSON.stringify({ evt: 'appointment_wa_ok' }));
+            } else {
+              console.log('Doki WA: WORKING session bulunamadı, atlandı');
+            }
+          } else {
+            console.log('Doki WA: aktif WhatsApp hattı yok, atlandı');
+          }
+        } else {
+          console.log('Doki WA: telefon WA formatına çevrilemedi, atlandı');
+        }
+      }
+    } catch (waErr) {
+      console.error('Doki WA randevu bildirim hatası (sessizce geçiliyor):', waErr);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        messageId: brevoResult.messageId,
+        smsResult,
+        dokiWaResult,
+        smsPhoneSource,
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  } catch (error: any) {
+    console.error('Error in send-appointment-notification function:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+};
+
+serve(handler);
