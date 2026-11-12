@@ -5,9 +5,9 @@ import { HorizontalNavigation } from '@/components/HorizontalNavigation';
 import Footer from '@/components/Footer';
 import publication from '@/content/legal/publication.json';
 import { isLegalPublished } from '@/lib/legalPublication.js';
-import disclosure from '@/content/legal/2026-11-12-yayin-adayi-v6/aydinlatma-metni.md?raw';
-import consent from '@/content/legal/2026-11-12-yayin-adayi-v6/acik-riza.md?raw';
-import call from '@/content/legal/2026-11-12-yayin-adayi-v6/cagri-merkezi.md?raw';
+import disclosure from '@/content/legal/2026-11-12-yayin-adayi-v8/aydinlatma-metni.md?raw';
+import consent from '@/content/legal/2026-11-12-yayin-adayi-v8/acik-riza.md?raw';
+import call from '@/content/legal/2026-11-12-yayin-adayi-v8/cagri-merkezi.md?raw';
 
 export type LegalDocument = keyof typeof publication.documents;
 const texts = { disclosure, consent, call };

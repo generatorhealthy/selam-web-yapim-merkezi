@@ -1,3 +1,11 @@
+# 12 Kasım 2026 20:00 — Yayın ve geçişin sonuçlandırılması
+- [x] v7 esaslı temiz v8 kamu adayları, v6/v7 hash koruması ve ayrı hash-onaylı sağlık belge kataloğu paketi; 25 test ve altı ekran kontrolü geçti.
+- [x] doktorumol.com.tr üç HTTP yanıtının tarih/hash kanıtı ve FTP yolu incelendi; yeni belge yayını yok, tarayıcı footer Hostinger engelinde doğrulanamadı.
+- [x] Eski native kodda cevap öncesi uzaktan durdurma/güncelleme bulunamadı; eski gönderim hata etkisi somutlaştırıldı; kayıt kapatma yapılmadı.
+- [x] 34 AI kaydı içeriksiz işlem gruplarına ayrıldı; sonsuz arşiv/delil/rıza varsayılmadı; B/C/erişim korundu.
+- [ ] Yeni hukuki belge yayını — Aydınlatma/Rıza için sağlık açıklamalı eski kaynakların somut sebebi, Çağrı için geçmiş döküm saklama sebebi; şirket/hukuk teyidi ve gerçek FTP dağıtım erişimi bekler.
+- [ ] Sağlık katalog uygulama/etkinleştirme — belge hash onayı, sağlık aktarım şartı, gerçek mobil kabul veya eski gönderim kesintisi için ayrı kullanıcı kararı bekler.
+
 # 12 Kasım 2026 19:39 — Gerçek sağlık izni entegrasyonu ve koşullu yayın
 - [x] Gerçek TestTaking/TestTaker/MobileTestTaker ortak izin kapısı/atomik gönderimle bağlandı; yeni ekranlar kapalı sunucuda veri almadan durur.
 - [x] En küçük sunucu temeli + service-only politikalar canlı; release kapalı, 0 yeni sağlık olay/işlem. 24 Deno + 7 izin + 4 yayın testi, 10 sentetik SQL kabul grubu ve dört web/mobile ölçüsü geçti.

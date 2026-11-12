@@ -1,0 +1,26 @@
+[
+  {
+    "url": "https://doktorumol.com.tr/acik-riza",
+    "http": 200,
+    "response_sha256": "ee0e4e9a72c56db45dbe53b231701af6ba7def8f9a1275f3e145f2e222e3455c",
+    "headers_date": "date: Thu, 12 Nov 2026 20:01:33 GMT",
+    "new_document_verified": false,
+    "published_at": null
+  },
+  {
+    "url": "https://doktorumol.com.tr/aydinlatma-metni",
+    "http": 200,
+    "response_sha256": "cbffba01f8de6f1ebdaca17fd5f247b960fc9e7118fd70ff086844a5f1b0d4bd",
+    "headers_date": "date: Thu, 12 Nov 2026 20:01:33 GMT",
+    "new_document_verified": false,
+    "published_at": null
+  },
+  {
+    "url": "https://doktorumol.com.tr/cagri-merkezi-aydinlatma-metni",
+    "http": 200,
+    "response_sha256": "48b787b7740e8fe3bee5d436728517eef076b55f14c6710ed39158236621577f",
+    "headers_date": "date: Thu, 12 Nov 2026 20:01:34 GMT",
+    "new_document_verified": false,
+    "published_at": null
+  }
+]

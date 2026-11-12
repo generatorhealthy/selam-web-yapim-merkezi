@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-12-yayin-adayi-v6",
+  "version": "2026-11-12-yayin-adayi-v8",
   "documents": {
     "disclosure": { "path": "/aydinlatma-metni", "file": "aydinlatma-metni.md", "title": "KVKK Aydınlatma Metni", "legal_approved_at": null, "publication_authorized_at": "2026-11-12T18:55:00Z", "published_at": null },
     "consent": { "path": "/acik-riza", "file": "acik-riza.md", "title": "Açık Rıza Metni", "legal_approved_at": null, "publication_authorized_at": "2026-11-12T18:55:00Z", "published_at": null },
