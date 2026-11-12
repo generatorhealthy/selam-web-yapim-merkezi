@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { safeLog } from "../_shared/safeLog.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -26,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const requestData: RegistrationEmailRequest = await req.json();
-    console.log("Registration email request received:", requestData);
+    safeLog("Registration email request received:", { hasEmail: !!(requestData as any)?.email });
 
     const brevoApiKey = Deno.env.get("BREVO_API_KEY");
     if (!brevoApiKey) {
@@ -251,7 +252,7 @@ const handler = async (req: Request): Promise<Response> => {
     const adminResult = await adminEmailResponse.json();
     const userResult = await userEmailResponse.json();
 
-    console.log("E-postalar başarıyla gönderildi:", { adminResult, userResult });
+    safeLog("E-postalar başarıyla gönderildi:", { admin: (adminResult as any)?.messageId ? "ok" : "?", user: (userResult as any)?.messageId ? "ok" : "?" });
 
     // Log emails to database
     try {

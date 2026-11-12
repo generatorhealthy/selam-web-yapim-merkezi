@@ -1,4 +1,5 @@
 import { verifySmsCaller } from "../_shared/smsAuth.ts";
+import { safeLog } from "../_shared/safeLog.ts";
 import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
@@ -36,7 +37,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (isBlockedPhone(phone)) {
-      console.warn('Blocked phone, SMS iptal edildi:', phone);
+      console.warn('Blocked phone, SMS iptal edildi');
       return new Response(
         JSON.stringify({ success: false, blocked: true, error: 'Bu numara engellenmis listede, SMS gonderilmedi' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -96,8 +97,8 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     const useRelay = !!relayUrl;
-    console.log(useRelay ? 'Using RELAY to send SMS' : 'Using ScrapingBee proxy to send SMS', { to: cleanPhone });
-    console.log('Message:', message);
+    console.log(useRelay ? 'Using RELAY to send SMS' : 'Using ScrapingBee proxy to send SMS', { toLast2: String(cleanPhone).slice(-2) });
+    console.log('Message length:', String(message ?? '').length);
 
     let fetchUrl = '';
     let fetchOptions: RequestInit = {
@@ -122,11 +123,11 @@ const handler = async (req: Request): Promise<Response> => {
     let response = await fetch(fetchUrl, fetchOptions);
 
     console.log('Proxy response status:', response.status);
-    console.log('Proxy response headers:', Object.fromEntries(response.headers.entries()));
+    
     
     let result;
     let responseText = await response.text();
-    console.log('Raw proxy response:', responseText);
+    safeLog('Raw proxy response:', { text: responseText.slice(0, 200) });
     
     try {
       result = JSON.parse(responseText);
@@ -135,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
       result = { message: responseText, raw_response: responseText };
     }
     
-    console.log('Parsed response:', result);
+    safeLog('Parsed response:', result);
 
     let attemptedFallback = false;
 
@@ -166,7 +167,7 @@ const handler = async (req: Request): Promise<Response> => {
           response = await fetch(scrapingBeeUrl, fbOptions);
           console.log('Fallback ScrapingBee response status:', response.status);
           responseText = await response.text();
-          console.log('Raw fallback response:', responseText);
+          safeLog('Raw fallback response:', { text: responseText.slice(0, 200) });
           try {
             result = JSON.parse(responseText);
           } catch {

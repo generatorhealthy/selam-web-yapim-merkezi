@@ -97,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
 
             const message = `Merhaba ${appointment.patient_name}, ${specialistName} ile bugün saat ${appointment.appointment_time}'da ${appointmentTypeText} randevunuz bulunmaktadır. İyi günler dileriz. - doktorumol.com.tr`;
 
-            console.log('Sending reminder SMS to:', appointment.patient_phone);
+            console.log('Sending reminder SMS for appointment:', appointment.id);
 
             const { data: smsData, error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
               body: {

@@ -1,4 +1,5 @@
 import { verifySmsCaller } from "../_shared/smsAuth.ts";
+import { safeLog } from "../_shared/safeLog.ts";
 import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
@@ -36,7 +37,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (isBlockedPhone(phone)) {
-      console.warn('Blocked phone, SMS iptal edildi:', phone);
+      console.warn('Blocked phone, SMS iptal edildi');
       return new Response(
         JSON.stringify({ success: false, blocked: true, error: 'Bu numara engellenmis listede, SMS gonderilmedi' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -93,11 +94,11 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log('Verimor API response status:', response.status);
-    console.log('Verimor API response headers:', Object.fromEntries(response.headers.entries()));
+    
     
     let result;
     const responseText = await response.text();
-    console.log('Verimor raw response:', responseText);
+    safeLog('Verimor raw response:', { text: responseText.slice(0, 200) });
     
     try {
       result = JSON.parse(responseText);
@@ -106,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
       result = { message: responseText, raw_response: responseText };
     }
     
-    console.log('Verimor parsed response:', result);
+    safeLog('Verimor parsed response:', result);
 
     if (!response.ok) {
       console.error('Verimor API error details:', {

@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     }
 
     const payload = { expires_after: { anchor: "created_at", seconds: 600 }, session };
-    console.log("realtime session payload", JSON.stringify(payload));
+    console.log("realtime session created", { hasPrompt: !!(payload as any)?.session?.prompt });
 
     // ?debug=1 → anahtar üretmeden gönderilen tam payload'ı döndür.
     if (new URL(req.url).searchParams.get("debug") === "1") {

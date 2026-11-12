@@ -1,4 +1,5 @@
 import { isBlockedPhone } from "../_shared/blocklist.ts";
+import { safeLog } from "../_shared/safeLog.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
@@ -58,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
         current_month: null,
         paid_months: []
       }];
-      console.log('TEST MODE: Calling', requestBody.test_phone);
+      console.log('TEST MODE: Calling test number');
     } else {
       // Find unpaid customers: payment day has passed but current month not in paid_months
       const { data: customers, error: fetchError } = await supabase
@@ -217,20 +218,20 @@ const handler = async (req: Request): Promise<Response> => {
       .filter(c => {
         if (!c.customer_phone || c.customer_phone.trim() === '') return false;
         if (isBlockedPhone(c.customer_phone)) {
-          console.log(`Skipping ${c.customer_name}: engellenmis numara`);
+          console.log('Skipping: engellenmis numara');
           return false;
         }
         // Strip non-digits to compare
         const digits = c.customer_phone.replace(/\D/g, '');
         // Skip office/default numbers
         if (OFFICE_NUMBERS.some(office => digits.endsWith(office) || digits === office)) {
-          console.log(`Skipping ${c.customer_name}: office/default phone number`);
+          console.log('Skipping: office/default phone number');
           return false;
         }
         // Only allow mobile numbers (starting with 5 after country code)
         const normalized = digits.startsWith('90') ? digits.substring(2) : (digits.startsWith('0') ? digits.substring(1) : digits);
         if (!normalized.startsWith('5')) {
-          console.log(`Skipping ${c.customer_name}: not a mobile number (${c.customer_phone})`);
+          console.log('Skipping: not a mobile number');
           return false;
         }
         return true;
@@ -293,8 +294,8 @@ const handler = async (req: Request): Promise<Response> => {
         recording_enabled: true
       };
 
-      console.log('Creating IVR campaign for', customer.customer_name, customer.phone);
-      console.log('Campaign data:', JSON.stringify(campaignData, null, 2));
+      console.log('Creating IVR campaign');
+      safeLog('Campaign data:', campaignData);
 
       const verimorResponse = await fetch(
         `https://api.bulutsantralim.com/ivr_campaigns.json?key=${apiKey}`,
@@ -309,7 +310,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       const responseText = await verimorResponse.text();
       console.log('Verimor IVR response status:', verimorResponse.status);
-      console.log('Verimor IVR response:', responseText);
+      safeLog('Verimor IVR response:', { text: responseText.slice(0, 200) });
 
       if (!verimorResponse.ok) {
         throw new Error(`Verimor IVR API error for ${customer.customer_name} (${verimorResponse.status}): ${responseText}`);

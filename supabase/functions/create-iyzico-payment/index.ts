@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { safeLog } from "../_shared/safeLog.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,7 +15,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Gelen Body - Subscription V4:", body);
+    safeLog("Gelen istek - Subscription V4:", { packageType: body?.packageType ?? body?.packageData?.type ?? null, hasCustomer: !!body?.customerData });
 
     const { packageType, customerData, subscriptionReferenceCode, layout } = body;
     const {

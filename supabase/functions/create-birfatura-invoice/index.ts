@@ -1,4 +1,5 @@
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
+import { safeLog } from "../_shared/safeLog.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -105,7 +106,7 @@ serve(async (req) => {
     let birfaturaSuccess = false;
     
     try {
-      console.log('Sending invoice data to BirFatura:', JSON.stringify(invoiceData, null, 2));
+      safeLog('Sending invoice data to BirFatura:', { orderId });
       
       // Simulated BirFatura API response for testing
       // When you have the actual BirFatura API endpoint, replace this with real call
@@ -115,7 +116,7 @@ serve(async (req) => {
         invoiceId: `INV-${order.id.substring(0, 8)}`,
         invoiceNumber: `BF-${Date.now()}`
       };
-      console.log('BirFatura API response (simulated):', birfaturaResult);
+      safeLog('BirFatura API response (simulated):', birfaturaResult);
       birfaturaSuccess = true;
       
     } catch (error) {

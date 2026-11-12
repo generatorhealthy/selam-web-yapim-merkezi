@@ -5,6 +5,7 @@
 // 4. Marks the change record as completed.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { safeLog } from "../_shared/safeLog.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -53,7 +54,7 @@ async function cancelOldSubscription(subRef: string): Promise<boolean> {
       },
     });
     const result = await res.json();
-    console.log("Cancel old subscription result:", JSON.stringify(result));
+    safeLog("Cancel old subscription result:", { status: (result as any)?.status ?? null, errorCode: (result as any)?.errorCode ?? null });
     return result.status === "success";
   } catch (err) {
     console.error("Cancel sub error:", err);
@@ -81,7 +82,7 @@ serve(async (req) => {
     }
     const queryParams = Object.fromEntries(url.searchParams.entries());
     body = { ...body, ...queryParams };
-    console.log("Callback body:", JSON.stringify(body));
+    safeLog("Callback received:", { keys: Object.keys(body ?? {}) });
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -136,7 +137,7 @@ serve(async (req) => {
     const targetEmail = (changeRecord.specialist_email || "").toLowerCase().trim();
     const oldSubRef = changeRecord.old_subscription_ref;
 
-    console.log("Target email:", targetEmail, "| New sub:", newSubRef, "| Old sub:", oldSubRef);
+    safeLog("Target:", { email: targetEmail, newSub: newSubRef, oldSub: oldSubRef });
 
     if (!targetEmail) {
       return new Response(JSON.stringify({ error: "Email tespit edilemedi" }), {
@@ -195,7 +196,7 @@ serve(async (req) => {
         .eq("id", changeId);
     }
 
-    console.log(`✅ Payment method changed for ${targetEmail}: ${oldSubRef || 'havale'} -> ${newSubRef}`);
+    safeLog('✅ Payment method changed', { email: targetEmail, from: oldSubRef || 'havale', to: newSubRef });
 
     const successUrl = "https://doktorumol.com.tr/doktor-paneli?paymentChange=success";
     return new Response(null, { status: 302, headers: { ...corsHeaders, Location: successUrl } });
