@@ -105,12 +105,21 @@
 - [x] Yönetici panelinden kullanılan 3 işleme fonksiyon içi yönetici/personel kontrolü eklendi
 - [x] Doğrulama: 11/11 fonksiyonda anonim yetki kapalı, cron yedek görevleri etkilenmedi
 
-## Aşama 2 — Anonim veri yazma güvenliği
-- [ ] Onay kaydı: sunucudan tek kullanımlık fiş tasarımı (SQL onay bekliyor)
-- [ ] Randevu / sipariş / test sonucu ziyaretçi yazma kısıtları (SQL onay bekliyor)
-- [ ] `issue-consent-grant` sunucu işlevi (onay sonrası)
-- [ ] `MobileSignup.tsx` fiş akışı (onay sonrası)
-- [ ] Fiş üretim ucuna IP başına deneme konacak mı — kullanıcı kararı bekliyor
+## Aşama 2 — Revize (kullanıcı onayı: mevcut SQL reddedildi)
+- [x] Düzeltilmiş SQL hazırlandı (uygulanmadı, onay bekliyor): `security/stage2/01_schema.sql`
+      (yalnızca ekleme: `legal_documents`, `consent_grants`, fiş üretim/tüketim fonksiyonları,
+      hız sınırları), `02_guest_flows.sql` (randevu/test misafir yazımları daraltma),
+      `03_server_writes.sql` (sipariş + onay satırları sunucuya), `04_rollback.sql`
+- [x] Edge function değişiklikleri hazırlandı (yayınlanmadı): `security/stage2/functions/
+      create-iyzico-payment` (tutar/plan artık sunucu kataloğunda), `issue-consent-grant`,
+      `create-checkout-order`; altı fonksiyonun yetki kapıları `FUNCTION_GATES.md`
+- [x] Sunucu mantığı test edildi: 24/24 geçti (`_shared/packageCatalog_test.ts`,
+      `consentGrant_test.ts`, `secretGate_test.ts`) — tek kullanım, kişi bağlama,
+      hız sınırları, "verilmeyen rıza verildi yazılmaz", tutarın planı değiştirememesi
+- [ ] Üretim migration'ı için ayrı onay (01 -> 02 -> fonksiyon/istemci -> 03 sırası)
+- [ ] Ödeme/kayıt ekranlarının yeni uçları çağırması (03'ten önce)
+- [ ] `BIRFATURA_API_TOKEN` vb. sırların tanımlı olduğunun doğrulanması
+- [ ] Test ortamında uçtan uca doğrulama + geri alma provası
 
 ## Aşama 3 — Test ve doğrulama
 - [ ] Uzman kaydı, danışan kaydı, randevu oluşturma, test tamamlama, sipariş oluşturma
