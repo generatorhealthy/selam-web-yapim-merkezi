@@ -3,6 +3,7 @@
 ## Gerçek yayın kanıtı
 - 12 Kasım 2026 yaklaşık 22:24 UTC: doktorumol.com.tr/randevu-sayfasi Chromium ile açıldı; gerçek danışmanlık seçimi ekranı göründü. boot.js ve document script: app-C2tzd4uX.js (200). Canlı JS sağlık açıklaması alınmadığı uyarısını ve randomUUID kullanımını içeriyor. Önceki de6e3bf1/84e0991d yayın içeriği gözlemlendi; GitHub iş durumuna erişim yok.
 - Üretimde hiçbir form gönderilmedi; bu nedenle gerçek kayıt, uzman paneli readback veya teslim doğrulanmış sayılmaz.
+- Canlı 390x844: 50 uzman kartı yüklendi, uzman seçimi → görüşme seçimi → takvim adımına ulaşıldı; yatay taşma yok. Kişisel alan gönderimi yapılmadı.
 
 ## Uygulanan bağımsız web paketi
 - BookAppointment ve RandevuSayfasi: aynı içerikli denemeler bellek içi aynı UUID ile gönderilir. Canlı appointments_pkey ikinci aynı ID'yi reddeder. Bildirim sonucu başarı varsayılmaz; BookAppointment tarayıcıdan ek e-posta çağrısı yapmaz.

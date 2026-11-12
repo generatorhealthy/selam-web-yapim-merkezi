@@ -1,9 +1,11 @@
 # 12 Kasım 2026 — Aşama 3 tamamlama / Aşama 4 web akışları
-- [ ] Önceki randevu düzeltmelerini gerçek alan adında doğrula; üretimde sentetik kayıt/mesaj gönderme.
-- [ ] Ağ hatasında aynı başvuru kimliğini koru, belirsiz sonuçta başarı gösterme; kaynak ve erişim kontrollerini incele.
-- [ ] Sipariş kayıt hatasında ödemeyi durdur; tekrar tıklama ve yanıltıcı başarı/aktivasyon bildirimlerini düzelt, sentetik testleri çalıştır.
-- [ ] Sunucu yetki/eşleştirme ve eski kaynak sorunlarını somutlaştır; canlıyla yerel kanıtı ayır.
-- [ ] Yeni paketlerin gerçek dağıtımını doğrula veya erişim/dağıtım engelini açıkça bildir.
+- [x] Önceki randevu yayını gerçek alanda app-C2tzd4uX.js (200) ile görüldü; mobil uzman→görüşme→takvim seçimi taşmasız, kayıt/mesaj gönderilmedi.
+- [x] İki web formunda değişmeyen deneme UUID'si, anlaşılır hata ve tarayıcıdan ek bildirim çağrısının kaldırılması; canlı PK/unique ve sahiplik kontrolleri incelendi.
+- [x] Sipariş kayıt hatasında ödeme durur; anında kilit/aynı UUID, route parametresi ve doğrulanmamış ödeme başarı iddiası düzeltildi. 17 Bun + 42 Deno testi; sentetik tarayıcıda iki 503, aynı ID ve sıfır ödeme isteği.
+- [x] Sunucu yetki/eşleştirme ve eski kaynak açıkları security/stage34-web-2026-11-12/RESULT.md içinde somutlaştırıldı.
+- [ ] Aşama 3 tam E2E ve sağlayıcı teslim kabulü — gerçek test kaydı/mesaj yasak; ayrı güvenli kabul kanıtı yok. Anonim abuse, iptal saati unique ve WhatsApp atomik kayıt açığı için eski kaynak uyumluluk kabulü bekler.
+- [ ] Aşama 4 güvenilir sipariş/sahiplik/aktivasyon ve webhook geçişi — yüksek etkili DB/sağlayıcı değişiklikleri için bağımsız paket, açık onay ve eski kaynak kabulü gerekir; mevcut paket yalnız web.
+- [ ] Yeni web paketinin gerçek domain yayını — platform commit'i main'e iletip GitHub→Hostinger dağıtımı bitmeli; sandbox GH/FTP erişimi yok. Şu anda yeni paket canlıda doğrulanmış değil.
 
 # 12 Kasım 2026 22:35 — Aşama 1 kapanış + Aşama 3 randevu düzeltmeleri
 - [x] Aşama 1 istemci entegrasyonu canlıda doğrulandı (app-DAseeK4N.js): anonim kabul → consent-transaction + record-consent çağrıları, sunucuda analytics/advertising grant kayıtları (anonymous_server_token); geri çekme → advertising accepted=false kaydı. İzin yoksa ölçüm yok, sahte izin 401, CAPI held — hepsi gerçek sitede.
