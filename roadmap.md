@@ -100,6 +100,8 @@
 ## KVKK güvenlik çalışması (12 Kasım)
 
 ## KVKK Aşama 6 — Kontrollü onay kaydı geçişi
+- [x] KEP içeren üç v2 taslak, SHA-256 özetleri ve birebir eski sürüm arşivi; yalnız önizleme güncellendi, üç sayfa görsel kontrol edildi.
+- [x] Mobil/e-posta doğrulama/OAuth/eski sürüm geçiş planı, yayınlanmayan imzalı beyan prototipi ve risk raporu; 13 yeni test, toplam 48 test geçti; 57 kayıt aynı kaldı.
 - [x] Sunucu işlevi yayımlandı (yeni metin kaydı kapalı), 35/35 test geçti; 57 kaydın içeriği parmak iziyle aynı kaldı.
 - [x] E-posta eşleşmeli okuma ve istemcinin değiştirme/silme yetkileri kapatıldı; mevcut yönetici/personel incelemesi korundu.
 - [ ] Mobil üyelikte gerçek oturumlu sunucu geçişini doğrula, ardından doğrudan INSERT kapat — harici Supabase oturumu ve eski kurulu mobil sürümlerin güvenli geçişi doğrulanamadı; mevcut mobil akış değişmedi.
