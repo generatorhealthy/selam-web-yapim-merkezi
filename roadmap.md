@@ -145,3 +145,7 @@
 - [x] Ödeme bildirimi v2 canlıda (12.11.2026); eski sürüm: security/stage2/functions/iyzico-payment-callback-v2/ROLLBACK_previous_index.ts
 - [ ] İlk gerçek ödeme/yenileme sonrası callback loglarını kontrol et
 - [ ] Sonraki aday: auto-approve-iyzico-orders tutar eşleşmesi (onay bekliyor)
+
+## KVKK Faz 2 (Aşama 1–2)
+- [x] 9 işlev + 6 tablo denetimi, düzeltme taslakları security/stage3
+- [ ] Onay: 5 işlev kapısı, sağlık RLS SQL, WAHA sırrı, randevu bildirimi
