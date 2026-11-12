@@ -4,7 +4,7 @@
 - [x] Tek sayfalık LEGAL_DECISION_TABLE.md ve yalnız bireysel onaylı script-free gerçek HTML çıkaran bağımsız yayın paketi hazır; diğer faaliyetler onaylı belgeyi engellemez.
 - [x] Üç gerçek HTTP kaynağında yeni v8 yok; FTP yayını yapılmadı. B/C/bağlantılar/veriler değiştirilmedi.
 - [ ] İmzalı yeni native sürüm — son mağaza yayınının tam Xcode/Android kaynakları, dağıtım sorumlusunun imzası ve gerçek cihaz kabulü bekler; depoda yalnız iOS Google plist var, Android yok.
-- [ ] Eski INSERT kapatma — yeni sürüm/duyuru kabulünden sonra kullanıcı kesinti kararını bekler; bugün kapatılmadı.
+- [x] Kullanıcı eski test gönderimi için “Şimdilik kapatma” seçti; doğrudan INSERT kapatılmayacak. Yeni açık karar olmadan kesinti uygulanmaz; tam sağlık geçişi etkin sayılmaz.
 - [ ] Hukuki içerik onayı ve gerçek FTP erişimi — karar tablosundaki faaliyet bazlı hukuk teyidi; üç sayfa bugün yayımlanmadı.
 
 # 12 Kasım 2026 20:00 — Yayın ve geçişin sonuçlandırılması
