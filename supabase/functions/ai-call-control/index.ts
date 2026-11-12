@@ -1,6 +1,7 @@
 // Yönetim paneli kontrol uç noktası: durum, aç/kapat ve tek danışan test araması.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
+import { blockedHealthCall } from "./policy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,12 +18,19 @@ Deno.serve(async (req) => {
   if (!auth.ok) return json({ error: auth.error }, auth.status);
 
   try {
+    const url = Deno.env.get("SUPABASE_URL");
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!url || !key) return json({ error: "Yapılandırma kullanılamıyor" }, 503);
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      url,
+      key,
     );
     const body = await req.json().catch(() => ({}));
     const action = body.action || "status";
+    // Health processing and historical transcript basis are not cleared for renewed calls.
+    if (blockedHealthCall(action, body.enabled)) {
+      return json({ error: "Sağlık verisi ve görüşme izinleri doğrulanana kadar yapay zekâ aramaları kapalıdır." }, 409);
+    }
 
     const { data: settings } = await supabase.from("ai_call_settings").select("*").limit(1).maybeSingle();
     if (!settings) return json({ success: false, error: "Ayar kaydı bulunamadı" }, 500);
@@ -31,25 +39,25 @@ Deno.serve(async (req) => {
       const bridgeUrl = Deno.env.get("AI_BRIDGE_URL");
       const bridgeSecret = Deno.env.get("AI_BRIDGE_SECRET");
       let bridge: any = { configured: !!(bridgeUrl && bridgeSecret), reachable: false };
-      if (bridge.configured) {
+      if (bridgeUrl && bridgeSecret) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3_000);
         try {
-          const r = await fetch(`${bridgeUrl!.replace(/\/$/, "")}/health`, {
-            headers: { "x-bridge-secret": bridgeSecret! },
+          const r = await fetch(`${bridgeUrl.replace(/\/$/, "")}/health`, {
+            headers: { "x-bridge-secret": bridgeSecret },
             signal: controller.signal,
           });
           bridge.reachable = r.ok;
-          bridge.detail = (await r.text()).slice(0, 300);
+          bridge.detail = r.ok ? "Santral erişilebilir" : "Santral yanıtı doğrulanamadı";
         } catch (e: any) {
-          bridge.detail = e?.name === "AbortError" ? "Santral sağlık kontrolü zaman aşımına uğradı" : e?.message || String(e);
+          bridge.detail = e?.name === "AbortError" ? "Santral sağlık kontrolü zaman aşımına uğradı" : "Santral kontrolü tamamlanamadı";
         } finally {
           clearTimeout(timeout);
         }
       }
       const { data: recent } = await supabase
         .from("ai_call_sessions")
-        .select("id, lead_name, lead_phone, line_prefix, status, outcome, transferred_specialist_name, started_at, ended_at, error_message")
+        .select("id, lead_name, lead_phone, line_prefix, status, outcome, transferred_specialist_name, started_at, ended_at")
         .order("started_at", { ascending: false })
         .limit(20);
       return json({ success: true, settings, bridge, recent_sessions: recent || [] });
@@ -65,61 +73,9 @@ Deno.serve(async (req) => {
       return json({ success: true, enabled });
     }
 
-    if (action === "test_call") {
-      const leadId = body.lead_id as string | undefined;
-      if (!leadId) return json({ error: "lead_id gerekli" }, 400);
-
-      const { data: lead } = await supabase
-        .from("danisan_basvurulari")
-        .select("id, full_name, phone")
-        .eq("id", leadId)
-        .maybeSingle();
-      if (!lead?.phone) return json({ error: "Danışan veya telefon bulunamadı" }, 404);
-
-      const bridgeUrl = Deno.env.get("AI_BRIDGE_URL");
-      const bridgeSecret = Deno.env.get("AI_BRIDGE_SECRET");
-      if (!bridgeUrl || !bridgeSecret) return json({ error: "AI köprüsü yapılandırılmamış" }, 500);
-
-      const line = body.line_prefix || settings.active_line_prefix || "80";
-      const { data: session, error: sessErr } = await supabase
-        .from("ai_call_sessions")
-        .insert({
-          lead_id: lead.id,
-          lead_name: lead.full_name,
-          lead_phone: lead.phone,
-          line_prefix: line,
-          status: "dialing",
-          is_test: true,
-        })
-        .select("id")
-        .maybeSingle();
-      if (sessErr) throw sessErr;
-
-      const res = await fetch(`${bridgeUrl.replace(/\/$/, "")}/originate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-bridge-secret": bridgeSecret },
-        body: JSON.stringify({
-          session_id: session!.id,
-          lead_id: lead.id,
-          phone: lead.phone,
-          line_prefix: line,
-          is_test: true,
-        }),
-      });
-      const text = await res.text();
-      if (!res.ok) {
-        await supabase
-          .from("ai_call_sessions")
-          .update({ status: "failed", error_message: `[${res.status}] ${text}`, ended_at: new Date().toISOString() })
-          .eq("id", session!.id);
-        return json({ success: false, error: `Köprü hatası [${res.status}]`, details: text }, res.status);
-      }
-      return json({ success: true, session_id: session!.id, line });
-    }
-
     return json({ error: "Bilinmeyen işlem" }, 400);
   } catch (e: any) {
-    console.error("ai-call-control error:", e);
-    return json({ success: false, error: e?.message || String(e) }, 500);
+    console.error("ai_call_control_failed");
+    return json({ success: false, error: "İşlem tamamlanamadı" }, 500);
   }
 });

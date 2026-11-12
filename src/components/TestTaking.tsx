@@ -226,6 +226,7 @@ const TestTaking = () => {
   if (showPatientForm) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-md">
+        {operation && <TestConsentControl operation={operation} onWithdraw={() => { setOperation(null); setAnswers({}); setPatientInfo({ name: '', phone: '' }); }} />}
         <Card>
           <CardHeader>
             <CardTitle>{test.title}</CardTitle>

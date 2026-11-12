@@ -149,13 +149,13 @@ export default function AiCallPanel({ testLeadId, testLeadName }: Props) {
             <Button variant="outline" size="sm" onClick={() => void load(true)} disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
-            <Button size="sm" variant="secondary" onClick={testCall} disabled={testing || !bridge?.reachable}>
+            <Button size="sm" variant="secondary" onClick={testCall} disabled>
               <PhoneCall className={`h-4 w-4 mr-2 ${testing ? "animate-pulse" : ""}`} />
               {testing ? "Aranıyor..." : "Test Araması"}
             </Button>
             <div className="flex items-center gap-2 pl-2 border-l">
               <span className="text-sm font-medium">{s?.enabled ? "Açık" : "Kapalı"}</span>
-              <Switch checked={!!s?.enabled} onCheckedChange={toggle} disabled={!s} />
+              <Switch checked={!!s?.enabled} onCheckedChange={toggle} disabled={!s || !s.enabled} />
             </div>
           </div>
         </div>
@@ -164,8 +164,7 @@ export default function AiCallPanel({ testLeadId, testLeadName }: Props) {
           <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
             <span>
-              Sistem kapalı — otomatik arama yapılmıyor. Önce tek tek test araması yapıp konuşmayı dinleyin,
-              sonuçlar aşağıda görünecek. Her şey doğruysa şalteri açın.
+              Yapay zekâ aramaları kapalıdır. Görüşme izinleri doğrulanana kadar yeni arama başlatılamaz.
             </span>
           </div>
         )}

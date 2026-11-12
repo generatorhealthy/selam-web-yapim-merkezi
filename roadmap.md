@@ -1,8 +1,11 @@
 # 12 Kasım 2026 19:39 — Gerçek sağlık izni entegrasyonu ve koşullu yayın
-- [ ] Gerçek TestTaking/TestTaker/MobileTestTaker ekranlarına cevap öncesi ortak izin kapısı ve atomik sunucu gönderimini entegre et.
-- [ ] Gerçek şemaya uygun en küçük sunucu paketini doğrula; eski mobil/izin belgesi kabul şartı geçmeden sonuç INSERT yetkisini kapatma veya sağlık paketini etkinleştirme.
-- [ ] Randevu/yönlendirme sağlık ayrıntısı ayrımını ve geçmiş AI erişimini değerlendir; uygulanabilir dar korumaları tamamla.
-- [ ] Üç v6 sayfanın gerçek yayın durumunu ve somut hukuki/teknik engelleri raporla; B/C, geçmiş kayıt ve ödeme korunmasını kontrol et.
+- [x] Gerçek TestTaking/TestTaker/MobileTestTaker ortak izin kapısı/atomik gönderimle bağlandı; yeni ekranlar kapalı sunucuda veri almadan durur.
+- [x] En küçük sunucu temeli + service-only politikalar canlı; release kapalı, 0 yeni sağlık olay/işlem. 24 Deno + 7 izin + 4 yayın testi, 10 sentetik SQL kabul grubu ve dört web/mobile ölçüsü geçti.
+- [x] Dört randevu formunda sağlık not/konu alanı kaldırıldı; geçmiş AI transcript/error erişimi canlıda daraltıldı, ai-call-control yeni aramayı reddeder.
+- [x] Üç v6/hash korundu; v7 inceleme kopyası ve gerçek yayın/engeller RESULT.md içinde. 12/57/341, 2736 sipariş, 34 AI ve 36 yedek tablosu aynı; B/C değişmedi.
+- [ ] Sağlık release ve legacy INSERT kapatma — teknik ekipten eski kurulu mobilin cevap öncesi güncelleme/durdurma kabulü; şirket/hukuktan gerçek hizmet izni ve saklama kapsamı beklenir.
+- [ ] Üç sayfa nihai yayın — gerçek hizmet açıklaması ve geçmiş AI/randevu kaynaklarının somut dayanak kapsamı hukuk incelemesi bekler; teknik yayın izni mevcut.
+- [ ] Eski Meta/WhatsApp/mobil sağlık açıklaması kaynakları — bağlantılar korunarak teknik geçiş kabulü gerekir; yeni formların alan kaldırımı tüm kaynakları kapsamaz.
 
 # Roadmap
 
