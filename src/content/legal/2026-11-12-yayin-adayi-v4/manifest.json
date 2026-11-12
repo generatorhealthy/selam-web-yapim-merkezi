@@ -1,0 +1,12 @@
+{
+  "version": "2026-11-12-yayin-adayi-v4",
+  "prepared_at": "2026-11-12",
+  "published_at": null,
+  "status": "legal_review_pending",
+  "source": "2026-11-12-taslak-v2",
+  "documents": {
+    "acik-riza.md": "60b9a5432eb649e23b6618b4619ad44097bd2dcfca85cf91b5b4161c783024e6",
+    "aydinlatma-metni.md": "86aab245cdf853e2b319ff4427084ff17c4f79c21eb54af9f282d16b6f471a17",
+    "cagri-merkezi.md": "179b2eac1c9437c28581df1ed44a9a286c42099b35ce88f4c4e6c135add296c7"
+  }
+}

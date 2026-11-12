@@ -1,5 +1,10 @@
 # Roadmap
 
+## 12 Kasım 17:57 — Hukuki sayfaları güncelleme talimatı
+- [x] v2 temelinde üç v4 yayın adayı: şirket bilgileri, gerçek veri aktarımı/analitik, ses-döküm ayrımı, m.5/m.6 ve mevcut olmayan araç iddiaları düzeltildi; önceki sürümler/hash'ler korundu. Yayın tarihi null.
+- [x] Yalnız taslakta içerik/bağlantı ve altı mobil/masaüstü görüntü kontrolü; noindex/taşma/şirket bilgileri ve eski dört URL yerelde doğrulandı, hash'ler eşleşti. Rapor security/legal-publication-2026-11-12/REVIEW.md; kamu sayfaları/bağlantılar değişmedi.
+- [ ] Üç sayfanın birlikte yayını — faaliyet bazlı sağlık hukuki sebebi, santral kaydı, sağlayıcı/aktarım mekanizması ve saklama prosedürü için bilgi/onay bekliyor; ödeme/onay/veritabanı akışları kapsam dışı.
+
 ## 12 Kasım 17:53 — Mevcut projede aşamalı güvenlik (önceki ortam kurulum kararlarını geçersiz kılar)
 - [x] Yeni hesap/proje/branch ve test ortamı kurulumu iptal; mevcut bağlantı korunacak, tarihsel migration replay edilmeyecek.
 - [x] Öncelik 1 inceleme/teslim: iki aktif submit yolu + kullanılmayan TestTaker + okuma ekranları ve canlı SMS/push trigger metadata incelendi; izole mail politikası, 29 mantık testi ve mevcut yerel SQL rollback kontrolü geçti. Kod/etki/sıra/geri alma raporu: security/test-email-transition-2026-11-12/REPORT.md; canlı değişmedi.
