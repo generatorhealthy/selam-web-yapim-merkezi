@@ -1,5 +1,5 @@
 import { isBlockedPhone, isBlockedVisitor } from "@/utils/blockedNumbers";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
@@ -25,6 +25,8 @@ export default function MobileBooking() {
   const [phone, setPhone] = useState("");
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  // Çift tıklama/eşzamanlı gönderim kilidi: state güncellemesi beklenmeden anında kapanır.
+  const submitLock = useRef(false);
   const [viewMonth, setViewMonth] = useState<Date>(() => {
     const d = new Date();
     d.setDate(1);
@@ -93,10 +95,13 @@ export default function MobileBooking() {
       toast({ title: "Randevu oluşturulamadı", description: "Bu bilgilerle randevu oluşturulamıyor.", variant: "destructive" });
       return;
     }
+    if (submitLock.current) return;
+    submitLock.current = true;
     setSubmitting(true);
     try {
       const { error } = await supabase.from("appointments").insert([
         {
+          id: crypto.randomUUID(),
           specialist_id: specialistId,
           appointment_date: formatDateKey(selectedDate),
           appointment_time: selectedTime,
@@ -114,6 +119,7 @@ export default function MobileBooking() {
     } catch (e: any) {
       toast({ title: "Hata", description: e.message, variant: "destructive" });
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   };

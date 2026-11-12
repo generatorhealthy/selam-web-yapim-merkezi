@@ -1,6 +1,6 @@
 import { isBlockedPhone, isBlockedVisitor } from "@/utils/blockedNumbers";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getAvailableSlotsForDate, parseAvailability, DEFAULT_TIME_SLOTS } from "@/utils/availabilityUtils";
 import { Helmet } from "react-helmet-async";
@@ -27,6 +27,8 @@ const BookAppointment = () => {
   const [specialist, setSpecialist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  // Çift tıklama/eşzamanlı gönderim kilidi: state güncellemesi beklenmeden anında kapanır.
+  const submitLock = useRef(false);
   const [formData, setFormData] = useState({
     patientName: '',
     patientEmail: '',
@@ -126,6 +128,8 @@ const BookAppointment = () => {
       return;
     }
 
+    if (submitLock.current) return;
+    submitLock.current = true;
     setSubmitting(true);
 
     try {
@@ -214,6 +218,7 @@ const BookAppointment = () => {
       console.error('Error booking appointment:', error);
       toast.error('Randevu alınırken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   };

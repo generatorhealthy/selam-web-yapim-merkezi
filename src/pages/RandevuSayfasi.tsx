@@ -1,5 +1,5 @@
 import { isBlockedPhone, isBlockedVisitor } from "@/utils/blockedNumbers";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getAvailableSlotsForDate, parseAvailability, DEFAULT_TIME_SLOTS } from "@/utils/availabilityUtils";
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CalendarIcon, Clock, User, Mail, Phone, MapPin, ChevronLeft, ChevronRight, CheckCircle, Star } from 'lucide-react';
 import { format } from 'date-fns';
@@ -129,9 +128,10 @@ const RandevuSayfasi = () => {
   const [formData, setFormData] = useState({
     patientName: '',
     patientEmail: '',
-    patientPhone: '',
-    notes: ''
+    patientPhone: ''
   });
+  // Çift tıklama/eşzamanlı gönderim kilidi: state güncellemesi beklenmeden anında kapanır.
+  const submitLock = useRef(false);
 
   // Fetch specialists
   useEffect(() => {
@@ -240,8 +240,7 @@ const RandevuSayfasi = () => {
     setFormData({
       patientName: '',
       patientEmail: '',
-      patientPhone: '',
-      notes: ''
+      patientPhone: ''
     });
   };
 
@@ -309,15 +308,18 @@ const RandevuSayfasi = () => {
       return;
     }
 
+    if (submitLock.current) return;
+    submitLock.current = true;
     setSubmitting(true);
-    
+
     try {
       // Convert Turkish appointment type labels to database constraint values
       const dbAppointmentType = appointmentType === 'Online' ? 'online' : 'face-to-face';
-      
+
       const { error } = await supabase
         .from('appointments')
         .insert({
+          id: crypto.randomUUID(),
           specialist_id: selectedSpecialist,
           appointment_date: format(selectedDate, 'yyyy-MM-dd'),
           appointment_time: selectedTime,
@@ -325,7 +327,8 @@ const RandevuSayfasi = () => {
           patient_email: formData.patientEmail,
           patient_phone: formData.patientPhone,
           appointment_type: dbAppointmentType,
-          notes: formData.notes,
+          // Sağlık açıklaması toplanmaz: serbest not alanı bilinçli olarak yok.
+          notes: null,
           status: 'pending'
         });
 
@@ -346,6 +349,7 @@ const RandevuSayfasi = () => {
         variant: "destructive",
       });
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   };
@@ -630,17 +634,6 @@ const RandevuSayfasi = () => {
                   placeholder="E-posta adresinizi girin"
                   className="h-14 text-lg"
                   required
-                />
-              </div>
-              <div>
-                <Label htmlFor="notes" className="text-lg font-semibold mb-2 block">Notlar (Opsiyonel)</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  placeholder="Randevunuzla ilgili özel notlarınız varsa yazabilirsiniz"
-                  rows={4}
-                  className="text-lg resize-none"
                 />
               </div>
             </CardContent>
