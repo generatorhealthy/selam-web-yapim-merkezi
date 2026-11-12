@@ -180,6 +180,9 @@ serve(async (req) => {
     // 1. AI parse
     const parsed = await parseWithAI(rawText);
 
+    // GÜVENLİK: bu uçtan yalnızca uzman hesabı açılır; yapay zekâ veya metin rol yükseltemez.
+    parsed.role = "specialist";
+
     // mode === "preview" ise sadece parse edip dön
     if (mode === "preview") {
       return new Response(
@@ -215,6 +218,12 @@ serve(async (req) => {
           (u: any) => u.email?.toLowerCase() === parsed.email.toLowerCase(),
         );
         if (existing) {
+          // GÜVENLİK: mevcut yönetici/personel/hukuk/muhasebe hesabı bu uçtan değiştirilemez.
+          const { data: prof } = await supabaseAdmin.from("user_profiles").select("role").eq("user_id", existing.id).maybeSingle();
+          if (prof && prof.role !== "specialist") {
+            return new Response(JSON.stringify({ error: "Bu e-posta uzman dışı bir hesaba ait; işlem yapılmadı." }),
+              { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
           userId = existing.id;
         } else {
           return new Response(

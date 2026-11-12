@@ -1,3 +1,4 @@
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -23,6 +24,14 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  // GÜVENLİK: yalnız onaylı yönetici/personel veya sunucu içi çağrı
+  {
+    const __gate = await verifyAdminOrCron(req);
+    if (!__gate.ok) {
+      return new Response(JSON.stringify({ error: __gate.error }), { status: __gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+  }
+
 
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { 

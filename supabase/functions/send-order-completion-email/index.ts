@@ -1,3 +1,4 @@
+import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -103,6 +104,14 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  // GÜVENLİK: yalnız onaylı yönetici/personel veya sunucu içi çağrı
+  {
+    const __gate = await verifyAdminOrCron(req);
+    if (!__gate.ok) {
+      return new Response(JSON.stringify({ error: __gate.error }), { status: __gate.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+  }
+
 
   try {
     const brevoApiKey = Deno.env.get('BREVO_API_KEY');
@@ -129,11 +138,11 @@ const handler = async (req: Request): Promise<Response> => {
     const orderReference = orderId.slice(0, 8).toUpperCase();
     const subject = `Sipariş Onayı & Sözleşmeleriniz • ${packageData.name} • #${orderReference}`;
 
-    console.log('Order completion email request:', { orderId, email: customerData.email, fullName });
+    console.log('Order completion email request:', { orderId });
 
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
-      .select('pre_info_pdf_content, distance_sales_pdf_content, contract_generated_at')
+      .select('pre_info_pdf_content, distance_sales_pdf_content, contract_generated_at, customer_email, customer_name, package_name')
       .eq('id', orderId)
       .maybeSingle();
 
@@ -145,6 +154,9 @@ const handler = async (req: Request): Promise<Response> => {
     if (!order) {
       throw new Error('Sipariş kaydı bulunamadı');
     }
+    // GÜVENLİK: alıcı her zaman siparişin kayıtlı e-postası; istemcinin gönderdiği adres yok sayılır.
+    if (!order.customer_email) throw new Error('Siparişte kayıtlı e-posta yok');
+    customerData.email = String(order.customer_email).trim();
 
     const preInfoContent = order.pre_info_pdf_content?.trim() || null;
     const distanceSalesContent = order.distance_sales_pdf_content?.trim() || null;
