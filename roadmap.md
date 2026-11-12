@@ -1,5 +1,9 @@
 # Roadmap
 
+## 12 Kasım 17:33 — Branch kurulumu öncesi güvenlik planı
+- [x] Mevcut migration/seed/cron/Edge Functions/dış servis risk taraması ve oluşturma öncesi güvenlik planı hazır: BRANCH_PRECREATION_SAFETY_PLAN_2026-11-12.md. 382 migration içinde canlı hedef/görev/HTTP kalıpları bulundu; tam inceleme ve ilk başlangıç engeli kanıtlanmadan oluşturma önerilmiyor. Hiçbir canlı bağlantı/kayıt değişmedi.
+- [ ] Branching planı ve etkinliğini kullanıcı Supabase panelinden doğrulayacak; kurulum kararı bu doğrulama ve güvenlik planından sonra verilecek. Şu an branch veya bağımsız proje oluşturma onayı yok.
+
 ## Test ortamı onayı ve uzman değerlendirmesi
 - [x] Ayrı boş test ortamı kurulumu kullanıcı tarafından onaylandı; aday SQL otomatik puan/risk üretmez, uzman değerlendirmesini bekler.
 - [ ] İzole test ortamı bağlantısı — 12 Kasım 17:17 talimatıyla yeni proje kurulumu bekletildi; önce mevcut Supabase Branching uygunluğu incelenecek. Hiçbir ortam/bağlantı bu inceleme kapsamında oluşturulmayacak veya değiştirilmeyecek.
@@ -12,7 +16,7 @@
 - [x] Pending prepare/finalize SQL ve SDK email/OAuth/callback adaptörü; eşzamanlı yerel finalize ve geri çekme testi geçti.
 - [ ] Gerçek kayıt ekranı/native receipt entegrasyonu — ayrı staging Auth ve gerçek cihaz, bağımsız amaçların hukuki onayı gerekiyor.
 - [x] Staging allowlist/test iskeleti/kurulum planı; production origin reddi test edildi.
-- [ ] Staging kurulumu ve gerçek E2E — yeni boş proje/maliyet onayı, test SMTP/OAuth/CAPTCHA ve cihaz gerekiyor.
+- [ ] Staging kurulumu ve gerçek E2E — öncelikle mevcut Supabase Branching uygunluğu ve kurulum onayı, izole test iletişim/OAuth/CAPTCHA ve cihaz gerekiyor; bağımsız proje kurulumu bekletildi.
 - [ ] Mesaj OTP ekranı/sağlayıcı geçişi — test hattı/OTP ve aktif WAHA doğrulaması gerekiyor; tamamlanmadı.
 - [x] v2 değişmedi; üç unimported v3, SHA256SUMS ve form-amaç haritası hazır.
 - [x] 13 Kasım 16:00 UTC sonrası yedek SELECT sorguları hazır; doğal çalışma bekleniyor, elle çağrı yok.
