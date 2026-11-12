@@ -29,7 +29,10 @@ const CALL_CENTER_NUMBER = "0530 823 22 75";
 const CALL_CENTER_TEL = "+905308232275";
 const WHATSAPP_NUMBER = "905308232275";
 const EMAIL = "info@doktorumol.com.tr";
-const ADDRESS = "İstanbul, Türkiye";
+const COMPANY_TITLE = "Doktorum Ol Bilgi ve Teknoloji Hizmetleri Ltd. Şti.";
+const ADDRESS = "Ataşehir / İstanbul";
+const ADDRESS_STREET = "Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20";
+const ADDRESS_DISTRICT = "Ataşehir / İstanbul";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -221,6 +224,28 @@ const Contact = () => {
                     için destek sağlamaktadır. Telefon, e-posta veya WhatsApp üzerinden
                     bize kolayca ulaşabilirsiniz.
                   </p>
+                  <div className="rounded-2xl border border-border/60 bg-muted/40 p-5 mb-8">
+                    <div className="grid sm:grid-cols-2 gap-5">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                          Ünvan
+                        </p>
+                        <p className="text-sm font-medium text-foreground leading-relaxed">
+                          {COMPANY_TITLE}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                          Adres
+                        </p>
+                        <p className="text-sm font-medium text-foreground leading-relaxed">
+                          {ADDRESS_STREET}
+                          <br />
+                          {ADDRESS_DISTRICT}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                   <Button
                     className="w-fit h-12 px-7 rounded-full bg-foreground text-primary-foreground hover:bg-foreground/90 font-semibold gap-2"
                     onClick={() => window.location.href = `tel:${CALL_CENTER_TEL}`}

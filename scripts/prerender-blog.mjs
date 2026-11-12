@@ -181,7 +181,7 @@ function specialistsForSlug(slug, map, specialists) {
 
 const STATIC_PAGES = [
   ["/hakkimizda", "Hakkımızda | Doktorum Ol", "Doktorum Ol; psikolog, aile danışmanı ve daha birçok branşta uzmanı danışanlarla buluşturan online ve yüz yüze randevu platformudur."],
-  ["/iletisim", "İletişim | Doktorum Ol", "Doktorum Ol ile iletişime geçin: uzman randevusu, üyelik ve destek talepleriniz için bize ulaşın."],
+  ["/iletisim", "İletişim | Doktorum Ol", "Doktorum Ol ile iletişime geçin: uzman randevusu, üyelik ve destek talepleriniz için bize ulaşın.", `<h2>Kurumsal Bilgiler</h2><p>Ünvan: Doktorum Ol Bilgi ve Teknoloji Hizmetleri Ltd. Şti.</p><p>Adres: Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20 Ataşehir / İstanbul</p>`],
   ["/sss", "Sıkça Sorulan Sorular (SSS) | Doktorum Ol", "Doktorum Ol hakkında sıkça sorulan sorular: randevu alma, online görüşme, uzman seçimi ve üyelik."],
   ["/gizlilik-politikasi", "Gizlilik Politikası | Doktorum Ol", "Doktorum Ol gizlilik politikası: kişisel verilerinizin nasıl toplandığı, kullanıldığı ve korunduğu."],
   ["/aydinlatma-metni", "KVKK Aydınlatma Metni | Doktorum Ol", "Doktorum Ol KVKK aydınlatma metni: kişisel verilerin işlenmesine ilişkin bilgilendirme."],
@@ -481,8 +481,8 @@ async function main() {
   }
 
   // ---------- Kurumsal / yasal ----------
-  for (const [path, title, description] of STATIC_PAGES) {
-    const body = `${crumbs([["Ana Sayfa", "/"], [title.split(" | ")[0], null]])}<h1>${esc(title.split(" | ")[0])}</h1><p>${esc(description)}</p>${NAV}`;
+  for (const [path, title, description, extra = ""] of STATIC_PAGES) {
+    const body = `${crumbs([["Ana Sayfa", "/"], [title.split(" | ")[0], null]])}<h1>${esc(title.split(" | ")[0])}</h1><p>${esc(description)}</p>${extra}${NAV}`;
     write(`pre${path}.html`, setRoot(setMeta(template, { title, description, url: `${SITE}${path}` }), body));
     sm(path, { changefreq: path === "/hakkimizda" || path === "/iletisim" || path === "/sss" ? "monthly" : "yearly", priority: ["/hakkimizda", "/iletisim", "/sss"].includes(path) ? "0.6" : "0.3" });
   }
