@@ -4,7 +4,8 @@
 - [x] 382 migration envanteri: 378 dosya/2072 komut ayrıştırıldı, 4 dosya engellendi; dosya/satır/kategori/hash listeleri hazır, otomatik güvenli onay yok.
 - [x] Açık kaynak listeli minimum başlangıç, tam test origin kapısı, redirect engeli ve beş servis simülatörü; izole mantık ve yerel SQL kontrolleri geçti. Tam üretim şeması veya hosted UI E2E değildir.
 - [x] Teknik rapor: standart Dashboard branch güvenli kabul edilmedi; Docker en ucuz yerel seçenek, Lovable için uygun kotada bağımsız Free test projesi önerildi. Canlı değişmedi; kurulum yapılmadı.
-- [ ] Önerilen yalnız Free test projesi + boş test Lovable kurulumu — kullanıcı onayı, ücretsiz kota ve ortam oluşturma erişimi bekleniyor; ücretli alternatife otomatik geçiş yok.
+- [x] Kullanıcı yalnız ücretsiz kota varsa bağımsız Free Supabase test projesi + boş test Lovable kurulumu onayladı; ücretli/branch alternatifi onaylanmadı.
+- [ ] Onaylı test ortamını oluştur/bağla — bu oturumda Supabase kuruluş/kota yönetim bağlantısı veya yeni Lovable proje oluşturma aracı yok; kullanıcı ücretsiz kota kontrolü ve iki boş proje oluşturmasını tamamlayıp yeni test Lovable sohbetinden devam etmeli. Canlı bağlantı değişmez.
 - [x] Kullanıcı PRO planı ve Create branch seçeneğini doğruladı; hiçbir ortam oluşturma veya canlı değişiklik onayı yok.
 
 ## 12 Kasım 17:33 — Branch kurulumu öncesi güvenlik planı
