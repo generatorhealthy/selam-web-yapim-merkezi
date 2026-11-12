@@ -42,6 +42,16 @@ const Footer = () => {
             <Link to="/comment-rules" className="hover:text-blue-600 transition-colors">
               Yorum Yayınlanma Kuralları
             </Link>
+            {!isNativeApp && <>
+              <span className="text-gray-400">|</span>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("open-cookie-settings"))}
+                className="hover:text-blue-600 transition-colors"
+              >
+                Çerez Tercihleri
+              </button>
+            </>}
           </div>
 
           {/* Sosyal Medya */}

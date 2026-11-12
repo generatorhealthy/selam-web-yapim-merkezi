@@ -129,6 +129,60 @@
     <meta name="twitter:site" content="@Doktorum_Ol" />
     <meta name="twitter:creator" content="@Doktorum_Ol" />
 
+    <!-- Çerez izni varsayılanları: ölçüm etiketleri yüklenmeden önce izin sinyallerini ayarlar.
+         Eski tek anahtarlı 'cookie-consent' cevabı iki amaca (analitik + reklam) bir kez taşınır. -->
+    <script>
+      (function () {
+        try {
+          var legacy = (localStorage.getItem("cookie-consent") || "").toLowerCase();
+          var choice = legacy === "accepted" ? "granted" : legacy === "rejected" ? "denied" : null;
+          if (choice) {
+            ["cookie_consent_analytics", "cookie_consent_advertising"].forEach(function (key) {
+              if (localStorage.getItem(key) === null) {
+                localStorage.setItem(key, JSON.stringify({ choice: choice, at: Date.now() }));
+              }
+            });
+          }
+        } catch (e) {}
+      })();
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("consent", "default", {
+        analytics_storage: "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        wait_for_update: 500,
+      });
+      (function () {
+        var signals = {
+          analytics: ["analytics_storage"],
+          advertising: ["ad_storage", "ad_user_data", "ad_personalization"],
+        };
+        for (var purpose in signals) {
+          var choice = null;
+          try {
+            var saved = JSON.parse(localStorage.getItem("cookie_consent_" + purpose) || "null");
+            if (
+              saved &&
+              (saved.choice === "denied" || (saved.choice === "granted" && Date.now() - saved.at < 365 * 86400000))
+            ) {
+              choice = saved.choice;
+            }
+          } catch (e) {}
+          if (navigator.globalPrivacyControl === true) choice = "denied";
+          if (!choice) continue;
+          var update = {};
+          signals[purpose].forEach(function (signal) {
+            update[signal] = choice;
+          });
+          gtag("consent", "update", update);
+        }
+      })();
+    </script>
+
     <!-- Schema.org Structured Data: Organization + WebSite -->
     <script type="application/ld+json">
     {
@@ -254,7 +308,22 @@
         function gtag(){dataLayer.push(arguments);}
         window.gtag = gtag;
 
+        // Ölçüm etiketleri yalnızca geçerli izin varken yüklenir.
+        function consentGranted() {
+          if (navigator.globalPrivacyControl === true) return false;
+          try {
+            var a = JSON.parse(localStorage.getItem('cookie_consent_analytics') || 'null');
+            var b = JSON.parse(localStorage.getItem('cookie_consent_advertising') || 'null');
+            if ((a && a.choice === 'granted') || (b && b.choice === 'granted')) return true;
+            if (!a && !b && localStorage.getItem('cookie-consent') === 'accepted') return true;
+          } catch (e) {}
+          return false;
+        }
+
+        var gtagLoaded = false;
         function loadGtag() {
+          if (gtagLoaded || !consentGranted()) return;
+          gtagLoaded = true;
           var script = document.createElement('script');
           script.type = 'text/javascript';
           script.async = true;
@@ -267,11 +336,20 @@
             gtag('config', 'AW-18512454833');
           };
         }
+        window.__dkoLoadGtag = loadGtag;
 
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(function() { setTimeout(loadGtag, 5000); }, { timeout: 12000 });
-        } else {
-          setTimeout(loadGtag, 8000);
+        // İzin sonradan verilirse (bu sekmede veya başka sekmede) etiketleri yükle.
+        window.addEventListener('consent-change', loadGtag);
+        window.addEventListener('storage', function (ev) {
+          if (ev.key === null || ev.key.indexOf('cookie_consent_') === 0) loadGtag();
+        });
+
+        if (consentGranted()) {
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(function() { setTimeout(loadGtag, 5000); }, { timeout: 12000 });
+          } else {
+            setTimeout(loadGtag, 8000);
+          }
         }
       })();
     </script>

@@ -115,8 +115,8 @@ const AnalyticsTracker = () => {
     if (isPanelRoute) return;
     const fire = () => trackPixelPageView(location.pathname);
     fire();
-    window.addEventListener('cookie-consent-change', fire);
-    return () => window.removeEventListener('cookie-consent-change', fire);
+    window.addEventListener('consent-change', fire);
+    return () => window.removeEventListener('consent-change', fire);
   }, [location.pathname, isPanelRoute]);
 
   // Track route changes

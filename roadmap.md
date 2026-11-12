@@ -328,3 +328,10 @@
 - [x] 20:52:26 UTC: gerçek /acik-riza HTTP 200, belge ve HTML SHA-256 hazırlanan sürümle birebir; form yok, mobil taşma yok. Actions logu okunmadı; gerçek HTML teslimi doğrulandı.
 - [x] 21:07 UTC: şirket yetkilisinin açık yayın talimatıyla Genel Aydınlatma ve Çağrı Merkezi v9 yayın kapısı açıldı (bilgilendirme kapsamı; metinler eksik m.6/m.9 durumunu gizlemeden açıklıyor). 9 test + yerel masaüstü/mobil doğrulama geçti, tam HTML üretildi.
 - [ ] Gerçek doktorumol.com.tr HTML/hash doğrulaması — GitHub Actions → Hostinger dağıtımı sonrası yapılacak.
+
+## Web tamamlanma planı — 12 Kasım 2026 21:20 UTC (7 aşama)
+- [x] Aşama 1 çekirdek: çerez bandı gerçek izin denetimine bağlandı — GA4/Ads yalnız izin sonrası yükleniyor, Meta Pixel amaç bazlı izne bağlı, Consent Mode varsayılanları denied, eski tek anahtar iki amaca taşınıyor, footer "Çerez Tercihleri" geri çekme yolu, GPC desteği. 14 test + tarayıcı doğrulaması (ret=0 istek, kabul=gtag yüklenir, geri çekme çalışıyor). Aydınlatma v9 metni yeni davranışla tutarlı güncellendi (yeni hash 132a88c1).
+- [ ] Aşama 1 kalan: sunucu tarafı Meta CAPI izin değerlendirmesi ayrı iş; kayıt/randevu/test ekranlarındaki aydınlatma bağlantıları denetimi.
+- [ ] Aşama 2: web test akışı (secure-health-test release kapalı, eski mobil INSERT açık kalacak).
+- [ ] Aşama 3-6: randevu akışları, ödeme doğrulama, panel güvenliği (173 bulgu sınıflandırma), SEO/mobil.
+- [ ] Aşama 7: paket bazlı kontrollü yayın; her pakette commit SHA + gerçek URL doğrulaması.

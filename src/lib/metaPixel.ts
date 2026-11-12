@@ -24,7 +24,12 @@ const isTestVisit = () => {
   } catch { return false; }
 };
 export const hasMarketingConsent = () => {
-  try { return localStorage.getItem("cookie-consent") === "accepted"; } catch { return false; }
+  try {
+    // Yeni amaç bazlı izin kaydı öncelikli; eski tek anahtarlı kabul yedek olarak okunur.
+    const saved = JSON.parse(localStorage.getItem("cookie_consent_advertising") || "null");
+    if (saved && (saved.choice === "granted" || saved.choice === "denied")) return saved.choice === "granted";
+    return localStorage.getItem("cookie-consent") === "accepted";
+  } catch { return false; }
 };
 const canTrack = () => isProd() && hasMarketingConsent() && !isTestVisit();
 
