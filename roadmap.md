@@ -4,7 +4,7 @@
 - [x] v6 birebir korundu; gerçek uygulama/route/footer/prerender/.htaccess entegrasyonu belge başına onay kapısıyla hazır. Eski iki kamu kaynağı arşivle birebir; kayıt yazımı yok.
 - [x] Faaliyet bazlı m.6 ve sağlayıcı bazlı m.9 şirket/sağlayıcı/hukuk ayrımı ve üç ayrı karar FINAL_DECISION.md içinde; son v6 metinleri kullanıcıya sunuldu.
 - [x] Altı yayın testi, altı mobil/masaüstü sayfa açılışı/footer tıklaması/noindex/taşma kontrolü geçti; bütün geçmiş/v6 arşiv SHA256SUMS eşleşti, build OK.
-- [ ] Üç sayfanın nihai yayını: somut sağlık işleme sebebi ve bağlı bilgilendirme kararı eksik; aktarım mekanizması tamamlandı denemez. Dar şeffaf bilgilendirme yayını için ayrıca açık içerik/yayın kararı beklenir; canlıda yeni metin yok.
+- [ ] Üç sayfanın nihai yayını: kullanıcı Aydınlatma, Açık Rıza ve Çağrı Merkezi için ayrı ayrı “Hukuki teyidi beklet” kararını verdi. Somut sağlık işleme sebebi, bağlı bilgilendirme ve aktarım mekanizması teyidi bekleniyor; teyit ve sonraki açık yayın onayı gelmeden yayın yapılmayacak. Yeniden yüklenen talimat aynı; kapsam değişmedi.
 
 ## 12 Kasım 18:29 — Doğrulanamayan eski mail reddi onayı
 - [x] B CANLIDA: mevcut endpoint v1 genel içerik + getUser + kayıtlı ilgili uzman/test; eski doğrulanamayan istek reddi, sonuç yazımı/okuma bağımsız. OPTIONS 200 version ve anonim POST 401 doğrulandı; submitted source SHA256 16bc77bf59395b2bef2bab4236795e6e93235d08c9b24c05cc21736b05b90cd0.
