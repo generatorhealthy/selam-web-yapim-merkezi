@@ -8,6 +8,11 @@ test('each of the three v6 pages stays unpublished until its own approvals exist
   for (const d of Object.values(publication.documents)) assert.equal(isLegalPublished(d), false);
 });
 test('a publication instruction alone does not declare legal approval', () => {
+  for (const document of Object.values(publication.documents)) {
+    assert.equal(document.publication_authorized_at, '2026-11-12T18:55:00Z');
+    assert.equal(document.legal_approved_at, null);
+    assert.equal(document.published_at, null);
+  }
   assert.equal(isLegalPublished({ publication_authorized_at: '2026-11-12T18:37:00Z', published_at: '2026-11-12T18:37:00Z' }), false);
 });
 test('complete document approval allows only that document', () => {

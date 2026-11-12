@@ -1,5 +1,10 @@
 # Roadmap
 
+## 12 Kasım 18:55 — Yeni açık teknik yayın talimatı
+- [x] Önceki bekleme kararının yerine üç sayfa için açık teknik yayın iradesi alındı; hukuki şartların varsayılması yetkisi verilmedi.
+- [x] Zorunlu açıklamalar sayfa/bölüm/kanıt/çözüm bazında REQUIRED_INFORMATION.md içinde sonuçlandırıldı; teknik yayın iradesi üç belge için kaydedildi. v6 ve B/C korundu; canlı veri/ödeme/bağlantı yazımı yok.
+- [ ] Nihai yayın: sağlık ve genel veri faaliyetlerinin gerçek amaç/dayanak/olgu eşleştirmesi eksik. Şirket olguları ve hukuk değerlendirmesi bekleniyor; sağlayıcı sözleşmesinin sayfada bulunmaması veya otomatik araç eksikliği tek başına engel sayılmadı. Salt bilgilendirme Açık Rıza sayfasında kutu/kayıt zorunlu değil; hizmete özgü bağlı açıklama tamamlanmalı. Açık teknik yayın talimatı alındı, tekrar istenmeyecek.
+
 ## 12 Kasım 18:37 — Paket A nihai yayın hazırlığı
 - [x] v6 birebir korundu; gerçek uygulama/route/footer/prerender/.htaccess entegrasyonu belge başına onay kapısıyla hazır. Eski iki kamu kaynağı arşivle birebir; kayıt yazımı yok.
 - [x] Faaliyet bazlı m.6 ve sağlayıcı bazlı m.9 şirket/sağlayıcı/hukuk ayrımı ve üç ayrı karar FINAL_DECISION.md içinde; son v6 metinleri kullanıcıya sunuldu.
