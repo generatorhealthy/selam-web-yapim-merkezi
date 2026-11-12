@@ -6,7 +6,7 @@ const oldBody={testResultId:id,specialistId:id,patientName:'SYNTHETIC_HEALTH_NAM
  patientPhone:'SYNTHETIC_CONTACT',testTitle:'SYNTHETIC_HEALTH_TITLE',answers:{q:'SYNTHETIC_HEALTH_ANSWER'},results:{}};
 
 Deno.test('current production source allows two anonymous sends and health payloads (acceptance failure reproduced without network)',async()=>{
- const source=await Deno.readTextFile('supabase/functions/send-test-results-email/index.ts');
+ const source=await Deno.readTextFile('security/test-email-transition-2026-11-12/rollback/unsafe-previous-index.ts.txt');
  const emitted:Record<string,unknown>[]=[];
  const client={from:(table:string)=>{
   const row=table==='test_results'?{id,test_id:id,specialist_id:id,patient_name:oldBody.patientName,

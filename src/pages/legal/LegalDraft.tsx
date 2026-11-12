@@ -3,9 +3,9 @@ import { Helmet } from "react-helmet-async";
 import ReactMarkdown from "react-markdown";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
-import aydinlatma from "@/content/legal/2026-11-12-yayin-adayi-v5/aydinlatma-metni.md?raw";
-import cagri from "@/content/legal/2026-11-12-yayin-adayi-v5/cagri-merkezi.md?raw";
-import riza from "@/content/legal/2026-11-12-yayin-adayi-v5/acik-riza.md?raw";
+import aydinlatma from "@/content/legal/2026-11-12-yayin-adayi-v6/aydinlatma-metni.md?raw";
+import cagri from "@/content/legal/2026-11-12-yayin-adayi-v6/cagri-merkezi.md?raw";
+import riza from "@/content/legal/2026-11-12-yayin-adayi-v6/acik-riza.md?raw";
 
 const DOCS: Record<string, string> = { "aydinlatma-metni": aydinlatma, "cagri-merkezi": cagri, "acik-riza": riza };
 
@@ -26,7 +26,7 @@ const LegalDraft = () => {
       <main className="container mx-auto px-4 py-6 sm:py-10">
         <div className="max-w-3xl mx-auto">
           <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            YAYIN ADAYI – hukuki belirsizlikler için onay bekliyor, yayında değil. Sürüm: 2026-11-12-v5
+            YAYIN ADAYI – hukuki belirsizlikler için onay bekliyor, yayında değil. Sürüm: 2026-11-12-v6
           </div>
           <article className="rounded-lg bg-card p-5 sm:p-8 shadow-sm text-foreground text-[15px]">
             <ReactMarkdown components={{

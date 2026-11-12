@@ -1,5 +1,10 @@
 # Roadmap
 
+## 12 Kasım 18:29 — Doğrulanamayan eski mail reddi onayı
+- [ ] B: mevcut endpoint genel içerik + sunucu kullanıcı doğrulaması + kayıtlı ilgili uzman/test kontrolü; eski doğrulanamayan istek 401/403, test yazımı bağımsız.
+- [ ] B: service-only kalıcı unique claim, timeout kör retry yok; eşzamanlı yerel SQL/handler testleri ardından kontrollü migration ve endpoint yayını, salt okunur kanıt.
+- [ ] A: şirketin kesin ses dosyası kaydetmiyor beyanını yeni v4-tabanlı sürümde işle; sağlık m.6 ve fiilî m.9 doğrulanmadan hukuki yeterlilik iddiası/yayın yok, C korunur.
+
 ## 12 Kasım 18:25 — Mevcut e-posta yolunda dar düzeltme
 - [x] B ölçümü: gerçek handler sentetik SDK/HTTP ile çalıştırıldı; anonim iki aynı istek iki mail üretti. İçerik-only değişiklik sağlık içeriğini kaldırır fakat anonim/duplicate koşullarını geçmez; kimlik kapısı ownerless eski isteği reddeder. 2 test bu engeli üretir (kabul koşulları geçti anlamına gelmez).
 - [ ] B yayın ENGELLİ: eski INSERT patient_user_id/receipt bağlamıyor; güvenilir sunucu INSERT kaynağı veya tek kullanımlık imzalı receipt gereklidir. Mükerrer engeli için kalıcı unique claim gerekir; yeni worker zorunlu değil. Kimliksiz eski mail sürekliliği ile yetkisiz gönderim yasağı aynı istek biçiminde birlikte sağlanamaz; sonuç yazımı değiştirilmedi.
