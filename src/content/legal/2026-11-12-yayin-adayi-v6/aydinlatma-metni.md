@@ -197,7 +197,7 @@ Kişisel veriler, ilgili veri işleme ve aktarım şartlarının bulunması hâl
 
 **Yetkili Kamu Kurum ve Kuruluşları:** Mevzuattan kaynaklanan yükümlülükler ve yetkili mercilerin usulüne uygun talepleri.
 
-Mevcut psikolojik test e-posta bildirimlerinde danışan adı, iletişim bilgisi, test başlığı ve cevapların Brevo üzerinden ilgili uzmana iletilmesi söz konusudur. Test SMS ve push bildirimleri 12.11.2026 tarihinde genel yeni değerlendirme metniyle sınırlandırılmıştır; danışan adı, test başlığı ve sonuç kimliği bu bildirimlere eklenmez. E-posta için güvenlik geçişi ayrıca değerlendirilir. Ayrıntıların yalnız yetkili panelde gösterildiği ve hiçbir dış bildirimde bulunmadığı ileri sürülmemektedir.
+Test e-posta bildirimleri 12.11.2026 tarihinde genel yeni değerlendirme metniyle sınırlandırılmıştır; danışan adı, iletişim bilgileri, test başlığı, cevaplar, puanlar ve sonuç kimliği e-posta içeriğine eklenmez. Doğrulanamayan eski e-posta istekleri reddedilir; test sonucu kaydı e-posta başarısına bağlanmaz. Test SMS ve push bildirimleri de genel metin kullanır; danışan adı, test başlığı ve sonuç kimliği içermez. Bu düzenleme geçmişte gönderilmiş e-postaların sağlayıcı veya alıcı tarafında silindiği anlamına gelmez.
 
 ## 7. Kişisel Verilerin Yurt Dışına Aktarılması
 

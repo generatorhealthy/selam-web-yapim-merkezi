@@ -25,6 +25,8 @@ try:
  except RuntimeError:pass
  else:raise RuntimeError('unrelated user accepted')
  assert sql(f"SELECT count(*) FROM public.test_results WHERE id='{rid}'")=='1'
+ assert sql(f"SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{user}',false); SELECT count(*) FROM public.test_results WHERE id='{rid}';").endswith('1')
+ assert sql(f"SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','99999999-9999-4999-8999-999999999999',false); SELECT count(*) FROM public.test_results WHERE id='{rid}';").endswith('0')
  print('PASS: 20 real PG connections one claim; unknown not retried; anon/auth RPC denied; unrelated rejected; result preserved')
 finally:
  sql(f"DROP FUNCTION IF EXISTS public.claim_test_email_delivery(uuid,uuid); DROP TABLE IF EXISTS public.test_email_delivery_claims; DELETE FROM public.test_results WHERE id='{rid}'; ALTER TABLE public.test_results DROP COLUMN IF EXISTS created_at;")

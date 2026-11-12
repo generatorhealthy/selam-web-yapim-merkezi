@@ -1,0 +1,1 @@
+CREATE POLICY "Service role manages test email claims" ON public.test_email_delivery_claims FOR ALL TO service_role USING (true) WITH CHECK (true);

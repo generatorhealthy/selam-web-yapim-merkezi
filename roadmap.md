@@ -1,9 +1,10 @@
 # Roadmap
 
 ## 12 Kasım 18:29 — Doğrulanamayan eski mail reddi onayı
-- [ ] B: mevcut endpoint genel içerik + sunucu kullanıcı doğrulaması + kayıtlı ilgili uzman/test kontrolü; eski doğrulanamayan istek 401/403, test yazımı bağımsız.
-- [ ] B: service-only kalıcı unique claim, timeout kör retry yok; eşzamanlı yerel SQL/handler testleri ardından kontrollü migration ve endpoint yayını, salt okunur kanıt.
-- [ ] A: şirketin kesin ses dosyası kaydetmiyor beyanını yeni v4-tabanlı sürümde işle; sağlık m.6 ve fiilî m.9 doğrulanmadan hukuki yeterlilik iddiası/yayın yok, C korunur.
+- [x] B CANLIDA: mevcut endpoint v1 genel içerik + getUser + kayıtlı ilgili uzman/test; eski doğrulanamayan istek reddi, sonuç yazımı/okuma bağımsız. OPTIONS 200 version ve anonim POST 401 doğrulandı; submitted source SHA256 16bc77bf59395b2bef2bab4236795e6e93235d08c9b24c05cc21736b05b90cd0.
+- [x] B unique service-only claim uygulandı; 6 üretim handler testi ve 20 gerçek yerel PG bağlantısı tek claim/unknown retry yok geçti. Canlı 0 claim, 12/57/341; C md5 korundu. Gerçek cihaz/Brevo teslim E2E yapılmadı; imzasız veya ilgili uzman olmayan kullanıcı mail gönderemez.
+- [x] A beyan v4-tabanlı v6'da ayrı ses/döküm/işlem kategorileriyle işlendi; noindex önizlemede, önceki sürümler/hash korundu. Canlı B/C genel içerik bilgisi güncellendi.
+- [ ] A yayın ENGELLİ: gerçek sağlık işlemlerinin faaliyet bazlı m.6 şartı ve yabancı aktarımların fiilî m.9 mekanizması belgeyle doğrulanmadı; uzman hukuk incelemesi gerekir. Sayısal süre/ses teknik belirsizliği tek başına engel değil. Kamu entegrasyonu/adaptörleri hukuki manifest onayı olmadan aktive edilmedi.
 
 ## 12 Kasım 18:25 — Mevcut e-posta yolunda dar düzeltme
 - [x] B ölçümü: gerçek handler sentetik SDK/HTTP ile çalıştırıldı; anonim iki aynı istek iki mail üretti. İçerik-only değişiklik sağlık içeriğini kaldırır fakat anonim/duplicate koşullarını geçmez; kimlik kapısı ownerless eski isteği reddeder. 2 test bu engeli üretir (kabul koşulları geçti anlamına gelmez).
