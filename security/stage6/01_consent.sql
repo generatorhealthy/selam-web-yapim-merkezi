@@ -1,4 +1,8 @@
--- TASLAK — onay alınmadan uygulanmaz. Eski kayıtlar silinmez/değiştirilmez.
+-- TASLAK — BU DOSYAYI TOPLU ÇALIŞTIRMAYIN. 12.11.2026 kontrollü geçişte yalnız
+-- okuma daraltması ve UPDATE/DELETE yetki kaldırma ayrı migration ile uygulandı.
+-- INSERT kapatma mobil gerçek oturumlu sunucu geçişi doğrulanana kadar BEKLER.
+-- Test/randevu sütunları bu adımın kapsamında değildir, uygulanmadı.
+-- Eski kayıtlar silinmez/değiştirilmez.
 -- 1) İstemciden doğrudan yazma kapanır; kayıt yalnız record-consent işlevi (service_role) ile yazılır.
 DROP POLICY IF EXISTS "Anyone can insert consent logs" ON public.user_consent_logs;
 REVOKE INSERT ON public.user_consent_logs FROM anon, authenticated;

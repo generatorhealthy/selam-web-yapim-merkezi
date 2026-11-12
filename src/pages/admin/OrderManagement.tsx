@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, useDeferredValue } from "react";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -684,7 +685,7 @@ const OrderManagement = () => {
       console.log("Update payload:", JSON.stringify(updatePayload));
       const { data, error } = await supabase
         .from("orders")
-        .update(updatePayload)
+        .update(updatePayload as Database["public"]["Tables"]["orders"]["Update"])
         .eq("id", id)
         .select()
         .single();
