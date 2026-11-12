@@ -8029,6 +8029,7 @@ export type Database = {
         Args: { _id?: string; _slug?: string; _type: string }
         Returns: undefined
       }
+      owns_payment_email: { Args: { p_email: string }; Returns: boolean }
       paid_revenue_by_email: {
         Args: never
         Returns: {
