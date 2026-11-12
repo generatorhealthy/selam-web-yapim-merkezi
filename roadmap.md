@@ -1,5 +1,10 @@
 # Roadmap
 
+## 12 Kasım 18:25 — Mevcut e-posta yolunda dar düzeltme
+- [x] B ölçümü: gerçek handler sentetik SDK/HTTP ile çalıştırıldı; anonim iki aynı istek iki mail üretti. İçerik-only değişiklik sağlık içeriğini kaldırır fakat anonim/duplicate koşullarını geçmez; kimlik kapısı ownerless eski isteği reddeder. 2 test bu engeli üretir (kabul koşulları geçti anlamına gelmez).
+- [ ] B yayın ENGELLİ: eski INSERT patient_user_id/receipt bağlamıyor; güvenilir sunucu INSERT kaynağı veya tek kullanımlık imzalı receipt gereklidir. Mükerrer engeli için kalıcı unique claim gerekir; yeni worker zorunlu değil. Kimliksiz eski mail sürekliliği ile yetkisiz gönderim yasağı aynı istek biçiminde birlikte sağlanamaz; sonuç yazımı değiştirilmedi.
+- [x] A v4 incelemesi: sağlık faaliyetinin somut hukuki sebebi eksikliği gerçek aydınlatma engeli; m.9 güvence faaliyetin hukuka uygunluğu konusu, imzanın sayfaya konması zorunlu değil; kategori süreleri m.10 asgari listesinde değil. Ses teknik belirsizliği dürüst beyanla anlatılabilir, tek başına bütün sayfaları engellemez. Açık rıza bilgilendirmesi bağlı aydınlatma eksikliğinden; çağrı sayfası sağlık/döküm hukuki sebebi eksikliğinden yayımlanmadı.
+
 ## 12 Kasım 18:20 — Koşullu canlı uygulama onayı
 - [ ] A ENGELLİ: somut sağlık işleme şartı, düzenli yabancı aktarım güvencesi ve saklama kriterleri doğrulanmadı; üç sayfa yayımlanmadı, arşiv/onaylar korunur.
 - [ ] B ENGELLİ: anonim INSERT güvenilir bildirim kaynağı değil, eski mobil doğrulaması yok; eski gönderimi kapatma reddedildi, fonksiyon değiştirilmedi. Sağlık içerikli e-posta riski devam ediyor.
