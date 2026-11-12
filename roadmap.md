@@ -2,6 +2,8 @@
 
 ## Kritik güvenlik öncelikleri — 12 Kasım 16:43 talimatı
 - [x] Öncelik 1: yedek owner/grant/direct postgres cron 23 ve admin ekranı doğrulandı; eski anon açığı yerel PostgreSQL'de üretildi; güvenli SQL ve rollback 10 test grubuyla doğrulandı.
+- [x] Kullanıcı onayıyla yalnız yedek yetkilendirmesi canlıya alındı; anonim canlı RPC 401/42501 reddedildi, iç admin/server kapısı ve cron 23/24 etkinliği doğrulandı; 57 onay hash aynı, 12 test/341 randevu/36 yedek tablo korundu.
+- [ ] Yeni korumayla ilk doğal cron 23 sonucunu doğrula — sıradaki zamanlanmış çalışmayı bekliyor; üretimde test yedeği oluşturulmadı.
 - [x] Öncelik 2: generic test mail, getUser/server scoped adapter, 14 notice testi ve gerçek 20-bağlantılı SQL dedup paketi hazır; canlıya alınmadı.
 - [x] Öncelik 3: kayıtlı referral alıcı/uzman/personel kontrolü hazır; anonim public caller geçiş riski raporlandı. Contact transport canlı protokol/hat doğrulaması nedeniyle tamam değil.
 - [x] Consent production SDK/atomik SQL/withdraw/append-only taslağı gerçek SQL'de test edildi; sağlık ekran envanteri, BirFatura fail-closed 5 test, MFA kurtarma tasarımı hazır. Toplam 89 mantık testi ve 19 SQL test grubu geçti.
