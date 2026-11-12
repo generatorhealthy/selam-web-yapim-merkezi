@@ -138,3 +138,6 @@
   danışan SELECT politikalarının e-posta eşleşmesi, WhatsApp webhook sırları,
   uzman adına blog yayınlama, personel yönetici açması, form önizleme betiği.
   Bunlar Aşama 1/2 kapsamı dışında; ayrı bir iş olarak planlanacak.
+
+- [x] Ödeme güvenliği v2 taslakları + 19 mock test (security/stage2/PAYMENT_ROLLOUT.md)
+- [ ] Ödeme v2 canlıya geçiş — kullanıcı onayı ve plan periyodu bekliyor
