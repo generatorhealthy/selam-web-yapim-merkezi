@@ -149,3 +149,10 @@
 ## KVKK Faz 2 (Aşama 1–2)
 - [x] 9 işlev + 6 tablo denetimi, düzeltme taslakları security/stage3
 - [ ] Onay: 5 işlev kapısı, sağlık RLS SQL, WAHA sırrı, randevu bildirimi
+
+## KVKK Aşama 3 – WhatsApp webhook (beklemede)
+- [x] Gizli anahtar oluşturuldu, izleme kipi canlıda (yanlış anahtar reddediliyor)
+- [x] Kontrol aracı yalnız yöneticiye; sonuç: oturum FAILED, yalnız bot adresi tanımlı, arşiv adresi yok
+- [ ] BEKLİYOR: WhatsApp hattı 24 saat engelli (12.11.2026) — açılınca QR ile yeniden bağlanacak
+- [ ] Onayla: anahtarı bot + arşiv adresine ekle, deneme mesajıyla doğrula
+- [ ] Son onayla: WAHA_WEBHOOK_ENFORCE=true (anahtarsız istekleri kapat)
