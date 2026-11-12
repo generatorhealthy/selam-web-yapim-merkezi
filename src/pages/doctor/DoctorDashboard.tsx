@@ -43,8 +43,7 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
     
     // Validate required fields
     if (!formData.patient_name || !formData.patient_email || !formData.patient_phone || 
-        !formData.appointment_date || !formData.appointment_time || !formData.appointment_type || 
-        !formData.consultation_topic) {
+        !formData.appointment_date || !formData.appointment_time || !formData.appointment_type) {
       toast({
         title: "Hata",
         description: "Lütfen tüm zorunlu alanları doldurun.",
@@ -65,8 +64,8 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
         appointment_date: formData.appointment_date, // yyyy-mm-dd from <input type="date" />
         appointment_time: timeValue,                 // HH:MM:SS
         appointment_type: formData.appointment_type,
-        consultation_topic: formData.consultation_topic.trim(),
-        notes: formData.notes?.trim() || null,
+        consultation_topic: "Genel görüşme",
+        notes: null,
         specialist_id: doctorId,
         created_by_specialist: true,
       };
@@ -108,7 +107,7 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
               appointmentDate: formData.appointment_date,
               appointmentTime: formData.appointment_time,
               appointmentType: formData.appointment_type,
-              notes: formData.notes
+              notes: null
             }
           });
 
@@ -236,28 +235,7 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="consultation_topic">Danışmanlık Türü *</Label>
-        <Textarea
-          id="consultation_topic"
-          value={formData.consultation_topic}
-          onChange={(e) => setFormData(prev => ({ ...prev, consultation_topic: e.target.value }))}
-          placeholder="Danışan hangi konuda destek alıyor? (Örn: Kaygı bozukluğu, depresyon, ilişki sorunları...)"
-          rows={2}
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="notes">Notlar</Label>
-        <Textarea
-          id="notes"
-          value={formData.notes}
-          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          placeholder="Randevu ile ilgili özel notlar..."
-          rows={3}
-        />
-      </div>
+      <p className="text-sm text-muted-foreground">Bu randevu kaydında sağlık açıklaması alınmaz. Yalnız iletişim ve randevu bilgilerini girin.</p>
 
       <div className="flex justify-end gap-3 pt-4">
         <Button type="submit" disabled={loading}>

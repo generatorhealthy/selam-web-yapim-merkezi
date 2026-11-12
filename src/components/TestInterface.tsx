@@ -48,7 +48,7 @@ const TestInterface = () => {
         .select('*')
         .eq('id', testId)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (testError) throw testError;
 
@@ -95,7 +95,7 @@ const TestInterface = () => {
     } else {
       // Specialist olmadan test alınması durumu
       // İlk uzmanı seç veya genel test sayfasına yönlendir
-      navigate(`/test-al/${testId}/genel`);
+      navigate(`/test-al/${testId}`);
     }
   };
 
@@ -174,7 +174,7 @@ const TestInterface = () => {
                   <li>• Bu test {questionCount} sorudan oluşmaktadır</li>
                   <li>• Testi tamamlamak yaklaşık 10-15 dakika sürer</li>
                   <li>• Tüm sorular zorunludur</li>
-                  <li>• Sonuçlarınız size e-posta ile gönderilecektir</li>
+                  <li>• Yanıtlarınızı yalnız ilgili yetkili uzman değerlendirir</li>
                   <li>• Test sonuçları sadece bilgilendirme amaçlıdır</li>
                 </ul>
               </div>

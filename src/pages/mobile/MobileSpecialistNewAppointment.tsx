@@ -53,8 +53,8 @@ export default function MobileSpecialistNewAppointment() {
       appointment_date: form.appointment_date,
       appointment_time: form.appointment_time,
       appointment_type: form.appointment_type,
-      consultation_topic: form.consultation_topic || null,
-      notes: form.notes || null,
+      consultation_topic: "Genel görüşme",
+      notes: null,
       status: "confirmed",
       created_by_specialist: true,
     });
@@ -112,8 +112,7 @@ export default function MobileSpecialistNewAppointment() {
               ><Icon className="w-4 h-4" />{label}</button>
             ))}
           </div>
-          <input className={inputCls} style={inputStyle} placeholder="Danışmanlık konusu" value={form.consultation_topic} onChange={(e) => onChange("consultation_topic", e.target.value)} />
-          <textarea className="w-full p-4 rounded-xl text-[15px] outline-none min-h-[80px]" style={inputStyle} placeholder="Notlar" value={form.notes} onChange={(e) => onChange("notes", e.target.value)} />
+          <p className="text-sm text-muted-foreground">Bu randevu kaydında sağlık açıklaması alınmaz.</p>
         </div>
 
         <button

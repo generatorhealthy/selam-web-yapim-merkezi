@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, ArrowRight, Send } from 'lucide-react';
+import TestStartGate from '@/components/TestStartGate';
+import TestConsentControl from '@/components/TestConsentControl';
+import { submitTest, type Operation } from '@/lib/testSubmission';
 
 interface Test {
   id: string;
@@ -38,6 +41,8 @@ const TestTaking = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const [operation, setOperation] = useState<Operation | null>(null);
+  const submitLock = useRef(false);
   const [test, setTest] = useState<Test | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -51,10 +56,11 @@ const TestTaking = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setOperation(null); setAnswers({}); setPatientInfo({ name: '', phone: '' }); setShowPatientForm(true);
     if (testId) {
       fetchTestData();
     }
-  }, [testId]);
+  }, [testId, specialistId]);
 
   const fetchTestData = async () => {
     try {
@@ -64,7 +70,7 @@ const TestTaking = () => {
         .select('*')
         .eq('id', testId)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (testError) throw testError;
 
@@ -149,49 +155,8 @@ const TestTaking = () => {
     }
   };
 
-  const calculateResults = () => {
-    // Basit puanlama sistemi - her cevap için puan
-    const totalQuestions = questions.length;
-    const answeredQuestions = Object.keys(answers).length;
-    const completionRate = (answeredQuestions / totalQuestions) * 100;
-
-    // Cevaplara göre puanlama (0-4 arası)
-    let totalScore = 0;
-    Object.values(answers).forEach(answer => {
-      // Her seçenek için farklı puanlar (ilk seçenek 0, son seçenek maksimum puan)
-      const questionAnswers = questions.find(q => answers[q.id] === answer);
-      if (questionAnswers) {
-        const optionIndex = questionAnswers.options.indexOf(answer);
-        totalScore += optionIndex;
-      }
-    });
-
-    const maxPossibleScore = questions.length * 4; // Her soru max 4 puan
-    const scorePercentage = (totalScore / maxPossibleScore) * 100;
-
-    let riskLevel = 'Düşük';
-    let recommendations = 'Test sonuçlarınız normal aralıkta görünüyor.';
-
-    if (scorePercentage > 70) {
-      riskLevel = 'Yüksek';
-      recommendations = 'Test sonuçlarınız profesyonel destek almanızı önerir durumda. Bir uzmanla konuşmanızı tavsiye ederiz.';
-    } else if (scorePercentage > 40) {
-      riskLevel = 'Orta';
-      recommendations = 'Test sonuçlarınız dikkat edilmesi gereken bazı alanlar olduğunu gösteriyor. Uzmanla görüşmek faydalı olabilir.';
-    }
-
-    return {
-      totalScore,
-      scorePercentage: Math.round(scorePercentage),
-      completionRate: Math.round(completionRate),
-      riskLevel,
-      recommendations,
-      answeredQuestions,
-      totalQuestions
-    };
-  };
-
   const handleSubmit = async () => {
+    if (!operation || !testId || submitLock.current) return;
     // Son soruyu da kontrol et
     const currentQuestion = questions[currentQuestionIndex];
     if (currentQuestion.is_required && !answers[currentQuestion.id]) {
@@ -203,66 +168,16 @@ const TestTaking = () => {
       return;
     }
 
+    submitLock.current = true;
     setIsSubmitting(true);
 
     try {
-      const results = calculateResults();
-      
-      // Specialist ID'si "genel" ise, ilk aktif uzmanı bul veya varsayılan değer kullan
-      let finalSpecialistId = specialistId;
-      if (specialistId === 'genel' || !specialistId) {
-        const { data: publicSpecialists } = await supabase.rpc('get_public_specialists');
-        finalSpecialistId = publicSpecialists?.[0]?.id || 'genel';
-      }
-      
-      const testResult = {
-        test_id: testId!,
-        specialist_id: finalSpecialistId!,
-        patient_name: patientInfo.name,
-        patient_email: `${patientInfo.phone}@test.com`, // Telefon numarasını geçici email formatına çevir
-        answers,
-        results
-      };
-
-      const { data: resultData, error } = await supabase
-        .from('test_results')
-        .insert([testResult])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Send email notification to specialist (uzman e-postası server tarafında bulunur)
-      if (finalSpecialistId && finalSpecialistId !== 'genel') {
-        try {
-          await supabase.functions.invoke('send-test-results-email', {
-            body: {
-              testResultId: resultData?.id || 'unknown',
-              specialistId: finalSpecialistId,
-              patientName: patientInfo.name,
-              patientPhone: patientInfo.phone,
-              testTitle: test?.title || 'Test',
-              answers,
-              results
-            }
-          });
-        } catch (emailErr) {
-          console.error('Email gönderim hatası (kritik değil):', emailErr);
-        }
-      }
-
-      toast({
-        title: "Başarılı",
-        description: "Test sonuçlarınız kaydedildi.",
-      });
-
-      // Test sonuçları sayfasına yönlendir
-      navigate(`/test-sonuc/${testId}/${finalSpecialistId}`, {
-        state: { results, patientInfo }
-      });
+      const result = await submitTest(operation, patientInfo.name, patientInfo.phone, answers);
+      toast({ title: "Kaydedildi", description: "Yanıtlarınız ilgili uzmanın panelinde değerlendirmeye sunuldu." });
+      navigate(`/test-sonuc/${testId}/${result.specialistId}`, { replace: true, state: { resultId: result.resultId } });
 
     } catch (error: any) {
-      console.error('Test gönderilirken hata:', error);
+
       const errorMessage = error?.message || error?.toString() || "Test gönderilirken bir hata oluştu.";
       toast({
         title: "Hata",
@@ -270,6 +185,7 @@ const TestTaking = () => {
         variant: "destructive",
       });
     } finally {
+      submitLock.current = false;
       setIsSubmitting(false);
     }
   };
@@ -304,6 +220,8 @@ const TestTaking = () => {
       </div>
     );
   }
+
+  if (!operation && testId) return <TestStartGate key={`${testId}:${specialistId}`} testId={testId} specialistId={specialistId && specialistId !== 'genel' ? specialistId : null} onReady={setOperation} />;
 
   if (showPatientForm) {
     return (
@@ -350,11 +268,13 @@ const TestTaking = () => {
   }
 
   const currentQuestion = questions[currentQuestionIndex];
+  const withdraw = () => { setOperation(null); setAnswers({}); setPatientInfo({ name: '', phone: '' }); setShowPatientForm(true); setCurrentQuestionIndex(0); };
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
+      {operation && <TestConsentControl operation={operation} onWithdraw={withdraw} />}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-2xl font-bold">{test.title}</h1>

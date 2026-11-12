@@ -1,9 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronRight, Check } from "lucide-react";
+
+import TestStartGate from '@/components/TestStartGate';
+import TestConsentControl from '@/components/TestConsentControl';
+import { submitTest, type Operation } from '@/lib/testSubmission';
 
 interface Question {
   id: string;
@@ -26,6 +30,8 @@ export default function MobileTestTaker() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const [operation, setOperation] = useState<Operation | null>(null);
+  const submitLock = useRef(false);
   const [test, setTest] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -37,6 +43,7 @@ export default function MobileTestTaker() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setOperation(null); setAnswers({}); setStep(0); setName(''); setPhone(''); setEmail('');
     (async () => {
       const [{ data: t }, { data: qs }] = await Promise.all([
         supabase.from("tests").select("*").eq("id", testId).maybeSingle(),
@@ -67,76 +74,15 @@ export default function MobileTestTaker() {
       toast({ title: "Ad Soyad ve telefon gerekli", variant: "destructive" });
       return;
     }
-    setSubmitting(true);
-
-    // Specialist'i belirle
-    let finalSpecialistId = test?.specialist_id;
-    if (!finalSpecialistId) {
-      const { data: firstSpecialist } = await supabase
-        .from("specialists")
-        .select("id")
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-      finalSpecialistId = firstSpecialist?.id;
-    }
-
-    if (!finalSpecialistId) {
-      setSubmitting(false);
-      toast({ title: "Hata", description: "Uzman bulunamadı", variant: "destructive" });
-      return;
-    }
-
-    const { data: resultData, error } = await supabase
-      .from("test_results")
-      .insert([{
-        test_id: testId!,
-        specialist_id: finalSpecialistId,
-        patient_name: name,
-        // patient_email kolonu zorunlu — yoksa telefonu geçici e-posta formatına çevir
-        patient_email: email || `${phone.replace(/\D/g, "")}@test.com`,
-        answers,
-        results: {},
-        specialty_area: test?.specialty_area,
-        status: "pending",
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      setSubmitting(false);
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
-      return;
-    }
-
-    // Uzmana e-posta bildirimi
+    if (!operation || submitLock.current) return;
+    submitLock.current = true; setSubmitting(true);
     try {
-      const { data: specialistData } = await supabase
-        .from("specialists")
-        .select("email")
-        .eq("id", finalSpecialistId)
-        .maybeSingle();
-
-      if (specialistData?.email) {
-        await supabase.functions.invoke("send-test-results-email", {
-          body: {
-            testResultId: resultData?.id,
-            specialistId: finalSpecialistId,
-            patientName: name,
-            patientPhone: phone,
-            testTitle: test?.title || "Test",
-            answers,
-            results: {},
-          },
-        });
-      }
-    } catch (e) {
-      console.error("[MobileTestTaker] notify error:", e);
-    }
-
-    setSubmitting(false);
-    toast({ title: "Test gönderildi", description: "Sonuçlar uzmanınıza iletildi" });
-    navigate("/mobile/home");
+      await submitTest(operation, name, email || phone, answers);
+      toast({ title: "Kaydedildi", description: "Yanıtlarınız ilgili uzmanın panelinde değerlendirmeye sunuldu." });
+      navigate("/mobile/home");
+    } catch {
+      toast({ title: "Kaydedilemedi", description: "Yanıtlarınız bu ekranda korunuyor. Lütfen tekrar deneyin.", variant: "destructive" });
+    } finally { submitLock.current = false; setSubmitting(false); }
   };
 
   if (loading) {
@@ -152,10 +98,13 @@ export default function MobileTestTaker() {
     );
   }
 
+  if (!operation && testId) return <div className="min-h-screen bg-background pb-32"><MobileHeader showBack title="Test" /><TestStartGate key={testId} testId={testId} specialistId={test?.specialist_id || null} onReady={setOperation} /></div>;
+
   return (
     <div style={{ background: "hsl(var(--m-bg))", minHeight: "100vh", paddingBottom: "calc(180px + var(--m-safe-bottom))" }}>
       <MobileHeader showBack title={test?.title || "Test"} />
 
+      {operation && <TestConsentControl operation={operation} onWithdraw={() => { setOperation(null); setAnswers({}); setStep(0); setName(''); setPhone(''); setEmail(''); }} />}
       {/* Progress */}
       <div className="px-5 mb-4">
         <div className="h-1 rounded-full overflow-hidden" style={{ background: "hsl(var(--m-divider))" }}>

@@ -1,3 +1,9 @@
+# 12 Kasım 2026 19:39 — Gerçek sağlık izni entegrasyonu ve koşullu yayın
+- [ ] Gerçek TestTaking/TestTaker/MobileTestTaker ekranlarına cevap öncesi ortak izin kapısı ve atomik sunucu gönderimini entegre et.
+- [ ] Gerçek şemaya uygun en küçük sunucu paketini doğrula; eski mobil/izin belgesi kabul şartı geçmeden sonuç INSERT yetkisini kapatma veya sağlık paketini etkinleştirme.
+- [ ] Randevu/yönlendirme sağlık ayrıntısı ayrımını ve geçmiş AI erişimini değerlendir; uygulanabilir dar korumaları tamamla.
+- [ ] Üç v6 sayfanın gerçek yayın durumunu ve somut hukuki/teknik engelleri raporla; B/C, geçmiş kayıt ve ödeme korunmasını kontrol et.
+
 # Roadmap
 
 ## 12 Kasım 18:59 — m.6 açık rıza ve uygulanabilir düzenleme

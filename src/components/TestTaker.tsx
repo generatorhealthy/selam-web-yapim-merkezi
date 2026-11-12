@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,10 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, Send } from "lucide-react";
+
+import TestStartGate from '@/components/TestStartGate';
+import TestConsentControl from '@/components/TestConsentControl';
+import { submitTest, type Operation } from '@/lib/testSubmission';
 
 interface Question {
   id: string;
@@ -26,6 +30,8 @@ interface TestTakerProps {
 }
 
 const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
+  const [operation, setOperation] = useState<Operation | null>(null);
+  const submitLock = useRef(false);
   const { toast } = useToast();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -36,8 +42,9 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
   const [testTitle, setTestTitle] = useState('');
 
   useEffect(() => {
+    setOperation(null); setAnswers({}); setPatientInfo({ name: '', phone: '' }); setCurrentStep(0);
     fetchTestQuestions();
-  }, [testId]);
+  }, [testId, specialistId]);
 
   const fetchTestQuestions = async () => {
     try {
@@ -48,10 +55,10 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
         .from('tests')
         .select('title')
         .eq('id', testId)
-        .single();
+        .maybeSingle();
 
       if (testError) throw testError;
-      setTestTitle(testData.title);
+      setTestTitle(testData?.title || 'Test');
 
       // Test sorularını al
       const { data: questionsData, error } = await supabase
@@ -104,6 +111,7 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
   };
 
   const handleSubmit = async () => {
+    if (!operation || submitLock.current) return;
     if (!patientInfo.name.trim() || !patientInfo.phone.trim()) {
       toast({
         title: "Hata",
@@ -113,60 +121,21 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
       return;
     }
 
+    submitLock.current = true;
     setSubmitting(true);
     try {
-      // Test sonucunu kaydet
-      const { data: resultData, error: resultError } = await supabase
-        .from('test_results')
-        .insert({
-          test_id: testId,
-          specialist_id: specialistId,
-          patient_name: patientInfo.name,
-          patient_email: patientInfo.phone, // Telefon numarasını e-posta alanına kaydet
-          answers: answers,
-          results: {}, // Sonuçlar daha sonra hesaplanabilir
-          status: 'completed'
-        })
-        .select()
-        .single();
-
-      if (resultError) throw resultError;
-
-      // E-posta gönder (uzman e-postası server tarafında bulunur)
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-test-results-email', {
-          body: {
-            testResultId: resultData.id,
-            specialistId: specialistId,
-            patientName: patientInfo.name,
-            patientPhone: patientInfo.phone,
-            testTitle: testTitle,
-            answers: answers,
-            results: {}
-          }
-        });
-
-        if (emailError) {
-          console.error('E-posta gönderim hatası:', emailError);
-        }
-      } catch (emailError) {
-        console.error('E-posta gönderiminde beklenmeyen hata:', emailError);
-      }
-
-      toast({
-        title: "Başarılı",
-        description: "Test başarıyla tamamlandı. Sonuçlar uzmanınıza gönderildi.",
-      });
-
+      await submitTest(operation, patientInfo.name, patientInfo.phone, answers);
+      toast({ title: "Kaydedildi", description: "Yanıtlarınız ilgili uzmanın panelinde değerlendirmeye sunuldu." });
       onComplete();
     } catch (error) {
-      console.error('Test sonucu kaydedilirken hata:', error);
+
       toast({
         title: "Hata",
         description: "Test sonucu kaydedilirken bir hata oluştu.",
         variant: "destructive"
       });
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   };
@@ -192,12 +161,15 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
     );
   }
 
+  if (!operation) return <TestStartGate key={`${testId}:${specialistId}`} testId={testId} specialistId={specialistId} onReady={setOperation} />;
+
   const currentQuestion = questions[currentStep];
   const isLastStep = currentStep === questions.length - 1;
   const canProceed = currentQuestion ? answers[currentQuestion.id] !== undefined : false;
 
   return (
     <Card className="max-w-2xl mx-auto">
+      <TestConsentControl operation={operation} onWithdraw={() => { setOperation(null); setAnswers({}); setPatientInfo({ name: '', phone: '' }); setCurrentStep(0); }} />
       <CardHeader>
         <CardTitle className="text-center">
           {testTitle}

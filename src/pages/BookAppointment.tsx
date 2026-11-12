@@ -140,11 +140,11 @@ const BookAppointment = () => {
         appointment_date: formData.appointmentDate,
         appointment_time: formData.appointmentTime,
         appointment_type: formData.appointmentType,
-        notes: formData.notes.trim() || null,
+        notes: null,
         status: 'pending'
       };
 
-      console.log('Submitting appointment with data:', appointmentData);
+
 
       const { error } = await supabase
         .from('appointments')
@@ -479,20 +479,7 @@ const BookAppointment = () => {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="notes" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4" />
-                      Notlar
-                    </Label>
-                    <Textarea
-                      id="notes"
-                      value={formData.notes}
-                      onChange={(e) => handleInputChange('notes', e.target.value)}
-                      placeholder="Özel notlarınız varsa yazabilirsiniz"
-                      rows={4}
-                      className="rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
-                    />
-                  </div>
+                  <p className="text-sm text-muted-foreground">Bu başvuruda sağlık açıklaması alınmaz. Yalnız iletişim ve randevu bilgilerinizi paylaşın.</p>
                 </div>
 
                 <div className="pt-6">

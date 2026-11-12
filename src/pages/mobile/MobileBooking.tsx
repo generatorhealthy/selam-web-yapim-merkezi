@@ -101,7 +101,7 @@ export default function MobileBooking() {
           appointment_date: formatDateKey(selectedDate),
           appointment_time: selectedTime,
           appointment_type: appointmentType,
-          consultation_topic: topic || "Genel",
+          consultation_topic: "Genel görüşme",
           patient_name: name,
           patient_email: email,
           patient_phone: phone,
@@ -298,7 +298,7 @@ export default function MobileBooking() {
             <Input label="Ad Soyad" value={name} onChange={setName} placeholder="Adınız" />
             <Input label="E-posta" value={email} onChange={setEmail} placeholder="email@ornek.com" type="email" />
             <Input label="Telefon" value={phone} onChange={setPhone} placeholder="05XX XXX XX XX" type="tel" />
-            <Input label="Konu (opsiyonel)" value={topic} onChange={setTopic} placeholder="Görüşme konusu" />
+            <p className="text-sm text-muted-foreground">Bu başvuruda sağlık açıklaması alınmaz. Yalnız iletişim ve randevu bilgilerinizi paylaşın.</p>
           </div>
         )}
       </div>
