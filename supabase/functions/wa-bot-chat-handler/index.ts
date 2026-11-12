@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { hookAuthFromEnv } from '../_shared/wahaWebhookGuard.ts';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const json = (body: Record<string, unknown>, status = 200) =>
@@ -150,18 +151,13 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  const secret =
-    Deno.env.get('WAHA_BOT_SECRET') ||
-    Deno.env.get('WAHA_WEBHOOK_SECRET');
-  const received =
-    req.headers.get('x-bot-secret') ||
-    req.headers.get('x-waha-token') ||
-    req.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim() ||
-    '';
-
-  if (secret && received !== secret) {
-    return json({ ok: false, error: 'Unauthorized' }, 401);
+  // Kaynak doğrulaması (izleme/zorunlu kip — bkz. _shared/wahaWebhookGuard.ts)
+  const hookAuth = hookAuthFromEnv(req);
+  if (!hookAuth.allow) {
+    console.warn(JSON.stringify({ evt: 'wa_bot_auth', state: hookAuth.state }));
+    return json({ ok: false, error: 'Unauthorized' }, hookAuth.status);
   }
+  if (hookAuth.state === 'unsigned') console.log(JSON.stringify({ evt: 'wa_bot_auth', state: 'unsigned' }));
 
   try {
     const body = (await req.json()) as Record<string, unknown>;

@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { hookAuthFromEnv } from '../_shared/wahaWebhookGuard.ts';
 
 const json = (body: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -12,21 +13,16 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  // Optional webhook secret validation (enforced when WAHA_WEBHOOK_SECRET is set)
-  const WAHA_WEBHOOK_SECRET = Deno.env.get('WAHA_WEBHOOK_SECRET');
-  if (WAHA_WEBHOOK_SECRET) {
-    const token =
-      req.headers.get('x-waha-token') ||
-      req.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim() ||
-      '';
-    if (token !== WAHA_WEBHOOK_SECRET) {
-      return json({ error: 'Unauthorized' }, 401);
-    }
+  // Kaynak doğrulaması (izleme/zorunlu kip — bkz. _shared/wahaWebhookGuard.ts)
+  const hookAuth = hookAuthFromEnv(req);
+  if (!hookAuth.allow) {
+    console.warn(JSON.stringify({ evt: 'waha_webhook_auth', state: hookAuth.state }));
+    return json({ error: 'Unauthorized' }, hookAuth.status);
   }
+  const WAHA_WEBHOOK_SECRET = Deno.env.get('WAHA_WEBHOOK_SECRET');
 
   try {
     const body = await req.json();
-    console.log('WAHA Webhook received:', JSON.stringify(body).substring(0, 500));
 
     const event = body.event ?? body.type ?? '';
 
@@ -72,7 +68,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { error } = await supabase.from('whatsapp_messages').upsert(
+    const { data: inserted, error } = await supabase.from('whatsapp_messages').upsert(
       {
         session_name: session,
         chat_id: chatId,
@@ -89,16 +85,18 @@ Deno.serve(async (req) => {
         onConflict: 'session_name,chat_id,message_id',
         ignoreDuplicates: true,
       }
-    );
+    ).select('id');
+    // Mükerrer bildirim: aynı mesaj kimliği daha önce kaydedildiyse bot yeniden tetiklenmez.
+    const isNew = !messageId || (Array.isArray(inserted) && inserted.length > 0);
 
     if (error) {
       console.error('Failed to store message:', error);
     } else {
-      console.log(`Message stored: session=${session} chat=${chatId} fromMe=${fromMe}`);
+      console.log(JSON.stringify({ evt: 'waha_webhook', auth: hookAuth.state, stored: isNew, fromMe }));
     }
 
     // Trigger auto-reply handler for incoming client messages
-    if (!fromMe && chatId && messageBody.trim().length > 1) {
+    if (isNew && !error && !fromMe && chatId && messageBody.trim().length > 1) {
       try {
         const { data: settings } = await supabase
           .from('whatsapp_bot_settings')

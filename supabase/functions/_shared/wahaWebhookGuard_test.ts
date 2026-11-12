@@ -1,0 +1,11 @@
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { decideHookAuth } from "./wahaWebhookGuard.ts";
+const S = "s3cr3t-value-0123456789abcdef";
+Deno.test("izleme: anahtarsız geçer, unsigned", () => assertEquals(decideHookAuth(null, S, false), { allow: true, state: "unsigned" }));
+Deno.test("izleme: yanlış anahtar reddedilir", () => assertEquals(decideHookAuth("wrong", S, false).allow, false));
+Deno.test("izleme: doğru anahtar signed", () => assertEquals(decideHookAuth(S, S, false), { allow: true, state: "signed" }));
+Deno.test("zorunlu: anahtarsız reddedilir", () => assertEquals(decideHookAuth(null, S, true).allow, false));
+Deno.test("zorunlu: yanlış anahtar reddedilir", () => assertEquals(decideHookAuth("x", S, true).allow, false));
+Deno.test("zorunlu: doğru anahtar geçer", () => assertEquals(decideHookAuth(S, S, true).allow, true));
+Deno.test("zorunlu: sır yoksa fail-closed", () => assertEquals(decideHookAuth(S, undefined, true).allow, false));
+Deno.test("sır yokken izleme: eski davranış korunur", () => assertEquals(decideHookAuth(null, undefined, false).allow, true));

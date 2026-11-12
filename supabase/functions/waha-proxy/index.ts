@@ -300,6 +300,50 @@ Deno.serve(async (req) => {
       headers['X-Api-Key'] = wahaApiKey;
     }
 
+    // Webhook güvenliği: yalnız okuma (inspect) ve onaylı geçiş (secure). Sır değeri asla döndürülmez.
+    if (action === 'webhooks.inspect' || action === 'webhooks.secure') {
+      const ownBase = (Deno.env.get('SUPABASE_URL') || '').replace(/\/+$/, '');
+      const secret = Deno.env.get('WAHA_WEBHOOK_SECRET') || '';
+      const listRes = await fetch(`${wahaUrl}/api/sessions?all=true`, { headers });
+      const list = await listRes.json().catch(() => []);
+      const sessions = Array.isArray(list) ? list : [];
+      const summary: unknown[] = [];
+      for (const ses of sessions) {
+        const name = String(ses?.name || '');
+        const cfg = ses?.config || {};
+        const hooks: any[] = Array.isArray(cfg.webhooks) ? cfg.webhooks : [];
+        const mapped = hooks.map((h) => {
+          const url = String(h?.url || '');
+          const ours = !!ownBase && url.startsWith(ownBase);
+          const hdrs: any[] = Array.isArray(h?.customHeaders) ? h.customHeaders : [];
+          const hasToken = hdrs.some((x) => ['x-waha-token', 'x-bot-secret'].includes(String(x?.name || '').toLowerCase()));
+          let path = '';
+          try { path = new URL(url).pathname; } catch { path = '(geçersiz adres)'; }
+          return { ours, path: ours ? path : '(dış adres)', events: h?.events || [], hasToken };
+        });
+        let updated: boolean | null = null;
+        if (action === 'webhooks.secure' && name && hooks.some((h) => String(h?.url || '').startsWith(ownBase))) {
+          if (!secret) return respond({ success: false, error: 'WAHA_WEBHOOK_SECRET tanımlı değil' });
+          const newHooks = hooks.map((h) => {
+            if (!String(h?.url || '').startsWith(ownBase)) return h;
+            const others = (Array.isArray(h?.customHeaders) ? h.customHeaders : [])
+              .filter((x: any) => !['x-waha-token', 'x-bot-secret'].includes(String(x?.name || '').toLowerCase()));
+            return { ...h, customHeaders: [...others, { name: 'x-waha-token', value: secret }] };
+          });
+          const up = await fetch(`${wahaUrl}/api/sessions/${encodeURIComponent(name)}`, {
+            method: 'PUT', headers, body: JSON.stringify({ name, config: { ...cfg, webhooks: newHooks } }),
+          });
+          updated = up.ok;
+        }
+        summary.push({ session: name, status: ses?.status ?? null, webhooks: mapped, updated });
+      }
+      return respond({ success: listRes.ok, status: listRes.status, data: {
+        secretConfigured: !!secret,
+        enforce: (Deno.env.get('WAHA_WEBHOOK_ENFORCE') || '').toLowerCase() === 'true',
+        sessions: summary,
+      }, error: listRes.ok ? null : 'WAHA oturum listesi okunamadı' });
+    }
+
     let endpoint = '';
     let method = 'GET';
     let body: string | undefined;

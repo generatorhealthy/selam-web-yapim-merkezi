@@ -3,6 +3,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import { DatabaseBackupCard } from "@/components/DatabaseBackupCard";
+import { WhatsappWebhookCheck } from "@/components/admin/WhatsappWebhookCheck";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Scale, Loader2 } from "lucide-react";
 
@@ -60,6 +61,7 @@ const DatabaseBackup = () => {
             </p>
           </div>
 
+          <WhatsappWebhookCheck />
           <DatabaseBackupCard />
         </div>
         
