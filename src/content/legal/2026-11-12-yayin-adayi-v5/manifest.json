@@ -1,0 +1,11 @@
+{
+  "version": "2026-11-12-yayin-adayi-v5",
+  "source": "2026-11-12-yayin-adayi-v4",
+  "published_at": null,
+  "status": "blocked_legal_review",
+  "documents": {
+    "acik-riza.md": "c303ec48263ef0890c4d535c8d41465198a76065e26818cfb870233c0d0bdc9b",
+    "aydinlatma-metni.md": "fac35abf7c7c73f36f09b88d4f6564aee43b630cb80cf9c3ce2e977c9ad612a4",
+    "cagri-merkezi.md": "ad5a92a2434ae5fc284d4fe7f2c595545ed76df4f31e52ab999279087d827019"
+  }
+}

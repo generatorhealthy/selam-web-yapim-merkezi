@@ -18,9 +18,10 @@ export function genericMail(recipient: string) {
     sender: { email: 'info@doktorumol.com.tr', name: 'Doktorum Ol' },
     to: [{ email: recipient }],
     subject: 'Yeni değerlendirme bildirimi',
-    htmlContent: '<p>Yeni bir değerlendirme kaydı bulunmaktadır.</p><p>Ayrıntıları yetkili uzman panelinizden görüntüleyebilirsiniz.</p><p><a href="https://doktorumol.com.tr/doktor-paneli">Uzman paneli</a></p>',
+    htmlContent: `<p>${NOTICE_TEXT}</p>`,
   };
 }
+export const NOTICE_TEXT = 'Doktorum Ol hesabınızda değerlendirmenizi bekleyen yeni bir kayıt bulunmaktadır. Detayları güvenli uzman panelinizden inceleyebilirsiniz.';
 // Request payload cannot select a result, recipient, subject or body. The queue is authoritative.
 export async function processNextNotice(ports: MailPorts) {
   if (!await ports.authorize()) return { status: 401, outcome: 'unauthorized' };

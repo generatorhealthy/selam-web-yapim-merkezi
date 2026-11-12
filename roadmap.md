@@ -1,5 +1,12 @@
 # Roadmap
 
+## 12 Kasım 18:06 — Koordineli A/B/C hazırlığı (canlı onay yok)
+- [x] A hazırlığı: v4 korundu, v5 ses beyanı/saklama/kamu URL'leri; React sayfa, route/footer/.htaccess diff üretici ve onay kapılı prerender modülü hazır. Hukuk engelleri COORDINATED_RESULTS.md'de; production entegrasyon/yayın tamamlanmadı.
+- [ ] Santral otomatik kayıt/dosya sayımı — readonly helper check TLS doğrulamasında başarısız; TLS atlanmadı, SSH/sağlayıcı erişimi yok, ses dosyasına erişilmedi. Şirket beyanı ayrı kaydedildi.
+- [x] B kod hazırlığı: üretim kolonlarıyla SQL/gerçek SDK/worker/legacy body-readless 401 ve rollback; 19 Deno ve yerel SQL rollback kontrolleri geçti, direct Brevo GET /account 200. Eski anon sonuçlar held_legacy; kimlik/izin üst katmanı ve native geçişi eksik, tam paket deploy hazır değil.
+- [x] C kod hazırlığı: bağımsız trigger/SDK worker + C0 bildirim-kapalı SQL; genel içerik, mevcut service-role sağlayıcı kapıları, partial/timeout unknown testleri ve rollback. Tam C queue substrate'a bağlı; C0 ayrıca onaylanabilir.
+- [ ] A yayını — somut m.6/m.9 ve saklama/sağlayıcı kayıt kapıları bekliyor. B/C canlı migration/function/cron/trigger değişiklikleri ayrı açık onay bekliyor; mevcut kayıtlar korunur.
+
 ## 12 Kasım 17:57 — Hukuki sayfaları güncelleme talimatı
 - [x] v2 temelinde üç v4 yayın adayı: şirket bilgileri, gerçek veri aktarımı/analitik, ses-döküm ayrımı, m.5/m.6 ve mevcut olmayan araç iddiaları düzeltildi; önceki sürümler/hash'ler korundu. Yayın tarihi null.
 - [x] Yalnız taslakta içerik/bağlantı ve altı mobil/masaüstü görüntü kontrolü; noindex/taşma/şirket bilgileri ve eski dört URL yerelde doğrulandı, hash'ler eşleşti. Rapor security/legal-publication-2026-11-12/REVIEW.md; kamu sayfaları/bağlantılar değişmedi.
