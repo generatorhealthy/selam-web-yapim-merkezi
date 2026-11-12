@@ -59,6 +59,8 @@ Deno.serve(async (req) => {
         pendingOrder: { id: "sim", amount: Number(latestApproved.amount), package_type: latestApproved.package_type, status: "pending" } }).action : null,
     });
   }
+  const out = { fields: { subscription: [...fieldSets.subscription], order: [...fieldSets.order], attempt: [...fieldSets.attempt] }, rows };
+  console.log("IYZICO_INSPECT_RESULT " + JSON.stringify(out));
   return new Response(JSON.stringify({
     fields: { subscription: [...fieldSets.subscription], order: [...fieldSets.order], attempt: [...fieldSets.attempt] }, rows,
   }, null, 2), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

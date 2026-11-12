@@ -56,11 +56,14 @@ export function parseIyzicoSubscription(result: any, requestedRef: string): Veri
     const t = Number(okAttempt?.createdDate ?? o?.startPeriod ?? 0);
     return { status, success: status === "SUCCESS", referenceCode: o?.referenceCode ? String(o.referenceCode) : null,
       price: num(o?.price ?? okAttempt?.price), paidAt: Number.isFinite(t) ? t : 0,
-      lastTry: Math.max(0, ...attempts.map((a) => Number(a?.createdDate) || 0), Number(o?.startPeriod) || 0) };
+      attempted: attempts.length > 0 || status === "SUCCESS" || status === "FAILED",
+      lastTry: Math.max(0, ...attempts.map((a) => Number(a?.createdDate) || 0)) };
   });
   const succ = charges.filter((c) => c.success).sort((a, b) => b.paidAt - a.paidAt);
   if (succ.length === 0) return null; // başarılı tahsilat görünmeden onay yok (eski "orders boşsa geç" kaldırıldı)
-  const latest = charges.slice().sort((a, b) => b.lastTry - a.lastTry)[0];
+  // iyzico bir sonraki dönemi WAITING + denemesiz olarak listeler: o henüz bir ödeme denemesi değildir.
+  const tried = charges.filter((c) => c.attempted);
+  const latest = tried.slice().sort((a, b) => b.lastTry - a.lastTry)[0];
   return {
     subscriptionReferenceCode: ref,
     customerReferenceCode: String(sub.customerReferenceCode),

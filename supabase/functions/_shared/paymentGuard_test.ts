@@ -48,3 +48,10 @@ Deno.test("eski plan, kayıt-linki siparişini onaylamaz", () => {
   eq(cb(mockSub({ pricingPlanReferenceCode: "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94", orders: [charge(5000, T1)] })), { action: "reject", reason: "plan_mismatch" }); });
 Deno.test("müşteri kodu uyuşmazsa reddedilir", () => { eq(cb(mockSub(), order(), null, "baska").action, "reject"); });
 Deno.test("bekleyen sipariş yoksa onay yok", () => { eq(cb(mockSub(), null).action, "reject"); });
+
+Deno.test("gerçek yanıt biçimi: gelecek dönem WAITING (denemesiz) onayı engellemez", () => {
+  const future = { referenceCode: "next", price: 5000, orderStatus: "WAITING", startPeriod: T1 + MONTH, paymentAttempts: [] };
+  eq(cb(mockSub({ orders: [charge(5000, T1), future] })).action, "approve"); });
+Deno.test("denemesi yapılmış WAITING (tahsil edilemedi) onaylanmaz", () => {
+  const w = { referenceCode: "w", price: 5000, orderStatus: "WAITING", paymentAttempts: [{ paymentStatus: "FAILED", createdDate: T1 + MONTH }] };
+  eq(cb(mockSub({ orders: [charge(5000, T1), w] }), order({ subscription_month: 2 }), T1 + 1000).action, "reject"); });
