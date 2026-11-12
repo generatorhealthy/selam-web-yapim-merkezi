@@ -326,4 +326,5 @@
 - [x] 9 test, altı yerel ekran + script-free mobil HTML; footer/route/Apache/prerender doğrulandı, kayıt/B/C değişmedi.
 - [x] Gerçek URL GET ve 403/200 koruma HTML hash kanıtı alındı; gerçek yeni yayın doğrulanmadı, RESULT.md zaman/hash/karar içerir.
 - [x] 20:52:26 UTC: gerçek /acik-riza HTTP 200, belge ve HTML SHA-256 hazırlanan sürümle birebir; form yok, mobil taşma yok. Actions logu okunmadı; gerçek HTML teslimi doğrulandı.
-- [ ] Genel/Çağrı nihai aydınlatma — sırasıyla eski test/randevu ve geçmiş sağlık dökümleri için somut mevcut m.6 şartı bekleniyor.
+- [x] 21:07 UTC: şirket yetkilisinin açık yayın talimatıyla Genel Aydınlatma ve Çağrı Merkezi v9 yayın kapısı açıldı (bilgilendirme kapsamı; metinler eksik m.6/m.9 durumunu gizlemeden açıklıyor). 9 test + yerel masaüstü/mobil doğrulama geçti, tam HTML üretildi.
+- [ ] Gerçek doktorumol.com.tr HTML/hash doğrulaması — GitHub Actions → Hostinger dağıtımı sonrası yapılacak.

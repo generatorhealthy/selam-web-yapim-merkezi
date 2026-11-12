@@ -6,8 +6,8 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { approvedLegalPages } from './legalPublication.mjs';
 
-test('only the independently evaluated consent information is emitted', () => {
-  assert.deepEqual(approvedLegalPages().map(page => page.path), ['/acik-riza']);
+test('all three independently approved v9 information pages are emitted', () => {
+  assert.deepEqual(approvedLegalPages().map(page => page.path), ['/aydinlatma-metni', '/acik-riza', '/cagri-merkezi-aydinlatma-metni']);
 });
 test('prerender emits only an approved document and rejects altered text', () => {
   const root = mkdtempSync(join(tmpdir(), 'legal-publication-'));

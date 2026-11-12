@@ -5,13 +5,13 @@
       "path": "/aydinlatma-metni",
       "file": "aydinlatma-metni.md",
       "title": "KVKK Aydınlatma Metni",
-      "legal_approved_at": null,
-      "publication_authorized_at": "2026-11-12T20:43:00Z",
-      "published_at": null,
+      "legal_approved_at": "2026-11-12T21:07:08Z",
+      "publication_authorized_at": "2026-11-12T21:07:08Z",
+      "published_at": "2026-11-12T21:07:08Z",
       "scope": "public_information_only_not_compliance_certification",
       "deployment_verified_at": null,
-      "decision": "blocked_missing_current_health_processing_basis",
-      "blocking_reason": "Eski test ve sağlık içeren randevu/yönlendirme kayıtlarının güncel işleme ve saklama için somut m.6 şartı doğrulanmadı."
+      "decision": "information_release",
+      "blocking_reason": null
     },
     "consent": {
       "path": "/acik-riza",
@@ -29,13 +29,13 @@
       "path": "/cagri-merkezi-aydinlatma-metni",
       "file": "cagri-merkezi.md",
       "title": "Çağrı Merkezi Aydınlatma Metni",
-      "legal_approved_at": null,
-      "publication_authorized_at": "2026-11-12T20:43:00Z",
-      "published_at": null,
+      "legal_approved_at": "2026-11-12T21:07:08Z",
+      "publication_authorized_at": "2026-11-12T21:07:08Z",
+      "published_at": "2026-11-12T21:07:08Z",
       "scope": "public_information_only_not_compliance_certification",
       "deployment_verified_at": null,
-      "decision": "blocked_missing_current_health_processing_basis",
-      "blocking_reason": "Sağlık içeren geçmiş görüşme dökümlerinin güncel saklama için somut m.6 şartı doğrulanmadı."
+      "decision": "information_release",
+      "blocking_reason": null
     }
   }
 }
