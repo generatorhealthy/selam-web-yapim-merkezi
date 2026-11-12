@@ -1,8 +1,41 @@
 {
-  "version": "2026-11-12-yayin-adayi-v8",
+  "version": "2026-11-12-yayin-v9",
   "documents": {
-    "disclosure": { "path": "/aydinlatma-metni", "file": "aydinlatma-metni.md", "title": "KVKK Aydınlatma Metni", "legal_approved_at": null, "publication_authorized_at": "2026-11-12T18:55:00Z", "published_at": null },
-    "consent": { "path": "/acik-riza", "file": "acik-riza.md", "title": "Açık Rıza Metni", "legal_approved_at": null, "publication_authorized_at": "2026-11-12T18:55:00Z", "published_at": null },
-    "call": { "path": "/cagri-merkezi-aydinlatma-metni", "file": "cagri-merkezi.md", "title": "Çağrı Merkezi Aydınlatma Metni", "legal_approved_at": null, "publication_authorized_at": "2026-11-12T18:55:00Z", "published_at": null }
+    "disclosure": {
+      "path": "/aydinlatma-metni",
+      "file": "aydinlatma-metni.md",
+      "title": "KVKK Aydınlatma Metni",
+      "legal_approved_at": null,
+      "publication_authorized_at": "2026-11-12T20:43:00Z",
+      "published_at": null,
+      "scope": "public_information_only_not_compliance_certification",
+      "deployment_verified_at": null,
+      "decision": "blocked_missing_current_health_processing_basis",
+      "blocking_reason": "Eski test ve sağlık içeren randevu/yönlendirme kayıtlarının güncel işleme ve saklama için somut m.6 şartı doğrulanmadı."
+    },
+    "consent": {
+      "path": "/acik-riza",
+      "file": "acik-riza.md",
+      "title": "Açık Rıza Bilgilendirmesi",
+      "legal_approved_at": "2026-11-12T20:43:00Z",
+      "publication_authorized_at": "2026-11-12T20:43:00Z",
+      "published_at": "2026-11-12T20:45:41Z",
+      "scope": "public_information_only_not_compliance_certification",
+      "deployment_verified_at": null,
+      "decision": "information_release",
+      "blocking_reason": null
+    },
+    "call": {
+      "path": "/cagri-merkezi-aydinlatma-metni",
+      "file": "cagri-merkezi.md",
+      "title": "Çağrı Merkezi Aydınlatma Metni",
+      "legal_approved_at": null,
+      "publication_authorized_at": "2026-11-12T20:43:00Z",
+      "published_at": null,
+      "scope": "public_information_only_not_compliance_certification",
+      "deployment_verified_at": null,
+      "decision": "blocked_missing_current_health_processing_basis",
+      "blocking_reason": "Sağlık içeren geçmiş görüşme dökümlerinin güncel saklama için somut m.6 şartı doğrulanmadı."
+    }
   }
 }

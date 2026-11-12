@@ -7,8 +7,13 @@ import { createHash } from 'node:crypto';
 import { staticLegalFiles, writeStaticLegalPackage } from './legal-static-package.mjs';
 
 test('no legal document is released without its own approval', () => {
-  assert.deepEqual(staticLegalFiles(), []);
-  assert.throws(() => writeStaticLegalPackage('/tmp/should-not-emit-legal'), /No independently approved/);
+  const root = mkdtempSync(join(tmpdir(), 'blocked-legal-'));
+  try {
+    mkdirSync(join(root, 'src/content/legal'), { recursive: true });
+    writeFileSync(join(root, 'src/content/legal/publication.json'), JSON.stringify({ version: 'synthetic', documents: { call: { legal_approved_at: null } } }));
+    assert.deepEqual(staticLegalFiles(root), []);
+    assert.throws(() => writeStaticLegalPackage(join(root, 'output'), root), /No independently approved/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
 test('one approved independent notice is not blocked by two unapproved activities', () => {
   const root = mkdtempSync(join(tmpdir(), 'independent-legal-'));

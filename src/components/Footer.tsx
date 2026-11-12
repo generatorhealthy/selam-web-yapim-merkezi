@@ -29,7 +29,7 @@ const Footer = () => {
               Aydınlatma Metni
             </Link>
             <span aria-hidden="true">|</span>
-            <Link to="/acik-riza" className="hover:text-primary transition-colors">Açık Rıza Metni</Link>
+            <Link to="/acik-riza" className="hover:text-primary transition-colors">Açık Rıza Bilgilendirmesi</Link>
             {canShowLegalCandidate(publication.documents.call, window.location.hostname) && <>
               <span aria-hidden="true">|</span>
               <Link to="/cagri-merkezi-aydinlatma-metni" className="hover:text-primary transition-colors">Çağrı Merkezi Aydınlatma Metni</Link>

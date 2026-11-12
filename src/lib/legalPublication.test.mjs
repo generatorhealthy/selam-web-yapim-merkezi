@@ -3,17 +3,25 @@ import assert from 'node:assert/strict';
 import publication from '../content/legal/publication.json' with { type: 'json' };
 import { isLegalPublished, canShowLegalCandidate } from './legalPublication.js';
 
-test('each of the three v6 pages stays unpublished until its own approvals exist', () => {
+test('updated health notices remain blocked independently of consent information', () => {
   assert.deepEqual(Object.values(publication.documents).map(d => d.path), ['/aydinlatma-metni', '/acik-riza', '/cagri-merkezi-aydinlatma-metni']);
-  for (const d of Object.values(publication.documents)) assert.equal(isLegalPublished(d), false);
+  assert.equal(isLegalPublished(publication.documents.disclosure), false);
+  assert.equal(isLegalPublished(publication.documents.call), false);
+  assert.equal(isLegalPublished(publication.documents.consent), true);
 });
 test('a publication instruction alone does not declare legal approval', () => {
-  for (const document of Object.values(publication.documents)) {
-    assert.equal(document.publication_authorized_at, '2026-11-12T18:55:00Z');
+  for (const document of [publication.documents.disclosure, publication.documents.call]) {
+    assert.equal(document.publication_authorized_at, '2026-11-12T20:43:00Z');
     assert.equal(document.legal_approved_at, null);
     assert.equal(document.published_at, null);
   }
   assert.equal(isLegalPublished({ publication_authorized_at: '2026-11-12T18:37:00Z', published_at: '2026-11-12T18:37:00Z' }), false);
+});
+test('a prepared release never claims verified production deployment', () => {
+  for (const document of Object.values(publication.documents)) {
+    assert.equal(document.deployment_verified_at, null);
+    assert.equal(document.scope, 'public_information_only_not_compliance_certification');
+  }
 });
 test('complete document approval allows only that document', () => {
   const approved = { legal_approved_at: '2026-11-12T18:37:00Z', publication_authorized_at: '2026-11-12T18:37:00Z', published_at: '2026-11-12T18:37:00Z' };

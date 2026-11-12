@@ -5,9 +5,9 @@ import { HorizontalNavigation } from '@/components/HorizontalNavigation';
 import Footer from '@/components/Footer';
 import publication from '@/content/legal/publication.json';
 import { isLegalPublished } from '@/lib/legalPublication.js';
-import disclosure from '@/content/legal/2026-11-12-yayin-adayi-v8/aydinlatma-metni.md?raw';
-import consent from '@/content/legal/2026-11-12-yayin-adayi-v8/acik-riza.md?raw';
-import call from '@/content/legal/2026-11-12-yayin-adayi-v8/cagri-merkezi.md?raw';
+import disclosure from '@/content/legal/2026-11-12-yayin-v9/aydinlatma-metni.md?raw';
+import consent from '@/content/legal/2026-11-12-yayin-v9/acik-riza.md?raw';
+import call from '@/content/legal/2026-11-12-yayin-v9/cagri-merkezi.md?raw';
 
 export type LegalDocument = keyof typeof publication.documents;
 const texts = { disclosure, consent, call };
@@ -18,12 +18,14 @@ export default function LegalPage({ document, draft = false }: { document: Legal
     <Helmet>
       <title>{entry.title} | Doktorum Ol{published ? '' : ' – Yayın Adayı'}</title>
       <meta name="description" content={`Doktorum Ol ${entry.title.toLocaleLowerCase('tr')}.`} />
+      <meta name="legal-document-version" content={publication.version} />
+      {published && <meta name="legal-published-at" content={entry.published_at ?? undefined} />}
       <meta name="robots" content={published ? 'index, follow' : 'noindex, nofollow'} />
       {published && <link rel="canonical" href={`https://doktorumol.com.tr${entry.path}`} />}
     </Helmet>
     <HorizontalNavigation />
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-8 sm:py-12">
-      {!published && <p role="status" className="mb-6 border-l-4 border-destructive bg-destructive/10 p-4 text-sm text-destructive">Yayın adayı — hukuki onay bekliyor. Bu sayfa açık rıza kaydetmez.</p>}
+      {!published && <p role="status" className="mb-6 border-l-4 border-destructive bg-destructive/10 p-4 text-sm text-destructive">Yayın adayı — {entry.blocking_reason ?? "İçerik değerlendirmesi bekleniyor."} Bu sayfa açık rıza kaydetmez.</p>}
       <article className="min-w-0 break-words text-[15px] leading-relaxed">
         <ReactMarkdown components={{
           h1: p => <h1 className="mb-6 text-2xl font-bold leading-snug sm:text-3xl" {...p} />,

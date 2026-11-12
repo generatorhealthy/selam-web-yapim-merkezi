@@ -77,7 +77,7 @@ const CookieConsent = () => {
             </Link>
             {" • "}
             <Link
-              to="/disclosure-text"
+              to="/aydinlatma-metni"
               className="text-primary underline-offset-2 hover:underline font-medium"
             >
               Aydınlatma Metni

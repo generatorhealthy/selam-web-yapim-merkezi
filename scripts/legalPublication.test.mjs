@@ -6,13 +6,14 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { approvedLegalPages } from './legalPublication.mjs';
 
-test('unapproved v6 documents are not emitted to public prerender', () => {
-  assert.equal(approvedLegalPages().length, 0);
+test('only the independently evaluated consent information is emitted', () => {
+  assert.deepEqual(approvedLegalPages().map(page => page.path), ['/acik-riza']);
 });
 test('prerender emits only an approved document and rejects altered text', () => {
   const root = mkdtempSync(join(tmpdir(), 'legal-publication-'));
   try {
     const registry = JSON.parse(readFileSync('src/content/legal/publication.json', 'utf8'));
+    for (const entry of Object.values(registry.documents)) entry.legal_approved_at = null;
     registry.documents.call = { ...registry.documents.call, legal_approved_at: '2026-11-12T18:37:00Z', publication_authorized_at: '2026-11-12T18:37:00Z', published_at: '2026-11-12T18:37:00Z' };
     const folder = join(root, 'src/content/legal', registry.version);
     mkdirSync(folder, { recursive: true });

@@ -1,0 +1,87 @@
+{
+  "local": [
+    {
+      "viewport": [
+        1280,
+        1800
+      ],
+      "path": "aydinlatma-metni",
+      "overflow": false,
+      "no_consent_form": true
+    },
+    {
+      "viewport": [
+        1280,
+        1800
+      ],
+      "path": "acik-riza",
+      "overflow": false,
+      "no_consent_form": true
+    },
+    {
+      "viewport": [
+        1280,
+        1800
+      ],
+      "path": "cagri-merkezi-aydinlatma-metni",
+      "overflow": false,
+      "no_consent_form": true
+    },
+    {
+      "viewport": [
+        440,
+        673
+      ],
+      "path": "aydinlatma-metni",
+      "overflow": false,
+      "no_consent_form": true
+    },
+    {
+      "viewport": [
+        440,
+        673
+      ],
+      "path": "acik-riza",
+      "overflow": false,
+      "no_consent_form": true
+    },
+    {
+      "viewport": [
+        440,
+        673
+      ],
+      "path": "cagri-merkezi-aydinlatma-metni",
+      "overflow": false,
+      "no_consent_form": true
+    }
+  ],
+  "production": [
+    {
+      "path": "/aydinlatma-metni",
+      "status": 403,
+      "checked_at": "2026-11-12T20:46:46.074024+00:00",
+      "html_sha256": "69eacef2f355c22ff53745adb39ff0076d2093a767a72e38070ca83c7c5569df",
+      "document_hash_meta": 0,
+      "published_at_meta": 0,
+      "title": "Checking your browser before accessing. Just a moment..."
+    },
+    {
+      "path": "/acik-riza",
+      "status": 403,
+      "checked_at": "2026-11-12T20:46:46.285864+00:00",
+      "html_sha256": "69eacef2f355c22ff53745adb39ff0076d2093a767a72e38070ca83c7c5569df",
+      "document_hash_meta": 0,
+      "published_at_meta": 0,
+      "title": "Checking your browser before accessing. Just a moment..."
+    },
+    {
+      "path": "/cagri-merkezi-aydinlatma-metni",
+      "status": 403,
+      "checked_at": "2026-11-12T20:46:46.417168+00:00",
+      "html_sha256": "69eacef2f355c22ff53745adb39ff0076d2093a767a72e38070ca83c7c5569df",
+      "document_hash_meta": 0,
+      "published_at_meta": 0,
+      "title": "Checking your browser before accessing. Just a moment..."
+    }
+  ]
+}

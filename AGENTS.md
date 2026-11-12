@@ -31,3 +31,5 @@
 - Legacy anonymous test INSERTs must not become trusted notice provenance; hold their outbox entries until authenticated operation migration, and reject legacy mail bodies without parsing — prevents guessed result IDs and forged anonymous assignments from triggering paid notifications.
 - Independent test SMS/push minimization may transform only the existing trigger's payload with fail-closed definition checks; preserve transport, grants and result writes without enabling the unapproved queue — allows privacy improvement without breaking legacy submissions.
 - Direct test email delivery requires a verified owning specialist and service-only unique result claim; never retry unknown claims or alter legacy result writes — rejects unverified mail while preserving result persistence and scoped panel readback.
+
+- Public legal information releases record a per-document content-only decision and separate deployment verification; blocked historical-health notices remain preview-only — informational publication never certifies processing legality or activates consent capture.

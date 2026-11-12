@@ -1,0 +1,28 @@
+{
+  "prepared_at": "2026-11-12T20:45:41Z",
+  "documents": [
+    {
+      "source": "KİŞİSEL_VERİLERİN_KORUNMASI_AYDINLATMA_METNİ_pasted-2.md",
+      "source_sha256": "f52d4ef351ba141827811f320329d5e94a0273a9cbe397c106be0c2e9c7f17ec",
+      "file": "aydinlatma-metni.md",
+      "sha256": "00cf77757d5da1d61407c8c775a7ed7c3576966c0901bed1e023f35f27001fc9"
+    },
+    {
+      "source": "KİŞİSEL_VERİLERİN_İŞLENMESİNE_İLİŞKİN_AÇIK_RIZA_pasted-2.md",
+      "source_sha256": "b4da0a774770556b75289e28d2af8639cf0d5d0e18af733120dc70c2fbf4631f",
+      "file": "acik-riza.md",
+      "sha256": "65664bcab74a33b355e06aab01e6a41672da4142b63300affc2edaa6627ad8aa"
+    },
+    {
+      "source": "ÇAĞRI_MERKEZİ_KİŞİSEL_VERİLERİN_KORUNMASI_pasted-2.md",
+      "source_sha256": "bff9f3877dfbf5f38be553001f363c1c4ed14c877f6d6ba65aeeb4b41f891117",
+      "file": "cagri-merkezi.md",
+      "sha256": "42d0821c41275ee0eb0c2563e0722592735e4d98d88380e48497e23de9c4197d"
+    }
+  ],
+  "internal_document_public": false,
+  "analytics_settings": {
+    "visitor_analytics_enabled": true,
+    "click_tracking_enabled": true
+  }
+}

@@ -319,3 +319,11 @@
 - [ ] İlk gerçek randevuda doğru uzmana gittiğini doğrula — bekliyor: yeni randevu
 - [ ] Sonra tetikleyiciyi sadeleştir + anonim çağrıları kapat
 - [ ] Aşama 5 — kullanıcı onayı bekliyor
+
+## Güncel kamu KVKK metinleri — 12 Kasım 2026 20:43 UTC
+- [x] Dört yükleme v8 ile karşılaştırıldı; v9 entegre, 04 yalnız security içinde.
+- [x] Açık Rıza yalnız bilgilendirme kapsamıyla hazır; iki eski sağlık dayanağı eksik aydınlatma taslak/noindex kaldı.
+- [x] 9 test, altı yerel ekran + script-free mobil HTML; footer/route/Apache/prerender doğrulandı, kayıt/B/C değişmedi.
+- [x] Gerçek URL GET ve 403/200 koruma HTML hash kanıtı alındı; gerçek yeni yayın doğrulanmadı, RESULT.md zaman/hash/karar içerir.
+- [ ] Açık Rıza gerçek Hostinger dağıtım/HTML teyidi — mevcut Actions yayın sonucu ve erişilebilir gerçek belge HTML’i bekleniyor.
+- [ ] Genel/Çağrı nihai aydınlatma — sırasıyla eski test/randevu ve geçmiş sağlık dökümleri için somut mevcut m.6 şartı bekleniyor.

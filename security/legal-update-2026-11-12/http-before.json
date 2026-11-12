@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/aydinlatma-metni",
+    "status": 200,
+    "url": "https://doktorumol.com.tr/aydinlatma-metni",
+    "sha256": "cbffba01f8de6f1ebdaca17fd5f247b960fc9e7118fd70ff086844a5f1b0d4bd",
+    "bytes": 12186,
+    "checked_at": "2026-11-12T20:45:05.515596+00:00",
+    "has_v9": false,
+    "challenge": true
+  },
+  {
+    "path": "/acik-riza",
+    "status": 200,
+    "url": "https://doktorumol.com.tr/acik-riza",
+    "sha256": "ee0e4e9a72c56db45dbe53b231701af6ba7def8f9a1275f3e145f2e222e3455c",
+    "bytes": 11976,
+    "checked_at": "2026-11-12T20:45:05.630575+00:00",
+    "has_v9": false,
+    "challenge": true
+  },
+  {
+    "path": "/cagri-merkezi-aydinlatma-metni",
+    "status": 200,
+    "url": "https://doktorumol.com.tr/cagri-merkezi-aydinlatma-metni",
+    "sha256": "ca4b5245c1f951e7cf45e468eb152d13a98e0a8bed60807c5b02d2b69a2534c4",
+    "bytes": 11808,
+    "checked_at": "2026-11-12T20:45:05.859547+00:00",
+    "has_v9": false,
+    "challenge": true
+  }
+]

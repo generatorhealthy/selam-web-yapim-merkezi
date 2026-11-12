@@ -18,6 +18,7 @@ import { resolve, dirname } from "path";
 import { buildLocalPages, localTitle, localHeading, localDescription, localFaq } from "../src/lib/localSeo.js";
 
 import { approvedLegalPages } from "./legalPublication.mjs";
+import { staticLegalFiles } from "./legal-static-package.mjs";
 
 const SITE = "https://doktorumol.com.tr";
 const SUPABASE_URL = "https://irnfwewabogveofwemvg.supabase.co";
@@ -199,6 +200,10 @@ const specialistCard = (s) =>
   }${isTrue(s.face_to_face_consultation) ? " · Yüz yüze" : ""}</li>`;
 
 async function main() {
+  // Legal information is independent of the public specialist/blog fetches.
+  // Emit it first so a network failure cannot silently leave a stale notice.
+  const legalFiles = staticLegalFiles();
+  for (const file of legalFiles) write(file.path, file.html);
   const key = readFileSync(resolve("src/integrations/supabase/client.ts"), "utf8").match(/eyJ[A-Za-z0-9._-]+/)?.[0];
   if (!key) throw new Error("anon key bulunamadı");
   const rawTemplate = readFileSync(resolve(DIST, "index.html"), "utf8");
@@ -486,9 +491,7 @@ async function main() {
   const legalPages = approvedLegalPages();
   const legalPaths = new Set(legalPages.map(page => page.path));
   for (const page of legalPages) {
-    const url = `${SITE}${page.path}`;
-    const ld = { "@context": "https://schema.org", "@type": "WebPage", name: page.title, url, inLanguage: "tr-TR", datePublished: page.published_at };
-    write(`pre${page.path}.html`, setRoot(setMeta(template, { title: `${page.title} | Doktorum Ol`, description: page.description, url }), `${page.html}${NAV}`, ldScript(ld)));
+    // Already emitted as independent, script-free HTML above.
     sm(page.path, { changefreq: "yearly", priority: "0.3", lastmod: page.published_at.slice(0, 10) });
   }
 
