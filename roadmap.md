@@ -1,5 +1,11 @@
 # Roadmap
 
+## 12 Kasım 18:59 — m.6 açık rıza ve uygulanabilir düzenleme
+- [x] İzole test başlatma: ayrı sağlık kararı UI/istemci/server şemasına bağlandı; false/eksik beyan ve legacy prepare reddi. SDK olmayan cors import düzeltildi. 40 Deno testi geçti.
+- [x] Yeni isolated healthEvidence politikası: 57 üyelik onayı sağlık delili değildir; amaç/işlem/kimlik/sürüm/hash/server time ve geri çekme kontrolü. Geçmiş döküm metadata-only adayı kayıt silmeden sınandı; mevcut randevu health-strip/atomik geri çekme testleri geçti. Canlı uygulama veya SQL erişim daraltması yapılmadı.
+- [x] m.6/3-a geçerli açık rıza koşuluyla test toplama/saklama/ilgili uzman paylaşımı için kanuni yöntem olarak doğrulandı; mevcut canlı izinlerin fiilî geçerliliği ve rıza özgürlüğü doğrulanmış sayılmadı. Sağlık kuruluşu istisnası varsayılmadı.
+- [ ] Sağlık izni canlı geçişi: hizmete özgü amaç/veri/alıcı/saklama bilgilendirmesi ve özgür rıza kapsamı değerlendirmesi; sunucu/DB ve eski native/guest geçişi için ayrı onay ve gerçek doğrulama gerekir. Üç hukuk sayfası yayımlanmadı; metinleri gerçek sağlık izin uygulaması varmış gibi değiştirme yok.
+
 ## 12 Kasım 18:55 — Yeni açık teknik yayın talimatı
 - [x] Önceki bekleme kararının yerine üç sayfa için açık teknik yayın iradesi alındı; hukuki şartların varsayılması yetkisi verilmedi.
 - [x] Zorunlu açıklamalar sayfa/bölüm/kanıt/çözüm bazında REQUIRED_INFORMATION.md içinde sonuçlandırıldı; teknik yayın iradesi üç belge için kaydedildi. v6 ve B/C korundu; canlı veri/ödeme/bağlantı yazımı yok.

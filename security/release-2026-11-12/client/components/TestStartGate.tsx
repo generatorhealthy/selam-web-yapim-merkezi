@@ -20,7 +20,7 @@ export default function TestStartGate({testId,specialistId,onReady}:{testId:stri
   document.head.appendChild(script);return()=>{if(id)api()?.remove(id);script.remove();};
  },[docs?.captchaSiteKey]);
  async function begin(){if(lock.current||!docs||!shown||!allowed)return;lock.current=true;setBusy(true);setError('');
-  try{onReady(await startTest(testId,specialistId,captcha));}catch{setError('Teste başlanamadı. Lütfen doğrulamayı yenileyin.');}finally{lock.current=false;setBusy(false);}
+  try{onReady(await startTest(testId,specialistId,captcha,{disclosureShown:shown,healthConsentGranted:allowed}));}catch{setError('Teste başlanamadı. Lütfen doğrulamayı yenileyin.');}finally{lock.current=false;setBusy(false);}
  }
  return <section className="mx-auto max-w-2xl space-y-5 p-5">
   <h1 className="text-2xl font-semibold">Test öncesi bilgilendirme</h1>

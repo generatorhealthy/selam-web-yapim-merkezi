@@ -1,8 +1,8 @@
 // DRAFT ONLY. Must not be imported from src or deployed functions.
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
-const prepare=z.object({action:z.literal('prepare'),testId:z.string().uuid(),specialistId:z.string().uuid().nullable(),guestDeclared:z.boolean(),disclosureShown:z.literal(true),captchaToken:z.string().max(4096)}).strict();
+const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
+const prepare=z.object({action:z.literal('prepare'),testId:z.string().uuid(),specialistId:z.string().uuid().nullable(),guestDeclared:z.literal(true),healthConsentGranted:z.literal(true),disclosureShown:z.literal(true),captchaToken:z.string().max(4096)}).strict();
 const submit=z.object({action:z.literal('submit'),operationId:z.string().uuid(),capability:z.string().regex(/^[a-f0-9]{64}$/),name:z.string().trim().min(1).max(200),contact:z.string().trim().min(1).max(254),answers:z.record(z.union([z.string().max(4000),z.number().finite()]))}).strict();
 export const requestSchema=z.union([prepare,submit,z.object({action:z.literal('documents')}).strict()]);
 export async function sha(value:string){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('');}
