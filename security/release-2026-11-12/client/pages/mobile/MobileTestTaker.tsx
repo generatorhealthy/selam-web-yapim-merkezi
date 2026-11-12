@@ -6,8 +6,8 @@ import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronRight, Check } from "lucide-react";
 
-import { prepareTest, submitTest, type Operation } from '@/lib/testSubmission';
-import { Checkbox } from '@/components/ui/checkbox';
+import { submitTest, type Operation } from '@/lib/testSubmission';
+import TestStartGate from '@/components/TestStartGate';
 import { Label } from '@/components/ui/label';
 
 interface Question {
@@ -34,7 +34,7 @@ export default function MobileTestTaker() {
   const [test, setTest] = useState<any>(null);
   const operationRef = useRef<Operation | null>(null);
   const submitLock = useRef(false);
-  const [guestDeclared, setGuestDeclared] = useState(false);
+  const [started, setStarted] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [step, setStep] = useState(0); // 0..N-1 = questions, N = patient info
@@ -45,6 +45,7 @@ export default function MobileTestTaker() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!started) return;
     (async () => {
       const [{ data: t }, { data: qs }] = await Promise.all([
         supabase.from("tests").select("*").eq("id", testId).maybeSingle(),
@@ -54,7 +55,7 @@ export default function MobileTestTaker() {
       setQuestions((qs as Question[]) || []);
       setLoading(false);
     })();
-  }, [testId]);
+  }, [testId, started]);
 
   const totalSteps = questions.length + 1; // +1 for patient info at end
   const isPatientStep = step === questions.length;
@@ -72,7 +73,7 @@ export default function MobileTestTaker() {
 
   const submit = async () => {
     if (submitLock.current) return;
-    if (!guestDeclared) {
+    if (!operationRef.current) {
       toast({title: 'Sağlık verisi izni gerekli', variant: 'destructive'});
       return;
     }
@@ -86,11 +87,8 @@ export default function MobileTestTaker() {
 
     try {
       if (!testId) throw new Error('Test bulunamadı');
-      let operation = operationRef.current;
-      if (!operation) {
-        operation = await prepareTest(testId, null, guestDeclared);
-        operationRef.current = operation;
-      }
+      const operation = operationRef.current;
+      if (!operation) throw new Error('Test işlemi başlatılmadı');
       await submitTest(operation, name, email || phone, answers);
     } catch {
       setSubmitting(false);
@@ -104,6 +102,11 @@ export default function MobileTestTaker() {
     toast({ title: "Test gönderildi", description: "Sonuç kaydedildi; bildirim sıraya alındı" });
     navigate("/mobile/home");
   };
+
+  if (!started) {
+    if (!testId) return <p>Test bulunamadı.</p>;
+    return <TestStartGate testId={testId} specialistId={null} onReady={op => { operationRef.current = op; setStarted(true); }} />;
+  }
 
   if (loading) {
     return (
@@ -204,11 +207,7 @@ export default function MobileTestTaker() {
               className="w-full h-12 px-4 rounded-2xl text-[15px] outline-none"
               style={{ background: "hsl(var(--m-surface))", color: "hsl(var(--m-text-primary))", boxShadow: "var(--m-shadow)" }}
             />
-<Label className="flex items-start gap-2">
-                <Checkbox checked={guestDeclared} onCheckedChange={value => setGuestDeclared(value === true)} />
-                <span>Bu test için sağlık verilerimin işlenmesine açık rıza veriyorum.</span>
-              </Label>
-              <a href="/acik-riza" target="_blank" rel="noreferrer">Açık rıza metni</a>
+
             <input
               type="email"
               value={email}

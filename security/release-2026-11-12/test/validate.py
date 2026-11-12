@@ -63,3 +63,16 @@ sql((ROOT/'PANEL_ACCESS.sql').read_text())
 assert sql(f"SET ROLE authenticated;SET request.jwt.claim.sub='{s}';SELECT count(*) FROM test_results")=='1'
 assert sql(f"SET ROLE authenticated;SET request.jwt.claim.sub='{other}';SELECT count(*) FROM test_results")=='0'
 print('PASS related specialist reads saved details; unrelated specialist sees zero results')
+assert sql("SELECT results->>'maxPossibleScore' FROM test_results")=='1'
+assert sql("SELECT results->>'scorePercentage' FROM test_results")=='100'
+assert sql("SELECT results ? 'riskLevel' FROM test_results")=='f'
+print('PASS option-count maximum and server score consistent; no invented clinical risk')
+sql((ROOT/'abuse.sql').read_text())
+assert sql("SET ROLE service_role;SELECT consume_test_prepare_budget('"+'b'*64+"','"+'c'*64+"')")=='f'
+sql('INSERT INTO test_prepare_limits VALUES(true,3,3600)')
+assert sql("SET ROLE service_role;SELECT consume_test_prepare_budget('"+'b'*64+"','"+'c'*64+"')")=='t'
+assert sql("SET ROLE service_role;SELECT consume_test_prepare_budget('"+'b'*64+"','"+'c'*64+"')")=='f'
+def quota(n):return sql("SET ROLE service_role;SELECT consume_test_prepare_budget('"+'b'*64+"','"+f'{n:064x}'+"')")
+with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:budgets=list(ex.map(quota,range(20)))
+assert budgets.count('t')==2
+print('PASS disabled quota fails closed, CAPTCHA proof one-use, 20 concurrent requests obey configured synthetic quota=3')

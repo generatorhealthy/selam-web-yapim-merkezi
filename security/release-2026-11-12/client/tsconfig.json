@@ -1,5 +1,5 @@
 {
  "extends":"../../../tsconfig.app.json",
- "compilerOptions":{"paths":{"@/lib/testSubmission":["./lib/testSubmission.ts"],"@/*":["../../../src/*"]}},
+ "compilerOptions":{"paths":{"@/components/TestStartGate":["./components/TestStartGate.tsx"],"@/lib/testSubmission":["./lib/testSubmission.ts"],"@/*":["../../../src/*"]}},
  "include":["./**/*.ts","./**/*.tsx"]
 }

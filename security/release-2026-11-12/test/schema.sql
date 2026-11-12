@@ -45,7 +45,7 @@ REVOKE ALL ON FUNCTION public.prepare_test_submission(uuid,uuid,uuid,text,boolea
 GRANT EXECUTE ON FUNCTION public.prepare_test_submission(uuid,uuid,uuid,text,boolean) TO service_role;
 CREATE FUNCTION public.commit_test_submission(p_operation uuid,p_hash text,p_user uuid,p_name text,p_contact text,p_answers jsonb)
 RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,pg_temp AS $$
-DECLARE op public.test_submission_operations; rid uuid; digest text; score int:=0; answered int; total int; percentage int; q record; a jsonb;
+DECLARE op public.test_submission_operations; rid uuid; digest text; score int:=0; maximum int:=0; answered int; total int; percentage int; q record; a jsonb;
 BEGIN
  IF current_setting('role',true) IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'server required' USING ERRCODE='42501'; END IF;
  -- Same lock order as withdrawal/prepare; no health write after revoked consent.
@@ -70,6 +70,7 @@ BEGIN
  total:=0;answered:=0;
  FOR q IN SELECT * FROM public.test_questions WHERE test_id=op.test_id ORDER BY step_number LOOP
   total:=total+1;a:=p_answers->q.id::text;
+  IF q.question_type='multiple_choice' THEN maximum:=maximum+greatest(jsonb_array_length(q.options)-1,0); END IF;
   IF q.is_required AND (a IS NULL OR a='null'::jsonb OR a='""'::jsonb) THEN RAISE EXCEPTION 'required answer'; END IF;
   IF a IS NOT NULL THEN
    answered:=answered+1;
@@ -82,9 +83,9 @@ BEGIN
   END IF;
  END LOOP;
  IF total=0 THEN RAISE EXCEPTION 'empty test'; END IF;
- percentage:=round(score*100.0/(total*4));
+ percentage:=CASE WHEN maximum>0 THEN round(score*100.0/maximum) ELSE 0 END;
  INSERT INTO public.test_results(test_id,specialist_id,patient_user_id,patient_name,patient_email,answers,results,status)
- VALUES(op.test_id,op.specialist_id,p_user,p_name,p_contact,p_answers,jsonb_build_object('totalScore',score,'scorePercentage',percentage,'answeredQuestions',answered,'totalQuestions',total,'completionRate',round(answered*100.0/total)),'completed') RETURNING id INTO rid;
+ VALUES(op.test_id,op.specialist_id,p_user,p_name,p_contact,p_answers,jsonb_build_object('totalScore',score,'maxPossibleScore',maximum,'scorePercentage',percentage,'answeredQuestions',answered,'totalQuestions',total,'completionRate',round(answered*100.0/total),'scoringVersion','ordinal-nondiagnostic-v1','interpretation','clinical_rules_unverified'),'completed') RETURNING id INTO rid;
  UPDATE public.test_submission_operations SET result_id=rid,payload_hash=digest WHERE id=op.id;
  INSERT INTO public.test_result_outbox(result_id) VALUES(rid);
  RETURN rid;

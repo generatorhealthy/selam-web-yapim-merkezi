@@ -17,8 +17,8 @@ interface Test {
   category: string;
 }
 
-import { prepareTest, submitTest, type Operation } from '@/lib/testSubmission';
-import { Checkbox } from '@/components/ui/checkbox';
+import { submitTest, type Operation } from '@/lib/testSubmission';
+import TestStartGate from '@/components/TestStartGate';
 
 interface Question {
   id: string;
@@ -45,7 +45,7 @@ const TestTaking = () => {
   const [test, setTest] = useState<Test | null>(null);
   const operationRef = useRef<Operation | null>(null);
   const submitLock = useRef(false);
-  const [guestDeclared, setGuestDeclared] = useState(false);
+  const [started, setStarted] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -58,10 +58,10 @@ const TestTaking = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (testId) {
+    if (testId && started) {
       fetchTestData();
     }
-  }, [testId]);
+  }, [testId, started]);
 
   const fetchTestData = async () => {
     try {
@@ -85,20 +85,20 @@ const TestTaking = () => {
       if (questionsError) throw questionsError;
 
       setTest(testData);
-      
+
       // Transform the questions data to match our interface
       const transformedQuestions = questionsData?.map(q => ({
         id: q.id,
         question_text: q.question_text,
-        options: Array.isArray(q.options) 
-          ? q.options.map((opt: any) => 
+        options: Array.isArray(q.options)
+          ? q.options.map((opt: any) =>
               typeof opt === 'string' ? opt : opt.text || opt.value || String(opt)
             )
           : [],
         step_number: q.step_number,
         is_required: q.is_required
       })) || [];
-      
+
       setQuestions(transformedQuestions);
     } catch (error) {
       console.error('Test verisi alınırken hata:', error);
@@ -135,7 +135,7 @@ const TestTaking = () => {
 
   const handleNext = () => {
     const currentQuestion = questions[currentQuestionIndex];
-    
+
     if (currentQuestion.is_required && !answers[currentQuestion.id]) {
       toast({
         title: "Uyarı",
@@ -156,51 +156,9 @@ const TestTaking = () => {
     }
   };
 
-  const calculateResults = () => {
-    // Basit puanlama sistemi - her cevap için puan
-    const totalQuestions = questions.length;
-    const answeredQuestions = Object.keys(answers).length;
-    const completionRate = (answeredQuestions / totalQuestions) * 100;
-
-    // Cevaplara göre puanlama (0-4 arası)
-    let totalScore = 0;
-    Object.values(answers).forEach(answer => {
-      // Her seçenek için farklı puanlar (ilk seçenek 0, son seçenek maksimum puan)
-      const questionAnswers = questions.find(q => answers[q.id] === answer);
-      if (questionAnswers) {
-        const optionIndex = questionAnswers.options.indexOf(answer);
-        totalScore += optionIndex;
-      }
-    });
-
-    const maxPossibleScore = questions.length * 4; // Her soru max 4 puan
-    const scorePercentage = (totalScore / maxPossibleScore) * 100;
-
-    let riskLevel = 'Düşük';
-    let recommendations = 'Test sonuçlarınız normal aralıkta görünüyor.';
-
-    if (scorePercentage > 70) {
-      riskLevel = 'Yüksek';
-      recommendations = 'Test sonuçlarınız profesyonel destek almanızı önerir durumda. Bir uzmanla konuşmanızı tavsiye ederiz.';
-    } else if (scorePercentage > 40) {
-      riskLevel = 'Orta';
-      recommendations = 'Test sonuçlarınız dikkat edilmesi gereken bazı alanlar olduğunu gösteriyor. Uzmanla görüşmek faydalı olabilir.';
-    }
-
-    return {
-      totalScore,
-      scorePercentage: Math.round(scorePercentage),
-      completionRate: Math.round(completionRate),
-      riskLevel,
-      recommendations,
-      answeredQuestions,
-      totalQuestions
-    };
-  };
-
   const handleSubmit = async () => {
     if (submitLock.current) return;
-    if (!guestDeclared) {
+    if (!operationRef.current) {
       toast({title: 'Sağlık verisi izni gerekli', variant: 'destructive'});
       return;
     }
@@ -220,16 +178,14 @@ const TestTaking = () => {
     setIsSubmitting(true);
 
     try {
-      const results = calculateResults();
-      
+
+
       if (!testId) throw new Error('Test bulunamadı');
-      let operation = operationRef.current;
-      if (!operation) {
-        operation = await prepareTest(testId, specialistId && specialistId !== 'genel' ? specialistId : null, guestDeclared);
-        operationRef.current = operation;
-      }
-      await submitTest(operation, patientInfo.name, patientInfo.phone, answers);
-      const finalSpecialistId = specialistId || 'genel';
+      const operation = operationRef.current;
+      if (!operation) throw new Error('Test işlemi başlatılmadı');
+      const committed = await submitTest(operation, patientInfo.name, patientInfo.phone, answers);
+      const results = committed.results;
+      const finalSpecialistId = committed.specialistId;
 
       toast({
         title: "Başarılı",
@@ -237,9 +193,7 @@ const TestTaking = () => {
       });
 
       // Test sonuçları sayfasına yönlendir
-      navigate(`/test-sonuc/${testId}/${finalSpecialistId}`, {
-        state: { results, patientInfo }
-      });
+      navigate(`/test-sonuc/${testId}/${finalSpecialistId}`);
 
     } catch (error: any) {
       console.error('Test gönderilirken hata:', error);
@@ -254,6 +208,11 @@ const TestTaking = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (!started) {
+    if (!testId) return <p>Test bulunamadı.</p>;
+    return <TestStartGate testId={testId} specialistId={specialistId && specialistId !== 'genel' ? specialistId : null} onReady={op => { operationRef.current = op; setStarted(true); }} />;
+  }
 
   if (loading) {
     return (
@@ -320,12 +279,8 @@ const TestTaking = () => {
                   required
                 />
               </div>
-              <Label className="flex items-start gap-2">
-                <Checkbox checked={guestDeclared} onCheckedChange={value => setGuestDeclared(value === true)} />
-                <span>Bu test için sağlık verilerimin işlenmesine açık rıza veriyorum.</span>
-              </Label>
-              <a href="/acik-riza" target="_blank" rel="noreferrer">Açık rıza metni</a>
-              <Button type="submit" className="w-full" disabled={!guestDeclared}>
+
+              <Button type="submit" className="w-full">
                 Teste Başla
               </Button>
             </form>

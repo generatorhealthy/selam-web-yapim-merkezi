@@ -1,5 +1,17 @@
 # Roadmap
 
+## 12 Kasım 17:07 — eksik entegrasyonların tamamlanması, canlı değişiklik yok
+- [x] Üç aday test ekranı başlangıçta server gate; navigation sağlık state kaldırıldı, yalnız tamamlanma ekranı adayı; TS kontrolü geçti.
+- [x] Gerçek puan metadata toplu envanteri, seçenek sayısına göre SQL maksimum; risk/tanı uydurulmadı, yerel testi geçti.
+- [ ] Klinik puanlama ve sonuç yorumu — test başına doğrulanmış puan anahtarı/ters maddeler/eşikler gerekiyor.
+- [x] Pending prepare/finalize SQL ve SDK email/OAuth/callback adaptörü; eşzamanlı yerel finalize ve geri çekme testi geçti.
+- [ ] Gerçek kayıt ekranı/native receipt entegrasyonu — ayrı staging Auth ve gerçek cihaz, bağımsız amaçların hukuki onayı gerekiyor.
+- [x] Staging allowlist/test iskeleti/kurulum planı; production origin reddi test edildi.
+- [ ] Staging kurulumu ve gerçek E2E — yeni boş proje/maliyet onayı, test SMTP/OAuth/CAPTCHA ve cihaz gerekiyor.
+- [ ] Mesaj OTP ekranı/sağlayıcı geçişi — test hattı/OTP ve aktif WAHA doğrulaması gerekiyor; tamamlanmadı.
+- [x] v2 değişmedi; üç unimported v3, SHA256SUMS ve form-amaç haritası hazır.
+- [x] 13 Kasım 16:00 UTC sonrası yedek SELECT sorguları hazır; doğal çalışma bekleniyor, elle çağrı yok.
+
 ## 12 Kasım 16:56 — yalnız hazırlık ve izole test onayı
 - [x] Test hazırlığı: atomik işlem/sonuç/outbox, guest capability ve belge snapshot, üç tam istemci adayı, genel mail worker; TS/Deno ve 9 gerçek yerel SQL test grubu geçti; canlı değişmedi.
 - [ ] Test tam yayın paketi — cevap toplamadan önce izin/işlem, gerçek puanlama eşdeğerliği, misafir kötüye kullanım koruması, gerçek mobil/Brevo E2E ve scheduler secret gerekiyor.

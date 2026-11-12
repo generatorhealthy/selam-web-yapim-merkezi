@@ -1,0 +1,3 @@
+import {assertEquals,assertThrows} from 'https://deno.land/std@0.224.0/assert/mod.ts';
+import {assertStaging} from './guard.ts';
+Deno.test('staging refuses production, missing allowlist and mismatched origin',()=>{assertThrows(()=>assertStaging('https://irnfwewabogveofwemvg.supabase.co','irnfwewabogveofwemvg'));assertThrows(()=>assertStaging('https://test.supabase.co',''));assertThrows(()=>assertStaging('https://other.supabase.co','test'));assertEquals(assertStaging('https://test.supabase.co','test'),'https://test.supabase.co');});

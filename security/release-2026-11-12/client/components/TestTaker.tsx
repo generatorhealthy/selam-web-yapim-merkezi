@@ -11,8 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, Send } from "lucide-react";
 
-import { prepareTest, submitTest, type Operation } from '@/lib/testSubmission';
-import { Checkbox } from '@/components/ui/checkbox';
+import { submitTest, type Operation } from '@/lib/testSubmission';
+import TestStartGate from '@/components/TestStartGate';
 
 interface Question {
   id: string;
@@ -33,7 +33,7 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
   const { toast } = useToast();
   const operationRef = useRef<Operation | null>(null);
   const submitLock = useRef(false);
-  const [guestDeclared, setGuestDeclared] = useState(false);
+  const [started, setStarted] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: any }>({});
@@ -43,8 +43,8 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
   const [testTitle, setTestTitle] = useState('');
 
   useEffect(() => {
-    fetchTestQuestions();
-  }, [testId]);
+    if (started) fetchTestQuestions();
+  }, [testId, started]);
 
   const fetchTestQuestions = async () => {
     try {
@@ -112,7 +112,7 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
 
   const handleSubmit = async () => {
     if (submitLock.current) return;
-    if (!guestDeclared) {
+    if (!operationRef.current) {
       toast({title: 'Sağlık verisi izni gerekli', variant: 'destructive'});
       return;
     }
@@ -129,11 +129,8 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
     submitLock.current = true;
     setSubmitting(true);
     try {
-      let operation = operationRef.current;
-      if (!operation) {
-        operation = await prepareTest(testId, specialistId || null, guestDeclared);
-        operationRef.current = operation;
-      }
+      const operation = operationRef.current;
+      if (!operation) throw new Error('Test işlemi başlatılmadı');
       await submitTest(operation, patientInfo.name, patientInfo.phone, answers);
 
       toast({
@@ -154,6 +151,11 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
       setSubmitting(false);
     }
   };
+
+  if (!started) {
+    if (!testId) return <p>Test bulunamadı.</p>;
+    return <TestStartGate testId={testId} specialistId={specialistId || null} onReady={op => { operationRef.current = op; setStarted(true); }} />;
+  }
 
   if (loading) {
     return (
@@ -221,11 +223,7 @@ const TestTaker = ({ testId, specialistId, onComplete }: TestTakerProps) => {
           </div>
         )}
 
-<Label className="flex items-start gap-2">
-                <Checkbox checked={guestDeclared} onCheckedChange={value => setGuestDeclared(value === true)} />
-                <span>Bu test için sağlık verilerimin işlenmesine açık rıza veriyorum.</span>
-              </Label>
-              <a href="/acik-riza" target="_blank" rel="noreferrer">Açık rıza metni</a>
+
         {currentQuestion && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">
