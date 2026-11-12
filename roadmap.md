@@ -96,3 +96,36 @@
 
 - [x] Divan panelinde Kelime Sıralayıcısı: Search Console kelime/sayfa sıraları, önceki dönem karşılaştırması, sayfa kalma süresi sayacı, fırsatlar ve onayla-uygula SEO düzeltmeleri; 6 saatte bir yenileme; 4 kural testi geçti.
 - [ ] Kelime Sıralayıcısı ekranını gerçek yönetici oturumunda doğrula — harici Supabase oturumu bu ortamda sağlanamıyor.
+
+## KVKK güvenlik çalışması (12 Kasım)
+
+## Aşama 1 — Kritik RPC güvenliği
+- [x] 11 fonksiyon için rol/yetki ve çağrı analizi (uygulama, edge function, RLS politikası, tetikleyici, cron)
+- [x] Anonim ve oturum açmış rollerin gereksiz EXECUTE yetkileri kaldırıldı (migration uygulandı)
+- [x] Yönetici panelinden kullanılan 3 işleme fonksiyon içi yönetici/personel kontrolü eklendi
+- [x] Doğrulama: 11/11 fonksiyonda anonim yetki kapalı, cron yedek görevleri etkilenmedi
+
+## Aşama 2 — Anonim veri yazma güvenliği
+- [ ] Onay kaydı: sunucudan tek kullanımlık fiş tasarımı (SQL onay bekliyor)
+- [ ] Randevu / sipariş / test sonucu ziyaretçi yazma kısıtları (SQL onay bekliyor)
+- [ ] `issue-consent-grant` sunucu işlevi (onay sonrası)
+- [ ] `MobileSignup.tsx` fiş akışı (onay sonrası)
+- [ ] Fiş üretim ucuna IP başına deneme konacak mı — kullanıcı kararı bekliyor
+
+## Aşama 3 — Test ve doğrulama
+- [ ] Uzman kaydı, danışan kaydı, randevu oluşturma, test tamamlama, sipariş oluşturma
+- [ ] Ödeme akışı, admin paneli, danışan yönlendirme, yedekleme/geri yükleme
+- [ ] Yetkisiz kullanıcının yönetici işlemlerini çalıştıramadığı (veri değiştirmeyen testlerle)
+- [ ] Geri alma planlarının her değişiklik için hazır tutulması
+
+## Aşama 4 — Raporlama
+- [x] Aşama 1 raporu
+- [x] Derin tarama özeti (54 bulgu: 14 kritik, 40 uyarı)
+- [ ] Aşama 2 uygulandıktan sonra nihai rapor
+
+## Bekleyen / dış bağımlılık
+- Derin taramanın kalan kritikleri (kod tarafı): sipariş detayı çeken uç, destek yanıtı ucu,
+  telefon yönlendirme ucu, randevu bildirimi ucu, ödeme planı doğrulaması,
+  danışan SELECT politikalarının e-posta eşleşmesi, WhatsApp webhook sırları,
+  uzman adına blog yayınlama, personel yönetici açması, form önizleme betiği.
+  Bunlar Aşama 1/2 kapsamı dışında; ayrı bir iş olarak planlanacak.
