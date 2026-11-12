@@ -62,3 +62,19 @@ Sunucu izin doğrulaması tek başına yurt dışı aktarımı hukuken uygun kı
 - Edge function SHA-256: record-consent `e9ec3643…`, consent-transaction `6a2ac6b4…`, meta-capi-event `7ce7fe34…`, meta-ad-intelligence `e899bf50…`.
 - Migration'lar: `consent_transactions` tablosu; `meta_capi_events` status CHECK'e `'held'`.
 - Linter notu: `consent_transactions` için "RLS etkin, politika yok" INFO bulgusu bilinçli (yalnız service_role tablosu). 173-174 eski bulgu bu çalışmadan önce var.
+
+## Ek — 22:35 UTC: Aşama 1 istemci entegrasyonu canlı doğrulaması
+
+Canlı paket `app-DAseeK4N.js` ile bant→sunucu kaydı gerçek sitede doğrulandı:
+- Anonim "Tümünü Kabul Et": consent-transaction + record-consent çağrıları; sunucuda `analytics` ve `advertising` grant kayıtları (`verification_method=anonymous_server_token`, user_id/email/ip null).
+- Footer → reklam izni geri çekme: `advertising` `accepted=false` kaydı sunucuda oluştu.
+- İzin verilmeden Google/Meta isteği yok; sahte jeton 401; CAPI kişisel verili olaylar `held`.
+- Sınır: giriş yapmış gerçek kullanıcıyla uçtan uca kayıt henüz doğrulanmadı (gerçek oturum gerekir).
+
+## Aşama 3 randevu düzeltmeleri (commit de6e3bf1)
+
+- RandevuSayfasi'ndaki serbest "Notlar (Opsiyonel)" alanı kaldırıldı — randevu akışında sağlık açıklaması toplanmıyor (diğer üç formda zaten yoktu).
+- BookAppointment, RandevuSayfasi, MobileBooking'e anında kapanan gönderim kilidi (ref) ve istemci üretimi tekil kayıt kimliği eklendi — çift tıklama/eşzamanlı gönderim artık ikinci kayıt üretmez.
+- RLS doğrulaması: uzmanlar yalnız kendi randevularını görebilir (specialist_id eşleşmesi), danışanlar yalnız kendi kayıtlarını, anonim yalnızca oluşturabilir.
+- Bildirimler DB trigger + sunucu işlevi üzerinden (Aşama 4 mimarisi) korunuyor; uzman telefonu yalnız kayıtlı numaradan.
+- Dağıtım: de6e3bf1 GitHub'a itildi; Hostinger dağıtımı bu rapor anında henüz başlamadı — canlı doğrulama dağıtım sonrası yapılacak.
