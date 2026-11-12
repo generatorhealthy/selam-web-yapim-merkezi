@@ -1,3 +1,10 @@
+# 12 Kasım 2026 22:35 — Aşama 1 kapanış + Aşama 3 randevu düzeltmeleri
+- [x] Aşama 1 istemci entegrasyonu canlıda doğrulandı (app-DAseeK4N.js): anonim kabul → consent-transaction + record-consent çağrıları, sunucuda analytics/advertising grant kayıtları (anonymous_server_token); geri çekme → advertising accepted=false kaydı. İzin yoksa ölçüm yok, sahte izin 401, CAPI held — hepsi gerçek sitede.
+- [ ] Giriş yapmış gerçek kullanıcıyla record-consent uçtan uca doğrulama — gerçek oturum gerekir (sınır olarak kayıtlı).
+- [x] Aşama 3 randevu düzeltmeleri (de6e3bf1): RandevuSayfasi'ndaki serbest "Notlar" alanı kaldırıldı (sağlık açıklaması riski), üç web randevu formuna çift gönderim kilidi + tekil kayıt kimliği eklendi. RLS doğrulandı: uzmanlar yalnız kendi randevularını görür. Typecheck + build geçti.
+- [ ] de6e3bf1'in Hostinger dağıtımı ve canlı doğrulaması — dağıtım henüz başlamadı, bekleniyor.
+- [ ] Aşama 3 kalan denetimler: uzman paneli görüntüleme, bildirim tetikleri, Meta Lead/WhatsApp/telefon kaynakları, mobil tarayıcı form kontrolleri.
+
 # 12 Kasım 2026 22:00 — Aşama 1 canlı doğrulama + Meta CAPI izin güvenliği
 - [x] a1e6dd75 canlıda doğrulandı: app-CwODkGys.js; ilk ziyarette bant + sıfır izne bağlı istek, reddetme sonrası sıfır istek, kabulde gtag+Meta Pixel yükleniyor, footer düğmesi bandı yeniden açıyor, geri çekme kaydediliyor, GPC'de ölçüm kapalı (gerçek doktorumol.com.tr, Playwright).
 - [x] Sunucu doğrulamalı izin kaydı: consent_transactions tablosu (yalnız service_role, 15 dk, tek kullanımlık, hash'li jeton), consent-transaction işlevi, record-consent'e analytics/advertising amaçları + anonim jeton yolu; v9 aydınlatma hash'i kanıt belgesi. Canlı sentetik: jetsız 401, jetonlu 201, tekrar 401, sahte jeton 401.
