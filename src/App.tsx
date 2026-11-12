@@ -87,6 +87,7 @@ import { lazyPanel } from "@/lib/lazyPanel";
 
 // Panel ekranları ayrı dosyada: ziyaretçi sayfaları bu kodu indirmez (mobil hız / SEO).
 const AdminWorkspace = lazyPanel(() => import("./pages/admin/AdminWorkspace"));
+const LegalDraft = lazyPanel(() => import("./pages/legal/LegalDraft"));
 const DoctorDashboard = lazyPanel(() => import("./pages/doctor/DoctorDashboard"));
 const PartnerDashboard = lazyPanel(() => import("./pages/partner/PartnerDashboard"));
 const VoiceAssistant = lazyPanel(() => import("./pages/VoiceAssistant"));
@@ -186,6 +187,7 @@ const AppContent = () => {
               <Route path="/aydinlatma-metni" element={<DisclosureText />} />
               <Route path="/disclosure-text" element={<DisclosureText />} />
               <Route path="/acik-riza" element={<ExplicitConsent />} />
+              <Route path="/kvkk-taslak/:doc" element={<LegalDraft />} />
               <Route path="/explicit-consent" element={<ExplicitConsent />} />
               <Route path="/ziyaretci-danisman-sozlesmesi" element={<VisitorConsultantAgreement />} />
               <Route path="/visitor-consultant-agreement" element={<VisitorConsultantAgreement />} />
@@ -241,6 +243,7 @@ const AppContent = () => {
               <Route path="/disclosure-text" element={<DisclosureText />} />
               <Route path="/aydinlatma-metni" element={<DisclosureText />} />
               <Route path="/acik-riza" element={<ExplicitConsent />} />
+              <Route path="/kvkk-taslak/:doc" element={<LegalDraft />} />
               <Route path="/explicit-consent" element={<ExplicitConsent />} />
               <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesContract />} />
               <Route path="/visitor-consultant-agreement" element={<VisitorConsultantAgreement />} />
