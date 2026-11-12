@@ -1,3 +1,12 @@
+# 12 Kasım 2026 22:00 — Aşama 1 canlı doğrulama + Meta CAPI izin güvenliği
+- [x] a1e6dd75 canlıda doğrulandı: app-CwODkGys.js; ilk ziyarette bant + sıfır izne bağlı istek, reddetme sonrası sıfır istek, kabulde gtag+Meta Pixel yükleniyor, footer düğmesi bandı yeniden açıyor, geri çekme kaydediliyor, GPC'de ölçüm kapalı (gerçek doktorumol.com.tr, Playwright).
+- [x] Sunucu doğrulamalı izin kaydı: consent_transactions tablosu (yalnız service_role, 15 dk, tek kullanımlık, hash'li jeton), consent-transaction işlevi, record-consent'e analytics/advertising amaçları + anonim jeton yolu; v9 aydınlatma hash'i kanıt belgesi. Canlı sentetik: jetsız 401, jetonlu 201, tekrar 401, sahte jeton 401.
+- [x] CAPI kapısı yalnız source='record_consent' kayıtlarına güvenir; eski mobile_signup INSERT'ları kanıt değil. İzinsiz olaylar 'held' (terminal) — kuyruk asla otomatik göndermez, sonradan izin verilse bile gönderilmez; yük kişisel verisiz minimize. status CHECK'e 'held' eklendi. Canlı sentetik olay held doğrulandı.
+- [x] m.9: kişisel verili CAPI fiilen kapalı (hiç doğrulanmış advertising izni yok); izin altyapısı hazır ama aktarım hukuki güvence olmadan etkinleştirilmedi.
+- [ ] Giriş yapmış kullanıcıyla record-consent'in canlı uçtan uca doğrulaması — gerçek oturum gerekir.
+- [ ] İstemci tarafı bant→sunucu kaydı (consent.ts) commit sonrası GitHub→Hostinger dağıtımıyla canlıya gidecek; canlıda yeniden doğrulanacak.
+- [ ] Aşama 2: web test sistemi (secure-health-test, release kapalı) — eski mobil INSERT açık kalırken sunucu tarafı web izin sınırlarının doğrulanması.
+
 # 12 Kasım 2026 20:23 — Karar vericilere tek somut dosya
 - [x] Tek KARAR_DOSYASI.md ve kullanıcıya teslim kopyası: veri/amaç/alıcı, şirket saklama teyidi, hukuk işleme şartı, sağlayıcı kanıtları ve K1/K2/K3 imza alanları önceden dolduruldu; v8 hash'leri ve kopya doğrulandı.
 - [x] Apple API: 1.0.2, 5 Mayıs 2026, BOSPHORUS satıcısı; Google: 29 Nisan 2026, Bosphorus Design, kamu sürüm numarası yok. Kaynak Capacitor WebView; imzalı mağaza eserinin bu depoya köken bağı kanıtlanamadı. store-evidence.json kaydedildi; eksikler tek dosyada.

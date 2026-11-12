@@ -1,0 +1,2 @@
+ALTER TABLE public.meta_capi_events DROP CONSTRAINT meta_capi_events_status_check;
+ALTER TABLE public.meta_capi_events ADD CONSTRAINT meta_capi_events_status_check CHECK (status = ANY (ARRAY['pending'::text, 'sent'::text, 'failed'::text, 'retrying'::text, 'held'::text]));
