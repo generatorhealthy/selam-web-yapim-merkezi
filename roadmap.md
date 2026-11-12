@@ -1,5 +1,16 @@
 # Roadmap
 
+## Kritik güvenlik öncelikleri — 12 Kasım 16:43 talimatı
+- [x] Öncelik 1: yedek owner/grant/direct postgres cron 23 ve admin ekranı doğrulandı; eski anon açığı yerel PostgreSQL'de üretildi; güvenli SQL ve rollback 10 test grubuyla doğrulandı.
+- [x] Öncelik 2: generic test mail, getUser/server scoped adapter, 14 notice testi ve gerçek 20-bağlantılı SQL dedup paketi hazır; canlıya alınmadı.
+- [x] Öncelik 3: kayıtlı referral alıcı/uzman/personel kontrolü hazır; anonim public caller geçiş riski raporlandı. Contact transport canlı protokol/hat doğrulaması nedeniyle tamam değil.
+- [x] Consent production SDK/atomik SQL/withdraw/append-only taslağı gerçek SQL'de test edildi; sağlık ekran envanteri, BirFatura fail-closed 5 test, MFA kurtarma tasarımı hazır. Toplam 89 mantık testi ve 19 SQL test grubu geçti.
+- [x] 48/36 ve 350/341 salt okunur araştırıldı: üç 12-table set, 338/338/341 snapshot; eski sayım nedeni kesinleşmedi; veri/metinler korunuyor.
+- [ ] Trusted test outbox ve gerçek sağlık submit/guest OTP/mobile adaptörleri — hukuk faaliyet matrisi ve gerçek test oturum/cihaz ortamı gerekiyor.
+- [ ] Contact gerçek transport ve public self-link güvenli geçiş — aktif hat/doğrulanmış iç servis protokolü ve davranış onayı gerekiyor.
+- [ ] MFA kurtarma kodu işlevleri ve gerçek kurulum — MFA/kurtarma modelinin kullanıcı onayı ve test yönetici ortamı gerekiyor.
+- [ ] Canlı izin/mesaj/erişim değişiklikleri — ayrı kullanıcı onayı; gerçek mobil test bitmeden INSERT kapanmayacak.
+
 ## KVKK tamamlama talimatı — ilk paket (12 Kasım 2026)
 - [x] 6A/6B/6C: temel onay, web/mobil test ve randevu yolları analiz edildi; canlıdan bağımsız servis/ekran prototipi, 22 yeni test ve sentetik tarayıcı kontrolleri hazır. Toplam 70 test geçti; gerçek üretim adaptörleri hazır değil.
 - [x] 6D–6J, Aşama 4 ve 3: tek güncel rapor, hedefli canlı salt okunur denetim, risk ve yayın kapıları hazır; 57 kayıt fingerprint aynı. 174 eski bulgunun tam yeniden taraması yapılmış sayılmadı.

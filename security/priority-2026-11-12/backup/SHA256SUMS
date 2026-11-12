@@ -1,0 +1,3 @@
+206cf5d95eca41aa341f21a5a26d691b2b6a9a0d282a315b48a2e90653ed0ba1  original.sql
+36f1d5208c08dfa98704b5352a4a136c423ff606e6dc6dacb7d29f767cec596b  migration-draft.sql
+3e8f4dbb3674b8e72b94ca1067e63a03b111a96b5b86eed07627505aa5da6cf1  safe-rollback.sql
