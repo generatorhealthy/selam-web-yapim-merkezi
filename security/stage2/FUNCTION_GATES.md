@@ -119,6 +119,22 @@ tek kontrol sonucun 1 saatinden eski olmaması. Misafir test akışı bu ucu ça
 uç yalnızca veritabanı tetikleyicisi tarafından (iç sırla) çağrılacak şekilde
 kısıtlanması. Bu, kullanıcının listesindeki altı fonksiyondan ayrıdır; karar bekliyor.
 
+## 7) `send-test-results-email` — kullanıcı kararı: yalnızca yönetici/personel
+
+Mevcut: `verify_jwt=false`; alıcı ve sağlık verisi kayıtlı satırdan okunuyor
+(alıcı seçilemiyor), 1 saatlik süre kısıtı var. Sorun: ucu **tarayıcıdan misafir
+test akışı** çağırıyor (`TestTaking.tsx`, `TestTaker.tsx`, `MobileTestTaker.tsx`).
+
+Karar: uç yalnızca yönetici/personel veya sunucu içi çağrıya açık olsun.
+Uygulama sırası (kapı tek başına yayınlanmamalı):
+1. `security/stage2/05_test_result_email_trigger.sql` — e-postayı artık veritabanı
+   tetikleyicisi gönderir (`<CRON_SECRET>` doldurulmalı).
+2. `security/stage2/functions/send-test-results-email/index.ts` yayınlanır
+   (`verifyAdminOrCron` kapısı).
+3. Tarayıcıdaki üç çağrı kaldırılır.
+
+Kapı tek başına yayınlanırsa uzman test sonucu e-postası bir daha gönderilmez.
+
 ## Uygulama sırası
 
 1. Sırların tanımlı olduğunu doğrula (`BIRFATURA_API_TOKEN`, PBX ve Brevo anahtarları).
