@@ -1,8 +1,15 @@
 # Roadmap
 
+## 12 Kasım 17:37 — Güvenli başlangıç teknik hazırlığı
+- [x] 382 migration envanteri: 378 dosya/2072 komut ayrıştırıldı, 4 dosya engellendi; dosya/satır/kategori/hash listeleri hazır, otomatik güvenli onay yok.
+- [x] Açık kaynak listeli minimum başlangıç, tam test origin kapısı, redirect engeli ve beş servis simülatörü; izole mantık ve yerel SQL kontrolleri geçti. Tam üretim şeması veya hosted UI E2E değildir.
+- [x] Teknik rapor: standart Dashboard branch güvenli kabul edilmedi; Docker en ucuz yerel seçenek, Lovable için uygun kotada bağımsız Free test projesi önerildi. Canlı değişmedi; kurulum yapılmadı.
+- [ ] Önerilen yalnız Free test projesi + boş test Lovable kurulumu — kullanıcı onayı, ücretsiz kota ve ortam oluşturma erişimi bekleniyor; ücretli alternatife otomatik geçiş yok.
+- [x] Kullanıcı PRO planı ve Create branch seçeneğini doğruladı; hiçbir ortam oluşturma veya canlı değişiklik onayı yok.
+
 ## 12 Kasım 17:33 — Branch kurulumu öncesi güvenlik planı
 - [x] Mevcut migration/seed/cron/Edge Functions/dış servis risk taraması ve oluşturma öncesi güvenlik planı hazır: BRANCH_PRECREATION_SAFETY_PLAN_2026-11-12.md. 382 migration içinde canlı hedef/görev/HTTP kalıpları bulundu; tam inceleme ve ilk başlangıç engeli kanıtlanmadan oluşturma önerilmiyor. Hiçbir canlı bağlantı/kayıt değişmedi.
-- [ ] Branching planı ve etkinliğini kullanıcı Supabase panelinden doğrulayacak; kurulum kararı bu doğrulama ve güvenlik planından sonra verilecek. Şu an branch veya bağımsız proje oluşturma onayı yok.
+- [x] Kullanıcı PRO planı ve Create branch seçeneğini doğruladı; kurulum kararı teknik hazırlıktan sonra verilecek. Şu an branch veya bağımsız proje oluşturma onayı yok.
 
 ## Test ortamı onayı ve uzman değerlendirmesi
 - [x] Ayrı boş test ortamı kurulumu kullanıcı tarafından onaylandı; aday SQL otomatik puan/risk üretmez, uzman değerlendirmesini bekler.

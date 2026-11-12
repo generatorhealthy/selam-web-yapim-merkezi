@@ -1,0 +1,30 @@
+{
+  "scope": "minimal_synthetic_fixture_not_production_clone",
+  "sources": [
+    {
+      "source": "security/release-2026-11-12/staging/bootstrap/base.sql",
+      "sha256": "ef81990a11a040e253686dd2ba24e9fd0699797d6001a753d475843aeda01c11"
+    },
+    {
+      "source": "security/priority-2026-11-12/consent-draft.sql",
+      "sha256": "cb4705528391aab8c79c32e0c28e4dbb904d8e768b2b9266405856c73ec61733"
+    },
+    {
+      "source": "security/release-2026-11-12/consent/withdrawal.sql",
+      "sha256": "bd9814c13f84189ac95ba1eaa5dadb39b6b41d47c585f19ada9deb1e57992639"
+    },
+    {
+      "source": "security/release-2026-11-12/test/schema.sql",
+      "sha256": "12465e0b72b357d558899bdf71d8730db89be9772511abd8afc42b12df29d810"
+    },
+    {
+      "source": "security/release-2026-11-12/test/abuse.sql",
+      "sha256": "2feaa84d4278e2e0c17765adba943b581b9feab0a9f18b4c6ca7ca66c984e36e"
+    },
+    {
+      "source": "security/release-2026-11-12/staging/bootstrap/appointment.sql",
+      "sha256": "6eb6e1598db8da5dd4e0c272b0918fc7768aa315f8961a34240aec8a5a78103f"
+    }
+  ],
+  "sha256": "2c7108a5e4509619c757a7d5e993322b6c7d233253647a5550cbf506793d4539"
+}
