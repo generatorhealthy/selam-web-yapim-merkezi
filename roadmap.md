@@ -2,7 +2,8 @@
 
 ## Test ortamı onayı ve uzman değerlendirmesi
 - [x] Ayrı boş test ortamı kurulumu kullanıcı tarafından onaylandı; aday SQL otomatik puan/risk üretmez, uzman değerlendirmesini bekler.
-- [ ] Boş harici Supabase test projesi bağlantısı — mevcut araçlar yeni harici proje oluşturamıyor; kullanıcı test projesini açıp ayrı uygulamaya bağlamalı. Üretim bağlantısı değişmeyecek.
+- [ ] İzole test ortamı bağlantısı — 12 Kasım 17:17 talimatıyla yeni proje kurulumu bekletildi; önce mevcut Supabase Branching uygunluğu incelenecek. Hiçbir ortam/bağlantı bu inceleme kapsamında oluşturulmayacak veya değiştirilmeyecek.
+- [x] Mevcut Supabase Branching, veri izolasyonu, Lovable bağlantısı ve düşük maliyetli alternatifler hakkında salt okunur seçenek raporu; yönetim token'ı olmadığından plan/branch listesi ve Lovable branch seçimi doğrulanamadı. Rapor: security/release-2026-11-12/staging/BRANCHING_OPTIONS_2026-11-12.md.
 
 ## 12 Kasım 17:07 — eksik entegrasyonların tamamlanması, canlı değişiklik yok
 - [x] Üç aday test ekranı başlangıçta server gate; navigation sağlık state kaldırıldı, yalnız tamamlanma ekranı adayı; TS kontrolü geçti.
