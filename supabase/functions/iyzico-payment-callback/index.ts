@@ -309,6 +309,7 @@ serve(async (req) => {
           "92feac6d-1181-4b78-b0c2-3b5d5742adff": 2998,
           "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94": 3998,
           "e0d7e6b7-e665-4460-ab8f-6bb6e7a2c652": 4000,
+          "29429127-2e4f-48ee-a2b7-708a068de378": 5000,
         };
         return priceMap[pricingPlanCode] || 2998;
       };
@@ -320,6 +321,7 @@ serve(async (req) => {
           "92feac6d-1181-4b78-b0c2-3b5d5742adff": "Profesyonel Paket",
           "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94": "Premium Paket",
           "e0d7e6b7-e665-4460-ab8f-6bb6e7a2c652": "Premium Paket - Özel Fırsat",
+          "29429127-2e4f-48ee-a2b7-708a068de378": "Premium Paket - Özel Fırsat",
         };
         return nameMap[pricingPlanCode] || "Premium Paket";
       };

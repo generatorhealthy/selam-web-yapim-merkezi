@@ -168,6 +168,7 @@ const Checkout = () => {
             document.referrer.includes('/packages') ||
             document.referrer.includes('/kayit-ol') ||
             document.referrer.includes('/ozel-firsat') ||
+            document.referrer.includes('/kayit-linki') ||
             document.referrer.includes('/bu-aya-ozel'));
 
         // Mobil uygulamada (Capacitor) document.referrer her zaman boş olduğundan,

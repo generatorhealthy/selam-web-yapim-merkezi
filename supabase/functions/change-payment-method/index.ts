@@ -116,6 +116,9 @@ serve(async (req) => {
 
     // Determine pricing plan based on amount
     const getPricingPlanCode = (amount: number, pkgType?: string): string => {
+      if (pkgType === "kayit-linki" || amount === 5000) {
+        return "29429127-2e4f-48ee-a2b7-708a068de378";
+      }
       if (pkgType === "ozel-firsat" || amount === 4000) {
         return "e0d7e6b7-e665-4460-ab8f-6bb6e7a2c652";
       }

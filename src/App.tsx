@@ -16,6 +16,7 @@ import { useNetworkRecovery } from "@/hooks/useNetworkRecovery";
 import { useNativeApp } from "@/hooks/useNativeApp";
 import Index from "./pages/Index";
 import SpecialOfferNew from "./pages/SpecialOfferNew";
+import RegistrationLinkOffer from "./pages/RegistrationLinkOffer";
 import DokiLogos from "./pages/DokiLogos";
 import MobileHome from "./pages/mobile/MobileHome";
 import MobileSearch from "./pages/mobile/MobileSearch";
@@ -228,6 +229,7 @@ const AppContent = () => {
               <Route path="/indirimli-paket" element={<Navigate to="/ozel-firsat" replace />} />
               <Route path="/bu-aya-ozel" element={<SpecialOffer />} />
               <Route path="/ozel-firsat" element={<SpecialOfferNew />} />
+              <Route path="/kayit-linki" element={<RegistrationLinkOffer />} />
               <Route path="/odeme/:packageType" element={<Checkout />} />
               <Route path="/odeme-sayfasi" element={<Checkout />} />
               <Route path="/checkout" element={<Checkout />} />
