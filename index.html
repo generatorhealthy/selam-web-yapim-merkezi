@@ -130,21 +130,9 @@
     <meta name="twitter:creator" content="@Doktorum_Ol" />
 
     <!-- Çerez izni varsayılanları: ölçüm etiketleri yüklenmeden önce izin sinyallerini ayarlar.
-         Eski tek anahtarlı 'cookie-consent' cevabı iki amaca (analitik + reklam) bir kez taşınır. -->
+         Eski tek anahtarlı 'cookie-consent' kaydının kapsamı doğrulanamadığı için yeni amaçlara
+         otomatik aktarılmaz; eski ziyaretçiye amaç bazlı tercih ekranı yeniden gösterilir. -->
     <script>
-      (function () {
-        try {
-          var legacy = (localStorage.getItem("cookie-consent") || "").toLowerCase();
-          var choice = legacy === "accepted" ? "granted" : legacy === "rejected" ? "denied" : null;
-          if (choice) {
-            ["cookie_consent_analytics", "cookie_consent_advertising"].forEach(function (key) {
-              if (localStorage.getItem(key) === null) {
-                localStorage.setItem(key, JSON.stringify({ choice: choice, at: Date.now() }));
-              }
-            });
-          }
-        } catch (e) {}
-      })();
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
@@ -315,7 +303,6 @@
             var a = JSON.parse(localStorage.getItem('cookie_consent_analytics') || 'null');
             var b = JSON.parse(localStorage.getItem('cookie_consent_advertising') || 'null');
             if ((a && a.choice === 'granted') || (b && b.choice === 'granted')) return true;
-            if (!a && !b && localStorage.getItem('cookie-consent') === 'accepted') return true;
           } catch (e) {}
           return false;
         }

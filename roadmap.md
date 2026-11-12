@@ -335,3 +335,5 @@
 - [ ] Aşama 2: web test akışı (secure-health-test release kapalı, eski mobil INSERT açık kalacak).
 - [ ] Aşama 3-6: randevu akışları, ödeme doğrulama, panel güvenliği (173 bulgu sınıflandırma), SEO/mobil.
 - [ ] Aşama 7: paket bazlı kontrollü yayın; her pakette commit SHA + gerçek URL doğrulaması.
+- [x] Aşama 1 düzeltme: eski tek anahtarlı çerez onayının yeni amaçlara otomatik aktarımı kaldırıldı (kapsam kanıtı yok); eski ziyaretçiye amaç bazlı bant yeniden gösteriliyor, eski kayıtlar değiştirilmedi. 7 tarayıcı senaryosu + 5 node + 4 Deno testi geçti.
+- [x] Meta CAPI izin kapısı: kişisel verili Lead/CompleteRegistration/Purchase/InitiateCheckout/QualifiedLead olayları yalnız user_consent_logs'ta sunucu doğrulamalı 'advertising' izni varken gönderilir; kanıt yoksa olay kuyrukta bekler (held), sipariş/ödeme etkilenmez. Reklam izni sunucu kaydı henüz hiçbir kullanıcıda olmadığından CAPI fiilen beklemede — ayrı kabul paketi.

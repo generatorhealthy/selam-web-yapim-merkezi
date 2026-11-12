@@ -25,10 +25,10 @@ const isTestVisit = () => {
 };
 export const hasMarketingConsent = () => {
   try {
-    // Yeni amaç bazlı izin kaydı öncelikli; eski tek anahtarlı kabul yedek olarak okunur.
+    // Yalnız amaç bazlı, doğrulanabilir reklam ölçümü izni geçerlidir; eski tek anahtarlı
+    // 'cookie-consent' kaydının kapsamı doğrulanamadığı için izin sayılmaz.
     const saved = JSON.parse(localStorage.getItem("cookie_consent_advertising") || "null");
-    if (saved && (saved.choice === "granted" || saved.choice === "denied")) return saved.choice === "granted";
-    return localStorage.getItem("cookie-consent") === "accepted";
+    return saved?.choice === "granted";
   } catch { return false; }
 };
 const canTrack = () => isProd() && hasMarketingConsent() && !isTestVisit();

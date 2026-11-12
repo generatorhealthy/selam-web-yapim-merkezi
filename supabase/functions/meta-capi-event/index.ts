@@ -1,6 +1,7 @@
 // Meta (Facebook) Conversions API — sunucu taraflı olay gönderimi
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { classifyCapiResponse } from "../_shared/capiResponse.ts";
+import { hasAdvertisingConsent, HELD_REASON } from "../_shared/capiConsent.ts";
 // Veri Seti Kodu: 1053321257408384
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -91,6 +92,23 @@ Deno.serve(async (req) => {
         });
       }
     }
+    // Kişisel verili olay yalnızca sunucuda doğrulanabilir reklam ölçümü izni varken Meta'ya gider.
+    // Tarayıcıdan gelen alanlar kanıt sayılmaz; kanıt yoksa olay kuyrukta bekletilir, kayıt akışı etkilenmez.
+    const consentUserId = /^[0-9a-f-]{36}$/i.test(String(external_id)) ? String(external_id) : null;
+    if (!(await hasAdvertisingConsent(db, consentUserId))) {
+      if (eventKey) {
+        await db.from("meta_capi_events").upsert({
+          event_key: eventKey, event_name, event_id: stableId,
+          user_id: consentUserId,
+          payload: { event_time: new Date().toISOString(), lead_event_source },
+          status: "pending", attempts: 0, last_error: HELD_REASON,
+        }, { onConflict: "event_key", ignoreDuplicates: true });
+      }
+      return new Response(JSON.stringify({ success: false, held: true, reason: HELD_REASON }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const event = {
       event_name,
       event_time: Math.floor(Date.now() / 1000),

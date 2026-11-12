@@ -7,6 +7,7 @@ import { z } from "npm:zod";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { attributedRoas, hasTrackedSample } from "../_shared/adAttribution.ts";
 import { classifyCapiResponse } from "../_shared/capiResponse.ts";
+import { hasAdvertisingConsent, HELD_REASON } from "../_shared/capiConsent.ts";
 import { decide, reasonLine } from "../_shared/adDecision.ts";
 import { isOtherProjectRow } from "../_shared/adExclusions.ts";
 import { computeQualification, ruleVersion } from "../_shared/qualification.ts";
@@ -237,9 +238,18 @@ async function sendQueue(admin: any) {
   if (!token) return { sent: 0, failed: 0, note: "META_CAPI_ACCESS_TOKEN yok" };
   const { data: items } = await admin.from("meta_capi_events").select("*")
     .in("status", ["pending", "retrying"]).lt("attempts", MAX_ATTEMPTS).order("created_at").limit(50);
-  let sent = 0, failed = 0;
+  let sent = 0, failed = 0, held = 0;
   for (const it of items || []) {
     if (it.is_test) { await admin.from("meta_capi_events").update({ status: "sent", meta_status: "TEST_NOT_SENT", last_error: "test — Meta'ya gönderilmedi", sent_at: new Date().toISOString() }).eq("id", it.id); continue; }
+    // Kişisel verili olay yalnızca sunucuda doğrulanabilir reklam izni varken gönderilir.
+    // Kanıt yoksa olay kuyrukta bekler (pending kalır); sipariş/ödeme akışı etkilenmez.
+    if (!(await hasAdvertisingConsent(admin, it.user_id))) {
+      held++;
+      if (it.last_error !== HELD_REASON) {
+        await admin.from("meta_capi_events").update({ last_error: HELD_REASON }).eq("id", it.id);
+      }
+      continue;
+    }
     let email = it.payload?.email as string | undefined, phone: string | undefined, fbc: string | undefined, fbp: string | undefined;
     let fullName: string | undefined, city: string | undefined, ip: string | undefined;
     if (it.order_id) {
@@ -301,7 +311,7 @@ async function sendQueue(admin: any) {
       await admin.from("meta_capi_events").update({ ...evidence, status: attempts >= MAX_ATTEMPTS ? "failed" : "retrying", last_error: r.error }).eq("id", it.id);
     }
   }
-  return { sent, failed };
+  return { sent, failed, held };
 }
 
 // ---- AI analizi ----

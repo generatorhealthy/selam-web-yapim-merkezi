@@ -25,10 +25,12 @@ test('google tags load only after a stored grant, never on idle alone', () => {
   assert.match(html, /navigator\.globalPrivacyControl === true\) return false/);
 });
 
-test('legacy single-key answer migrates to both purposes once', () => {
-  assert.match(html, /cookie-consent/);
+test('unverifiable legacy single-key answer is never auto-granted to new purposes', () => {
+  const consentGrantedBlock = html.slice(html.indexOf('function consentGranted()'), html.indexOf('var gtagLoaded'));
+  assert.doesNotMatch(consentGrantedBlock, /cookie-consent/, 'legacy key must not grant measurement');
   assert.match(html, /cookie_consent_analytics/);
   assert.match(html, /cookie_consent_advertising/);
+  assert.doesNotMatch(pixel, /cookie-consent'\) === "accepted"/, 'meta pixel must not read the legacy key');
 });
 
 test('banner saves per-purpose answers and offers withdraw path', () => {
