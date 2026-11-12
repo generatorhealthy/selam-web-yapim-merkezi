@@ -24,3 +24,16 @@
 
 ## Geri alma
 Her adım tek fonksiyon: git'teki önceki index.ts yeniden yayınlanır (veri/migration yok, abonelikler etkilenmez).
+
+## Güncelleme (48 test)
+- Mükerrer kontrol abonelik kodu yerine "tahsilat zamanı > son onay zamanı" ile yapılıyor — yenilemeler aynı abonelik kodunu taşıdığı için önceki sürüm her yenilemeyi engellerdi.
+- Tutar eşleşmesi iyzico'nun gerçekte çektiği tutardan (abonelik orders[].price); plan kodu yoksa tutarla eşleşir, tutar da yoksa onay yok.
+- "orders listesi boşsa onayla" kaldırıldı; son deneme başarısız/bekliyorsa onay yok.
+- Salt okunur inceleme aracı: security/stage2/functions/iyzico-readonly-inspect (yayınlanmadı).
+
+## Eski paketlerde ödeme başlatan sayfalar (dokunulmadı)
+- /kampanyali-paket → campaign, 2398 → plan e01a059d (yeni create-iyzico-payment reddederdi)
+- /kampanyali-premium-paket → campaign-premium, 3600 → bugün fiyattan 92feac6d planına düşüyor (yeni sürüm reddederdi)
+- DiscountedPackage (route yok), Checkout varsayılan paketleri (basic/professional/premium)
+- Yenilemeler: iyzico otomatik çeker; create-daily-orders bekleyen sipariş açar, callback + auto-approve-iyzico-orders onaylar. create-iyzico-payment yenilemede çağrılmaz.
+- change-payment-method mevcut planı aynen kullanır; iyzico-subscription-upgrade ayrı.

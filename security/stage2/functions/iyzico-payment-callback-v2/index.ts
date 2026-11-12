@@ -217,13 +217,16 @@ serve(async (req) => {
             console.error("Sipariş sorgulama hatası:", fetchError);
           } else if (pendingOrders && pendingOrders.length > 0) {
             const order = pendingOrders[0];
-            // Mükerrer bildirim: bu abonelik kodu zaten bir siparişe yazıldıysa tekrar onaylama.
-            const { data: used } = await supabaseAdmin.from('orders').select('id')
+            // Mükerrer: bu abonelikle en son onaylanan sipariş tahsilat zamanından sonra mı onaylandı?
+            const { data: lastApproved } = await supabaseAdmin.from('orders').select('id, approved_at')
               .eq('subscription_reference_code', verified.subscriptionReferenceCode)
-              .is('deleted_at', null).limit(1).maybeSingle();
+              .eq('status', 'approved').is('deleted_at', null)
+              .order('approved_at', { ascending: false }).limit(1).maybeSingle();
             const decision = decideCallback({
-              verified, claimedCustomerRef, alreadyUsedByOrderId: used?.id ?? null,
-              pendingOrder: { id: order.id, amount: Number(order.amount), package_type: order.package_type, status: order.status },
+              verified, claimedCustomerRef,
+              lastApprovedAtForSubscription: lastApproved?.approved_at ? Date.parse(lastApproved.approved_at) : null,
+              lastApprovedOrderId: lastApproved?.id ?? null,
+              pendingOrder: { id: order.id, amount: Number(order.amount), package_type: order.package_type, status: order.status, subscription_month: order.subscription_month },
             });
             if (decision.action !== 'approve') {
               console.warn('Callback onaylanmadı:', decision);
