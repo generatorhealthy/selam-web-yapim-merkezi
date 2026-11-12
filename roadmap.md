@@ -1,5 +1,9 @@
 # Roadmap
 
+## Test ortamı onayı ve uzman değerlendirmesi
+- [x] Ayrı boş test ortamı kurulumu kullanıcı tarafından onaylandı; aday SQL otomatik puan/risk üretmez, uzman değerlendirmesini bekler.
+- [ ] Boş harici Supabase test projesi bağlantısı — mevcut araçlar yeni harici proje oluşturamıyor; kullanıcı test projesini açıp ayrı uygulamaya bağlamalı. Üretim bağlantısı değişmeyecek.
+
 ## 12 Kasım 17:07 — eksik entegrasyonların tamamlanması, canlı değişiklik yok
 - [x] Üç aday test ekranı başlangıçta server gate; navigation sağlık state kaldırıldı, yalnız tamamlanma ekranı adayı; TS kontrolü geçti.
 - [x] Gerçek puan metadata toplu envanteri, seçenek sayısına göre SQL maksimum; risk/tanı uydurulmadı, yerel testi geçti.
