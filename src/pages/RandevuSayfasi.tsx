@@ -16,6 +16,7 @@ import { tr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { createSubmissionAttempt, appointmentErrorMessage } from '@/lib/submissionAttempt';
 
 interface Specialist {
   id: string;
@@ -132,6 +133,7 @@ const RandevuSayfasi = () => {
   });
   // Çift tıklama/eşzamanlı gönderim kilidi: state güncellemesi beklenmeden anında kapanır.
   const submitLock = useRef(false);
+  const submissionAttempt = useRef(createSubmissionAttempt());
 
   // Fetch specialists
   useEffect(() => {
@@ -309,6 +311,8 @@ const RandevuSayfasi = () => {
     }
 
     if (submitLock.current) return;
+    const appointmentId = submissionAttempt.current.begin({ selectedSpecialist, date: format(selectedDate, 'yyyy-MM-dd'), selectedTime, appointmentType, ...formData });
+    if (!appointmentId) return;
     submitLock.current = true;
     setSubmitting(true);
 
@@ -319,7 +323,7 @@ const RandevuSayfasi = () => {
       const { error } = await supabase
         .from('appointments')
         .insert({
-          id: crypto.randomUUID(),
+          id: appointmentId,
           specialist_id: selectedSpecialist,
           appointment_date: format(selectedDate, 'yyyy-MM-dd'),
           appointment_time: selectedTime,
@@ -345,10 +349,11 @@ const RandevuSayfasi = () => {
       console.error('Error creating appointment:', error);
       toast({
         title: "Hata",
-        description: "Randevu oluşturulurken bir hata oluştu.",
+        description: appointmentErrorMessage(error),
         variant: "destructive",
       });
     } finally {
+      submissionAttempt.current.finish();
       submitLock.current = false;
       setSubmitting(false);
     }

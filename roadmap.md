@@ -1,3 +1,10 @@
+# 12 Kasım 2026 — Aşama 3 tamamlama / Aşama 4 web akışları
+- [ ] Önceki randevu düzeltmelerini gerçek alan adında doğrula; üretimde sentetik kayıt/mesaj gönderme.
+- [ ] Ağ hatasında aynı başvuru kimliğini koru, belirsiz sonuçta başarı gösterme; kaynak ve erişim kontrollerini incele.
+- [ ] Sipariş kayıt hatasında ödemeyi durdur; tekrar tıklama ve yanıltıcı başarı/aktivasyon bildirimlerini düzelt, sentetik testleri çalıştır.
+- [ ] Sunucu yetki/eşleştirme ve eski kaynak sorunlarını somutlaştır; canlıyla yerel kanıtı ayır.
+- [ ] Yeni paketlerin gerçek dağıtımını doğrula veya erişim/dağıtım engelini açıkça bildir.
+
 # 12 Kasım 2026 22:35 — Aşama 1 kapanış + Aşama 3 randevu düzeltmeleri
 - [x] Aşama 1 istemci entegrasyonu canlıda doğrulandı (app-DAseeK4N.js): anonim kabul → consent-transaction + record-consent çağrıları, sunucuda analytics/advertising grant kayıtları (anonymous_server_token); geri çekme → advertising accepted=false kaydı. İzin yoksa ölçüm yok, sahte izin 401, CAPI held — hepsi gerçek sitede.
 - [ ] Giriş yapmış gerçek kullanıcıyla record-consent uçtan uca doğrulama — gerçek oturum gerekir (sınır olarak kayıtlı).

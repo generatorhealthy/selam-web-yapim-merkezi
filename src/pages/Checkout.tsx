@@ -1,6 +1,8 @@
 import { trackLeadEvent, getLeadSessionId } from "@/lib/leadTracking";
 import { trackPixelEvent, capiCheckoutEventId } from "@/lib/metaPixel";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createSubmissionAttempt } from '@/lib/submissionAttempt';
+import { checkoutAfterOrder } from '@/lib/checkoutSubmission';
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -116,7 +118,7 @@ const turkishCities = [
 ];
 
 const Checkout = () => {
-  const { packageId } = useParams();
+  const { packageType: packageId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -129,6 +131,8 @@ const Checkout = () => {
   const [showBankInfo, setShowBankInfo] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("credit_card");
   const [clientIP, setClientIP] = useState<string>("");
+  const paymentLock = useRef(false);
+  const orderAttempt = useRef(createSubmissionAttempt());
   
   const [formData, setFormData] = useState({
     name: "",
@@ -317,14 +321,18 @@ const Checkout = () => {
   };
 
   const handlePaymentProcess = async () => {
-    if (!validateForm()) return;
-
-    if (paymentMethod === "bank_transfer") {
-      await saveOrder('bank_transfer');
-      setShowBankInfo(true);
-    } else {
-      await saveOrder('credit_card');
-      await handleCreditCardPayment();
+    if (paymentLock.current || !validateForm()) return;
+    paymentLock.current = true;
+    try {
+      await checkoutAfterOrder(
+        () => saveOrder(paymentMethod),
+        async () => {
+          if (paymentMethod === 'bank_transfer') setShowBankInfo(true);
+          else await handleCreditCardPayment();
+        },
+      );
+    } finally {
+      paymentLock.current = false;
     }
   };
 
@@ -445,10 +453,13 @@ const handleCreditCardPayment = async () => {
 };
 
   const saveOrder = async (paymentMethod: string) => {
+    const orderId = orderAttempt.current.begin({ formData, customerType, packageType: selectedPackage.type, amount: selectedPackage.price, paymentMethod });
+    if (!orderId) return false;
     try {
       setLoading(true);
       
       const orderData = {
+        id: orderId,
         customer_name: `${formData.name} ${formData.surname}`,
         customer_email: formData.email,
         customer_phone: formData.gsmNumber,
@@ -479,19 +490,16 @@ const handleCreditCardPayment = async () => {
         } catch (e) { /* ignore */ }
       }
 
-      console.log('Mobile debug - Order data being saved:', orderData);
-      console.log('Mobile debug - User agent:', navigator.userAgent);
-      console.log('Mobile debug - Client IP:', clientIP);
-
       const { error } = await supabase
         .from('orders')
         .insert(orderData);
 
       if (error) {
-        console.error('Mobile debug - Order save error:', error);
-        console.error('Mobile debug - Error details:', JSON.stringify(error, null, 2));
-        throw new Error(`Sipariş kaydedilemedi: ${error.message || 'Bilinmeyen hata'}`);
+        throw new Error(error.code === '23505'
+          ? 'Bu sipariş daha önce kaydedilmiş olabilir. Yeniden ödeme başlatmadan önce siparişinizi teyit edin.'
+          : 'Sipariş kaydı doğrulanamadı. Ödeme başlatılmadı; bağlantınızı kontrol edip tekrar deneyin.');
       }
+      orderAttempt.current.finish(true);
 
       // Yeni sipariş SMS bildirimi gönder
       try {
@@ -516,7 +524,7 @@ const handleCreditCardPayment = async () => {
       }
 
       localStorage.setItem('lastOrder', JSON.stringify({
-        id: null, // anonim kullanıcılar için SELECT izni yok; id dönmüyor
+        id: orderId,
         orderNumber: `DRP-${Date.now()}`,
         package: selectedPackage.name,
         amount: selectedPackage.price,
@@ -527,6 +535,7 @@ const handleCreditCardPayment = async () => {
       if (paymentMethod === 'bank_transfer') {
         navigate("/odeme-basarili");
       }
+      return true;
 
     } catch (error) {
       console.error('Save order error:', error);
@@ -535,7 +544,9 @@ const handleCreditCardPayment = async () => {
         description: error.message || "Beklenmeyen bir hata oluştu.",
         variant: "destructive"
       });
+      return false;
     } finally {
+      orderAttempt.current.finish();
       setLoading(false);
     }
   };

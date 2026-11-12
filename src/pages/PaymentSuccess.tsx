@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Copy, Check, Banknote } from "lucide-react";
+import { CheckCircle, Copy, Check, Banknote, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import { paymentConfirmed } from '@/lib/paymentConfirmation';
 
 interface OrderData {
   id: string;
@@ -23,6 +25,7 @@ const PaymentSuccess = () => {
   const { toast } = useToast();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [verifiedPayment, setVerifiedPayment] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const bankInfo = {
@@ -50,10 +53,6 @@ const PaymentSuccess = () => {
       try {
         const orderInfo = JSON.parse(decodeURIComponent(urlOrderData));
         setOrderData(orderInfo);
-        setLoading(false);
-        
-        // Store in localStorage for consistency
-        localStorage.setItem('lastOrder', JSON.stringify(orderInfo));
         
         // Clean URL by removing the parameter
         window.history.replaceState({}, document.title, '/odeme-basarili');
@@ -71,7 +70,6 @@ const PaymentSuccess = () => {
         setOrderData(orderInfo);
         // Clear the data after reading it
         localStorage.removeItem('lastOrder');
-        setLoading(false);
       } catch (error) {
         console.error('Error parsing order data:', error);
         // If data is corrupted, redirect to home
@@ -83,6 +81,31 @@ const PaymentSuccess = () => {
       setTimeout(() => navigate('/'), 3000);
     }
   }, [navigate]);
+
+  useEffect(() => {
+    if (!orderData) return;
+    let cancelled = false;
+    const verify = async () => {
+      try {
+        if (orderData.paymentMethod !== 'credit_card') return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !orderData.id || !/^[0-9a-f-]{36}$/i.test(orderData.id)) return;
+        // Session + RLS, never browser storage or callback query parameters,
+        // establish the server order status. No anonymous order lookup is added.
+        const { data, error } = await supabase.from('orders')
+          .select('status, payment_method, amount, package_name')
+          .eq('id', orderData.id).maybeSingle();
+        if (!cancelled && !error && paymentConfirmed(data)) {
+          setVerifiedPayment(true);
+          if (data) setOrderData(previous => previous ? { ...previous, amount: Number(data.amount), package: data.package_name } : previous);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    void verify();
+    return () => { cancelled = true; };
+  }, [orderData?.id, orderData?.paymentMethod]);
 
   const getPaymentMethodText = (method: string) => {
     switch (method) {
@@ -112,7 +135,7 @@ const PaymentSuccess = () => {
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
         <meta name="googlebot" content="noindex, nofollow" />
-        <title>{orderData?.paymentMethod === 'bank_transfer' ? 'Sipariş Tamamlandı' : 'Ödeme Başarılı'} - Doktorum Ol</title>
+        <title>{orderData?.paymentMethod === 'bank_transfer' ? 'Sipariş Alındı' : verifiedPayment ? 'Ödeme Başarılı' : 'Ödeme Durumu'} - Doktorum Ol</title>
       </Helmet>
       
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
@@ -122,17 +145,17 @@ const PaymentSuccess = () => {
             <Card className="text-center">
               <CardHeader className="pb-4">
                 <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
+                  {verifiedPayment ? <CheckCircle className="w-8 h-8 text-green-600" /> : <Clock className="w-8 h-8 text-muted-foreground" />}
                 </div>
                 <CardTitle className="text-2xl text-green-600 mb-2">
                   {orderData?.paymentMethod === 'bank_transfer' 
                     ? 'Siparişiniz Tamamlanmıştır!' 
-                    : 'Ödeme Başarılı!'}
+                    : verifiedPayment ? 'Ödeme Başarılı!' : 'Ödeme Durumu Teyit Bekliyor'}
                 </CardTitle>
                 <p className="text-gray-600">
                   {orderData?.paymentMethod === 'bank_transfer'
                     ? 'Siparişiniz alınmıştır. Aşağıdaki hesap bilgilerine ödemenizi yapabilirsiniz.'
-                    : 'Paketiniz başarıyla aktifleştirildi. Hoş geldiniz!'}
+                    : verifiedPayment ? 'Ödemeniz doğrulandı. Üyelik durumunuzu uzman panelinizden kontrol edebilirsiniz.' : 'Bu sayfanın açılması ödemenin başarılı olduğunu göstermez. Yeniden ödeme yapmadan önce uzman panelinizden veya destek hattından durumunuzu teyit edin.'}
                 </p>
               </CardHeader>
 
@@ -145,13 +168,13 @@ const PaymentSuccess = () => {
                     <div className="flex justify-between py-2">
                       <span>Sipariş No:</span>
                       <span className="font-medium text-gray-900">
-                        {orderData?.orderNumber || `DRP-${Date.now().toString().slice(-12)}`}
+                        {orderData?.orderNumber || 'Teyit bekleniyor'}
                       </span>
                     </div>
                     <div className="flex justify-between py-2">
                       <span>Paket:</span>
                       <span className="font-medium text-gray-900">
-                        {orderData?.package || 'Premium Paket'}
+                        {orderData?.package || 'Teyit bekleniyor'}
                       </span>
                     </div>
                     <div className="flex justify-between py-2">
@@ -159,7 +182,7 @@ const PaymentSuccess = () => {
                       <span className="font-medium text-gray-900">
                         {orderData?.amount ? 
                           `${orderData.amount.toLocaleString('tr-TR')} ₺` : 
-                          '2.998 ₺'
+                          'Teyit bekleniyor'
                         }
                       </span>
                     </div>
@@ -175,7 +198,7 @@ const PaymentSuccess = () => {
                     <div className="flex justify-between py-2">
                       <span>Durum:</span>
                       <span className={`font-medium ${orderData?.paymentMethod === 'bank_transfer' ? 'text-orange-600' : 'text-green-600'}`}>
-                        {orderData?.paymentMethod === 'bank_transfer' ? 'Ödeme Bekleniyor' : 'Aktif'}
+                        {orderData?.paymentMethod === 'bank_transfer' ? 'Ödeme Bekleniyor' : verifiedPayment ? 'Ödeme Doğrulandı' : 'Doğrulanmadı'}
                       </span>
                     </div>
                   </div>

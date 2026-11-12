@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { sendAppointmentNotification } from "@/services/notificationService";
+import { createSubmissionAttempt, appointmentErrorMessage } from "@/lib/submissionAttempt";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
 
 const BookAppointment = () => {
@@ -29,6 +29,7 @@ const BookAppointment = () => {
   const [submitting, setSubmitting] = useState(false);
   // Çift tıklama/eşzamanlı gönderim kilidi: state güncellemesi beklenmeden anında kapanır.
   const submitLock = useRef(false);
+  const submissionAttempt = useRef(createSubmissionAttempt());
   const [formData, setFormData] = useState({
     patientName: '',
     patientEmail: '',
@@ -129,12 +130,12 @@ const BookAppointment = () => {
     }
 
     if (submitLock.current) return;
+    const appointmentId = submissionAttempt.current.begin({ specialistId: specialist.id, ...formData });
+    if (!appointmentId) return;
     submitLock.current = true;
     setSubmitting(true);
 
     try {
-      const appointmentId = crypto.randomUUID();
-
       const appointmentData = {
         id: appointmentId,
         specialist_id: specialist.id,
@@ -157,17 +158,7 @@ const BookAppointment = () => {
       if (error) {
         console.error('Database error:', error);
 
-        if (error.message.includes('blocked_visitor')) {
-          toast.error('Bu iletişim bilgileriyle randevu oluşturulamıyor. Lütfen bizimle iletişime geçin.');
-        } else if (error.message.includes('row-level security policy')) {
-          toast.error('Randevu oluşturulurken yetkilendirme hatası oluştu. Lütfen sayfayı yenileyip tekrar deneyin.');
-        } else if (error.message.includes('appointments_appointment_type_check')) {
-          toast.error('Randevu türü geçersiz. Lütfen geçerli bir randevu türü seçin.');
-        } else if (error.message.includes('specialist_id')) {
-          toast.error('Doktor bilgisi eksik. Lütfen sayfayı yenileyip tekrar deneyin.');
-        } else {
-          toast.error('Randevu oluşturulurken bir hata oluştu: ' + error.message);
-        }
+        toast.error(appointmentErrorMessage(error));
         return;
       }
 
@@ -177,26 +168,8 @@ const BookAppointment = () => {
       // (send_appointment_notification_email_trigger) tarafından gönderilir.
       // Tekrar gönderilmemesi için frontend'den invoke kaldırıldı.
 
-      // Hasta ve uzman SMS'leri sunucuda (send-appointment-notification, DB trigger)
-      // gönderilir; ziyaretçi tarayıcısı SMS servisini doğrudan çağıramaz.
-      try {
-        await sendAppointmentNotification(
-          formData.patientEmail,
-          '',
-          {
-            date: formData.appointmentDate,
-            time: formData.appointmentTime,
-            type: formData.appointmentType === 'face-to-face' ? 'Yüz Yüze' : 'Online',
-            doctorName: specialist.name,
-            doctorPhone: specialist.phone,
-            doctorEmail: specialist.email
-          }
-        );
-      } catch (notificationError) {
-        console.error('Patient notification error (non-critical):', notificationError);
-      }
-
-      toast.success('Randevu talebiniz başarıyla gönderildi! Uzman e-posta ile bilgilendirildi.');
+      submissionAttempt.current.finish(true);
+      toast.success('Randevu talebiniz kaydedildi. Uzmanın onayı bekleniyor.');
       
       // Form'u temizle
       setFormData({
@@ -216,8 +189,9 @@ const BookAppointment = () => {
 
     } catch (error) {
       console.error('Error booking appointment:', error);
-      toast.error('Randevu alınırken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.');
+      toast.error(appointmentErrorMessage(error));
     } finally {
+      submissionAttempt.current.finish();
       submitLock.current = false;
       setSubmitting(false);
     }
