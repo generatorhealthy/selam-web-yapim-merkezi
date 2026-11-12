@@ -4103,6 +4103,182 @@ export type Database = {
         }
         Relationships: []
       }
+      health_test_consent_events: {
+        Row: {
+          action: string
+          document_hash: string
+          document_text: string
+          document_version: string
+          id: string
+          operation_id: string
+          purpose: string
+          recorded_at: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          document_hash: string
+          document_text: string
+          document_version: string
+          id?: string
+          operation_id: string
+          purpose: string
+          recorded_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          document_hash?: string
+          document_text?: string
+          document_version?: string
+          id?: string
+          operation_id?: string
+          purpose?: string
+          recorded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_test_consent_events_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "health_test_operations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_test_documents: {
+        Row: {
+          consent: string
+          created_at: string
+          disclosure: string
+          legal_approved_at: string | null
+          published_at: string | null
+          version: string
+        }
+        Insert: {
+          consent: string
+          created_at?: string
+          disclosure: string
+          legal_approved_at?: string | null
+          published_at?: string | null
+          version: string
+        }
+        Update: {
+          consent?: string
+          created_at?: string
+          disclosure?: string
+          legal_approved_at?: string | null
+          published_at?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      health_test_operations: {
+        Row: {
+          capability_hash: string
+          consent_hash: string
+          created_at: string
+          disclosure_hash: string
+          document_version: string
+          expires_at: string
+          id: string
+          payload_hash: string | null
+          result_id: string | null
+          specialist_id: string
+          test_id: string
+          updated_at: string
+          user_id: string
+          withdrawn_at: string | null
+        }
+        Insert: {
+          capability_hash: string
+          consent_hash: string
+          created_at?: string
+          disclosure_hash: string
+          document_version: string
+          expires_at?: string
+          id?: string
+          payload_hash?: string | null
+          result_id?: string | null
+          specialist_id: string
+          test_id: string
+          updated_at?: string
+          user_id: string
+          withdrawn_at?: string | null
+        }
+        Update: {
+          capability_hash?: string
+          consent_hash?: string
+          created_at?: string
+          disclosure_hash?: string
+          document_version?: string
+          expires_at?: string
+          id?: string
+          payload_hash?: string | null
+          result_id?: string | null
+          specialist_id?: string
+          test_id?: string
+          updated_at?: string
+          user_id?: string
+          withdrawn_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_test_operations_document_version_fkey"
+            columns: ["document_version"]
+            isOneToOne: false
+            referencedRelation: "health_test_documents"
+            referencedColumns: ["version"]
+          },
+          {
+            foreignKeyName: "health_test_operations_result_id_fkey"
+            columns: ["result_id"]
+            isOneToOne: true
+            referencedRelation: "test_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_test_operations_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_test_operations_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_test_operations_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_test_release: {
+        Row: {
+          enabled: boolean
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       instagram_post_templates: {
         Row: {
           data_base64: string
@@ -7753,6 +7929,33 @@ export type Database = {
       get_specialist_follower_count: {
         Args: { p_specialist_id: string }
         Returns: number
+      }
+      health_test_commit: {
+        Args: {
+          p_answers: Json
+          p_capability_hash: string
+          p_contact: string
+          p_name: string
+          p_operation: string
+          p_user: string
+        }
+        Returns: string
+      }
+      health_test_prepare: {
+        Args: {
+          p_capability_hash: string
+          p_consent_hash: string
+          p_disclosure_hash: string
+          p_specialist: string
+          p_test: string
+          p_user: string
+          p_version: string
+        }
+        Returns: string
+      }
+      health_test_withdraw: {
+        Args: { p_capability_hash: string; p_operation: string; p_user: string }
+        Returns: boolean
       }
       invoke_twitter_share_after_may1: { Args: never; Returns: undefined }
       is_admin_or_staff: { Args: never; Returns: boolean }
