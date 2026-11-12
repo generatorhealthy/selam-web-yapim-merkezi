@@ -1,5 +1,12 @@
 # Roadmap
 
+## KVKK tamamlama talimatı — ilk paket (12 Kasım 2026)
+- [x] 6A/6B/6C: temel onay, web/mobil test ve randevu yolları analiz edildi; canlıdan bağımsız servis/ekran prototipi, 22 yeni test ve sentetik tarayıcı kontrolleri hazır. Toplam 70 test geçti; gerçek üretim adaptörleri hazır değil.
+- [x] 6D–6J, Aşama 4 ve 3: tek güncel rapor, hedefli canlı salt okunur denetim, risk ve yayın kapıları hazır; 57 kayıt fingerprint aynı. 174 eski bulgunun tam yeniden taraması yapılmış sayılmadı.
+- [ ] Gerçek sunucu/DB/OTP adaptörleri, kardeş intake yolları ve tam eski bulgu envanteri — ayrı test ortamı ve güvenli test kimlikleri gerekiyor; ülke/DPA/metin onayı sağlayıcı ve hukuk belgelerini bekliyor.
+- [ ] Gerçek mobil/rol oturumları ve ayrı test veritabanında atomiklik doğrulaması — harici Supabase ve test ortamı erişimi gerekiyor.
+- [ ] Canlı geçiş, INSERT kapatma, izin/toplama/erişim/webhook/saklama değişiklikleri — aşama bazlı kullanıcı onayı gerekiyor; ödeme ve mevcut kayıtlar değişmeyecek.
+
 ## Kayıt linki paket bilgilendirmesi
 - [x] Yeni ve kayıtlı ön bilgilendirme gösteriminde pakete özel metin eklendi; 5 test geçti, her iki paketin ödeme ekranında ayrı metinler ve taahhüt üstü konum doğrulandı.
 
