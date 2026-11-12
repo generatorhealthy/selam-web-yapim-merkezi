@@ -1,9 +1,9 @@
 # Roadmap
 
 ## 12 Kasım 18:20 — Koşullu canlı uygulama onayı
-- [ ] A: zorunlu hukuki bilgi şartı geçmeyen sayfaları yayımlama; mevcut arşiv/onaylar korunur.
-- [ ] B: eski mobil uyumluluğu ve güvenilir sonuç kaynağı doğrulanmadan yayımlama; bildirim durdurma reddi korunur.
-- [ ] C: mevcut trigger taşımasını ve yetkilerini koruyarak yalnız genel içerik kullanan bağımsız düzeltmeyi sentetik SQL ile doğrula, sonra koşullu onay kapsamında uygula ve salt okunur kanıt al.
+- [ ] A ENGELLİ: somut sağlık işleme şartı, düzenli yabancı aktarım güvencesi ve saklama kriterleri doğrulanmadı; üç sayfa yayımlanmadı, arşiv/onaylar korunur.
+- [ ] B ENGELLİ: anonim INSERT güvenilir bildirim kaynağı değil, eski mobil doğrulaması yok; eski gönderimi kapatma reddedildi, fonksiyon değiştirilmedi. Sağlık içerikli e-posta riski devam ediyor.
+- [x] C CANLIDA: yalnız mevcut SMS/push içeriği genel metne çevrildi; alıcı/taşıma/yetki/trigger bağları korunur. Yerel SQL: iki kanal, genel içerik, eski INSERT ve servis hatasında kayıt korunması geçti; 19 Deno geçti. Canlı definition md5=86b9e31efd63448b1f7de10375d6ffd9; eski=e114f53a506bd9563d9e48f768dbe231. Salt okunur kontroller: sağlık/test/sonuç kimliği yok, trigger etkin, 12/57/341 korundu. Gerçek teslim/mobil E2E yapılmadı.
 
 ## 12 Kasım 18:06 — Koordineli A/B/C hazırlığı (canlı onay yok)
 - [x] A hazırlığı: v4 korundu, v5 ses beyanı/saklama/kamu URL'leri; React sayfa, route/footer/.htaccess diff üretici ve onay kapılı prerender modülü hazır. Hukuk engelleri COORDINATED_RESULTS.md'de; production entegrasyon/yayın tamamlanmadı.
