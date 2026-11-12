@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { parseIyzicoSubscription, decideCallback } from "../_shared/paymentGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,7 +78,7 @@ async function getCustomerFromIyzico(customerReferenceCode: string): Promise<str
 // ACTIVE, belong to the customer named in the callback, and have a paid order.
 async function getVerifiedSubscription(
   subscriptionReferenceCode: string,
-): Promise<{ customerReferenceCode: string; subscriptionReferenceCode: string } | null> {
+): Promise<import("../_shared/paymentGuard.ts").VerifiedSubscription | null> {
   const apiKey = Deno.env.get("IYZICO_API_KEY");
   const secretKey = Deno.env.get("IYZICO_SECRET_KEY");
   const baseUrl = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
@@ -97,25 +98,7 @@ async function getVerifiedSubscription(
         "x-iyzi-rnd": randomKey,
       },
     });
-    const result = await response.json();
-    console.log("Iyzico subscription verification status:", result?.status, result?.data?.subscriptionStatus);
-    if (result.status !== "success") return null;
-
-    const sub = Array.isArray(result.data?.items) ? result.data.items[0] : result.data;
-    if (!sub) return null;
-    if (String(sub.subscriptionStatus || "").toUpperCase() !== "ACTIVE") return null;
-
-    const orders: any[] = Array.isArray(sub.orders) ? sub.orders : [];
-    const hasPaidOrder = orders.length === 0
-      ? true // Iyzico omits orders for some plans; ACTIVE means the first charge succeeded
-      : orders.some((o) => String(o?.orderStatus || "").toUpperCase() === "SUCCESS");
-    if (!hasPaidOrder) return null;
-
-    if (!sub.customerReferenceCode) return null;
-    return {
-      customerReferenceCode: String(sub.customerReferenceCode),
-      subscriptionReferenceCode: String(sub.referenceCode || subscriptionReferenceCode),
-    };
+    return parseIyzicoSubscription(await response.json(), subscriptionReferenceCode);
   } catch (err) {
     console.error("Iyzico subscription verification error:", err);
     return null;
@@ -222,7 +205,7 @@ serve(async (req) => {
           
           const { data: pendingOrders, error: fetchError } = await supabaseAdmin
             .from('orders')
-            .select('id, customer_name, customer_email, amount, subscription_month')
+            .select('id, customer_name, customer_email, amount, subscription_month, package_type, status')
             .eq('customer_email', customerEmail)
             .eq('status', 'pending')
             .is('deleted_at', null)
@@ -234,6 +217,21 @@ serve(async (req) => {
             console.error("Sipariş sorgulama hatası:", fetchError);
           } else if (pendingOrders && pendingOrders.length > 0) {
             const order = pendingOrders[0];
+            // Mükerrer: bu abonelikle en son onaylanan sipariş tahsilat zamanından sonra mı onaylandı?
+            const { data: lastApproved } = await supabaseAdmin.from('orders').select('id, approved_at')
+              .eq('subscription_reference_code', verified.subscriptionReferenceCode)
+              .eq('status', 'approved').is('deleted_at', null)
+              .order('approved_at', { ascending: false }).limit(1).maybeSingle();
+            const decision = decideCallback({
+              verified, claimedCustomerRef,
+              lastApprovedAtForSubscription: lastApproved?.approved_at ? Date.parse(lastApproved.approved_at) : null,
+              lastApprovedOrderId: lastApproved?.id ?? null,
+              pendingOrder: { id: order.id, amount: Number(order.amount), package_type: order.package_type, status: order.status, subscription_month: order.subscription_month },
+            });
+            if (decision.action !== 'approve') {
+              console.warn('Callback onaylanmadı:', decision);
+              return new Response(JSON.stringify({ status: decision.action }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
             
             const { error: updateError } = await supabaseAdmin
               .from('orders')
@@ -245,7 +243,8 @@ serve(async (req) => {
                 subscription_reference_code: verified.subscriptionReferenceCode,
                 iyzico_customer_reference_code: customerRef,
               })
-              .eq('id', order.id);
+              .eq('id', order.id)
+              .eq('status', 'pending');
 
             // Also propagate sub ref to automatic_orders for future card-change lookups
             {

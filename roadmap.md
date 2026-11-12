@@ -141,3 +141,7 @@
 
 - [x] Ödeme güvenliği v2 taslakları + 19 mock test (security/stage2/PAYMENT_ROLLOUT.md)
 - [ ] Ödeme v2 canlıya geçiş — kullanıcı onayı ve plan periyodu bekliyor
+
+- [x] Ödeme bildirimi v2 canlıda (12.11.2026); eski sürüm: security/stage2/functions/iyzico-payment-callback-v2/ROLLBACK_previous_index.ts
+- [ ] İlk gerçek ödeme/yenileme sonrası callback loglarını kontrol et
+- [ ] Sonraki aday: auto-approve-iyzico-orders tutar eşleşmesi (onay bekliyor)

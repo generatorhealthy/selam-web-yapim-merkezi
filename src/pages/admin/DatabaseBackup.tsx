@@ -5,18 +5,9 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { DatabaseBackupCard } from "@/components/DatabaseBackupCard";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Scale, Loader2 } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 
 const DatabaseBackup = () => {
   const { userProfile, loading } = useUserRole();
-  const [inspect, setInspect] = useState<string>("");
-  const runInspect = async () => {
-    setInspect("Çalışıyor... (yaklaşık 30 sn)");
-    const { data, error } = await supabase.functions.invoke("iyzico-readonly-inspect", { body: {} });
-    setInspect(error ? `Hata: ${error.message}` : "Tamamlandı. Sonuçlar alındı.\n" + JSON.stringify(data, null, 2));
-  };
 
   if (loading) {
     return (
@@ -70,14 +61,6 @@ const DatabaseBackup = () => {
           </div>
 
           <DatabaseBackupCard />
-
-          {/* Geçici: iyzico salt okunur ödeme kontrolü (kayıt yazmaz, tahsilat yapmaz) */}
-          <div className="mt-8 rounded-2xl border bg-card p-6">
-            <h2 className="text-xl font-semibold mb-2">iyzico Salt Okunur Kontrol</h2>
-            <p className="text-muted-foreground mb-4">Abonelikleri yalnızca okur; hiçbir ödeme veya kayıt değiştirmez.</p>
-            <Button onClick={runInspect}>Kontrolü Başlat</Button>
-            {inspect && <pre className="mt-4 max-h-96 overflow-auto text-xs whitespace-pre-wrap">{inspect}</pre>}
-          </div>
         </div>
         
         <Footer />
