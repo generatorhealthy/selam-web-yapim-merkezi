@@ -17,9 +17,10 @@ test('a publication instruction alone does not declare legal approval', () => {
   }
   assert.equal(isLegalPublished({ publication_authorized_at: '2026-11-12T18:37:00Z', published_at: '2026-11-12T18:37:00Z' }), false);
 });
-test('a prepared release never claims verified production deployment', () => {
+test('only the hash-verified production information page records deployment verification', () => {
   for (const document of Object.values(publication.documents)) {
-    assert.equal(document.deployment_verified_at, null);
+    if (document.path === "/acik-riza") assert.equal(document.deployment_verified_at, "2026-11-12T20:52:26Z");
+    else assert.equal(document.deployment_verified_at, null);
     assert.equal(document.scope, 'public_information_only_not_compliance_certification');
   }
 });

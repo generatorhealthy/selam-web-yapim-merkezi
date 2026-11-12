@@ -1,0 +1,11 @@
+{
+  "url": "https://doktorumol.com.tr/acik-riza",
+  "status": 200,
+  "verified_at": "2026-11-12T20:52:26Z",
+  "html_sha256": "791db1963093d325abbc3aa599576c084b35bdbad82ec20a5e17f6c996890f23",
+  "document_sha256": "65664bcab74a33b355e06aab01e6a41672da4142b63300affc2edaa6627ad8aa",
+  "declared_release_at": "2026-11-12T20:45:41Z",
+  "raw_production_html": true,
+  "no_consent_form": true,
+  "mobile_overflow": false
+}

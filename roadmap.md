@@ -325,5 +325,5 @@
 - [x] Açık Rıza yalnız bilgilendirme kapsamıyla hazır; iki eski sağlık dayanağı eksik aydınlatma taslak/noindex kaldı.
 - [x] 9 test, altı yerel ekran + script-free mobil HTML; footer/route/Apache/prerender doğrulandı, kayıt/B/C değişmedi.
 - [x] Gerçek URL GET ve 403/200 koruma HTML hash kanıtı alındı; gerçek yeni yayın doğrulanmadı, RESULT.md zaman/hash/karar içerir.
-- [ ] Açık Rıza gerçek Hostinger dağıtım/HTML teyidi — mevcut Actions yayın sonucu ve erişilebilir gerçek belge HTML’i bekleniyor.
+- [x] 20:52:26 UTC: gerçek /acik-riza HTTP 200, belge ve HTML SHA-256 hazırlanan sürümle birebir; form yok, mobil taşma yok. Actions logu okunmadı; gerçek HTML teslimi doğrulandı.
 - [ ] Genel/Çağrı nihai aydınlatma — sırasıyla eski test/randevu ve geçmiş sağlık dökümleri için somut mevcut m.6 şartı bekleniyor.
