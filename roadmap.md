@@ -1,3 +1,9 @@
+# 12 Kasım 2026 — Kritik ödeme/üyelik paketleri
+- [ ] Sipariş sahipliği ve istemciden aktivasyon engeli: gerçek şema/geriye uyumluluk, sentetik SQL kabul, dar migration ve salt okunur canlı teyit.
+- [ ] Callback/reconciliation ortak atomik ödeme kaydı: doğrulanmış işlem/tutar/para birimi, idempotent yan etkiler; kabul geçmeden yayın yok.
+- [ ] Randevu/WhatsApp bağımsız güvenlik düzeltmeleri; mevcut mesaj bağlantıları ve eski INSERT korunur.
+- [ ] Önceki Hostinger paketini ve yeni paketlerin gerçek dağıtımlarını ayrı doğrula; kalan kullanıcı etkilerini bildir.
+
 # 12 Kasım 2026 — Aşama 3 tamamlama / Aşama 4 web akışları
 - [x] Önceki randevu yayını gerçek alanda app-C2tzd4uX.js (200) ile görüldü; mobil uzman→görüşme→takvim seçimi taşmasız, kayıt/mesaj gönderilmedi.
 - [x] İki web formunda değişmeyen deneme UUID'si, anlaşılır hata ve tarayıcıdan ek bildirim çağrısının kaldırılması; canlı PK/unique ve sahiplik kontrolleri incelendi.

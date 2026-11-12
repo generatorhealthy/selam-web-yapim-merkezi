@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS'
-};
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { normalizedPaymentEmail, ownsOrderEmail } from '../_shared/paymentOwnership.ts';
 
 interface RequestBody {
   email?: string | null;
@@ -63,8 +59,9 @@ serve(async (req) => {
     // Admin/staff dışındaki kullanıcılar yalnızca KENDİ e-postalarının sözleşmelerini görebilir.
     // İsim bazlı bulanık arama (enumeration riski) sadece admin/staff için açıktır.
     if (!isAdminStaff) {
-      email = user.email ?? null;
+      email = normalizedPaymentEmail(user.email);
       name = null;
+      if (!email) return new Response(JSON.stringify({ error: 'Doğrulanmış e-posta gerekli' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
 
@@ -81,11 +78,12 @@ serve(async (req) => {
 
     // 1) Try exact email match (case-insensitive)
     if (email) {
-      const { data, error } = await baseSelect().ilike('customer_email', email);
+      const escapedEmail = email.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
+      const { data, error } = await baseSelect().ilike('customer_email', escapedEmail);
       if (error) {
         console.error('Email match query error:', error);
       } else if (data) {
-        aggregated = aggregated.concat(data);
+        aggregated = aggregated.concat(isAdminStaff ? data : data.filter(order => ownsOrderEmail(user.email, order.customer_email)));
       }
     }
 
