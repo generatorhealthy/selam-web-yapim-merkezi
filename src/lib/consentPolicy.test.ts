@@ -1,5 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { buildAppointmentPayload, canSubmitHealthTest, emptyConsent, isGranted } from "./consentPolicy";
+import { test as it, describe } from "node:test";
+import assert from "node:assert/strict";
+const expect = (v: unknown) => ({ toBe: (e: unknown) => assert.equal(v, e), toBeNull: () => assert.equal(v, null) });
+import { buildAppointmentPayload, canSubmitHealthTest, emptyConsent, isGranted } from "./consentPolicy.ts";
 
 describe("consentPolicy", () => {
   it("aydınlatma gösterilse bile rıza yoksa test gönderilemez", () => {
