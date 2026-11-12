@@ -1,3 +1,4 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 
@@ -302,6 +303,17 @@ Deno.serve(async (req) => {
 
     // Webhook güvenliği: yalnız okuma (inspect) ve onaylı geçiş (secure). Sır değeri asla döndürülmez.
     if (action === 'webhooks.inspect' || action === 'webhooks.secure') {
+      // Yalnız onaylı YÖNETİCİ (personel ve sunucu anahtarı bu işlemleri çalıştıramaz).
+      {
+        const authHeader = req.headers.get('Authorization') || '';
+        const uc = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } });
+        const { data: { user } } = await uc.auth.getUser();
+        const ac = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+        const { data: prof } = user ? await ac.from('user_profiles').select('role, is_approved').eq('user_id', user.id).maybeSingle() : { data: null };
+        if (!prof || prof.role !== 'admin' || prof.is_approved !== true) {
+          return new Response(JSON.stringify({ success: false, error: 'Yalnız yönetici' }), { status: 403, headers: jsonHeaders });
+        }
+      }
       const ownBase = (Deno.env.get('SUPABASE_URL') || '').replace(/\/+$/, '');
       const secret = Deno.env.get('WAHA_WEBHOOK_SECRET') || '';
       const listRes = await fetch(`${wahaUrl}/api/sessions?all=true`, { headers });
