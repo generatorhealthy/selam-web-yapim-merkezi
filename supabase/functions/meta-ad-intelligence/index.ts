@@ -242,12 +242,15 @@ async function sendQueue(admin: any) {
   for (const it of items || []) {
     if (it.is_test) { await admin.from("meta_capi_events").update({ status: "sent", meta_status: "TEST_NOT_SENT", last_error: "test — Meta'ya gönderilmedi", sent_at: new Date().toISOString() }).eq("id", it.id); continue; }
     // Kişisel verili olay yalnızca sunucuda doğrulanabilir reklam izni varken gönderilir.
-    // Kanıt yoksa olay kuyrukta bekler (pending kalır); sipariş/ödeme akışı etkilenmez.
+    // Kanıt yoksa (veya izin geri çekilmişse) olay "held" olarak kapanır: kuyruk onu
+    // bir daha denemez; kullanıcı sonradan izin verse bile bu olay otomatik gönderilmez.
+    // Kişisel veri içeren yük bu noktada en aza indirilir; sipariş/ödeme akışı etkilenmez.
     if (!(await hasAdvertisingConsent(admin, it.user_id))) {
       held++;
-      if (it.last_error !== HELD_REASON) {
-        await admin.from("meta_capi_events").update({ last_error: HELD_REASON }).eq("id", it.id);
-      }
+      await admin.from("meta_capi_events").update({
+        status: "held", last_error: HELD_REASON,
+        payload: { event_time: it.payload?.event_time ?? it.created_at, minimized: true },
+      }).eq("id", it.id);
       continue;
     }
     let email = it.payload?.email as string | undefined, phone: string | undefined, fbc: string | undefined, fbp: string | undefined;

@@ -3700,6 +3700,33 @@ export type Database = {
         }
         Relationships: []
       }
+      consent_transactions: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          purpose: string
+          token_hash: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          purpose: string
+          token_hash: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          purpose?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
       danisan_basvurulari: {
         Row: {
           assigned_specialist_id: string | null

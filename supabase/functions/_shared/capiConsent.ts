@@ -1,7 +1,9 @@
 // Meta CAPI izin kapısı: kişisel verili dönüşüm olayı yalnızca sunucu tarafında
 // doğrulanabilir reklam ölçümü izni varken gönderilir. Tarayıcıdan gelen
 // consent=true gibi değiştirilebilir alanlar kanıt sayılmaz; tek kaynak
-// user_consent_logs içindeki 'advertising' türündeki en son kayıttır.
+// user_consent_logs içindeki source='record_consent' (sunucu kimlik doğrulamalı)
+// 'advertising' kayıtlarıdır. Eski mobil uyumluluğu için açık bırakılan doğrudan
+// INSERT kayıtları (ör. mobile_signup) reklam izni kanıtı sayılmaz.
 // İzin kanıtı yoksa olay "held" sayılır: kuyrukta bekletilir, Meta'ya gönderilmez,
 // ticari işlem (sipariş/ödeme/kayıt) bundan etkilenmez.
 export async function hasAdvertisingConsent(admin: any, userId: string | null | undefined): Promise<boolean> {
@@ -11,6 +13,7 @@ export async function hasAdvertisingConsent(admin: any, userId: string | null | 
     .select("accepted")
     .eq("user_id", userId)
     .eq("consent_type", "advertising")
+    .eq("source", "record_consent")
     .order("accepted_at", { ascending: false })
     .limit(1)
     .maybeSingle();

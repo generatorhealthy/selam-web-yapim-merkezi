@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export type Purpose = "analytics" | "advertising";
 export type Choice = "granted" | "denied";
 
@@ -108,6 +110,32 @@ function restoreChoices(purposes: Purpose[]) {
   }
 }
 
+/**
+ * Sunucuda doğrulanabilir izin kanıtı: giriş yapmış kullanıcı için doğrulanmış
+ * hesap kimliğiyle, anonim ziyaretçi için sunucunun ürettiği tek kullanımlık
+ * işlem jetonuyla kaydedilir. En iyi çaba: hata durumunda sessiz kalır, site
+ * kullanımını, üyeliği veya ödemeyi asla engellemez.
+ */
+async function recordConsentServer(purpose: Purpose, choice: Choice): Promise<void> {
+  try {
+    const action = choice === "granted" ? "grant" : "withdraw";
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      await supabase.functions.invoke("record-consent", {
+        body: { transaction_id: crypto.randomUUID(), purpose, action },
+      });
+      return;
+    }
+    const { data: tx } = await supabase.functions.invoke("consent-transaction", {
+      body: { purpose },
+    });
+    if (!tx?.transaction_id || !tx?.token) return;
+    await supabase.functions.invoke("record-consent", {
+      body: { transaction_id: tx.transaction_id, purpose, action, transaction_token: tx.token },
+    });
+  } catch { /* sunucu kaydı en iyi çaba; izin vermeyen kullanıcı engellenmez */ }
+}
+
 /** Persists only the purposes passed, so one answer never stands in for another. */
 export function saveChoices(choices: Partial<Record<Purpose, Choice>>) {
   for (const [purpose, choice] of Object.entries(choices) as [Purpose, Choice][]) {
@@ -121,6 +149,7 @@ export function saveChoices(choices: Partial<Record<Purpose, Choice>>) {
       unsaved[purpose] = choice;
     }
     applySignals(purpose, readChoice(purpose) ?? choice);
+    void recordConsentServer(purpose, choice);
   }
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }

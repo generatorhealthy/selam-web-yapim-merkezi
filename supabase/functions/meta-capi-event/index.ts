@@ -97,11 +97,14 @@ Deno.serve(async (req) => {
     const consentUserId = /^[0-9a-f-]{36}$/i.test(String(external_id)) ? String(external_id) : null;
     if (!(await hasAdvertisingConsent(db, consentUserId))) {
       if (eventKey) {
+        // İzin kanıtı olmadan oluşan olay "held" olarak kapanır: kuyruk onu asla
+        // otomatik göndermez; kullanıcı sonradan izin verse bile bu olay gönderilmez.
+        // Kişisel veri yükü saklanmaz — yalnız olay adı ve zaman damgası tutulur.
         await db.from("meta_capi_events").upsert({
           event_key: eventKey, event_name, event_id: stableId,
           user_id: consentUserId,
           payload: { event_time: new Date().toISOString(), lead_event_source },
-          status: "pending", attempts: 0, last_error: HELD_REASON,
+          status: "held", attempts: 0, last_error: HELD_REASON,
         }, { onConflict: "event_key", ignoreDuplicates: true });
       }
       return new Response(JSON.stringify({ success: false, held: true, reason: HELD_REASON }), {
