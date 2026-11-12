@@ -5,7 +5,7 @@
 - [x] m.9: kişisel verili CAPI fiilen kapalı (hiç doğrulanmış advertising izni yok); izin altyapısı hazır ama aktarım hukuki güvence olmadan etkinleştirilmedi.
 - [ ] Giriş yapmış kullanıcıyla record-consent'in canlı uçtan uca doğrulaması — gerçek oturum gerekir.
 - [ ] İstemci tarafı bant→sunucu kaydı (consent.ts) commit sonrası GitHub→Hostinger dağıtımıyla canlıya gidecek; canlıda yeniden doğrulanacak.
-- [ ] Aşama 2: web test sistemi (secure-health-test, release kapalı) — eski mobil INSERT açık kalırken sunucu tarafı web izin sınırlarının doğrulanması.
+- [x] Aşama 2 ilk iş (salt okunur sınır doğrulaması): üç web test ekranının (TestTaking/TestTaker/MobileTestTaker) tamamı TestStartGate→secure-health-test yolunda; release boş/kapalı, veri toplamıyor. Ancak test_results genel INSERT politikası açık kaldığı sürece doğrudan tablo yazımı (eski mobil/özel istemci) izin kanıtı olmadan mümkün — sunucu tarafı zorlama yalnız kapılı yolu kullanan istemcileri kapsar. Güvenilir sınır oluşmadı: sağlık izin sistemi tamamlanmış sayılmadı, release anahtarı kapalı tutuldu.
 
 # 12 Kasım 2026 20:23 — Karar vericilere tek somut dosya
 - [x] Tek KARAR_DOSYASI.md ve kullanıcıya teslim kopyası: veri/amaç/alıcı, şirket saklama teyidi, hukuk işleme şartı, sağlayıcı kanıtları ve K1/K2/K3 imza alanları önceden dolduruldu; v8 hash'leri ve kopya doğrulandı.

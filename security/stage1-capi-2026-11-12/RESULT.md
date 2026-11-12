@@ -51,6 +51,12 @@ Sunucu izin doğrulaması tek başına yurt dışı aktarımı hukuken uygun kı
 
 Üç yayımlanmış KVKK sayfası, B/C güvenliği, 57 eski izin kaydı, 12 test sonucu, 341 randevu, sipariş/abonelik akışları, eski mobil INSERT yolu, mevcut Supabase bağlantısı değiştirilmedi. Yeni proje/branch açılmadı.
 
+## 7. Aşama 2 ilk iş — web test sistemi sınır doğrulaması (salt okunur)
+
+- Üç web test ekranı (TestTaking, TestTaker, MobileTestTaker) TestStartGate → secure-health-test yolunu kullanıyor; `health_test_release` boş (release kapalı) olduğundan bu ekranlar cevap/kişisel bilgi toplamadan duruyor.
+- Sınır: `test_results` üzerindeki genel INSERT politikası (eski mobil uyumluluğu için açık) kaldığı sürece, doğrudan tablo yazımı izin kanıtı olmadan mümkün. Sunucu tarafı izin zorlaması yalnızca kapılı yolu kullanan istemcileri kapsar; eski/özel istemciyi kapsamaz.
+- Sonuç: güvenilir sınır oluşmadığından sağlık verisi izin sistemi tamamlanmış sayılmadı ve release anahtarı açılmadı. Eski INSERT'i kapatma kararı kullanıcıda (önceki karar: şimdilik kapatma).
+
 ## Dağıtım kayıtları
 
 - Edge function SHA-256: record-consent `e9ec3643…`, consent-transaction `6a2ac6b4…`, meta-capi-event `7ce7fe34…`, meta-ad-intelligence `e899bf50…`.
