@@ -1,5 +1,8 @@
 # Roadmap
 
+## Kayıt linki paket bilgilendirmesi
+- [x] Yeni ve kayıtlı ön bilgilendirme gösteriminde pakete özel metin eklendi; 5 test geçti, her iki paketin ödeme ekranında ayrı metinler ve taahhüt üstü konum doğrulandı.
+
 ## İkinci yıl abonelik tutarı düğmesi
 - [x] İkinci yıl bekleyen havale siparişlerinde tutar düzenleme düğmesini mevcut sipariş düzenlemesine bağla; kartlı abonelik akışını koru.
 - [x] Görünürlük kuralları için 3 test geçti; derleme hatasız.

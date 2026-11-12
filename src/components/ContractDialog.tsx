@@ -151,7 +151,7 @@ ${selectedPackage.price === 2398 ? `
 `;
 
         content = customerInfo + content;
-        setContractContent(content);
+        setContractContent(withCommitmentDisclosure(content, selectedPackage.price));
       }
     } catch (error) {
       console.error('Error loading form content:', error);
