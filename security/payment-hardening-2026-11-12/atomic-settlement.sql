@@ -32,8 +32,10 @@ BEGIN
    OR (session_user='postgres' AND current_setting('role',true) IN ('none','postgres'))) THEN
    RAISE EXCEPTION 'service_payment_proof_required' USING ERRCODE='42501';
  END IF;
- IF p_charge_ref IS NULL OR length(p_charge_ref)=0 OR p_subscription_ref IS NULL
-   OR p_customer_ref IS NULL OR p_paid_at IS NULL OR p_amount<=0 OR p_currency<>'TRY' THEN
+ IF p_order_id IS NULL OR p_email IS NULL OR length(trim(p_email))=0
+   OR p_charge_ref IS NULL OR length(p_charge_ref)=0 OR p_subscription_ref IS NULL
+   OR p_customer_ref IS NULL OR p_paid_at IS NULL OR p_amount IS NULL OR p_amount<=0
+   OR p_currency IS DISTINCT FROM 'TRY' THEN
    RAISE EXCEPTION 'incomplete_payment_proof';
  END IF;
  -- Serialize all callers for the same charge, including different target orders.

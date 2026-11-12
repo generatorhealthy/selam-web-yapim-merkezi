@@ -5,7 +5,7 @@ DECLARE privileged boolean;
 BEGIN
   privileged := COALESCE(auth.role() = 'service_role',false)
     OR (session_user = 'postgres' AND current_setting('role',true) IN ('none','postgres'))
-    OR (auth.uid() IS NOT NULL AND public.is_admin_or_staff_user());
+    OR (auth.uid() IS NOT NULL AND CASE WHEN TG_TABLE_NAME='user_profiles' THEN public.is_admin_user() ELSE public.is_admin_or_staff_user() END);
   IF privileged THEN RETURN NEW; END IF;
   IF TG_TABLE_NAME = 'orders' THEN
     IF TG_OP <> 'INSERT' OR COALESCE(NEW.status,'pending') <> 'pending'
@@ -64,7 +64,8 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $
   );
 $$;
 REVOKE ALL ON FUNCTION public.owns_payment_email(text) FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.owns_payment_email(text) TO authenticated,service_role;
+GRANT EXECUTE ON FUNCTION public.owns_payment_email(text) TO service_role;
 ALTER POLICY "Specialists can view their own orders" ON public.orders TO authenticated
 USING (NOT public.is_admin_or_staff_user() AND status IN ('pending','approved','completed')
-  AND public.owns_payment_email(customer_email));
+  AND EXISTS (SELECT 1 FROM public.specialists s WHERE s.user_id=auth.uid()
+    AND lower(trim(s.email))=lower(trim(orders.customer_email))));

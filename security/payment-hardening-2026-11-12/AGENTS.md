@@ -1,0 +1,2 @@
+- Client payment guards preserve public pending writes but reject paid status and privilege reassignment; changes never backfill historical ownership.
+- Settlement receipt/outbox SQL is a non-deployed candidate until all live payment writers and side-effect handlers pass compatibility acceptance; synthetic concurrency alone does not certify provider delivery.

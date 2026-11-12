@@ -13,6 +13,7 @@ CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$SELECT current_settin
 CREATE TABLE auth.users(id uuid primary key,email text);
 CREATE TABLE public.user_profiles(user_id uuid,role text,is_approved boolean default false);
 CREATE FUNCTION public.is_admin_or_staff_user() RETURNS boolean LANGUAGE sql SECURITY DEFINER AS $$SELECT EXISTS(SELECT 1 FROM public.user_profiles WHERE user_id=auth.uid() AND role IN ('admin','staff') AND is_approved)$$;
+CREATE FUNCTION public.is_admin_user() RETURNS boolean LANGUAGE sql SECURITY DEFINER AS $$SELECT EXISTS(SELECT 1 FROM public.user_profiles WHERE user_id=auth.uid() AND role='admin' AND is_approved)$$;
 CREATE TABLE public.specialists(id uuid default gen_random_uuid(),user_id uuid,email text,name text,is_active boolean default false,registration_source text);
 CREATE TABLE public.orders(id uuid primary key default gen_random_uuid(),customer_email text,status text default 'pending',approved_at timestamptz,approved_by uuid,payment_transaction_id text,subscription_reference_code text,iyzico_customer_reference_code text,payment_status text,invoice_sent boolean default false,invoice_number text);
 GRANT USAGE ON SCHEMA public,auth TO anon,authenticated,service_role;
@@ -43,3 +44,5 @@ sql(session('authenticated',one,"UPDATE public.specialists SET name='Updated' WH
 sql(session('service_role','',"UPDATE public.specialists SET is_active=true WHERE email='one@example.invalid'"));print('PASS trusted activation')
 sql("INSERT INTO public.user_profiles VALUES('33333333-3333-4333-8333-333333333333','admin',true)")
 sql(session('authenticated','33333333-3333-4333-8333-333333333333',"INSERT INTO public.orders(customer_email,status) VALUES('manual@example.invalid','approved')"));print('PASS authorized manual EFT approval')
+sql("INSERT INTO public.user_profiles VALUES('44444444-4444-4444-8444-444444444444','staff',true)")
+rejects('staff cannot promote self to admin',session('authenticated','44444444-4444-4444-8444-444444444444',"UPDATE public.user_profiles SET role='admin' WHERE user_id=auth.uid()"))
