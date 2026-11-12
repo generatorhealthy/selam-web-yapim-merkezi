@@ -17,6 +17,8 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { buildLocalPages, localTitle, localHeading, localDescription, localFaq } from "../src/lib/localSeo.js";
 
+import { approvedLegalPages } from "./legalPublication.mjs";
+
 const SITE = "https://doktorumol.com.tr";
 const SUPABASE_URL = "https://irnfwewabogveofwemvg.supabase.co";
 const DIST = resolve("dist");
@@ -480,8 +482,19 @@ async function main() {
     sm("/", { changefreq: "daily", priority: "1.0" });
   }
 
+  // Approved legal markdown overrides summaries, using the same release gate as React.
+  const legalPages = approvedLegalPages();
+  const legalPaths = new Set(legalPages.map(page => page.path));
+  for (const page of legalPages) {
+    const url = `${SITE}${page.path}`;
+    const ld = { "@context": "https://schema.org", "@type": "WebPage", name: page.title, url, inLanguage: "tr-TR", datePublished: page.published_at };
+    write(`pre${page.path}.html`, setRoot(setMeta(template, { title: `${page.title} | Doktorum Ol`, description: page.description, url }), `${page.html}${NAV}`, ldScript(ld)));
+    sm(page.path, { changefreq: "yearly", priority: "0.3", lastmod: page.published_at.slice(0, 10) });
+  }
+
   // ---------- Kurumsal / yasal ----------
   for (const [path, title, description, extra = ""] of STATIC_PAGES) {
+    if (legalPaths.has(path)) continue;
     const body = `${crumbs([["Ana Sayfa", "/"], [title.split(" | ")[0], null]])}<h1>${esc(title.split(" | ")[0])}</h1><p>${esc(description)}</p>${extra}${NAV}`;
     write(`pre${path}.html`, setRoot(setMeta(template, { title, description, url: `${SITE}${path}` }), body));
     sm(path, { changefreq: path === "/hakkimizda" || path === "/iletisim" || path === "/sss" ? "monthly" : "yearly", priority: ["/hakkimizda", "/iletisim", "/sss"].includes(path) ? "0.6" : "0.3" });

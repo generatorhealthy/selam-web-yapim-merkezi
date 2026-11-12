@@ -1,0 +1,82 @@
+# Paket A — sayfa bazlı nihai karar
+
+12 Kasım 2026. Esas: **v6 metinleri birebir korunmuştur; yeni belge sürümü üretilmedi.** Paket B ve C'nin canlı genel bildirim güvenliği değiştirilmedi. Bu çalışma hiçbir veritabanı, onay, kullanıcı, randevu, test, ödeme, abonelik, sağlayıcı veya bağlantı ayarı yazımı yapmaz.
+
+## 1. Üç ayrı karar
+
+| Sayfa | Teknik durum | Karar ve somut kalan engel |
+|---|---|---|
+| `/aydinlatma-metni` | v6 gerçek React sayfası, footer, alias, onay kapılı tam HTML/prerender ve sitemap entegrasyonu hazır | **Nihai aydınlatma olarak otomatik yayın yok.** §4.2, §4.3, §4.5 ve §8 gerçek sağlık işlemlerinin hukuki sebebini hâlâ faaliyet başına açıklamıyor. §7 aktarımı dürüstçe açıklıyor fakat güvencelerin kurulduğunu doğrulamıyor. |
+| `/acik-riza` | Aynı metin ve URL; izin kaydeden form veya işlem eklenmedi | **Onay bekliyor.** Metin yalnız bilgilendirici seçenek örneği olarak sunulabilir; görüntüleme ve geçmiş üyelik onayı yeni rıza değildir. Bağlı aydınlatmanın sağlık şartı eksik; bunu mevcut işleme için alınmış rıza veya tamamlanmış izin sistemi gibi yayımlamak mümkün değil. |
+| `/cagri-merkezi-aydinlatma-metni` | Web/native route, footer, .htaccess uzman/blog yönlendirme istisnası ve onay kapılı tam HTML hazır | **Onay bekliyor.** §4 ve §7 sağlık/döküm işlemleri için somut m.6 şartı yok; §4'te genel amaçlar ile m.5 bentleri işlem bazında eşleştirilmeli. Asistanın kapalı/planlanan kullanımı ve geçmiş döküm saklaması ayrılmalı; kapalı asistan güncel yeni AI görüşmesi kanıtı değildir. |
+
+Üçünün de koşullu talimattaki bütün kabul koşulları geçtiği iddia edilmez. Bu nedenle bu tur **hiçbir sayfa canlı yayımlanmadı**. Son v6 metinleri önizlemede tam kamu yollarında ve `/kvkk-taslak/:doc` adreslerinde sunulmuştur. Yayın için belge başına hukuki içerik kararı ve ayrıca kullanıcı yayın onayı gerekir. Kullanıcı yayın izni, eksik kanuni şartı kendiliğinden oluşturmaz.
+
+**İstenebilecek dar yayın kararı:** Şirket, aşağıdaki açık eksikleri taşıyan v6'yı “nihai uyum tamamlandı” iddiası olmadan şeffaf bilgilendirme olarak kamuya açmak istiyorsa bunu her sayfa için açıkça belirtmelidir; hukuk uzmanının bu eksik içerikle yayın değerlendirmesi ayrıca kayda alınmalıdır. Sağlık veri akışlarının hukuka uygunluğu ayrı konudur; yalnız metni yayımlamak bunları düzeltmez.
+
+## 2. KVKK m.6 — faaliyet bazlı değerlendirme
+
+Bu değerlendirme mevcut kanun/rehber ile kod envanterine dayanır; şirket adına bir hukuki şartın fiilen sağlandığı ilan edilmez.
+
+| İşleme faaliyeti | Uygulanabilecek şart ve neden | Neden bugün doğrulanmış sayılmaz / kim tamamlar? |
+|---|---|---|
+| Psikolojik test yanıtlarının toplanması ve sonucun oluşturulması | m.6/3-a: önceden, belirli test amacına ilişkin, bilgilendirilmiş ve özgür açık rıza alınırsa adaydır. m.6/3-e: sağlık amacı ve sır saklama yükümlüsü/yetkili kurum şartlarını sağlayan sağlık hizmetinde değerlendirilebilir. | 57 üyelik onayı ayrı test izni kanıtı değildir; yeni ayrı izin geçişi yayımlanmadı. Teknoloji platformu otomatik yetkili sağlık kurumu değildir. **Şirket:** uzman yetkisi, amaç, görev/rol ve mevcut izin örneklerini teyit eder. **Hukuk:** a/e ve veri sorumlusu/işleyen ayrımını belirler. |
+| Test sonucu/sağlık verisinin Supabase'de tutulması ve yalnız ilgili uzman panelinde okunması | İlk toplamanın geçerli şartı, bu saklama/okuma amacını gerçekten kapsıyorsa sürdürülebilir; a veya şartları kanıtlanan e. | İzin kapsamı, saklama gerekliliği ve uzman rolü ayrı kanıtlanmalı. Yetki kontrolü tek başına m.6 sebebi değildir. **Şirket:** rol/amaç/saklama ihtiyacı; **hukuk:** kapsam ve süre/kriter; **sağlayıcı:** saklama/alt işleyen belgeleri. |
+| Randevu, danışmanlık türü ve yönlendirmede sağlık açıklaması | Sağlık açıklaması ve kişiyle eşleşmiş psikolojik destek bilgisi için a adayı; e yalnız nitelikli sağlık faaliyeti koşullarında. Sadece ad/telefon/zaman gibi sağlık niteliği taşımayan kısım m.5 altında ayrılır. | Sözleşme gerekliliği m.5/2-c sağlık bölümünü tek başına karşılamaz. Özel mesajla kendiliğinden bilgi yazılması kamuya alenileştirme değildir. **Şirket:** hangi alanın kime/niçin iletildiğini teyit; **hukuk:** alan/faaliyet bazlı sınıflandırma ve a/e kararı. |
+| WhatsApp/e-posta/telefon destek içeriğinde sağlık açıklamaları ve danışan yönlendirme | Gerekli, amaçla sınırlı sağlık kısmında a veya şartlı e değerlendirilebilir. Genel iletişimden sağlık kısmı ayrılır. | Hizmet kalitesi veya meşru menfaat m.5/2-f sağlık işleme şartı değildir; mesaj göndermek geçerli açık rıza sayılmaz. **Şirket:** içerik/erişim/amaç; **hukuk:** ayrı sağlık şartı; **sağlayıcı:** mesaj saklama ve aktarım koşulları. |
+| AI görüşmesinde geçici sesin metne çevrilmesi ve sağlayıcıya iletilmesi | Sağlık içeriyorsa a veya koşulları sağlanan e; salt teknik ses işleminde içerik/sesin kimlik belirleme amacı ayrıca sınıflandırılır. Her ses otomatik biyometrik veri değildir. | Asistan kapalı; gelecekte açılması ayrı karardır. Genel çağrı izni/OpenAI kullanımı e'yi sağlamaz. **Şirket:** amaç/aktif kullanım; **sağlayıcı:** işleme/retention; **hukuk:** sağlık ve gerekirse biyometri ayrımı ile m.6 şartı. |
+| Geçmiş AI yazılı dökümlerinin saklanması ve okunması | Gerçek amaca göre a/e; somut uyuşmazlıkta zorunlu kapsam için m.6/3-d (hakkın tesisi/kullanılması/korunması) değerlendirilebilir. | Asistanın kapanması geçmiş saklamayı sona erdirmez. “Bir gün delil olur” tüm dökümleri sınırsız saklama gerekçesi değildir. **Şirket:** döküm amacı/erişim/somut hak ihtiyacı; **hukuk:** d'nin zorunluluk sınırı ve diğer şartlar. |
+| Eski sağlık içerikli e-postaların alıcı/sağlayıcı tarafındaki kopyaları ve yedeklerdeki sağlık kayıtları | Saklama da işlemedir; geçerli önceki şart ve güncel gereklilik/kapsam değerlendirilir; somut hak savunmasında d veya belirli kanuni hüküm varsa m.6/3-b adaydır. | B/C genel metinleri geçmiş kopyaları silmedi. Belirli kanuni hüküm sunulmadı; otomatik imha bu işte yapılmaz. **Şirket:** kopya/erişim/kategori; **sağlayıcı:** backup/mail retention; **hukuk:** gereklilik ve uygulanabilir hüküm. |
+| Güncel B/C genel test bildirimleri | Test başlığı/yanıt/puan/ad/sonuç kimliği gövdeden çıkarıldı. Alıcı adresi/telefon/token işlemesi kendi başına sağlık verisi olarak kabul edilmez; bağlam sağlığı açığa çıkarıyorsa ayrıca incelenir. | Genel bildirim sağlık sonucunun silindiği anlamına gelmez; paneldeki sağlık kaydı yukarıdaki şartları bekler. Bu içerik düzeltmesi artık bir yayın engeli değildir; gerçek teslim E2E yapılmadı. |
+
+**Diğer m.6 bentleri:** m.6/3-b için sağlık işlemini açıkça öngören somut kanun hükmü gerekir, burada verilmedi. m.6/3-c fiilî imkânsızlık/hayat veya beden bütünlüğü zorunluluğu için istisnadır; rutin test/randevuya genellenemez. m.6/3-ç alenileştirme amacıyla sınırlıdır, özel başvuru bunu sağlamaz. m.6/3-f istihdam/iş sağlığı/sosyal güvenlik gibi yükümlülükler, g ise dar kâr amacı gütmeyen kuruluş koşulları içindir; mevcut danışan platformu faaliyetini bu şartlar altında gösteren kanıt yoktur. m.6/4 ek güvenlik önlemleri ayrıca gerekir.
+
+## 3. KVKK m.9 — yabancı sağlayıcı bazlı gerçek yol ve kanıt açığı
+
+Kod yolunun mevcut olması her isteğin teslim edildiğinin kanıtı değildir. Ülke/alıcı ve sözleşme kanıtı bulunmayan yerde tahmin yazılmadı.
+
+| Sağlayıcı | Fiilî / kaynakta kanıtlanan yol | Şirket teyidi | Sağlayıcı belgesi ve hukuk değerlendirmesi |
+|---|---|---|---|
+| Supabase | Mevcut harici projede hesap/profil, randevu, test/sağlık, onay, işlem/log saklama | Hesap sözleşmesi, seçili bölge, hangi sıfatla işleniyor | Projeye uygulanan DPA, gerçek bölge/alt işleyen/backup; hukuk gerçek alıcı ve rol bazında m.9 mekanizmasını kurar. Türk standart sözleşme/imza/bildirim kanıtı yok. |
+| Brevo | Kayıtlı uzman adresine genel test e-postası; diğer hizmet e-postaları; geçmiş hassas mail kopyaları silinmiş değil | Hesap ve gönderim kategorileri | DPA/alt işleyen/retention; uygulanabilir Türk m.9 güvencesi ve gerekirse imza/bildirim. Genel metin kişisel alıcı adresini anonim yapmaz. |
+| OpenAI | Realtime ses/metin yolu kodda var; asistan son kontrolde kapalı, geçmiş dökümler Supabase'de | Kullanılan hesap, plan, aktiflik ve geçmiş kullanım | DPA, hizmete uygulanan veri saklama/ZDR ve bölge, alt işleyen; m.6 ve m.9 ayrı. Bugün yeni ses aktarımı yapıldığı iddia edilmez. |
+| Meta | Kabul kapılı Pixel; sunucu CAPI, kayıt/dönüşüm atıf verileri ve lead kaynakları ayrı | Gerçek hesap/olay/alan kapsamı | Veri şartları, alıcı tüzel kişi/roller; Türk m.9 mekanizması. Hash'li e-posta/telefon otomatik anonim değildir; banner sunucu CAPI'yi otomatik durdurmaz. |
+| Google GA4/Ads | Webde gecikmeli yüklenen etiketler, kabul bekleyen kapı yok | Gerçek etiket ve veri paylaşım ayarları | Hizmet şartları/DPA, roller, ülke/alt işleyen, Türk m.9 mekanizması; reklam izinleri ayrıca değerlendirilir. |
+| Google Fonts/Maps | index.html uzak font; mobil uzman sayfası harita bağlantısı | Kullanılan harita biçimi/hizmet kapsamı | Teknik IP/istek verisi alıcısı ve işleme koşulları; uygun m.9 kapsamı. Uzak font/harita kullanımı sağlık sonucu aktarımı kanıtı değildir. |
+| Google Firebase/FCM | Push token, teslim için teknik veri ve C'nin genel bildirim gövdesi | Firebase hesabı/proje ve alıcı kapsamı | FCM koşulları/alt işleyen/retention; Türk m.9 değerlendirmesi. Sağlık gövdesi kaldırılmış, token kişisel veri olabilir. |
+| Lovable ziyaretçi analitiği | Yayın ayarı yeniden okundu: ziyaretçi ve tıklama ölçümü açık; çerezsiz, cihazda kayıt/IP saklama/kimlik tespiti yok; özel uygulama olayı bulunmadı | Hangi yayınlar/hizmetler kullanılıyor | Hizmet şartları/işleyen zinciri; kişisel veri niteliği ve m.9 kapsamı veri akışı bazında hukukça değerlendirilir. Bütün ölçümü kimlikli sağlık verisi saymak da tamamen m.9 dışında varsaymak da doğru değil. |
+| Lovable AI Gateway / yönlendirilen AI sağlayıcıları | Blog/uzman içerik, reklam açıklaması ve otomasyon kodunda ayrı AI çağrıları var | Aktif işlev ve gerçek prompt alanları | Gateway/model alıcısı ve alt işleyen/retention; gönderilen uzman/başvuru/hesap verisi için rol ve m.9. Kamu sağlık konulu yazı tek başına bir danışanın sağlık verisi değildir. |
+| WhatsApp/Meta ve WAHA barındırması | Mesaj/numara, webhook arşivi ve proxy yolu; son hat durumu kapalı/engelli olabilir | Gerçek WAHA host/ülke ve aktif hat; Railway olduğu varsayılmaz | Meta/host alt işleyen ve saklama belgeleri; geçmiş arşiv ve güncel gönderim ayrımıyla Türk m.9. WAHA bir yazılım, ayrıca gerçek barındıran tüzel kişi belirlenmeli. |
+| ScrapingBee / SMS proxy alternatifleri | Bazı SMS işlevlerinde yabancı proxy fallback kodu var; bu tur çalıştırılmadı | Fiilen kullanılıp kullanılmadığı ve geçirilen alanlar | Proxy tüzel kişi, ülke, log/retention; kullanılıyorsa telefon/mesaj/teknik verinin ayrı m.9 yolu. Kod bulunması başarılı güncel teslim kanıtı değil. |
+| Site/santral barındırması, Verimor, iyzico, BirFatura | Hosting isteği, çağrı trafik/telefon, ödeme/fatura yolları mevcut | Gerçek sunucu/sağlayıcı ve ülke | Bu yerel veya ülke teyitsiz hizmetleri kendiliğinden yabancı saymadık; yabancı alt işleyen varsa belgeyle m.9 kapsamı değerlendirilir. Ödeme ve bağlantılara dokunulmadı. |
+
+**Ortak eksik güvence:** Alıcı ve role uygun, bu faaliyet için uygulanabilir yeterlilik/uygun güvence kanıtı henüz sağlanmadı. Standart sözleşme seçilirse doğru modül, yetkili tarafların Türkçe metindeki imzası ve imzadan itibaren **beş iş günü** içinde bildirim kanıtı gerekir. GDPR DPA/EU SCC tek başına Türk m.9 işleminin tamamlandığını kanıtlamaz. Düzenli veritabanı/mail/reklam akışına arızi aktarım istisnası veya genel rıza otomatik uygulanmaz. Kamu sayfasında imzalı sözleşmeyi göstermek zorunlu asgari unsur değildir; sözleşmenin hukuken gerekliyken hiç bulunmaması faaliyetin uygunluğu sorunudur, salt sayfa bağlantısı sorunu değil.
+
+## 4. Gerçek yayın engeli / sonraki iyileştirme ayrımı
+
+- **Doğrudan aydınlatma engeli:** Gerçek sağlık işlemi için somut hukuki sebebin belirtilmemesi; amaç/veri/alıcı/hukuki sebep eşleşmesinin belirsizliği. KVKK m.10 ve aydınlatma Tebliği açısından “uygulanabilir şart incelenecek” nihai açıklama değildir.
+- **İşleme/aktarım engeli:** Gerekli m.6 şartının veya m.9 mekanizmasının fiilen kurulmaması. Bir açıklama yayımlamak bunları kurmaz. Bu nedenle final uyum onayı verilemez; dürüst eksik durum metninin yayımlanması ayrı dar karardır.
+- **Tek başına bütün sayfaları engellemez:** Santral sağlayıcısında ses dosyası yokluğunu kanıtlayamama; şirketin “ses dosyası kaydetmiyor” beyanı korunur, çağrı trafik/geçici ses/yazılı döküm ayrı anlatılır. Sağlayıcıda kesin yok denmez.
+- **Tek başına m.10 asgari eksikliği değildir:** Her kategori için sayısal süre veya otomatik imha aracı bulunmaması. m.4/7 yükümlülükleri ve gerçek saklama kriteri yine gerekir; süre uydurulmaz. Otomatik silme bu pakette kurulmaz.
+- **Belge yayını için tek başına zorunlu değil:** Otomatik geri çekme aracı. Geçerli başvuru kanalı, kimlik doğrulama ve fiilen talebi işleyen sorumlu süreç gerekir; KEP/e-posta var, operasyonel işleyiş teyidi şirketten gerekir.
+- **Tamamlanmış teknik hazırlık:** URL/footer/prerender/.htaccess ve okunabilirlik. Bu eksikler artık bu paket için bekleme gerekçesi değildir; onay kapısı hariç çalışır durumdadır.
+- **Korunan canlı düzeltme:** B/C genel bildirim sürümleri. Gerçek cihaz/teslim testi yapılmaması hukuki belgeyi yayımlamak için tek başına engel değildir; B/C düzeltmeleri geri alınmadı.
+
+## 5. Teknik kabul, arşiv ve yayın adımı
+
+- Gerçek App web/native kolları üç Türkçe yolu içerir; eski iki İngilizce alias korunur. Önizleme tam kamu yollarında v6; production kapısı açık değilse eski iki kaynak kalır, yeni çağrı sayfası bulunamadı olur ve footer yeni çağrı bağlantısı göstermez.
+- Footer üç bağlantıyı önizlemede gösterir; üretimde yeni çağrı bağlantısı yalnız o belgenin onayı tamamlandıysa çıkar. `.htaccess` çağrı ve taslak yolunu blog yönlendirmesinden hariç tutar; mevcut alias 301 ve `/pre` sunumu korunur.
+- Prerender onaylı markdown'ın tam HTML'ini, başlık/açıklama/canonical/JSON-LD ve sitemap kaydını üretir; onaysız metni üretmez. Onaylı dosya SHA-256 eşleşmezse reddeder. Şu anda onaylı yeni belge sayısı **0**.
+- Mobil 457×926 ve masaüstü 1280×1800: altı sayfa açılışı, şirket bilgileri, noindex, taşma kontrolü ve footer çağrı bağlantısı başarılı. Görüntüler incelendi. Dış istekler engellendi; gerçek kayıt/mesaj/analitik yazımı yapılmadı. Native cihaz ve Apache/FTP üretim sunumu test edilmedi.
+- Bütün mevcut sürüm ve arşiv SHA256SUMS doğrulandı; DisclosureText/ExplicitConsent eski kaynakları arşivle birebir aynı. v6 ve geçmiş sürümler değiştirilmedi. 57 eski onaya hiçbir yazım yapılmadı; bu tur canlı sayımı yeniden yapılmadı.
+- Yayında v6'nın “yayımlanmadı” satırı gerçek yayın tarihi/sürümüyle ayrı, hash'li yayın kopyasında değiştirilmelidir; kaynak v6 arşivi ve imzalı geçmiş snapshot'lar korunur. Yayın kaydı onay tarihi, kapsamı ve hash içermelidir; bu tur yayın tarihi uydurulmadı.
+- Geri alma sadece hukuk sayfa/bağlantı sürümünü arşivlenmiş sürüme döndürür; B/C eski sağlık içerikli bildirimleri açmaz. Veritabanı ve onay ilişkileri değişmez.
+
+## Dayanaklar
+
+- Kurumun [özel nitelikli veri rehberi](https://www.kvkk.gov.tr/SharedFolderServer/CMSFiles/41e880f2-9f70-40e6-9258-e7fc86e39a76.pdf) bu tur indirildi ve m.6 bentleri okundu.
+- Kurumun [standart sözleşmelerde dikkat edilecek hususlar](https://www.kvkk.gov.tr/Icerik/8170/Yurt-Disina-Kisisel-Veri-Aktariminda-Kullanilacak-Standart-Sozlesmelerde-Dikkat-Edilmesi-Gereken-Hususlara-Iliskin-Kamuoyu-Duyurusu): geçerli imza, Türkçe metin, beş iş günü bildirim.
+- Kurumun [2026 doğru bilinen yanlışlar rehberi](https://www.kvkk.gov.tr/SharedFolderServer/CMSFiles/d077b665-66b6-4615-975a-249f93e084ba.pdf): belirli amaç, ayrı rıza ve geri alma ayrımı.
+- Önceki mevcut sağlayıcı kaynakları: [Supabase DPA](https://supabase.com/legal/customer-resources/data-processing-addendum), [OpenAI DPA](https://openai.com/policies/data-processing-addendum/), [OpenAI alt işleyenler](https://openai.com/policies/sub-processor-list/), [Lovable gizlilik](https://lovable.dev/privacy). Genel belge mevcutluğu hesabın imzası, bölgesi veya Türk aktarım güvencesi kanıtı olarak kullanılmadı.
+
+**Sonuç:** Teknik entegrasyon hazır; üç sayfanın nihai hukuki yayın koşulları tamamlandı denemez. Son v6 metinleri ve bu faaliyet/sağlayıcı bazlı açık engeller kullanıcıya sunulur; üç belge için ayrı hukuki içerik kararı ve yayın onayı beklenir. Genel güvenlik çalışması veya yeni ortam önerilmez.

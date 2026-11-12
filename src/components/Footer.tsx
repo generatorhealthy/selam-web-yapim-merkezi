@@ -1,5 +1,7 @@
 
 import { Link } from "react-router-dom";
+import publication from "@/content/legal/publication.json";
+import { canShowLegalCandidate } from "@/lib/legalPublication.js";
 import { Capacitor } from "@capacitor/core";
 
 const isNativeApp = Capacitor.isNativePlatform();
@@ -23,9 +25,15 @@ const Footer = () => {
               Ziyaretçi-Danışan Sözleşmesi
             </Link>
             <span className="text-gray-400">|</span>
-            <Link to="/disclosure-text" className="hover:text-blue-600 transition-colors">
+            <Link to="/aydinlatma-metni" className="hover:text-blue-600 transition-colors">
               Aydınlatma Metni
             </Link>
+            <span aria-hidden="true">|</span>
+            <Link to="/acik-riza" className="hover:text-primary transition-colors">Açık Rıza Metni</Link>
+            {canShowLegalCandidate(publication.documents.call, window.location.hostname) && <>
+              <span aria-hidden="true">|</span>
+              <Link to="/cagri-merkezi-aydinlatma-metni" className="hover:text-primary transition-colors">Çağrı Merkezi Aydınlatma Metni</Link>
+            </>}
             <span className="text-gray-400">|</span>
             <Link to="/sss" className="hover:text-blue-600 transition-colors">
               Sıkça Sorulan Sorular

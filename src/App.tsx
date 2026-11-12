@@ -66,6 +66,9 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import Privacy from "./pages/Privacy";
 import DisclosureText from "./pages/DisclosureText";
 import ExplicitConsent from "./pages/ExplicitConsent";
+import LegalPage from "./pages/legal/LegalPage";
+import publication from "@/content/legal/publication.json";
+import { canShowLegalCandidate } from "@/lib/legalPublication.js";
 import DistanceSalesContract from "./pages/DistanceSalesContract";
 import VisitorConsultantAgreement from "./pages/VisitorConsultantAgreement";
 import CommentRules from "./pages/CommentRules";
@@ -119,6 +122,7 @@ const MobileBlogDetailRedirect = () => {
 
 const AppContent = () => {
   const { isNative } = usePlatform();
+  const legalCandidate = (kind: keyof typeof publication.documents) => canShowLegalCandidate(publication.documents[kind], window.location.hostname);
   useNetworkRecovery();
   useNativeApp();
 
@@ -184,11 +188,12 @@ const AppContent = () => {
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
               <Route path="/privacy" element={<Privacy />} />
-              <Route path="/aydinlatma-metni" element={<DisclosureText />} />
-              <Route path="/disclosure-text" element={<DisclosureText />} />
-              <Route path="/acik-riza" element={<ExplicitConsent />} />
+              <Route path="/aydinlatma-metni" element={legalCandidate("disclosure") ? <LegalPage document="disclosure" /> : <DisclosureText />} />
+              <Route path="/disclosure-text" element={legalCandidate("disclosure") ? <LegalPage document="disclosure" /> : <DisclosureText />} />
+              <Route path="/acik-riza" element={legalCandidate("consent") ? <LegalPage document="consent" /> : <ExplicitConsent />} />
+              <Route path="/cagri-merkezi-aydinlatma-metni" element={legalCandidate("call") ? <LegalPage document="call" /> : <NotFound />} />
               <Route path="/kvkk-taslak/:doc" element={<LegalDraft />} />
-              <Route path="/explicit-consent" element={<ExplicitConsent />} />
+              <Route path="/explicit-consent" element={legalCandidate("consent") ? <LegalPage document="consent" /> : <ExplicitConsent />} />
               <Route path="/ziyaretci-danisman-sozlesmesi" element={<VisitorConsultantAgreement />} />
               <Route path="/visitor-consultant-agreement" element={<VisitorConsultantAgreement />} />
               <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesContract />} />
@@ -240,11 +245,12 @@ const AppContent = () => {
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
-              <Route path="/disclosure-text" element={<DisclosureText />} />
-              <Route path="/aydinlatma-metni" element={<DisclosureText />} />
-              <Route path="/acik-riza" element={<ExplicitConsent />} />
+              <Route path="/disclosure-text" element={legalCandidate("disclosure") ? <LegalPage document="disclosure" /> : <DisclosureText />} />
+              <Route path="/aydinlatma-metni" element={legalCandidate("disclosure") ? <LegalPage document="disclosure" /> : <DisclosureText />} />
+              <Route path="/acik-riza" element={legalCandidate("consent") ? <LegalPage document="consent" /> : <ExplicitConsent />} />
+              <Route path="/cagri-merkezi-aydinlatma-metni" element={legalCandidate("call") ? <LegalPage document="call" /> : <NotFound />} />
               <Route path="/kvkk-taslak/:doc" element={<LegalDraft />} />
-              <Route path="/explicit-consent" element={<ExplicitConsent />} />
+              <Route path="/explicit-consent" element={legalCandidate("consent") ? <LegalPage document="consent" /> : <ExplicitConsent />} />
               <Route path="/mesafeli-satis-sozlesmesi" element={<DistanceSalesContract />} />
               <Route path="/visitor-consultant-agreement" element={<VisitorConsultantAgreement />} />
               <Route path="/ziyaretci-danisan-sozlesmesi" element={<VisitorConsultantAgreement />} />
