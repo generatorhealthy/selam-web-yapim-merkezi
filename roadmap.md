@@ -1,11 +1,20 @@
 # Roadmap
 
+## 12 Kasım 17:53 — Mevcut projede aşamalı güvenlik (önceki ortam kurulum kararlarını geçersiz kılar)
+- [x] Yeni hesap/proje/branch ve test ortamı kurulumu iptal; mevcut bağlantı korunacak, tarihsel migration replay edilmeyecek.
+- [x] Öncelik 1 inceleme/teslim: iki aktif submit yolu + kullanılmayan TestTaker + okuma ekranları ve canlı SMS/push trigger metadata incelendi; izole mail politikası, 29 mantık testi ve mevcut yerel SQL rollback kontrolü geçti. Kod/etki/sıra/geri alma raporu: security/test-email-transition-2026-11-12/REPORT.md; canlı değişmedi.
+- [ ] Öncelik 1 kurulabilir dar uyumluluk paketi — mail-only SQL/SDK/legacy worker adaptörü ve native sürüm kanıtı eksik; gerçek sağlayıcı/cihaz E2E tamamlanmadı, ayrı canlı onay gerekir. SMS/push minimizasyonu ayrı onaylanacak.
+- [ ] Öncelik 2: web/mobil onay geçişi ve 57 eski kaydın korunması — gerçek mobil doğrulama ve ayrı yayın onayı bekliyor; doğrudan INSERT henüz kapanmayacak.
+- [ ] Öncelik 3: randevu/danışan başvurularında aydınlatma ve ayrı sağlık izni — hukuki şartlar ve ayrı yayın onayı bekliyor.
+- [ ] Öncelik 4: üç nihai hukuki metin, MERSİS/KEP ve eski sürümlerin korunması — teknik/hukuki kontroller ve yayın onayı bekliyor.
+- [ ] Öncelik 5: mesaj/randevu bildirimi/MFA ve güncel bulgular — her davranış değişikliği ayrı onay bekliyor; yedek güvenliği korunacak.
+
 ## 12 Kasım 17:37 — Güvenli başlangıç teknik hazırlığı
 - [x] 382 migration envanteri: 378 dosya/2072 komut ayrıştırıldı, 4 dosya engellendi; dosya/satır/kategori/hash listeleri hazır, otomatik güvenli onay yok.
 - [x] Açık kaynak listeli minimum başlangıç, tam test origin kapısı, redirect engeli ve beş servis simülatörü; izole mantık ve yerel SQL kontrolleri geçti. Tam üretim şeması veya hosted UI E2E değildir.
 - [x] Teknik rapor: standart Dashboard branch güvenli kabul edilmedi; Docker en ucuz yerel seçenek, Lovable için uygun kotada bağımsız Free test projesi önerildi. Canlı değişmedi; kurulum yapılmadı.
 - [x] Kullanıcı yalnız ücretsiz kota varsa bağımsız Free Supabase test projesi + boş test Lovable kurulumu onayladı; ücretli/branch alternatifi onaylanmadı.
-- [ ] Onaylı test ortamını oluştur/bağla — bu oturumda Supabase kuruluş/kota yönetim bağlantısı veya yeni Lovable proje oluşturma aracı yok; kullanıcı ücretsiz kota kontrolü ve iki boş proje oluşturmasını tamamlayıp yeni test Lovable sohbetinden devam etmeli. Canlı bağlantı değişmez.
+- [x] Test ortamı oluşturma/bağlama görevi 17:53 kullanıcı kararıyla iptal edildi; yeni proje veya branch istenmeyecek.
 - [x] Kullanıcı PRO planı ve Create branch seçeneğini doğruladı; hiçbir ortam oluşturma veya canlı değişiklik onayı yok.
 
 ## 12 Kasım 17:33 — Branch kurulumu öncesi güvenlik planı
@@ -14,7 +23,7 @@
 
 ## Test ortamı onayı ve uzman değerlendirmesi
 - [x] Ayrı boş test ortamı kurulumu kullanıcı tarafından onaylandı; aday SQL otomatik puan/risk üretmez, uzman değerlendirmesini bekler.
-- [ ] İzole test ortamı bağlantısı — 12 Kasım 17:17 talimatıyla yeni proje kurulumu bekletildi; önce mevcut Supabase Branching uygunluğu incelenecek. Hiçbir ortam/bağlantı bu inceleme kapsamında oluşturulmayacak veya değiştirilmeyecek.
+- [x] İzole hosted test ortamı bağlantısı görevi 17:53 kullanıcı kararıyla iptal edildi; yerel sentetik test yöntemi kullanılacak.
 - [x] Mevcut Supabase Branching, veri izolasyonu, Lovable bağlantısı ve düşük maliyetli alternatifler hakkında salt okunur seçenek raporu; yönetim token'ı olmadığından plan/branch listesi ve Lovable branch seçimi doğrulanamadı. Rapor: security/release-2026-11-12/staging/BRANCHING_OPTIONS_2026-11-12.md.
 
 ## 12 Kasım 17:07 — eksik entegrasyonların tamamlanması, canlı değişiklik yok
@@ -24,7 +33,7 @@
 - [x] Pending prepare/finalize SQL ve SDK email/OAuth/callback adaptörü; eşzamanlı yerel finalize ve geri çekme testi geçti.
 - [ ] Gerçek kayıt ekranı/native receipt entegrasyonu — ayrı staging Auth ve gerçek cihaz, bağımsız amaçların hukuki onayı gerekiyor.
 - [x] Staging allowlist/test iskeleti/kurulum planı; production origin reddi test edildi.
-- [ ] Staging kurulumu ve gerçek E2E — öncelikle mevcut Supabase Branching uygunluğu ve kurulum onayı, izole test iletişim/OAuth/CAPTCHA ve cihaz gerekiyor; bağımsız proje kurulumu bekletildi.
+- [x] Staging kurulumu iptal; yerel/sentetik doğrulama yapılacak, gerçek cihaz/sağlayıcı E2E eksikleri tamamlanmış gösterilmeyecek.
 - [ ] Mesaj OTP ekranı/sağlayıcı geçişi — test hattı/OTP ve aktif WAHA doğrulaması gerekiyor; tamamlanmadı.
 - [x] v2 değişmedi; üç unimported v3, SHA256SUMS ve form-amaç haritası hazır.
 - [x] 13 Kasım 16:00 UTC sonrası yedek SELECT sorguları hazır; doğal çalışma bekleniyor, elle çağrı yok.
