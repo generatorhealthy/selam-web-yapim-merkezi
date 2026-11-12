@@ -11,7 +11,7 @@ CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
 CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$SELECT current_setting('request.jwt.claim.role',true)$$;
 CREATE TABLE auth.users(id uuid primary key,email text);
-CREATE TABLE public.user_profiles(user_id uuid,role text,is_approved boolean default false);
+CREATE TABLE public.user_profiles(user_id uuid,role text,is_approved boolean default false,email text);
 CREATE FUNCTION public.is_admin_or_staff_user() RETURNS boolean LANGUAGE sql SECURITY DEFINER AS $$SELECT EXISTS(SELECT 1 FROM public.user_profiles WHERE user_id=auth.uid() AND role IN ('admin','staff') AND is_approved)$$;
 CREATE FUNCTION public.is_admin_user() RETURNS boolean LANGUAGE sql SECURITY DEFINER AS $$SELECT EXISTS(SELECT 1 FROM public.user_profiles WHERE user_id=auth.uid() AND role='admin' AND is_approved)$$;
 CREATE TABLE public.specialists(id uuid default gen_random_uuid(),user_id uuid,email text,name text,is_active boolean default false,registration_source text);
@@ -22,7 +22,7 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Specialists can view their own orders" ON public.orders FOR SELECT TO authenticated USING(true);
 CREATE POLICY pending_insert ON public.orders FOR INSERT TO anon,authenticated WITH CHECK(true);
 INSERT INTO auth.users VALUES ('11111111-1111-4111-8111-111111111111','one@example.invalid'),('22222222-2222-4222-8222-222222222222','two@example.invalid');
-INSERT INTO public.user_profiles VALUES ('11111111-1111-4111-8111-111111111111','specialist',false),('22222222-2222-4222-8222-222222222222','specialist',false);
+INSERT INTO public.user_profiles(user_id,role,is_approved) VALUES ('11111111-1111-4111-8111-111111111111','specialist',false),('22222222-2222-4222-8222-222222222222','specialist',false);
 INSERT INTO public.specialists(user_id,email,name,registration_source) VALUES ('11111111-1111-4111-8111-111111111111','one@example.invalid','Same Name','self_registration'),('22222222-2222-4222-8222-222222222222','two@example.invalid','Same Name','self_registration');
 INSERT INTO public.orders(customer_email) VALUES ('one@example.invalid'),('two@example.invalid');''')
 sql(ROOT.joinpath('client-boundary.sql').read_text())
@@ -42,7 +42,10 @@ rejects('identity reassignment',session('authenticated',one,"UPDATE public.speci
 assert sql(session('authenticated',one,"SELECT count(*) FROM public.orders" )).splitlines()[-1]=='1';print('PASS same name cannot read other order')
 sql(session('authenticated',one,"UPDATE public.specialists SET name='Updated' WHERE user_id=auth.uid()"));print('PASS normal profile editing')
 sql(session('service_role','',"UPDATE public.specialists SET is_active=true WHERE email='one@example.invalid'"));print('PASS trusted activation')
-sql("INSERT INTO public.user_profiles VALUES('33333333-3333-4333-8333-333333333333','admin',true)")
+sql("INSERT INTO public.user_profiles(user_id,role,is_approved) VALUES('33333333-3333-4333-8333-333333333333','admin',true)")
 sql(session('authenticated','33333333-3333-4333-8333-333333333333',"INSERT INTO public.orders(customer_email,status) VALUES('manual@example.invalid','approved')"));print('PASS authorized manual EFT approval')
-sql("INSERT INTO public.user_profiles VALUES('44444444-4444-4444-8444-444444444444','staff',true)")
+sql("INSERT INTO public.user_profiles(user_id,role,is_approved) VALUES('44444444-4444-4444-8444-444444444444','staff',true)")
 rejects('staff cannot promote self to admin',session('authenticated','44444444-4444-4444-8444-444444444444',"UPDATE public.user_profiles SET role='admin' WHERE user_id=auth.uid()"))
+sql("CREATE ROLE supabase_auth_admin; GRANT ALL ON public.user_profiles TO supabase_auth_admin; GRANT USAGE ON SCHEMA public,auth TO supabase_auth_admin")
+assert sql("SET SESSION AUTHORIZATION supabase_auth_admin; SET request.jwt.claim.role=''; INSERT INTO public.user_profiles(user_id,role,is_approved,email) VALUES('11111111-1111-4111-8111-111111111111','specialist',false,'one@example.invalid'); SELECT count(*) FROM public.user_profiles WHERE email='one@example.invalid'").splitlines()[-1]=='1'
+print('PASS server auth lifecycle creates only verified unapproved profile')

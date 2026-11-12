@@ -6,6 +6,12 @@ BEGIN
   privileged := COALESCE(auth.role() = 'service_role',false)
     OR (session_user = 'postgres' AND current_setting('role',true) IN ('none','postgres'))
     OR (auth.uid() IS NOT NULL AND CASE WHEN TG_TABLE_NAME='user_profiles' THEN public.is_admin_user() ELSE public.is_admin_or_staff_user() END);
+  IF TG_TABLE_NAME = 'user_profiles' AND TG_OP = 'INSERT'
+    AND session_user = 'supabase_auth_admin' AND current_setting('role',true) IN ('none','supabase_auth_admin')
+    AND NEW.role::text IN ('user','specialist','patient') AND NOT COALESCE(NEW.is_approved,false)
+    AND EXISTS(SELECT 1 FROM auth.users u WHERE u.id=NEW.user_id AND lower(trim(u.email))=lower(trim(NEW.email))) THEN
+    RETURN NEW;
+  END IF;
   IF privileged THEN RETURN NEW; END IF;
   IF TG_TABLE_NAME = 'orders' THEN
     IF TG_OP <> 'INSERT' OR COALESCE(NEW.status,'pending') <> 'pending'
