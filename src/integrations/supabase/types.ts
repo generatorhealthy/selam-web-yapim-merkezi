@@ -6639,6 +6639,27 @@ export type Database = {
         }
         Relationships: []
       }
+      test_email_delivery_claims: {
+        Row: {
+          created_at: string
+          result_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          result_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          result_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       test_questions: {
         Row: {
           created_at: string
@@ -7415,6 +7436,10 @@ export type Database = {
           blocked_until: string
           is_blocked: boolean
         }[]
+      }
+      claim_test_email_delivery: {
+        Args: { p_result: string; p_user: string }
+        Returns: boolean
       }
       cleanup_expired_otps: { Args: never; Returns: undefined }
       cleanup_old_backups: { Args: never; Returns: undefined }
