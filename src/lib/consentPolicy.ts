@@ -22,7 +22,9 @@ export function canSubmitHealthTest(s: ConsentState): boolean {
   return s.disclosureShown && s.granted.health_test === true;
 }
 
-/** Randevu her zaman genel bilgilerle alınabilir; sağlık açıklaması yalnız rızayla gönderilir. */
+/** Taslak not filtresi; tüm randevu alanlarını genel veri olarak sınıflandırmaz.
+ * Kişiyle eşleşen danışmanlık türü faaliyet bazında sağlık verisi sayılabilir.
+ * Bu yardımcı yalnız notes alanını filtreler, randevu için hukuki izin vermez. */
 export function buildAppointmentPayload<T extends Record<string, unknown>>(
   base: T,
   healthNote: string | null | undefined,

@@ -99,6 +99,13 @@
 
 ## KVKK güvenlik çalışması (12 Kasım)
 
+## KVKK Aşama 6 — Kontrollü onay kaydı geçişi
+- [ ] Mevcut 57 kaydı koruyarak sunucu onay kaydı ve atomik tekrar önleme hazırlığını test et.
+- [ ] Mobil üyelikte gerçek oturumlu geçişi doğrula; ancak ardından doğrudan yazma ve başkasının okuma erişimini kapat.
+- [ ] Danışmanlık türü sınıflandırmasını ve WhatsApp altyapı haritasını düzelt.
+- [ ] Üç hukuki taslak önizlemesini tarayıcıda doğrula; metinleri yayımlama.
+- [ ] Sonuçları ve varsa geçiş engelini raporla; sonraki beş aşamayı uygulama.
+
 ## Aşama 1 — Kritik RPC güvenliği
 - [x] 11 fonksiyon için rol/yetki ve çağrı analizi (uygulama, edge function, RLS politikası, tetikleyici, cron)
 - [x] Anonim ve oturum açmış rollerin gereksiz EXECUTE yetkileri kaldırıldı (migration uygulandı)
