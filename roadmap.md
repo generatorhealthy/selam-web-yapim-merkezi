@@ -1,3 +1,8 @@
+# 13 Kasım 2026 — Aydınlatma bölüm 7
+- [x] Visitor analytics onayla kapatıldı; settings visitor/click false, gerçek domain tarayıcıda Lovable script/analytics request yok.
+- [x] Yalnız bölüm 7 v10 olarak sadeleştirildi; v9 SHA arşivi ve diğer belgeler birebir korunur. 7 yayın testi + özet ve bölüm eşitliği kontrolü + mobil taşma yok.
+- [ ] Hostinger v10 yayın doğrulaması — GitHub dağıtımı henüz çalışmadı; gerçek domain hâlâ v9. Commit sonrası FTP dağıtımının tamamlanması bekleniyor, deployment_verified_at null.
+
 # 13 Kasım 2026 — Son üç ödeme engeli
 - [ ] Gerçek checkout/token→sipariş ve yenileme referansı bağını kabul etmeden atomik settlement dağıtma; eski sipariş araştırması bağımsızdır.
 - [x] BirFatura gerçek pull yolunda sıraya alma ile fatura düzenlenmesi ayrıldı; conditional UPDATE + timeout readback, 5 test, handler deploy ve canlı yetkisiz 401. Dış sağlayıcı issuance/dedup kabulü eksik.

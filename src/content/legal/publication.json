@@ -1,13 +1,13 @@
 {
-  "version": "2026-11-12-yayin-v9",
+  "version": "2026-11-13-yayin-v10",
   "documents": {
     "disclosure": {
       "path": "/aydinlatma-metni",
       "file": "aydinlatma-metni.md",
       "title": "KVKK Aydınlatma Metni",
-      "legal_approved_at": "2026-11-12T21:07:08Z",
-      "publication_authorized_at": "2026-11-12T21:07:08Z",
-      "published_at": "2026-11-12T21:07:08Z",
+      "legal_approved_at": "2026-11-13T07:16:11Z",
+      "publication_authorized_at": "2026-11-13T07:16:11Z",
+      "published_at": "2026-11-13T07:16:11Z",
       "scope": "public_information_only_not_compliance_certification",
       "deployment_verified_at": null,
       "decision": "information_release",
