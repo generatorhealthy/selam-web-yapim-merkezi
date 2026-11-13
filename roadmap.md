@@ -1,3 +1,8 @@
+# 13 Kasım 2026 — Yalnız yeni iyzico satın alma
+- [ ] Gerçek initialize/token callback entegrasyonu bu tur tamamlanmadı: client INSERT→server identity/capability→token→retrieve→receipt bağı yok; yeni checkout kapsamlı receipt'siz approval kapısı olmadan ikinci auto-approve yazıcısı onaylayabilir. Eksiklik iç uygulamadır, kullanıcı/sağlayıcı credential engeli değildir.
+- [x] Mevcut gerçek handler gövdeleri sekiz sentetik senaryoda çalıştırıldı; 7 kabul eksikliği tekrarlanabilir biçimde üretildi, provider failure kontrolü var. Bunlar güvenlik kabulü değil; PURCHASE_BLOCKER.md kesin bağı açıklar.
+- [x] Riskli üretim dağıtımı yapılmadı; migration/frontend/payment handler değişikliği yok, altı plan ve 64 eski sipariş/BirFatura/mobil korunur.
+
 # 13 Kasım 2026 — Üç bağımsız üretim paketi
 - [ ] Paket 1: gerçek initialize/retrieve geçişi tamamlanmadı; altı plan GET doğrulandı, sentetik request-path geçti. Atomik server order/session+unique token ve mevcut guest aktivasyon uyumluluğu eksik; üretime bağlanmadı.
 - [ ] Paket 2: sentetik V3/dönem/request-path geçti; gerçek auto-approve/retry/change-payment/trigger transaction+outbox kabulü ve kesin period→order bağı eksik, dağıtılmadı.
