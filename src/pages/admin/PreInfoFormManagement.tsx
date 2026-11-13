@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Save, FileText, Eye } from "lucide-react";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { sanitizeRichHtml } from "@/utils/sanitize";
 
 const PreInfoFormManagement = () => {
   const [formContent, setFormContent] = useState("");
@@ -48,7 +49,7 @@ const PreInfoFormManagement = () => {
         .from('form_contents')
         .select('content')
         .eq('form_type', 'pre_info')
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error loading form content:', error);
@@ -82,7 +83,7 @@ const PreInfoFormManagement = () => {
       .from('form_contents')
       .upsert({
         form_type: 'pre_info',
-        content: formContent,
+        content: sanitizeRichHtml(formContent),
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'form_type',
@@ -119,6 +120,7 @@ const PreInfoFormManagement = () => {
     // Yeni sekmede önizleme açar
     const previewWindow = window.open('', '_blank');
     if (previewWindow) {
+      previewWindow.opener = null;
       previewWindow.document.write(`
         <html>
           <head>
@@ -165,7 +167,7 @@ const PreInfoFormManagement = () => {
           </head>
           <body>
             <h1>Ön Bilgilendirme Formu - Önizleme</h1>
-            <div class="content">${formContent}</div>
+            <div class="content">${sanitizeRichHtml(formContent)}</div>
           </body>
         </html>
       `);

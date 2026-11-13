@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowLeft, RefreshCw, Download, ArrowUp, ArrowDown, Minus, Search, Sparkles, Target, MousePointerClick, Eye, Percent, Trophy, Clock, ExternalLink, Check, X } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { toast } from "sonner";
+import { safeCsv } from "@/lib/safeCsv";
 import { classifyPage, clickPotential, expectedCtr } from "../../../supabase/functions/_shared/seoRules";
 
 type Snap = { query: string; page: string; clicks: number; impressions: number; ctr: number; position: number };
@@ -96,7 +97,7 @@ function PosBadge({ p }: { p: number }) {
 }
 
 function exportCsv(name: string, rows: (string | number)[][]) {
-  const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n");
+  const csv = safeCsv(rows, ";");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
   a.download = name; a.click();

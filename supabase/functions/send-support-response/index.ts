@@ -1,6 +1,7 @@
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { escapeHtml } from '../_shared/escapeHtml.ts';
 
 const BREVO_API_KEY = Deno.env.get('BREVO_API_KEY');
 
@@ -50,13 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
       status
     }: SupportResponseRequest = await req.json();
 
-    console.log('Request data:', {
-      ticketId,
-      specialistEmail,
-      specialistName,
-      ticketTitle,
-      status
-    });
+    console.log('Support response request received');
 
     if (!BREVO_API_KEY) {
       console.error('BREVO_API_KEY not found');
@@ -70,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Status display mapping
-    const statusDisplay = {
+    const statusDisplay: Record<string, string> = {
       'open': 'Açık',
       'in_progress': 'İşlemde', 
       'resolved': 'Çözüldü',
@@ -80,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailData = {
       sender: {
         name: "Doktorum Ol Destek",
-        email: "destek@doktorumol.com.tr"
+        email: "info@doktorumol.com.tr"
       },
       to: [
         {
@@ -120,20 +115,20 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             
             <div class="content">
-              <p>Merhaba <strong>${specialistName}</strong>,</p>
+              <p>Merhaba <strong>${escapeHtml(specialistName)}</strong>,</p>
               
               <p>Destek talebinize cevap verilmiştir. Detaylar aşağıdaki gibidir:</p>
               
               <div class="ticket-info">
                 <h3>📋 Talep Bilgileri</h3>
-                <p><strong>Konu:</strong> ${ticketTitle}</p>
-                <p><strong>Talep ID:</strong> ${ticketId}</p>
-                <p><strong>Durum:</strong> <span class="status-badge status-${status}">${statusDisplay[status] || status}</span></p>
+                <p><strong>Konu:</strong> ${escapeHtml(ticketTitle)}</p>
+                <p><strong>Talep ID:</strong> ${escapeHtml(ticketId)}</p>
+                <p><strong>Durum:</strong> <span class="status-badge status-${Object.hasOwn(statusDisplay, status) ? status : 'open'}">${escapeHtml(statusDisplay[status] || status)}</span></p>
               </div>
               
               <div class="response-box">
                 <h3>💬 Destek Ekibi Cevabı</h3>
-                <p>${adminResponse.replace(/\n/g, '<br>')}</p>
+                <p>${escapeHtml(adminResponse).replace(/\n/g, '<br>')}</p>
               </div>
               
               ${status === 'resolved' ? `
@@ -180,12 +175,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Brevo API error:', errorText);
-      throw new Error(`Brevo API error: ${response.status} ${errorText}`);
+      console.error('Brevo API error status:', response.status);
+      throw new Error('Email provider rejected the request');
     }
 
     const result = await response.json();
-    console.log('Email sent successfully:', result);
+    console.log('Email accepted by provider');
 
     // Log email to database
     try {
@@ -199,7 +194,7 @@ const handler = async (req: Request): Promise<Response> => {
         brevo_message_id: result.messageId || null,
         metadata: { ticketId, status }
       });
-    } catch (logErr) { console.error('Email log insert error:', logErr); }
+    } catch (logErr) { console.error('Email log insert failed'); }
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -213,10 +208,10 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error) {
-    console.error('Error in send-support-response function:', error);
+    console.error('Support response failed');
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: 'Email delivery failed',
         message: 'Email gönderilirken hata oluştu'
       }),
       {

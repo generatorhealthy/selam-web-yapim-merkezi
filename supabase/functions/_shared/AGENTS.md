@@ -1,0 +1,2 @@
+- Website inspection may fetch only exact allowlisted HTTPS public-site hosts and rejects redirects; chat history accepts only user/assistant roles because caller-controlled roles are not authority.
+- BirFatura pull authentication keeps existing provider header/query names but fails closed when the configured secret is missing; never log request headers, bodies or order response contents.

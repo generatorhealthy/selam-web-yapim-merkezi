@@ -1,0 +1,18 @@
+[
+  {
+    "function": "birfatura-orders",
+    "status": 401
+  },
+  {
+    "function": "sync-brevo-email-history",
+    "status": 401
+  },
+  {
+    "function": "admin-ai-chat",
+    "status": 401
+  },
+  {
+    "function": "send-support-response",
+    "status": 401
+  }
+]

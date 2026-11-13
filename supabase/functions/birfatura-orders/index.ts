@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { authorizeBirfaturaPull } from '../_shared/birfaturaPullAuth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,48 +11,16 @@ const corsHeaders = {
 serve(async (req) => {
   console.log('===== BIRFATURA REQUEST START =====');
   console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Headers:', Object.fromEntries(req.headers.entries()));
   
   if (req.method === 'OPTIONS') {
     console.log('CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Token validation. Enforced only when BIRFATURA_API_TOKEN secret is configured,
-  // so the existing integration keeps working until the token is set on the BirFatura side.
-  // BirFatura "Özel Entegrasyon" sends the API Şifresi (API password). Different BirFatura
-  // builds use different header names, so we check every common variant + query params.
-  const BIRFATURA_API_TOKEN = Deno.env.get('BIRFATURA_API_TOKEN');
-  if (BIRFATURA_API_TOKEN) {
-    const reqUrl = new URL(req.url);
-    const headerNames = [
-      'apipassword', 'api_password', 'api-password',
-      'apikey', 'api_key', 'api-key', 'x-api-key',
-      'token', 'x-token', 'apitoken', 'api_token',
-      'password', 'sifre', 'apisifre',
-    ];
-    let provided = '';
-    for (const name of headerNames) {
-      const v = req.headers.get(name);
-      if (v) { provided = v; break; }
-    }
-    if (!provided) {
-      provided = reqUrl.searchParams.get('token')
-        || reqUrl.searchParams.get('apiKey')
-        || reqUrl.searchParams.get('apiPassword')
-        || reqUrl.searchParams.get('apipassword')
-        || '';
-    }
-    if (provided.trim() !== BIRFATURA_API_TOKEN.trim()) {
-      console.warn('BirFatura request rejected: invalid token. Received header names:', JSON.stringify(Object.fromEntries(req.headers.entries())));
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-  } else {
-    console.warn('BIRFATURA_API_TOKEN not set — request allowed without token (configure to enforce).');
-  }
+  const authStatus = authorizeBirfaturaPull(req, Deno.env.get('BIRFATURA_API_TOKEN'));
+  if (authStatus !== 200) return new Response(JSON.stringify({ error: authStatus === 503 ? 'Service not configured' : 'Unauthorized' }), {
+    status: authStatus, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 
 
 
@@ -60,7 +29,6 @@ serve(async (req) => {
     let body = null;
     try {
       body = await req.text();
-      console.log('Request Body:', body);
     } catch (e) {
       console.log('No body or error reading body:', e);
     }
@@ -68,7 +36,6 @@ serve(async (req) => {
     // Parse URL parameters
     const url = new URL(req.url);
     const params = Object.fromEntries(url.searchParams.entries());
-    console.log('URL Parameters:', params);
 
     // If this is a POST request, it might be an update
     if (req.method === 'POST' && body) {
@@ -77,7 +44,6 @@ serve(async (req) => {
       let updateData = {};
       try {
         updateData = JSON.parse(body);
-        console.log('Parsed update data:', updateData);
       } catch (e) {
         console.log('Could not parse JSON body, might be orders request');
       }
@@ -230,7 +196,7 @@ serve(async (req) => {
 
     const response = { Orders: birfaturaOrders };
     
-    console.log('Sending orders response:', JSON.stringify(response, null, 2));
+    console.log('Sending orders response count:', birfaturaOrders.length);
     console.log('===== BIRFATURA REQUEST END =====');
 
     return new Response(JSON.stringify(response), {
@@ -242,10 +208,10 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('ERROR:', error);
+    console.error('BirFatura orders request failed');
     return new Response(JSON.stringify({ 
       success: true, // Always return success to prevent BirFatura errors
-      error: error instanceof Error ? error.message : String(error),
+      error: 'Order retrieval failed',
       Orders: []
     }), {
       status: 200,

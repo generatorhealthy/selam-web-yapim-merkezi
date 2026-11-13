@@ -1,0 +1,72 @@
+Known vulnerabilities in production dependencies (bun.lock, 86 packages checked):
+
+| Package | Installed | Severity | Advisory | Fixed in | Fix |
+|---|---|---|---|---|---|
+| @aparajita/capacitor-biometric-auth | 10.0.0 | critical | Capacitor Android and iOS: remote content can be loaded at the app origin via the internal HTTP proxy path (via @capacitor/android) | @capacitor/android@>8.3.4 | - |
+| @aparajita/capacitor-biometric-auth | 10.0.0 | critical | Capacitor Android and iOS: remote content can be loaded at the app origin via the internal HTTP proxy path (via @capacitor/ios) | @capacitor/ios@>8.3.4 | - |
+| @capacitor/android | 7.4.2 | critical | Capacitor Android and iOS: remote content can be loaded at the app origin via the internal HTTP proxy path | 7.6.9 | bun add @capacitor/android@7.6.9 |
+| @capacitor/cli | 7.4.2 | critical | node-tar: Decompression/parse DoS via unlimited input (via tar) | tar@>7.5.18 | - |
+| @capacitor/ios | 7.4.2 | critical | Capacitor Android and iOS: remote content can be loaded at the app origin via the internal HTTP proxy path | 7.6.9 | bun add @capacitor/ios@7.6.9 |
+| jspdf | 3.0.1 | critical | jsPDF has HTML Injection in New Window paths | >4.2.0 | - |
+| jspdf | 3.0.1 | critical | jsPDF has Local File Inclusion/Path Traversal vulnerability | >3.0.4 | - |
+| @capacitor/cli | 7.4.2 | high | @isaacs/brace-expansion has Uncontrolled Resource Consumption (via @isaacs/brace-expansion) | @isaacs/brace-expansion@>5.0.0 | - |
+| @capacitor/cli | 7.4.2 | high | Arbitrary File Read/Write via Hardlink Target Escape Through Symlink Chain in node-tar Extraction (via tar) | tar@7.5.8 | - |
+| @capacitor/cli | 7.4.2 | high | Race Condition in node-tar Path Reservations via Unicode Ligature Collisions on macOS APFS (via tar) | tar@>7.5.3 | - |
+| @capacitor/cli | 7.4.2 | high | glob CLI: Command injection via -c/--cmd executes matches with shell:true (via glob) | glob@11.1.0 | - |
+| @capacitor/cli | 7.4.2 | high | minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions (via minimatch) | minimatch@10.2.3 | - |
+| @capacitor/cli | 7.4.2 | high | minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments (via minimatch) | minimatch@10.2.3 | - |
+| @capacitor/cli | 7.4.2 | high | minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern (via minimatch) | minimatch@10.2.1 | - |
+| @capacitor/cli | 7.4.2 | high | node-tar Symlink Path Traversal via Drive-Relative Linkpath (via tar) | tar@>7.5.10 | - |
+| @capacitor/cli | 7.4.2 | high | node-tar Vulnerable to Arbitrary File Creation/Overwrite via Hardlink Path Traversal (via tar) | tar@7.5.7 | - |
+| @capacitor/cli | 7.4.2 | high | node-tar is Vulnerable to Arbitrary File Overwrite and Symlink Poisoning via Insufficient Path Sanitization (via tar) | tar@>7.5.2 | - |
+| @capacitor/cli | 7.4.2 | high | node-tar: Negative tar entry size causes infinite loop in archive replace (via tar) | tar@>7.5.17 | - |
+| @capacitor/cli | 7.4.2 | high | node-tar: Uncontrolled recursion in mapHas/filesFilter allows uncatchable stack-overflow DoS via crafted long-path tar with member selection (via tar) | tar@>7.5.20 | - |
+| @capacitor/cli | 7.4.2 | high | tar has Hardlink Path Traversal via Drive-Relative Linkpath (via tar) | tar@>7.5.9 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom has XML injection through unvalidated DocumentType serialization (via @xmldom/xmldom) | @xmldom/xmldom@0.8.13 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom has XML node injection through unvalidated comment serialization (via @xmldom/xmldom) | @xmldom/xmldom@0.8.13 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom has XML node injection through unvalidated processing instruction serialization (via @xmldom/xmldom) | @xmldom/xmldom@0.8.13 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: Attribute name injection via setAttribute() bypasses requireWellFormed (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.13 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: DocType `name` Injection Bypasses requireWellFormed (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.14 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: Element name injection via createElement() bypasses requireWellFormed (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.13 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: End-tag Whitespace-Trim Regex ReDoS — quadratic backtracking in the 0.8.x end-tag parser (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.14 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: Processing Instruction Target Injection Bypasses requireWellFormed (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.14 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: Quadratic-memory consumption (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.14 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: Quadratic-time attribute deduplication (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.14 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: Quadratic-time parsing via the malformed-input recovery path — `parseElementStartPart` re-scan and `normalize()` adjacent-text merge (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.14 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: Uncontrolled recursion in XML serialization leads to DoS (via @xmldom/xmldom) | @xmldom/xmldom@0.8.13 | - |
+| @capacitor/cli | 7.4.2 | high | xmldom: XML injection via unsafe CDATA serialization allows attacker-controlled markup insertion (via @xmldom/xmldom) | @xmldom/xmldom@0.8.12 | - |
+| @supabase/supabase-js | 2.50.2 | high | ws: Memory exhaustion DoS from tiny fragments and data chunks (via ws) | ws@8.21.0 | - |
+| docx | 9.5.1 | high | nanoid: Integer Overflow or Wraparound (via nanoid) | nanoid@5.1.11 | - |
+| docx | 9.5.1 | high | nanoid: custom generators can loop indefinitely when size is zero (via nanoid) | nanoid@5.1.6 | - |
+| docx | 9.5.1 | high | nanoid: non-secure generators can loop indefinitely with negative size (via nanoid) | nanoid@5.1.16 | - |
+| jspdf | 3.0.1 | high | jsPDF Affected by Client-Side/Server-Side Denial of Service via Malicious GIF Dimensions | 4.2.0 | bun add jspdf@4.2.0 |
+| jspdf | 3.0.1 | high | jsPDF Denial of Service (DoS) | >3.0.1 | - |
+| jspdf | 3.0.1 | high | jsPDF Vulnerable to Denial of Service (DoS) via Unvalidated BMP Dimensions in BMPDecoder | >4.0.0 | - |
+| jspdf | 3.0.1 | high | jsPDF has PDF Injection in AcroFormChoiceField that allows Arbitrary JavaScript Execution | >4.0.0 | - |
+| jspdf | 3.0.1 | high | jsPDF has a PDF Injection in AcroForm module allows Arbitrary JavaScript Execution (RadioButton.createOption and "AS" property) | 4.2.0 | bun add jspdf@4.2.0 |
+| jspdf | 3.0.1 | high | jsPDF has a PDF Object Injection via FreeText color | >4.2.0 | - |
+| jspdf | 3.0.1 | high | jsPDF has a PDF Object Injection via Unsanitized Input in addJS Method | 4.2.0 | bun add jspdf@4.2.0 |
+| react-quill | 2.0.0 | high | lodash vulnerable to Code Injection via `_.template` imports key names (via lodash) | lodash@>4.17.23 | - |
+| react-router-dom | 6.27.0 | high | React Router vulnerable to XSS via Open Redirects (via @remix-run/router) | @remix-run/router@>1.23.1 | - |
+| recharts | 2.13.0 | high | lodash vulnerable to Code Injection via `_.template` imports key names (via lodash) | lodash@>4.17.23 | - |
+| zod | 3.23.8 | high | Zod can exhaust memory while validating oversized constrained collections | 4.6.6 | bun add zod@4.6.6 |
+| @capacitor/cli | 7.4.2 | moderate | Glob: AbortSignal cancellation bypass allows post-timeout filesystem traversal (via glob) | glob@>14.0.1 | - |
+| @capacitor/cli | 7.4.2 | moderate | minimatch has potential denial of service via globparts amplification (via minimatch) | minimatch@11.0.1 | - |
+| @capacitor/cli | 7.4.2 | moderate | node-tar applies PAX size override to intermediary GNU long-name/long-link headers, causing tar parser interpretation differential (file smuggling) (via tar) | tar@>7.5.15 | - |
+| @capacitor/cli | 7.4.2 | moderate | node-tar: Process crash via PAX numeric path type confusion (via tar) | tar@>7.5.17 | - |
+| @capacitor/cli | 7.4.2 | moderate | node-tar: Uncaught Exception DoS via NUL byte in PAX path/linkpath records (via tar) | tar@>7.5.16 | - |
+| @capacitor/cli | 7.4.2 | moderate | xmldom: Parser silently accepts a not-well-formed end tag whose name is followed by a line break and trailing content (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.14 | - |
+| @capacitor/cli | 7.4.2 | moderate | xmldom: XML fragment injection via invalid EntityReference.nodeName during requireWellFormed serialization (via @xmldom/xmldom) | @xmldom/xmldom@>0.8.14 | - |
+| @supabase/supabase-js | 2.50.2 | moderate | ws: Uninitialized memory disclosure (via ws) | ws@8.20.1 | - |
+| jspdf | 3.0.1 | moderate | fflate unzipSync can enter an infinite loop when parsing malformed ZIP64 archives (via fflate) | fflate@0.8.3 | - |
+| jspdf | 3.0.1 | moderate | jsPDF Vulnerable to Stored XMP Metadata Injection (Spoofing & Integrity Violation) | >4.0.0 | - |
+| jspdf | 3.0.1 | moderate | jsPDF has Shared State Race Condition in addJS Plugin | >4.0.0 | - |
+| mapbox-gl | 3.13.0 | moderate | Mafintosh's protocol-buffers-schema is vulnerable to prototype pollution (via protocol-buffers-schema) | protocol-buffers-schema@3.6.1 | - |
+| react-quill | 2.0.0 | moderate | Cross-site Scripting in quill (via quill) | quill@>1.3.7 | - |
+| react-quill | 2.0.0 | moderate | Lodash has Prototype Pollution Vulnerability in `_.unset`, `_.omit`, and `_.pullAt` functions (via lodash) | lodash@>4.17.22 | - |
+| react-router-dom | 6.27.0 | moderate | React Router has unexpected external redirect via untrusted paths (via react-router) | react-router@6.30.2 | - |
+| react-router-dom | 6.27.0 | moderate | React Router's same-origin redirect with path starting // causes open redirect via protocol-relative URL reinterpretation (via @remix-run/router) | @remix-run/router@1.23.3 | - |
+| react-router-dom | 6.27.0 | moderate | React Router's same-origin redirect with path starting // causes open redirect via protocol-relative URL reinterpretation (via react-router) | react-router@6.30.4 | - |
+| react-router-dom | 6.27.0 | moderate | React Router: Arbitrary Constructor Injection via deserializeErrors() in React Router SSR Hydration (via react-router) | react-router@7.18.0 | - |
+| react-router-dom | 6.27.0 | moderate | React Router: Open redirect via backslash in <Link> and useNavigate (CVE-2025-68470 bypass) (via react-router) | react-router@7.18.0 | - |
+| recharts | 2.13.0 | moderate | Lodash has Prototype Pollution Vulnerability in `_.unset`, `_.omit`, and `_.pullAt` functions (via lodash) | lodash@>4.17.22 | - |

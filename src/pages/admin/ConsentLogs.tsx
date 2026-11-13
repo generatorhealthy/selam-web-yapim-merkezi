@@ -15,6 +15,7 @@ import { useAdminActivityTracker } from "@/hooks/useAdminActivityTracker";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
+import { safeCsv } from "@/lib/safeCsv";
 
 interface ConsentLog {
   id: string;
@@ -107,13 +108,11 @@ export default function ConsentLogs() {
       l.consent_version || "",
       l.accepted ? "Evet" : "Hayır",
       l.ip_address || "",
-      (l.user_agent || "").replace(/"/g, "'"),
+      l.user_agent || "",
       l.source || "",
       l.document_hash || "",
     ]);
-    const csv = [headers, ...rows]
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
+    const csv = safeCsv([headers, ...rows]);
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -1,3 +1,13 @@
+# 13 Kasım 2026 — Toplu güvenlik düzeltmeleri
+- [x] 69 başlangıç bulgusu, nesne başına durum ve 13 paket raporu; DB tekrar 15 (farklı kapsam), DOMPurify yaması.
+- [x] Mevcut restore admin-only: 5 gerçek fonksiyon yerel test; 64 SELECT/75 yazma ret; hasta email yerine UUID ve service-only profil RPC doğrulandı.
+- [x] BirFatura fail-closed/log, Brevo admin-only, Doki SSRF/history role, destek HTML/log düzeltmeleri canlı: 4 anon 401; CSV/önizleme web düzeltmesi yerelde kabul edildi.
+- [ ] Randevu/sitemap/reminder/WAHA güvenilir çağıran geçişi — gerçek mevcut anon cron/trigger ve imzasız provider protokolü nedeniyle uyumlu secret dağıtımı gerekli.
+- [ ] Yeni sipariş katalog/fiyat ve fee/subscription atomik tahsilat — katalog key/sözleşme fiyat uyumu ve retry sağlayıcı anlamı teyitsiz.
+- [ ] Kamu telefon-link bildirimi sahiplik/bütçe, kalan şablon/log/blog prompt ve tüm Edge eylemleri — güvenilir işlem kanıtı/gerçek yetkili oturum kabulü eksik.
+- [ ] Hosted signup/MFA, eski signed token, jsPDF/native bağımlılıklar, Hostinger web dağıtımı ve derin tarama sonucu — dış sağlayıcı/oturum/native dağıtım kanıtı bekliyor.
+- [x] 64 Bun/44 Deno/139 RLS/5 restore test + tarayıcı sanitization; kayıt değişikliği yok; REPORT.md açık engelleri içerir.
+
 # 13 Kasım 2026 — Aşama 5 son kabul ve Aşama 6
 - [ ] Giriş korumasının yeniden başlangıç/dağıtık deneme sınırı ve mevcut MFA seçenekleri; hosted ayar doğrulaması.
 - [x] Özel dosyalarda yeni kayıtlar yalnız yol saklar; eski bağlantı güncel kullanıcı RLS ile 300 saniyelik imzaya çevrilir. 6 yol testi, girişsiz tarayıcı reddi; eski 10 yıllık token iptali yapılmadı.

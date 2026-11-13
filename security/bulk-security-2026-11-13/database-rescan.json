@@ -1,0 +1,166 @@
+{
+  "act_on_findings": "The management field is each finding's persisted scan state: 'active' findings can be fixed or ignored (manage_security_finding / ignore_security_finding); 'ignored_by_user' findings were dismissed by the user — do not fix, re-propose, or re-report them; 'not_persisted' findings exist only in this scan and cannot be ignored or marked fixed — fix real issues in code and rescan to confirm; leave intentional ones as they are (a later persisted scan records them, after which they can be ignored).",
+  "completion_status": "complete",
+  "count": 15,
+  "counts_by_level": {
+    "error": 1,
+    "info": 6,
+    "warn": 8
+  },
+  "findings": [
+    {
+      "description": "An access rule on form_contents lets anyone read every record in it, with no limit on which ones they can see.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_765ca89fa0503f41",
+      "level": "error",
+      "management": "active",
+      "name": "Anyone can read every record in form_contents",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on appointments lets anyone add any record to it without any check on what it contains.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_14968b3b208dc8e7",
+      "level": "warn",
+      "management": "active",
+      "name": "Anyone can add any record to appointments",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on career_applications lets anyone add any record to it without any check on what it contains.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_0e9e0866f7810a3a",
+      "level": "warn",
+      "management": "active",
+      "name": "Anyone can add any record to career_applications",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on orders lets anyone add any record to it without any check on what it contains.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_d6c0382902b465f1",
+      "level": "warn",
+      "management": "active",
+      "name": "Anyone can add any record to orders",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on registration_analytics lets anyone add any record to it without any check on what it contains.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_8bcfb9ad59fbbf4d",
+      "level": "warn",
+      "management": "active",
+      "name": "Anyone can add any record to registration_analytics",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on specialist_applications lets anyone add any record to it without any check on what it contains.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_8bf4807379f4d7d7",
+      "level": "warn",
+      "management": "active",
+      "name": "Anyone can add any record to specialist_applications",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on test_results lets anyone add any record to it without any check on what it contains.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_6b2486cb09b6ac24",
+      "level": "warn",
+      "management": "active",
+      "name": "Anyone can add any record to test_results",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on user_consent_logs lets anyone add any record to it without any check on what it contains.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_fc32d9c0b66c0fe2",
+      "level": "warn",
+      "management": "active",
+      "name": "Anyone can add any record to user_consent_logs",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on website_analytics lets anyone add any record to it without any check on what it contains.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_41c7721f47fe1cdb",
+      "level": "warn",
+      "management": "active",
+      "name": "Anyone can add any record to website_analytics",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on blog_categories lets anyone read every record in it, with no limit on which ones they can see.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_3e6b6f649798b6f7",
+      "level": "info",
+      "management": "active",
+      "name": "Anyone can read every record in blog_categories",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on blog_post_categories lets anyone read every record in it, with no limit on which ones they can see.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_898b0437a89d2231",
+      "level": "info",
+      "management": "active",
+      "name": "Anyone can read every record in blog_post_categories",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "An access rule on test_questions lets anyone read every record in it, with no limit on which ones they can see.",
+      "id": "RLS_EXPOSURE",
+      "internal_id": "lov_db_rls_tautology_permissive_v1_1fbd4decc2f88ede",
+      "level": "info",
+      "management": "active",
+      "name": "Anyone can read every record in test_questions",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "Files in blog-images are already public to anyone with a link, and this rule also lets anyone list the files it covers there.",
+      "id": "STORAGE_EXPOSURE",
+      "internal_id": "lov_db_storage_objects_owner_unbound_v1_39eaaef5c5d55eeb",
+      "level": "info",
+      "management": "active",
+      "name": "A rule lets anyone list files in blog-images",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "Files in profile-pictures are already public to anyone with a link, and this rule also lets anyone list the files it covers there.",
+      "id": "STORAGE_EXPOSURE",
+      "internal_id": "lov_db_storage_objects_owner_unbound_v1_3fd328f691ab5c75",
+      "level": "info",
+      "management": "active",
+      "name": "A rule lets anyone list files in profile-pictures",
+      "scanner": "lov_pgscan"
+    },
+    {
+      "description": "Files in instagram-posts are already public to anyone with a link, and this rule also lets anyone list the files it covers there.",
+      "id": "STORAGE_EXPOSURE",
+      "internal_id": "lov_db_storage_objects_owner_unbound_v1_2d5b35d8e3850b54",
+      "level": "info",
+      "management": "active",
+      "name": "A rule lets anyone list files in instagram-posts",
+      "scanner": "lov_pgscan"
+    }
+  ],
+  "metadata": {
+    "app_mcp": {
+      "items_found": 0,
+      "status": "success",
+      "version": "1.0"
+    },
+    "lov_pgscan": {
+      "items_found": 15,
+      "status": "success",
+      "version": "0.2.1"
+    },
+    "wiz": {
+      "items_found": 0,
+      "skip_reason": "connector_not_configured",
+      "status": "skipped",
+      "version": "1.0"
+    }
+  },
+  "scanned_at": "2026-11-13T14:39:36.381502605Z"
+}

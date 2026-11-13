@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { fetchPublicSite } from "../_shared/publicSiteFetch.ts";
+import { validChatHistory } from "../_shared/chatInput.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,13 +48,12 @@ async function fetchWebsiteData(url: string): Promise<string> {
 
     // 1. Main page fetch
     const startTime = Date.now();
-    const mainResp = await fetch(targetUrl, {
+    const mainResp = await fetchPublicSite(targetUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; DokiBot/1.0; +https://doktorumol.com.tr)',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'tr,en;q=0.5',
       },
-      redirect: 'follow',
     });
     const loadTime = Date.now() - startTime;
     const html = await mainResp.text();
@@ -155,7 +156,7 @@ async function fetchWebsiteData(url: string): Promise<string> {
       try {
         const baseUrl = new URL(targetUrl);
         const checkUrl = `${baseUrl.origin}${check.path}`;
-        const r = await fetch(checkUrl, {
+        const r = await fetchPublicSite(checkUrl, {
           method: 'HEAD',
           headers: { 'User-Agent': 'DokiBot/1.0' },
         });
@@ -164,7 +165,7 @@ async function fetchWebsiteData(url: string): Promise<string> {
         
         // Get robots.txt content for analysis
         if (check.path === '/robots.txt' && status === 200) {
-          const robotsResp = await fetch(checkUrl, { headers: { 'User-Agent': 'DokiBot/1.0' } });
+          const robotsResp = await fetchPublicSite(checkUrl, { headers: { 'User-Agent': 'DokiBot/1.0' } });
           const robotsContent = await robotsResp.text();
           results.push(`robots.txt içeriği:\n${robotsContent.substring(0, 500)}`);
         }
@@ -210,10 +211,9 @@ async function fetchWebsiteData(url: string): Promise<string> {
       try {
         const baseUrl = new URL(targetUrl);
         const pageUrl = `${baseUrl.origin}${path}`;
-        const r = await fetch(pageUrl, {
+        const r = await fetchPublicSite(pageUrl, {
           method: 'HEAD',
           headers: { 'User-Agent': 'DokiBot/1.0' },
-          redirect: 'follow',
         });
         if (r.status >= 400) {
           results.push(`❌ ${path} → HTTP ${r.status}`);
@@ -243,8 +243,9 @@ serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supabaseUrl || !supabaseKey) return new Response(JSON.stringify({ error: "Servis yapılandırılmamış" }), { status: 503, headers: corsHeaders });
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -259,11 +260,11 @@ serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("user_profiles")
-      .select("role")
+      .select("role, is_approved")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (!profile || !["admin", "staff", "legal", "muhasebe"].includes(profile.role)) {
+    if (!profile || profile.is_approved !== true || !["admin", "staff", "legal", "muhasebe"].includes(profile.role)) {
       return new Response(JSON.stringify({ error: "Bu özelliğe erişim yetkiniz yok" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -271,6 +272,7 @@ serve(async (req) => {
     }
 
     const { messages } = await req.json();
+    if (!validChatHistory(messages)) return new Response(JSON.stringify({ error: "Geçersiz mesaj geçmişi" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -320,7 +322,7 @@ Her maddeyi gerçek veriye dayandır. Eksik veya hatalı olan şeyleri açıkça
     // If website analysis requested, fetch real data
     let websiteData = "";
     if (isWebAnalysis) {
-      console.log("Website analysis requested for:", urls);
+      console.log("Website analysis requested, targets:", urls.length);
       const analysisPromises = urls.map(url => fetchWebsiteData(url));
       const results = await Promise.all(analysisPromises);
       websiteData = results.join("\n\n");

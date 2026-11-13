@@ -1,0 +1,42 @@
+[
+  {
+    "function": "birfatura-orders",
+    "status": 401
+  },
+  {
+    "function": "sync-brevo-email-history",
+    "status": 401
+  },
+  {
+    "function": "admin-ai-chat",
+    "status": 401
+  },
+  {
+    "function": "send-support-response",
+    "status": 401
+  },
+  {
+    "function": "freepbx-trunk-config",
+    "status": 401
+  },
+  {
+    "function": "send-appointment-notification",
+    "status": 400
+  },
+  {
+    "function": "send-test-results-email",
+    "status": 401
+  },
+  {
+    "function": "send-order-completion-email",
+    "status": 401
+  },
+  {
+    "function": "quick-register-specialist",
+    "status": 401
+  },
+  {
+    "function": "generate-specialist-blog",
+    "status": 401
+  }
+]
