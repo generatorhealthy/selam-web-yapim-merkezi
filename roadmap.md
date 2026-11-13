@@ -1,9 +1,12 @@
 # 13 Kasım 2026 16:33 UTC — Aşama 5 son kabul
-- [ ] Bütün Premium aktivasyon kaynaklarını ve doğrulanmış banka hareketi bağı eksikliğini tamamla; geçmiş yenilemeler korunur.
-- [ ] Dört rol / özel belge kabulünü yeniden çalıştır; gerçek yetkili oturum sınırını ayrı kaydet.
-- [ ] WAHA sürüm/kimlik doğrulama desteği ve cron 2/11 sahip geçişini güvenli, kesin adımlarla hazırla.
-- [ ] Hostinger gerçek HTML/tarayıcı ve dağıtım kanıtını ayrı kontrol et; zararlı canlı deneme yok.
-- [ ] İki bölümlü sonuçta iç uygulama eksikleriyle hesap sahibi işlemlerini ayır.
+- [x] Kayıt kaynağından bağımsız aktivasyon kapısı migration canlı; hızlı ekleme pasif varsayılan, 20 bağlantı1/19 ve dört kaynak reddi geçti; geçmiş aktifler korunur.
+- [x] Dört rol 64 okuma/75 mutasyon ve6 özel yol testi tekrar geçti; gerçek pozitif hosted kabul eksikliği açık kaydedildi.
+- [x] WAHA resmî destek/offline HMAC ve cron gate adayları2 test; OWNER_ACTIONS kesin panel/ayar ve uyumluluk sırası; bağlantı/görev değiştirilmedi.
+- [x] Hostinger kayıt/profil/blog/randevu ekranları açıldı; kayıt ilkHTTP403, diğerleri200. boot hash/cache kaydedildi; Actions erişimi/commit dağıtım kanıtı yok.
+- [x] FINAL_ACCEPTANCE iki bölüm: iç uygulama eksikleri ve hesap sahibi işlemleri ayrı.
+- [ ] Tam banka kanıtı — doğrulanmış hesap hareketi kaynak kaydı/hesap/TRY/tarih/sipariş/uzman tüketim entegrasyonu yok; mevcut beyan defteri yeterli değil.
+- [ ] Cron2/11 ve WAHA aktif kaynak geçişi — postgres sahibi ve Railway kurulu sürüm/header doğal kabulü bekler; hedef cron işlevleri gate bağlanmadan güvenli değildir.
+- [ ] Tam yüksek etkili Edge/özel belge pozitif kabulü — harici Supabase gerçek rol oturum kabulü ve tam eylem matrisi eksik.
 
 # 13 Kasım 2026 16:10 UTC — Kalan güvenlik açıklarını tamamlama
 - [x] Havale: yeni onaylar service-only atomik banka referansı defterine bağlandı; e-posta yalnız aday, yeni satış tutarı/kimliği immutable, aktivasyon için onaylı sipariş gerekir. Üç migration ve confirm-bank-transfer/process-akbank-transfer-email canlı; 20 SQL bağlantıda 1/19, anon401, ledger0; geçmiş kayıtlar değişmedi.

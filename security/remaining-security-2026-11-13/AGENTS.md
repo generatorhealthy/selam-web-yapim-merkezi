@@ -1,3 +1,4 @@
 - Bank confirmations are made through an authenticated admin edge endpoint and service-only atomic RPC; never trust notification matching or uploaded receipts as settled funds.
 - Already-paid legacy orders are a frozen compatibility allowlist, not proof of historical account ownership; do not backfill or rewrite them.
 - Patient-contact sending requires Auth-confirmed phone ownership and an expiring hashed capability consumed before provider access; never retry uncertain delivery or consume another person's phone budget.
+- Activation checks apply to every registration source; creation starts inactive and already-active historical profiles are not rewritten.
