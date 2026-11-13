@@ -3772,6 +3772,26 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_legacy_paid_orders: {
+        Row: {
+          order_id: string
+        }
+        Insert: {
+          order_id: string
+        }
+        Update: {
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_legacy_paid_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_transfer_notifications: {
         Row: {
           amount: number | null
@@ -3842,6 +3862,61 @@ export type Database = {
             columns: ["matched_order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_transfer_verifications: {
+        Row: {
+          amount: number
+          bank_reference: string
+          id: string
+          order_id: string
+          specialist_id: string
+          statement_checked: boolean
+          verified_at: string
+          verified_by: string
+        }
+        Insert: {
+          amount: number
+          bank_reference: string
+          id?: string
+          order_id: string
+          specialist_id: string
+          statement_checked: boolean
+          verified_at?: string
+          verified_by: string
+        }
+        Update: {
+          amount?: number
+          bank_reference?: string
+          id?: string
+          order_id?: string
+          specialist_id?: string
+          statement_checked?: boolean
+          verified_at?: string
+          verified_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transfer_verifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_verifications_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_verifications_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
             referencedColumns: ["id"]
           },
         ]
@@ -8594,6 +8669,16 @@ export type Database = {
       cleanup_old_backups: { Args: never; Returns: undefined }
       cleanup_old_sessions: { Args: never; Returns: undefined }
       client_ip_from_headers: { Args: never; Returns: string }
+      confirm_bank_transfer: {
+        Args: {
+          p_amount: number
+          p_bank_reference: string
+          p_order_id: string
+          p_specialist_id: string
+          p_statement_checked: boolean
+        }
+        Returns: Json
+      }
       consume_admin_login_challenge: {
         Args: { p_expires_at: string; p_nonce_hash: string }
         Returns: boolean
