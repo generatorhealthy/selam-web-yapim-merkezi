@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { classifyCaller, decideNotification, pickSpecialistPhone, specialistSms, patientSms as buildPatientSms } from '../_shared/appointmentNotify.ts';
+import { appointmentAuthority } from '../_shared/appointmentAuthority.ts';
+import { escapeHtml } from '../_shared/escapeHtml.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +11,7 @@ const corsHeaders = {
 
 interface AppointmentNotificationRequest {
   appointmentId: string;
+  notificationToken?: string;
   patientName: string;
   patientEmail: string;
   patientPhone: string;
@@ -67,24 +70,29 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // GÜVENLİK: çağıran türü. Güvenilir = sunucu gizli anahtarı veya service role.
-    // Eski tetikleyici (anon anahtarlı) yalnız uyumluluk kipinde ve kısa pencerede kabul edilir.
+    // Public JWTs are transport only; the database-issued appointment token is required.
     const notifySecret = Deno.env.get('APPOINTMENT_NOTIFY_SECRET') ?? '';
-    const enforce = (Deno.env.get('APPOINTMENT_NOTIFY_ENFORCE') ?? '').toLowerCase() === 'true';
     const bearer = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-    const caller = classifyCaller({
+    let caller = classifyCaller({
       secretHeader: req.headers.get('x-notify-secret'), secret: notifySecret,
-      bearer, serviceKey: supabaseServiceKey, enforce,
+      bearer, serviceKey: supabaseServiceKey, enforce: true,
     });
-    if (caller === 'rejected') {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
     const payload = await req.json().catch(() => ({})) as Partial<AppointmentNotificationRequest>;
     if (typeof payload.appointmentId !== 'string' || !/^[0-9a-f-]{36}$/i.test(payload.appointmentId)) {
       return new Response(JSON.stringify({ error: 'Invalid appointmentId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    if (caller !== 'trusted') {
+      const authorized = await appointmentAuthority(payload.appointmentId, payload.notificationToken, async (id, hash) => {
+        const { data, error } = await supabase.rpc('verify_appointment_notification_authority', {
+          p_appointment_id: id, p_token_hash: hash,
+        });
+        return !error && data === true;
+      });
+      if (!authorized) return new Response(JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      caller = 'trusted';
     }
     const missingFields = [
       'appointmentId',
@@ -113,8 +121,6 @@ const handler = async (req: Request): Promise<Response> => {
       appointmentType,
       notes,
     } = payload as AppointmentNotificationRequest;
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // SECURITY: the notification must describe a real appointment and may only be
     // delivered to the specialist stored on that appointment. Everything that decides
@@ -149,18 +155,18 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     specialistEmail = specialistRecord.email;
-    specialistName = specialistRecord.name ?? specialistName;
-    specialistPhone = specialistRecord.phone ?? specialistPhone;
-    patientName = appointmentRow.patient_name ?? patientName;
-    patientEmail = appointmentRow.patient_email ?? patientEmail;
-    patientPhone = appointmentRow.patient_phone ?? patientPhone;
-    appointmentDate = appointmentRow.appointment_date ?? appointmentDate;
-    appointmentTime = (appointmentRow.appointment_time ?? appointmentTime)?.toString().slice(0, 5);
-    appointmentType = appointmentRow.appointment_type ?? appointmentType;
+    specialistName = specialistRecord.name ?? '';
+    specialistPhone = specialistRecord.phone ?? '';
+    patientName = appointmentRow.patient_name ?? '';
+    patientEmail = appointmentRow.patient_email ?? '';
+    patientPhone = appointmentRow.patient_phone ?? '';
+    appointmentDate = appointmentRow.appointment_date;
+    appointmentTime = appointmentRow.appointment_time?.toString().slice(0, 5) ?? '';
+    appointmentType = appointmentRow.appointment_type ?? '';
     // GÜVENLİK: notlar/danışmanlık konusu hiçbir bildirime girmez.
     notes = undefined;
 
-    // GÜVENLİK: yalnız gerçek, yeni (30 dk) ve daha önce bildirilmemiş randevu için gönderim.
+    // Trusted delayed calls retain the existing 24-hour window and unique claim.
     {
       const { data: prior } = await supabase.from('brevo_email_logs').select('id')
         .eq('template_name', 'appointment-notification').contains('metadata', { appointmentId }).limit(1);
@@ -184,7 +190,6 @@ const handler = async (req: Request): Promise<Response> => {
           { status: dup ? 200 : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
     }
-    const releaseClaim = () => supabase.from('appointment_notification_claims').delete().eq('appointment_id', appointmentId);
 
     console.log(JSON.stringify({ evt: 'appointment_notify', appointmentId, caller }));
 
@@ -211,16 +216,16 @@ const handler = async (req: Request): Promise<Response> => {
             
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #27ae60; margin-top: 0;">Randevu Detayları</h3>
-              <p><strong>Tarih:</strong> ${formattedDate}</p>
-              <p><strong>Saat:</strong> ${appointmentTime}</p>
-              <p><strong>Randevu Türü:</strong> ${appointmentTypeText}</p>
+              <p><strong>Tarih:</strong> ${escapeHtml(formattedDate)}</p>
+              <p><strong>Saat:</strong> ${escapeHtml(appointmentTime)}</p>
+              <p><strong>Randevu Türü:</strong> ${escapeHtml(appointmentTypeText)}</p>
             </div>
 
             <div style="background-color: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
               <h3 style="color: #2c3e50;">Hasta Bilgileri</h3>
-              <p><strong>Adı Soyadı:</strong> ${patientName}</p>
-              <p><strong>E-posta:</strong> ${patientEmail}</p>
-              <p><strong>Telefon:</strong> ${patientPhone}</p>
+              <p><strong>Adı Soyadı:</strong> ${escapeHtml(patientName)}</p>
+              <p><strong>E-posta:</strong> ${escapeHtml(patientEmail)}</p>
+              <p><strong>Telefon:</strong> ${escapeHtml(patientPhone)}</p>
             </div>
 
             <div style="margin-top: 30px; padding: 20px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;">
@@ -277,9 +282,9 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (!brevoResponse.ok) {
-      const errorData = await brevoResponse.text();
-      console.error('Brevo API error status:', brevoResponse.status, errorData.slice(0, 200));
-      await releaseClaim(); // gönderilemedi: yeniden denemeye izin ver, bildirim kaybolmasın
+      console.error('Brevo API error status:', brevoResponse.status);
+      // Provider rejection/timeout is not proof of non-delivery. Keep the claim;
+      // reconcile before any retry, never risk a duplicate notification.
       throw new Error(`Brevo API error: ${brevoResponse.status}`);
     }
 

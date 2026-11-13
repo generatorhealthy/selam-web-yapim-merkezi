@@ -30,7 +30,7 @@ export function decideNotification(o: { exists: boolean; alreadyNotified: boolea
 
 /** Alıcı yalnız uzmanın kayıtlı numarası. İstek gövdesi asla. */
 export function pickSpecialistPhone(specialistPhone: string | null | undefined) {
-  if (isUsablePhone(specialistPhone)) return { phone: specialistPhone!.trim(), source: "specialists" as const };
+  if (specialistPhone && isUsablePhone(specialistPhone)) return { phone: specialistPhone.trim(), source: "specialists" as const };
   return { phone: null, source: "none" as const };
 }
 

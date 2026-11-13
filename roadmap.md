@@ -1,3 +1,12 @@
+# 13 Kasım 2026 — Kritik güvenlik A–H
+- [ ] A: Randevu trigger → sunucu işlem kanıtı → bildirim, yetkisiz gerçek biçimli istek reddi ve atomik tekrar kontrolü.
+- [ ] B: Gerçek katalog/kampanya eşleşmesiyle yalnız yeni sipariş fiyat koruması.
+- [ ] C: Sözleşmeye bağlı cayma bedeli, güvenilir abonelik ve atomik tahsilat; sağlayıcı belirsizliğinde tekrar yok.
+- [ ] D: Gerçek cron çağıranları için kesintisiz güvenilir kimlik geçişi.
+- [ ] E/F: WAHA kaynak doğrulaması ve telefon sahipliği/işlem bütçesi; sağlayıcı kabulü olmadan tamamlandı sayılmaz.
+- [ ] G/H: Kalan HTML/AI yolları ve güncel tablo/kolon/rol erişimi; eski mobil INSERT korunur.
+- [ ] Her paket için uygulama/test/canlı/meşru işlev/engel tablosu ve sekiz kesin cevap.
+
 # 13 Kasım 2026 — Toplu güvenlik düzeltmeleri
 - [x] 69 başlangıç bulgusu, nesne başına durum ve 13 paket raporu; DB tekrar 15 (farklı kapsam), DOMPurify yaması.
 - [x] Mevcut restore admin-only: 5 gerçek fonksiyon yerel test; 64 SELECT/75 yazma ret; hasta email yerine UUID ve service-only profil RPC doğrulandı.
