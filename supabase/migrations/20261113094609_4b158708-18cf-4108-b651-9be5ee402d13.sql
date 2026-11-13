@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.guard_appointment_slot() FROM PUBLIC, anon, authenticated;

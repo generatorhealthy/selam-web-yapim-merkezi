@@ -29,6 +29,8 @@ export function appointmentErrorMessage(error: unknown): string {
   if (detail?.code === '23505') {
     return 'Bu başvuru daha önce kaydedilmiş veya seçilen saat dolmuş olabilir. Yeni bir başvuru göndermeden önce uzmanla teyit edin.';
   }
+  if (detail?.message?.includes('appointment_slot_taken')) return 'Seçtiğiniz saat artık dolu. Lütfen başka bir saat seçin.';
+  if (detail?.message?.includes('appointment_slot_in_past')) return 'Seçtiğiniz saat geçmişte kaldı. Lütfen ileri bir saat seçin.';
   if (detail?.message?.includes('blocked_visitor') || detail?.message?.includes('blocked_phone')) {
     return 'Bu iletişim bilgileriyle randevu oluşturulamıyor. Lütfen bizimle iletişime geçin.';
   }
