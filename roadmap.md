@@ -1,8 +1,9 @@
 # 13 Kasım 2026 — Üç bağımsız üretim paketi
-- [ ] Paket 1: gerçek initialize/retrieve için güvenilir sipariş, süreli checkout ve tekil token; girişsiz uyumluluk ve sentetik kabul sonrası dağıtım.
-- [ ] Paket 2: ilk alım/EFT/yenileme ayrımı, doğrulanmış dönem ve ödeme, atomik aktivasyon ve harici yan etki kabulü sonrası dağıtım.
-- [ ] Paket 3: mevcut receipt/queue güvenliğini koruyarak sağlayıcı sorgusu veya yetkili manuel mutabakat; belirsiz sonucu tekrar göndermeme.
-- [ ] 64/17 sabit eski sipariş listesi, korunan kayıtlar ve paket başına test/yayın kanıtı; otomatik sahiplik aktarımı yok.
+- [ ] Paket 1: gerçek initialize/retrieve geçişi tamamlanmadı; altı plan GET doğrulandı, sentetik request-path geçti. Atomik server order/session+unique token ve mevcut guest aktivasyon uyumluluğu eksik; üretime bağlanmadı.
+- [ ] Paket 2: sentetik V3/dönem/request-path geçti; gerçek auto-approve/retry/change-payment/trigger transaction+outbox kabulü ve kesin period→order bağı eksik, dağıtılmadı.
+- [x] Paket 3 bağımsız salt-okunur admin mutabakat endpoint dağıtıldı; 401/OPTIONS ve 20 fatura testi geçti. Mevcut enqueue/receipt yetkileri korunur; otomatik provider lookup/retry yok.
+- [ ] Paket 3 gerçek admin/Hostinger kabulü — yeni pencere yerel sentetik mobil/masaüstünde geçti; yönetici oturumu ve commit sonrası FTP dağıtımı doğrulanamadı. Provider non-issuance kanıtı yok, ikinci fatura oluşturulmaz.
+- [x] 64/17 sabit eski sipariş listesi/hash korundu, 0 doğrulanmış/64 doğrulanmamış; 61 test ve yayın sınırları security/payment-hardening-2026-11-13/RESULT.md içinde.
 
 # 13 Kasım 2026 — Ödeme sonuçlandırma talimatı
 - [ ] Checkout server-bound order/token ve bütün callback/yenileme kabulü; eski girişsiz akış kesilmeden kimlik/işlem kanıtı gerekli.
