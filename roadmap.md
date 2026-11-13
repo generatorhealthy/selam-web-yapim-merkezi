@@ -1,11 +1,12 @@
 # 13 Kasım 2026 15:18 UTC — Kritik açıkları kapatma talimatı
-- [ ] Boş muhasebe ve kayıt e-postalarını ayrı olay olarak incele; dış bağlantısız gerçek handler testleriyle gönderim öncesi ret doğrula.
-- [ ] Kayıt doğrulaması, muhasebe belge/yetki bağı ve destek ticket-alıcı bağı için bağımsız güvenli düzeltmeleri yayımla.
-- [ ] Fiyat kaynakları ve sözleşme/periyot eşleşmesi; yalnız doğrulanmış satış koşullarına göre sunucu koruması.
+- [x] Boş muhasebe/kayıt olayları incelendi: eksik doğrulama; muhasebe sabit alıcısı ve log-alıcı farkı bulundu; kayıt admin maili gönderilip auto-reply başarısız olmuş olabilir. Kişisel veri ifşası doğrulanmadı, sağlayıcı teslim envanteri eksik.
+- [x] Kayıt doğrulaması, muhasebe onaylı admin/muhasebe + kayıtlı belge ve destek ticket→uzman→alıcı/yanıt bağı yayımlandı. Canlı GET 405/405/401; iki boş POST 400, muhasebe log toplamı 5 kaldı. 32 dış bağlantısız handler testi geçti.
+- [x] 4000 ozel-firsat ve 5000 kayit-linki yeni müşteri INSERT tutarı sunucuda korundu; migration canlı tanımı doğrulandı, 32 yerel sentetik SQL kontrolü geçti. Mevcut sipariş ve yetkili yenileme değişmedi.
+- [ ] Diğer fiyat yolları: campaign 3600/2398, campaign-premium 2398/3600, premium 2998/4998, discounted 1998/1499; ticari key/fiyat/periyot kararları ve bütün yolların ortak sunucu teklifine bağlanması eksik.
 - [ ] Cayma tahsilatı: doğru sağlayıcı işlemi, güvenilir sözleşme bağı ve kalıcı atomik claim.
 - [ ] Telefon sahipliği/tekil gönderim ve WAHA gerçek kaynak kabulü; meşru yolu doğrulamadan kesme.
 - [ ] Cron gerçek job kimliği/yetki geçişi ve kalan RLS/şablon matrisi; gerçek kullanıcı işlemi yok.
-- [ ] Sekiz kesin cevap ve sınırlı yayın kanıtı; mevcut kayıtları ve A/B/C korumalarını koru.
+- [x] FOLLOWUP.md sekiz cevap/yayın hashleri/rollback/sınırlar içerir. 2747 sipariş,339 randevu,12 test,154 onay ve0 makbuz; kayıt değişikliği yok. 64 okuma/75 yazma RLS ret yeniden geçti; bütün hosted oturum/eşzamanlı sağlayıcı kabulü değil.
 
 # 13 Kasım 2026 — Kritik güvenlik A–H
 - [x] A: Randevu trigger → sunucu işlem kanıtı → bildirim canlı; geçerli biçimli yetkisiz 401, 20 eşzamanlı sentetik çağrıda tek gönderim. İlk doğal teslim ve dağıtım öncesi bekleyen çağrı kabulü doğrulanmadı.
