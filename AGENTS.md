@@ -33,3 +33,4 @@
 - Direct test email delivery requires a verified owning specialist and service-only unique result claim; never retry unknown claims or alter legacy result writes — rejects unverified mail while preserving result persistence and scoped panel readback.
 
 - Public legal information releases record a per-document content-only decision and separate deployment verification; blocked historical-health notices remain preview-only — informational publication never certifies processing legality or activates consent capture.
+- iyzico first purchases are approved only via public.settle_iyzico_payment from a server checkout session (order→conversationId→token→Checkout Form Retrieve→subscription charge); auto-approve never approves on email alone and side effects stay in the order-approval triggers — prevents forged success and duplicate activation/invoices.
