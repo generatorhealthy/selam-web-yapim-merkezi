@@ -522,7 +522,7 @@ Deno.serve(async (req) => {
         .select("*")
         .eq("phone", phone)
         .eq("is_test", false)
-        .not("state", "in", "(completed,declined,no_specialist)")
+        .not("state", "in", "(completed,declined,no_specialist,manual_review)")
         .order("last_message_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -749,6 +749,18 @@ Deno.serve(async (req) => {
         const all = await loadCandidates(supabase, urgentDays);
         const spec = all.find((c) => c.id === specId) || null;
 
+        // Uzman sunucu kaydından bulunamazsa rastgele/ilk uzman seçilmez; güvenli manuel incelemeye alınır.
+        if (!spec) {
+          if (existing.lead_id) {
+            const { error: reviewError } = await supabase.from("danisan_basvurulari")
+              .update({ status: "manuel_inceleme" }).eq("id", existing.lead_id);
+            if (reviewError) return json({ success: false, error: "manual_review_pending" }, 503);
+          }
+          await reply("Onayınız için teşekkür ederiz. Başvurunuz ekibimiz tarafından incelenecek ve size uygun uzmanla ilgili en kısa sürede bilgi verilecektir.",
+            undefined, "manual_review", "done", { selection_reason: "uzman_eslesmesi_dogrulanamadi" });
+          return json({ success: true, state: "manual_review", specialistId: null });
+        }
+
         if (spec) {
           const now = new Date();
           const nameParts = String(existing.client_name || "").trim().split(" ");
@@ -787,7 +799,7 @@ Deno.serve(async (req) => {
         }
 
         await reply(
-          spec ? msgCompleted(spec) : "Onayınız için teşekkür ederiz. Ekibimiz en kısa sürede sizinle iletişime geçecektir.",
+          msgCompleted(spec),
           undefined,
           "completed",
           "done",

@@ -249,11 +249,17 @@ export async function settleSubscriptionCharge(raw: any, ref: string, source: st
 }
 
 /** iyzico abonelik webhook X-IYZ-SIGNATURE-V3 (merchantId tanımlıysa zorunlu). */
+// Subscription webhook V3 (official example): message = merchantId + secretKey + eventType
+// + subscriptionReferenceCode + orderReferenceCode + customerReferenceCode; HMAC-SHA256 key = secretKey.
 export async function verifyWebhookSignature(secretKey: string, merchantId: string, body: any, signature: string): Promise<boolean> {
-  const data = secretKey + merchantId + String(body?.iyziEventType ?? "") + String(body?.subscriptionReferenceCode ?? "")
-    + String(body?.orderReferenceCode ?? "") + String(body?.customerReferenceCode ?? "");
+  const fields = ["iyziEventType", "subscriptionReferenceCode", "orderReferenceCode", "customerReferenceCode"];
+  if (!secretKey || !merchantId || !/^[a-f0-9]{64}$/i.test(signature || "")
+    || fields.some((k) => typeof body?.[k] !== "string" || !body[k])) return false;
+  const data = merchantId + secretKey + fields.map((k) => String(body[k])).join("");
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey("raw", enc.encode(secretKey), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const hex = Array.from(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(data)))).map((b) => b.toString(16).padStart(2, "0")).join("");
-  return hex.length === signature.length && hex === signature.toLowerCase();
+  const got = signature.toLowerCase(); let diff = 0;
+  for (let i = 0; i < 64; i++) diff |= hex.charCodeAt(i) ^ got.charCodeAt(i);
+  return diff === 0;
 }

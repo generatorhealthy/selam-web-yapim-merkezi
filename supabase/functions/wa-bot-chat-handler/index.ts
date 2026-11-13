@@ -107,7 +107,7 @@ async function hasActiveReferralSession(
     .from('whatsapp_bot_sessions')
     .select('id')
     .ilike('phone', `%${cleanPhone}%`)
-    .not('state', 'in', '(completed,declined,no_specialist)')
+    .not('state', 'in', '(completed,declined,no_specialist,manual_review)')
     .gt('last_message_at', since)
     .limit(1)
     .maybeSingle();
