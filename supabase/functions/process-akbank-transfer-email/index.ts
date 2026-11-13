@@ -428,111 +428,17 @@ serve(async (req) => {
         }
       }
 
-      if (selectedOrder) {
-        const order = selectedOrder;
-        const amountDiff =
-          amount != null && order.amount != null
-            ? Number(amount) - Number(order.amount)
-            : null;
-
-        // Siparişi onayla
-        const { error: updErr } = await supabase
-          .from("orders")
-          .update({
-            status: "approved",
-            approved_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", order.id);
-
-        if (updErr) {
-          console.error("Order approve failed:", updErr);
-          await supabase.from("bank_transfer_notifications").insert({
-            ...baseRow,
-            status: "unmatched",
-            notes: `Eşleşme bulundu ama onaylama başarısız: ${updErr.message}`,
-            amount_diff: amountDiff,
-          });
-          results.push({ orderId: order.id, error: updErr.message });
-          continue;
-        }
-
-        await supabase.from("bank_transfer_notifications").insert({
-          ...baseRow,
-          status: "matched",
-          matched_order_id: order.id,
-          matched_at: new Date().toISOString(),
-          match_method: matchMethod,
-          amount_diff: amountDiff,
-          notes:
-            amountDiff != null && Math.abs(amountDiff) > 0.5
-              ? `Tutar farkı: ${amountDiff.toFixed(2)} TL (önemsenmedi)`
-              : null,
-        });
-
-        // Uzmana SMS + Email
-        try {
-          if (order.customer_phone) {
-            await supabase.functions.invoke("send-sms-via-static-proxy", {
-              body: {
-                phone: order.customer_phone,
-                message: `Sayin ${order.customer_name}, ${order.amount} TL tutarindaki banka havalesi odemeniz alinmis ve siparisiniz onaylanmistir. Doktorum Ol`,
-              },
-            });
-          }
-        } catch (e) {
-          console.error("SMS to specialist failed:", e);
-        }
-
-        try {
-          if (order.customer_email) {
-            await supabase.functions.invoke("send-order-approved-email", {
-              body: {
-                customerEmail: order.customer_email,
-                customerName: order.customer_name,
-                packageName: order.package_name,
-                amount: order.amount,
-                paymentMethod: "Banka Havalesi",
-              },
-            });
-          }
-        } catch (e) {
-          console.error("Email to specialist failed:", e);
-        }
-
-        // Admin'e bilgi SMS'i
-        try {
-          await supabase.functions.invoke("send-sms-via-static-proxy", {
-            body: {
-              phone: "05316852275",
-              message: `OTOMATIK ONAY: ${senderName} -> ${order.customer_name} (${order.amount} TL) banka havalesi onaylandi.`,
-            },
-          });
-        } catch (e) {
-          console.error("Admin SMS failed:", e);
-        }
-
-        results.push({
-          status: "matched",
-          orderId: order.id,
-          customer: order.customer_name,
-          amount: order.amount,
-          amountDiff,
-        });
-      } else {
-        // Sadece hiç güvenli aday bulunmadığında unmatched olur
-        await supabase.from("bank_transfer_notifications").insert({
-          ...baseRow,
-          status: "unmatched",
-          notes: amountCandidates.length > 1
-            ? "Aynı tutarda birden fazla bekleyen sipariş var; yanlış onaylamamak için manuel inceleme gerekli."
-            : "Bekleyen siparişler içinde isim veya tutar eşleşmesi bulunamadı.",
-        });
-        results.push({
-          status: "unmatched",
-          candidateCount: candidates.length,
-        });
-      }
+      // Candidate only: email parsing/name/amount cannot establish receipt of funds.
+      // All approvals now require confirm_bank_transfer and a checked bank statement.
+      const { error: insertError } = await supabase.from("bank_transfer_notifications").insert({
+        ...baseRow,
+        status: "unmatched",
+        notes: selectedOrder
+          ? "Aday sipariş bulundu; gerçek banka hareketi ve işlem referansı yönetici tarafından doğrulanmalı."
+          : "Gerçek banka hareketi ve işlem referansı yönetici tarafından doğrulanmalı.",
+      });
+      if (insertError) throw new Error("bank_notification_write_failed");
+      results.push({ status: "unmatched", candidateCount: candidates.length });
     }
 
     return new Response(

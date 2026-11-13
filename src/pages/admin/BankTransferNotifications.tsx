@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import AdminBackButton from "@/components/AdminBackButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,6 +73,9 @@ export default function BankTransferNotifications() {
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
   const [linking, setLinking] = useState(false);
+  const [bankReference, setBankReference] = useState("");
+  const [bankAmount, setBankAmount] = useState("");
+  const [statementChecked, setStatementChecked] = useState(false);
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -104,6 +109,9 @@ export default function BankTransferNotifications() {
   const openLinkDialog = async (notif: Notification) => {
     setSelectedNotification(notif);
     setSelectedOrderId("");
+    setBankReference("");
+    setBankAmount("");
+    setStatementChecked(false);
     const { data } = await supabase
       .from("orders")
       .select("id, customer_name, customer_email, amount, package_name, created_at")
@@ -125,40 +133,31 @@ export default function BankTransferNotifications() {
       return;
     }
 
-    // 1) Siparişi onayla
-    const { error: updErr } = await supabase
-      .from("orders")
-      .update({ status: "approved" })
-      .eq("id", selectedOrderId);
-
-    if (updErr) {
-      toast({
-        title: "Sipariş onaylanamadı",
-        description: updErr.message,
-        variant: "destructive",
-      });
+    const { data: specialists, error: identityError } = await supabase.from("specialists")
+      .select("id, email, user_id").ilike("email", order.customer_email.trim()).limit(2);
+    if (identityError || specialists?.length !== 1 || !specialists[0]?.user_id) {
+      toast({ title: "Hesap doğrulanamadı", description: "Siparişe bağlı tek uzman hesabı bulunmalıdır.", variant: "destructive" });
       setLinking(false);
       return;
     }
-
-    // 2) Bildirimi güncelle
-    const amountDiff =
-      selectedNotification.amount != null
-        ? Number(selectedNotification.amount) - Number(order.amount)
-        : null;
-
-    const { data: userData } = await supabase.auth.getUser();
-    await supabase
-      .from("bank_transfer_notifications")
-      .update({
-        status: "manual_matched",
-        matched_order_id: selectedOrderId,
-        matched_at: new Date().toISOString(),
-        matched_by: userData.user?.id ?? null,
-        match_method: "manual",
-        amount_diff: amountDiff,
-      })
-      .eq("id", selectedNotification.id);
+    const { error: confirmationError } = await (supabase as any).rpc("confirm_bank_transfer", {
+      p_order_id: order.id,
+      p_specialist_id: specialists[0].id,
+      p_bank_reference: bankReference,
+      p_amount: Number(bankAmount),
+      p_statement_checked: statementChecked,
+    });
+    if (confirmationError) {
+      toast({ title: "Havale onaylanamadı", description: confirmationError.message, variant: "destructive" });
+      setLinking(false);
+      return;
+    }
+    // This is display metadata only; the immutable verification ledger is authoritative.
+    const { error: metadataError } = await supabase.from("bank_transfer_notifications").update({
+      status: "manual_matched", matched_order_id: order.id,
+      match_method: "verified_bank_statement", matched_at: new Date().toISOString(),
+    }).eq("id", selectedNotification.id);
+    if (metadataError) toast({ title: "Havale doğrulandı", description: "Bildirim etiketi güncellenemedi; ödeme teyidi kayıtlıdır." });
 
     toast({
       title: "Başarılı",
@@ -466,6 +465,16 @@ export default function BankTransferNotifications() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="bank-reference">Banka hareketindeki işlem referansı</Label>
+                <Input id="bank-reference" value={bankReference} onChange={e => setBankReference(e.target.value)} maxLength={120} />
+                <Label htmlFor="bank-amount">Hesaba geçen tutar (TL)</Label>
+                <Input id="bank-amount" type="number" min="0" step="0.01" value={bankAmount} onChange={e => setBankAmount(e.target.value)} />
+                <div className="flex items-start gap-2 pt-2">
+                  <Checkbox id="statement-checked" checked={statementChecked} onCheckedChange={value => setStatementChecked(value === true)} />
+                  <Label htmlFor="statement-checked">Şirket banka hesabındaki hareketi kontrol ettim; bu referans ve tutar seçilen siparişe aittir.</Label>
+                </div>
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -477,9 +486,9 @@ export default function BankTransferNotifications() {
             </Button>
             <Button
               onClick={handleManualMatch}
-              disabled={!selectedOrderId || linking}
+              disabled={!selectedOrderId || linking || !statementChecked || bankReference.trim().length < 8 || Number(bankAmount) <= 0}
             >
-              {linking ? "Onaylanıyor..." : "Eşleştir ve Onayla"}
+              {linking ? "Onaylanıyor..." : "Havaleyi Doğrula ve Onayla"}
             </Button>
           </DialogFooter>
         </DialogContent>

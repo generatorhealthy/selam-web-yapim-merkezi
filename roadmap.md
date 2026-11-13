@@ -1,3 +1,9 @@
+# 13 Kasım 2026 16:10 UTC — Kalan güvenlik açıklarını tamamlama
+- [ ] Havale onayı: gerçek banka kaydı personel teyidi, tekil referans, atomik sipariş/uzman bağı ve doğrudan aktivasyon kapısı; sentetik olumlu/olumsuz kabul ve canlı zararsız kontrol.
+- [ ] Telefon: doğrulanmış telefon kimliği + kısa ömürlü işlem kanıtı + kalıcı tek gönderim; gerçek sağlayıcıya mesaj göndermeden kabul.
+- [ ] WAHA kaynak ve konuşma bağları, cron gerçek kimlik/yürütme ve yetki matrisi; sağlayıcı/sahip engellerini somut belirt.
+- [ ] Cayma kapalı korumasını doğrula; geçmiş kayıtları koru; dokuz soruya canlı/yayın/rollback kanıtıyla cevap ver.
+
 # 13 Kasım 2026 15:53 UTC — İki paketli satış ve bağımsız güvenlik düzeltmeleri
 - [x] Yeni satışta yalnız ozel-firsat 4000 TRY / kayit-linki 5000 TRY; bütün INSERT yazıcılarında sunucu kapısı, amount=null sunucu belirler, kart yeni satışta reddedilir. Eski web yolları yönlendirilir; tarihsel yenileme güvenilir yazıcı+önceki onaylı kayıt ister.
 - [x] 121 gerçek yerel SQL kontrolü, 28 uygulama testi ve sentetik havale→1 sipariş→ödeme bekliyor UI; mobil/masaüstü taşma yok. Migration canlı tanımı doğrulandı; 2747/339/12/154/0 sayımları aynı.
