@@ -1,0 +1,3116 @@
+[
+  {
+    "cmd": "INSERT",
+    "name": "Admin and staff can insert call reports",
+    "qual": null,
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "roles": [
+      "public"
+    ],
+    "table": "call_reports",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin and staff can update call reports",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "call_reports",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can view call reports",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "call_reports",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin can delete call reports",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "call_reports",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins can view all consent logs",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "user_consent_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Anyone can insert consent logs",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "user_consent_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Users can view their own consent logs",
+    "qual": "(user_id = auth.uid())",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "user_consent_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin can manage cancellation_fees",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "cancellation_fees",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "admin_staff_manage_ai_call_settings",
+    "qual": "is_admin_or_staff()",
+    "check": "is_admin_or_staff()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "ai_call_settings",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "admin_staff_read_ai_call_sessions",
+    "qual": "is_admin_or_staff()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "ai_call_sessions",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "admin_staff_read_ai_call_queue",
+    "qual": "is_admin_or_staff()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "ai_call_queue",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Service role manages test email claims",
+    "qual": "true",
+    "check": "true",
+    "roles": [
+      "service_role"
+    ],
+    "table": "test_email_delivery_claims",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin and staff can insert email logs",
+    "qual": null,
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "brevo_email_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can view email logs",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "brevo_email_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin and staff can manage blocked visitors",
+    "qual": "is_admin_or_staff()",
+    "check": "is_admin_or_staff()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "blocked_visitors",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin ve staff hatırlatma kayıtlarını görebilir",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "registration_reminders",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "health_test_release_service",
+    "qual": "true",
+    "check": "true",
+    "roles": [
+      "service_role"
+    ],
+    "table": "health_test_release",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "admin read kw",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "seo_keyword_snapshots",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Yalnizca admin takip kayitlarini yonetir",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "registration_followups",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "admin read engagement",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "seo_page_engagement",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "anyone insert engagement",
+    "qual": null,
+    "check": "((length(path) <= 300) AND ((duration_ms >= 0) AND (duration_ms <= 3600000)) AND (path !~~ '/divan_paneli%'::text))",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "seo_page_engagement",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "admin read sugg",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "seo_suggestions",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "admin update sugg",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "seo_suggestions",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "health_test_documents_service_insert",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "service_role"
+    ],
+    "table": "health_test_documents",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "health_test_documents_service_read",
+    "qual": "true",
+    "check": null,
+    "roles": [
+      "service_role"
+    ],
+    "table": "health_test_documents",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "admin read runs",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "seo_sync_runs",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "health_test_operations_service",
+    "qual": "true",
+    "check": "true",
+    "roles": [
+      "service_role"
+    ],
+    "table": "health_test_operations",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "health_test_events_service_insert",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "service_role"
+    ],
+    "table": "health_test_consent_events",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "health_test_events_service_read",
+    "qual": "true",
+    "check": null,
+    "roles": [
+      "service_role"
+    ],
+    "table": "health_test_consent_events",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin and staff can delete face to face referrals",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "face_to_face_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin and staff can insert face to face referrals",
+    "qual": null,
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "face_to_face_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin and staff can update face to face referrals",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "face_to_face_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can view face to face referrals",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "face_to_face_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "No public access to otp_codes",
+    "qual": "false",
+    "check": "false",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "otp_codes",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admins can delete old backups",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "client_referrals_backup",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins can view backups",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "client_referrals_backup",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admins insert payment changes",
+    "qual": null,
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "payment_method_changes",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admins update payment changes",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "payment_method_changes",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Specialists view own payment changes",
+    "qual": "((specialist_email = (( SELECT users.email\n   FROM auth.users\n  WHERE (users.id = auth.uid())))::text) OR is_admin_or_staff_user())",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "payment_method_changes",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Users manage own conversations",
+    "qual": "(auth.uid() = user_id)",
+    "check": "(auth.uid() = user_id)",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "doki_conversations",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Users manage own messages",
+    "qual": "(conversation_id IN ( SELECT doki_conversations.id\n   FROM doki_conversations\n  WHERE (doki_conversations.user_id = auth.uid())))",
+    "check": "(conversation_id IN ( SELECT doki_conversations.id\n   FROM doki_conversations\n  WHERE (doki_conversations.user_id = auth.uid())))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "doki_messages",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin manage referral codes",
+    "qual": "is_admin_or_staff_user()",
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialist_referral_codes",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Specialist can read own referral code",
+    "qual": "(EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = specialist_referral_codes.specialist_id) AND (s.user_id = auth.uid()))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialist_referral_codes",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin and staff can modify client referrals",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.is_approved = true) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.is_approved = true) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "client_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can read client referrals",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.is_approved = true) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "client_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can view client referrals",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "client_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Specialists can view their own referrals",
+    "qual": "(EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = client_referrals.specialist_id) AND (s.user_id = auth.uid()))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "client_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin manage referrals",
+    "qual": "is_admin_or_staff_user()",
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialist_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Referred can read own referral",
+    "qual": "(EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = specialist_referrals.referred_specialist_id) AND (s.user_id = auth.uid()))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialist_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Referrer can read own referrals",
+    "qual": "(EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = specialist_referrals.referrer_specialist_id) AND (s.user_id = auth.uid()))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialist_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admins can manage whatsapp lines",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "whatsapp_lines",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Staff can view whatsapp lines",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'staff'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "whatsapp_lines",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins and staff can view failed payment notifications",
+    "qual": "is_admin_or_staff()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "failed_payment_notifications",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admins can manage database backups",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "database_backups",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin reads attribution",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "lead_attribution",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Anyone can create appointments",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "appointments",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Patients cancel own appointments",
+    "qual": "(patient_user_id = ( SELECT auth.uid() AS uid))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "appointments",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Patients view own appointments",
+    "qual": "(patient_user_id = ( SELECT auth.uid() AS uid))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "appointments",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Specialists and staff can view appointments",
+    "qual": "((specialist_id IN ( SELECT s.id\n   FROM specialists s\n  WHERE (s.user_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "appointments",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Specialists can delete their appointments",
+    "qual": "((specialist_id IN ( SELECT s.id\n   FROM specialists s\n  WHERE (s.user_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_admin_user() AS is_admin_user))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "appointments",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Specialists can update their appointments",
+    "qual": "((specialist_id IN ( SELECT s.id\n   FROM specialists s\n  WHERE (s.user_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_admin_user() AS is_admin_user))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "appointments",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Anyone can view blog post categories",
+    "qual": "true",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "blog_post_categories",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "service role manages checkout sessions",
+    "qual": "true",
+    "check": "true",
+    "roles": [
+      "service_role"
+    ],
+    "table": "payment_checkout_sessions",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin reads events",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "analytics_events",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Automatic orders admin policy",
+    "qual": "(is_admin_user() OR is_admin_or_staff_user())",
+    "check": "(is_admin_user() OR is_admin_or_staff_user())",
+    "roles": [
+      "public"
+    ],
+    "table": "automatic_orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Anyone can view blog categories",
+    "qual": "true",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "blog_categories",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Blog posts delete policy",
+    "qual": "(is_admin_user() OR is_admin_or_staff_user())",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "blog_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Blog posts insert policy",
+    "qual": null,
+    "check": "(is_admin_user() OR is_admin_or_staff_user() OR ((specialist_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = blog_posts.specialist_id) AND (s.user_id = auth.uid())))) AND ((author_id IS NULL) OR (author_id = auth.uid()) OR (author_id = specialist_id))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "blog_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Blog posts read access",
+    "qual": "((status = 'published'::text) OR ( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user) OR (author_id = ( SELECT auth.uid() AS uid)) OR ((specialist_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = blog_posts.specialist_id) AND (s.user_id = ( SELECT auth.uid() AS uid)))))) OR ((author_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = blog_posts.author_id) AND (s.user_id = ( SELECT auth.uid() AS uid)))))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "blog_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Blog posts update policy",
+    "qual": "(is_admin_user() OR is_admin_or_staff_user() OR ((specialist_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = blog_posts.specialist_id) AND (s.user_id = auth.uid()))))) OR ((author_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = blog_posts.author_id) AND (s.user_id = auth.uid()))))))",
+    "check": "(is_admin_user() OR is_admin_or_staff_user() OR ((specialist_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = blog_posts.specialist_id) AND (s.user_id = auth.uid())))) AND ((author_id IS NULL) OR (author_id = auth.uid()) OR (author_id = specialist_id))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "blog_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Legal proceedings consolidated policy",
+    "qual": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'legal'::user_role) AND (user_profiles.is_approved = true)))))",
+    "check": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'legal'::user_role) AND (user_profiles.is_approved = true)))))",
+    "roles": [
+      "public"
+    ],
+    "table": "legal_proceedings",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin manages scoring rules",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "scoring_rules",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin manages pipeline",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "lead_pipeline",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin and staff can create blogs",
+    "qual": null,
+    "check": "(is_admin_user() OR is_admin_or_staff_user())",
+    "roles": [
+      "public"
+    ],
+    "table": "blogs",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin users can manage all blogs",
+    "qual": "(is_admin_user() OR is_admin_or_staff_user())",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "blogs",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Published blogs are publicly readable",
+    "qual": "((status = 'published'::text) OR is_admin_user() OR is_admin_or_staff_user())",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "blogs",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Employee salaries policy",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "public"
+    ],
+    "table": "employee_salaries",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin can delete form contents",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "form_contents",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin can modify form contents",
+    "qual": null,
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "form_contents",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin can update form contents",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "form_contents",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Anyone can read form contents",
+    "qual": "true",
+    "check": null,
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "form_contents",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin manages stage history",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "lead_stage_history",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Iyzico settings policy",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "public"
+    ],
+    "table": "iyzico_settings",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "service role manages payment receipts",
+    "qual": "true",
+    "check": "true",
+    "roles": [
+      "service_role"
+    ],
+    "table": "payment_receipts",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Authenticated users can create orders",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Orders admin delete policy",
+    "qual": "( SELECT is_admin_user() AS is_admin_user)",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Orders admin read policy",
+    "qual": "(( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Orders admin update policy",
+    "qual": "(( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Specialists can view their own orders",
+    "qual": "((NOT is_admin_or_staff_user()) AND (status = ANY (ARRAY['pending'::text, 'approved'::text, 'completed'::text])) AND (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.user_id = auth.uid()) AND (lower(TRIM(BOTH FROM s.email)) = lower(TRIM(BOTH FROM orders.customer_email)))))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can read mobile activity logs",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "mobile_activity_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin can delete mobile activity logs",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "mobile_activity_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Users can insert their own mobile activity logs",
+    "qual": null,
+    "check": "(auth.uid() = user_id)",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "mobile_activity_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Packages consolidated policy",
+    "qual": "((is_active = true) OR is_admin_user())",
+    "check": "is_admin_user()",
+    "roles": [
+      "public"
+    ],
+    "table": "packages",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "admin_staff_muhasebe_delete_sip",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role, 'muhasebe'::user_role])))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "specialist_instagram_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "admin_staff_muhasebe_insert_sip",
+    "qual": null,
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role, 'muhasebe'::user_role])))))",
+    "roles": [
+      "public"
+    ],
+    "table": "specialist_instagram_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "admin_staff_muhasebe_select_sip",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role, 'muhasebe'::user_role])))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "specialist_instagram_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "admin_staff_muhasebe_update_sip",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role, 'muhasebe'::user_role])))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "specialist_instagram_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin and staff can manage prospective registrations",
+    "qual": "(is_admin_user() OR is_admin_or_staff_user())",
+    "check": "(is_admin_user() OR is_admin_or_staff_user())",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "prospective_registrations",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin staff can view all reviews",
+    "qual": "( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user)",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "reviews",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Reviews delete policy",
+    "qual": "(( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "reviews",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Reviews insert policy",
+    "qual": null,
+    "check": "(status = 'pending'::text)",
+    "roles": [
+      "public"
+    ],
+    "table": "reviews",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Reviews manage policy",
+    "qual": "(( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user))",
+    "check": "(( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user))",
+    "roles": [
+      "public"
+    ],
+    "table": "reviews",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "System settings admin policy",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "public"
+    ],
+    "table": "system_settings",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin/staff can delete career applications",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "career_applications",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin/staff can update career applications",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "career_applications",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin/staff can view career applications",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "career_applications",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Anyone can submit career applications",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "career_applications",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Specialist tests consolidated policy",
+    "qual": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = specialist_tests.specialist_id) AND (s.user_id = auth.uid())))))",
+    "check": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = specialist_tests.specialist_id) AND (s.user_id = auth.uid())))))",
+    "roles": [
+      "public"
+    ],
+    "table": "specialist_tests",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "admin_staff_muhasebe_read_instagram_templates",
+    "qual": "((auth.role() = 'service_role'::text) OR (EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role, 'muhasebe'::user_role]))))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "instagram_post_templates",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can read registration analytics",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "registration_analytics",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Anyone can insert registration analytics",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "registration_analytics",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Update recent session analytics",
+    "qual": "((session_id IS NOT NULL) AND (created_at > (now() - '2 days'::interval)))",
+    "check": "(session_id IS NOT NULL)",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "registration_analytics",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Success statistics consolidated policy",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "public"
+    ],
+    "table": "success_statistics",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Support tickets consolidated policy",
+    "qual": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = support_tickets.specialist_id) AND (s.user_id = auth.uid())))))",
+    "check": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = support_tickets.specialist_id) AND (s.user_id = auth.uid())))))",
+    "roles": [
+      "public"
+    ],
+    "table": "support_tickets",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin reads purchase reports",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "meta_purchase_reports",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Owner or admin staff can view specialists",
+    "qual": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Specialists delete policy",
+    "qual": "( SELECT is_admin_user() AS is_admin_user)",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Specialists update policy",
+    "qual": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user))",
+    "check": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user))",
+    "roles": [
+      "public"
+    ],
+    "table": "specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Specialists write policy",
+    "qual": null,
+    "check": "(( SELECT is_admin_user() AS is_admin_user) OR ( SELECT is_admin_or_staff_user() AS is_admin_or_staff_user) OR (user_id = ( SELECT auth.uid() AS uid)))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Anyone can insert test results",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "public"
+    ],
+    "table": "test_results",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Patients view own test results",
+    "qual": "(patient_user_id = ( SELECT auth.uid() AS uid))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "test_results",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Test results delete policy",
+    "qual": "(is_admin_user() OR (specialist_id IN ( SELECT specialists.id\n   FROM specialists\n  WHERE (specialists.user_id = auth.uid()))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "test_results",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Test results read policy",
+    "qual": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = test_results.specialist_id) AND (s.user_id = auth.uid())))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "test_results",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin can delete analytics",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "website_analytics",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin staff can view analytics",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "website_analytics",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins can view analytics",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "website_analytics",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Allow analytics tracking inserts",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "public"
+    ],
+    "table": "website_analytics",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Session analytics update",
+    "qual": "(session_id IS NOT NULL)",
+    "check": "(session_id IS NOT NULL)",
+    "roles": [
+      "public"
+    ],
+    "table": "website_analytics",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin reads ai recs",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "ai_ad_recommendations",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "service_only_login_claims",
+    "qual": "true",
+    "check": "true",
+    "roles": [
+      "service_role"
+    ],
+    "table": "admin_login_challenge_claims",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "User profiles insert policy",
+    "qual": null,
+    "check": "((auth.uid() = user_id) OR is_admin_user())",
+    "roles": [
+      "public"
+    ],
+    "table": "user_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "User profiles update policy",
+    "qual": "((auth.uid() = user_id) OR is_admin_user())",
+    "check": "((auth.uid() = user_id) OR is_admin_user())",
+    "roles": [
+      "public"
+    ],
+    "table": "user_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Users can read own profile",
+    "qual": "((user_id = auth.uid()) OR is_admin_or_staff_user())",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "user_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin can insert test questions",
+    "qual": null,
+    "check": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM (tests t\n     JOIN specialists s ON ((s.id = t.specialist_id)))\n  WHERE ((t.id = test_questions.test_id) AND (s.user_id = auth.uid())))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "test_questions",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin can update test questions",
+    "qual": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM (tests t\n     JOIN specialists s ON ((s.id = t.specialist_id)))\n  WHERE ((t.id = test_questions.test_id) AND (s.user_id = auth.uid())))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "test_questions",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Anyone can read test questions",
+    "qual": "true",
+    "check": null,
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "test_questions",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Specialists can delete their own test questions",
+    "qual": "(test_id IN ( SELECT tests.id\n   FROM tests\n  WHERE (tests.specialist_id = auth.uid())))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "test_questions",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Test questions delete policy",
+    "qual": "(is_admin_user() OR (test_id IN ( SELECT t.id\n   FROM (tests t\n     JOIN specialists s ON ((s.id = t.specialist_id)))\n  WHERE (s.user_id = auth.uid()))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "test_questions",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Tests delete policy",
+    "qual": "(is_admin_user() OR (specialist_id IN ( SELECT specialists.id\n   FROM specialists\n  WHERE (specialists.user_id = auth.uid()))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "tests",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Tests insert policy",
+    "qual": null,
+    "check": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = tests.specialist_id) AND (s.user_id = auth.uid())))))",
+    "roles": [
+      "public"
+    ],
+    "table": "tests",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Tests select policy",
+    "qual": "((is_active = true) OR is_admin_user() OR (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = tests.specialist_id) AND (s.user_id = auth.uid())))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "tests",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Tests update policy",
+    "qual": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = tests.specialist_id) AND (s.user_id = auth.uid())))))",
+    "check": "(is_admin_user() OR (EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = tests.specialist_id) AND (s.user_id = auth.uid())))))",
+    "roles": [
+      "public"
+    ],
+    "table": "tests",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "SMS logs admin/staff full access",
+    "qual": "(is_admin_user() OR is_admin_or_staff_user())",
+    "check": "(is_admin_user() OR is_admin_or_staff_user())",
+    "roles": [
+      "public"
+    ],
+    "table": "sms_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin reads capi events",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "meta_capi_events",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin reads meta metrics",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "meta_daily_metrics",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin reads creatives",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "meta_ad_creatives",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin manages ad settings",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles p\n  WHERE ((p.user_id = auth.uid()) AND (p.role = 'admin'::user_role))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "ad_intel_settings",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins can view missed transfer notifications",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "pbx_missed_transfer_notifications",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin/staff can manage seo_branches",
+    "qual": "is_admin_or_staff_user()",
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "seo_branches",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin/staff can manage seo_keywords",
+    "qual": "is_admin_or_staff_user()",
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "seo_keywords",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admins can insert blog notifications",
+    "qual": null,
+    "check": "(is_admin_user() OR is_admin_or_staff_user())",
+    "roles": [
+      "public"
+    ],
+    "table": "blog_notifications",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Specialists can update their own blog notifications",
+    "qual": "(EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = blog_notifications.specialist_id) AND (s.user_id = auth.uid()))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "blog_notifications",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Specialists can view their own blog notifications",
+    "qual": "(EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = blog_notifications.specialist_id) AND (s.user_id = auth.uid()))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "blog_notifications",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin and staff manage referral notes",
+    "qual": "is_admin_or_staff_user()",
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "client_referral_notes",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Specialists manage their own referral notes",
+    "qual": "(EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = client_referral_notes.specialist_id) AND (s.user_id = auth.uid()))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM specialists s\n  WHERE ((s.id = client_referral_notes.specialist_id) AND (s.user_id = auth.uid()))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "client_referral_notes",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin and staff can delete urgent notes",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "urgent_referral_notes",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin and staff can insert urgent notes",
+    "qual": null,
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "urgent_referral_notes",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin and staff can update urgent notes",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "urgent_referral_notes",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can view urgent notes",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "urgent_referral_notes",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin and muhasebe can delete accounting documents storage",
+    "qual": "((bucket_id = 'accounting-documents'::text) AND (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role])) AND (user_profiles.is_approved = true)))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin and muhasebe can upload accounting documents",
+    "qual": null,
+    "check": "((bucket_id = 'accounting-documents'::text) AND (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role])) AND (user_profiles.is_approved = true)))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and muhasebe can view accounting documents storage",
+    "qual": "((bucket_id = 'accounting-documents'::text) AND (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role])) AND (user_profiles.is_approved = true)))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin staff can delete profile pictures",
+    "qual": "((bucket_id = 'profile-pictures'::text) AND is_admin_or_staff_user())",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin staff can update profile pictures",
+    "qual": "((bucket_id = 'profile-pictures'::text) AND (is_admin_or_staff_user() OR ((auth.uid())::text = (storage.foldername(name))[1])))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin staff can upload blog images",
+    "qual": null,
+    "check": "((bucket_id = 'blog-images'::text) AND is_admin_or_staff_user())",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admins can delete legal evidence files",
+    "qual": "((bucket_id = 'legal-evidence'::text) AND (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role) AND (user_profiles.is_approved = true)))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admins can upload legal evidence files",
+    "qual": null,
+    "check": "((bucket_id = 'legal-evidence'::text) AND (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role) AND (user_profiles.is_approved = true)))))",
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins can view legal evidence files",
+    "qual": "((bucket_id = 'legal-evidence'::text) AND (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role) AND (user_profiles.is_approved = true)))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Blog images public read",
+    "qual": "(bucket_id = 'blog-images'::text)",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Legal team can delete legal documents",
+    "qual": "((bucket_id = 'legal-documents'::text) AND (is_admin_user() OR (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'legal'::user_role) AND (user_profiles.is_approved = true))))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Legal team can update legal documents",
+    "qual": "((bucket_id = 'legal-documents'::text) AND (is_admin_user() OR (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'legal'::user_role) AND (user_profiles.is_approved = true))))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Legal team can upload legal documents",
+    "qual": null,
+    "check": "((bucket_id = 'legal-documents'::text) AND (is_admin_user() OR (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'legal'::user_role) AND (user_profiles.is_approved = true))))))",
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Legal team can view legal documents",
+    "qual": "((bucket_id = 'legal-documents'::text) AND (is_admin_user() OR (EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'legal'::user_role) AND (user_profiles.is_approved = true))))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Profile pictures read specific files",
+    "qual": "((bucket_id = 'profile-pictures'::text) AND (name IS NOT NULL) AND (name <> ''::text))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Users upload profile pictures to own folder",
+    "qual": null,
+    "check": "((bucket_id = 'profile-pictures'::text) AND (((storage.foldername(name))[1] = ( SELECT (auth.uid())::text AS uid)) OR is_admin_or_staff_user()))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "public_read_instagram_posts",
+    "qual": "(bucket_id = 'instagram-posts'::text)",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "service_delete_instagram_posts",
+    "qual": "((bucket_id = 'instagram-posts'::text) AND ((auth.role() = 'service_role'::text) OR (EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role, 'muhasebe'::user_role])))))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "service_update_instagram_posts",
+    "qual": "((bucket_id = 'instagram-posts'::text) AND ((auth.role() = 'service_role'::text) OR (EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role, 'muhasebe'::user_role])))))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "service_write_instagram_posts",
+    "qual": null,
+    "check": "((bucket_id = 'instagram-posts'::text) AND ((auth.role() = 'service_role'::text) OR (EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role, 'muhasebe'::user_role])))))))",
+    "roles": [
+      "public"
+    ],
+    "table": "objects",
+    "schema": "storage"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin staff can delete leads",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "danisan_basvurulari",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin staff can insert leads",
+    "qual": null,
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "danisan_basvurulari",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin staff can update leads",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "danisan_basvurulari",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin staff can view leads",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "danisan_basvurulari",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Anon can insert reapplication leads",
+    "qual": null,
+    "check": "((source = 'reapply-form'::text) AND (status = 'reapplied'::text))",
+    "roles": [
+      "anon"
+    ],
+    "table": "danisan_basvurulari",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins view all push tokens",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "push_tokens",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Service role full access push tokens",
+    "qual": "true",
+    "check": "true",
+    "roles": [
+      "service_role"
+    ],
+    "table": "push_tokens",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Users can manage own push tokens",
+    "qual": "(auth.uid() = user_id)",
+    "check": "(auth.uid() = user_id)",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "push_tokens",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Users manage own push tokens",
+    "qual": "(auth.uid() = user_id)",
+    "check": "(auth.uid() = user_id)",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "push_tokens",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin and staff can manage calendar notes",
+    "qual": "is_admin_or_staff_user()",
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "calendar_notes",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin can read all activity logs",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "admin_activity_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Authenticated users can insert own logs",
+    "qual": null,
+    "check": "(auth.uid() = user_id)",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "admin_activity_logs",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin can read login attempts",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "admin_login_attempts",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin delete bank transfer notifications",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "bank_transfer_notifications",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin muhasebe update bank transfer notifications",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role])))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role])))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "bank_transfer_notifications",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin staff muhasebe view bank transfer notifications",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role, 'muhasebe'::user_role])))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "bank_transfer_notifications",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin muhasebe view processed emails",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles up\n  WHERE ((up.user_id = auth.uid()) AND (up.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role, 'staff'::user_role])))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "processed_emails",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins view all patient profiles",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "patient_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Patients insert own profile",
+    "qual": null,
+    "check": "(auth.uid() = user_id)",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "patient_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Patients update own profile",
+    "qual": "(auth.uid() = user_id)",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "patient_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Patients view own profile",
+    "qual": "(auth.uid() = user_id)",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "patient_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins view all favorites",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "favorite_specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Users add own favorites",
+    "qual": null,
+    "check": "(auth.uid() = user_id)",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "favorite_specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Users delete own favorites",
+    "qual": "(auth.uid() = user_id)",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "favorite_specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Users view own favorites",
+    "qual": "(auth.uid() = user_id)",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "favorite_specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin and staff can insert social shares",
+    "qual": null,
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "social_shares",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin and staff can update social shares",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "social_shares",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can view all social shares",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "social_shares",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins read qualification history",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles x\n  WHERE ((x.user_id = auth.uid()) AND (x.role = 'admin'::user_role))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "lead_qualification_history",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admins manage litigation evidence",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "litigation_evidence_items",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admins manage litigation cases",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "litigation_cases",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin staff can delete uzman leads",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "uzman_basvurulari",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin staff can insert uzman leads",
+    "qual": null,
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "uzman_basvurulari",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin staff can update uzman leads",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "uzman_basvurulari",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin staff can view uzman leads",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "uzman_basvurulari",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can view freepbx extensions",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "freepbx_extensions",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admins can insert legal evidence",
+    "qual": null,
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role) AND (user_profiles.is_approved = true))))",
+    "roles": [
+      "public"
+    ],
+    "table": "legal_evidence",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admins can update legal evidence",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "legal_evidence",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins can view legal evidence",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "legal_evidence",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can read whatsapp messages",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "whatsapp_messages",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin staff can insert whatsapp messages",
+    "qual": null,
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "whatsapp_messages",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin can delete attendance",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "staff_attendance",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Staff can check in",
+    "qual": null,
+    "check": "(auth.uid() = user_id)",
+    "roles": [
+      "public"
+    ],
+    "table": "staff_attendance",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Staff can check out",
+    "qual": "((auth.uid() = user_id) OR is_admin_user())",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "staff_attendance",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Staff can view own attendance",
+    "qual": "((auth.uid() = user_id) OR is_admin_user())",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "staff_attendance",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admins can manage scheduled_sms",
+    "qual": "is_admin_or_staff_user()",
+    "check": null,
+    "roles": [
+      "public"
+    ],
+    "table": "scheduled_sms",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin and muhasebe can delete accounting documents",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "accounting_documents",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Admin and muhasebe can insert accounting documents",
+    "qual": null,
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role])) AND (user_profiles.is_approved = true))))",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "accounting_documents",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin and muhasebe can update accounting documents",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "accounting_documents",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and muhasebe can view accounting documents",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'muhasebe'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "accounting_documents",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin manages all partners",
+    "qual": "is_admin_or_staff()",
+    "check": "is_admin_or_staff()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "partners",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Partner sees own record",
+    "qual": "(user_id = auth.uid())",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "partners",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin and staff can manage order notes",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "roles": [
+      "public"
+    ],
+    "table": "order_notes",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin manages all referrals",
+    "qual": "is_admin_or_staff()",
+    "check": "is_admin_or_staff()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "partner_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Partner sees own referrals",
+    "qual": "(partner_id = current_partner_id())",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "partner_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Public may create referral for active partner",
+    "qual": null,
+    "check": "(EXISTS ( SELECT 1\n   FROM partners p\n  WHERE ((p.id = partner_referrals.partner_id) AND (p.is_active = true))))",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "partner_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin manages all payments",
+    "qual": "is_admin_or_staff()",
+    "check": "is_admin_or_staff()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "partner_commission_payments",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Partner sees own payments",
+    "qual": "(partner_id = current_partner_id())",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "partner_commission_payments",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin and staff can manage specialist admin notes",
+    "qual": "is_admin_or_staff_user()",
+    "check": "is_admin_or_staff_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialist_admin_notes",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_client_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_automatic_orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_appointments",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_blog_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_tests",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin staff manage wa bot settings",
+    "qual": "is_admin_or_staff()",
+    "check": "is_admin_or_staff()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "whatsapp_bot_settings",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_reviews",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin staff manage wa bot sessions",
+    "qual": "is_admin_or_staff()",
+    "check": "is_admin_or_staff()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "whatsapp_bot_sessions",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_test_questions",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin staff manage wa bot auto replies",
+    "qual": "is_admin_or_staff()",
+    "check": "is_admin_or_staff()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "whatsapp_bot_auto_replies",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_user_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_test_results",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794326401_packages",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_client_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_automatic_orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_appointments",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_blog_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_reviews",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_tests",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_test_questions",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_test_results",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_packages",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": "is_admin_user()",
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794412801_user_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admins read notification claims",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "appointment_notification_claims",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_specialists",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_client_referrals",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_automatic_orders",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_appointments",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_blog_posts",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_reviews",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_tests",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_test_questions",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_test_results",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_packages",
+    "schema": "public"
+  },
+  {
+    "cmd": "ALL",
+    "name": "Admin only access",
+    "qual": "is_admin_user()",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "backup_1794499201_user_profiles",
+    "schema": "public"
+  },
+  {
+    "cmd": "UPDATE",
+    "name": "Admin and staff can update applications",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialist_applications",
+    "schema": "public"
+  },
+  {
+    "cmd": "SELECT",
+    "name": "Admin and staff can view applications",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialist_applications",
+    "schema": "public"
+  },
+  {
+    "cmd": "DELETE",
+    "name": "Admin can delete applications",
+    "qual": "(EXISTS ( SELECT 1\n   FROM user_profiles\n  WHERE ((user_profiles.user_id = auth.uid()) AND (user_profiles.role = 'admin'::user_role) AND (user_profiles.is_approved = true))))",
+    "check": null,
+    "roles": [
+      "authenticated"
+    ],
+    "table": "specialist_applications",
+    "schema": "public"
+  },
+  {
+    "cmd": "INSERT",
+    "name": "Anyone can submit applications",
+    "qual": null,
+    "check": "true",
+    "roles": [
+      "anon",
+      "authenticated"
+    ],
+    "table": "specialist_applications",
+    "schema": "public"
+  }
+]

@@ -1,0 +1,322 @@
+[
+  {
+    "role": "anon",
+    "table": "orders",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "appointments",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "client_referrals",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "test_results",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "specialists",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "call_reports",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "automatic_orders",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "system_settings",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "database_backups",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "legal_evidence",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "accounting_documents",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "blog_posts",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "table": "tests",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "bucket": "legal-documents",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "bucket": "legal-evidence",
+    "count": 0
+  },
+  {
+    "role": "anon",
+    "bucket": "accounting-documents",
+    "count": 0
+  },
+  {
+    "role": "specialist",
+    "table": "orders",
+    "count": 1
+  },
+  {
+    "role": "specialist",
+    "table": "appointments",
+    "count": 1
+  },
+  {
+    "role": "specialist",
+    "table": "client_referrals",
+    "count": 1
+  },
+  {
+    "role": "specialist",
+    "table": "test_results",
+    "count": 1
+  },
+  {
+    "role": "specialist",
+    "table": "specialists",
+    "count": 1
+  },
+  {
+    "role": "specialist",
+    "table": "call_reports",
+    "count": 0
+  },
+  {
+    "role": "specialist",
+    "table": "automatic_orders",
+    "count": 0
+  },
+  {
+    "role": "specialist",
+    "table": "system_settings",
+    "count": 0
+  },
+  {
+    "role": "specialist",
+    "table": "database_backups",
+    "count": 0
+  },
+  {
+    "role": "specialist",
+    "table": "legal_evidence",
+    "count": 0
+  },
+  {
+    "role": "specialist",
+    "table": "accounting_documents",
+    "count": 0
+  },
+  {
+    "role": "specialist",
+    "table": "blog_posts",
+    "count": 1
+  },
+  {
+    "role": "specialist",
+    "table": "tests",
+    "count": 1
+  },
+  {
+    "role": "specialist",
+    "bucket": "legal-documents",
+    "count": 0
+  },
+  {
+    "role": "specialist",
+    "bucket": "legal-evidence",
+    "count": 0
+  },
+  {
+    "role": "specialist",
+    "bucket": "accounting-documents",
+    "count": 0
+  },
+  {
+    "role": "staff",
+    "table": "orders",
+    "count": 2
+  },
+  {
+    "role": "staff",
+    "table": "appointments",
+    "count": 2
+  },
+  {
+    "role": "staff",
+    "table": "client_referrals",
+    "count": 2
+  },
+  {
+    "role": "staff",
+    "table": "test_results",
+    "count": 0
+  },
+  {
+    "role": "staff",
+    "table": "specialists",
+    "count": 2
+  },
+  {
+    "role": "staff",
+    "table": "call_reports",
+    "count": 1
+  },
+  {
+    "role": "staff",
+    "table": "automatic_orders",
+    "count": 1
+  },
+  {
+    "role": "staff",
+    "table": "system_settings",
+    "count": 0
+  },
+  {
+    "role": "staff",
+    "table": "database_backups",
+    "count": 0
+  },
+  {
+    "role": "staff",
+    "table": "legal_evidence",
+    "count": 0
+  },
+  {
+    "role": "staff",
+    "table": "accounting_documents",
+    "count": 0
+  },
+  {
+    "role": "staff",
+    "table": "blog_posts",
+    "count": 2
+  },
+  {
+    "role": "staff",
+    "table": "tests",
+    "count": 0
+  },
+  {
+    "role": "staff",
+    "bucket": "legal-documents",
+    "count": 0
+  },
+  {
+    "role": "staff",
+    "bucket": "legal-evidence",
+    "count": 0
+  },
+  {
+    "role": "staff",
+    "bucket": "accounting-documents",
+    "count": 0
+  },
+  {
+    "role": "admin",
+    "table": "orders",
+    "count": 2
+  },
+  {
+    "role": "admin",
+    "table": "appointments",
+    "count": 2
+  },
+  {
+    "role": "admin",
+    "table": "client_referrals",
+    "count": 2
+  },
+  {
+    "role": "admin",
+    "table": "test_results",
+    "count": 2
+  },
+  {
+    "role": "admin",
+    "table": "specialists",
+    "count": 2
+  },
+  {
+    "role": "admin",
+    "table": "call_reports",
+    "count": 1
+  },
+  {
+    "role": "admin",
+    "table": "automatic_orders",
+    "count": 1
+  },
+  {
+    "role": "admin",
+    "table": "system_settings",
+    "count": 1
+  },
+  {
+    "role": "admin",
+    "table": "database_backups",
+    "count": 1
+  },
+  {
+    "role": "admin",
+    "table": "legal_evidence",
+    "count": 1
+  },
+  {
+    "role": "admin",
+    "table": "accounting_documents",
+    "count": 1
+  },
+  {
+    "role": "admin",
+    "table": "blog_posts",
+    "count": 2
+  },
+  {
+    "role": "admin",
+    "table": "tests",
+    "count": 2
+  },
+  {
+    "role": "admin",
+    "bucket": "legal-documents",
+    "count": 1
+  },
+  {
+    "role": "admin",
+    "bucket": "legal-evidence",
+    "count": 1
+  },
+  {
+    "role": "admin",
+    "bucket": "accounting-documents",
+    "count": 1
+  }
+]

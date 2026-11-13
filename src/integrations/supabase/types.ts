@@ -203,6 +203,24 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_login_challenge_claims: {
+        Row: {
+          created_at: string
+          expires_at: string
+          nonce_hash: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          nonce_hash: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          nonce_hash?: string
+        }
+        Relationships: []
+      }
       ai_ad_recommendations: {
         Row: {
           campaign_id: string | null
@@ -7779,6 +7797,10 @@ export type Database = {
       cleanup_old_backups: { Args: never; Returns: undefined }
       cleanup_old_sessions: { Args: never; Returns: undefined }
       client_ip_from_headers: { Args: never; Returns: string }
+      consume_admin_login_challenge: {
+        Args: { p_expires_at: string; p_nonce_hash: string }
+        Returns: boolean
+      }
       create_full_database_backup: {
         Args: {
           p_backup_type?: string

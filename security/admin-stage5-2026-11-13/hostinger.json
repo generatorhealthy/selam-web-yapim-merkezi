@@ -1,0 +1,113 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "sha256": "ef6cc8bd4657286c0d7cad8bf6d807dcc78f9eb9e609087b27c3f5d79c8eebfd",
+    "lastModified": "Fri, 13 Nov 2026 08:58:34 GMT",
+    "challenge": true,
+    "canonical": [
+      "https://doktorumol.com.tr/"
+    ],
+    "h1Count": 1
+  },
+  {
+    "path": "/uzmanlar",
+    "status": 200,
+    "sha256": "50e180d75391a1715d283afc70a7c60a4168a4bbf564f2a2c512b2341e3fad10",
+    "lastModified": "Fri, 13 Nov 2026 09:27:48 GMT",
+    "challenge": true,
+    "canonical": [
+      "https://doktorumol.com.tr/uzmanlar"
+    ],
+    "h1Count": 1
+  },
+  {
+    "path": "/blog",
+    "status": 200,
+    "sha256": "c2d0a9a88b318ae412b2d4f95695d62551c4e971187e151ec09a69f2106b6896",
+    "lastModified": "Fri, 13 Nov 2026 09:13:36 GMT",
+    "challenge": true,
+    "canonical": [
+      "https://doktorumol.com.tr/blog"
+    ],
+    "h1Count": 1
+  },
+  {
+    "path": "/aydinlatma-metni",
+    "status": 200,
+    "sha256": "6e5885c41a87429ea49b24efbe3b0bf539c6c5dab2cd91d305d08b58b17d65be",
+    "lastModified": "Fri, 13 Nov 2026 07:18:37 GMT",
+    "challenge": false,
+    "canonical": [
+      "https://doktorumol.com.tr/aydinlatma-metni"
+    ],
+    "h1Count": 1
+  },
+  {
+    "path": "/acik-riza",
+    "status": 200,
+    "sha256": "ce9913743b9e947df3e38b502be82c776a08005385cf8ad7f0e32c07628d6dbd",
+    "lastModified": "Thu, 12 Nov 2026 21:10:39 GMT",
+    "challenge": false,
+    "canonical": [
+      "https://doktorumol.com.tr/acik-riza"
+    ],
+    "h1Count": 1
+  },
+  {
+    "path": "/cagri-merkezi-aydinlatma-metni",
+    "status": 200,
+    "sha256": "6826f26200c8db7a95a8e0f8f897eabb1143d627ef75fef5ad053293ad9af3b9",
+    "lastModified": "Thu, 12 Nov 2026 21:10:38 GMT",
+    "challenge": false,
+    "canonical": [
+      "https://doktorumol.com.tr/cagri-merkezi-aydinlatma-metni"
+    ],
+    "h1Count": 1
+  },
+  {
+    "path": "/robots.txt",
+    "status": 200,
+    "sha256": "e17b35e28e09f36e60c99132a208af3a4aae4d1c56fe6bc6e560ae124d630265",
+    "lastModified": "Thu, 08 Oct 2026 10:05:55 GMT",
+    "challenge": false,
+    "canonical": [],
+    "h1Count": 0
+  },
+  {
+    "path": "/sitemap.xml",
+    "status": 200,
+    "sha256": "16a8949ab68f7ddc12b378f944e5efdb0734aa354f4dd7fcf418a6fd99254ec5",
+    "lastModified": "Fri, 13 Nov 2026 09:27:50 GMT",
+    "challenge": false,
+    "canonical": [],
+    "h1Count": 0,
+    "urlCount": 1710,
+    "legalPaths": {
+      "/aydinlatma-metni": true,
+      "/acik-riza": true,
+      "/cagri-merkezi-aydinlatma-metni": true
+    }
+  },
+  {
+    "path": "/boot.js",
+    "status": 200,
+    "sha256": "c3ba2b50d0178118034a3de5b9eb0aecb91eb5a96c9226e78ae27305c79a4036",
+    "lastModified": "Fri, 13 Nov 2026 11:36:20 GMT",
+    "challenge": false,
+    "canonical": [],
+    "h1Count": 0,
+    "assets": [
+      {
+        "name": "/assets/app-Bf0WuUx-.js",
+        "status": 200,
+        "sha256": "7d9d3e0ba7b1f73e9e3f4c1f68223cb6f5bfb5873bdb3833d1db8b2bcf3cb352",
+        "messages": {
+          "Uzman bu saati kapatmış": false,
+          "Saat dolu": false,
+          "Çok fazla başvuru": false
+        }
+      }
+    ]
+  }
+]
