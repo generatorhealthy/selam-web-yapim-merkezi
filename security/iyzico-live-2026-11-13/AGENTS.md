@@ -1,0 +1,1 @@
+- Keep final-acceptance reports and signature candidates offline, outside application and deployed function imports; this preserves the working payment architecture until provider configuration and separate release approval are verified.

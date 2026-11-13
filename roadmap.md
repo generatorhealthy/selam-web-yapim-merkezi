@@ -1,4 +1,10 @@
-# 13 Kasım 2026 — Canlı checkout geçişi (güncel görev)
+# 13 Kasım 2026 — Son doğal ödeme kabulü ve güvenli geçiş (güncel görev)
+- [x] Salt okunur ilk doğal satın alma raporu hazırlandı ve canlı SELECT hatasız/boş döndü; 0 oturum/0 makbuz, doğal ödeme beklenir. Eksik iş geçmişi başarı sayılamaz; aktivasyon eksikliği ayrı uyarıdır.
+- [x] Eski bağı olmayan oturumlar için personel mutabakat tablosu ve dört kanıt sınıfı hazır; eski token envanteri saklanmamış, tam liste/ödenmemiş/süresi dolmuş sayıları bilinmiyor. Şirketten iyzico salt okunur işlem envanteri beklenir.
+- [x] Resmî abonelik V3 merchant-first sabit vektörü ve kabul sınıfları 9/9 test geçti; canlı helper sırası farklı olduğu açıkça raporlandı. Hesap etkinliği/gerçek merchant ID ve ayrı imza yayını onayı beklenir; canlı ödeme mimarisi değiştirilmedi.
+- [x] Bağımsız randevu işlerine geçiş hazırlığı: 17 iptal/0 gelecek iptal; tüm-durum unique korunur. Anonim sunucu hız sınırı limit/kaynak kabulü ve WhatsApp onayında kaybolan uzman durumu için dar yayın paketi gerekir; ayrı canlı onay beklenir. Mobil/health release değişmez.
+
+# 13 Kasım 2026 — Canlı checkout geçişi
 - [x] 96b9da49 Checkout kaynak commit'i ve gerçek /boot.js → app-BDqH2Nwi.js içinde orderId gönderimi doğrulandı.
 - [x] Eski kimliksiz initialize kapatıldı; create-iyzico-payment yayımlandı, source SHA256 25058e4a690238a2f5ef985beb1ab94a757978600202653dc9cb240e8c428e08; eksik/yanlış ID canlı 400, sağlayıcı çağrısı yok. Eski zaten açık iyzico formları otomatik iptal edilmedi; sunucu bağı olmadan onay yok.
 - [x] Gerçek doktorumol.com.tr tarayıcısında girişsiz sipariş→aynı ID→form ve 503 kayıt hatası→sıfır initialize geçti; bütün yazılar/mesaj/ödeme istekleri sentetik karşılandı. 6 gerçek handler + 10 mevcut ödeme + 2 checkout testi geçti; üretim migration'ıyla yerel 20 bağlantı: 1 applied/19 duplicate, aktivasyon/fatura/bildirim 1'er.
