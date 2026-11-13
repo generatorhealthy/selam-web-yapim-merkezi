@@ -1,3 +1,9 @@
+# 13 Kasım 2026 — Güncel kritik açıkların güvenli kapatılması
+- [ ] Güncel taramayı mevcut kaynak ve canlı yetkilerle karşılaştır; eski bulguları kapatılmış saymadan yeniden tara.
+- [ ] Randevu onay e-postası ve sipariş belgeleri için kayıtlı alıcı/işlem bağı, yetki ve güvenli içerik testlerini tamamla.
+- [ ] Cron/WAHA geçişini çalışan hizmeti kesmeden hazırla; gerekli hesap sahibi kabulünü açık bırak.
+- [ ] Regresyon, canlı salt-okunur kabul, kalan engeller ve geri alma raporunu tamamla.
+
 # 13 Kasım 2026 16:33 UTC — Aşama 5 son kabul
 - [x] Kayıt kaynağından bağımsız aktivasyon kapısı migration canlı; hızlı ekleme pasif varsayılan, 20 bağlantı1/19 ve dört kaynak reddi geçti; geçmiş aktifler korunur.
 - [x] Dört rol 64 okuma/75 mutasyon ve6 özel yol testi tekrar geçti; gerçek pozitif hosted kabul eksikliği açık kaydedildi.
