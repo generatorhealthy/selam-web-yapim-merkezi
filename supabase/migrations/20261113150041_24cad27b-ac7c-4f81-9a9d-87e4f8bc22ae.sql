@@ -1,0 +1,1 @@
+REVOKE ALL ON public.appointment_notification_authority FROM anon,authenticated,PUBLIC; GRANT ALL ON public.appointment_notification_authority TO service_role;

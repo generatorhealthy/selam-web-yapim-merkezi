@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { safeLog } from "../_shared/safeLog.ts";
+import { escapeHtml } from "../_shared/escapeHtml.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -34,6 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("BREVO_API_KEY is not configured");
     }
 
+    const htmlData = Object.fromEntries(Object.entries(requestData).map(([key, value]) => [key, escapeHtml(value)]));
     // Admin'e gönderilecek e-posta içeriği - güzel tasarım
     const adminEmailContent = `
       <!DOCTYPE html>
@@ -59,61 +61,61 @@ const handler = async (req: Request): Promise<Response> => {
               <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
                 👤 Ad Soyad:
               </h3>
-              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #2d3748;">${requestData.name}</p>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #2d3748;">${htmlData.name}</p>
             </div>
             
             <div style="margin-bottom: 25px;">
               <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
                 📧 E-posta:
               </h3>
-              <p style="margin: 0; font-size: 16px; color: #4299e1;"><a href="mailto:${requestData.email}" style="color: #4299e1; text-decoration: none;">${requestData.email}</a></p>
+              <p style="margin: 0; font-size: 16px; color: #4299e1;"><a href="mailto:${htmlData.email}" style="color: #4299e1; text-decoration: none;">${htmlData.email}</a></p>
             </div>
             
             <div style="margin-bottom: 25px;">
               <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
                 📞 Telefon:
               </h3>
-              <p style="margin: 0; font-size: 16px; color: #2d3748;">${requestData.phone}</p>
+              <p style="margin: 0; font-size: 16px; color: #2d3748;">${htmlData.phone}</p>
             </div>
             
             <div style="margin-bottom: 25px;">
               <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
                 🏥 Uzmanlık Alanı:
               </h3>
-              <p style="margin: 0; font-size: 16px; color: #2d3748; background-color: #edf2f7; padding: 8px 12px; border-radius: 6px; display: inline-block;">${requestData.specialty}</p>
+              <p style="margin: 0; font-size: 16px; color: #2d3748; background-color: #edf2f7; padding: 8px 12px; border-radius: 6px; display: inline-block;">${htmlData.specialty}</p>
             </div>
             
             <div style="margin-bottom: 25px;">
               <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
                 🏢 Şehir:
               </h3>
-              <p style="margin: 0; font-size: 16px; color: #2d3748;">${requestData.city}</p>
+              <p style="margin: 0; font-size: 16px; color: #2d3748;">${htmlData.city}</p>
             </div>
             
-            ${requestData.experience ? `
+            ${htmlData.experience ? `
             <div style="margin-bottom: 25px;">
               <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
                 📈 Deneyim:
               </h3>
-              <p style="margin: 0; font-size: 16px; color: #2d3748;">${requestData.experience} yıl</p>
+              <p style="margin: 0; font-size: 16px; color: #2d3748;">${htmlData.experience} yıl</p>
             </div>
             ` : ''}
             
-            ${requestData.education ? `
+            ${htmlData.education ? `
             <div style="margin-bottom: 25px;">
               <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
                 🎓 Eğitim:
               </h3>
-              <p style="margin: 0; font-size: 16px; color: #2d3748; background-color: #f7fafc; padding: 12px; border-radius: 6px; border-left: 4px solid #667eea;">${requestData.education}</p>
+              <p style="margin: 0; font-size: 16px; color: #2d3748; background-color: #f7fafc; padding: 12px; border-radius: 6px; border-left: 4px solid #667eea;">${htmlData.education}</p>
             </div>
             ` : ''}
             
-            ${requestData.about ? `
+            ${htmlData.about ? `
             <div style="margin-bottom: 25px;">
               <h3 style="color: #4a5568; margin: 0 0 15px 0; font-size: 16px; display: flex; align-items: center;">
                 💬 Hakkında:
               </h3>
-              <p style="margin: 0; font-size: 16px; color: #2d3748; background-color: #f7fafc; padding: 12px; border-radius: 6px; border-left: 4px solid #764ba2;">${requestData.about}</p>
+              <p style="margin: 0; font-size: 16px; color: #2d3748; background-color: #f7fafc; padding: 12px; border-radius: 6px; border-left: 4px solid #764ba2;">${htmlData.about}</p>
             </div>
             ` : ''}
             
@@ -157,16 +159,16 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="padding: 30px 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
               <h2 style="color: #2d3748; margin: 0 0 15px 0; font-size: 22px;">Başvurunuz Başarıyla Alındı!</h2>
-              <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0;">Sayın <strong>${requestData.name}</strong>, Doktorumol.com.tr'ye yapmış olduğunuz başvuru tarafımıza ulaşmıştır.</p>
+              <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0;">Sayın <strong>${htmlData.name}</strong>, Doktorumol.com.tr'ye yapmış olduğunuz başvuru tarafımıza ulaşmıştır.</p>
             </div>
             
             <div style="background-color: #edf2f7; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
               <h3 style="color: #2d3748; margin: 0 0 15px 0; font-size: 18px;">📋 Başvuru Özeti:</h3>
               <div style="color: #4a5568; font-size: 14px; line-height: 1.8;">
-                <p style="margin: 8px 0;"><strong>Uzmanlık Alanı:</strong> ${requestData.specialty}</p>
-                <p style="margin: 8px 0;"><strong>Şehir:</strong> ${requestData.city}</p>
-                <p style="margin: 8px 0;"><strong>E-posta:</strong> ${requestData.email}</p>
-                <p style="margin: 8px 0;"><strong>Telefon:</strong> ${requestData.phone}</p>
+                <p style="margin: 8px 0;"><strong>Uzmanlık Alanı:</strong> ${htmlData.specialty}</p>
+                <p style="margin: 8px 0;"><strong>Şehir:</strong> ${htmlData.city}</p>
+                <p style="margin: 8px 0;"><strong>E-posta:</strong> ${htmlData.email}</p>
+                <p style="margin: 8px 0;"><strong>Telefon:</strong> ${htmlData.phone}</p>
               </div>
             </div>
             

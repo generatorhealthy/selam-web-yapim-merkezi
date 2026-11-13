@@ -1,0 +1,18 @@
+[
+  {
+    "function": "send-registration-email",
+    "status": 500
+  },
+  {
+    "function": "send-accounting-notification",
+    "status": 200
+  },
+  {
+    "function": "send-disclosure-consent-email",
+    "status": 400
+  },
+  {
+    "function": "send-career-application",
+    "status": 400
+  }
+]

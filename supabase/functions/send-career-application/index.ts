@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { escapeHtml } from "../_shared/escapeHtml.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -99,24 +100,24 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background:#f8f9fa;padding:30px;border-radius:0 0 8px 8px;">
             <div style="background:#fff;padding:20px;border-radius:8px;margin-bottom:15px;">
               <h3 style="margin:0 0 10px 0;color:#333;">👤 Ad Soyad</h3>
-              <p style="margin:0;color:#555;font-size:16px;">${full_name}</p>
+              <p style="margin:0;color:#555;font-size:16px;">${escapeHtml(full_name)}</p>
             </div>
             <div style="background:#fff;padding:20px;border-radius:8px;margin-bottom:15px;">
               <h3 style="margin:0 0 10px 0;color:#333;">📧 E-posta</h3>
-              <p style="margin:0;color:#555;font-size:16px;"><a href="mailto:${email}" style="color:#1e40af;">${email}</a></p>
+              <p style="margin:0;color:#555;font-size:16px;"><a href="mailto:${escapeHtml(email)}" style="color:#1e40af;">${escapeHtml(email)}</a></p>
             </div>
             <div style="background:#fff;padding:20px;border-radius:8px;margin-bottom:15px;">
               <h3 style="margin:0 0 10px 0;color:#333;">📞 Telefon</h3>
-              <p style="margin:0;color:#555;font-size:16px;"><a href="tel:${phone}" style="color:#1e40af;">${phone}</a></p>
+              <p style="margin:0;color:#555;font-size:16px;"><a href="tel:${escapeHtml(phone)}" style="color:#1e40af;">${escapeHtml(phone)}</a></p>
             </div>
             <div style="background:#fff;padding:20px;border-radius:8px;margin-bottom:15px;">
               <h3 style="margin:0 0 10px 0;color:#333;">🎯 Pozisyon</h3>
-              <p style="margin:0;color:#555;font-size:16px;">${position}</p>
+              <p style="margin:0;color:#555;font-size:16px;">${escapeHtml(position)}</p>
             </div>
             ${cover_letter ? `
             <div style="background:#fff;padding:20px;border-radius:8px;margin-bottom:15px;">
               <h3 style="margin:0 0 10px 0;color:#333;">📝 Ön Yazı</h3>
-              <p style="margin:0;color:#555;font-size:15px;white-space:pre-wrap;line-height:1.6;">${cover_letter}</p>
+              <p style="margin:0;color:#555;font-size:15px;white-space:pre-wrap;line-height:1.6;">${escapeHtml(cover_letter)}</p>
             </div>` : ""}
             <div style="background:#fff;padding:20px;border-radius:8px;margin-bottom:15px;">
               <h3 style="margin:0 0 10px 0;color:#333;">📎 CV</h3>
@@ -163,13 +164,13 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           <div style="background:#f8f9fa;padding:30px;border-radius:0 0 8px 8px;">
             <div style="background:#fff;padding:25px;border-radius:8px;text-align:center;">
-              <h2 style="margin:0 0 15px 0;color:#333;">Merhaba ${full_name},</h2>
+              <h2 style="margin:0 0 15px 0;color:#333;">Merhaba ${escapeHtml(full_name)},</h2>
               <p style="color:#555;font-size:16px;line-height:1.6;">
-                <strong>${position}</strong> pozisyonu için yaptığınız başvuru başarıyla tarafımıza ulaştı.
+                <strong>${escapeHtml(position)}</strong> pozisyonu için yaptığınız başvuru başarıyla tarafımıza ulaştı.
                 İK ekibimiz başvurunuzu inceleyip uygun bulunması halinde sizinle iletişime geçecektir.
               </p>
               <div style="background:#e3f2fd;padding:15px;border-radius:8px;margin:20px 0;">
-                <p style="margin:5px 0;color:#555;"><strong>Pozisyon:</strong> ${position}</p>
+                <p style="margin:5px 0;color:#555;"><strong>Pozisyon:</strong> ${escapeHtml(position)}</p>
                 <p style="margin:5px 0;color:#555;"><strong>Başvuru Tarihi:</strong> ${turkeyTime}</p>
               </div>
               <p style="color:#666;font-size:14px;margin-top:20px;">

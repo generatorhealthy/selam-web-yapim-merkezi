@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { escapeHtml } from '../_shared/escapeHtml.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,6 +47,14 @@ const handler = async (req: Request): Promise<Response> => {
       fileUrl
     }: AccountingNotificationRequest = await req.json();
 
+    if (typeof fileName !== 'string' || !fileName.trim() || fileName.length > 512
+      || !Number.isInteger(year) || year < 2000 || year > 2200
+      || !Number.isInteger(month) || month < 1 || month > 12
+      || (uploadedBy !== undefined && typeof uploadedBy !== 'string')) {
+      return new Response(JSON.stringify({ error: 'Geçerli dosya adı ve dönem gerekli' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     console.log('Sending accounting notification for file:', fileName);
 
     const uploadDate = new Date().toLocaleString('tr-TR', {
@@ -89,11 +98,11 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="info-box">
               <div class="info-row">
                 <span class="info-label">📁 Dosya Adı:</span>
-                <span class="info-value">${fileName}</span>
+                <span class="info-value">${escapeHtml(fileName)}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">📅 Dönem:</span>
-                <span class="info-value">${getMonthName(month)} ${year}</span>
+                <span class="info-value">${getMonthName(month)} ${escapeHtml(year)}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">⏰ Yüklenme Tarihi:</span>
@@ -102,7 +111,7 @@ const handler = async (req: Request): Promise<Response> => {
               ${uploadedBy ? `
               <div class="info-row">
                 <span class="info-label">👤 Yükleyen:</span>
-                <span class="info-value">${uploadedBy}</span>
+                <span class="info-value">${escapeHtml(uploadedBy)}</span>
               </div>
               ` : ''}
             </div>

@@ -1,11 +1,12 @@
 # 13 Kasım 2026 — Kritik güvenlik A–H
-- [ ] A: Randevu trigger → sunucu işlem kanıtı → bildirim, yetkisiz gerçek biçimli istek reddi ve atomik tekrar kontrolü.
-- [ ] B: Gerçek katalog/kampanya eşleşmesiyle yalnız yeni sipariş fiyat koruması.
-- [ ] C: Sözleşmeye bağlı cayma bedeli, güvenilir abonelik ve atomik tahsilat; sağlayıcı belirsizliğinde tekrar yok.
-- [ ] D: Gerçek cron çağıranları için kesintisiz güvenilir kimlik geçişi.
-- [ ] E/F: WAHA kaynak doğrulaması ve telefon sahipliği/işlem bütçesi; sağlayıcı kabulü olmadan tamamlandı sayılmaz.
-- [ ] G/H: Kalan HTML/AI yolları ve güncel tablo/kolon/rol erişimi; eski mobil INSERT korunur.
-- [ ] Her paket için uygulama/test/canlı/meşru işlev/engel tablosu ve sekiz kesin cevap.
+- [x] A: Randevu trigger → sunucu işlem kanıtı → bildirim canlı; geçerli biçimli yetkisiz 401, 20 eşzamanlı sentetik çağrıda tek gönderim. İlk doğal teslim ve dağıtım öncesi bekleyen çağrı kabulü doğrulanmadı.
+- [ ] B: Katalog key/route fiyatları çelişiyor (campaign ve campaign-premium ters, discounted 1499/1998, premium 2998/4998); kampanya önceliği ve sözleşme süresi teyidi gerekir, INSERT koruması yayımlanmadı.
+- [ ] C: Retry endpoint cayma bedeli tutarını taşımıyor; gerçek sözleşme/dönem tahsilat mekanizması teyidi gerekir, güvenilir fee→order bağı eksik; değiştirilmedi.
+- [ ] D: Randevu trigger işlem kanıtı tamam; cron 2/11 postgres sahibi ve mevcut bağlantı cron.alter_job yetkisiz. Sahip tarafından secret dağıtımı geçişi gerekir; görevler durdurulmadı.
+- [ ] E/F: WAHA sağlayıcı gerçek imza/başlık kabulü ve kamu telefon akışına sahiplik doğrulaması gerekiyor; monitor-mode ve telefon bildirimi açık risk olarak korunur.
+- [x] G kısmi: Dört gerçek e-posta HTML kaçış + blog system/veri ayrımı canlı, 7 yeni test; randevu HTML de güvenli. Diğer sözleşme/e-posta yolları ve alıcı yetkisi tamamlanmadı.
+- [ ] H: 12 canlı tablo politika karşılaştırması yapıldı; tüm yeni rol/kolon sentetik matrisi ve gerçek özel belge oturum kabulü tamamlanmadı. Eski mobil INSERT değişmedi.
+- [x] Paket tablosu ve sekiz kesin cevap: security/critical-security-2026-11-13/RESULT.md; beklenmedik tek muhasebe e-postası ve eksik alan düzeltmesi açık raporlandı.
 
 # 13 Kasım 2026 — Toplu güvenlik düzeltmeleri
 - [x] 69 başlangıç bulgusu, nesne başına durum ve 13 paket raporu; DB tekrar 15 (farklı kapsam), DOMPurify yaması.

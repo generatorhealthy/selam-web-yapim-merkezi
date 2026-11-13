@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { escapeHtml } from "../_shared/escapeHtml.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,11 +75,11 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="margin:8px 0 0;opacity:.9;font-size:14px;">Doktorumol.com.tr — KVKK Aydınlatma Metni</p>
           </div>
           <div style="padding:28px 28px 8px;color:#2d3748;font-size:14px;line-height:1.6;">
-            <p style="margin:0 0 12px;">Sayın <strong>${displayName}</strong>,</p>
+            <p style="margin:0 0 12px;">Sayın <strong>${escapeHtml(displayName)}</strong>,</p>
             <p style="margin:0 0 12px;">Doktorumol.com.tr'ye üye olurken onayladığınız <strong>Aydınlatma Metni</strong>'nin tam içeriği, kayıtlarınız için aşağıda yer almaktadır.</p>
             <div style="background:#edf2f7;border-radius:8px;padding:14px 16px;margin:16px 0;">
               <p style="margin:4px 0;font-size:13px;"><strong>Onay Tarihi:</strong> ${consentDateStr}</p>
-              <p style="margin:4px 0;font-size:13px;"><strong>E-posta:</strong> ${email}</p>
+              <p style="margin:4px 0;font-size:13px;"><strong>E-posta:</strong> ${escapeHtml(email)}</p>
             </div>
           </div>
           <div style="padding:0 28px 24px;color:#4a5568;font-size:14px;line-height:1.6;">
