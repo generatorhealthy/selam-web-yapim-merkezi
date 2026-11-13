@@ -9270,6 +9270,10 @@ export type Database = {
         Args: { p_appointment_id: string; p_token_hash: string }
         Returns: boolean
       }
+      verify_internal_cron_token: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role:

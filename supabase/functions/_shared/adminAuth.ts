@@ -19,6 +19,15 @@ export async function verifyAdminOrCron(
     return { ok: true };
   }
 
+  // Scheduled pg_cron jobs: vault-held token, verified by a service-only RPC.
+  const internalCron = req.headers.get("x-internal-cron-token");
+  if (internalCron && /^[0-9a-f]{64}$/.test(internalCron)) {
+    const svc = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    const { data, error } = await svc.rpc("verify_internal_cron_token", { p_token: internalCron });
+    if (!error && data === true) return { ok: true };
+    return { ok: false, status: 401, error: "Geçersiz görev anahtarı" };
+  }
+
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
 

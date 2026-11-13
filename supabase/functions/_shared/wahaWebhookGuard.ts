@@ -1,8 +1,5 @@
-// WAHA webhook kaynağı doğrulaması — kontrollü geçiş için iki kip.
-//  - İzleme kipi (WAHA_WEBHOOK_ENFORCE != "true"): anahtarsız istek GEÇER ama
-//    "unsigned" olarak kaydedilir; YANLIŞ anahtar her zaman reddedilir.
-//  - Zorunlu kip (WAHA_WEBHOOK_ENFORCE == "true"): anahtarsız/yanlış istek reddedilir.
-// Sır tanımlı değilse zorunlu kipte de istek reddedilir (fail-closed).
+// WAHA webhook kaynağı doğrulaması — her zaman zorunlu (fail-closed).
+// Anahtarsız, yanlış anahtarlı veya sır tanımsız istekler reddedilir.
 import { requireSharedSecret } from "./secretGate.ts";
 
 export type HookAuth =
@@ -18,16 +15,12 @@ export function readHookToken(h: Headers): string | null {
 export function decideHookAuth(
   provided: string | null,
   secret: string | null | undefined,
-  enforce: boolean,
+  _enforce: boolean,
 ): HookAuth {
+  // Fail-closed: unsigned or unverifiable webhook calls never reach storage or outbound sends.
   const hasSecret = !!secret && secret.trim() !== "";
-  if (!provided) {
-    if (enforce) return { allow: false, status: hasSecret ? 401 : 500, state: hasSecret ? "rejected" : "misconfigured" };
-    return { allow: true, state: "unsigned" };
-  }
-  if (!hasSecret) {
-    return enforce ? { allow: false, status: 500, state: "misconfigured" } : { allow: true, state: "unsigned" };
-  }
+  if (!hasSecret) return { allow: false, status: 500, state: "misconfigured" };
+  if (!provided) return { allow: false, status: 401, state: "rejected" };
   const r = requireSharedSecret(provided, secret);
   return r.ok ? { allow: true, state: "signed" } : { allow: false, status: 401, state: "rejected" };
 }

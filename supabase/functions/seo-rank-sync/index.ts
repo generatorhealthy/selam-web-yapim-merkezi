@@ -176,6 +176,10 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = typeof body.action === "string" ? body.action : "sync";
 
+    // Every action, including the scheduled one, requires admin or trusted scheduler authority.
+    const auth = await verifyAdminOrCron(req);
+    if (!auth.ok) return json({ error: auth.error }, auth.status);
+
     if (action === "cron") {
       // Zamanlanmış çağrı: yalnızca son 5 saatte başarılı yenileme yoksa çalışır.
       const { data: last } = await supabase.from("seo_sync_runs").select("started_at").gte("started_at", new Date(Date.now() - 5 * 3600e3).toISOString()).limit(1);
@@ -184,9 +188,6 @@ Deno.serve(async (req) => {
       await fillMissing(supabase, 12).catch(() => null);
       return json(res);
     }
-
-    const auth = await verifyAdminOrCron(req);
-    if (!auth.ok) return json({ error: auth.error }, auth.status);
 
     if (action === "sync") return json(await sync(supabase));
     if (action === "fill") return json(await fillMissing(supabase));
@@ -213,7 +214,7 @@ Deno.serve(async (req) => {
     }
     return json({ error: "Bilinmeyen işlem" }, 400);
   } catch (e) {
-    console.error(e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    console.error("seo-rank-sync failed");
+    return json({ error: "SEO senkronizasyonu tamamlanamadı" }, 500);
   }
 });

@@ -27,7 +27,8 @@ const getDeviceType = () => {
 const getSessionId = () => {
   let id = sessionStorage.getItem('reg_analytics_session');
   if (!id) {
-    id = `reg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Unguessable random ID: the server only accepts updates for this format.
+    id = `reg_${crypto.randomUUID()}`;
     sessionStorage.setItem('reg_analytics_session', id);
   }
   return id;
@@ -36,7 +37,7 @@ const getSessionId = () => {
 const getVisitorId = () => {
   let id = localStorage.getItem('reg_visitor_id');
   if (!id) {
-    id = `v_${Date.now()}_${Math.random().toString(36).substr(2, 12)}`;
+    id = `v_${crypto.randomUUID()}`;
     localStorage.setItem('reg_visitor_id', id);
   }
   return id;

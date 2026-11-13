@@ -157,7 +157,6 @@ Deno.serve(async (req) => {
     console.warn(JSON.stringify({ evt: 'wa_bot_auth', state: hookAuth.state }));
     return json({ ok: false, error: 'Unauthorized' }, hookAuth.status);
   }
-  if (hookAuth.state === 'unsigned') console.log(JSON.stringify({ evt: 'wa_bot_auth', state: 'unsigned' }));
 
   try {
     const body = (await req.json()) as Record<string, unknown>;

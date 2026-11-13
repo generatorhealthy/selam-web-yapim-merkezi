@@ -19,7 +19,7 @@ const safeSet = (k: string, v: string) => { try { localStorage.setItem(k, v); } 
 export const getLeadSessionId = () => {
   let id = safeGet(SESSION_KEY);
   if (!id) {
-    id = `ls_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
+    id = `ls_${crypto.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(36).slice(2, 12)}`}`;
     safeSet(SESSION_KEY, id);
   }
   return id;
