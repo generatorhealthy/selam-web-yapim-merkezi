@@ -1,0 +1,2 @@
+- Test appointment guards against minimal synthetic local PostgreSQL fixtures before migrating; never replay historical migrations or contact notification providers.
+- Anonymous burst protection uses existing server-timestamped contact pairs, never untrusted IP headers; it is not verified identity or comprehensive bot protection.

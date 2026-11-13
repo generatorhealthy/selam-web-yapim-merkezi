@@ -31,6 +31,8 @@ export function appointmentErrorMessage(error: unknown): string {
   }
   if (detail?.message?.includes('appointment_slot_taken')) return 'Seçtiğiniz saat artık dolu. Lütfen başka bir saat seçin.';
   if (detail?.message?.includes('appointment_slot_in_past')) return 'Seçtiğiniz saat geçmişte kaldı. Lütfen ileri bir saat seçin.';
+  if (detail?.message?.includes('appointment_slot_unavailable')) return 'Uzman seçtiğiniz saati kapatmış. Lütfen başka bir saat seçin.';
+  if (detail?.message?.includes('appointment_retry_later')) return 'Kısa sürede çok sayıda başvuru alındı. Lütfen biraz bekleyin veya bizimle iletişime geçin.';
   if (detail?.message?.includes('blocked_visitor') || detail?.message?.includes('blocked_phone')) {
     return 'Bu iletişim bilgileriyle randevu oluşturulamıyor. Lütfen bizimle iletişime geçin.';
   }
