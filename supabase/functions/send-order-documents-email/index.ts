@@ -91,63 +91,6 @@ const buildTextContent = (customerName: string, packageName: string, message: st
   return sections.join('\n\n');
 };
 
-const getOrderContractContent = async (
-  supabaseAdmin: any,
-  options: {
-    orderId?: string;
-    orderCustomerEmail?: string;
-    customerEmail: string;
-    packageName: string;
-  }
-) => {
-  const { orderId, orderCustomerEmail, customerEmail, packageName } = options;
-
-  if (orderId) {
-    const { data: order, error } = await supabaseAdmin
-      .from('orders')
-      .select('id, pre_info_pdf_content, distance_sales_pdf_content')
-      .eq('id', orderId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Order fetch error by id:', error);
-    } else if (order) {
-      return {
-        matchedOrderId: order.id,
-        preInfoContent: order.pre_info_pdf_content?.trim() || undefined,
-        distanceSalesContent: order.distance_sales_pdf_content?.trim() || undefined,
-      };
-    }
-  }
-
-  const lookupEmail = orderCustomerEmail?.trim() || customerEmail.trim();
-  if (!lookupEmail) {
-    return { matchedOrderId: undefined, preInfoContent: undefined, distanceSalesContent: undefined };
-  }
-
-  const { data: fallbackOrders, error: fallbackError } = await supabaseAdmin
-    .from('orders')
-    .select('id, pre_info_pdf_content, distance_sales_pdf_content, created_at')
-    .eq('customer_email', lookupEmail)
-    .eq('package_name', packageName)
-    .in('status', ['approved', 'completed'])
-    .order('created_at', { ascending: false })
-    .limit(1);
-
-  if (fallbackError) {
-    console.error('Order fetch error by email fallback:', fallbackError);
-    return { matchedOrderId: undefined, preInfoContent: undefined, distanceSalesContent: undefined };
-  }
-
-  const fallbackOrder = fallbackOrders?.[0];
-
-  return {
-    matchedOrderId: fallbackOrder?.id,
-    preInfoContent: fallbackOrder?.pre_info_pdf_content?.trim() || undefined,
-    distanceSalesContent: fallbackOrder?.distance_sales_pdf_content?.trim() || undefined,
-  };
-};
-
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -178,48 +121,31 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const {
-      orderId,
-      orderCustomerEmail,
-      customerEmail,
-      customerName,
-      packageName,
-      message,
-      invoicePdf,
-      contractPdf,
-      invoiceFileName,
-      contractFileName,
-      preInfoContent,
-      distanceSalesContent
-    }: OrderDocumentsEmailRequest = await req.json();
-
-    let resolvedPreInfoContent = preInfoContent?.trim() || undefined;
-    let resolvedDistanceSalesContent = distanceSalesContent?.trim() || undefined;
-    let resolvedOrderId = orderId;
-
-    if (!resolvedPreInfoContent || !resolvedDistanceSalesContent) {
-      const orderContractContent = await getOrderContractContent(supabaseAdmin, {
-        orderId,
-        orderCustomerEmail,
-        customerEmail,
-        packageName,
-      });
-      resolvedOrderId ||= orderContractContent.matchedOrderId;
-      resolvedPreInfoContent ||= orderContractContent.preInfoContent;
-      resolvedDistanceSalesContent ||= orderContractContent.distanceSalesContent;
+    const body: OrderDocumentsEmailRequest = await req.json();
+    if (!body || typeof body.orderId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.orderId)) {
+      return new Response(JSON.stringify({error: 'Kayıtlı sipariş kimliği gerekli'}), {status: 400, headers: {...corsHeaders, 'Content-Type': 'application/json'}});
     }
-
-    console.log('Sending order documents email to:', customerEmail);
-    console.log('Contract content found:', {
-      requestedOrderId: orderId,
-      resolvedOrderId,
-      orderCustomerEmail,
-      hasPreInfo: !!resolvedPreInfoContent,
-      hasDistanceSales: !!resolvedDistanceSalesContent,
-    });
-
+    const {data: order, error: orderError} = await supabaseAdmin.from('orders')
+      .select('id,customer_email,customer_name,package_name,pre_info_pdf_content,distance_sales_pdf_content')
+      .eq('id', body.orderId).maybeSingle();
+    if (orderError || !order) return new Response(JSON.stringify({error: 'Sipariş bulunamadı'}), {status: 404, headers: {...corsHeaders, 'Content-Type': 'application/json'}});
+    const customerEmail = order.customer_email?.trim();
+    if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) ||
+        (body.customerEmail && body.customerEmail.trim().toLowerCase() !== customerEmail.toLowerCase())) {
+      return new Response(JSON.stringify({error: 'Alıcı siparişte kayıtlı e-posta olmalıdır'}), {status: 400, headers: {...corsHeaders, 'Content-Type': 'application/json'}});
+    }
+    if (typeof body.message !== 'string' || !body.message.trim() || body.message.length > 10000) {
+      return new Response(JSON.stringify({error: 'Geçerli mesaj gerekli'}), {status: 400, headers: {...corsHeaders, 'Content-Type': 'application/json'}});
+    }
+    const {invoicePdf, contractPdf, invoiceFileName, contractFileName, message} = body;
+    const orderId = order.id;
+    const resolvedOrderId = order.id;
+    const customerName = order.customer_name || '';
+    const packageName = order.package_name || '';
+    const resolvedPreInfoContent = order.pre_info_pdf_content?.trim() || undefined;
+    const resolvedDistanceSalesContent = order.distance_sales_pdf_content?.trim() || undefined;
     if (!resolvedPreInfoContent && !resolvedDistanceSalesContent) {
-      throw new Error('Siparişte gönderilecek sözleşme içeriği bulunamadı');
+      return new Response(JSON.stringify({error: 'Siparişte kayıtlı sözleşme içeriği yok'}), {status: 409, headers: {...corsHeaders, 'Content-Type': 'application/json'}});
     }
 
     const attachments: Array<{ content: string; name: string }> = [];
@@ -315,14 +241,14 @@ const handler = async (req: Request): Promise<Response> => {
     const responseData = await response.json();
 
     if (!response.ok) {
-      console.error('Brevo API error:', responseData);
+      console.error('Order document delivery rejected');
       return new Response(
-        JSON.stringify({ error: 'Failed to send email', details: responseData }),
+        JSON.stringify({ error: 'Failed to send email' }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Email sent successfully:', responseData);
+    console.log('Order document delivery completed');
 
     try {
       await supabaseAdmin.from('brevo_email_logs').insert({
@@ -341,7 +267,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
       });
     } catch (logErr) {
-      console.error('Email log insert error:', logErr);
+      console.error('Email log unavailable');
     }
 
     return new Response(
@@ -354,9 +280,9 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error) {
-    console.error('Error in send-order-documents-email:', error);
+    console.error('Order document request failed');
     return new Response(
-      JSON.stringify({ error: (error instanceof Error ? error.message : String(error)) || 'Internal server error' }),
+      JSON.stringify({ error: 'Sipariş belgesi gönderilemedi' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

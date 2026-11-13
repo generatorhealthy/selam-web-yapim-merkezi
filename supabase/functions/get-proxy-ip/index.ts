@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { verifyAdminOrCron } from '../_shared/adminAuth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +11,10 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  if (req.method !== 'POST') return new Response(JSON.stringify({error: 'Method not allowed'}), {status: 405, headers: {...corsHeaders, 'Content-Type': 'application/json'}});
+  const auth = await verifyAdminOrCron(req, ['admin']);
+  if (!auth.ok) return new Response(JSON.stringify({error: auth.error}), {status: auth.status, headers: {...corsHeaders, 'Content-Type': 'application/json'}});
 
   try {
     const scrapingBeeApiKey = Deno.env.get('SCRAPINGBEE_API_KEY');
@@ -37,17 +42,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const responseText = await response.text();
-    console.log('ScrapingBee proxy IP response:', responseText);
     
     let ipData;
     try {
       ipData = JSON.parse(responseText);
     } catch (parseError) {
-      console.log('Failed to parse response as JSON:', responseText);
       throw new Error('Invalid response from IP service');
     }
 
-    console.log('Proxy IP detected:', ipData.ip);
 
     return new Response(JSON.stringify({ 
       success: true,
@@ -63,11 +65,11 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error('Error getting proxy IP:', error);
+    console.error('Proxy lookup failed');
     
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: 'Proxy lookup failed'
     }), {
       status: 500,
       headers: {

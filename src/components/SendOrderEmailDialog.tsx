@@ -30,8 +30,7 @@ interface UploadedFile {
 
 const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialogProps) => {
   const { toast } = useToast();
-  // Not: Bu diyalog, belgeleri genelde *uzmana* göndermek için kullanılır.
-  // Bu yüzden varsayılan alıcıyı müşterinin e-postasıyla otomatik doldurmuyoruz.
+  // Recipient is bound to the selected order; the server enforces the same rule.
   const [recipientEmail, setRecipientEmail] = useState<string>("");
   const [message, setMessage] = useState<string>(
     `Merhaba,\n\nSipariş belgeleriniz ekte yer almaktadır.\n\nHerhangi bir sorunuz olursa bizimle iletişime geçmekten çekinmeyin.\n\nSaygılarımızla,\nDoktorumol Ekibi`
@@ -41,8 +40,8 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    if (open) setRecipientEmail("");
-  }, [open, order?.id]);
+    if (open) setRecipientEmail(order?.customer_email || "");
+  }, [open, order?.id, order?.customer_email]);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -201,18 +200,18 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
             Sipariş Belgelerini Gönder
           </DialogTitle>
           <DialogDescription>
-            Müşteri: {order?.customer_name} ({order?.customer_email}) — belgeleri göndereceğiniz alıcı (uzman) e-postasını aşağıdan girin.
+            Müşteri: {order?.customer_name} ({order?.customer_email})
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Recipient */}
           <div className="space-y-2">
-            <Label htmlFor="recipientEmail">Alıcı E-posta (Uzman)</Label>
+            <Label htmlFor="recipientEmail">Siparişte Kayıtlı E-posta</Label>
             <Input
               id="recipientEmail"
               value={recipientEmail}
-              onChange={(e) => setRecipientEmail(e.target.value)}
+              readOnly
               placeholder="uzman@domain.com"
               autoComplete="email"
             />

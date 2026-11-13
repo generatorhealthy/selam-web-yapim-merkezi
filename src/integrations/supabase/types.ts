@@ -491,6 +491,38 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_delivery_claims: {
+        Row: {
+          appointment_id: string
+          channel: string
+          created_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          channel: string
+          created_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          channel?: string
+          created_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_delivery_claims_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_notification_authority: {
         Row: {
           appointment_id: string

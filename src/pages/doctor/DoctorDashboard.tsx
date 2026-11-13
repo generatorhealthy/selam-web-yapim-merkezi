@@ -57,7 +57,9 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
     try {
       // Normalize date and time for Postgres
       const timeValue = formData.appointment_time?.length === 5 ? `${formData.appointment_time}:00` : formData.appointment_time;
+      const appointmentId = crypto.randomUUID();
       const payload = {
+        id: appointmentId,
         patient_name: formData.patient_name.trim(),
         patient_email: formData.patient_email.trim(),
         patient_phone: formData.patient_phone.trim(),
@@ -88,27 +90,8 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
 
       // Send patient confirmation email
       try {
-        const { data: specialistData } = await supabase
-          .from('specialists')
-          .select('name, email, phone')
-          .eq('id', doctorId)
-          .single();
-
-        if (specialistData) {
           const { error: emailError } = await supabase.functions.invoke('send-patient-appointment-confirmation', {
-            body: {
-              appointmentId: 'temp-id', // The actual ID would come from the insert response
-              patientName: formData.patient_name,
-              patientEmail: formData.patient_email,
-              patientPhone: formData.patient_phone,
-              specialistName: specialistData.name,
-              specialistPhone: specialistData.phone,
-              specialistEmail: specialistData.email,
-              appointmentDate: formData.appointment_date,
-              appointmentTime: formData.appointment_time,
-              appointmentType: formData.appointment_type,
-              notes: null
-            }
+            body: { appointmentId }
           });
 
           if (emailError) {
@@ -116,7 +99,6 @@ const AppointmentFormComponent = ({ doctorId, onSuccess }: { doctorId: string; o
           } else {
             console.log('✅ Patient confirmation email sent successfully');
           }
-        }
       } catch (emailError) {
         console.error('Error sending patient confirmation:', emailError);
       }
