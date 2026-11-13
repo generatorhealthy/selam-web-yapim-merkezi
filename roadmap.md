@@ -1,3 +1,11 @@
+# 13 Kasım 2026 — Aşama 5 admin ve güvenlik tamamlama
+- [ ] E-posta hedefli kilidi kaldıran, sunucu doğrulamalı özel kademeli giriş koruması; sentetik kabul ve ayrı canlı doğrulama.
+- [ ] Sabit 64 sipariş için salt-okunur admin/staff inceleme ekranı ve denetim tasarımı.
+- [ ] Modül/RLS/RPC/Storage/Edge yetki envanteri; dört sentetik rol ile sınır testleri.
+- [ ] Önceki 174 / güncel 167 uyarının nesne bazlı sınıflandırması ve küçük güvenlik paketleri.
+- [ ] Hostinger uyarı dosyası/HTML kanıtı ve izinli sentetik tarayıcı kontrolü.
+- [ ] Kritik işler sonrası düşük riskli SEO düzeltmeleri; kalan dış engelleri açık raporla.
+
 # 13 Kasım 2026 — Randevu ve ödeme son düzeltmeleri (güncel görev)
 - [x] IP kullanmayan, anonim iletişim çifti için kısa süreli sunucu koruması; yoğunluk ölçümü ve yanlış engelleme kabulü.
 - [x] Gerçek available_time_slots kaynağında kapalı saat reddi; 20 eşzamanlı sentetik PostgreSQL başvurusu ve bağımsız canlı yayın.

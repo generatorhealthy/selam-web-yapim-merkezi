@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { sendSms } from "@/services/smsService";
 import SendOrderEmailDialog from "@/components/SendOrderEmailDialog";
 import InvoiceReconciliationDialog from "@/components/InvoiceReconciliationDialog";
+import LegacyOrderReviewDialog from "@/components/LegacyOrderReviewDialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
@@ -1653,6 +1654,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto p-6 space-y-8">
         <AdminBackButton />
+        {userProfile?.is_approved && ['admin', 'staff'].includes(userProfile.role) && <LegacyOrderReviewDialog />}
         
         {/* Header Section */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/90 via-primary to-primary/80 p-8 text-white shadow-2xl">

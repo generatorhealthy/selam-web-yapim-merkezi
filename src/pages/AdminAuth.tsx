@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, EyeOff, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { Eye, EyeOff } from "lucide-react";
+import { solveLoginChallenge } from "@/lib/adminLogin";
 import { primeUserRoleCache } from "@/hooks/useUserRole";
 
 const AdminAuth = () => {
@@ -18,9 +17,8 @@ const AdminAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
-  const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
-  const [attemptsRemaining, setAttemptsRemaining] = useState(3);
+  const submitLock = useRef(false);
+  const nextChallenge = useRef<Parameters<typeof solveLoginChallenge>[0] | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -40,50 +38,6 @@ const AdminAuth = () => {
     }
   };
 
-  // Check if user is blocked when email changes
-  useEffect(() => {
-    const checkBlockStatus = async () => {
-      if (!loginData.email || !loginData.email.includes('@')) return;
-      
-      try {
-        const { data, error } = await withTimeout(
-          async () => await supabase.rpc('check_admin_login_block', {
-            p_email: loginData.email
-          }),
-          5000,
-          'Blokaj kontrolü zaman aşımına uğradı'
-        );
-        
-        if (error) {
-          console.error('Block check error:', error);
-          return;
-        }
-        
-        if (data && data.length > 0) {
-          const result = data[0];
-          setIsBlocked(result.is_blocked);
-          setBlockedUntil(result.blocked_until ? new Date(result.blocked_until) : null);
-          setAttemptsRemaining(result.attempts_remaining);
-          
-          // If blocked, redirect to homepage
-          if (result.is_blocked && result.blocked_until && new Date(result.blocked_until) > new Date()) {
-            toast({
-              title: "Erişim Engellendi",
-              description: `Çok fazla başarısız giriş denemesi. ${format(new Date(result.blocked_until), 'dd MMMM yyyy HH:mm', { locale: tr })} tarihine kadar bekleyin.`,
-              variant: "destructive"
-            });
-            setTimeout(() => navigate('/'), 2000);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking block status:', error);
-      }
-    };
-    
-    const debounceTimer = setTimeout(checkBlockStatus, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [loginData.email, navigate, toast]);
-
   // Do not load credentials from localStorage for security
   useEffect(() => {
     // Security: Remove any existing credentials from localStorage
@@ -93,95 +47,31 @@ const AdminAuth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if blocked before attempting login
-    if (isBlocked && blockedUntil && blockedUntil > new Date()) {
-      toast({
-        title: "Erişim Engellendi",
-        description: `${format(blockedUntil, 'dd MMMM yyyy HH:mm', { locale: tr })} tarihine kadar giriş yapamazsınız.`,
-        variant: "destructive"
-      });
-      navigate('/');
-      return;
-    }
-
+    if (submitLock.current) return;
+    submitLock.current = true;
     setIsLoading(true);
-
     try {
-      const { data: authData, error: authError } = await withTimeout(
-        async () => await supabase.auth.signInWithPassword({
-          email: loginData.email,
-          password: loginData.password,
-        }),
-        12_000,
-        'Giriş isteği zaman aşımına uğradı. Lütfen tekrar deneyin.'
-      );
-
-      if (authError) {
-        console.error('Giriş hatası:', authError);
-        
-        const isCredentialError = authError.message.includes('Invalid login credentials');
-
-        try {
-          if (!isCredentialError) throw new Error('Geçici bağlantı hatası kilit sayacına eklenmedi');
-          const { data: blockData } = await withTimeout(
-            async () => await supabase.rpc('record_failed_admin_login', {
-              p_email: loginData.email,
-              p_ip_address: null
-            }),
-            8000,
-            'Başarısız giriş kaydı zaman aşımına uğradı'
-          );
-        
-          if (blockData && blockData.length > 0) {
-            const result = blockData[0];
-            setIsBlocked(result.is_now_blocked);
-            setBlockedUntil(result.blocked_until ? new Date(result.blocked_until) : null);
-            setAttemptsRemaining(result.attempts_remaining);
-            
-            if (result.is_now_blocked) {
-              toast({
-                title: "Hesap Kilitlendi!",
-                description: `3 başarısız giriş denemesi. ${format(new Date(result.blocked_until), 'dd MMMM yyyy HH:mm', { locale: tr })} tarihine kadar engellendi.`,
-                variant: "destructive"
-              });
-              setTimeout(() => navigate('/'), 3000);
-              return;
-            }
-          }
-        } catch (blockError) {
-          if (isCredentialError) console.error('Başarısız giriş kaydı hatası:', blockError);
-        }
-        
-        if (authError.message.includes('Email not confirmed')) {
-          toast({
-            title: "E-posta Doğrulaması Gerekli",
-            description: "Lütfen e-posta adresinizi kontrol edin ve doğrulama linkine tıklayın.",
-            variant: "destructive"
-          });
-        } else if (authError.message.includes('Invalid login credentials')) {
-          toast({
-            title: "Giriş Hatası",
-            description: `E-posta veya şifre hatalı. ${attemptsRemaining > 0 ? `${attemptsRemaining} deneme hakkınız kaldı.` : 'Son deneme!'}`,
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Giriş Hatası",
-            description: authError.message,
-            variant: "destructive"
-          });
-        }
+      let ticket = nextChallenge.current;
+      if (!ticket || ticket.challenge.expiresAt <= Date.now()) {
+        const response = await supabase.functions.invoke('admin-panel-login', { body: { action: 'challenge' } });
+        if (response.error || !response.data?.token) throw new Error('login_unavailable');
+        ticket = response.data;
+      }
+      if (!ticket) throw new Error('login_unavailable');
+      const solution = await solveLoginChallenge(ticket);
+      nextChallenge.current = null;
+      const response = await supabase.functions.invoke('admin-panel-login', {
+        body: { action: 'login', email: loginData.email, password: loginData.password, token: ticket.token, solution },
+      });
+      if (response.error || !response.data?.session) {
+        let failed = response.data;
+        try { failed = await response.error?.context?.json(); } catch { /* Generic failure only. */ }
+        if (failed?.token && failed?.challenge) nextChallenge.current = failed;
+        toast({ title: 'Giriş Hatası', description: 'Giriş doğrulanamadı. Bilgilerinizi kontrol edip tekrar deneyin.', variant: 'destructive' });
         return;
       }
-
-      if (!authData.user) {
-        toast({
-          title: "Giriş Hatası",
-          description: "Kullanıcı bilgileri alınamadı.",
-          variant: "destructive"
-        });
-        return;
-      }
+      const { data: authData, error: authError } = await supabase.auth.setSession(response.data.session);
+      if (authError || !authData.user) throw new Error('login_unavailable');
 
       const { data: panelProfiles, error: profileError } = await withTimeout(
         async () => await supabase.rpc('get_my_panel_access'),
@@ -234,7 +124,7 @@ const AdminAuth = () => {
       try {
         await withTimeout(
           async () => await supabase.rpc('reset_admin_login_attempts', {
-            p_email: loginData.email
+            p_email: authData.user.email ?? loginData.email
           }),
           5000,
           'Giriş denemeleri sıfırlanamadı'
@@ -269,13 +159,14 @@ const AdminAuth = () => {
       }
 
     } catch (error) {
-      console.error('Beklenmeyen hata:', error);
+      // Do not log credentials or auth response details.
       toast({
         title: "Hata",
         description: "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive"
       });
     } finally {
+      submitLock.current = false;
       setIsLoading(false);
     }
   };
@@ -297,35 +188,7 @@ const AdminAuth = () => {
             </p>
           </CardHeader>
           <CardContent>
-            {isBlocked && blockedUntil && blockedUntil > new Date() ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertTriangle className="w-8 h-8 text-red-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-red-600 mb-2">Erişim Engellendi</h3>
-                <p className="text-gray-600 mb-4">
-                  3 başarısız giriş denemesi nedeniyle hesabınız geçici olarak kilitlendi.
-                </p>
-                <p className="text-sm text-gray-500 mb-6">
-                  Engel kalkış zamanı: <br />
-                  <span className="font-medium text-gray-700">
-                    {format(blockedUntil, 'dd MMMM yyyy HH:mm', { locale: tr })}
-                  </span>
-                </p>
-                <Button variant="outline" asChild>
-                  <Link to="/">Ana Sayfaya Dön</Link>
-                </Button>
-              </div>
-            ) : (
               <form onSubmit={handleLogin} className="space-y-4">
-                {attemptsRemaining < 3 && attemptsRemaining > 0 && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                    <p className="text-sm text-amber-700">
-                      {attemptsRemaining} deneme hakkınız kaldı. 3 hatalı girişte hesabınız 3 saat süreyle kilitlenecek.
-                    </p>
-                  </div>
-                )}
                 <div>
                   <Label htmlFor="email">E-posta</Label>
                   <Input
@@ -389,7 +252,6 @@ const AdminAuth = () => {
                   </Button>
                 </div>
               </form>
-            )}
           </CardContent>
         </Card>
       </div>
