@@ -1,8 +1,10 @@
 # 12 Kasım 2026 — Kritik ödeme/üyelik paketleri
-- [ ] Sipariş sahipliği ve istemciden aktivasyon engeli: gerçek şema/geriye uyumluluk, sentetik SQL kabul, dar migration ve salt okunur canlı teyit.
-- [ ] Callback/reconciliation ortak atomik ödeme kaydı: doğrulanmış işlem/tutar/para birimi, idempotent yan etkiler; kabul geçmeden yayın yok.
-- [ ] Randevu/WhatsApp bağımsız güvenlik düzeltmeleri; mevcut mesaj bağlantıları ve eski INSERT korunur.
-- [ ] Önceki Hostinger paketini ve yeni paketlerin gerçek dağıtımlarını ayrı doğrula; kalan kullanıcı etkilerini bildir.
+- [x] Dar canlı yetki paketi: paid INSERT, rol/onay/aktivasyon/kimlik değişikliği reddi, ad benzerliğiyle sipariş okuma kaldırımı; auth lifecycle uyumluluğu. Yerel 12 SQL kabul + canlı tanım/izin teyidi; gerçek müşteri işlemi denenmedi.
+- [ ] Callback/reconciliation tam geçiş — ortak atomik aday 20 bağlantıda 1 uygulama/19 duplicate geçti; gerçek sağlayıcı charge/currency ve tüm mevcut reconciliation/fatura yolları kabulü yok, yayımlanmadı.
+- [x] WhatsApp tek oturum→tek referral UUID, duplicate assignment doğrulaması ve başarısız kayıtta completed yok; wa-bot-engine yayımlandı. Gerçek mesaj teslimi denenmedi.
+- [ ] Anonim randevu hız kontrolü — eski ortak INSERT uçları/sağlayıcı kaynakları uyumluluk kabulü yok; mevcut PK+slot unique korunur, yeni rate limit yayımlanmadı.
+- [x] Önceki Hostinger web paketi app-y1xDolZ5.js gerçek sitede; sahte ödeme bilgisi teyit bekliyor, 390x844 taşma yok. Sözleşme anon 401. Yeni DB/Edge dağıtımları webden ayrı kaydedildi.
+- [ ] Tüm ödeme yolları sahipliği/üyelik tam kabul — 16 hesap/63 eski ad eşleşmesi artık yetki kanıtı değil; yeni doğrulanmış geçmiş sahiplik bağı dış doğrulama bekler. Ödeme initialize/reconciliation/fatura provider kabulü eksik.
 
 # 12 Kasım 2026 — Aşama 3 tamamlama / Aşama 4 web akışları
 - [x] Önceki randevu yayını gerçek alanda app-C2tzd4uX.js (200) ile görüldü; mobil uzman→görüşme→takvim seçimi taşmasız, kayıt/mesaj gönderilmedi.
