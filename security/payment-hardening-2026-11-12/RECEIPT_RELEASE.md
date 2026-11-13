@@ -1,0 +1,15 @@
+# 13 Kasım 2026 — Fatura teyit yolu
+
+`birfatura-invoice-link-update` gerçek kullanılan provider callback yoluna referans/numara/tarih kontrolü bağlandı. Pull endpoint'in mevcut sayısal timestamp OrderId biçimi desteklenir; bir milisaniye aralığında birden çok sipariş varsa reddedilir. UUID de desteklenir. Geçerli approved/completed ve silinmemiş siparişe invoice_number yalnız NULL iken yazılır. Mevcut farklı numara değiştirilemez. Aynı numara tekrarında durum duplicate; timeout sonrası önce DB readback, kör tekrar yok. Yeni fatura oluşturmaz, kuyruk veya müşteri üyeliği değiştirmez. Tarih Türkiye offsetiyle parse edilir.
+
+11 Deno receipt/queue testi geçti; receipt için 20 eşzamanlı sentetik çağrı 1 yazma, farklı numara/ambiguous sipariş/pending reddi ve timeout readback doğrulandı. Handler bağımlılık kontrolü geçti. Build OK. Deploy source SHA256 `8b586faddd0ba248931b33ff48ac3b9bb11d2932d1f18365a8dc430638b4cbed`; canlı yetkisiz POST 401. Gerçek sağlayıcı callbacki yeniden oynatılmadı; müşteri faturası kesilmedi. Yetkili provider uçtan uca kabulü hâlâ eksik. Migration ve frontend değişikliği yok.
+
+Rollback: eski receipt handler numara kaydetmeden başarı iddia ediyordu; güvenli geri alma yalnız yeni receipt işleme özelliğini bakım hatasına çekmek olabilir, eski yanlış başarıyı geri getirmek değildir. Mevcut farklı invoice_number, hayali INV numaraları dahil, otomatik değiştirilmez; yetkili mutabakat gerekir.
+
+## Ödeme kabul sınırı
+Sağlayıcı resmi abonelik dokümanı token GET `/v2/subscription/checkoutform/{token}` sonucunun ACTIVE veya trial olabileceğini gösteriyor: ACTIVE tek başına tahsilat değildir. Detay `orders.paymentAttempts.paymentId`, order price/currencyCode/startPeriod/endPeriod alınmalı. Repository'nin gerçek initialize çağrısında henüz server-owned order intent yok. Girişsiz satın almayı kesmeden yeni server order/capability ve frontend dağıtımı birlikte kabul edilmelidir. Bu yüzden initialize/callback/reconciliation değişikliği veya settlement migration bu pakette yayımlanmadı. Eski müşterilerin gerçek yenileme bağları kabul edilmeden bir kısmını e-postayla güvenilir sayan fallback eklenmedi.
+
+## Eski sipariş denetimi
+Sabit küme `audit/order-ids-2026-11-13.txt`: 64 UUID, SHA256 `820acea0fcb3239c501d372125fbd1f6470147655193fb467c56f1e134279d9a`. Salt okunur ad eşleşmesi yalnız denetim kapsamını bulmak içindir, sahiplik değildir. Önceki 63 sabit küme mevcut değil. Güvenilir sahipliği kanıtlanan 0; 64 destek işlem/hesap delili gerektirir. Kayıtlar, abonelikler ve Premium erişimleri değiştirilmedi.
+
+Destek doğrulaması: yetkili personel oturumuyla kayıtlı müşteri başvurusu, sağlayıcı tahsilat/fatura referansı ve imzalı sözleşme/hesap bağını çapraz kontrol etmeli; karar delil referanslarıyla ayrı kayıtlanmalı, başka müşterinin içeriği başvuru sahibine önceden gösterilmemeli. Bu prosedür otomatik erişim atama işlevi değildir; server-bound sahiplik kayıt sistemi henüz etkinleştirilmedi.

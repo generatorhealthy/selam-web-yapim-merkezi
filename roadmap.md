@@ -1,3 +1,8 @@
+# 13 Kasım 2026 — Ödeme sonuçlandırma talimatı
+- [ ] Checkout server-bound order/token ve bütün callback/yenileme kabulü; eski girişsiz akış kesilmeden kimlik/işlem kanıtı gerekli.
+- [x] BirFatura invoiceLinkUpdate gerçek receipt yoluna number/date/reference validation + conditional tek yazma/readback bağlandı; 11 test, deploy ve yetkisiz 401. Dış sağlayıcı fatura sorgusu ve transport kabulü eksik.
+- [x] 64 eski siparişin sabit UUID kümesi kaydedildi, SHA256 doğrulandı; işlem/hesap kanıtı olmadığı için sahiplik atanmadı. Destek deliliyle güvenli erişim akışı henüz etkin değil.
+
 # 13 Kasım 2026 — Aydınlatma bölüm 7
 - [x] Visitor analytics onayla kapatıldı; settings visitor/click false, gerçek domain tarayıcıda Lovable script/analytics request yok.
 - [x] Yalnız bölüm 7 v10 olarak sadeleştirildi; v9 SHA arşivi ve diğer belgeler birebir korunur. 7 yayın testi + özet ve bölüm eşitliği kontrolü + mobil taşma yok.

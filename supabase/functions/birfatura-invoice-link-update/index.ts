@@ -1,96 +1,51 @@
 import { verifyBirfatura } from '../_shared/birfaturaAuth.ts';
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { acceptInvoiceReceipt, parseInvoiceReceipt } from '../_shared/invoiceReceipt.ts';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { corsHeaders as sdkCorsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, token, x-token, x-api-key, api-key, api_password',
+const corsHeaders = { ...sdkCorsHeaders,
+  'Access-Control-Allow-Headers': `${sdkCorsHeaders['Access-Control-Allow-Headers']}, token, x-token, x-api-key, api-key, api_password, apipassword`,
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  if (!verifyBirfatura(req)) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
+  status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+});
+serve(async req => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (!verifyBirfatura(req)) return json({ error: 'Unauthorized' }, 401);
+  if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
   try {
-    const url = new URL(req.url);
-    const token = req.headers.get('token') || req.headers.get('x-token') || req.headers.get('x-api-key') || req.headers.get('api-key') || req.headers.get('api_password') || req.headers.get('authorization') || url.searchParams.get('token') || url.searchParams.get('apikey') || url.searchParams.get('apiKey') || '';
-
-    // Token validation. Enforced only when BIRFATURA_WEBHOOK_SECRET secret is configured,
-    // so the existing webhook keeps working until the token is set on the BirFatura side.
-    const BIRFATURA_WEBHOOK_SECRET = Deno.env.get('BIRFATURA_WEBHOOK_SECRET');
-    if (BIRFATURA_WEBHOOK_SECRET) {
-      const cleaned = token.replace(/^Bearer\s+/i, '').trim();
-      if (cleaned !== BIRFATURA_WEBHOOK_SECRET) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
-
-
-    // Parse body (accept both TR and EN keys)
-    let payload: any = {};
-    try { payload = await req.json(); } catch (_) { payload = {}; }
-
-    const orderId = payload.orderId ?? payload.OrderId;
-    const invoiceLink = payload.faturaUrl ?? payload.InvoiceLink;
-    const invoiceNo = payload.faturaNo ?? payload.InvoiceNo;
-    const invoiceDateStr = payload.faturaTarihi ?? payload.InvoiceDate;
-
-    // Helper to parse BirFatura date format "DD.MM.YYYY HH:mm:ss"
-    const parseDateTR = (s?: string): string | undefined => {
-      if (!s) return undefined;
-      const [datePart, timePart = '00:00:00'] = s.split(' ');
-      const [dd, mm, yyyy] = datePart.split('.').map(Number);
-      const [HH, MM, SS] = timePart.split(':').map(Number);
-      const d = new Date(yyyy, (mm || 1) - 1, dd || 1, HH || 0, MM || 0, SS || 0);
-      return d.toISOString();
-    };
-
-    const invoiceDateISO = parseDateTR(invoiceDateStr);
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Update order with invoice information (best effort)
-    const { error } = await supabase
-      .from('orders')
-      .update({ 
-        invoice_sent: true,
-        invoice_date: invoiceDateISO || new Date().toISOString(),
-      })
-      .eq('id', orderId);
-
-
-    if (error) {
-      console.error('Database error:', error);
-      return new Response(JSON.stringify({ error: 'Database error' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    return new Response(JSON.stringify({ success: true, message: 'Invoice link updated successfully' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const body = await req.json();
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return json({ error: 'invalid_receipt' }, 400);
+    const receipt = parseInvoiceReceipt(body);
+    if (!receipt) return json({ error: 'invalid_receipt' }, 400);
+    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+    const result = await acceptInvoiceReceipt(receipt, {
+      resolve: async reference => {
+        let query = supabase.from('orders').select('id,status,invoice_number,created_at').is('deleted_at', null);
+        if (/^\d{13}$/.test(reference)) {
+          // Preserve the actual pull feed's timestamp-based numeric OrderId;
+          // reject collisions instead of choosing an arbitrary customer.
+          const ms = Number(reference);
+          query = query.gte('created_at', new Date(ms).toISOString()).lt('created_at', new Date(ms + 1).toISOString());
+        } else query = query.eq('id', reference);
+        const { data, error } = await query.limit(2);
+        if (error) throw error;
+        return (data ?? []).map(o => ({ id: o.id, status: o.status, number: o.invoice_number }));
+      },
+      storeOnce: async (id, proof) => {
+        const { data, error } = await supabase.from('orders').update({
+          invoice_number: proof.number, invoice_date: proof.issuedAt, invoice_sent: true,
+        }).eq('id', id).is('deleted_at', null).is('invoice_number', null)
+          .in('status', ['approved', 'completed']).select('id');
+        if (error) throw error;
+        return (data?.length ?? 0) === 1;
+      },
     });
-
-  } catch (error) {
-    console.error('Error in birfatura-invoice-link-update function:', error);
-    const msg = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return json(result, result.success ? 200 : 409);
+  } catch {
+    return json({ success: false, error: 'invoice_receipt_unavailable' }, 503);
   }
 });
