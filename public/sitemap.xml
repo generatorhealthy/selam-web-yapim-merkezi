@@ -1707,20 +1707,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/mutlu-aile-olmanin-sirlari-uzman-aile-danismanlarindan-oneriler</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://doktorumol.com.tr/blog/psikolojik-danisman-nedir-hangi-konularda-destek-sunar</loc>
-    <lastmod>2025-10-11</lastmod>
-
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://doktorumol.com.tr/blog/aile-danismanligi-ve-psikolojik-danismanlik-arasindaki-farklar</loc>
     <lastmod>2026-11-11</lastmod>
 
@@ -1763,8 +1749,15 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://doktorumol.com.tr/blog/psikolojik-danisman-ile-psikolog-arasindaki-fark-nedir</loc>
-    <lastmod>2025-10-11</lastmod>
+    <loc>https://doktorumol.com.tr/blog/mutlu-aile-olmanin-sirlari-uzman-aile-danismanlarindan-oneriler</loc>
+    <lastmod>2026-11-13</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikolojik-danisman-nedir-hangi-konularda-destek-sunar</loc>
+    <lastmod>2026-11-13</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -8695,6 +8688,13 @@
   <url>
     <loc>https://doktorumol.com.tr/blog/sosyal-hayatta-anksiyete-ile-basa-cikma-stratejileri</loc>
     <lastmod>2026-11-02</lastmod>
+
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://doktorumol.com.tr/blog/psikolojik-danisman-ile-psikolog-arasindaki-fark-nedir</loc>
+    <lastmod>2026-11-13</lastmod>
 
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
