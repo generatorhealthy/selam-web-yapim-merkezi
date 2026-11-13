@@ -1,8 +1,9 @@
 # 13 Kasım 2026 16:10 UTC — Kalan güvenlik açıklarını tamamlama
-- [ ] Havale onayı: gerçek banka kaydı personel teyidi, tekil referans, atomik sipariş/uzman bağı ve doğrudan aktivasyon kapısı; sentetik olumlu/olumsuz kabul ve canlı zararsız kontrol.
-- [ ] Telefon: doğrulanmış telefon kimliği + kısa ömürlü işlem kanıtı + kalıcı tek gönderim; gerçek sağlayıcıya mesaj göndermeden kabul.
-- [ ] WAHA kaynak ve konuşma bağları, cron gerçek kimlik/yürütme ve yetki matrisi; sağlayıcı/sahip engellerini somut belirt.
-- [ ] Cayma kapalı korumasını doğrula; geçmiş kayıtları koru; dokuz soruya canlı/yayın/rollback kanıtıyla cevap ver.
+- [x] Havale: yeni onaylar service-only atomik banka referansı defterine bağlandı; e-posta yalnız aday, yeni satış tutarı/kimliği immutable, aktivasyon için onaylı sipariş gerekir. Üç migration ve confirm-bank-transfer/process-akbank-transfer-email canlı; 20 SQL bağlantıda 1/19, anon401, ledger0; geçmiş kayıtlar değişmedi.
+- [x] Telefon: notify-patient-contact Auth-confirmed phone + 5dk hash + kalıcı telefon/uzman tekil claim; 20 SQL bağlantı ve handler isteğinde1/19. Kamu bağlantı kopyalama/WhatsApp uygulamasında açma gerçek profil üzerinde masaüstü/mobil doğrulandı; ücretli SMS/WhatsApp misafir gönderimi kapandı; anon401.
+- [ ] Havale gerçek yetkili personel ekran readback ve banka hareketi kabulü — harici Supabase yönetilen oturum yok; gerçek havale onayı/test müşteri yasak. Yeni gönderim için hosted telefon OTP yapılandırması/gerçek doğrulanmış kimlik yok; kamu linki çalışır.
+- [ ] WAHA kaynak ve konuşma bağları — webhooks.inspect401, onaylı admin oturumu/gerçek Railway header kabulü yok; bağlantı değişmedi. Cron2/11 geçiş — alter_job=false; postgres sahibi gerçek secret header eklemeli, görevler kapatılmadı. Tüm hosted Edge/özel belge yetkileri — harici yetkili oturum yok; 64read/75mutasyon yerel regresyon geçti.
+- [x] Cayma kapalı koruması:20 paralel sentetik0tahsilat, canlıGET405. Sonuç/rollback ve dokuz cevap RESULT.md; doğal sipariş sayısı2747/randevu339/test12, banka ve iletişim defteri0. Hostinger browser challenge web dağıtım kabulünü engelledi.
 
 # 13 Kasım 2026 15:53 UTC — İki paketli satış ve bağımsız güvenlik düzeltmeleri
 - [x] Yeni satışta yalnız ozel-firsat 4000 TRY / kayit-linki 5000 TRY; bütün INSERT yazıcılarında sunucu kapısı, amount=null sunucu belirler, kart yeni satışta reddedilir. Eski web yolları yönlendirilir; tarihsel yenileme güvenilir yazıcı+önceki onaylı kayıt ister.

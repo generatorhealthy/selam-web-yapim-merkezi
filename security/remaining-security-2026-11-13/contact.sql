@@ -15,7 +15,7 @@ BEGIN
  IF auth.role() IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'service_required' USING ERRCODE='42501'; END IF;
  SELECT regexp_replace(phone,'[^0-9]','','g') INTO phone_value FROM auth.users
  WHERE id=p_user_id AND phone_confirmed_at IS NOT NULL;
- IF phone_value IS NULL OR phone_value !~ '^905[0-9]{9}$' OR p_token_hash !~ '^[a-f0-9]{64}$'
+ IF phone_value IS NULL OR phone_value !~ '^905[0-9]{9}$' OR p_token_hash IS NULL OR p_token_hash !~ '^[a-f0-9]{64}$'
  OR NOT EXISTS(SELECT 1 FROM public.specialists WHERE id=p_specialist_id AND is_active=true AND slug IS NOT NULL) THEN
   RAISE EXCEPTION 'verified_phone_and_specialist_required' USING ERRCODE='42501';
  END IF;

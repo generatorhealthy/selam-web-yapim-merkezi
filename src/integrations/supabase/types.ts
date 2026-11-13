@@ -6284,6 +6284,54 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_contact_claims: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+          specialist_id: string
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone: string
+          specialist_id: string
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          specialist_id?: string
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_contact_claims_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_contact_claims_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_profiles: {
         Row: {
           auth_provider: string | null
@@ -8694,6 +8742,10 @@ export type Database = {
         Args: { p_expires_at: string; p_nonce_hash: string }
         Returns: boolean
       }
+      consume_patient_contact: {
+        Args: { p_token_hash: string; p_user_id: string }
+        Returns: Json
+      }
       create_full_database_backup: {
         Args: {
           p_backup_type?: string
@@ -9083,6 +9135,14 @@ export type Database = {
           em: string
           first_paid_at: string
         }[]
+      }
+      prepare_patient_contact: {
+        Args: {
+          p_specialist_id: string
+          p_token_hash: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       record_failed_admin_login: {
         Args: { p_email: string; p_ip_address?: string }
