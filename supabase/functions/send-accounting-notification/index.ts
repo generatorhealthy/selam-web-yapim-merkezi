@@ -1,11 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { escapeHtml } from '../_shared/escapeHtml.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { verifyAdminOrCron } from '../_shared/adminAuth.ts';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 interface AccountingNotificationRequest {
   fileName: string;
@@ -28,6 +25,11 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     const brevoApiKey = Deno.env.get('BREVO_API_KEY');
@@ -45,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
       month,
       uploadedBy,
       fileUrl
-    }: AccountingNotificationRequest = await req.json();
+    }: AccountingNotificationRequest = (await req.json().catch(() => null)) || {};
 
     if (typeof fileName !== 'string' || !fileName.trim() || fileName.length > 512
       || !Number.isInteger(year) || year < 2000 || year > 2200
@@ -55,7 +57,23 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    console.log('Sending accounting notification for file:', fileName);
+    const gate = await verifyAdminOrCron(req, ['admin', 'muhasebe']);
+    if (!gate.ok) {
+      return new Response(JSON.stringify({ error: gate.error }), {
+        status: gate.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+    const { data: document, error: documentError } = await admin.from('accounting_documents')
+      .select('id').eq('file_name', fileName).eq('year', year).eq('month', month)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (documentError || !document) {
+      return new Response(JSON.stringify({ error: 'Kayıtlı muhasebe belgesi bulunamadı' }), {
+        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Accounting notification document verified');
 
     const uploadDate = new Date().toLocaleString('tr-TR', {
       timeZone: 'Europe/Istanbul',
@@ -158,25 +176,26 @@ const handler = async (req: Request): Promise<Response> => {
     const responseData = await response.json();
 
     if (!response.ok) {
-      console.error('Brevo API error:', responseData);
+      console.error('Accounting provider rejected request');
       return new Response(
-        JSON.stringify({ error: 'Failed to send email', details: responseData }),
+        JSON.stringify({ error: 'Failed to send email' }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Accounting notification email sent successfully:', responseData);
+    console.log('Accounting notification accepted by provider');
 
     // Log email to database
     try {
       const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
       await supabaseAdmin.from('brevo_email_logs').insert({
-        recipient_email: 'info@doktorumol.com.tr',
-        recipient_name: 'Doktorum Ol Admin',
+        recipient_email: emailPayload.to[0].email,
+        recipient_name: emailPayload.to[0].name,
         subject: `Yeni Muhasebe Belgesi - ${getMonthName(month)} ${year}`,
         template_name: 'accounting-notification',
         status: 'sent',
         brevo_message_id: responseData.messageId || null,
+        metadata: { document_id: document.id },
       });
     } catch (logErr) { console.error('Email log insert error:', logErr); }
 

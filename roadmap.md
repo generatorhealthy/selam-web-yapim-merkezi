@@ -1,3 +1,12 @@
+# 13 Kasım 2026 15:18 UTC — Kritik açıkları kapatma talimatı
+- [ ] Boş muhasebe ve kayıt e-postalarını ayrı olay olarak incele; dış bağlantısız gerçek handler testleriyle gönderim öncesi ret doğrula.
+- [ ] Kayıt doğrulaması, muhasebe belge/yetki bağı ve destek ticket-alıcı bağı için bağımsız güvenli düzeltmeleri yayımla.
+- [ ] Fiyat kaynakları ve sözleşme/periyot eşleşmesi; yalnız doğrulanmış satış koşullarına göre sunucu koruması.
+- [ ] Cayma tahsilatı: doğru sağlayıcı işlemi, güvenilir sözleşme bağı ve kalıcı atomik claim.
+- [ ] Telefon sahipliği/tekil gönderim ve WAHA gerçek kaynak kabulü; meşru yolu doğrulamadan kesme.
+- [ ] Cron gerçek job kimliği/yetki geçişi ve kalan RLS/şablon matrisi; gerçek kullanıcı işlemi yok.
+- [ ] Sekiz kesin cevap ve sınırlı yayın kanıtı; mevcut kayıtları ve A/B/C korumalarını koru.
+
 # 13 Kasım 2026 — Kritik güvenlik A–H
 - [x] A: Randevu trigger → sunucu işlem kanıtı → bildirim canlı; geçerli biçimli yetkisiz 401, 20 eşzamanlı sentetik çağrıda tek gönderim. İlk doğal teslim ve dağıtım öncesi bekleyen çağrı kabulü doğrulanmadı.
 - [ ] B: Katalog key/route fiyatları çelişiyor (campaign ve campaign-premium ters, discounted 1499/1998, premium 2998/4998); kampanya önceliği ve sözleşme süresi teyidi gerekir, INSERT koruması yayımlanmadı.

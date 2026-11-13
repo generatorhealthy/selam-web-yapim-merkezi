@@ -2,13 +2,9 @@ import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { escapeHtml } from '../_shared/escapeHtml.ts';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const BREVO_API_KEY = Deno.env.get('BREVO_API_KEY');
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 interface SupportResponseRequest {
   ticketId: string;
@@ -42,14 +38,34 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const {
-      ticketId,
-      specialistEmail,
-      specialistName,
-      ticketTitle,
-      adminResponse,
-      status
-    }: SupportResponseRequest = await req.json();
+    const body = await req.json().catch(() => null);
+    const ticketId = body?.ticketId;
+    if (typeof ticketId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ticketId)) {
+      return new Response(JSON.stringify({ error: 'Geçerli destek talebi gerekli' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+    const { data: ticket, error: ticketError } = await admin.from('support_tickets')
+      .select('specialist_id,title,admin_response,status').eq('id', ticketId).maybeSingle();
+    if (ticketError || !ticket?.specialist_id || !ticket.admin_response?.trim()) {
+      return new Response(JSON.stringify({ error: 'Yanıtlanmış destek talebi bulunamadı' }), {
+        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const { data: specialist, error: specialistError } = await admin.from('specialists')
+      .select('name,email').eq('id', ticket.specialist_id).maybeSingle();
+    if (specialistError || typeof specialist?.email !== 'string'
+      || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(specialist.email)) {
+      return new Response(JSON.stringify({ error: 'Destek talebi alıcısı doğrulanamadı' }), {
+        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const specialistEmail = specialist.email;
+    const specialistName = specialist.name || '';
+    const ticketTitle = ticket.title;
+    const adminResponse = ticket.admin_response;
+    const status = ticket.status;
 
     console.log('Support response request received');
 

@@ -2,11 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { safeLog } from "../_shared/safeLog.ts";
 import { escapeHtml } from "../_shared/escapeHtml.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 interface RegistrationEmailRequest {
   name: string;
@@ -25,9 +21,27 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
-    const requestData: RegistrationEmailRequest = await req.json();
+    const requestData: RegistrationEmailRequest = await req.json().catch(() => null);
+    if (!requestData || typeof requestData !== "object" || Array.isArray(requestData)
+      || ["name", "email", "phone", "specialty", "city"].some(key => {
+        const value = (requestData as unknown as Record<string, unknown>)[key];
+        return typeof value !== "string" || !value.trim() || value.length > 255;
+      })
+      || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(requestData.email)
+      || !/^(?:90|0)?5\d{9}$/.test(requestData.phone.replace(/\D/g, ""))
+      || [requestData.experience, requestData.education, requestData.about].some(value =>
+        value !== undefined && (typeof value !== "string" || value.length > 5000))) {
+      return new Response(JSON.stringify({ error: "Geçerli başvuru bilgileri gerekli", success: false }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     safeLog("Registration email request received:", { hasEmail: !!(requestData as any)?.email });
 
     const brevoApiKey = Deno.env.get("BREVO_API_KEY");
