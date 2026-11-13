@@ -1,0 +1,1 @@
+CREATE POLICY "Server only notification authority" ON public.appointment_notification_authority FOR ALL TO service_role USING (true) WITH CHECK (true);
