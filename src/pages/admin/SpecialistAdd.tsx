@@ -302,14 +302,14 @@ const SpecialistAdd = () => {
           online_consultation: formData.online_consultation,
           face_to_face_consultation: formData.face_to_face_consultation,
           user_id: selectedUserId, // Mevcut kullanıcının ID'si
-          is_active: true,
+          is_active: false,
           // SEO meta alanları
           seo_title: formData.seo_title || null,
           seo_description: formData.seo_description || null,
           seo_keywords: formData.seo_keywords || null
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Uzman ekleme hatası:', error);

@@ -28,6 +28,7 @@ with tempfile.TemporaryDirectory(prefix='bank-safe-') as tmp:
   ok(f"INSERT INTO auth.users VALUES('{uid}','synthetic@example.invalid'); INSERT INTO specialists VALUES('{uid}','{uid}','synthetic@example.invalid',false,'self_registration'); INSERT INTO orders(id,customer_email,payment_method,status,amount,package_type) VALUES('{oid}','synthetic@example.invalid','bank_transfer','pending',4000,'ozel-firsat'),('{oid2}','synthetic@example.invalid','bank_transfer','pending',5000,'kayit-linki');")
   ok(ROOT.joinpath('bank.sql').read_text())
   ok(ROOT.joinpath('bank-server.sql').read_text())
+  ok(ROOT.joinpath('activation-all-sources.sql').read_text())
   ok("INSERT INTO user_profiles VALUES('44444444-4444-4444-8444-444444444444','admin',true)")
   # Mirror actual activation side effect, no notification provider.
   ok("CREATE FUNCTION synthetic_activate() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN UPDATE specialists SET is_active=true WHERE email=NEW.customer_email AND NEW.status='approved'; RETURN NEW; END$$; CREATE TRIGGER synthetic_activate AFTER UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION synthetic_activate();")
@@ -37,6 +38,12 @@ with tempfile.TemporaryDirectory(prefix='bank-safe-') as tmp:
   reject(panel_admin+f"UPDATE orders SET status='approved' WHERE id='{oid}'",'verified_bank_transfer_required')
   reject(panel_admin+f"UPDATE orders SET payment_status='paid' WHERE id='{oid}'",'verified_bank_transfer_required')
   reject(panel_admin+f"UPDATE specialists SET is_active=true WHERE id='{uid}'",'paid_order_activation_required')
+  for source in ['self_registration','admin','manual',None]:
+   source_sql='NULL' if source is None else "'"+source+"'"
+   ok(f"UPDATE specialists SET registration_source={source_sql} WHERE id='{uid}'")
+   reject(panel_admin+f"UPDATE specialists SET is_active=true WHERE id='{uid}'",'paid_order_activation_required')
+   reject(admin+f"UPDATE specialists SET is_active=true WHERE id='{uid}'",'paid_order_activation_required')
+  reject(admin+f"INSERT INTO specialists(id,user_id,email,is_active) VALUES('{oid2}','{uid}','new@example.invalid',true)",'paid_order_activation_required')
   reject(panel_admin+f"UPDATE orders SET payment_method='credit_card',status='approved' WHERE id='{oid}'",'bank_order_identity_immutable')
   reject(panel_admin+f"UPDATE orders SET amount=1 WHERE id='{oid}'",'new_sale_terms_immutable')
   reject(admin+call(amount=1),'bank_order_amount_or_status_mismatch')
@@ -48,10 +55,13 @@ with tempfile.TemporaryDirectory(prefix='bank-safe-') as tmp:
   assert ok('SELECT count(*) FROM bank_transfer_verifications')=='1'
   assert ok(f"SELECT status||':'||payment_status FROM orders WHERE id='{oid}'")=='approved:paid'
   assert ok(f"SELECT is_active FROM specialists WHERE id='{uid}'")=='t'
+  # Updating already-active legacy profiles does not re-run activation or rewrite them.
+  ok(panel_admin+f"UPDATE specialists SET registration_source='manual' WHERE id='{uid}'")
+  assert ok(f"SELECT is_active FROM specialists WHERE id='{uid}'")=='t'
   reject(admin+call(order=oid2,amount=5000),'bank_reference_already_used')
   assert ok(f"SELECT status FROM orders WHERE id='{oid2}'")=='pending'
   assert 'confirmed' in ok(admin+call(order=oid2,ref='BANK-REF-5000',amount=5000))
   assert ok(f"SELECT amount FROM bank_transfer_verifications WHERE order_id='{oid2}'")=='5000'
   reject(admin+'INSERT INTO bank_transfer_verifications(order_id,specialist_id,bank_reference,amount,verified_by,statement_checked) '+f"VALUES('{oid2}','{uid}','FORGED-123',5000,'{uid}',true)",'permission denied')
-  print('PASS bank: 20 concurrent = 1 confirmation/19 duplicates; role, statement, amount, ownership, activation, reference replay, immutable method and pending preservation')
+  print('PASS bank: 20 concurrent = 1 confirmation/19 duplicates; four registration sources cannot bypass activation; active profiles preserved; role, statement, amount, ownership and reference replay')
  finally:pg(BIN+'pg_ctl','-D',tmp+'/data','stop','-m','immediate')

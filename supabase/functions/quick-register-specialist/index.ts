@@ -313,13 +313,13 @@ serve(async (req) => {
         faq,
         online_consultation: parsed.online_consultation,
         face_to_face_consultation: parsed.face_to_face_consultation,
-        is_active: true,
+        is_active: false,
         seo_title: parsed.seo_title?.slice(0, 65) || null,
         seo_description: parsed.seo_description?.slice(0, 145) || null,
         seo_keywords: parsed.seo_keywords || null,
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (specErr) {
       console.error("specialists insert error:", specErr);

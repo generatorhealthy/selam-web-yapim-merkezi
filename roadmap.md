@@ -1,3 +1,10 @@
+# 13 Kasım 2026 16:33 UTC — Aşama 5 son kabul
+- [ ] Bütün Premium aktivasyon kaynaklarını ve doğrulanmış banka hareketi bağı eksikliğini tamamla; geçmiş yenilemeler korunur.
+- [ ] Dört rol / özel belge kabulünü yeniden çalıştır; gerçek yetkili oturum sınırını ayrı kaydet.
+- [ ] WAHA sürüm/kimlik doğrulama desteği ve cron 2/11 sahip geçişini güvenli, kesin adımlarla hazırla.
+- [ ] Hostinger gerçek HTML/tarayıcı ve dağıtım kanıtını ayrı kontrol et; zararlı canlı deneme yok.
+- [ ] İki bölümlü sonuçta iç uygulama eksikleriyle hesap sahibi işlemlerini ayır.
+
 # 13 Kasım 2026 16:10 UTC — Kalan güvenlik açıklarını tamamlama
 - [x] Havale: yeni onaylar service-only atomik banka referansı defterine bağlandı; e-posta yalnız aday, yeni satış tutarı/kimliği immutable, aktivasyon için onaylı sipariş gerekir. Üç migration ve confirm-bank-transfer/process-akbank-transfer-email canlı; 20 SQL bağlantıda 1/19, anon401, ledger0; geçmiş kayıtlar değişmedi.
 - [x] Telefon: notify-patient-contact Auth-confirmed phone + 5dk hash + kalıcı telefon/uzman tekil claim; 20 SQL bağlantı ve handler isteğinde1/19. Kamu bağlantı kopyalama/WhatsApp uygulamasında açma gerçek profil üzerinde masaüstü/mobil doğrulandı; ücretli SMS/WhatsApp misafir gönderimi kapandı; anon401.
