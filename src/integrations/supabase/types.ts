@@ -491,6 +491,35 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_notification_authority: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          expires_at: string
+          token_hash: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          expires_at: string
+          token_hash: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          expires_at?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_notification_authority_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_notification_claims: {
         Row: {
           appointment_id: string
@@ -8280,6 +8309,10 @@ export type Database = {
           p_time_on_page: number
         }
         Returns: undefined
+      }
+      verify_appointment_notification_authority: {
+        Args: { p_appointment_id: string; p_token_hash: string }
+        Returns: boolean
       }
     }
     Enums: {
