@@ -1,3 +1,13 @@
+# 13 Kasım 2026 — Canlı checkout geçişi (güncel görev)
+- [x] 96b9da49 Checkout kaynak commit'i ve gerçek /boot.js → app-BDqH2Nwi.js içinde orderId gönderimi doğrulandı.
+- [x] Eski kimliksiz initialize kapatıldı; create-iyzico-payment yayımlandı, source SHA256 25058e4a690238a2f5ef985beb1ab94a757978600202653dc9cb240e8c428e08; eksik/yanlış ID canlı 400, sağlayıcı çağrısı yok. Eski zaten açık iyzico formları otomatik iptal edilmedi; sunucu bağı olmadan onay yok.
+- [x] Gerçek doktorumol.com.tr tarayıcısında girişsiz sipariş→aynı ID→form ve 503 kayıt hatası→sıfır initialize geçti; bütün yazılar/mesaj/ödeme istekleri sentetik karşılandı. 6 gerçek handler + 10 mevcut ödeme + 2 checkout testi geçti; üretim migration'ıyla yerel 20 bağlantı: 1 applied/19 duplicate, aktivasyon/fatura/bildirim 1'er.
+- [ ] V3 hesap etkinliği/merchant ID — hesabın imza ayarı ve numarası erişilebilir değil; Retrieve korunur.
+- [x] Son 48 saatte sağlayıcıda 1 doğrulanmış tahsilat (2998 TRY, 11 Kasım 13:24 UTC); bu aboneliğe 7 onaylı yenileme/1 otomatik sipariş bağlı, 0 pending; son onay tahsilattan 17 saniye sonra. Yeni checkout makbuzu yok çünkü eski işlem. Kayıp/geçişte onaysız yeni tahsilat kanıtı yok; personel iyzico tahsilat referansı+tarih+tutarı kayıtlı abonelik/siparişle karşılaştırmalı, otomatik işlem/yeniden ödeme yok.
+- [ ] GitHub Actions çalışma kaydı — GitHub/FTP erişimi yok; gerçek dosya kanıtı ayrı doğrulanır.
+- [x] 13 Kasım 08:56 UTC canlı boot.js önbelleksiz, Last-Modified 08:33:22 UTC; app-BDqH2Nwi.js SHA256 723edac3ea360bec7868852b9a0cf997ff62cd2198c2bb777d55bf20b386205b. Checkout dosyası 96b9da49 ile birebir SHA256 ef799554ad69c14b24d1223fcf4600fa9df5f5bbd512d61cff1694d85d12044b; yeniden web yayını gerekmedi. Migration 20261113080553 canlı, settle RPC anonim execute=false; 0 checkout oturumu/0 yeni receipt.
+- [ ] İlk doğal yeni kartlı satın alma teslim/aktivasyon/fatura kabulü — gerçek müşteri test amacıyla kullanılmadı, sonraki doğal işlemin salt okunur doğrulamasını bekler. V3 hesap etkinliği/merchant numarası doğrulanmadı, güvenilir Retrieve korunur.
+
 # 13 Kasım 2026 — Yalnız yeni iyzico satın alma
 - [ ] Gerçek initialize/token callback entegrasyonu bu tur tamamlanmadı: client INSERT→server identity/capability→token→retrieve→receipt bağı yok; yeni checkout kapsamlı receipt'siz approval kapısı olmadan ikinci auto-approve yazıcısı onaylayabilir. Eksiklik iç uygulamadır, kullanıcı/sağlayıcı credential engeli değildir.
 - [x] Mevcut gerçek handler gövdeleri sekiz sentetik senaryoda çalıştırıldı; 7 kabul eksikliği tekrarlanabilir biçimde üretildi, provider failure kontrolü var. Bunlar güvenlik kabulü değil; PURCHASE_BLOCKER.md kesin bağı açıklar.
