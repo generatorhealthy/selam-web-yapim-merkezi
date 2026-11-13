@@ -133,6 +133,7 @@ const Checkout = () => {
   const [clientIP, setClientIP] = useState<string>("");
   const paymentLock = useRef(false);
   const orderAttempt = useRef(createSubmissionAttempt());
+  const savedOrderId = useRef<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -368,6 +369,8 @@ const handleCreditCardPayment = async () => {
 
     const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
       body: {
+        // Sunucu paket/tutarı bu kayıtlı siparişten alır ve ödeme oturumunu ona bağlar.
+        orderId: savedOrderId.current,
         packageType: selectedPackage.type,
         customerData,
         subscriptionReferenceCode,
@@ -500,6 +503,7 @@ const handleCreditCardPayment = async () => {
           : 'Sipariş kaydı doğrulanamadı. Ödeme başlatılmadı; bağlantınızı kontrol edip tekrar deneyin.');
       }
       orderAttempt.current.finish(true);
+      savedOrderId.current = orderId;
 
       // Yeni sipariş SMS bildirimi gönder
       try {

@@ -1,180 +1,54 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { safeLog } from "../_shared/safeLog.ts";
+import { iyzicoHttpPort, legacyPlanForType, startCheckout } from "../_shared/iyzicoCheckout.ts";
+import { supabaseDbPort } from "../_shared/iyzicoDb.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+const CALLBACK_URL = "https://irnfwewabogveofwemvg.supabase.co/functions/v1/iyzico-payment-callback";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: corsHeaders
-    });
-  }
-
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const body = await req.json();
-    safeLog("Gelen istek - Subscription V4:", { packageType: body?.packageType ?? body?.packageData?.type ?? null, hasCustomer: !!body?.customerData });
+    const apiKey = Deno.env.get("IYZICO_API_KEY"), secretKey = Deno.env.get("IYZICO_SECRET_KEY");
+    if (!apiKey || !secretKey) return json({ status: "failure", errorCode: "provider_not_configured" }, 503);
+    const iyzico = iyzicoHttpPort(apiKey, secretKey, Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com");
 
-    const { packageType, customerData, subscriptionReferenceCode, layout } = body;
-    const {
-      name, surname, email, gsmNumber: phone, identityNumber: tcNo,
-      registrationAddress: address, city, billingAddress, billingCity,
-      billingZipCode, shippingAddress, shippingCity, shippingZipCode,
-      customerType, companyName, taxNumber, taxOffice
-    } = customerData;
+    if (body?.orderId) {
+      // Güvenli yol: sipariş, paket, tutar ve para birimi sunucudaki sipariş kaydından;
+      // token + conversationId bu siparişin tek ödeme oturumuna bağlanır.
+      const admin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+      const r = await startCheckout({ orderId: body.orderId, customerData: body.customerData, layout: body.layout },
+        { db: supabaseDbPort(admin), iyzico, callbackUrl: CALLBACK_URL });
+      safeLog("checkout start", { status: r.status, result: r.body.status, code: r.body.errorCode ?? null });
+      return json(r.body, r.status);
+    }
 
-    const IYZICO_API_KEY = Deno.env.get("IYZICO_API_KEY");
-    const IYZICO_SECRET_KEY = Deno.env.get("IYZICO_SECRET_KEY");
-    const IYZICO_BASE_URL = Deno.env.get("IYZIPAY_URI") || "https://api.iyzipay.com";
-
-    const getPricingPlanByPackageType = (type: string, price: number): string => {
-      if (type === 'kayit-linki' || price === 5000) {
-        return "29429127-2e4f-48ee-a2b7-708a068de378"; // 5000 TL plan - /kayit-linki
-      }
-      // Özel fırsat 4000 TL için yeni plan
-      if (type === 'ozel-firsat' || price === 4000) {
-        return "e0d7e6b7-e665-4460-ab8f-6bb6e7a2c652"; // 4000 TL plan - Premium Paket 4000
-      }
-      
-      // Eski özel teklifler için tip kontrolü (3600 TL)
-      if (type === 'special-offer' || price === 3600) {
-        return "92feac6d-1181-4b78-b0c2-3b5d5742adff"; // 3600 TL plan
-      }
-      
-      const planMap: Record<string, string> = {
-        "campaign": "e01a059d-9392-4690-b030-0002064f9421",
-        "basic": "205eb35c-e122-401f-aef7-618daf3732f8",
-        "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff"
-      };
-      return planMap[type] || "205eb35c-e122-401f-aef7-618daf3732f8";
-    };
-
-    const validateTCNo = (tc: string | null | undefined): string => {
-      if (!tc) return "11111111111";
-      const cleanTC = tc.replace(/\D/g, '');
-      if (cleanTC.length === 11) return cleanTC;
-      return "11111111111";
-    };
-
-    const validatePhone = (phoneNumber: string | null | undefined): string => {
-      if (!phoneNumber) return "+905000000000";
-      let cleaned = phoneNumber.replace(/\D/g, '');
-      if (cleaned.startsWith('90')) cleaned = cleaned.substring(2);
-      if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
-      if (cleaned.length === 10) return `+90${cleaned}`;
-      return "+905000000000";
-    };
-
-    const validateAddress = (addr: string | null | undefined): string => {
-      if (!addr || addr.length < 5) return "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1";
-      return addr;
-    };
-
-    const validatedTCNo = validateTCNo(tcNo);
-    const validatedPhone = validatePhone(phone);
-    const validatedAddress = validateAddress(address);
-    const validatedBillingAddress = validateAddress(billingAddress || address);
-
-    const requestData = {
-      callbackUrl: "https://irnfwewabogveofwemvg.supabase.co/functions/v1/iyzico-payment-callback",
-      pricingPlanReferenceCode: getPricingPlanByPackageType(packageType, body.amount || body.packageData?.price),
+    // Geçiş dönemi: eski önbellekli sayfa orderId göndermiyor. Ödeme alınabilir, ancak bu ödemeye
+    // sunucu oturumu bağlanmadığı için otomatik onay/aktivasyon YAPILMAZ (personel doğrular).
+    // Plan yalnız paket tipinden; istemci tutarı artık plan seçmez.
+    const c = body?.customerData || {};
+    safeLog("checkout start legacy (unbound)", { packageType: body?.packageType ?? null });
+    const result = await iyzico.initialize({
+      locale: "tr", callbackUrl: CALLBACK_URL, pricingPlanReferenceCode: legacyPlanForType(body?.packageType),
       subscriptionInitialStatus: "ACTIVE",
-      customer: {
-        name: name || "Kullanici",
-        surname: surname || "Adi",
-        email: email || "test@test.com",
-        gsmNumber: validatedPhone,
-        identityNumber: validatedTCNo,
-        billingAddress: {
-          address: validatedBillingAddress,
-          zipCode: billingZipCode || "34100",
-          contactName: `${name || "Kullanici"} ${surname || "Adi"}`,
-          city: billingCity || city || "Istanbul",
-          country: "Turkey"
-        }
-      }
-    };
-
-    const jsonString = JSON.stringify(requestData);
-    console.log("Subscription API'ya gönderilen JSON V4:", jsonString);
-
-    const randomString = "123456789";
-    const uri_path = "/v2/subscription/checkoutform/initialize";
-
-    const dataToEncrypt = randomString + uri_path + jsonString;
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(IYZICO_SECRET_KEY);
-    const messageData = encoder.encode(dataToEncrypt);
-
-    const cryptoKey = await crypto.subtle.importKey(
-      "raw",
-      keyData,
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-
-    const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
-    const signatureHex = Array.from(new Uint8Array(signature))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-
-    const authorizationString = `apiKey:${IYZICO_API_KEY}&randomKey:${randomString}&signature:${signatureHex}`;
-    const base64EncodedAuthorization = btoa(authorizationString);
-    const authorization = `IYZWSv2 ${base64EncodedAuthorization}`;
-
-    const headers = {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      "Authorization": authorization
-    };
-
-    const iyzicoResponse = await fetch(`${IYZICO_BASE_URL}${uri_path}?locale=tr`, {
-      method: "POST",
-      headers: headers,
-      body: jsonString
+      customer: { name: c.name || "Kullanici", surname: c.surname || "Adi", email: c.email || "",
+        gsmNumber: (() => { let d = String(c.gsmNumber ?? "").replace(/\D/g, ""); if (d.startsWith("90")) d = d.slice(2); if (d.startsWith("0")) d = d.slice(1); return d.length === 10 ? `+90${d}` : "+905000000000"; })(),
+        identityNumber: String(c.identityNumber ?? "").replace(/\D/g, "").length === 11 ? String(c.identityNumber).replace(/\D/g, "") : "11111111111",
+        billingAddress: { address: (c.billingAddress || c.registrationAddress || "").length >= 5 ? (c.billingAddress || c.registrationAddress) : "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
+          zipCode: c.billingZipCode || "34100", contactName: `${c.name || "Kullanici"} ${c.surname || "Adi"}`, city: c.billingCity || c.city || "Istanbul", country: "Turkey" } },
     });
-
-    const responseText = await iyzicoResponse.text();
-    let iyzicoResult;
-    try {
-      iyzicoResult = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error("JSON parse hatası:", parseError);
-      return new Response(JSON.stringify({
-        error: "Iyzico yanıt formatı hatası",
-        details: responseText
-      }), {
-        headers: corsHeaders,
-        status: 500
-      });
-    }
-
-    if (layout === "popup" && iyzicoResult?.data?.checkoutPageUrl) {
-      iyzicoResult.popup = true;
-    }
-
-    return new Response(JSON.stringify(iyzicoResult), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json"
-      },
-      status: 200
-    });
-
+    if (!result) return json({ error: "Iyzico yanıt formatı hatası" }, 500);
+    if (body?.layout === "popup" && result?.data?.checkoutPageUrl) result.popup = true;
+    return json(result);
   } catch (err) {
-    console.error("Subscription API Hatası V4:", err);
-    return new Response(JSON.stringify({
-      error: "Sunucu hatası",
-      details: err instanceof Error ? err.message : String(err)
-    }), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json"
-      },
-      status: 500
-    });
+    console.error("create-iyzico-payment error:", err instanceof Error ? err.message : String(err));
+    return json({ error: "Sunucu hatası" }, 500);
   }
 });

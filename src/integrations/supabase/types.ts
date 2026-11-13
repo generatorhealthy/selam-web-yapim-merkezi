@@ -5445,6 +5445,71 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_checkout_sessions: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          currency: string
+          customer_reference_code: string | null
+          expected_amount: number
+          expires_at: string
+          id: string
+          initialized_at: string | null
+          iyzico_token: string | null
+          last_error: string | null
+          order_id: string
+          plan_ref: string
+          settled_at: string | null
+          status: string
+          subscription_reference_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          currency?: string
+          customer_reference_code?: string | null
+          expected_amount: number
+          expires_at?: string
+          id?: string
+          initialized_at?: string | null
+          iyzico_token?: string | null
+          last_error?: string | null
+          order_id: string
+          plan_ref: string
+          settled_at?: string | null
+          status?: string
+          subscription_reference_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          currency?: string
+          customer_reference_code?: string | null
+          expected_amount?: number
+          expires_at?: string
+          id?: string
+          initialized_at?: string | null
+          iyzico_token?: string | null
+          last_error?: string | null
+          order_id?: string
+          plan_ref?: string
+          settled_at?: string | null
+          status?: string
+          subscription_reference_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_checkout_sessions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_method_changes: {
         Row: {
           completed_at: string | null
@@ -5501,6 +5566,72 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      payment_receipts: {
+        Row: {
+          amount: number
+          binding: string
+          charge_reference: string
+          created_at: string
+          currency: string
+          customer_reference_code: string
+          id: string
+          order_id: string
+          paid_at: string
+          payment_key: string
+          provider: string
+          session_id: string | null
+          source: string
+          subscription_reference_code: string
+        }
+        Insert: {
+          amount: number
+          binding: string
+          charge_reference: string
+          created_at?: string
+          currency: string
+          customer_reference_code: string
+          id?: string
+          order_id: string
+          paid_at: string
+          payment_key: string
+          provider?: string
+          session_id?: string | null
+          source: string
+          subscription_reference_code: string
+        }
+        Update: {
+          amount?: number
+          binding?: string
+          charge_reference?: string
+          created_at?: string
+          currency?: string
+          customer_reference_code?: string
+          id?: string
+          order_id?: string
+          paid_at?: string
+          payment_key?: string
+          provider?: string
+          session_id?: string | null
+          source?: string
+          subscription_reference_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_receipts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_receipts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "payment_checkout_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pbx_missed_transfer_notifications: {
         Row: {
@@ -8087,6 +8218,22 @@ export type Database = {
       restore_from_backup: {
         Args: { p_backup_id: number; p_table_name?: string }
         Returns: undefined
+      }
+      settle_iyzico_payment: {
+        Args: {
+          p_amount: number
+          p_binding: string
+          p_charge_ref: string
+          p_currency: string
+          p_customer_ref: string
+          p_order_id: string
+          p_paid_at: string
+          p_payment_key: string
+          p_session_id?: string
+          p_source: string
+          p_subscription_ref: string
+        }
+        Returns: Json
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }

@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
+import { iyzicoHttpPort, settleByToken, settleSubscriptionCharge } from "../_shared/iyzicoCheckout.ts";
+import { supabaseDbPort } from "../_shared/iyzicoDb.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -121,108 +123,42 @@ serve(async (req) => {
     const allSubscriptions = [...activeSubscriptions, ...unpaidSubscriptions];
     console.log(`Found ${activeSubscriptions.length} active + ${unpaidSubscriptions.length} unpaid = ${allSubscriptions.length} total Iyzico subscriptions`);
 
-    // Build sets of emails with successful/failed recent payments
-    // Track per-order to avoid masking a failed current order by a past successful one
+    const db = supabaseDbPort(supabaseAdmin);
+    const iyzico = iyzicoHttpPort(IYZICO_API_KEY, IYZICO_SECRET_KEY, IYZICO_BASE_URL);
+    const counts: Record<string, number> = {};
+    const bump = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
+
+    // A) Tarayıcı kapandıysa: sunucu oturumu olan ve token'ı bağlı siparişler kayıtlı token ile
+    //    iyzico Checkout Form Retrieve üzerinden kesinleştirilir.
+    const sessions = await db.listOpenSessions(new Date(Date.now() - 48 * 3600_000).toISOString());
+    for (const s of sessions) {
+      try { const r = await settleByToken(s.iyzico_token, "auto_approve_token", { db, iyzico }); bump(`token_${r.outcome}`); }
+      catch (e) { bump("token_error"); console.error("token settle error", e instanceof Error ? e.message : e); }
+    }
+
+    // B) Abonelik tahsilatları: yalnız bu aboneliğe sunucuda bağlı (oturum / abonelik kodu / bağlı yenileme)
+    //    bekleyen sipariş, iyzico'nun gerçekte çektiği tutarla ve tek kullanımlık makbuzla onaylanır.
+    //    E-posta eşleşmesi tek başına onay sebebi değildir; ilk siparişler oturumsuz asla onaylanmaz.
     const successfulEmails = new Set<string>();
     const failedEmails = new Set<string>();
-
     for (const sub of allSubscriptions) {
-      const email = sub.customerEmail;
-      if (!email) continue;
-      const emailLower = email.toLowerCase();
-
-      // Sort orders by most recent first
-      const sortedOrders = (sub.orders || []).slice().sort((a: any, b: any) => {
-        const aDate = a.paymentAttempts?.[0]?.createdDate || 0;
-        const bDate = b.paymentAttempts?.[0]?.createdDate || 0;
-        return bDate - aDate;
-      });
-
-      for (const order of sortedOrders) {
-        const hasSuccessfulPayment = order.paymentAttempts?.some(
-          (attempt: any) => attempt.paymentStatus === "SUCCESS"
-        );
-        const hasFailedPayment = order.paymentAttempts?.some(
-          (attempt: any) => attempt.paymentStatus === "FAILED"
-        );
-
-        if (hasSuccessfulPayment && order.orderStatus === "SUCCESS") {
-          const latestSuccess = order.paymentAttempts
-            ?.filter((a: any) => a.paymentStatus === "SUCCESS")
-            ?.sort((a: any, b: any) => b.createdDate - a.createdDate)[0];
-
-          if (latestSuccess) {
-            const hoursSince = (Date.now() - latestSuccess.createdDate) / (1000 * 60 * 60);
-            if (hoursSince <= 48) {
-              successfulEmails.add(emailLower);
-            }
-          }
-        }
-        
-        // Check failed payments independently - don't require !hasSuccessfulPayment
-        // A current order can have failed payments even if a previous order succeeded
-        if (hasFailedPayment && order.orderStatus !== "SUCCESS") {
-          const latestFailed = order.paymentAttempts
-            ?.filter((a: any) => a.paymentStatus === "FAILED")
-            ?.sort((a: any, b: any) => b.createdDate - a.createdDate)[0];
-
-          if (latestFailed) {
-            const hoursSince = (Date.now() - latestFailed.createdDate) / (1000 * 60 * 60);
-            if (hoursSince <= 168) { // 7 days for failed payments
-              failedEmails.add(emailLower);
-            }
-          }
-        }
+      const email = String(sub.customerEmail || "").toLowerCase().trim();
+      const ref = String(sub.referenceCode || "");
+      const orders = Array.isArray(sub.orders) ? sub.orders : [];
+      const recentSuccess = orders.some((o: any) => o.orderStatus === "SUCCESS" && (o.paymentAttempts || []).some((a: any) =>
+        a.paymentStatus === "SUCCESS" && Date.now() - Number(a.createdDate) <= 48 * 3600_000));
+      if (recentSuccess && ref) {
+        if (email) successfulEmails.add(email);
+        try {
+          const r = await settleSubscriptionCharge({ status: "success", data: sub }, ref, "auto_approve_subscription", { db }, email || null);
+          bump(`sub_${r.outcome}${r.reason ? `_${r.reason}` : ""}`);
+        } catch (e) { bump("sub_error"); console.error("subscription settle error", e instanceof Error ? e.message : e); }
       }
+      if (email && orders.some((o: any) => o.orderStatus !== "SUCCESS" && (o.paymentAttempts || []).some((a: any) =>
+        a.paymentStatus === "FAILED" && Date.now() - Number(a.createdDate) <= 168 * 3600_000))) failedEmails.add(email);
     }
-
-    // Don't remove failed emails just because they had a recent success on a DIFFERENT order
-    // Both can coexist - a specialist can have a successful past order AND a failed current one
-
-    console.log(`Found ${successfulEmails.size} emails with recent successful payments, ${failedEmails.size} with failed payments`);
-
-    // Find pending orders for successful emails and auto-approve
-    let approvedCount = 0;
+    const approvedCount = (counts.token_applied ?? 0) + (counts.sub_applied ?? 0);
     let failedMarkedCount = 0;
-
-    for (const email of successfulEmails) {
-      const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-
-      const { data: pendingOrders, error: fetchError } = await supabaseAdmin
-        .from('orders')
-        .select('id, customer_name, customer_email, status, subscription_month, amount')
-        .eq('customer_email', email)
-        .eq('status', 'pending')
-        .is('deleted_at', null)
-        .gte('created_at', twoDaysAgo)
-        .order('created_at', { ascending: false });
-
-      if (fetchError) {
-        console.error(`Error fetching orders for ${email}:`, fetchError);
-        continue;
-      }
-
-      if (!pendingOrders || pendingOrders.length === 0) continue;
-
-      const orderToApprove = pendingOrders[0];
-
-      const { error: updateError } = await supabaseAdmin
-        .from('orders')
-        .update({
-          status: 'approved',
-          approved_at: new Date().toISOString(),
-          payment_method: 'credit_card',
-          payment_status: 'success',
-        })
-        .eq('id', orderToApprove.id);
-
-      if (updateError) {
-        console.error(`Error approving order ${orderToApprove.id}:`, updateError);
-      } else {
-        console.log(`Auto-approved order for ${orderToApprove.customer_name} (${email}) - ${orderToApprove.amount} TL - Month ${orderToApprove.subscription_month}`);
-        approvedCount++;
-      }
-    }
 
     // Mark failed payment orders
     for (const email of failedEmails) {
@@ -260,6 +196,7 @@ serve(async (req) => {
       totalSuccessfulPayments: successfulEmails.size,
       totalFailedPayments: failedEmails.size,
       approved: approvedCount,
+      outcomes: counts,
       failedMarked: failedMarkedCount,
       timestamp: new Date().toISOString(),
     };
