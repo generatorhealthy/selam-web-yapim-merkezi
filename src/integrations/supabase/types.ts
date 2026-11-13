@@ -8679,6 +8679,17 @@ export type Database = {
         }
         Returns: Json
       }
+      confirm_bank_transfer_server: {
+        Args: {
+          p_actor_id: string
+          p_amount: number
+          p_bank_reference: string
+          p_order_id: string
+          p_specialist_id: string
+          p_statement_checked: boolean
+        }
+        Returns: Json
+      }
       consume_admin_login_challenge: {
         Args: { p_expires_at: string; p_nonce_hash: string }
         Returns: boolean

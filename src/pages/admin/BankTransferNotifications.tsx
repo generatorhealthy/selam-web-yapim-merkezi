@@ -140,12 +140,13 @@ export default function BankTransferNotifications() {
       setLinking(false);
       return;
     }
-    const { error: confirmationError } = await (supabase as any).rpc("confirm_bank_transfer", {
-      p_order_id: order.id,
-      p_specialist_id: specialists[0].id,
-      p_bank_reference: bankReference,
-      p_amount: Number(bankAmount),
-      p_statement_checked: statementChecked,
+    const { error: confirmationError } = await supabase.functions.invoke("confirm-bank-transfer", { body: {
+      orderId: order.id,
+      specialistId: specialists[0].id,
+      bankReference,
+      amount: Number(bankAmount),
+      statementChecked,
+    }
     });
     if (confirmationError) {
       toast({ title: "Havale onaylanamadı", description: confirmationError.message, variant: "destructive" });
