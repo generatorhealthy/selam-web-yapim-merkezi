@@ -1,0 +1,23 @@
+[
+  {
+    "path": "/assets/app-Bf0WuUx-.js",
+    "status": 200,
+    "sha256": "7d9d3e0ba7b1f73e9e3f4c1f68223cb6f5bfb5873bdb3833d1db8b2bcf3cb352",
+    "messages": {
+      "Uzman seçtiğiniz saati kapatmış.": true,
+      "Seçtiğiniz saat artık dolu.": true,
+      "Kısa sürede çok sayıda başvuru alındı.": true
+    }
+  },
+  {
+    "path": "/assets/panel-JVaxBf5s.js",
+    "status": 200,
+    "sha256": "41da3f4bc7acd28ca3b691264e5fb531cee74920ebb7261300773fbfb8617b8b",
+    "messages": {
+      "Uzman bu saati kapatmış": false,
+      "Saat dolu": false,
+      "Çok fazla başvuru": false,
+      "lütfen biraz bekleyin": false
+    }
+  }
+]

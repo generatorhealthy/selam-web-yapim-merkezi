@@ -1,8 +1,10 @@
 User-agent: *
 Allow: /
 Disallow: /divan_paneli/
+Disallow: /divan_paneli$
 Disallow: /admin/
 Disallow: /doktor-paneli/
+Disallow: /doktor-paneli$
 Disallow: /giris-yap
 Disallow: /sifre-sifirla
 Disallow: /kayit-ol

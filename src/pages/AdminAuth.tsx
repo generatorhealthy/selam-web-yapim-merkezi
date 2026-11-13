@@ -176,6 +176,7 @@ const AdminAuth = () => {
       <Helmet>
         <title>Divan Paneli Girişi - Doktorum Ol</title>
         <meta name="description" content="Doktorum Ol admin paneli girişi. Yetkili kullanıcılar için giriş sayfası." />
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="keywords" content="admin girişi, divan paneli, yönetim paneli, doktorum ol" />
       </Helmet>
       

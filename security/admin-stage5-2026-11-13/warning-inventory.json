@@ -1,0 +1,1439 @@
+[
+  {
+    "id": "anon:safe_timestamp_update()",
+    "object": "public.safe_timestamp_update",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:safe_timestamp_update()",
+    "object": "public.safe_timestamp_update",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:update_test_titles_on_specialist_name_change()",
+    "object": "public.update_test_titles_on_specialist_name_change",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:update_test_titles_on_specialist_name_change()",
+    "object": "public.update_test_titles_on_specialist_name_change",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:extract_first_int(p_text text)",
+    "object": "public.extract_first_int",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:extract_first_int(p_text text)",
+    "object": "public.extract_first_int",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:reset_admin_login_attempts(p_email text)",
+    "object": "public.reset_admin_login_attempts",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:send_first_order_sms_notification()",
+    "object": "public.send_first_order_sms_notification",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:send_first_order_sms_notification()",
+    "object": "public.send_first_order_sms_notification",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:mark_paid_month_on_order_approval()",
+    "object": "public.mark_paid_month_on_order_approval",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:mark_paid_month_on_order_approval()",
+    "object": "public.mark_paid_month_on_order_approval",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:auto_create_customer_on_order_approval()",
+    "object": "public.auto_create_customer_on_order_approval",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:auto_create_customer_on_order_approval()",
+    "object": "public.auto_create_customer_on_order_approval",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:set_specialist_slug()",
+    "object": "public.set_specialist_slug",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:set_specialist_slug()",
+    "object": "public.set_specialist_slug",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:preserve_specialist_slug()",
+    "object": "public.preserve_specialist_slug",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:preserve_specialist_slug()",
+    "object": "public.preserve_specialist_slug",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:get_specialist_follower_count(p_specialist_id uuid)",
+    "object": "public.get_specialist_follower_count",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:get_specialist_follower_count(p_specialist_id uuid)",
+    "object": "public.get_specialist_follower_count",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:is_following_specialist(p_specialist_id uuid)",
+    "object": "public.is_following_specialist",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:is_following_specialist(p_specialist_id uuid)",
+    "object": "public.is_following_specialist",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:create_full_database_backup(p_backup_type text, p_created_by uuid, p_notes text)",
+    "object": "public.create_full_database_backup",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:get_public_reviews(p_limit integer, p_specialist_id uuid)",
+    "object": "public.get_public_reviews",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:get_public_reviews(p_limit integer, p_specialist_id uuid)",
+    "object": "public.get_public_reviews",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:create_client_referral_for_new_specialist()",
+    "object": "public.create_client_referral_for_new_specialist",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:create_client_referral_for_new_specialist()",
+    "object": "public.create_client_referral_for_new_specialist",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:is_specialist_owner(_specialist_user_id uuid)",
+    "object": "public.is_specialist_owner",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:is_specialist_owner(_specialist_user_id uuid)",
+    "object": "public.is_specialist_owner",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:get_public_specialists()",
+    "object": "public.get_public_specialists",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:get_public_specialists()",
+    "object": "public.get_public_specialists",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:cleanup_on_profile_delete()",
+    "object": "public.cleanup_on_profile_delete",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:cleanup_on_profile_delete()",
+    "object": "public.cleanup_on_profile_delete",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:notify_specialist_new_appointment()",
+    "object": "public.notify_specialist_new_appointment",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:notify_specialist_new_appointment()",
+    "object": "public.notify_specialist_new_appointment",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:remove_specialist_from_customers_on_deactivate()",
+    "object": "public.remove_specialist_from_customers_on_deactivate",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:remove_specialist_from_customers_on_deactivate()",
+    "object": "public.remove_specialist_from_customers_on_deactivate",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:get_specialist_basic_info()",
+    "object": "public.get_specialist_basic_info",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:get_specialist_basic_info()",
+    "object": "public.get_specialist_basic_info",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:trigger_generate_instagram_posts()",
+    "object": "public.trigger_generate_instagram_posts",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:trigger_generate_instagram_posts()",
+    "object": "public.trigger_generate_instagram_posts",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:generate_unique_referral_code()",
+    "object": "public.generate_unique_referral_code",
+    "role": "anon",
+    "severity": "orta",
+    "group": "metadata-helper",
+    "evidence": "Approval/status or generator helper metadata; no unrestricted clinical/payment row read found; exact execution behavior needs focused acceptance.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:generate_unique_referral_code()",
+    "object": "public.generate_unique_referral_code",
+    "role": "authenticated",
+    "severity": "orta",
+    "group": "metadata-helper",
+    "evidence": "Approval/status or generator helper metadata; no unrestricted clinical/payment row read found; exact execution behavior needs focused acceptance.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:create_referral_code_for_new_specialist()",
+    "object": "public.create_referral_code_for_new_specialist",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:create_referral_code_for_new_specialist()",
+    "object": "public.create_referral_code_for_new_specialist",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:qualify_referral_on_first_paid_order()",
+    "object": "public.qualify_referral_on_first_paid_order",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:qualify_referral_on_first_paid_order()",
+    "object": "public.qualify_referral_on_first_paid_order",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:get_referrer_by_code(p_code text)",
+    "object": "public.get_referrer_by_code",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:get_referrer_by_code(p_code text)",
+    "object": "public.get_referrer_by_code",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:get_my_referral_summary()",
+    "object": "public.get_my_referral_summary",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:get_my_referral_summary()",
+    "object": "public.get_my_referral_summary",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:create_referral_record_on_signup()",
+    "object": "public.create_referral_record_on_signup",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:create_referral_record_on_signup()",
+    "object": "public.create_referral_record_on_signup",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:trigger_auto_share_new_blog()",
+    "object": "public.trigger_auto_share_new_blog",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:trigger_auto_share_new_blog()",
+    "object": "public.trigger_auto_share_new_blog",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:generate_contract_content_on_approval()",
+    "object": "public.generate_contract_content_on_approval",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:generate_contract_content_on_approval()",
+    "object": "public.generate_contract_content_on_approval",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:notify_specialist_new_test_result()",
+    "object": "public.notify_specialist_new_test_result",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:notify_specialist_new_test_result()",
+    "object": "public.notify_specialist_new_test_result",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:admin_get_client_referrals(p_year integer)",
+    "object": "public.admin_get_client_referrals",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:admin_get_client_referrals(p_year integer)",
+    "object": "public.admin_get_client_referrals",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:admin_update_client_referral_notes(p_specialist_id uuid, p_year integer, p_month integer, p_notes text)",
+    "object": "public.admin_update_client_referral_notes",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:admin_update_client_referral_notes(p_specialist_id uuid, p_year integer, p_month integer, p_notes text)",
+    "object": "public.admin_update_client_referral_notes",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:can_manage_users(target_user_id uuid)",
+    "object": "public.can_manage_users",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:can_manage_users(target_user_id uuid)",
+    "object": "public.can_manage_users",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:delete_automatic_order_on_specialist_delete()",
+    "object": "public.delete_automatic_order_on_specialist_delete",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:delete_automatic_order_on_specialist_delete()",
+    "object": "public.delete_automatic_order_on_specialist_delete",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:create_specialist_tests()",
+    "object": "public.create_specialist_tests",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:create_specialist_tests()",
+    "object": "public.create_specialist_tests",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:delete_specialist_and_orders_on_user_delete()",
+    "object": "public.delete_specialist_and_orders_on_user_delete",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:delete_specialist_and_orders_on_user_delete()",
+    "object": "public.delete_specialist_and_orders_on_user_delete",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:get_current_user_role()",
+    "object": "public.get_current_user_role",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:get_current_user_role()",
+    "object": "public.get_current_user_role",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:is_admin_or_staff_user()",
+    "object": "public.is_admin_or_staff_user",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:is_admin_or_staff_user()",
+    "object": "public.is_admin_or_staff_user",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:update_session_activity()",
+    "object": "public.update_session_activity",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:update_session_activity()",
+    "object": "public.update_session_activity",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:handle_new_user()",
+    "object": "public.handle_new_user",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:handle_new_user()",
+    "object": "public.handle_new_user",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:send_appointment_notification_email()",
+    "object": "public.send_appointment_notification_email",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:send_appointment_notification_email()",
+    "object": "public.send_appointment_notification_email",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:is_user_approved(user_id uuid)",
+    "object": "public.is_user_approved",
+    "role": "anon",
+    "severity": "orta",
+    "group": "metadata-helper",
+    "evidence": "Approval/status or generator helper metadata; no unrestricted clinical/payment row read found; exact execution behavior needs focused acceptance.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:is_user_approved(user_id uuid)",
+    "object": "public.is_user_approved",
+    "role": "authenticated",
+    "severity": "orta",
+    "group": "metadata-helper",
+    "evidence": "Approval/status or generator helper metadata; no unrestricted clinical/payment row read found; exact execution behavior needs focused acceptance.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:trigger_sitemap_generation()",
+    "object": "public.trigger_sitemap_generation",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:trigger_sitemap_generation()",
+    "object": "public.trigger_sitemap_generation",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:is_admin_user()",
+    "object": "public.is_admin_user",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "verified-identity",
+    "evidence": "Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.",
+    "status": "düzeltildi"
+  },
+  {
+    "id": "authenticated:is_admin_user()",
+    "object": "public.is_admin_user",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "verified-identity",
+    "evidence": "Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.",
+    "status": "düzeltildi"
+  },
+  {
+    "id": "anon:update_packages_updated_at()",
+    "object": "public.update_packages_updated_at",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:update_packages_updated_at()",
+    "object": "public.update_packages_updated_at",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:attach_signup_identity_to_analytics(p_session_id text, p_specialist_user_id uuid, p_specialist_email text, p_ref_code text)",
+    "object": "public.attach_signup_identity_to_analytics",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "verified-identity",
+    "evidence": "Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.",
+    "status": "düzeltildi"
+  },
+  {
+    "id": "anon:update_specialist_package_price_on_order()",
+    "object": "public.update_specialist_package_price_on_order",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:update_specialist_package_price_on_order()",
+    "object": "public.update_specialist_package_price_on_order",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:update_test_questions_updated_at()",
+    "object": "public.update_test_questions_updated_at",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:update_test_questions_updated_at()",
+    "object": "public.update_test_questions_updated_at",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:update_test_results_updated_at()",
+    "object": "public.update_test_results_updated_at",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:update_test_results_updated_at()",
+    "object": "public.update_test_results_updated_at",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:notify_doki_bank_transfer_order()",
+    "object": "public.notify_doki_bank_transfer_order",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:notify_doki_bank_transfer_order()",
+    "object": "public.notify_doki_bank_transfer_order",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:admin_update_specialist_slug(p_specialist_id uuid, p_new_slug text)",
+    "object": "public.admin_update_specialist_slug",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:admin_update_specialist_slug(p_specialist_id uuid, p_new_slug text)",
+    "object": "public.admin_update_specialist_slug",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:get_my_referred_specialists()",
+    "object": "public.get_my_referred_specialists",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:get_my_referred_specialists()",
+    "object": "public.get_my_referred_specialists",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:add_specialist_to_customers_on_activate()",
+    "object": "public.add_specialist_to_customers_on_activate",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:add_specialist_to_customers_on_activate()",
+    "object": "public.add_specialist_to_customers_on_activate",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:get_public_specialist_by_slug(p_slug text)",
+    "object": "public.get_public_specialist_by_slug",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:get_public_specialist_by_slug(p_slug text)",
+    "object": "public.get_public_specialist_by_slug",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:add_specialist_to_customers()",
+    "object": "public.add_specialist_to_customers",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:add_specialist_to_customers()",
+    "object": "public.add_specialist_to_customers",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:remove_specialist_from_customers_on_delete()",
+    "object": "public.remove_specialist_from_customers_on_delete",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:remove_specialist_from_customers_on_delete()",
+    "object": "public.remove_specialist_from_customers_on_delete",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:sync_specialist_amount_to_customers()",
+    "object": "public.sync_specialist_amount_to_customers",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:sync_specialist_amount_to_customers()",
+    "object": "public.sync_specialist_amount_to_customers",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:trg_notify_blog_post()",
+    "object": "public.trg_notify_blog_post",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:trg_notify_blog_post()",
+    "object": "public.trg_notify_blog_post",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:trg_notify_blog()",
+    "object": "public.trg_notify_blog",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:trg_notify_blog()",
+    "object": "public.trg_notify_blog",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:trg_notify_specialist()",
+    "object": "public.trg_notify_specialist",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:trg_notify_specialist()",
+    "object": "public.trg_notify_specialist",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:trg_notify_test()",
+    "object": "public.trg_notify_test",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:trg_notify_test()",
+    "object": "public.trg_notify_test",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:is_admin_or_staff()",
+    "object": "public.is_admin_or_staff",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:is_admin_or_staff()",
+    "object": "public.is_admin_or_staff",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:current_partner_id()",
+    "object": "public.current_partner_id",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:current_partner_id()",
+    "object": "public.current_partner_id",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:mark_partner_referral_earned()",
+    "object": "public.mark_partner_referral_earned",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:mark_partner_referral_earned()",
+    "object": "public.mark_partner_referral_earned",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:link_partner_user(p_partner_id uuid, p_email text)",
+    "object": "public.link_partner_user",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:link_partner_user(p_partner_id uuid, p_email text)",
+    "object": "public.link_partner_user",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:resolve_specialist_slug(p_slug text)",
+    "object": "public.resolve_specialist_slug",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:resolve_specialist_slug(p_slug text)",
+    "object": "public.resolve_specialist_slug",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:get_default_time_slots()",
+    "object": "public.get_default_time_slots",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:get_default_time_slots()",
+    "object": "public.get_default_time_slots",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "public-output",
+    "evidence": "Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:auto_create_invoice_on_approval()",
+    "object": "public.auto_create_invoice_on_approval",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:auto_create_invoice_on_approval()",
+    "object": "public.auto_create_invoice_on_approval",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:notify_specialist_new_order()",
+    "object": "public.notify_specialist_new_order",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:notify_specialist_new_order()",
+    "object": "public.notify_specialist_new_order",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:notify_specialist_new_review()",
+    "object": "public.notify_specialist_new_review",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:notify_specialist_new_review()",
+    "object": "public.notify_specialist_new_review",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:notify_specialist_new_referral()",
+    "object": "public.notify_specialist_new_referral",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:notify_specialist_new_referral()",
+    "object": "public.notify_specialist_new_referral",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:send_contract_emails_on_approval()",
+    "object": "public.send_contract_emails_on_approval",
+    "role": "anon",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "authenticated:send_contract_emails_on_approval()",
+    "object": "public.send_contract_emails_on_approval",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "trigger-only",
+    "evidence": "Trigger return type prevents direct RPC execution; invocation only in table trigger context.",
+    "status": "korundu"
+  },
+  {
+    "id": "anon:update_registration_analytics(p_session_id text, p_current_step integer, p_step_timestamps jsonb, p_click_events jsonb, p_time_on_page integer, p_completed boolean, p_left boolean)",
+    "object": "public.update_registration_analytics",
+    "role": "anon",
+    "severity": "orta",
+    "group": "telemetry-integrity",
+    "evidence": "Known session ID permits telemetry overwrite within 2 days; no private read, separate consent-compatible migration needed.",
+    "status": "açık"
+  },
+  {
+    "id": "authenticated:update_registration_analytics(p_session_id text, p_current_step integer, p_step_timestamps jsonb, p_click_events jsonb, p_time_on_page integer, p_completed boolean, p_left boolean)",
+    "object": "public.update_registration_analytics",
+    "role": "authenticated",
+    "severity": "orta",
+    "group": "telemetry-integrity",
+    "evidence": "Known session ID permits telemetry overwrite within 2 days; no private read, separate consent-compatible migration needed.",
+    "status": "açık"
+  },
+  {
+    "id": "authenticated:get_incomplete_registrations(p_days integer)",
+    "object": "public.get_incomplete_registrations",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:create_test_ad_visit()",
+    "object": "public.create_test_ad_visit",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:get_lead_intelligence(p_days integer)",
+    "object": "public.get_lead_intelligence",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:get_attribution_debug()",
+    "object": "public.get_attribution_debug",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:get_ad_attribution_completeness(p_from date, p_to date)",
+    "object": "public.get_ad_attribution_completeness",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "anon:track_lead_event(p_session_id text, p_event_name text, p_event_id text, p_properties jsonb, p_touch jsonb)",
+    "object": "public.track_lead_event",
+    "role": "anon",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:track_lead_event(p_session_id text, p_event_name text, p_event_id text, p_properties jsonb, p_touch jsonb)",
+    "object": "public.track_lead_event",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:get_registration_funnel(p_cohort text, p_dim text)",
+    "object": "public.get_registration_funnel",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:get_ad_performance(p_from date, p_to date, p_level text, p_parent text, p_model text)",
+    "object": "public.get_ad_performance",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:list_database_backups()",
+    "object": "public.list_database_backups",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:get_order_stats()",
+    "object": "public.get_order_stats",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:restore_from_backup(p_backup_id bigint, p_table_name text)",
+    "object": "public.restore_from_backup",
+    "role": "authenticated",
+    "severity": "düşük",
+    "group": "body-guard",
+    "evidence": "Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.",
+    "status": "inceleme"
+  },
+  {
+    "id": "authenticated:register_partner_referral(p_referral_code text, p_specialist_user_id uuid, p_specialist_email text, p_specialist_name text, p_specialist_phone text)",
+    "object": "public.register_partner_referral",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "verified-identity",
+    "evidence": "Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.",
+    "status": "düzeltildi"
+  },
+  {
+    "id": "authenticated:register_partner_referral(p_referral_code text, p_specialist_user_id uuid, p_specialist_email text, p_specialist_name text, p_specialist_phone text, p_session_id text, p_landing_url text)",
+    "object": "public.register_partner_referral",
+    "role": "authenticated",
+    "severity": "yanlış pozitif",
+    "group": "verified-identity",
+    "evidence": "Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.",
+    "status": "düzeltildi"
+  },
+  {
+    "id": "0008:consent_transactions",
+    "object": "public.consent_transactions",
+    "severity": "yanlış pozitif",
+    "group": "service-only",
+    "evidence": "RLS on, no user policy: intentional fail-closed service-only consent capability store.",
+    "status": "korundu"
+  },
+  {
+    "id": "0011:search_path",
+    "object": "public: mutable function search_path",
+    "severity": "düşük",
+    "group": "configuration",
+    "evidence": "One mutable-path catalog warning; exact function not supplied by aggregate linter, cannot assert resolved.",
+    "status": "açık"
+  },
+  {
+    "id": "0014:extension",
+    "object": "public extension",
+    "severity": "düşük",
+    "group": "configuration",
+    "evidence": "One extension-in-public warning; moving managed extension without dependency acceptance deferred.",
+    "status": "açık"
+  }
+]

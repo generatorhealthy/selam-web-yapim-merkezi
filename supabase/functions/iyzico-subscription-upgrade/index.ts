@@ -58,7 +58,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   // SECURITY: only trusted callers may trigger this handler.
-  const authCheck = await verifyAdminOrCron(req);
+  const authCheck = await verifyAdminOrCron(req, ["admin"]);
   if (!authCheck.ok) {
     return new Response(JSON.stringify({ error: authCheck.error }), {
       status: authCheck.status,

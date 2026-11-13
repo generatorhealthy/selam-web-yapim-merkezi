@@ -6,6 +6,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 // Returns { ok: true } when allowed, otherwise { ok: false, status, error }.
 export async function verifyAdminOrCron(
   req: Request,
+  allowedRoles: readonly string[] = ["admin", "staff"],
 ): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -47,7 +48,7 @@ export async function verifyAdminOrCron(
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!profile || !["admin", "staff"].includes(profile.role) || profile.is_approved !== true) {
+  if (!profile || !allowedRoles.includes(profile.role) || profile.is_approved !== true) {
     return { ok: false, status: 403, error: "Bu işlem için yetkiniz yok" };
   }
 

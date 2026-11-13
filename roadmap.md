@@ -1,10 +1,13 @@
 # 13 Kasım 2026 — Aşama 5 admin ve güvenlik tamamlama
-- [ ] E-posta hedefli kilidi kaldıran, sunucu doğrulamalı özel kademeli giriş koruması; sentetik kabul ve ayrı canlı doğrulama.
-- [ ] Sabit 64 sipariş için salt-okunur admin/staff inceleme ekranı ve denetim tasarımı.
-- [ ] Modül/RLS/RPC/Storage/Edge yetki envanteri; dört sentetik rol ile sınır testleri.
-- [ ] Önceki 174 / güncel 167 uyarının nesne bazlı sınıflandırması ve küçük güvenlik paketleri.
-- [ ] Hostinger uyarı dosyası/HTML kanıtı ve izinli sentetik tarayıcı kontrolü.
-- [ ] Kritik işler sonrası düşük riskli SEO düzeltmeleri; kalan dış engelleri açık raporla.
+- [x] E-posta hedefli üç saatlik kilit kaldırıldı; canlı sabit yanıtta hesap bilgisi yok, anonim failed/reset/claim reddi. 20 sentetik eşzamanlı claim 1/19. Kademeli challenge tek kullanımlık; Supabase doğrudan Auth endpoint koruması ayrıca hosted teyit gerektirir.
+- [x] Sabit 64 sipariş için salt-okunur admin/staff ekranı + service endpoint yayımlandı; yerel mobil/masaüstü sentetik personel kabulü ve canlı anon 401. Sahiplik yazımı yok, karar denetimi tasarlandı.
+- [x] 116 işlev / 282 politika envanteri, 64 gerçek-RLS yerel dört rol kontrolü; cross-account identity/partner ve staff abonelik upgrade yetkisi kapatıldı.
+- [x] Güncel 160 uyarı nesne/rol/imza bazında sınıflandırıldı (112 yanlış pozitif,42 düşük,6 orta); eski 174'ün birebir liste kanıtı bulunamadığı açık yazıldı.
+- [x] Hostinger gerçek JS ve sentetik POST reddiyle üç uyarı ekranda görüldü; gerçek kayıt/bildirim yok.
+- [x] Üç hukuki canonical/sitemap ve ana/blog/uzman HTML doğrulandı; panel kök robots engeli ve giriş noindex eklendi, URL değişmedi.
+- [ ] Bütün Edge eylemleri + özel diploma yükleme ve gerçek yetkili panel readback — harici Supabase yönetilen oturumu ve somut belge kaynağı yok; gerçek kullanıcıyla test yapılmadı.
+- [ ] 174 tarihsel birebir envanter — tarihsel ham nesne listesi yok; güncel 160 tüm satırları hazır.
+- [ ] Google indeks/CWV ve blog kategorisi tam kabul — Search Console/gerçek ölçüm kanıtı ve kategori route kapsamı eksik; tam SEO başarısı denmedi.
 
 # 13 Kasım 2026 — Randevu ve ödeme son düzeltmeleri (güncel görev)
 - [x] IP kullanmayan, anonim iletişim çifti için kısa süreli sunucu koruması; yoğunluk ölçümü ve yanlış engelleme kabulü.

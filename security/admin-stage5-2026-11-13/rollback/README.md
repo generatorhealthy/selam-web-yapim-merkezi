@@ -1,0 +1,3 @@
+# Güvenli geri alma
+Yeni personel okuma endpointi gerekirse kapatılır; sipariş sahipliği yazımı olmadığı için geri veri işlemi yok. Yeni giriş endpointi durdurulursa web sayfası generic hata verir; eski üç saatlik e-posta hedefli lock veya anonim reset ASLA geri açılmaz. Recovery yalnız doğrulanmış hesap sahibinde kalır. Eski frontend kopyası arşivdir, güvenli doğrudan rollback olarak yayımlanmaz.
+Admin-only iyzico upgrade geri alma sırasında staff abonelik yazıcısı yeniden açılmaz. Kimlik/partner RPC için önceki anonim güvensiz gövdeler geri yüklenmez; gerekirse uç service-only fail-closed bırakılır. Kayıt/abonelik/sipariş verisi geri yazımı yok.

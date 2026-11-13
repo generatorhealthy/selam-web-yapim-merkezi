@@ -1,0 +1,170 @@
+# Güvenlik uyarıları — nesne bazlı envanter
+
+Önceki 174 uyarının birebir tarihsel nesne listesi yoktur; kayıp 14 satır uydurulmadı. Bu tur başlangıcı 167, giriş paketi sonrası 163, yetki paketi sonrası 160 (71 anonim + 86 authenticated + 3 yapılandırma). Güncel 160 satırın tamamı warning-inventory.json içinde rol ve imza bazında verilmiştir.
+
+{'yanlış pozitif': 112, 'düşük': 42, 'orta': 6}
+
+Katalog uyarısı gerçek açık sayısı değildir. Yeni üç işaret: admin boolean gate ve authenticated identity/partner RPC erişimi; gövde doğrulaması ve sentetik kabul var, genel EXECUTE yetkisini kaldırmak RLS/kayıt akışını bozar. Beklenen erişim olarak yanlış pozitif sınıflandırıldı; yeni unguarded yetki açığı yok.
+
+Ayrıca katalog dışı açık: iyzico-subscription-upgrade ortak helper staff rolüne abonelik değişikliği izni veriyor; panelde gizli olsa bile sunucu admin-only değil. Admin-only dar paket yayımlandı; dokuz gerçek helper sentetik testi ve canlı anon 401 geçti. Sağlayıcı testi yapılmadı.
+
+- `anon:safe_timestamp_update()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:safe_timestamp_update()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:update_test_titles_on_specialist_name_change()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:update_test_titles_on_specialist_name_change()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:extract_first_int(p_text text)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:extract_first_int(p_text text)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:reset_admin_login_attempts(p_email text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:send_first_order_sms_notification()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:send_first_order_sms_notification()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:mark_paid_month_on_order_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:mark_paid_month_on_order_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:auto_create_customer_on_order_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:auto_create_customer_on_order_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:set_specialist_slug()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:set_specialist_slug()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:preserve_specialist_slug()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:preserve_specialist_slug()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:get_specialist_follower_count(p_specialist_id uuid)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:get_specialist_follower_count(p_specialist_id uuid)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `anon:is_following_specialist(p_specialist_id uuid)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:is_following_specialist(p_specialist_id uuid)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:create_full_database_backup(p_backup_type text, p_created_by uuid, p_notes text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:get_public_reviews(p_limit integer, p_specialist_id uuid)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:get_public_reviews(p_limit integer, p_specialist_id uuid)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `anon:create_client_referral_for_new_specialist()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:create_client_referral_for_new_specialist()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:is_specialist_owner(_specialist_user_id uuid)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:is_specialist_owner(_specialist_user_id uuid)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:get_public_specialists()` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:get_public_specialists()` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `anon:cleanup_on_profile_delete()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:cleanup_on_profile_delete()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:notify_specialist_new_appointment()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:notify_specialist_new_appointment()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:remove_specialist_from_customers_on_deactivate()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:remove_specialist_from_customers_on_deactivate()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:get_specialist_basic_info()` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:get_specialist_basic_info()` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `anon:trigger_generate_instagram_posts()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:trigger_generate_instagram_posts()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:generate_unique_referral_code()` — **orta**, inceleme: Approval/status or generator helper metadata; no unrestricted clinical/payment row read found; exact execution behavior needs focused acceptance.
+- `authenticated:generate_unique_referral_code()` — **orta**, inceleme: Approval/status or generator helper metadata; no unrestricted clinical/payment row read found; exact execution behavior needs focused acceptance.
+- `anon:create_referral_code_for_new_specialist()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:create_referral_code_for_new_specialist()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:qualify_referral_on_first_paid_order()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:qualify_referral_on_first_paid_order()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:get_referrer_by_code(p_code text)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:get_referrer_by_code(p_code text)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `anon:get_my_referral_summary()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:get_my_referral_summary()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:create_referral_record_on_signup()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:create_referral_record_on_signup()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:trigger_auto_share_new_blog()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:trigger_auto_share_new_blog()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:generate_contract_content_on_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:generate_contract_content_on_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:notify_specialist_new_test_result()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:notify_specialist_new_test_result()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:admin_get_client_referrals(p_year integer)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:admin_get_client_referrals(p_year integer)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:admin_update_client_referral_notes(p_specialist_id uuid, p_year integer, p_month integer, p_notes text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:admin_update_client_referral_notes(p_specialist_id uuid, p_year integer, p_month integer, p_notes text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:can_manage_users(target_user_id uuid)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:can_manage_users(target_user_id uuid)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:delete_automatic_order_on_specialist_delete()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:delete_automatic_order_on_specialist_delete()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:create_specialist_tests()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:create_specialist_tests()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:delete_specialist_and_orders_on_user_delete()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:delete_specialist_and_orders_on_user_delete()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:get_current_user_role()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:get_current_user_role()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:is_admin_or_staff_user()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:is_admin_or_staff_user()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:update_session_activity()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:update_session_activity()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:handle_new_user()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:handle_new_user()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:send_appointment_notification_email()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:send_appointment_notification_email()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:is_user_approved(user_id uuid)` — **orta**, inceleme: Approval/status or generator helper metadata; no unrestricted clinical/payment row read found; exact execution behavior needs focused acceptance.
+- `authenticated:is_user_approved(user_id uuid)` — **orta**, inceleme: Approval/status or generator helper metadata; no unrestricted clinical/payment row read found; exact execution behavior needs focused acceptance.
+- `anon:trigger_sitemap_generation()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:trigger_sitemap_generation()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:is_admin_user()` — **yanlış pozitif**, düzeltildi: Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.
+- `authenticated:is_admin_user()` — **yanlış pozitif**, düzeltildi: Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.
+- `anon:update_packages_updated_at()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:update_packages_updated_at()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:attach_signup_identity_to_analytics(p_session_id text, p_specialist_user_id uuid, p_specialist_email text, p_ref_code text)` — **yanlış pozitif**, düzeltildi: Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.
+- `anon:update_specialist_package_price_on_order()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:update_specialist_package_price_on_order()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:update_test_questions_updated_at()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:update_test_questions_updated_at()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:update_test_results_updated_at()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:update_test_results_updated_at()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:notify_doki_bank_transfer_order()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:notify_doki_bank_transfer_order()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:admin_update_specialist_slug(p_specialist_id uuid, p_new_slug text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:admin_update_specialist_slug(p_specialist_id uuid, p_new_slug text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:get_my_referred_specialists()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:get_my_referred_specialists()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:add_specialist_to_customers_on_activate()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:add_specialist_to_customers_on_activate()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:get_public_specialist_by_slug(p_slug text)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:get_public_specialist_by_slug(p_slug text)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `anon:add_specialist_to_customers()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:add_specialist_to_customers()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:remove_specialist_from_customers_on_delete()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:remove_specialist_from_customers_on_delete()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:sync_specialist_amount_to_customers()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:sync_specialist_amount_to_customers()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:trg_notify_blog_post()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:trg_notify_blog_post()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:trg_notify_blog()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:trg_notify_blog()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:trg_notify_specialist()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:trg_notify_specialist()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:trg_notify_test()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:trg_notify_test()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:is_admin_or_staff()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:is_admin_or_staff()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:current_partner_id()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:current_partner_id()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:mark_partner_referral_earned()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:mark_partner_referral_earned()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:link_partner_user(p_partner_id uuid, p_email text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:link_partner_user(p_partner_id uuid, p_email text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:resolve_specialist_slug(p_slug text)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:resolve_specialist_slug(p_slug text)` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `anon:get_default_time_slots()` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `authenticated:get_default_time_slots()` — **yanlış pozitif**, korundu: Explicit public profile/review/catalog output; public contact email/phone omitted from profile RPC.
+- `anon:auto_create_invoice_on_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:auto_create_invoice_on_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:notify_specialist_new_order()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:notify_specialist_new_order()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:notify_specialist_new_review()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:notify_specialist_new_review()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:notify_specialist_new_referral()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:notify_specialist_new_referral()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:send_contract_emails_on_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `authenticated:send_contract_emails_on_approval()` — **yanlış pozitif**, korundu: Trigger return type prevents direct RPC execution; invocation only in table trigger context.
+- `anon:update_registration_analytics(p_session_id text, p_current_step integer, p_step_timestamps jsonb, p_click_events jsonb, p_time_on_page integer, p_completed boolean, p_left boolean)` — **orta**, açık: Known session ID permits telemetry overwrite within 2 days; no private read, separate consent-compatible migration needed.
+- `authenticated:update_registration_analytics(p_session_id text, p_current_step integer, p_step_timestamps jsonb, p_click_events jsonb, p_time_on_page integer, p_completed boolean, p_left boolean)` — **orta**, açık: Known session ID permits telemetry overwrite within 2 days; no private read, separate consent-compatible migration needed.
+- `authenticated:get_incomplete_registrations(p_days integer)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:create_test_ad_visit()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:get_lead_intelligence(p_days integer)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:get_attribution_debug()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:get_ad_attribution_completeness(p_from date, p_to date)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `anon:track_lead_event(p_session_id text, p_event_name text, p_event_id text, p_properties jsonb, p_touch jsonb)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:track_lead_event(p_session_id text, p_event_name text, p_event_id text, p_properties jsonb, p_touch jsonb)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:get_registration_funnel(p_cohort text, p_dim text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:get_ad_performance(p_from date, p_to date, p_level text, p_parent text, p_model text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:list_database_backups()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:get_order_stats()` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:restore_from_backup(p_backup_id bigint, p_table_name text)` — **düşük**, inceleme: Body contains authorization/ownership gate; individual full handler and hosted role acceptance incomplete where not covered by role-matrix.
+- `authenticated:register_partner_referral(p_referral_code text, p_specialist_user_id uuid, p_specialist_email text, p_specialist_name text, p_specialist_phone text)` — **yanlış pozitif**, düzeltildi: Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.
+- `authenticated:register_partner_referral(p_referral_code text, p_specialist_user_id uuid, p_specialist_email text, p_specialist_name text, p_specialist_phone text, p_session_id text, p_landing_url text)` — **yanlış pozitif**, düzeltildi: Verified auth.uid ownership/server-read identity, or approved current-admin boolean; new catalog flag is expected access not unguarded data.
+- `0008:consent_transactions` — **yanlış pozitif**, korundu: RLS on, no user policy: intentional fail-closed service-only consent capability store.
+- `0011:search_path` — **düşük**, açık: One mutable-path catalog warning; exact function not supplied by aggregate linter, cannot assert resolved.
+- `0014:extension` — **düşük**, açık: One extension-in-public warning; moving managed extension without dependency acceptance deferred.

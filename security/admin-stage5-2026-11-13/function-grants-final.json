@@ -1,0 +1,1162 @@
+[
+  {
+    "anon": true,
+    "args": "",
+    "name": "safe_timestamp_update",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "update_test_titles_on_specialist_name_change",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_text text",
+    "name": "extract_first_int",
+    "return": "integer",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_email text",
+    "name": "reset_admin_login_attempts",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "send_first_order_sms_notification",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "list_client_referrals_backups",
+    "return": "TABLE(backup_timestamp timestamp with time zone, record_count bigint)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "cleanup_old_backups",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "mark_paid_month_on_order_approval",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "auto_create_customer_on_order_approval",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "set_specialist_slug",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "preserve_specialist_slug",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_specialist_id uuid",
+    "name": "get_specialist_follower_count",
+    "return": "bigint",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_specialist_id uuid",
+    "name": "is_following_specialist",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_user_id uuid",
+    "name": "is_patient_user",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "p_backup_type text, p_created_by uuid, p_notes text",
+    "name": "create_full_database_backup",
+    "return": "bigint",
+    "searchPath": [
+      "search_path=pg_catalog, public, pg_temp"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_limit integer, p_specialist_id uuid",
+    "name": "get_public_reviews",
+    "return": "TABLE(id uuid, specialist_id uuid, reviewer_display_name text, reviewer_name text, rating integer, comment text, status text, created_at timestamp with time zone, specialist_name text, specialist_specialty text)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "create_client_referral_for_new_specialist",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "_specialist_user_id uuid",
+    "name": "is_specialist_owner",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "get_public_specialists",
+    "return": "TABLE(id uuid, name text, specialty text, bio text, profile_picture text, rating numeric, reviews_count integer, city text, consultation_fee numeric, consultation_type text, experience integer, education text, hospital text, online_consultation boolean, face_to_face_consultation boolean, address_summary text, slug text)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "cleanup_old_sessions",
+    "return": "void",
+    "searchPath": [
+      "search_path=\"\""
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "cleanup_on_profile_delete",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "notify_specialist_new_appointment",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "protect_specialist_activation",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "activate_specialist_on_order_approval",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "remove_specialist_from_customers_on_deactivate",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "backup_client_referrals",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "invoke_twitter_share_after_may1",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "get_specialist_basic_info",
+    "return": "TABLE(id uuid, user_id uuid, name text, specialty text, profile_picture text, city text, bio text, rating numeric, reviews_count integer, experience integer, online_consultation boolean, face_to_face_consultation boolean, slug text)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "trigger_generate_instagram_posts",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "enforce_patient_cancel_only",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "generate_unique_referral_code",
+    "return": "text",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "create_referral_code_for_new_specialist",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "qualify_referral_on_first_paid_order",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_code text",
+    "name": "get_referrer_by_code",
+    "return": "TABLE(referrer_id uuid, referrer_name text, code text)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "get_my_referral_summary",
+    "return": "TABLE(code text, total_referrals integer, qualified_referrals integer, granted_referrals integer, total_bonus_months integer, pending_bonus_months integer)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "create_referral_record_on_signup",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "trigger_auto_share_new_blog",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "generate_contract_content_on_approval",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "notify_specialist_new_test_result",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_year integer",
+    "name": "admin_get_client_referrals",
+    "return": "SETOF client_referrals",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_specialist_id uuid, p_year integer, p_month integer, p_notes text",
+    "name": "admin_update_client_referral_notes",
+    "return": "client_referrals",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "target_user_id uuid",
+    "name": "can_manage_users",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=\"\""
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "delete_automatic_order_on_specialist_delete",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "create_specialist_tests",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "delete_specialist_and_orders_on_user_delete",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "get_current_user_role",
+    "return": "text",
+    "searchPath": [
+      "search_path=\"\""
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "is_admin_or_staff_user",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "update_session_activity",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=\"\""
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "handle_new_user",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public, auth"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "send_appointment_notification_email",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "user_id uuid",
+    "name": "is_user_approved",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_order_id uuid, p_payment_key text, p_subscription_ref text, p_customer_ref text, p_charge_ref text, p_amount numeric, p_currency text, p_paid_at timestamp with time zone, p_source text, p_binding text, p_session_id uuid",
+    "name": "settle_iyzico_payment",
+    "return": "jsonb",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "trigger_sitemap_generation",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "is_admin_user",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=\"\""
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "update_packages_updated_at",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=\"\""
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_session_id text, p_specialist_user_id uuid, p_specialist_email text, p_ref_code text",
+    "name": "attach_signup_identity_to_analytics",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "update_specialist_package_price_on_order",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "update_test_questions_updated_at",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=\"\""
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "update_test_results_updated_at",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=\"\""
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "notify_doki_bank_transfer_order",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_specialist_id uuid, p_new_slug text",
+    "name": "admin_update_specialist_slug",
+    "return": "jsonb",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "get_my_referred_specialists",
+    "return": "TABLE(id uuid, name text, email text, created_at timestamp with time zone, is_active boolean)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "add_specialist_to_customers_on_activate",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_slug text",
+    "name": "get_public_specialist_by_slug",
+    "return": "TABLE(id uuid, name text, specialty text, bio text, profile_picture text, rating numeric, reviews_count integer, city text, consultation_fee numeric, consultation_type text, experience integer, education text, hospital text, university text, certifications text, online_consultation boolean, face_to_face_consultation boolean, address text, phone text, email text, working_hours_start text, working_hours_end text, available_days text[], available_time_slots jsonb, faq text, seo_title text, seo_description text, seo_keywords text, user_id uuid, slug text, interests text[])",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "add_specialist_to_customers",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "remove_specialist_from_customers_on_delete",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "sync_specialist_amount_to_customers",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "trg_notify_blog_post",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "trg_notify_blog",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "trg_notify_specialist",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "trg_notify_test",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "is_admin_or_staff",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "current_partner_id",
+    "return": "uuid",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "mark_partner_referral_earned",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_partner_id uuid, p_email text",
+    "name": "link_partner_user",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_slug text",
+    "name": "resolve_specialist_slug",
+    "return": "TABLE(slug text, specialty text)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "get_default_time_slots",
+    "return": "jsonb",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "reject_blocked_phone",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "block_appointments_from_blocked_visitors",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "reject_blocked_phone_lead",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "protect_user_profile_privileges",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "auto_create_invoice_on_approval",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "notify_specialist_new_order",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "notify_specialist_new_review",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "notify_specialist_new_referral",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "",
+    "name": "send_contract_emails_on_approval",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": true,
+    "args": "p_session_id text, p_current_step integer, p_step_timestamps jsonb, p_click_events jsonb, p_time_on_page integer, p_completed boolean, p_left boolean",
+    "name": "update_registration_analytics",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_days integer",
+    "name": "get_incomplete_registrations",
+    "return": "TABLE(user_id uuid, name text, email text, phone text, created_at timestamp with time zone, reminders_sent integer, status text, note text, followup_updated_at timestamp with time zone)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "create_test_ad_visit",
+    "return": "text",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_days integer",
+    "name": "get_lead_intelligence",
+    "return": "TABLE(user_id uuid, name text, email text, phone text, created_at timestamp with time zone, specialty text, city text, score integer, professional integer, capacity integer, intent integer, lead_class text, stage text, paid boolean, revenue numeric, signals text[], utm_source text, utm_campaign text, utm_content text, meta_campaign_id text, meta_adset_id text, meta_ad_id text)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "get_attribution_debug",
+    "return": "TABLE(session_id text, visit_at timestamp with time zone, first_source text, last_source text, campaign_id text, adset_id text, ad_id text, campaign_name text, ad_name text, has_fbclid boolean, has_fbc boolean, has_fbp boolean, user_linked boolean, registered_at timestamp with time zone, checkout_at timestamp with time zone, paid_at timestamp with time zone, paid_amount numeric, is_test boolean)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_from date, p_to date",
+    "name": "get_ad_attribution_completeness",
+    "return": "TABLE(eligible_visits bigint, attributed_visits bigint, eligible_leads bigint, attributed_leads bigint, eligible_registrations bigint, attributed_registrations bigint, eligible_paid bigint, attributed_paid bigint)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "paid_revenue_by_email",
+    "return": "TABLE(em text, amt numeric, first_paid_at timestamp with time zone)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": true,
+    "args": "p_session_id text, p_event_name text, p_event_id text, p_properties jsonb, p_touch jsonb",
+    "name": "track_lead_event",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_cohort text, p_dim text",
+    "name": "get_registration_funnel",
+    "return": "TABLE(grp text, stage text, stage_order integer, n integer, measurable boolean)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_from date, p_to date, p_level text, p_parent text, p_model text",
+    "name": "get_ad_performance",
+    "return": "TABLE(entity_id text, entity_name text, parent_id text, campaign_id text, spend numeric, impressions bigint, clicks bigint, link_clicks bigint, meta_leads bigint, active_days bigint, visits bigint, leads bigint, qualified bigint, qualified_paid bigint, registrations bigint, profiles bigint, checkouts bigint, paid bigint, gross_revenue numeric, refund_amount numeric, revenue numeric, thumbnail_url text, creative_id text)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "cleanup_expired_otps",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "p_backup_timestamp timestamp with time zone",
+    "name": "restore_client_referrals_from_backup",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "merge_duplicate_client_referrals",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "p_specialist_id uuid, p_user_id uuid",
+    "name": "create_specialist_profile",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "list_database_backups",
+    "return": "TABLE(id bigint, backup_timestamp timestamp with time zone, backup_type text, backup_status text, tables_count integer, total_records integer, created_by uuid, notes text)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "get_order_stats",
+    "return": "TABLE(total_count bigint, approved_count bigint, pending_count bigint, total_amount numeric, pending_amount numeric)",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_user uuid, p_test uuid, p_specialist uuid, p_capability_hash text, p_version text, p_disclosure_hash text, p_consent_hash text",
+    "name": "health_test_prepare",
+    "return": "uuid",
+    "searchPath": [
+      "search_path=pg_catalog, public, pg_temp"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "p_user uuid, p_operation uuid, p_capability_hash text, p_name text, p_contact text, p_answers jsonb",
+    "name": "health_test_commit",
+    "return": "uuid",
+    "searchPath": [
+      "search_path=pg_catalog, public, pg_temp"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "p_backup_id bigint, p_table_name text",
+    "name": "restore_from_backup",
+    "return": "void",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_result uuid, p_user uuid",
+    "name": "claim_test_email_delivery",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=pg_catalog, public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "guard_payment_client_writes",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "p_user uuid, p_operation uuid, p_capability_hash text",
+    "name": "health_test_withdraw",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=pg_catalog, public, pg_temp"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "enforce_health_test_operation",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=pg_catalog, public, pg_temp"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "p_email text",
+    "name": "owns_payment_email",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "guard_appointment_slot",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "",
+    "name": "guard_anonymous_appointment_burst",
+    "return": "trigger",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "_type text, _id text, _slug text",
+    "name": "notify_search_engines_async",
+    "return": "void",
+    "searchPath": [
+      "search_path=public, extensions"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "p_nonce_hash text, p_expires_at timestamp with time zone",
+    "name": "consume_admin_login_challenge",
+    "return": "boolean",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": false
+  },
+  {
+    "anon": false,
+    "args": "p_referral_code text, p_specialist_user_id uuid, p_specialist_email text, p_specialist_name text, p_specialist_phone text",
+    "name": "register_partner_referral",
+    "return": "uuid",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  },
+  {
+    "anon": false,
+    "args": "p_referral_code text, p_specialist_user_id uuid, p_specialist_email text, p_specialist_name text, p_specialist_phone text, p_session_id text, p_landing_url text",
+    "name": "register_partner_referral",
+    "return": "uuid",
+    "searchPath": [
+      "search_path=public"
+    ],
+    "authenticated": true
+  }
+]
