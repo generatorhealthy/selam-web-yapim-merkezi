@@ -1,3 +1,11 @@
+# 13 Kasım 2026 15:53 UTC — İki paketli satış ve bağımsız güvenlik düzeltmeleri
+- [ ] Yeni satışta yalnız ozel-firsat 4000 TRY / kayit-linki 5000 TRY; sunucu INSERT kapısı ve web eski bağlantı yönlendirmeleri, geçmiş yenileme ayrımı.
+- [ ] Sentetik fiyat/rol/yenileme ve web akışı kabulü; kontrollü canlı migration, gerçek site salt okunur doğrulaması.
+- [ ] Cayma: sözleşme/uzman/sipariş/abonelik bağı ve atomik mükerrer kontrolü; sağlayıcı tahsilat anlamı doğrulanmadan yayınlama.
+- [ ] Telefon: güvenilir işlem/telefon sahipliği ve kalıcı gönderim kontrolü; gerçek bildirim testi yok.
+- [ ] Cron/WAHA: meşru görev/sağlayıcı kabulünü bozmayan güvenli geçiş; kalan şablon/RLS matrisi.
+- [ ] Dokuz kesin cevap ve gerçek yayın/sentetik kabul ayrımı; bütün kayıtlar, havale ve önceki korumalar korunur.
+
 # 13 Kasım 2026 15:18 UTC — Kritik açıkları kapatma talimatı
 - [x] Boş muhasebe/kayıt olayları incelendi: eksik doğrulama; muhasebe sabit alıcısı ve log-alıcı farkı bulundu; kayıt admin maili gönderilip auto-reply başarısız olmuş olabilir. Kişisel veri ifşası doğrulanmadı, sağlayıcı teslim envanteri eksik.
 - [x] Kayıt doğrulaması, muhasebe onaylı admin/muhasebe + kayıtlı belge ve destek ticket→uzman→alıcı/yanıt bağı yayımlandı. Canlı GET 405/405/401; iki boş POST 400, muhasebe log toplamı 5 kaldı. 32 dış bağlantısız handler testi geçti.

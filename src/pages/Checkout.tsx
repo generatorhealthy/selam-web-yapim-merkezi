@@ -2,6 +2,7 @@ import { trackLeadEvent, getLeadSessionId } from "@/lib/leadTracking";
 import { trackPixelEvent, capiCheckoutEventId } from "@/lib/metaPixel";
 import { useState, useEffect, useRef } from "react";
 import { createSubmissionAttempt } from '@/lib/submissionAttempt';
+import { newSaleCatalog, newSalePackage } from "@/lib/newSaleCatalog";
 import { checkoutAfterOrder } from '@/lib/checkoutSubmission';
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -24,90 +25,6 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 const CARD_PAYMENTS_ENABLED = false;
 import { supabase } from "@/integrations/supabase/client";
 
-const packages = {
-  campaign: {
-    name: "Kampanyalı Paket",
-    type: "campaign",
-    price: 2398,
-    originalPrice: 4999,
-    features: [
-      "Hasta Takibi",
-      "Detaylı Profil", 
-      "Branş (Doktor Üyeliği 1)",
-      "İletişim",
-      "Adres ve Konum",
-      "Sosyal Medya Hesapları Ekleme",
-      "Video Yayınlama",
-      "Soru Cevaplama",
-      "Danışan Görüşleri",
-      "Doktor Sayfasına Özgün Seo Çalışması"
-    ]
-  },
-  basic: {
-    name: "Premium Paket",
-    type: "basic",
-    price: 2998,
-    originalPrice: 6499,
-    features: [
-      "Hasta Takibi",
-      "Detaylı Profil", 
-      "Branş (Doktor Üyeliği 1)",
-      "İletişim",
-      "Adres ve Konum",
-      "Sosyal Medya Hesapları Ekleme",
-      "Video Yayınlama",
-      "Soru Cevaplama",
-      "Danışan Görüşleri",
-      "Doktor Sayfasına Özgün Seo Çalışması",
-      "Online Randevu Takimi",
-      "Google Reklam ve Yönetimi"
-    ]
-  },
-  professional: {
-    name: "Professional Paket",
-    type: "professional",
-    price: 3600,
-    originalPrice: 7200,
-    features: [
-      "Hasta Takibi",
-      "Detaylı Profil",
-      "Branş (Doktor Üyeliği 1)",
-      "İletişim", 
-      "Adres ve Konum",
-      "Sosyal Medya Hesapları Ekleme",
-      "Video Yayınlama",
-      "Soru Cevaplama",
-      "Danışan Görüşleri",
-      "Doktor Sayfasına Özgün Seo Çalışması",
-      "Online Randevu Takimi",
-      "Google Reklam ve Yönetimi",
-      "Sosyal Medya Reklam ve Yönetimi"
-    ]
-  },
-  premium: {
-    name: "Full Paket",
-    type: "premium", 
-    price: 4998,
-    originalPrice: 8750,
-    features: [
-      "Hasta Takibi",
-      "Detaylı Profil",
-      "Branş (Doktor Üyeliği 1)",
-      "İletişim", 
-      "Adres ve Konum",
-      "Sosyal Medya Hesapları Ekleme",
-      "Video Yayınlama",
-      "Soru Cevaplama",
-      "Danışan Görüşleri",
-      "Doktor Sayfasına Özgün Seo Çalışması",
-      "Online Randevu Takimi",
-      "Google Reklam ve Yönetimi",
-      "Sosyal Medya Reklam ve Yönetimi",
-      "Santral Sistemden Danışan Yönlendirme"
-    ]
-  }
-};
-
 const turkishCities = [
   "İstanbul", "Ankara", "İzmir", "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Aksaray", "Amasya", "Antalya",
   "Ardahan", "Artvin", "Aydın", "Balıkesir", "Bartın", "Batman", "Bayburt", "Bilecik", "Bingöl", "Bitlis",
@@ -125,7 +42,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [selectedPackage, setSelectedPackage] = useState<any>(packages.basic);
+  const [selectedPackage, setSelectedPackage] = useState(newSaleCatalog["ozel-firsat"]);
   const [loading, setLoading] = useState(false);
   const [customerType, setCustomerType] = useState<"individual" | "company">("individual");
   const [contractAccepted, setContractAccepted] = useState(false);
@@ -153,59 +70,18 @@ const Checkout = () => {
     referralCode: ""
   });
 
-  const getSubscriptionReferenceCode = (packageType: string) => {
-    const referenceCodeMap: { [key: string]: string } = {
-      "campaign": "e01a059d-9392-4690-b030-0002064f9421",
-      "basic": "205eb35c-e122-401f-aef7-618daf3732f8", 
-      "professional": "92feac6d-1181-4b78-b0c2-3b5d5742adff",
-      "premium": "4a9ab9e6-407f-4008-9a0d-6a31fac6fd94"
-    };
-    return referenceCodeMap[packageType] || referenceCodeMap["basic"];
-  };
-
   useEffect(() => {
     const initializeData = async () => {
       setLoading(true);
 
       try {
-        // Ödeme sayfasına doğrudan erişimi engelle
-        // Sadece paket seçimi yapılmışsa (state veya referrer kontrolü) erişime izin ver
-        const packageData = location.state?.packageData;
-        const hasValidReferrer = typeof document !== 'undefined' && document.referrer &&
-          (document.referrer.includes('/paketler') ||
-            document.referrer.includes('/packages') ||
-            document.referrer.includes('/kayit-ol') ||
-            document.referrer.includes('/ozel-firsat') ||
-            document.referrer.includes('/kayit-linki') ||
-            document.referrer.includes('/bu-aya-ozel'));
-
-        // Mobil uygulamada (Capacitor) document.referrer her zaman boş olduğundan,
-        // packageType parametresi de varsa erişime izin ver
-        const hasPackageParam = !!packageId;
-
-        if (!packageData && !hasValidReferrer && !hasPackageParam) {
-          toast({
-            title: "Geçersiz Erişim",
-            description: "Ödeme sayfasına erişmek için önce bir paket seçmelisiniz.",
-            variant: "destructive"
-          });
-          navigate('/paketler');
+        const selected = newSalePackage(packageId ?? location.state?.packageData?.id);
+        if (!selected) {
+          navigate('/ozel-firsat', { replace: true });
           return;
         }
-
-        if (packageData) {
-          setSelectedPackage({
-            name: packageData.name,
-            type: packageData.id,
-            price: packageData.price,
-            originalPrice: packageData.originalPrice,
-            features: packageData.features
-          });
-        } else if (packageId && (packages as any)[packageId]) {
-          setSelectedPackage((packages as any)[packageId]);
-        } else {
-          setSelectedPackage(packages.basic);
-        }
+        // Navigation state may select an ID, but cannot supply price/name/scope.
+        setSelectedPackage(selected);
 
         // IP fetch — 3sn timeout, hata olursa fallback
         try {
@@ -341,6 +217,7 @@ const Checkout = () => {
   };
 
 const handleCreditCardPayment = async () => {
+  if (!CARD_PAYMENTS_ENABLED) return;
   try {
     setLoading(true);
 
@@ -364,7 +241,7 @@ const handleCreditCardPayment = async () => {
       taxOffice: customerType === "company" ? formData.taxOffice : ""
     };
 
-    const subscriptionReferenceCode = getSubscriptionReferenceCode(selectedPackage.type);
+
 
     trackLeadEvent("checkout_started", { package: selectedPackage.type });
     // Sunucu kuyruğu aynı oturum için event_id = checkout_<oturum> üretir
@@ -376,7 +253,6 @@ const handleCreditCardPayment = async () => {
         orderId: savedOrderId.current,
         packageType: selectedPackage.type,
         customerData,
-        subscriptionReferenceCode,
         layout: "popup" // <-- BURAYI SABİTLEDİK
       },
     });
@@ -478,7 +354,8 @@ const handleCreditCardPayment = async () => {
         company_tax_office: customerType === 'company' ? formData.taxOffice : null,
         package_name: selectedPackage.name,
         package_type: selectedPackage.type,
-        amount: selectedPackage.price,
+        // The server assigns the canonical TRY amount from package_type.
+        amount: null,
         payment_method: paymentMethod,
         status: 'pending',
         is_first_order: true,

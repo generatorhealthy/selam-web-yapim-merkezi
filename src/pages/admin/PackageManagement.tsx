@@ -1,3 +1,4 @@
+import { newSaleCatalog } from "@/lib/newSaleCatalog";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,10 +37,10 @@ const PackageManagement = () => {
   const { toast } = useToast();
   const [packages, setPackages] = useState<PackageData[]>([
     {
-      id: "bu-aya-ozel",
-      name: "Premium Paket - Bu Aya Özel",
-      price: 3600,
-      originalPrice: 7200,
+      id: "kayit-linki",
+      name: "Kayıt Linki Paketi",
+      price: 5000,
+      originalPrice: 8500,
       features: [
         "Hasta Takibi",
         "Detaylı Profil",
@@ -59,13 +60,13 @@ const PackageManagement = () => {
       icon: "Gift",
       color: "from-blue-500 to-blue-600",
       popular: true,
-      link: "/bu-aya-ozel"
+      link: "/kayit-linki"
     },
     {
       id: "ozel-firsat",
       name: "Premium Paket - Özel Fırsat",
       price: 4000,
-      originalPrice: 8000,
+      originalPrice: 6500,
       features: [
         "Santral Sistemden Danışan Yönlendirme Garantisi",
         "Detaylı Profil",
@@ -127,7 +128,7 @@ const PackageManagement = () => {
   const handleSavePackage = () => {
     if (editedPackage) {
       setPackages(packages.map(pkg => 
-        pkg.id === editedPackage.id ? editedPackage : pkg
+        pkg.id === editedPackage.id ? { ...editedPackage, price: newSaleCatalog[pkg.id as keyof typeof newSaleCatalog].price } : pkg
       ));
       setEditingPackage(null);
       setEditedPackage(null);
@@ -296,6 +297,7 @@ const PackageManagement = () => {
                           <Input
                             type="number"
                             value={currentPackage?.price || 0}
+                            readOnly
                             onChange={(e) => setEditedPackage(prev => prev ? {...prev, price: parseInt(e.target.value)} : null)}
                             className="text-center w-40 mx-auto text-2xl"
                           />

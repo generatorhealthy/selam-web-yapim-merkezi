@@ -232,10 +232,10 @@ const AppContent = () => {
               <Route path="/uzmanlik/:specialty" element={<SpecialtyRoute />} />
               <Route path="/paketler" element={<Navigate to="/ozel-firsat" replace />} />
               
-              <Route path="/kampanyali-paket" element={<CampaignPackage />} />
-              <Route path="/kampanyali-premium-paket" element={<CampaignPremiumPackage />} />
+              <Route path="/kampanyali-paket" element={<Navigate to="/ozel-firsat" replace />} />
+              <Route path="/kampanyali-premium-paket" element={<Navigate to="/ozel-firsat" replace />} />
               <Route path="/indirimli-paket" element={<Navigate to="/ozel-firsat" replace />} />
-              <Route path="/bu-aya-ozel" element={<SpecialOffer />} />
+              <Route path="/bu-aya-ozel" element={<Navigate to="/ozel-firsat" replace />} />
               <Route path="/ozel-firsat" element={<SpecialOfferNew />} />
               <Route path="/kayit-linki" element={<RegistrationLinkOffer />} />
               <Route path="/odeme/:packageType" element={<Checkout />} />
