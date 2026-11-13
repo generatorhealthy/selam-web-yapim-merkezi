@@ -65,15 +65,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
         throw uploadError;
       }
 
-      // For legal documents, create a signed URL; for profile pictures, use public URL
+      // Private documents persist only their path; opening revalidates Storage access.
       let fileUrl: string;
       if (isPdf) {
-        const { data: signedData, error: signedError } = await supabase.storage
-          .from(bucketName)
-          .createSignedUrl(filePath, 3600); // 1 hour expiry
-
-        if (signedError) throw signedError;
-        fileUrl = signedData.signedUrl;
+        fileUrl = filePath;
       } else {
         const { data: { publicUrl } } = supabase.storage
           .from(bucketName)

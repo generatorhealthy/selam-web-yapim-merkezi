@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Upload, FileText, Trash2, Download, ChevronRight, Folder, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { privateFileUrl } from '@/lib/privateStorage';
+import { privateStoragePath } from '@/lib/privateStoragePath';
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -152,10 +154,6 @@ const AccountingDocuments = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data: signedUrlData } = await supabase.storage
-        .from('accounting-documents')
-        .createSignedUrl(fileName, 60 * 60 * 24 * 365 * 10); // 10 years
-
       const { data: { user } } = await supabase.auth.getUser();
 
       const { error: dbError } = await supabase
@@ -164,7 +162,7 @@ const AccountingDocuments = () => {
           year: selectedYear,
           month: selectedMonth,
           file_name: file.name,
-          file_url: signedUrlData?.signedUrl || fileName,
+          file_url: fileName,
           file_size: file.size,
           notes: notes || null,
           uploaded_by: user?.id
@@ -191,9 +189,7 @@ const AccountingDocuments = () => {
   const handleDeleteDocument = async (doc: AccountingDocument) => {
     try {
       // Delete from storage
-      const storagePath = doc.file_url.includes('accounting-documents/') 
-        ? doc.file_url.split('accounting-documents/')[1]?.split('?')[0]
-        : `${doc.year}/${doc.month}/${doc.file_name}`;
+      const storagePath = privateStoragePath(doc.file_url, 'accounting-documents', import.meta.env.VITE_SUPABASE_URL);
 
       await supabase.storage
         .from('accounting-documents')
@@ -470,7 +466,17 @@ const AccountingDocuments = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(doc.file_url, '_blank')}
+                        onClick={async () => {
+                          const tab = window.open('about:blank', '_blank');
+                          if (tab) tab.opener = null;
+                          try {
+                            const url = await privateFileUrl(doc.file_url, 'accounting-documents');
+                            if (tab) tab.location.replace(url);
+                          } catch {
+                            tab?.close();
+                            toast.error('Belgeye erişim izni doğrulanamadı.');
+                          }
+                        }}
                       >
                         <Download className="w-4 h-4 mr-1" />
                         İndir

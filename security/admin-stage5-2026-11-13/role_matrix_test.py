@@ -53,6 +53,33 @@ with tempfile.TemporaryDirectory(prefix='role-matrix-') as tmp:
     count=int(q(asrole(role,uid,f"SELECT count(*) FROM storage.objects WHERE bucket_id='{bucket}';")).stdout.strip());results.append({'role':label,'bucket':bucket,'count':count})
     if label in ['anon','specialist','staff']:assert count==0,(label,bucket,count)
   print('PASS 64 captured RLS/Storage read checks across anon/specialist/staff/admin')
+  mutation_checks=0
+  # Isolate each write in a rolled-back transaction: only synthetic local records.
+  for role,uid,label in [('anon','','anon'),('authenticated',u1,'specialist')]:
+   for t in ['orders','appointments','client_referrals','test_results','specialists','call_reports','automatic_orders','system_settings','legal_evidence','accounting_documents','user_profiles']:
+    for verb in ['UPDATE','DELETE']:
+     statement=f'UPDATE {t} SET id=id WHERE id=\'{u2}\' RETURNING id' if verb=='UPDATE' else f'DELETE FROM {t} WHERE id=\'{u2}\' RETURNING id'
+     result=q('BEGIN;'+asrole(role,uid,f'WITH affected AS ({statement}) SELECT count(*) FROM affected;')+'ROLLBACK;',False)
+     assert result.returncode or result.stdout.strip()=='0',(label,t,verb,result.stdout)
+     mutation_checks+=1
+   for t in ['call_reports','automatic_orders','system_settings','legal_evidence','accounting_documents']:
+    result=q('BEGIN;'+asrole(role,uid,f"INSERT INTO {t}(id) VALUES('55555555-5555-4555-8555-555555555555');")+'ROLLBACK;',False)
+    assert result.returncode,(label,t,'INSERT unexpectedly allowed')
+    mutation_checks+=1
+   for bucket in ['legal-documents','legal-evidence','accounting-documents']:
+    for verb in ['INSERT','UPDATE','DELETE']:
+     if verb=='INSERT':statement=f"INSERT INTO storage.objects VALUES('55555555-5555-4555-8555-555555555555','{bucket}','{u2}/synthetic.pdf');"
+     else:
+      change=f'UPDATE storage.objects SET name=name' if verb=='UPDATE' else 'DELETE FROM storage.objects'
+      statement=f"WITH affected AS ({change} WHERE bucket_id='{bucket}' RETURNING id) SELECT count(*) FROM affected;"
+     result=q('BEGIN;'+asrole(role,uid,statement)+'ROLLBACK;',False)
+     assert result.returncode or (verb!='INSERT' and result.stdout.strip()=='0'),(label,bucket,verb)
+     mutation_checks+=1
+  for table in ['orders','specialists','call_reports']:
+   result=q('BEGIN;'+asrole('authenticated',staff,f"WITH affected AS (DELETE FROM {table} RETURNING id) SELECT count(*) FROM affected;")+'ROLLBACK;',False)
+   assert result.returncode or result.stdout.strip()=='0',('staff',table,'DELETE')
+   mutation_checks+=1
+  print(f'PASS {mutation_checks} cross-account/table/private-storage mutation denials (local rollback only)')
   # Actual new identity authority code, actual signatures and synthetic source rows.
   q("CREATE UNIQUE INDEX referral_conflict ON partner_referrals(partner_id,specialist_email); CREATE FUNCTION normalize_ref_code(text) RETURNS text LANGUAGE sql AS $$ SELECT lower(trim($1)) $$;")
   # Remaining policy is intentionally only the public INSERT under test.

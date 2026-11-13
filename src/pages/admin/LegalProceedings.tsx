@@ -16,6 +16,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { Plus, Gavel, Edit, Trash2, Check, FileText, Download, Search, X, TrendingUp, TrendingDown, Scale, CircleDollarSign, ShieldCheck, AlertTriangle, Handshake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/FileUpload";
+import { privateFileUrl } from '@/lib/privateStorage';
 
 interface LegalProceeding {
   id: string;
@@ -165,12 +166,9 @@ const LegalProceedings = () => {
 
   const downloadPDF = async (url: string, filename: string) => {
     try {
-      const urlPath = new URL(url);
-      const pathSegments = urlPath.pathname.split('/');
-      const filePath = pathSegments[pathSegments.length - 1].split('?')[0];
-      const { data: signedData, error: signedError } = await supabase.storage.from('legal-documents').createSignedUrl(filePath, 300);
-      if (signedError) throw signedError;
-      const response = await fetch(signedData.signedUrl);
+      const signedUrl = await privateFileUrl(url, 'legal-documents');
+      const response = await fetch(signedUrl);
+      if (!response.ok) throw new Error('Belge indirilemedi.');
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');

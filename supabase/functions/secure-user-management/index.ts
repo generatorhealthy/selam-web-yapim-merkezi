@@ -47,7 +47,7 @@ serve(async (req) => {
       .from('user_profiles')
       .select('role, is_approved')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (profileError || !userProfile || userProfile.role !== 'admin' || !userProfile.is_approved) {
       return new Response(
@@ -59,7 +59,7 @@ serve(async (req) => {
     let requestBody;
     try {
       requestBody = await req.json();
-      console.log('Request body parsed:', requestBody);
+      // Never log payload: it may contain a user's new password.
     } catch (parseError) {
       console.error('Failed to parse request body:', parseError);
       return new Response(
@@ -135,7 +135,7 @@ serve(async (req) => {
           .from('specialists')
           .select('*')
           .eq('user_id', userId)
-          .single()
+          .maybeSingle()
 
         if (specialistCheckError && specialistCheckError.code !== 'PGRST116') {
           console.error('Error checking specialist:', specialistCheckError)

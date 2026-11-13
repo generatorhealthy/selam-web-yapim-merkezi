@@ -3,6 +3,7 @@
 // Body: { urls: string[] }  veya  { type: 'blog'|'specialist'|'test', slug?: string, id?: string }
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { verifyAdminOrCron } from '../_shared/adminAuth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,12 +23,14 @@ function trSlug(text: string): string {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  const gate = await verifyAdminOrCron(req, ['admin']);
+  if (!gate.ok) return new Response(JSON.stringify({ error: gate.error }), { status: gate.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
+    const url = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!url || !serviceKey) return new Response(JSON.stringify({ error: 'Service unavailable' }), { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const supabase = createClient(url, serviceKey);
 
     const body = await req.json().catch(() => ({}))
     let urls: string[] = []

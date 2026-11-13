@@ -11,8 +11,8 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // Only authenticated admin/staff (or trusted server) may recreate auth accounts.
-  const auth = await verifyAdminOrCron(req);
+  // Recreating credentials is admin-only; ordinary staff cannot take over accounts.
+  const auth = await verifyAdminOrCron(req, ['admin']);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -28,10 +28,10 @@ serve(async (req) => {
       });
     }
 
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const url = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!url || !serviceKey) return new Response(JSON.stringify({ error: 'Service unavailable' }), { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const admin = createClient(url, serviceKey);
 
     // Try to recreate auth user with same id
     const { data, error } = await (admin.auth.admin as any).createUser({

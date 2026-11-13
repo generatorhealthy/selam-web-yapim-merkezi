@@ -16,6 +16,7 @@ import { tr } from "date-fns/locale";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import AdminBackButton from "@/components/AdminBackButton";
+import PrivateEvidenceImage from '@/components/PrivateEvidenceImage';
 
 interface LegalEvidence {
   id: string;
@@ -140,11 +141,7 @@ const LegalEvidenceManagement = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('legal-evidence')
-        .getPublicUrl(fileName);
-
-      const newUrls = [...(selectedEvidence.screenshot_urls || []), publicUrl];
+      const newUrls = [...(selectedEvidence.screenshot_urls || []), fileName];
       
       const { error: updateError } = await supabase
         .from('legal_evidence')
@@ -573,23 +570,7 @@ const LegalEvidenceManagement = () => {
                         ) : (
                           <div className="grid grid-cols-2 gap-4">
                             {(selectedEvidence.screenshot_urls || []).map((url: string, index: number) => (
-                              <div key={index} className="relative group">
-                                <img 
-                                  src={url} 
-                                  alt={`Ekran görüntüsü ${index + 1}`}
-                                  className="w-full h-48 object-cover rounded-lg border"
-                                />
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                  <a 
-                                    href={url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-white hover:underline"
-                                  >
-                                    <Download className="w-8 h-8" />
-                                  </a>
-                                </div>
-                              </div>
+                              <PrivateEvidenceImage key={url} path={url} index={index} />
                             ))}
                           </div>
                         )}

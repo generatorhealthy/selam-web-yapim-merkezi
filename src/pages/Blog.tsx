@@ -412,7 +412,7 @@ const Blog = () => {
               <h2 className="text-2xl font-bold text-gray-900">Arama Sonuçları</h2>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBlogs.map((blog) => (
+              {filteredBlogs.map((blog, index) => (
                 <Link key={blog.id} to={`/blog/${blog.slug}`} className="group">
                   <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white rounded-xl h-full">
                     <CardContent className="p-0">
@@ -421,6 +421,8 @@ const Blog = () => {
                           <img
                             src={blog.featured_image}
                             alt={blog.title}
+                            loading={index === 0 ? 'eager' : 'lazy'}
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         </div>
@@ -467,6 +469,8 @@ const Blog = () => {
                           <img
                             src={filteredBlogs[0].featured_image}
                             alt={filteredBlogs[0].title}
+                            fetchPriority="high"
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         </div>
@@ -514,6 +518,8 @@ const Blog = () => {
                               <img
                                 src={blog.featured_image}
                                 alt={blog.title}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               />
                             </div>

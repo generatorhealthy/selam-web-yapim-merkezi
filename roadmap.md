@@ -1,3 +1,11 @@
+# 13 Kasım 2026 — Aşama 5 son kabul ve Aşama 6
+- [ ] Giriş korumasının yeniden başlangıç/dağıtık deneme sınırı ve mevcut MFA seçenekleri; hosted ayar doğrulaması.
+- [x] Özel dosyalarda yeni kayıtlar yalnız yol saklar; eski bağlantı güncel kullanıcı RLS ile 300 saniyelik imzaya çevrilir. 6 yol testi, girişsiz tarayıcı reddi; eski 10 yıllık token iptali yapılmadı.
+- [x] Yerel gerçek RLS dört rol okuma +75 cross-account/table/storage yazma-silme ret kontrolü; restore admin-only ve IndexNow yeniden açık kaynak kapısı canlı düzeltildi, yönetim payload şifre logu kaldırıldı.
+- [ ] Tüm Edge eylemleri ve hosted dört-rol tam kabul — harici Supabase oturumu erişilemiyor; henüz tüm eylemler tamamlanmadı.
+- [ ] Hostinger 64 sipariş ekranı dağıtımı ve SEO/performans dosya kanıtını kontrol et.
+- [x] Hostinger panel-Bc7wwVsH.js içinde 64 liste ve admin-panel-login var; gerçek giriş sayfası görüldü. Yetkili liste readback doğrulanmadı. Blog görselleri lazy/async ve ana görsel high-priority düzeltildi; bu turun statik yayını henüz teyit edilmedi.
+
 # 13 Kasım 2026 — Aşama 5 admin ve güvenlik tamamlama
 - [x] E-posta hedefli üç saatlik kilit kaldırıldı; canlı sabit yanıtta hesap bilgisi yok, anonim failed/reset/claim reddi. 20 sentetik eşzamanlı claim 1/19. Kademeli challenge tek kullanımlık; Supabase doğrudan Auth endpoint koruması ayrıca hosted teyit gerektirir.
 - [x] Sabit 64 sipariş için salt-okunur admin/staff ekranı + service endpoint yayımlandı; yerel mobil/masaüstü sentetik personel kabulü ve canlı anon 401. Sahiplik yazımı yok, karar denetimi tasarlandı.

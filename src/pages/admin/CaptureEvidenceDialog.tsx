@@ -67,7 +67,7 @@ const CaptureEvidenceDialog = ({
         .from('specialists')
         .select('*')
         .eq('id', specialistId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setSpecialistData(data);
@@ -140,10 +140,8 @@ const CaptureEvidenceDialog = ({
       setProgress(80);
       setStatus('saving');
 
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('legal-evidence')
-        .getPublicUrl(fileName);
+      // Persist a private locator, never a public URL or long-lived bearer token.
+      const publicUrl = fileName;
 
       // Check if there's already a legal_evidence record for this specialist
       const { data: existingEvidence } = await supabase
