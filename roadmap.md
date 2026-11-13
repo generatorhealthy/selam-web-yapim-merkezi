@@ -1,9 +1,9 @@
 # 13 Kasım 2026 — Randevu ve ödeme son düzeltmeleri (güncel görev)
-- [ ] IP kullanmayan, anonim iletişim çifti için kısa süreli sunucu koruması; yoğunluk ölçümü ve yanlış engelleme kabulü.
-- [ ] Gerçek available_time_slots kaynağında kapalı saat reddi; 20 eşzamanlı sentetik PostgreSQL başvurusu ve bağımsız canlı yayın.
-- [ ] WhatsApp yanlış uzman/eksik telefon/tekrar/bağlantı/kayıt başarısızlığı sentetik kabulü.
-- [ ] Abonelik Checkout Form ve Subscription V3 belge karşılaştırması; hesap özelliği teyit edilmeden yeni ödeme zorunluluğu yok.
-- [ ] Mevcut sahiplik/aktivasyon/makbuz korumalarını ve gerçek Hostinger uyarı dosyasını doğrula; gerçek müşteri işlemi yok.
+- [x] IP kullanmayan, anonim iletişim çifti için kısa süreli sunucu koruması; yoğunluk ölçümü ve yanlış engelleme kabulü.
+- [x] Gerçek available_time_slots kaynağında kapalı saat reddi; 20 eşzamanlı sentetik PostgreSQL başvurusu ve bağımsız canlı yayın.
+- [x] WhatsApp yanlış uzman/eksik telefon/tekrar/bağlantı/kayıt başarısızlığı sentetik kabulü.
+- [x] Abonelik Checkout Form ve Subscription V3 belge karşılaştırması; hesap özelliği teyit edilmeden yeni ödeme zorunluluğu yok.
+- [x] Mevcut sahiplik/aktivasyon/makbuz korumalarını ve gerçek Hostinger uyarı dosyasını doğrula; gerçek müşteri işlemi yok.
 
 # 13 Kasım 2026 — Son doğal ödeme kabulü ve güvenli geçiş
 - [x] Salt okunur ilk doğal satın alma raporu hazırlandı ve canlı SELECT hatasız/boş döndü; 0 oturum/0 makbuz, doğal ödeme beklenir. Eksik iş geçmişi başarı sayılamaz; aktivasyon eksikliği ayrı uyarıdır.
