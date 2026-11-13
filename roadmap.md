@@ -1,3 +1,9 @@
+# 13 Kasım 2026 — Üç bağımsız üretim paketi
+- [ ] Paket 1: gerçek initialize/retrieve için güvenilir sipariş, süreli checkout ve tekil token; girişsiz uyumluluk ve sentetik kabul sonrası dağıtım.
+- [ ] Paket 2: ilk alım/EFT/yenileme ayrımı, doğrulanmış dönem ve ödeme, atomik aktivasyon ve harici yan etki kabulü sonrası dağıtım.
+- [ ] Paket 3: mevcut receipt/queue güvenliğini koruyarak sağlayıcı sorgusu veya yetkili manuel mutabakat; belirsiz sonucu tekrar göndermeme.
+- [ ] 64/17 sabit eski sipariş listesi, korunan kayıtlar ve paket başına test/yayın kanıtı; otomatik sahiplik aktarımı yok.
+
 # 13 Kasım 2026 — Ödeme sonuçlandırma talimatı
 - [ ] Checkout server-bound order/token ve bütün callback/yenileme kabulü; eski girişsiz akış kesilmeden kimlik/işlem kanıtı gerekli.
 - [x] BirFatura invoiceLinkUpdate gerçek receipt yoluna number/date/reference validation + conditional tek yazma/readback bağlandı; 11 test, deploy ve yetkisiz 401. Dış sağlayıcı fatura sorgusu ve transport kabulü eksik.

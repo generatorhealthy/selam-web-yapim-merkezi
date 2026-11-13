@@ -20,6 +20,7 @@ import { Calendar, Clock, DollarSign, Users, Search, Filter, CheckCircle, XCircl
 import { Textarea } from "@/components/ui/textarea";
 import { sendSms } from "@/services/smsService";
 import SendOrderEmailDialog from "@/components/SendOrderEmailDialog";
+import InvoiceReconciliationDialog from "@/components/InvoiceReconciliationDialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
@@ -123,6 +124,7 @@ const OrderManagement = () => {
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const [emailOrder, setEmailOrder] = useState<Order | null>(null);
+  const [reconciliationOrderId, setReconciliationOrderId] = useState<string | null>(null);
   const [smsOrder, setSmsOrder] = useState<Order | null>(null);
   const [smsMessage, setSmsMessage] = useState("");
   const [isSendingSms, setIsSendingSms] = useState(false);
@@ -2089,10 +2091,16 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                             <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200 w-full">
                               {/* Invoice sent indicator */}
                               {order.invoice_sent && (
-                                <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs">
-                                  Fatura Gönderildi
+                                <Badge variant="secondary" className="text-xs">
+                                  {order.invoice_number ? `Fatura: ${order.invoice_number}` : 'Fatura teyidi bekleniyor'}
                                 </Badge>
                               )}
+                              {userProfile?.role === 'admin' && ['approved', 'completed'].includes(order.status) && order.invoice_sent && (
+                                <Button variant="outline" size="sm" onClick={() => setReconciliationOrderId(order.id)} className="gap-1 text-xs">
+                                  <Receipt className="h-3 w-3" />Fatura mutabakatı
+                                </Button>
+                              )}
+                              {reconciliationOrderId === order.id && <InvoiceReconciliationDialog orderId={reconciliationOrderId} onClose={() => setReconciliationOrderId(null)} />}
                               
                               {!isStaff && (
                                 <>
@@ -2106,7 +2114,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                       className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 text-xs flex-1"
                                     >
                                       <Receipt className="w-3 h-3" />
-                                      {createInvoiceMutation.isPending ? 'Kesiliyor...' : 'Fatura Kes'}
+                                      {createInvoiceMutation.isPending ? 'Sıraya alınıyor...' : 'Fatura aktarımı'}
                                     </Button>
                                   )}
                                   
