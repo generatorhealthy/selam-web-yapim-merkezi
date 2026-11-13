@@ -19,6 +19,9 @@ import { getClientIP } from "@/utils/ipUtils";
 import ContractDialog from "@/components/ContractDialog";
 import BankTransferInfo from "@/components/BankTransferInfo";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
+
+// Kart ödemesi geçici olarak kapalı (iyzico hizmeti sonlandı); yeni sağlayıcı bağlanınca true yapın.
+const CARD_PAYMENTS_ENABLED = false;
 import { supabase } from "@/integrations/supabase/client";
 
 const packages = {
@@ -129,7 +132,7 @@ const Checkout = () => {
   const [showPreInfoDialog, setShowPreInfoDialog] = useState(false);
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("credit_card");
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">(CARD_PAYMENTS_ENABLED ? "credit_card" : "bank_transfer");
   const [clientIP, setClientIP] = useState<string>("");
   const paymentLock = useRef(false);
   const orderAttempt = useRef(createSubmissionAttempt());
@@ -815,8 +818,8 @@ const handleCreditCardPayment = async () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button
+                  <div className={`grid grid-cols-1 ${CARD_PAYMENTS_ENABLED ? "md:grid-cols-2" : ""} gap-4`}>
+                    {CARD_PAYMENTS_ENABLED && (<Button
                       type="button"
                       variant={paymentMethod === "credit_card" ? "default" : "outline"}
                       onClick={() => setPaymentMethod("credit_card")}
@@ -827,7 +830,7 @@ const handleCreditCardPayment = async () => {
                         <div className="font-semibold">Kredi Kartı</div>
                         <div className="text-xs text-muted-foreground">Güvenli ödeme</div>
                       </div>
-                    </Button>
+                    </Button>)}
                     <Button
                       type="button"
                       variant={paymentMethod === "bank_transfer" ? "default" : "outline"}
