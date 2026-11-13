@@ -35,7 +35,7 @@ serve(async (req) => {
 
     const { blogId, specialistEmail, specialistName, blogTitle, blogSlug }: BlogNotificationRequest = await req.json();
 
-    console.log('Blog notification request:', { blogId, specialistEmail, specialistName, blogTitle });
+    console.log('Blog notification request', { blogId });
 
     // Blog linkini oluştur
     const blogUrl = `https://doktorumol.com.tr/blog/${blogSlug}`;
@@ -71,9 +71,9 @@ serve(async (req) => {
         );
 
         if (smsResponse.ok) {
-          console.log('SMS sent successfully to', specialist.phone);
+          console.log('Blog SMS sent');
         } else {
-          console.error('SMS send failed:', await smsResponse.text());
+          console.error('Blog SMS send failed', smsResponse.status);
         }
       } catch (smsError) {
         console.error('SMS send error:', smsError);
@@ -92,7 +92,7 @@ serve(async (req) => {
 
         const waPhone = normalizePhoneToWa(specialist.phone);
         if (!waPhone) {
-          console.error('Invalid phone for WhatsApp:', specialist.phone);
+          console.error('Invalid phone for WhatsApp blog notification');
         } else {
           // Aktif WORKING WAHA session bul
           const { data: activeLines } = await supabaseAdmin
@@ -150,7 +150,7 @@ serve(async (req) => {
             if (waRes.error) {
               console.error('WhatsApp send error:', waRes.error);
             } else {
-              console.log('WhatsApp blog notification sent to', waPhone);
+              console.log('WhatsApp blog notification sent');
             }
           }
         }

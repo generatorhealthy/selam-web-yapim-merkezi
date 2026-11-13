@@ -33,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
     const email = user.email.toLowerCase();
     const name = String(body?.name || "").slice(0, 120)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    console.log("Specialist welcome email request:", { email });
+    console.log('Specialist welcome email request');
 
     const logClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: alreadySent } = await logClient
@@ -150,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const result = await emailResponse.json();
-    console.log("Welcome email sent:", result);
+    console.log('Welcome email sent', { ok: !!result });
 
     // Log to brevo_email_logs
     try {

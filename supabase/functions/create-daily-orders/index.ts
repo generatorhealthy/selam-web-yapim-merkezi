@@ -1,3 +1,4 @@
+import { escapeHtml } from '../_shared/escapeHtml.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
@@ -101,7 +102,7 @@ serve(async (req) => {
         }
 
         if (candidateEmails.size === 0) {
-          console.log(`No email for specialist ${specialist.name}, skipping`);
+          console.log('No email for specialist, skipping', { id: specialist.id });
           errorCount++;
           continue;
         }
@@ -122,7 +123,7 @@ serve(async (req) => {
           .limit(1);
 
         if (orderError) {
-          console.error(`Error fetching latest order for ${specialist.name}:`, orderError);
+          console.error('Error fetching latest order', { id: specialist.id, code: orderError?.code });
           errorCount++;
           continue;
         }
@@ -153,7 +154,7 @@ serve(async (req) => {
         if (!prev) {
           // Never fabricate an order with default price / month 1 — it produces wrong
           // amounts (e.g. 2.998 TL for a 4.000 TL package) and duplicate "1st month" rows.
-          console.log(`No previous order found for ${specialist.name} (${emails.join(', ')}), skipping to avoid a wrong order`);
+          console.log('No previous order found, skipping', { id: specialist.id });
           skippedCount++;
           noPrevOrder.push({
             name: specialist.name || '-',
@@ -176,7 +177,7 @@ serve(async (req) => {
           .limit(1);
 
         if (existingToday && existingToday.length > 0) {
-          console.log(`Order already exists today for ${specialist.name}, skipping`);
+          console.log('Order already exists today, skipping', { id: specialist.id });
           skippedCount++;
           continue;
         }
@@ -223,14 +224,14 @@ serve(async (req) => {
           .insert(newOrder);
 
         if (insertError) {
-          console.error(`Error creating order for ${specialist.email}:`, insertError);
+          console.error('Error creating order', { id: specialist.id, code: insertError?.code });
           errorCount++;
         } else {
-          console.log(`Order created for ${specialist.name} (${specialist.email}) - month ${newOrder.subscription_month}`);
+          console.log('Order created', { id: specialist.id, month: newOrder.subscription_month });
           createdCount++;
         }
       } catch (err) {
-        console.error(`Unexpected error for ${specialist.email}:`, err);
+        console.error('Unexpected error for specialist', { id: specialist.id });
         errorCount++;
       }
     }
@@ -244,9 +245,9 @@ serve(async (req) => {
         } else {
           const rows = noPrevOrder.map((s) => `
             <tr>
-              <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${s.name}</td>
-              <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${s.emails}</td>
-              <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${s.phone}</td>
+              <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(String(s.name ?? ''))}</td>
+              <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(String(s.emails ?? ''))}</td>
+              <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(String(s.phone ?? ''))}</td>
             </tr>`).join('');
 
           const htmlContent = `
@@ -290,7 +291,7 @@ serve(async (req) => {
           }
         }
       } catch (mailErr) {
-        console.error('Skip notification error:', mailErr);
+        console.error('Skip notification error');
       }
     }
 
@@ -305,7 +306,7 @@ serve(async (req) => {
       timestamp: new Date().toISOString(),
     };
 
-    console.log('Daily order result:', result);
+    console.log('Daily order result', { created: (result as any)?.created, skipped: (result as any)?.skipped });
 
     return new Response(
       JSON.stringify(result),

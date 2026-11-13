@@ -51,7 +51,7 @@ async function sendSuccessNotificationSms(
     
     const message = `ODEME BASARILI! ${specialistName} - ${pricingPlanName} - ${orderPrice} TL - Siparis: ${orderRef} - Daha once cekilemeyen odeme basariyla tahsil edildi.`;
     
-    console.log(`SMS gönderiliyor: ${ADMIN_PHONE} - ${message}`);
+    console.log('Yönetici SMS bildirimi gönderiliyor');
     
     // send-verimor-sms edge function'ı çağır
     const response = await fetch(`${supabaseUrl}/functions/v1/send-verimor-sms`, {
@@ -67,7 +67,7 @@ async function sendSuccessNotificationSms(
     });
     
     const result = await response.json();
-    console.log(`SMS sonucu:`, result);
+    console.log('SMS sonucu alındı');
   } catch (error) {
     console.error(`SMS gönderme hatası:`, error);
   }
@@ -165,7 +165,7 @@ async function getUnpaidSubscriptions(
     return result.data.items;
   }
 
-  console.log("UNPAID abonelik sorgu yanıtı:", JSON.stringify(result));
+  console.log('UNPAID abonelik sorgu yanıtı alındı');
 
   // Don't silently return [] on auth or API errors; surface it to UI.
   const msg = result?.errorMessage || result?.message || "UNPAID abonelikleri alınamadı";
@@ -281,7 +281,7 @@ serve(async (req) => {
         const order = subscription.orders?.find(o => o.referenceCode === specificOrderRef);
         if (order) {
           found = true;
-          console.log(`Sipariş bulundu - Abonelik: ${subscription.customerEmail}, Order status: ${order.orderStatus}`);
+          console.log(`Sipariş bulundu - Order status: ${order.orderStatus}`);
           
           const retryResult = await retryPayment(
             IYZICO_API_KEY,
@@ -329,7 +329,7 @@ serve(async (req) => {
                   .from('orders')
                   .update({ payment_status: 'failed' })
                   .eq('id', pendingOrder.id);
-                console.log(`Manuel: payment_status='failed' işaretlendi: ${pendingOrder.customer_name}`);
+                console.log(`Manuel: payment_status='failed' işaretlendi`, { id: pendingOrder.id });
               }
             }
           }
@@ -370,7 +370,7 @@ serve(async (req) => {
 
     // 2. Her abonelik için başarısız ödeme siparişlerini bul ve tekrar dene
     for (const subscription of unpaidSubscriptions) {
-      console.log(`Abonelik kontrol ediliyor: ${subscription.referenceCode} - ${subscription.customerEmail}`);
+      console.log(`Abonelik kontrol ediliyor: ${subscription.referenceCode}`);
       
       for (const order of subscription.orders) {
         // Sadece WAITING veya başarısız ödemeleri kontrol et
@@ -446,7 +446,7 @@ serve(async (req) => {
                     .update({ payment_status: 'failed' })
                     .eq('id', pendingOrder.id);
                   if (!markError) {
-                    console.log(`payment_status='failed' olarak işaretlendi: ${pendingOrder.customer_name} (${customerEmail})`);
+                    console.log(`payment_status='failed' olarak işaretlendi`, { id: pendingOrder.id });
                   }
                 }
               }

@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
             })
             .then((r) => {
               if (r.error || (r.data as any)?.success === false) {
-                console.error("notify-specialist-application failed", lead.phone, r.error || (r.data as any)?.error);
+                console.error("notify-specialist-application failed", { lead: lead.external_id });
               }
             })
             .catch((e) => console.error("notify-specialist-application invoke error", e));

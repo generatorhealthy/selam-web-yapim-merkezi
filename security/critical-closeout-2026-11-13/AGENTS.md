@@ -1,2 +1,3 @@
 - Patient confirmation authority is the authenticated owning specialist, not caller-supplied recipients; delivery claims remain consumed on uncertain provider outcomes to prevent duplicate messages.
-- Order document recipients and signed text come only from the exact server-read order; do not reintroduce email fallback or caller-overridden contract snapshots.
+- Order document recipients and signed text come only from the exact server-read order; do not reintroduce email fallback or caller-overridden contract snapshots.- Scheduled edge calls authenticate with the vault-held internal_cron_token header verified by the service-only verify_internal_cron_token RPC; public anon JWTs are never scheduler authority.
+- WAHA webhooks are always fail-closed on the shared secret; unsigned provider events must not reach storage or outbound sends.

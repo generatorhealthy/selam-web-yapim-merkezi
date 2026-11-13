@@ -30,7 +30,7 @@ serve(async (req) => {
     try {
       body = await req.text();
     } catch (e) {
-      console.log('No body or error reading body:', e);
+      console.log('No body or error reading body');
     }
 
     // Parse URL parameters
@@ -60,7 +60,7 @@ serve(async (req) => {
           timestamp: new Date().toISOString()
         };
         
-        console.log('Sending update response:', updateResponse);
+        console.log('Sending update response');
         console.log('===== BIRFATURA REQUEST END =====');
 
         return new Response(JSON.stringify(updateResponse), {

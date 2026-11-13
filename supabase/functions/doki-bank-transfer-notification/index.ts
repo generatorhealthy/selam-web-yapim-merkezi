@@ -92,7 +92,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (orderErr || !order) {
-      console.log("Order not found:", orderId, orderErr);
+      console.log('Order not found for Doki message');
       return new Response(JSON.stringify({ skipped: "order_not_found" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -123,7 +123,7 @@ serve(async (req) => {
       .eq("order_id", orderId);
 
     if ((noteCount || 0) > 0) {
-      console.log("Order has notes, skipping Doki message:", orderId);
+      console.log('Order has notes, skipping Doki message');
       return new Response(JSON.stringify({ skipped: "has_notes" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -179,7 +179,7 @@ serve(async (req) => {
           payload: { chatId: `${waPhone}@c.us`, text },
         },
       });
-      console.log("Doki bank-transfer message dispatched", { orderId, sessionName, waPhone, sendErr });
+      console.log('Doki bank-transfer message dispatched', { ok: !sendErr });
       return new Response(JSON.stringify({ success: true, sent: !sendErr, sendData }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

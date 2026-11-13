@@ -66,20 +66,20 @@ serve(async (req: Request) => {
             .update({ status: 'sent', sent_at: new Date().toISOString() })
             .eq('id', sms.id);
           sentCount++;
-          console.log(`SMS sent to ${sms.phone} for ${sms.customer_name}`);
+          console.log('Scheduled SMS sent', { id: sms.id });
         } else {
           await supabase
             .from('scheduled_sms')
             .update({ status: 'failed', error_message: result.error || 'Unknown error' })
             .eq('id', sms.id);
-          console.error(`SMS failed for ${sms.phone}: ${result.error}`);
+          console.error('Scheduled SMS failed', { id: sms.id });
         }
       } catch (err: any) {
         await supabase
           .from('scheduled_sms')
           .update({ status: 'failed', error_message: err.message })
           .eq('id', sms.id);
-        console.error(`SMS error for ${sms.phone}: ${err.message}`);
+        console.error('Scheduled SMS error', { id: sms.id });
       }
     }
 

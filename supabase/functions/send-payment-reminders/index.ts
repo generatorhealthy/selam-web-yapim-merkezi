@@ -92,7 +92,7 @@ serve(async (req) => {
           console.error(`Failed to send SMS for order ${order.id}:`, smsResponse.error);
           failCount++;
         } else {
-          console.log(`SMS sent successfully to ${order.customer_name} (${phone})`);
+          console.log('Payment reminder SMS sent', { order: order.id });
           successCount++;
         }
       } catch (smsError) {

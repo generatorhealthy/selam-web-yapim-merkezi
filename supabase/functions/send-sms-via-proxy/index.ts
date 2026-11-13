@@ -36,7 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (isBlockedPhone(phone)) {
-      console.warn('Blocked phone, SMS iptal edildi:', phone);
+      console.warn('Blocked phone, SMS iptal edildi');
       return new Response(
         JSON.stringify({ success: false, blocked: true, error: 'Bu numara engellenmis listede, SMS gonderilmedi' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -92,8 +92,8 @@ const handler = async (req: Request): Promise<Response> => {
       ]
     };
 
-    console.log('Sending SMS via proxy to:', cleanPhone);
-    console.log('Message:', message);
+    console.log('Sending SMS via proxy');
+    // (kişisel veri içeren kayıt satırı kaldırıldı)
     console.log('Using proxy:', proxyHost);
 
     // Proxy authentication header
@@ -130,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     let result;
     const responseText = await response.text();
-    console.log('Verimor raw response via proxy:', responseText);
+    console.log('Verimor response received via proxy', { length: responseText.length });
     
     try {
       result = JSON.parse(responseText);
@@ -139,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
       result = { message: responseText, raw_response: responseText };
     }
     
-    console.log('Verimor parsed response:', result);
+    console.log('Verimor response parsed');
 
     if (!response.ok) {
       console.error('Verimor API error details:', {

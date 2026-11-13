@@ -1,3 +1,9 @@
+# 13 Kasım 2026 21:15 İstanbul — Kalan kritik ve uyarıların kapatılması
+- [x] 8 kritik bulgu kapandı: SEO senkronizasyonu, WhatsApp otomatik yanıt, kayıt analitiği canlıda düzeltildi; BirFatura, randevu bildirimi, hasta randevu/test erişimi ve form önizleme zaten kapalıydı, doğrulandı.
+- [x] Zamanlanmış görevler: kasada saklı görev anahtarı + yeni SEO/site haritası/hatırlatma görevleri (75/76/77); eski anonim 2/11/74 duraklatıldı (silinmedi). Anahtarlı çağrı 200, anonim 401.
+- [x] WhatsApp webhook her zaman imza ister; 15 işlevde telefon/e-posta/mesaj içeren kayıt satırları kaldırıldı; sözleşme PDF ve günlük sipariş uyarısı HTML temizliği.
+- [ ] Kalan 11 uyarı: blog yazar talimatı, destek uyarısı HTML, AI asistan URL/rol, cayma ücreti abonelik hedefi, pazarlama atıf oturumu (eski ziyaretçi kimlikleri), ödeme durumu sorgusu, randevu onay işareti, panel SMS metni, eski mobil test INSERT ve üyelik izin INSERT (önceki karar gereği açık).
+
 # 13 Kasım 2026 — Güncel kritik açıkların güvenli kapatılması
 - [x] Güncel tarama mevcut kaynak/canlı yetkilerle karşılaştırıldı; hızlı DB tarama 14 (0 kritik), derin mevcut uyarılar tüm sistem temiz anlamına gelmez.
 - [x] Randevu onay e-postası/sipariş belgeleri kayıtlı alıcı ve signed snapshot; service-only tek claim, proxy admin gate ve kamu şablonu daraltma canlı; 46 test + yerel PG geçti.

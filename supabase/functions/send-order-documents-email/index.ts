@@ -152,12 +152,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (invoicePdf && invoiceFileName) {
       attachments.push({ content: invoicePdf, name: invoiceFileName });
-      console.log('Added invoice attachment:', invoiceFileName);
+      console.log('Added invoice attachment');
     }
 
     if (contractPdf && contractFileName) {
       attachments.push({ content: contractPdf, name: contractFileName });
-      console.log('Added contract attachment:', contractFileName);
+      console.log('Added contract attachment');
     }
 
     const contractSections = [

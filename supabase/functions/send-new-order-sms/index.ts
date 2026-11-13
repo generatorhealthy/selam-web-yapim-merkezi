@@ -46,8 +46,8 @@ const handler = async (req: Request): Promise<Response> => {
     // SMS mesajı - görüntüdeki formata göre
     const message = `YENI KAYIT! ${customerName} - ${formattedPhone} - ${packageName} - ${customerCity || 'Belirtilmedi'} - ${amount} TL - ${orderDate} B038`;
 
-    console.log('Sending new order SMS to:', recipients);
-    console.log('Message:', message);
+    console.log('Sending new order SMS', { recipients: recipients.length });
+    // (kişisel veri içeren kayıt satırı kaldırıldı)
 
     // Verimor API endpoint  
     const verimorUrl = 'https://sms.verimor.com.tr/v2/send.json';
@@ -71,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
       messages: messages
     };
 
-    console.log('SMS Data:', JSON.stringify(smsData, null, 2));
+    // (kişisel veri içeren kayıt satırı kaldırıldı)
 
     const response = await fetch(verimorUrl, {
       method: 'POST',
@@ -85,7 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     let result;
     const responseText = await response.text();
-    console.log('Verimor raw response:', responseText);
+    console.log('Verimor response received', { length: responseText.length });
     
     try {
       result = JSON.parse(responseText);
@@ -94,7 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
       result = { message: responseText, raw_response: responseText };
     }
     
-    console.log('Verimor parsed response:', result);
+    console.log('Verimor response parsed');
 
     if (!response.ok) {
       console.error('Verimor API error details:', {

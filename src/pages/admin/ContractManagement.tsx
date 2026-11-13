@@ -31,6 +31,7 @@ import { tr } from "date-fns/locale";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { withCommitmentDisclosure } from '@/lib/contractDisclosure';
+import { sanitizeRichHtml } from '@/utils/sanitize';
 
 interface ContractOrder {
   id: string;
@@ -174,7 +175,7 @@ const ContractManagement = () => {
       // Create a hidden container for rendering
       const container = document.createElement('div');
       container.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:40px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:13px;line-height:1.6;color:#1a1a1a;';
-      container.innerHTML = `<h1 style="text-align:center;color:#0369a1;font-size:18px;margin-bottom:20px;">${typeLabel}</h1>${htmlContent}`;
+      container.innerHTML = `<h1 style="text-align:center;color:#0369a1;font-size:18px;margin-bottom:20px;">${typeLabel}</h1>${sanitizeRichHtml(htmlContent)}`;
       document.body.appendChild(container);
 
       // Wait for rendering

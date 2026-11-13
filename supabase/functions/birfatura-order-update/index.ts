@@ -11,7 +11,7 @@ const corsHeaders = {
 serve(async (req) => {
   console.log('===== BIRFATURA ORDER UPDATE REQUEST =====');
   console.log('Method:', req.method);
-  console.log('URL:', req.url);
+  // (kişisel veri içeren kayıt satırı kaldırıldı)
   
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -26,7 +26,7 @@ serve(async (req) => {
   try {
     // BirFatura sipariş durumu güncellemesi için
     const requestBody = await req.text();
-    console.log('Update Request Body:', requestBody);
+    console.log('Update request body received', { length: String(requestBody ?? '').length });
 
     let updateData: any = {};
     try {
@@ -35,7 +35,7 @@ serve(async (req) => {
       console.log('Could not parse JSON, treating as form data or other format');
     }
 
-    console.log('Update Data:', updateData);
+    // (kişisel veri içeren kayıt satırı kaldırıldı)
 
     // Create Supabase client
     const supabase = createClient(
@@ -49,7 +49,7 @@ serve(async (req) => {
       const status = updateData.OrderStatus || updateData.status;
       const trackingCode = updateData.CargoTrackingNumber || updateData.trackingCode || '';
 
-      console.log('Updating order:', { orderId, status, trackingCode });
+      console.log('Updating order status');
 
       // BirFatura'dan gelen sipariş ID'sini timestamp olarak kullanmıştık
       // Bu timestamp'e göre siparişi bulup güncellememiz gerekiyor
@@ -79,7 +79,7 @@ serve(async (req) => {
         if (updateError) {
           console.error('Update error:', updateError);
         } else {
-          console.log('Order updated successfully:', closestOrder.id);
+          console.log('Order updated successfully');
         }
       }
     }
@@ -92,7 +92,7 @@ serve(async (req) => {
       status: "success"
     };
 
-    console.log('Sending update response:', response);
+    console.log('Sending update response');
     console.log('===== BIRFATURA ORDER UPDATE END =====');
 
     return new Response(JSON.stringify(response), {

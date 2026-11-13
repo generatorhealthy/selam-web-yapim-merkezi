@@ -70,7 +70,7 @@ serve(async (req) => {
     }
 
     const userEmail = user.email.toLowerCase().trim();
-    console.log("Kart değiştirme talebi - Email:", userEmail);
+    console.log('Kart değiştirme talebi alındı');
 
     // Find the specialist's most recent active subscription order
     const selectCols = "id, customer_name, customer_email, customer_phone, customer_tc_no, customer_address, customer_city, package_name, package_type, amount, payment_method, subscription_reference_code, iyzico_customer_reference_code, customer_type, company_name, company_tax_no, company_tax_office";
@@ -228,7 +228,7 @@ serve(async (req) => {
     });
 
     const iyzicoResult = await iyzicoResponse.json();
-    console.log("Iyzico checkout init result:", JSON.stringify(iyzicoResult));
+    console.log('Iyzico checkout init result', { status: iyzicoResult?.status });
 
     // Iyzico v2 subscription API returns fields at top level (not under .data)
     const checkoutFormContent = iyzicoResult.data?.checkoutFormContent ?? iyzicoResult.checkoutFormContent;
