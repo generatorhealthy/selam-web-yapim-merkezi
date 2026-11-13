@@ -1,8 +1,9 @@
 # 13 Kasım 2026 — Güncel kritik açıkların güvenli kapatılması
-- [ ] Güncel taramayı mevcut kaynak ve canlı yetkilerle karşılaştır; eski bulguları kapatılmış saymadan yeniden tara.
-- [ ] Randevu onay e-postası ve sipariş belgeleri için kayıtlı alıcı/işlem bağı, yetki ve güvenli içerik testlerini tamamla.
+- [x] Güncel tarama mevcut kaynak/canlı yetkilerle karşılaştırıldı; hızlı DB tarama 14 (0 kritik), derin mevcut uyarılar tüm sistem temiz anlamına gelmez.
+- [x] Randevu onay e-postası/sipariş belgeleri kayıtlı alıcı ve signed snapshot; service-only tek claim, proxy admin gate ve kamu şablonu daraltma canlı; 46 test + yerel PG geçti.
 - [ ] Cron/WAHA geçişini çalışan hizmeti kesmeden hazırla; gerekli hesap sahibi kabulünü açık bırak.
-- [ ] Regresyon, canlı salt-okunur kabul, kalan engeller ve geri alma raporunu tamamla.
+- [x] Regresyon, üç canlı anon401, 2747/339/12 ve claim0; RESULT.md kaynak hash/rollback/engeller. Gerçek hosted pozitif panel ve Hostinger yeni web dağıtımı dış kabul bekler.
+- [ ] SEO cron anon dalı ve analytics session RPC — cron74 sahibi geçişi ve istemciye doğrulanmış işlem kanıtı kabulü eksik; açık risk.
 
 # 13 Kasım 2026 16:33 UTC — Aşama 5 son kabul
 - [x] Kayıt kaynağından bağımsız aktivasyon kapısı migration canlı; hızlı ekleme pasif varsayılan, 20 bağlantı1/19 ve dört kaynak reddi geçti; geçmiş aktifler korunur.

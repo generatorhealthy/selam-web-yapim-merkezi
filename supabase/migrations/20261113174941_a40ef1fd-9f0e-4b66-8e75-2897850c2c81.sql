@@ -1,0 +1,1 @@
+ALTER POLICY "Anyone can read form contents" ON public.form_contents TO anon, authenticated USING (form_type = 'pre_info' OR public.is_admin_user());

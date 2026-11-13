@@ -1,0 +1,2 @@
+- Patient confirmation authority is the authenticated owning specialist, not caller-supplied recipients; delivery claims remain consumed on uncertain provider outcomes to prevent duplicate messages.
+- Order document recipients and signed text come only from the exact server-read order; do not reintroduce email fallback or caller-overridden contract snapshots.
