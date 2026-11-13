@@ -1,3 +1,8 @@
+# 13 Kasım 2026 — Son üç ödeme engeli
+- [ ] Gerçek checkout/token→sipariş ve yenileme referansı bağını kabul etmeden atomik settlement dağıtma; eski sipariş araştırması bağımsızdır.
+- [x] BirFatura gerçek pull yolunda sıraya alma ile fatura düzenlenmesi ayrıldı; conditional UPDATE + timeout readback, 5 test, handler deploy ve canlı yetkisiz 401. Dış sağlayıcı issuance/dedup kabulü eksik.
+- [ ] Eski sipariş sahipliği: güncel salt okunur küme 64 sipariş/17 hesap; 0 ödeme/customer/subscription ref, hesap sahipliği kanıtı doğrulanamadı. Önceki 63 sabit ID listesi yok; destek işlem delili gerekir, otomatik eşleştirme yok.
+
 # 12 Kasım 2026 — Kritik ödeme/üyelik paketleri
 - [x] Dar canlı yetki paketi: paid INSERT, rol/onay/aktivasyon/kimlik değişikliği reddi, ad benzerliğiyle sipariş okuma kaldırımı; auth lifecycle uyumluluğu. Yerel 12 SQL kabul + canlı tanım/izin teyidi; gerçek müşteri işlemi denenmedi.
 - [ ] Callback/reconciliation tam geçiş — ortak atomik aday 20 bağlantıda 1 uygulama/19 duplicate geçti; gerçek sağlayıcı charge/currency ve tüm mevcut reconciliation/fatura yolları kabulü yok, yayımlanmadı.

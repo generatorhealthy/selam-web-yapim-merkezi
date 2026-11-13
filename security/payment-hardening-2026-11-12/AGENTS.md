@@ -1,2 +1,3 @@
 - Client payment guards preserve public pending writes but reject paid status and privilege reassignment; changes never backfill historical ownership.
 - Settlement receipt/outbox SQL is a non-deployed candidate until all live payment writers and side-effect handlers pass compatibility acceptance; synthetic concurrency alone does not certify provider delivery.
+- Invoice enqueue preserves the existing BirFatura pull protocol using conditional false-to-true writes and uncertain-result readback; queueing is not invoice issuance and must never fabricate invoice identifiers.

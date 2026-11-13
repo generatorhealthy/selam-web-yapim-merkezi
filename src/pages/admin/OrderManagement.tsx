@@ -1063,14 +1063,14 @@ const OrderManagement = () => {
         }
         toast({
           title: "Fatura Oluşturma Hatası",
-          description: data.error || "BirFatura'dan başarısız yanıt alındı",
+          description: data.error || data.message || "BirFatura'dan başarısız yanıt alındı",
           variant: "destructive",
         });
         return;
       }
       toast({
-        title: "Fatura Oluşturuldu",
-        description: `Fatura numarası: ${data?.invoiceNumber || 'Oluşturuldu'}`,
+        title: data?.state ? "Fatura Aktarımı" : "Fatura Durumu",
+        description: data?.message || "Fatura durumu doğrulanmayı bekliyor.",
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
