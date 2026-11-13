@@ -1,16 +1,18 @@
 # 13 Kasım 2026 15:53 UTC — İki paketli satış ve bağımsız güvenlik düzeltmeleri
-- [ ] Yeni satışta yalnız ozel-firsat 4000 TRY / kayit-linki 5000 TRY; sunucu INSERT kapısı ve web eski bağlantı yönlendirmeleri, geçmiş yenileme ayrımı.
-- [ ] Sentetik fiyat/rol/yenileme ve web akışı kabulü; kontrollü canlı migration, gerçek site salt okunur doğrulaması.
-- [ ] Cayma: sözleşme/uzman/sipariş/abonelik bağı ve atomik mükerrer kontrolü; sağlayıcı tahsilat anlamı doğrulanmadan yayınlama.
-- [ ] Telefon: güvenilir işlem/telefon sahipliği ve kalıcı gönderim kontrolü; gerçek bildirim testi yok.
-- [ ] Cron/WAHA: meşru görev/sağlayıcı kabulünü bozmayan güvenli geçiş; kalan şablon/RLS matrisi.
-- [ ] Dokuz kesin cevap ve gerçek yayın/sentetik kabul ayrımı; bütün kayıtlar, havale ve önceki korumalar korunur.
+- [x] Yeni satışta yalnız ozel-firsat 4000 TRY / kayit-linki 5000 TRY; bütün INSERT yazıcılarında sunucu kapısı, amount=null sunucu belirler, kart yeni satışta reddedilir. Eski web yolları yönlendirilir; tarihsel yenileme güvenilir yazıcı+önceki onaylı kayıt ister.
+- [x] 121 gerçek yerel SQL kontrolü, 28 uygulama testi ve sentetik havale→1 sipariş→ödeme bekliyor UI; mobil/masaüstü taşma yok. Migration canlı tanımı doğrulandı; 2747/339/12/154/0 sayımları aynı.
+- [x] Cayma yanlış retry tahsilatı ayrı endpointte kapatıldı/deploy; 20 paralel istek409 ve0 sağlayıcı/kayıt yazımı, canlı GET405/anonPOST401. Bu tam tahsilat özelliği değildir.
+- [ ] Cayma gerçek yeni sağlayıcı/sözleşme bağı/atomik tahsilat: iyzico ilişkisi bitti; doğru sağlayıcı işlemi/idempotency kabulü gerekir. Mevcut normal abonelik retry değişmedi.
+- [ ] Telefon sahipliği/kalıcı gönderim: public anonim ekran OTP veya doğrulanmış işlem sağlamıyor; meşru sahiplik kabulü olmadan tüm hizmeti auth-only kesmek yapılmadı. Güvenli kanal/sahiplik geçiş kabulü bekler.
+- [ ] Cron2/11 secret dağıtımı: mevcut bağlantının alter_job yetkisi false, postgres sahibi yetkisi bekler. WAHA imza enforce: gerçek sağlayıcı header kabulü bekler. Kalan hosted rol/alan ve şablon matrisi: yetkili harici oturum/özel belge kabulü yok.
+- [ ] Gerçek doktorumol.com.tr tarayıcı kabulü: Hostinger challenge engeli; GET boot/app200, amount:null veiki fiyat dosyada görüldü, etkileşim üretimde doğrulanmadı.
+- [x] Dokuz cevap, hashler, rollback ve kapsam security/two-package-sales-2026-11-13/RESULT.md; önceki korumalar, havale ve geçmiş haklar korunur.
 
 # 13 Kasım 2026 15:18 UTC — Kritik açıkları kapatma talimatı
 - [x] Boş muhasebe/kayıt olayları incelendi: eksik doğrulama; muhasebe sabit alıcısı ve log-alıcı farkı bulundu; kayıt admin maili gönderilip auto-reply başarısız olmuş olabilir. Kişisel veri ifşası doğrulanmadı, sağlayıcı teslim envanteri eksik.
 - [x] Kayıt doğrulaması, muhasebe onaylı admin/muhasebe + kayıtlı belge ve destek ticket→uzman→alıcı/yanıt bağı yayımlandı. Canlı GET 405/405/401; iki boş POST 400, muhasebe log toplamı 5 kaldı. 32 dış bağlantısız handler testi geçti.
 - [x] 4000 ozel-firsat ve 5000 kayit-linki yeni müşteri INSERT tutarı sunucuda korundu; migration canlı tanımı doğrulandı, 32 yerel sentetik SQL kontrolü geçti. Mevcut sipariş ve yetkili yenileme değişmedi.
-- [ ] Diğer fiyat yolları: campaign 3600/2398, campaign-premium 2398/3600, premium 2998/4998, discounted 1998/1499; ticari key/fiyat/periyot kararları ve bütün yolların ortak sunucu teklifine bağlanması eksik.
+- [x] Eski yeni-satış fiyat yolları 13 Kasım iki paket kararıyla INSERT kapısında kapatıldı; mevcut tarihsel paket satırları/sözleşmeler silinmedi.
 - [ ] Cayma tahsilatı: doğru sağlayıcı işlemi, güvenilir sözleşme bağı ve kalıcı atomik claim.
 - [ ] Telefon sahipliği/tekil gönderim ve WAHA gerçek kaynak kabulü; meşru yolu doğrulamadan kesme.
 - [ ] Cron gerçek job kimliği/yetki geçişi ve kalan RLS/şablon matrisi; gerçek kullanıcı işlemi yok.
