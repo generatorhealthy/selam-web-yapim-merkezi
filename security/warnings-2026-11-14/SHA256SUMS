@@ -1,0 +1,13 @@
+7182b953c714996182fa5f77c7a2f5907271cb5cb3b83a0a5ecaf1bba2380b8c  security/warnings-2026-11-14/candidates/card-start.ts
+4cf81c00896bfce3a707cf2d177fd5732cf600d6e70ae1f14656c29fa3a42d4e  security/warnings-2026-11-14/candidates/guards.sql
+4d050cb5e2d3b67bf91d436a959030e4b185be5aec9aff0d75a4fa0e2e46113f  security/warnings-2026-11-14/candidates/lead-adapter.ts
+0a26721aa515ea2ca683aa86ddb8fd3c1bc172436685b46f8f2b87466eed0849  security/warnings-2026-11-14/candidates/lead-authority.sql
+30fb36c41c349f53bbca17d7d758f63301d2af8229cdd98a095e0670e3398297  security/warnings-2026-11-14/candidates/lead-session-client.ts
+a9676944ec0fc4abac2f936ffb7be4f0c47ed6f053cfed4e8997bd944100255f  security/warnings-2026-11-14/candidates/lead.ts
+cedec42f42a34179b100e9a4a33f33a31202b42aef46a556f0fbc7e55e4d5747  security/warnings-2026-11-14/candidates/sms-adapter.ts
+be32d79b45599d2d946def9bcb9ffb3b2d77ee272b9bea2679d5444ae5ba3616  security/warnings-2026-11-14/candidates/sms-delivery.ts
+58dd813ea7ce758495d1b383f02ebff761928ff1e087f611632d8cb2933eda26  security/warnings-2026-11-14/candidates/sms.ts
+a0f11f286bf789ec28ae99f9006b4c0b36dbefecebfa72a6681126878c762c6f  security/warnings-2026-11-14/candidates/support-adapter.ts
+20ffe2f1c395c3c9ab2124fc2e6e2d34eda699e9b144d60fcd843572126a24a2  security/warnings-2026-11-14/candidates/support.ts
+9a456cfb9c0e0533d5453850e2dce9fb780fd25f9b5f41d3f228d155c1f84671  security/warnings-2026-11-14/candidates/web-sms.txt
+9d4c1db2cd26c2b802e7cf0e90ff272dd6c907e509a7d1ef6c75acad3d075151  security/warnings-2026-11-14/candidates/web-support.txt

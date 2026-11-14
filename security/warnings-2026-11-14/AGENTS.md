@@ -1,0 +1,3 @@
+- Keep candidates outside app and deployed functions until each live package receives approval; tests use injected transports and local synthetic PostgreSQL to avoid customer effects.
+- Support and panel SMS consume service-only unique claims before provider access; uncertain delivery stays claimed so retries cannot duplicate messages.
+- Marketing events bind a server-issued secret to a new session and verified Auth identity in a service-only atomic RPC; do not adopt historic anonymous identifiers.

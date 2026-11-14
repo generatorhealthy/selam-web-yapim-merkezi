@@ -1,0 +1,9 @@
+After separate publication approval:
+- SmsManagement uses specialists.phone, never order phone/name fuzzy matching.
+- template keys: referral/contact_reminder/payment_reminder/social.
+- custom composition: approved administrator only; no manual arbitrary recipient for other panel roles.
+- requestId = crypto.randomUUID() once per attempt. Reuse same ID across all alternate endpoints.
+- Stop fallback on every authorization failure or delivery_unknown/already_claimed response.
+- ClientReferrals and specialist-created appointments use server-bound specialized notifications,
+  not the manual panel envelope; no patient contact or health content in generic SMS.
+- Preserve authenticated server/cron transports; do not route them through panel-only adapter.

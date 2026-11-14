@@ -1,0 +1,7 @@
+DoctorDashboard handleCreateTicket (after independent server release approval):
+const ticketId = crypto.randomUUID();
+Include id: ticketId in the existing support_tickets INSERT.
+Send only {ticketId} to new-ticket-notification after successful INSERT.
+Do not remove the persisted ticket if delivery fails. Preserve current success/error feedback.
+
+The current web file is deliberately unchanged until the legacy-compatible server candidate is released.

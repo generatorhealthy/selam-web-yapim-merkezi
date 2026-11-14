@@ -1,0 +1,72 @@
+bun test v1.4.4 (38afee6c8)
+
+security/bulk-security-2026-11-13/guards.test.ts:
+(pass) missing configured invoice credential fails closed [0.17ms]
+(pass) anonymous and forged invoice credentials are denied [0.31ms]
+(pass) existing provider header apipassword is preserved [0.23ms]
+(pass) existing provider header api_password is preserved [0.03ms]
+(pass) existing provider header api-password is preserved
+(pass) existing provider header apikey is preserved
+(pass) existing provider header api_key is preserved [0.07ms]
+(pass) existing provider header api-key is preserved
+(pass) existing provider header x-api-key is preserved [0.01ms]
+(pass) existing provider header token is preserved
+(pass) existing provider header x-token is preserved [0.05ms]
+(pass) existing provider header apitoken is preserved [0.01ms]
+(pass) existing provider header api_token is preserved
+(pass) existing provider header password is preserved
+(pass) existing provider header sifre is preserved
+(pass) existing provider header apisifre is preserved
+(pass) existing provider query token is preserved [0.14ms]
+(pass) existing provider query apiKey is preserved [0.01ms]
+(pass) existing provider query apiPassword is preserved [0.05ms]
+(pass) existing provider query apipassword is preserved [0.01ms]
+(pass) SSRF target http://doktorumol.com.tr denied before transport [0.36ms]
+(pass) SSRF target https://localhost denied before transport [0.05ms]
+(pass) SSRF target https://127.0.0.1 denied before transport [0.01ms]
+(pass) SSRF target https://169.254.169.254 denied before transport
+(pass) SSRF target https://10.0.0.1 denied before transport
+(pass) SSRF target https://[::1] denied before transport [0.01ms]
+(pass) SSRF target https://doktorumol.com.tr.attacker.invalid denied before transport
+(pass) SSRF target https://doktorumol.com.tr@attacker.invalid denied before transport
+(pass) SSRF target https://doktorumol.com.tr:444 denied before transport [0.01ms]
+(pass) SSRF target https://user:pass@doktorumol.com.tr denied before transport
+(pass) SSRF target https://evil.invalid denied before transport
+(pass) allowlisted public site is fetched without following redirects [0.17ms]
+(pass) caller cannot inject system instruction role [0.09ms]
+(pass) caller cannot inject developer instruction role
+(pass) caller cannot inject tool instruction role
+(pass) caller cannot inject function instruction role
+(pass) ordinary user/assistant history and existing image input remain accepted [0.05ms]
+
+security/critical-security-2026-11-13/blog.test.ts:
+(pass) caller specialty cannot enter authoritative system message; normal generation still completes [58.91ms]
+(pass) invalid or excessive specialty rejected without inference [18.57ms]
+
+security/two-package-sales-2026-11-13/cancellation.test.ts:
+(pass) cayma endpoint 20 eşzamanlı istekte yanlış aboneliği veya tekrar tahsilatı başlatamaz [8.32ms]
+(pass) yetkisiz cayma çağrısında tahsilat yok [5.39ms]
+(pass) geçersiz oturumda tahsilat yok [5.81ms]
+
+security/warnings-2026-11-14/candidates.test.ts:
+(pass) support: unauthorized and another specialist cannot send [0.49ms]
+(pass) support: persisted record wins over forged recipient and content; safe HTML [0.22ms]
+(pass) support: 20 concurrent attempts consume one claim [0.28ms]
+(pass) support: provider uncertainty never causes blind retry [0.13ms]
+(pass) support: old mobile empty id can match a single owning persisted record [0.09ms]
+(pass) card status probing receives identical response for unknown, pending and paid ids [0.19ms]
+(pass) staff cannot compose arbitrary text or choose caller phone [0.13ms]
+(pass) approved administrator can compose only to a persisted specialist [0.03ms]
+(pass) SMS same request across alternate transports sends once, uncertainty retained [0.40ms]
+(pass) lead handler rejects stolen session without token, identity not caller controlled [0.25ms]
+(pass) old predictable visitor id is never adopted; parallel issuance once [0.23ms]
+
+security/warnings-2026-11-14/adapters.test.ts:
+(pass) actual lead adapter mints 256bit token, persists hash, atomic event uses Auth identity [3.07ms]
+(pass) support SDK adapter reads stored ticket/spec, claims once and does not take body fields [0.48ms]
+(pass) SMS SDK adapter server reads profile, phone and persists hashed payload before sending [0.73ms]
+
+ 56 pass
+ 0 fail
+ 115 expect() calls
+Ran 56 tests across 5 files. [262.00ms]

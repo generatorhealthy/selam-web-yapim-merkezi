@@ -1,9 +1,12 @@
 # 14 Kasım 2026 — Kalan 11 uyarı, kesintisiz güvenlik paketi
-- [ ] Güncel 11 bulguyu kaynak ve canlı tanımlarla karşılaştır; eski bulguları kanıtla ayır.
-- [ ] Destek bildirimi için kayıtlı talep/uzman bağı, HTML güvenliği ve regresyon hazırlığı.
-- [ ] Eski ziyaretçi kimliği, ödeme sorgusu, randevu onayı ve panel SMS için ayrı geri alınabilir paket ve test.
+- [x] Güncel 11 bulgu kaynak/canlı tanımlarla ayrıldı; blog/AI/cayma mevcut kaynak korumaları test edildi, deployed kaynak eşleşmesi teyitsiz bulgular kapatılmadı.
+- [x] Destek bildirimi kayıtlı sahiplik/HTML/legacy-15dk/tekil claim ve SDK adayı hazır; app ve deployed function değişmedi.
+- [x] Atıf token+atomic RPC, sabit kart-kapalı cevap, yeni INSERT approval gate ve panel SMS şablon/registered-phone/ortak claim adayları hazır.56 Bun+36 yerel SQL kontrolü geçti;20support/20SMS birer claim.
 - [ ] Eski mobil test/üyelik INSERT kapatılmaz; gerçek mobil geçiş ve ayrı onay bekler.
-- [ ] Test sonuçları, canlı etkiler, geri alma ve ayrı yayın kararlarını raporla.
+- [x] RESULT.md/hash/rollback/kapsam raporlandı; gerçek müşteri/mesaj/ödeme/test yazımı yok; build OK.
+- [ ] Beş canlı paket — migration/function/web ayrı yayın onayı bekler; gerçek hosted olumlu rol/sağlayıcı kabulü yok.
+- [ ] Bağımlılık denetimindeki native/jsPDF critical/high — ayrı uyumluluk güncellemesi ve native mağaza dağıtımı kabulü bekler.
+- [ ] Uzmanın açtığı randevu hasta SMS trigger'ı public JWT kullanıyor — güvenli sunucu transport geçiş onayı/kabulü bekler; anonim kapı açılmaz.
 
 # 13 Kasım 2026 21:15 İstanbul — Kalan kritik ve uyarıların kapatılması
 - [x] 8 kritik bulgu kapandı: SEO senkronizasyonu, WhatsApp otomatik yanıt, kayıt analitiği canlıda düzeltildi; BirFatura, randevu bildirimi, hasta randevu/test erişimi ve form önizleme zaten kapalıydı, doğrulandı.
