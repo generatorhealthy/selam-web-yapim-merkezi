@@ -1,3 +1,10 @@
+# 14 Kasım 2026 — Uyarıların uygulanması
+- [ ] Destek bildirimi kayıtlı talep/tekil hak, kart başlangıcında sabit kapalı yanıt, yeni randevu onay kapısı: test ve bağımsız yayın.
+- [ ] Reklam atfı sunucu jetonlu oturum geçişi; eski kayıtlar korunur.
+- [ ] Bağımlılıkların uyumlu yamaları ve belge/ekran kabulü.
+- [ ] Panel SMS yolları ve eski mobil geçiş: hizmet kesintisi riski varsa ayrı dar plan; yetkisiz yollar tekrar açılmaz.
+- [ ] Güncel tarama, test, yayın ve gerçek oturum sınırları raporu.
+
 # 14 Kasım 2026 — Kalan 11 uyarı, kesintisiz güvenlik paketi
 - [x] Güncel 11 bulgu kaynak/canlı tanımlarla ayrıldı; blog/AI/cayma mevcut kaynak korumaları test edildi, deployed kaynak eşleşmesi teyitsiz bulgular kapatılmadı.
 - [x] Destek bildirimi kayıtlı sahiplik/HTML/legacy-15dk/tekil claim ve SDK adayı hazır; app ve deployed function değişmedi.
