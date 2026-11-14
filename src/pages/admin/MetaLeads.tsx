@@ -140,10 +140,47 @@ const STATUS_OPTIONS = [
 
 const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
 
+const LEAD_COLUMNS = "id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, welcome_sent_at, callback_at, created_at";
+let leadsCache: any[] | null = null;
+let leadsInFlight: Promise<any[]> | null = null;
+
+/** Loads every lead with parallel 1000-row pages and keeps the result for instant reopening. */
+export const loadAllLeads = (force = false): Promise<any[]> => {
+  if (leadsInFlight) return leadsInFlight;
+  if (leadsCache && !force) return Promise.resolve(leadsCache);
+  leadsInFlight = (async () => {
+    const pageSize = 1000;
+    const { count, error: countError } = await supabase
+      .from("danisan_basvurulari")
+      .select("id", { count: "exact", head: true });
+    if (countError) throw countError;
+    const pages = Math.max(1, Math.ceil((count ?? 0) / pageSize) + 1);
+    const results = await Promise.all(
+      Array.from({ length: pages }, (_, i) =>
+        supabase
+          .from("danisan_basvurulari")
+          .select(LEAD_COLUMNS)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .range(i * pageSize, i * pageSize + pageSize - 1),
+      ),
+    );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) throw failed.error;
+    const seen = new Set<string>();
+    const all = results.flatMap((r) => r.data || []).filter((row: any) => !seen.has(row.id) && seen.add(row.id));
+    leadsCache = all;
+    return all;
+  })().finally(() => {
+    leadsInFlight = null;
+  });
+  return leadsInFlight;
+};
+
 const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { toast } = useToast();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [leads, setLeads] = useState<Lead[]>(() => (leadsCache as Lead[]) ?? []);
+  const [loading, setLoading] = useState(!leadsCache);
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -206,30 +243,12 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   };
 
   const fetchLeads = useCallback(async () => {
-    setLoading(true);
-    const pageSize = 1000;
-    let from = 0;
-    const all: Lead[] = [];
-    let fetchError: any = null;
-    while (true) {
-      const { data, error } = await supabase
-        .from("danisan_basvurulari")
-        .select("id, full_name, phone, consultation_type, therapy_type, source, lead_date, status, call_attempts, notes, welcome_sent_at, callback_at, created_at")
-        .order("created_at", { ascending: false })
-        .range(from, from + pageSize - 1);
-      if (error) {
-        fetchError = error;
-        break;
-      }
-      const batch = (data || []) as Lead[];
-      all.push(...batch);
-      if (batch.length < pageSize) break;
-      from += pageSize;
-    }
-    if (fetchError) {
-      toast({ title: "Hata", description: "Danışanlar yüklenemedi.", variant: "destructive" });
-    } else {
+    if (!leadsCache) setLoading(true);
+    try {
+      const all = await loadAllLeads(true);
       setLeads(all);
+    } catch {
+      toast({ title: "Hata", description: "Danışanlar yüklenemedi.", variant: "destructive" });
     }
     setLoading(false);
   }, [toast]);

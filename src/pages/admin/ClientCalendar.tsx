@@ -47,14 +47,23 @@ interface SpecialistWithReferral extends Specialist {
   calendarNote: string;
 }
 
+let calendarCache: any[] | null = null;
+let urgentCache: any[] | null = null;
+
 const ClientCalendar = ({ embedded = false }: { embedded?: boolean } = {}) => {
-  const [specialists, setSpecialists] = useState<SpecialistWithReferral[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [specialists, setSpecialistsState] = useState<SpecialistWithReferral[]>(() => (calendarCache as SpecialistWithReferral[]) ?? []);
+  const setSpecialists: typeof setSpecialistsState = (value) =>
+    setSpecialistsState((prev) => {
+      const next = typeof value === "function" ? (value as (p: SpecialistWithReferral[]) => SpecialistWithReferral[])(prev) : value;
+      calendarCache = next;
+      return next;
+    });
+  const [loading, setLoading] = useState(!calendarCache);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
-  const [urgentNotes, setUrgentNotes] = useState<UrgentNote[]>([]);
+  const [urgentNotes, setUrgentNotes] = useState<UrgentNote[]>(() => (urgentCache as UrgentNote[]) ?? []);
   const [newUrgentNote, setNewUrgentNote] = useState("");
   const [editingUrgentId, setEditingUrgentId] = useState<string | null>(null);
   const [editingUrgentText, setEditingUrgentText] = useState("");
@@ -89,7 +98,7 @@ const ClientCalendar = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
   const fetchSpecialistsWithReferrals = async () => {
     try {
-      setLoading(true);
+      if (!calendarCache) setLoading(true);
 
       const { data: specialistsData, error: specialistsError } = await supabase
         .from('specialists')
@@ -212,7 +221,7 @@ const ClientCalendar = ({ embedded = false }: { embedded?: boolean } = {}) => {
       .from('urgent_referral_notes')
       .select('*')
       .order('created_at', { ascending: false });
-    if (!error && data) setUrgentNotes(data as UrgentNote[]);
+    if (!error && data) { urgentCache = data; setUrgentNotes(data as UrgentNote[]); }
   };
 
   const addUrgentNote = async () => {

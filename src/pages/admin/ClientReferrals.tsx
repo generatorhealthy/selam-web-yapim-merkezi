@@ -1356,13 +1356,15 @@ const ClientReferrals = ({ embedded = false, presetSearch = null }: ClientReferr
                 );
               })}
             </div>
-            {inlinePanel && (
-              <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                <Suspense fallback={<div className="h-64 animate-pulse bg-muted" />}>
-                  {inlinePanel === "leads" ? <EmbeddedMetaLeads embedded /> : <EmbeddedClientCalendar embedded />}
-                </Suspense>
+            {/* Both panels stay mounted (loaded in the background) so switching is instant. */}
+            <Suspense fallback={null}>
+              <div className={inlinePanel === "leads" ? "mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-sm" : "hidden"}>
+                <EmbeddedMetaLeads embedded />
               </div>
-            )}
+              <div className={inlinePanel === "calendar" ? "mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-sm" : "hidden"}>
+                <EmbeddedClientCalendar embedded />
+              </div>
+            </Suspense>
           </div>
         )}
 
