@@ -242,7 +242,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending email via Brevo...');
 
-    if (body.documentsOnly === true) {
+    {
       const bytes = new TextEncoder().encode(JSON.stringify([customerEmail, resolvedPreInfoContent, resolvedDistanceSalesContent]));
       const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))).map(b => b.toString(16).padStart(2, '0')).join('');
       const { error: claimError } = await supabaseAdmin.from('order_document_delivery_claims').insert({ order_id: order.id, content_hash: hash });
