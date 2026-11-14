@@ -1,3 +1,8 @@
+# 14 Kasım 2026 — Diyetisyen testleri
+- [ ] Mevcut diyetisyen şablonlarını ve otomatik uzman bağlantısını kontrol et.
+- [ ] Kaynağı, Türkçe kullanımı ve puanlaması doğrulanmış test kataloğunu hazırla; doğrulanmamış klinik ölçek yayınlama.
+- [ ] Yeni/mevcut diyetisyenlere bağlantı ve sağlık izin sınırlarını koruyan ekleme paketini içerik/canlı onaya sun.
+
 # 14 Kasım 2026 — Uyarıların uygulanması
 - [x] Destek/kart işlevleri yayımlandı; canlı yetkisiz destek 401, kart sabit409. Yeni randevu INSERT kapısı migration canlı; geçmiş satırlar değiştirilmedi. Olumlu gerçek teslim kabulü yapılmadı.
 - [x] Reklam sunucu jetonlu SQL/Edge/web bağlantısı hazır ve Edge yayımlandı; sahte token401. Gerçek izinli kayıt→rapor readback kabulü henüz yok; eski istemci atıf yazımı artık kabul edilmez.
