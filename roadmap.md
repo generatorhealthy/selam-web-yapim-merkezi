@@ -1,6 +1,7 @@
 # 14 Kasım 2026 — Ödeme alınmadan yönetici manuel onayı
 - [x] İstek kaydedildi; canlı onay tetikleyicileri salt okunur incelendi: sözleşmeye ek olarak fatura, ödenmiş ay, müşteri ve yönlendirme kazanımı yan etkileri var. Beklemeye dönüş bunları geri almaz.
-- [ ] Ödeme onayından ayrı, yöneticiye özel ve denetim kayıtlı manuel ticari onay paketi: plan onayı ve yan etki/geri dönüş testleri bekler. Gerçek sipariş değiştirilmedi; e-posta gönderilmedi.
+- [x] Plan onayıyla ayrı yönetici ticari onayı, service-only atomik RPC, profil yayım izni ve otomatik güvenli belge gönderimi eklendi/yayımlandı. Sipariş pending kalır; fatura/ödenmiş ay/komisyon yok. 20 yerel bağlantı1onay/19tekrar, belge testleri ve gerçek düğmelerle sentetik mobil/masaüstü onay→bekleme geçti. Anon401; Ahmet Bey'in siparişi aynı, gönderim0; RESULT.md.
+- [ ] Gerçek yönetici paneli/teslim ve Hostinger yeni düğme dağıtım kabulü: external_unmanaged oturum/dağıtım kanıtı bekler. Bu tur müşteri işlemi yapılmadı.
 
 # 14 Kasım 2026 — Bekleyen sipariş sözleşme gönderimi
 - [x] Sipariş onayını değiştirmeden kayıtlı belge gönderim yolu ve eksik nüshada açıkça etiketlenen güncel ön bilgilendirme hazır. Mevcut kabul nüshaları/ödeme/aktivasyon/fatura değiştirilmez; ilgili siparişte arşivlenmiş sözleşme yok.

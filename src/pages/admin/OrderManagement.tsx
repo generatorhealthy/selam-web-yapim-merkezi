@@ -22,6 +22,7 @@ import { sendSms } from "@/services/smsService";
 import SendOrderEmailDialog from "@/components/SendOrderEmailDialog";
 import InvoiceReconciliationDialog from "@/components/InvoiceReconciliationDialog";
 import LegacyOrderReviewDialog from "@/components/LegacyOrderReviewDialog";
+import ManualOrderApproval from "@/components/ManualOrderApproval";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
@@ -139,6 +140,15 @@ const OrderManagement = () => {
   const [upgradeAmount, setUpgradeAmount] = useState("");
   const [upgradePeriod, setUpgradePeriod] = useState<'NOW' | 'NEXT_PERIOD'>('NEXT_PERIOD');
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const manualApprovals = useQuery({
+    queryKey: ['manual_order_approvals'],
+    enabled: userProfile?.role === 'admin' && userProfile?.is_approved === true,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('order_manual_approvals').select('order_id,active').eq('active', true);
+      if (error) throw error;
+      return new Set((data ?? []).map(item => item.order_id));
+    },
+  });
 
   // Sözleşme md. 7.2 — TEFE+TÜFE/2 ortalamasına göre yıllık zam oranı (%29,72)
   const TEFE_TUFE_RATE = 0.2972;
@@ -685,17 +695,17 @@ const OrderManagement = () => {
         }
       }
       updatePayload.updated_at = new Date().toISOString();
-      console.log("Update payload:", JSON.stringify(updatePayload));
       const { data, error } = await supabase
         .from("orders")
         .update(updatePayload as Database["public"]["Tables"]["orders"]["Update"])
         .eq("id", id)
         .select()
-        .single();
+        .maybeSingle();
       if (error) {
         console.error("Supabase update error:", error);
         throw error;
       }
+      if (!data) throw new Error('Sipariş bulunamadı');
       return data;
     },
     onMutate: async (updatedOrder) => {
@@ -1900,6 +1910,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                                    order.status === 'approved' ? 'Onaylanan' :
                                    order.status === 'completed' ? 'Tamamlanan' : 'İptal'}
                                 </Badge>
+                                {order.status === 'pending' && manualApprovals.data?.has(order.id) && <Badge variant="secondary">Manuel onaylı · Ödeme bekliyor</Badge>}
                                 {order.payment_status === 'failed' && (
                                   <Badge variant="destructive" className="flex items-center gap-1 font-medium text-xs bg-red-600">
                                     <XCircle className="w-3 h-3" />
@@ -2367,6 +2378,10 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                         min="1"
                       />
                     </div>
+                    {userProfile?.role === 'admin' && userProfile?.is_approved === true &&
+                      rawOrders.find(item => item.id === editingOrder.id)?.status === 'pending' &&
+                      ['bank_transfer', 'banka_havalesi'].includes(editingOrder.payment_method) &&
+                      <ManualOrderApproval orderId={editingOrder.id} customerName={editingOrder.customer_name} customerEmail={editingOrder.customer_email} />}
                     <div className="flex justify-end gap-2 md:col-span-2 pt-4">
                       <Button variant="ghost" onClick={handleCancelEdit}>
                         İptal

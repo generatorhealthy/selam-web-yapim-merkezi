@@ -9410,8 +9410,17 @@ export type Database = {
         Args: { p_backup_id: number; p_table_name?: string }
         Returns: undefined
       }
-      set_manual_order_approval: {
+      set_manual_order_approval_internal: {
         Args: { p_action: string; p_order_id: string; p_reason: string }
+        Returns: Json
+      }
+      set_manual_order_approval_server: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_order_id: string
+          p_reason: string
+        }
         Returns: Json
       }
       settle_iyzico_payment: {

@@ -1,0 +1,2 @@
+- Unpaid manual commercial approval uses a service-only audited RPC with verified admin identity; keep orders pending and never create payment receipts, invoices or paid months.
+- Document delivery uses the exact stored order and unique content claim; uncertain delivery never rolls back approval or retries automatically.

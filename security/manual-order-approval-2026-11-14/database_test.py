@@ -14,14 +14,18 @@ with tempfile.TemporaryDirectory(prefix='manual-approval-') as tmp:
  try:
   ok("CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role BYPASSRLS;CREATE SCHEMA auth;CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('test.uid',true),'')::uuid$$;CREATE FUNCTION is_admin_user() RETURNS boolean LANGUAGE sql AS $$SELECT coalesce(current_setting('test.admin',true),'false')='true'$$;CREATE TABLE auth.users(id uuid,email text);CREATE TABLE orders(id uuid PRIMARY KEY,customer_email text,status text,payment_method text,payment_status text,deleted_at timestamptz,invoice_sent boolean,invoice_number text,payment_transaction_id text,subscription_reference_code text,amount numeric);CREATE TABLE specialists(id uuid PRIMARY KEY,user_id uuid,email text,is_active boolean);CREATE TABLE bank_transfer_verifications(order_id uuid,specialist_id uuid,amount numeric,statement_checked boolean);CREATE TABLE bank_legacy_paid_orders(order_id uuid);CREATE TABLE payment_receipts(order_id uuid);GRANT USAGE ON SCHEMA auth TO anon,authenticated;GRANT ALL ON orders,specialists TO authenticated;")
   ok(ROOT.joinpath('release.sql').read_text())
+  ok("CREATE TABLE user_profiles(user_id uuid,role text,is_approved boolean);CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$SELECT current_setting('role',true)$$;CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;CREATE OR REPLACE FUNCTION is_admin_user() RETURNS boolean LANGUAGE sql SECURITY DEFINER SET search_path=public AS $$SELECT EXISTS(SELECT 1 FROM user_profiles WHERE user_id=auth.uid() AND role='admin' AND is_approved=true)$$;")
+  ok(ROOT.joinpath('service-only.sql').read_text())
   ok("CREATE TRIGGER activation BEFORE INSERT OR UPDATE ON specialists FOR EACH ROW EXECUTE FUNCTION require_activation_evidence();CREATE TABLE effects(kind text);CREATE FUNCTION paid_effect() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN INSERT INTO effects VALUES('invoice'),('paid_month'),('commission'),('email');RETURN NEW;END$$;CREATE TRIGGER paid AFTER UPDATE ON orders FOR EACH ROW WHEN(NEW.status='approved') EXECUTE FUNCTION paid_effect();")
   oid='11111111-1111-4111-8111-111111111111';sid='22222222-2222-4222-8222-222222222222';uid='33333333-3333-4333-8333-333333333333'
   ok(f"INSERT INTO auth.users VALUES('{uid}','owner@example.invalid');INSERT INTO specialists VALUES('{sid}','{uid}','owner@example.invalid',false);INSERT INTO orders VALUES('{oid}','owner@example.invalid','pending','bank_transfer','pending',null,false,null,null,null,4000);")
-  admin=f"SET ROLE authenticated;SET test.uid='{uid}';SET test.admin='true';"
-  call=f"SELECT set_manual_order_approval('{oid}','approve','Manual commercial permission');"
-  for role in ['anon','authenticated','service_role']:
+  ok(f"INSERT INTO user_profiles VALUES('{uid}','admin',true);")
+  admin="SET ROLE service_role;"
+  call=f"SELECT set_manual_order_approval_server('{oid}','approve','Manual commercial permission','{uid}');"
+  for role in ['anon','authenticated']:
    deny(f"SET ROLE {role};{call}")
-  deny(admin+f"SELECT set_manual_order_approval('{oid}','approve','x');")
+  deny(admin+f"SELECT set_manual_order_approval_server('{oid}','approve','x','{uid}');")
+  deny(admin+f"SELECT set_manual_order_approval_server('{oid}','approve','Forged actor','{sid}');")
   deny(f"SET ROLE authenticated;INSERT INTO order_manual_approvals(order_id,specialist_id,approved_by,reason)VALUES('{oid}','{sid}','{uid}','forged');")
   deny(f"SET ROLE authenticated;UPDATE specialists SET is_active=true WHERE id='{sid}';")
   before=ok(f"SELECT row_to_json(o) FROM orders o WHERE id='{oid}';")
@@ -31,11 +35,11 @@ with tempfile.TemporaryDirectory(prefix='manual-approval-') as tmp:
   assert ok('SELECT count(*) FROM effects')=='0'
   assert before==ok(f"SELECT row_to_json(o) FROM orders o WHERE id='{oid}';")
   assert ok('SELECT count(*) FROM order_manual_approval_events')=='1'
-  ok(admin+f"SELECT set_manual_order_approval('{oid}','pending','Return to awaiting transfer');")
+  ok(admin+f"SELECT set_manual_order_approval_server('{oid}','pending','Return to awaiting transfer','{uid}');")
   assert ok('SELECT active FROM order_manual_approvals')=='f'
   assert ok(f"SELECT is_active FROM specialists WHERE id='{sid}'")=='t'
   assert before==ok(f"SELECT row_to_json(o) FROM orders o WHERE id='{oid}';")
-  assert json.loads(ok(admin+f"SELECT set_manual_order_approval('{oid}','pending','Repeated pending request');").splitlines()[-1])['duplicate']
+  assert json.loads(ok(admin+f"SELECT set_manual_order_approval_server('{oid}','pending','Repeated pending request','{uid}');").splitlines()[-1])['duplicate']
   ok(f"INSERT INTO bank_transfer_verifications VALUES('{oid}','{sid}',4000,true);UPDATE orders SET status='approved',payment_status='paid' WHERE id='{oid}';")
   assert ok('SELECT count(*) FROM effects')=='4'
   deny(admin+call)

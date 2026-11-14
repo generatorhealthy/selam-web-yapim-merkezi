@@ -15,14 +15,16 @@ Deno.serve(async (req: Request) => {
     if (!parsed.success) return reply({ error: 'Sipariş, işlem ve en az beş karakterlik gerekçe gerekli' }, 400);
     const url = Deno.env.get('SUPABASE_URL');
     const anon = Deno.env.get('SUPABASE_ANON_KEY');
-    if (!url || !anon) return reply({ error: 'İşlem şu anda kullanılamıyor' }, 503);
+    const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!url || !anon || !service) return reply({ error: 'İşlem şu anda kullanılamıyor' }, 503);
     const client = createClient(url, anon, { global: { headers: { Authorization: authorization } } });
     const { data: identity, error: identityError } = await client.auth.getUser();
     if (identityError || !identity.user) return reply({ error: 'Geçerli yönetici oturumu gerekli' }, 401);
     const { data: admin, error: roleError } = await client.rpc('is_admin_user');
     if (roleError || admin !== true) return reply({ error: 'Yalnız yönetici manuel onay verebilir' }, 403);
     const { orderId, action, reason } = parsed.data;
-    const { data, error } = await client.rpc('set_manual_order_approval', { p_order_id: orderId, p_action: action, p_reason: reason });
+    const server = createClient(url, service);
+    const { data, error } = await server.rpc('set_manual_order_approval_server', { p_order_id: orderId, p_action: action, p_reason: reason, p_actor_id: identity.user.id });
     if (error) return reply({ error: error.code === '42501' ? 'Bu işlem için yetkiniz yok' : 'Sipariş bekleyen, ödenmemiş havale siparişi olmalı ve kayıtlı uzman hesabıyla eşleşmeli' }, error.code === '42501' ? 403 : 409);
     let documents: Record<string, unknown> | null = null;
     if (action === 'approve' && data?.duplicate !== true) {
