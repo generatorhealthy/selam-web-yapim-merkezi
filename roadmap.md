@@ -1,5 +1,6 @@
 # 14 Kasım 2026 — Bekleyen üyeliğin bağımsız aktivasyonu
-- [ ] Uzman listesi ve düzenleme ekranından yalnız yöneticiye özel, denetim kayıtlı aktivasyon/pasifleştirme; sipariş, ödeme ve e-posta değişmez. Ahmet Bey için etkinleştirme isteği alındı.
+- [x] Uzman listesi ve düzenleme ekranından yalnız yöneticiye özel, denetim kayıtlı aktivasyon/pasifleştirme eklendi. Service-only RPC/Edge yayımlandı; sipariş, ödeme ve e-posta değişmez. 4 handler testi ve 20 yerel eşzamanlı1/19 geçti; RESULT.md.
+- [ ] Ahmet Bey'in gerçek yönetici oturumundan Aktif Yap kabulü ve yeni web Hostinger dağıtımı: external_unmanaged oturum/dağıtım kanıtı bekler; burada kullanıcı adına başka yönetici seçilip işlem yapılmadı.
 
 # 14 Kasım 2026 — Ödeme alınmadan yönetici manuel onayı
 - [x] İstek kaydedildi; canlı onay tetikleyicileri salt okunur incelendi: sözleşmeye ek olarak fatura, ödenmiş ay, müşteri ve yönlendirme kazanımı yan etkileri var. Beklemeye dönüş bunları geri almaz.

@@ -7653,6 +7653,90 @@ export type Database = {
           },
         ]
       }
+      specialist_publication_events: {
+        Row: {
+          active: boolean
+          actor_id: string
+          created_at: string
+          id: string
+          reason: string
+          specialist_id: string
+        }
+        Insert: {
+          active: boolean
+          actor_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          specialist_id: string
+        }
+        Update: {
+          active?: boolean
+          actor_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          specialist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialist_publication_events_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialist_publication_events_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      specialist_publication_permissions: {
+        Row: {
+          active: boolean
+          actor_id: string
+          created_at: string
+          reason: string
+          specialist_id: string
+          updated_at: string
+        }
+        Insert: {
+          active: boolean
+          actor_id: string
+          created_at?: string
+          reason: string
+          specialist_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          actor_id?: string
+          created_at?: string
+          reason?: string
+          specialist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialist_publication_permissions_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialist_publication_permissions_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       specialist_referral_codes: {
         Row: {
           code: string
@@ -9420,6 +9504,15 @@ export type Database = {
           p_actor_id: string
           p_order_id: string
           p_reason: string
+        }
+        Returns: Json
+      }
+      set_specialist_publication_server: {
+        Args: {
+          p_active: boolean
+          p_actor_id: string
+          p_reason: string
+          p_specialist_id: string
         }
         Returns: Json
       }

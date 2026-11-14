@@ -253,17 +253,6 @@ const SpecialistManagement = () => {
 
     try {
       await setSpecialistPublication(id, !currentStatus);
-      const error = null;
-
-      if (error) {
-        console.error('Durum güncellenirken hata:', error);
-        toast({
-          title: "Hata",
-          description: "Durum güncellenirken bir hata oluştu: " + error.message,
-          variant: "destructive"
-        });
-        return;
-      }
 
       // Local state'i güncelle
       setSpecialists(prev => 
@@ -320,7 +309,7 @@ const SpecialistManagement = () => {
       console.error('Beklenmeyen hata:', error);
       toast({
         title: "Hata",
-        description: "Beklenmeyen bir hata oluştu.",
+        description: error instanceof Error ? error.message : "Üyelik durumu doğrulanamadı.",
         variant: "destructive"
       });
     }
