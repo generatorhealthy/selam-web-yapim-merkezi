@@ -1,3 +1,7 @@
+# 14 Kasım 2026 — Bekleyen sipariş sözleşme gönderimi
+- [ ] Sipariş onayını değiştirmeden kayıtlı belgeleri gönder; belge yoksa güncel ön bilgilendirmeyi kabul kanıtı gibi göstermeden sunucu kaynağından hazırla. Ödeme/aktivasyon/fatura korumaları korunur.
+- [ ] Gönderim düğmesi, çift tıklama kilidi, tarafsız e-posta başlığı ve yetki/test/yayın kontrolleri; gerçek müşteri gönderimi panelden yapılır.
+
 # 14 Kasım 2026 — Diyetisyen testleri
 - [x] Mevcut diyetisyen şablonu yok; create_specialist_tests diyetisyen dalı içermiyor. Gerçek mevcut tanımlar salt okunur kontrol edildi.
 - [x] Kullanıcı 15 özgün değerlendirme formu seçti;60isteğe bağlı soru, puan/klinik yorum yok. Katalog/ICERIK_ONAYI/SHA256SUMS security/dietitian-forms-2026-11-14 altında hazır.
