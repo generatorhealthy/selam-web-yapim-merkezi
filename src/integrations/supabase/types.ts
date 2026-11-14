@@ -7865,6 +7865,32 @@ export type Database = {
         }
         Relationships: []
       }
+      support_notification_claims: {
+        Row: {
+          created_at: string
+          state: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          state?: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          state?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_notification_claims_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           admin_response: string | null
