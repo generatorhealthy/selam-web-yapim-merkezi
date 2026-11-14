@@ -34,6 +34,7 @@ import {
 import { SpecialistNotesDialog } from "@/components/admin/SpecialistNotesDialog";
 import { Link } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
+import { setSpecialistPublication } from '@/lib/specialistPublication';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -251,10 +252,8 @@ const SpecialistManagement = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('specialists')
-        .update({ is_active: !currentStatus })
-        .eq('id', id);
+      await setSpecialistPublication(id, !currentStatus);
+      const error = null;
 
       if (error) {
         console.error('Durum güncellenirken hata:', error);

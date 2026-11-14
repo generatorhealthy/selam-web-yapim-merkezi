@@ -1,3 +1,6 @@
+# 14 Kasım 2026 — Bekleyen üyeliğin bağımsız aktivasyonu
+- [ ] Uzman listesi ve düzenleme ekranından yalnız yöneticiye özel, denetim kayıtlı aktivasyon/pasifleştirme; sipariş, ödeme ve e-posta değişmez. Ahmet Bey için etkinleştirme isteği alındı.
+
 # 14 Kasım 2026 — Ödeme alınmadan yönetici manuel onayı
 - [x] İstek kaydedildi; canlı onay tetikleyicileri salt okunur incelendi: sözleşmeye ek olarak fatura, ödenmiş ay, müşteri ve yönlendirme kazanımı yan etkileri var. Beklemeye dönüş bunları geri almaz.
 - [x] Plan onayıyla ayrı yönetici ticari onayı, service-only atomik RPC, profil yayım izni ve otomatik güvenli belge gönderimi eklendi/yayımlandı. Sipariş pending kalır; fatura/ödenmiş ay/komisyon yok. 20 yerel bağlantı1onay/19tekrar, belge testleri ve gerçek düğmelerle sentetik mobil/masaüstü onay→bekleme geçti. Anon401; Ahmet Bey'in siparişi aynı, gönderim0; RESULT.md.

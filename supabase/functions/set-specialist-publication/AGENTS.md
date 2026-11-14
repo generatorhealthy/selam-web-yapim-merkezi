@@ -1,0 +1,1 @@
+- Profile publication is an admin-audited service-only permission, never proof of payment; do not update orders, paid months, receipts or send contract emails from this endpoint.

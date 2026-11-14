@@ -15,6 +15,7 @@ import FAQSection from "@/components/FAQSection";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useUserRole } from "@/hooks/useUserRole";
+import { setSpecialistPublication } from '@/lib/specialistPublication';
 
 interface Specialist {
   id: string;
@@ -266,7 +267,6 @@ const SpecialistEdit = () => {
           faq: faqString,
           online_consultation: specialist.online_consultation,
           face_to_face_consultation: specialist.face_to_face_consultation,
-          is_active: specialist.is_active,
           profile_picture: specialist.profile_picture,
           seo_title: specialist.seo_title || null,
           seo_description: specialist.seo_description || null,
@@ -285,7 +285,17 @@ const SpecialistEdit = () => {
         return;
       }
 
-      console.log('✅ Specialist update successful:', updateResult);
+      const desiredActive = specialist.is_active;
+      const storedActive = updateResult?.[0]?.is_active;
+      if (storedActive !== desiredActive) {
+        try {
+          await setSpecialistPublication(specialist.id, desiredActive);
+        } catch (cause) {
+          toast({ title: 'Profil kaydedildi; üyelik durumu değişmedi', description: cause instanceof Error ? cause.message : 'Üyelik durumu doğrulanamadı', variant: 'destructive' });
+          if (typeof storedActive === 'boolean') setSpecialist({ ...specialist, is_active: storedActive });
+          return;
+        }
+      }
 
       // Doğrulama için veriyi tekrar çek
       const { data: verification, error: verifyError } = await supabase
