@@ -1,3 +1,7 @@
+# 14 Kasım 2026 — Ödeme alınmadan yönetici manuel onayı
+- [x] İstek kaydedildi; canlı onay tetikleyicileri salt okunur incelendi: sözleşmeye ek olarak fatura, ödenmiş ay, müşteri ve yönlendirme kazanımı yan etkileri var. Beklemeye dönüş bunları geri almaz.
+- [ ] Ödeme onayından ayrı, yöneticiye özel ve denetim kayıtlı manuel ticari onay paketi: plan onayı ve yan etki/geri dönüş testleri bekler. Gerçek sipariş değiştirilmedi; e-posta gönderilmedi.
+
 # 14 Kasım 2026 — Bekleyen sipariş sözleşme gönderimi
 - [x] Sipariş onayını değiştirmeden kayıtlı belge gönderim yolu ve eksik nüshada açıkça etiketlenen güncel ön bilgilendirme hazır. Mevcut kabul nüshaları/ödeme/aktivasyon/fatura değiştirilmez; ilgili siparişte arşivlenmiş sözleşme yok.
 - [x] Mail Gönder içinde bağımsız düğme, senkron kilit, tarafsız başlık ve service-only unique içerik claim;5test/buildOK. send-order-documents-email deploy SHA983c60fa6929d356ded41a27d3b92e5d7c16d83c0760fe3a4928f392d1e95148.
