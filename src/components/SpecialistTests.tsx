@@ -120,7 +120,9 @@ const SpecialistTests = ({ specialistId, specialistName, specialistSpecialty }: 
                     </Badge>
                   </div>
                   <p className="text-xs md:text-sm text-gray-500">
-                    {specialistName} tarafından hazırlanmıştır
+                    {test.category === 'Beslenme Değerlendirme Formu'
+                      ? 'Doktorum Ol değerlendirme formu · Puansızdır; ilgili diyetisyen değerlendirir.'
+                      : `${specialistName} tarafından hazırlanmıştır`}
                   </p>
                 </div>
                 <div className="w-full md:w-auto">
@@ -130,7 +132,7 @@ const SpecialistTests = ({ specialistId, specialistName, specialistSpecialty }: 
                   >
                     <Link to={`/test/${test.id}/${specialistId}`}>
                       <Play className="w-4 h-4 mr-2" />
-                      Teste Başla
+                      {test.category === 'Beslenme Değerlendirme Formu' ? 'Formu Aç' : 'Teste Başla'}
                     </Link>
                   </Button>
                 </div>
