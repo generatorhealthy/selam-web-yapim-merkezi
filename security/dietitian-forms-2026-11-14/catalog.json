@@ -1,0 +1,972 @@
+{
+  "version": "dietitian-intake-v1-2026-11-14",
+  "specialty": "Diyetisyen",
+  "kind": "intake_form",
+  "status": "draft",
+  "is_active": false,
+  "scoring": null,
+  "interpretation": "Yanıtlar yalnız ilgili yetkili diyetisyen tarafından değerlendirilir. Tanı, risk sınıfı veya otomatik beslenme önerisi üretilmez.",
+  "notice": "Özgün ön görüşme formudur; geçerliliği kanıtlanmış klinik ölçek değildir. Yanıt vermek istemediğiniz sorularda paylaşmama seçeneğini kullanabilirsiniz. Sağlık verisi içerebilen yanıtlar mevcut doğrulanmış ayrı izin kapısı açılmadan toplanmaz.",
+  "forms": [
+    {
+      "slug": "meal-routine",
+      "title": "Öğün Düzeni Değerlendirme Formu",
+      "category": "Öğün düzeni",
+      "description": "Öğün düzeni konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Son 7 günde ana öğünlerinizi ne kadar düzenli tüketebildiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Her gün benzer saatlerde",
+            "Çoğu gün benzer saatlerde",
+            "Günden güne değişti",
+            "Düzenli ana öğün tüketmedim",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Son 7 günde kahvaltı veya günün ilk öğününü kaç gün tüketebildiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "0–1 gün",
+            "2–3 gün",
+            "4–5 gün",
+            "6–7 gün",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Son 7 günde ana öğünler arasında genellikle ne kadar süre oldu?",
+          "question_type": "multiple_choice",
+          "options": [
+            "3 saatten az",
+            "3–5 saat",
+            "5 saatten fazla",
+            "Düzenli bir aralık yoktu",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Öğün düzeninizi en çok hangi durum etkiliyor?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Çalışma veya okul saatleri",
+            "Yemek hazırlama ve erişim",
+            "İştah ve kişisel tercih",
+            "Belirgin bir etken yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "water-routine",
+      "title": "Su Tüketimi Alışkanlıkları Formu",
+      "category": "Sıvı tüketimi",
+      "description": "Sıvı tüketimi konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Son 7 günde su içmeyi gün içine nasıl dağıttınız?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Gün boyunca",
+            "Daha çok öğünlerde",
+            "Susadığımda",
+            "Belirgin bir düzen yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Günlük içtiğiniz su miktarını takip ediyor musunuz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Düzenli takip ediyorum",
+            "Ara sıra takip ediyorum",
+            "Takip etmiyorum",
+            "Nasıl takip edeceğimi bilmiyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Gün içinde yanınızda su bulundurma alışkanlığınız nasıl?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Genellikle bulunduruyorum",
+            "Bazen bulunduruyorum",
+            "Nadiren bulunduruyorum",
+            "Bulundurmuyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Su içmeyi zorlaştıran başlıca durum hangisi?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Unutmak",
+            "Suya erişim",
+            "Tadı veya kişisel tercih",
+            "Belirgin bir güçlük yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "vegetables-fruit",
+      "title": "Sebze ve Meyve Tüketimi Formu",
+      "category": "Besin çeşitliliği",
+      "description": "Besin çeşitliliği konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Son 7 günde kaç gün sebze tükettiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "0–1 gün",
+            "2–3 gün",
+            "4–5 gün",
+            "6–7 gün",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Son 7 günde kaç gün meyve tükettiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "0–1 gün",
+            "2–3 gün",
+            "4–5 gün",
+            "6–7 gün",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Sebze tüketiminizi en çok ne etkiliyor?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Hazırlama zamanı",
+            "Fiyat veya erişim",
+            "Tat ve kişisel tercih",
+            "Belirgin bir güçlük yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Meyveyi daha çok hangi biçimde tüketiyorsunuz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Bütün veya doğranmış",
+            "Meyve suyu",
+            "Kuru meyve",
+            "Genellikle tüketmiyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "whole-grains",
+      "title": "Tahıl ve Tam Tahıl Tercihleri Formu",
+      "category": "Besin tercihleri",
+      "description": "Besin tercihleri konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Ekmek tercihiniz çoğunlukla hangisi?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Tam tahıllı",
+            "Beyaz ekmek",
+            "Her ikisi",
+            "Ekmek tüketmiyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Son 7 günde kaç gün bulgur, yulaf veya benzeri tam tahıllar tükettiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "0–1 gün",
+            "2–3 gün",
+            "4–5 gün",
+            "6–7 gün",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Tahıl seçiminizde başlıca etken nedir?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Tat",
+            "Fiyat ve erişim",
+            "Hazırlama kolaylığı",
+            "Diyetisyen önerisi",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Yeni bir tahıl ürününü denemeye yaklaşımınız nasıl?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Denemeye açığım",
+            "Bilgi alırsam deneyebilirim",
+            "Alıştığım ürünleri tercih ederim",
+            "Şu anda değerlendirmiyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "protein-variety",
+      "title": "Protein Kaynakları Çeşitliliği Formu",
+      "category": "Besin çeşitliliği",
+      "description": "Besin çeşitliliği konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Ana öğünlerde protein kaynağı seçiminiz çoğunlukla nasıl?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Et, tavuk veya balık",
+            "Yumurta veya süt ürünleri",
+            "Kurubaklagiller ve bitkisel kaynaklar",
+            "Düzenli bir tercih yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Son 7 günde kaç gün kurubaklagil tükettiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "0 gün",
+            "1–2 gün",
+            "3–4 gün",
+            "5 gün veya daha fazla",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Son 7 günde kaç gün yumurta veya süt ürünleri tükettiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "0–1 gün",
+            "2–3 gün",
+            "4–5 gün",
+            "6–7 gün",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Protein kaynaklarını çeşitlendirmede başlıca etken nedir?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Maliyet veya erişim",
+            "Hazırlama zamanı",
+            "Tat veya beslenme tercihi",
+            "Belirgin bir güçlük yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "snacks",
+      "title": "Ara Öğün ve Atıştırma Alışkanlıkları Formu",
+      "category": "Öğün düzeni",
+      "description": "Öğün düzeni konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Son 7 günde öğün aralarında atıştırmanız ne sıklıktaydı?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Her gün",
+            "Haftanın birkaç günü",
+            "Bir gün",
+            "Hiç olmadı",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Atıştırma zamanını çoğunlukla ne belirliyor?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Açlık",
+            "Mola veya sosyal ortam",
+            "Kolay erişim veya alışkanlık",
+            "Atıştırmıyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Atıştırmalık tercihiniz çoğunlukla hangisi?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Meyve veya kuruyemiş",
+            "Süt ürünü veya ev yapımı yiyecek",
+            "Paketli ürün",
+            "Sabit bir tercih yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Ara öğünlerinizi önceden planlıyor musunuz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Genellikle",
+            "Bazen",
+            "Nadiren",
+            "Planlamıyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "beverages",
+      "title": "İçecek Tercihleri Değerlendirme Formu",
+      "category": "Sıvı tüketimi",
+      "description": "Sıvı tüketimi konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Su dışında en sık tercih ettiğiniz içecek hangisi?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Şekersiz çay veya kahve",
+            "Süt veya ayran",
+            "Şekerli içecek",
+            "Sabit bir tercih yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Son 7 günde kaç gün şeker eklenmiş içecek tükettiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "0 gün",
+            "1–2 gün",
+            "3–4 gün",
+            "5–7 gün",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Çay veya kahvenize genellikle şeker ekliyor musunuz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Eklemiyorum",
+            "Bazen ekliyorum",
+            "Genellikle ekliyorum",
+            "Çay veya kahve içmiyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "İçecek seçiminizde başlıca etken nedir?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Tat",
+            "Alışkanlık",
+            "Sosyal ortam",
+            "Susuzluğu gidermek",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "eating-out",
+      "title": "Dışarıda Yemek ve Paket Servis Formu",
+      "category": "Yemek ortamı",
+      "description": "Yemek ortamı konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Son 7 günde dışarıda veya paket servisle kaç ana öğün tükettiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "0 öğün",
+            "1–2 öğün",
+            "3–5 öğün",
+            "6 öğün veya daha fazla",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Dışarıda yemek seçiminizi en çok ne etkiliyor?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Fiyat",
+            "Tat ve tercih",
+            "Hız ve erişim",
+            "İçerik ve çeşitlilik",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Sipariş öncesinde içerik bilgisini inceler misiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Genellikle",
+            "Bazen",
+            "Nadiren",
+            "İncelemiyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Dışarıda yemeğin öğün düzeninize etkisi nasıl?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Düzenimi kolaylaştırıyor",
+            "Zaman zaman değiştiriyor",
+            "Düzenimi zorlaştırıyor",
+            "Belirgin bir etkisi yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "cooking",
+      "title": "Evde Yemek Hazırlama ve Planlama Formu",
+      "category": "Yemek hazırlama",
+      "description": "Yemek hazırlama konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Son 7 günde kaç gün evde hazırlanan ana öğün tükettiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "0–1 gün",
+            "2–3 gün",
+            "4–5 gün",
+            "6–7 gün",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Yemek hazırlamada çoğunlukla nasıl bir rolünüz var?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Genellikle ben hazırlarım",
+            "Hazırlığı paylaşırız",
+            "Başka biri hazırlar",
+            "Evde yemek hazırlanmaz",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Alışveriş öncesinde liste veya öğün planı hazırlıyor musunuz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Genellikle",
+            "Bazen",
+            "Nadiren",
+            "Hazırlamıyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Evde yemek hazırlamanın başlıca güçlüğü nedir?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Zaman",
+            "Maliyet veya malzemeye erişim",
+            "Bilgi veya beceri",
+            "Belirgin bir güçlük yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "label-reading",
+      "title": "Besin Etiketi Okuma Alışkanlıkları Formu",
+      "category": "Besin seçimi",
+      "description": "Besin seçimi konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Paketli ürün alırken etiketi ne sıklıkta incelersiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Genellikle",
+            "Bazen",
+            "Nadiren",
+            "İncelemem",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Etikette ilk baktığınız bilgi hangisi?",
+          "question_type": "multiple_choice",
+          "options": [
+            "İçindekiler",
+            "Besin değerleri",
+            "Tarih ve saklama bilgisi",
+            "Sabit bir tercih yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Etiket bilgilerini anlamakta kendinizi nasıl hissediyorsunuz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Rahat anlıyorum",
+            "Bazı bilgilerde açıklama gerekiyor",
+            "Çoğu bilgide açıklama gerekiyor",
+            "Henüz incelemiyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Benzer ürünleri karşılaştırırken hangi bilgiye ihtiyaç duyarsınız?",
+          "question_type": "multiple_choice",
+          "options": [
+            "İçerik farkları",
+            "Porsiyon bilgisi",
+            "Besin değerlerinin anlamı",
+            "Şu anda ek bilgiye ihtiyacım yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "meal-environment",
+      "title": "Yemek Ortamı ve Yeme Hızı Formu",
+      "category": "Yemek ortamı",
+      "description": "Yemek ortamı konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Ana öğünlerinizi çoğunlukla nerede tüketirsiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Masa başında",
+            "Çalışırken veya ders sırasında",
+            "Ayakta veya hareket halinde",
+            "Ortama göre değişir",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Yemek sırasında ekran kullanma sıklığınız nasıl?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Genellikle",
+            "Bazen",
+            "Nadiren",
+            "Kullanmıyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Bir ana öğün için genellikle ne kadar zaman ayırırsınız?",
+          "question_type": "multiple_choice",
+          "options": [
+            "10 dakikadan az",
+            "10–20 dakika",
+            "20 dakikadan fazla",
+            "Belirgin bir süre yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Yemek sırasında ara verebilme durumunuz nasıl?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Rahatça ara verebilirim",
+            "Bazen ara verebilirim",
+            "Genellikle acele ederim",
+            "Duruma göre değişir",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "hunger-fullness",
+      "title": "Açlık ve Tokluk Farkındalığı Formu",
+      "category": "Yeme farkındalığı",
+      "description": "Yeme farkındalığı konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Öğüne başlamadan önce açlık hissinizi fark eder misiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Genellikle",
+            "Bazen",
+            "Nadiren",
+            "Emin değilim",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Öğünü bitirme kararınızı çoğunlukla ne belirler?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Tokluk hissim",
+            "Tabağın bitmesi",
+            "Zaman veya ortam",
+            "Duruma göre değişir",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Gün içinde açlık ile alışkanlık nedeniyle yemeyi ayırt etmek sizin için nasıl?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Kolay",
+            "Bazen zor",
+            "Genellikle zor",
+            "Henüz düşünmedim",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Bu konuda diyetisyenle görüşmek ister misiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Evet",
+            "Gerekirse",
+            "Şu anda istemiyorum",
+            "Kararsızım",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "activity-routine",
+      "title": "Günlük Hareket ve Oturma Düzeni Formu",
+      "category": "Günlük rutin",
+      "description": "Günlük rutin konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Son 7 günde günlük yürüyüş veya hareket fırsatınız nasıldı?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Her gün",
+            "Haftanın birkaç günü",
+            "Bir gün",
+            "Belirgin bir fırsat olmadı",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Günün büyük kısmını nasıl geçirirsiniz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Çoğunlukla oturarak",
+            "Oturma ve hareket dengeli",
+            "Çoğunlukla hareket halinde",
+            "Günden güne değişir",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Uzun süre otururken mola verme alışkanlığınız nasıl?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Düzenli",
+            "Bazen",
+            "Nadiren",
+            "Belirgin bir düzen yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Hareket için ayırabildiğiniz zamanı en çok ne etkiliyor?",
+          "question_type": "multiple_choice",
+          "options": [
+            "İş veya okul düzeni",
+            "Ortam ve erişim",
+            "Kişisel tercih",
+            "Belirgin bir etken yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "sleep-meals",
+      "title": "Uyku Saatleri ve Öğün Zamanları Formu",
+      "category": "Günlük rutin",
+      "description": "Günlük rutin konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Son 7 günde uykuya geçiş saatiniz ne kadar düzenliydi?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Her gün benzer",
+            "Çoğu gün benzer",
+            "Günden güne değişti",
+            "Belirgin bir düzen yok",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Geç saatlerde yemek yeme durumunuz nasıldı?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Her gün",
+            "Haftanın birkaç günü",
+            "Bir gün",
+            "Olmadı",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Geç saatte yemek yemenizi çoğunlukla ne belirliyor?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Çalışma veya okul",
+            "Açlık",
+            "Sosyal ortam veya alışkanlık",
+            "Geç saatte yemiyorum",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Uyku ve öğün saatlerinizi birlikte planlamaya yaklaşımınız nasıl?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Planlıyorum",
+            "Planlamak isterim",
+            "Şu anda zor görünüyor",
+            "Şu anda gündemimde değil",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    },
+    {
+      "slug": "goals",
+      "title": "Beslenme Hedefleri ve Görüşme Beklentileri Formu",
+      "category": "Ön görüşme",
+      "description": "Ön görüşme konusunda diyetisyen görüşmesine hazırlık için özgün, puansız değerlendirme formu.",
+      "questions": [
+        {
+          "question_text": "Diyetisyen görüşmesindeki öncelikli beklentiniz hangisi?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Öğün düzeni oluşturmak",
+            "Besin çeşitliliğini artırmak",
+            "Beslenme konusunda bilgi almak",
+            "Hedefimi birlikte belirlemek",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 1,
+          "is_required": false
+        },
+        {
+          "question_text": "Bir beslenme değişikliğini günlük hayatınıza uyarlamak için en çok neye ihtiyaç duyarsınız?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Pratik öneriler",
+            "Planlama desteği",
+            "Alışveriş veya hazırlık desteği",
+            "Birlikte değerlendirmek",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 2,
+          "is_required": false
+        },
+        {
+          "question_text": "Görüşme sonrası takip için tercih ettiğiniz yaklaşım hangisi?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Düzenli görüşmeler",
+            "Gerektikçe görüşme",
+            "Kısa hedeflerle ilerlemek",
+            "Henüz karar vermedim",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 3,
+          "is_required": false
+        },
+        {
+          "question_text": "Değişikliklere başlamak için kendinizi nasıl görüyorsunuz?",
+          "question_type": "multiple_choice",
+          "options": [
+            "Başlamaya hazırım",
+            "Küçük adımlarla başlayabilirim",
+            "Önce bilgi almak istiyorum",
+            "Şu anda hazır değilim",
+            "Paylaşmak istemiyorum",
+            "Bana uygun değil"
+          ],
+          "step_number": 4,
+          "is_required": false
+        }
+      ]
+    }
+  ]
+}

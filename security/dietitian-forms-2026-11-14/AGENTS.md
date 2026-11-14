@@ -1,0 +1,1 @@
+- Dietitian intake drafts remain outside app imports and deployment until exact question content and an additive publication package are approved; they have no clinical score or automated dietary interpretation.

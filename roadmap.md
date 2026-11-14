@@ -1,7 +1,7 @@
 # 14 Kasım 2026 — Diyetisyen testleri
-- [ ] Mevcut diyetisyen şablonlarını ve otomatik uzman bağlantısını kontrol et.
-- [ ] Kaynağı, Türkçe kullanımı ve puanlaması doğrulanmış test kataloğunu hazırla; doğrulanmamış klinik ölçek yayınlama.
-- [ ] Yeni/mevcut diyetisyenlere bağlantı ve sağlık izin sınırlarını koruyan ekleme paketini içerik/canlı onaya sun.
+- [x] Mevcut diyetisyen şablonu yok; create_specialist_tests diyetisyen dalı içermiyor. Gerçek mevcut tanımlar salt okunur kontrol edildi.
+- [x] Kullanıcı 15 özgün değerlendirme formu seçti;60isteğe bağlı soru, puan/klinik yorum yok. Katalog/ICERIK_ONAYI/SHA256SUMS security/dietitian-forms-2026-11-14 altında hazır.
+- [ ] Form içerik onayı ve ayrı canlı ekleme paketi bekler; yeni/mevcut diyetisyen bağlantısı, soruların birebir kopyası ve tekrar ekleme koruması onay sonrası yapılacak. Mevcut sağlık izin kapısı kullanıma açılmış değil; bu görevle açılmaz.
 
 # 14 Kasım 2026 — Uyarıların uygulanması
 - [x] Destek/kart işlevleri yayımlandı; canlı yetkisiz destek 401, kart sabit409. Yeni randevu INSERT kapısı migration canlı; geçmiş satırlar değiştirilmedi. Olumlu gerçek teslim kabulü yapılmadı.
