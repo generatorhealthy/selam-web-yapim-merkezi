@@ -8766,6 +8766,10 @@ export type Database = {
         Args: { p_new_slug: string; p_specialist_id: string }
         Returns: Json
       }
+      attach_dietitian_intake_forms_v1: {
+        Args: { p_specialist: string }
+        Returns: number
+      }
       attach_signup_identity_to_analytics: {
         Args: {
           p_ref_code?: string
