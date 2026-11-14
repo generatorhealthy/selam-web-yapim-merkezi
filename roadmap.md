@@ -1,3 +1,10 @@
+# 14 Kasım 2026 — Kalan 11 uyarı, kesintisiz güvenlik paketi
+- [ ] Güncel 11 bulguyu kaynak ve canlı tanımlarla karşılaştır; eski bulguları kanıtla ayır.
+- [ ] Destek bildirimi için kayıtlı talep/uzman bağı, HTML güvenliği ve regresyon hazırlığı.
+- [ ] Eski ziyaretçi kimliği, ödeme sorgusu, randevu onayı ve panel SMS için ayrı geri alınabilir paket ve test.
+- [ ] Eski mobil test/üyelik INSERT kapatılmaz; gerçek mobil geçiş ve ayrı onay bekler.
+- [ ] Test sonuçları, canlı etkiler, geri alma ve ayrı yayın kararlarını raporla.
+
 # 13 Kasım 2026 21:15 İstanbul — Kalan kritik ve uyarıların kapatılması
 - [x] 8 kritik bulgu kapandı: SEO senkronizasyonu, WhatsApp otomatik yanıt, kayıt analitiği canlıda düzeltildi; BirFatura, randevu bildirimi, hasta randevu/test erişimi ve form önizleme zaten kapalıydı, doğrulandı.
 - [x] Zamanlanmış görevler: kasada saklı görev anahtarı + yeni SEO/site haritası/hatırlatma görevleri (75/76/77); eski anonim 2/11/74 duraklatıldı (silinmedi). Anahtarlı çağrı 200, anonim 401.
