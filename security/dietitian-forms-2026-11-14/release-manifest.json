@@ -1,0 +1,24 @@
+{
+  "version": "dietitian-intake-v1-2026-11-14",
+  "template_ids": [
+    "300a4d54-d4c3-5443-9342-9561144b4181",
+    "6b035e9d-f3fa-5831-ab60-9e31bbb1ed91",
+    "7d3f52a6-8cb9-5ca9-a822-55c48081867b",
+    "01aa4766-b5d2-5870-b9e0-f4747bef937c",
+    "95b2a3aa-db0c-50be-b2e1-5cad3d114712",
+    "cd7674d6-347a-576b-bf12-b9bf473805da",
+    "ea4c16c2-d5cc-538c-a3a7-0dcc0e543470",
+    "07128706-184f-552a-85c4-7a0a88f09e4c",
+    "5485c459-5ff5-556b-ac9b-9d8e914da79e",
+    "87345cfa-c4e6-5aad-a41b-3de5538d01a2",
+    "2c62b321-c574-53b8-8f1b-db2dd8ef1b77",
+    "313fd598-7dd4-5f86-a1af-4d96faffca86",
+    "69aa51cf-af3d-55ca-b5fe-3d4a65d5b369",
+    "f8aca394-6acf-5761-a3ba-d787584f28e5",
+    "de24039c-026a-5531-97e2-ae4349fecc65"
+  ],
+  "catalog_sha256": "ca3923dbe80cbe80b65a6c79acbbe000f4f111576a037a18d3550d4602c488ba",
+  "content_approved": false,
+  "live_execution_approved": false,
+  "health_collection_enabled": false
+}

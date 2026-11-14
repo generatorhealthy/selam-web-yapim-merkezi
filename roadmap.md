@@ -1,6 +1,7 @@
 # 14 Kasım 2026 — Diyetisyen testleri
 - [x] Mevcut diyetisyen şablonu yok; create_specialist_tests diyetisyen dalı içermiyor. Gerçek mevcut tanımlar salt okunur kontrol edildi.
 - [x] Kullanıcı 15 özgün değerlendirme formu seçti;60isteğe bağlı soru, puan/klinik yorum yok. Katalog/ICERIK_ONAYI/SHA256SUMS security/dietitian-forms-2026-11-14 altında hazır.
+- [x] Ayrı pasif şablon veri ekleme ve service-only diyetisyen atama/tetikleyici SQL adayları hazır;2katalog testi ve yerel PostgreSQL20eşzamanlı1ekleme/19tekrar kontrolü geçti. Canlı yazım/yayın yok; RELEASE_STATUS.md sınırları açıklar.
 - [ ] Form içerik onayı ve ayrı canlı ekleme paketi bekler; yeni/mevcut diyetisyen bağlantısı, soruların birebir kopyası ve tekrar ekleme koruması onay sonrası yapılacak. Mevcut sağlık izin kapısı kullanıma açılmış değil; bu görevle açılmaz.
 
 # 14 Kasım 2026 — Uyarıların uygulanması
