@@ -1,0 +1,2 @@
+- Document-only mail reads the exact order and never mutates its payment, activation or signed snapshots; missing snapshots may send only explicitly labelled current information, never reconstructed acceptance evidence.
+- Document-only sends consume a service-only unique content claim before provider access; uncertain outcomes stay claimed to prevent duplicates.

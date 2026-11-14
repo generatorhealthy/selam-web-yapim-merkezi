@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,32 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
   const [invoiceFile, setInvoiceFile] = useState<UploadedFile | null>(null);
   const [contractFile, setContractFile] = useState<UploadedFile | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const sendLock = useRef(false);
+
+  const sendStoredDocuments = async () => {
+    if (!order || sendLock.current) return;
+    sendLock.current = true;
+    setIsSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-order-documents-email', {
+        body: { orderId: order.id, documentsOnly: true, message: 'Sipariş belgeleri' }
+      });
+      if (error || data?.success !== true) {
+        let detail = data?.error;
+        if (error && 'context' in error && error.context instanceof Response) {
+          const response = await error.context.json().catch(() => null);
+          detail = response?.error;
+        }
+        throw new Error(detail || 'Belgeler gönderilemedi');
+      }
+      toast({ title: 'Belgeler gönderildi', description: data.currentInformationOnly
+        ? 'Güncel ön bilgilendirme gönderildi; arşivlenmiş kabul nüshası bulunmuyor. Sipariş durumu değişmedi.'
+        : 'Kayıtlı belgeler gönderildi. Sipariş durumu değişmedi.' });
+      onOpenChange(false);
+    } catch (cause) {
+      toast({ title: 'Gönderim yapılamadı', description: cause instanceof Error ? cause.message : 'Lütfen teslim durumunu kontrol edin.', variant: 'destructive' });
+    } finally { sendLock.current = false; setIsSending(false); }
+  };
 
   useEffect(() => {
     if (open) setRecipientEmail(order?.customer_email || "");
@@ -205,6 +231,9 @@ const SendOrderEmailDialog = ({ order, open, onOpenChange }: SendOrderEmailDialo
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          <Button variant="outline" className="w-full" onClick={sendStoredDocuments} disabled={isSending}>
+            <Mail className="mr-2 h-4 w-4" /> {isSending ? 'Gönderiliyor…' : 'Sipariş Belgelerini Gönder (Onay Vermeden)'}
+          </Button>
           {/* Recipient */}
           <div className="space-y-2">
             <Label htmlFor="recipientEmail">Siparişte Kayıtlı E-posta</Label>

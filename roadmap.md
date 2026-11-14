@@ -1,6 +1,7 @@
 # 14 Kasım 2026 — Bekleyen sipariş sözleşme gönderimi
-- [ ] Sipariş onayını değiştirmeden kayıtlı belgeleri gönder; belge yoksa güncel ön bilgilendirmeyi kabul kanıtı gibi göstermeden sunucu kaynağından hazırla. Ödeme/aktivasyon/fatura korumaları korunur.
-- [ ] Gönderim düğmesi, çift tıklama kilidi, tarafsız e-posta başlığı ve yetki/test/yayın kontrolleri; gerçek müşteri gönderimi panelden yapılır.
+- [x] Sipariş onayını değiştirmeden kayıtlı belge gönderim yolu ve eksik nüshada açıkça etiketlenen güncel ön bilgilendirme hazır. Mevcut kabul nüshaları/ödeme/aktivasyon/fatura değiştirilmez; ilgili siparişte arşivlenmiş sözleşme yok.
+- [x] Mail Gönder içinde bağımsız düğme, senkron kilit, tarafsız başlık ve service-only unique içerik claim;5test/buildOK. send-order-documents-email deploy SHA983c60fa6929d356ded41a27d3b92e5d7c16d83c0760fe3a4928f392d1e95148.
+- [ ] Gerçek panel gönderimi ve teslim kabulü kullanıcı oturumundan yapılır; external_unmanaged oturum nedeniyle burada doğrulanmadı. Müşteriye bu tur mail gönderilmedi; Hostinger yeni düğme dağıtımı doğrulanmadı. Önceden var olan156linter bulgusu bu paketle çözülmedi.
 
 # 14 Kasım 2026 — Diyetisyen testleri
 - [x] Mevcut diyetisyen şablonu yok; create_specialist_tests diyetisyen dalı içermiyor. Gerçek mevcut tanımlar salt okunur kontrol edildi.

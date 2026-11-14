@@ -5926,6 +5926,32 @@ export type Database = {
         }
         Relationships: []
       }
+      order_document_delivery_claims: {
+        Row: {
+          content_hash: string
+          created_at: string
+          order_id: string
+        }
+        Insert: {
+          content_hash: string
+          created_at?: string
+          order_id: string
+        }
+        Update: {
+          content_hash?: string
+          created_at?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_document_delivery_claims_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_notes: {
         Row: {
           created_at: string
