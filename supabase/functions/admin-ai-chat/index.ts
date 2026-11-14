@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { fetchPublicSite } from "../_shared/publicSiteFetch.ts";
-import { validChatHistory } from "../_shared/chatInput.ts";
+import { validChatHistory, callerChatMessage } from "../_shared/chatInput.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -323,14 +323,14 @@ Her maddeyi gerçek veriye dayandır. Eksik veya hatalı olan şeyleri açıkça
     let websiteData = "";
     if (isWebAnalysis) {
       console.log("Website analysis requested, targets:", urls.length);
-      const analysisPromises = urls.map(url => fetchWebsiteData(url));
+      const analysisPromises = urls.slice(0, 3).map(url => fetchWebsiteData(url));
       const results = await Promise.all(analysisPromises);
       websiteData = results.join("\n\n");
       console.log("Website analysis data collected, length:", websiteData.length);
     }
 
     // Process messages to handle multimodal content (images)
-    const processedMessages = messages.map((msg: any) => {
+    const processedMessages = messages.map(callerChatMessage).map((msg: any) => {
       if (msg.images && Array.isArray(msg.images) && msg.images.length > 0) {
         const content: any[] = [];
         if (msg.content) {

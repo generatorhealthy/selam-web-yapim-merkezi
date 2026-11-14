@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { leadSessionClient } from "./leadSessionClient";
 
 const FIRST_KEY = "dko_first_touch";
 const LAST_KEY = "dko_last_touch";
@@ -52,17 +53,17 @@ const readTouch = () => {
   return { first: parse(FIRST_KEY), last: parse(LAST_KEY) };
 };
 
-/** Merkezi olay kaydı. Hata olursa sessiz kalır, kullanıcı akışını asla bozmaz. */
+const verifiedSession = leadSessionClient({getItem:safeGet,setItem:safeSet}, async () => {
+  const {data,error}=await supabase.functions.invoke("verified-lead-event",{body:{action:"issue"}});
+  if(error || !data) throw new Error("session_unavailable");
+  return data;
+});
+
+/** Tracking failures never interrupt registration or payment. */
 export const trackLeadEvent = (eventName: string, properties: Record<string, unknown> = {}, eventId?: string) => {
-  try {
-    void supabase.rpc("track_lead_event" as any, {
-      p_session_id: getLeadSessionId(),
-      p_event_name: eventName,
-      p_event_id: eventId ?? (crypto.randomUUID?.() ?? `${Date.now()}`),
-      p_properties: properties,
-      p_touch: readTouch(),
-    }).then(() => undefined, () => undefined);
-  } catch { /* ignore */ }
+  void verifiedSession().then(pair => supabase.functions.invoke("verified-lead-event", {
+    body:{...pair,event_name:eventName,event_id:eventId ?? crypto.randomUUID(),properties,touch:readTouch()}
+  })).catch(() => undefined);
 };
 
 /** Kayıt formu sürümü: değişiklik öncesi/sonrası cohort ayrımı için olaylara eklenir. */

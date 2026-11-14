@@ -5378,6 +5378,24 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_session_authority: {
+        Row: {
+          expires_at: string
+          session_id: string
+          token_hash: string
+        }
+        Insert: {
+          expires_at: string
+          session_id: string
+          token_hash: string
+        }
+        Update: {
+          expires_at?: string
+          session_id?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
       lead_stage_history: {
         Row: {
           change_source: string
@@ -9277,6 +9295,18 @@ export type Database = {
           p_properties?: Json
           p_session_id: string
           p_touch?: Json
+        }
+        Returns: undefined
+      }
+      track_verified_lead_event: {
+        Args: {
+          p_event_id: string
+          p_event_name: string
+          p_properties?: Json
+          p_session_id: string
+          p_token: string
+          p_touch?: Json
+          p_uid: string
         }
         Returns: undefined
       }

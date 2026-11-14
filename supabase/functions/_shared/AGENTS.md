@@ -1,4 +1,4 @@
-- Website inspection may fetch only exact allowlisted HTTPS public-site hosts and rejects redirects; chat history accepts only user/assistant roles because caller-controlled roles are not authority.
+- Website inspection may fetch only exact allowlisted HTTPS public-site hosts and rejects redirects; validate history roles and downgrade caller-supplied assistant messages to user context because caller roles are not authority.
 - BirFatura pull authentication keeps existing provider header/query names but fails closed when the configured secret is missing; never log request headers, bodies or order response contents.
 - Appointment notifications require trusted service authority or a hashed DB-issued appointment capability; public JWT transport alone is never authority, and provider uncertainty retains the unique claim.
 - Patient contact uses Auth-confirmed phone identity and a consumed-before-send capability; public profile links remain user-initiated shares so unverified visitors cannot spend paid messaging budgets.
