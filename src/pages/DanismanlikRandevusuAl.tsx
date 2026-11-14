@@ -36,7 +36,7 @@ const DanismanlikRandevusuAl = () => {
     e.preventDefault();
     const parsed = schema.safeParse({ full_name: fullName, phone, therapy_type: therapyType });
     if (!parsed.success) {
-      toast.error(parsed.error.errors[0].message);
+      toast.error(parsed.error.issues[0]?.message ?? "Lütfen bilgilerinizi kontrol edin.");
       return;
     }
     if (isBlockedVisitor({ name: parsed.data.full_name, phone: parsed.data.phone })) {

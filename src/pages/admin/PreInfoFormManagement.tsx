@@ -9,8 +9,8 @@ import Footer from "@/components/Footer";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { Save, FileText, Eye } from "lucide-react";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { sanitizeRichHtml } from "@/utils/sanitize";
 
 const PreInfoFormManagement = () => {
@@ -39,7 +39,7 @@ const PreInfoFormManagement = () => {
 
   const formats = [
     'header', 'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'color', 'background', 'align', 'link'
+    'list', 'color', 'background', 'align', 'link'
   ];
 
   const loadFormContent = async () => {

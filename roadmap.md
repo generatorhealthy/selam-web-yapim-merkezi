@@ -1,9 +1,10 @@
 # 14 Kasım 2026 — Uyarıların uygulanması
 - [x] Destek/kart işlevleri yayımlandı; canlı yetkisiz destek 401, kart sabit409. Yeni randevu INSERT kapısı migration canlı; geçmiş satırlar değiştirilmedi. Olumlu gerçek teslim kabulü yapılmadı.
 - [x] Reklam sunucu jetonlu SQL/Edge/web bağlantısı hazır ve Edge yayımlandı; sahte token401. Gerçek izinli kayıt→rapor readback kabulü henüz yok; eski istemci atıf yazımı artık kabul edilmez.
-- [x] Paket yamaları, PDF/Word üretimi, mobil/masaüstü açılışı doğrulandı; 81 Bun+36 yerel SQL testi geçti. Son build OK 08:34:13 UTC.
+- [x] Paket geçişi: son86 üretim bağımlılığı taramasında bilinen açık0; Zod4/resolver,Quill2/editör,Router7 ve native dolaylı8.6.2 yamaları.84 Bun+36 SQL+64 erişim/75 mutasyon testleri; mobil/masaüstü/editör kontrolü başarılı. Mağaza binary kabulü yapılmadı.
 - [ ] Panel SMS ve özel sunucu çağrıları birlikte geçiş: kayıtlı alıcı/şablon/claim onayı ve gerçek yetkili kabulü bekler; eski mobil INSERT yolları uyumluluk/onay bekler.
-- [x] Son durum FOLLOWUP.md; bağımlılıkta 2 critical/1 high/5 moderate açık, tam kapanış iddiası yok. AI geçmiş rol düşürme kodu testli, yayın onayı bekler.
+- [x] Son durum FOLLOWUP.md; bağımlılık uyarısı0, diğer açıklar korunur. AI geçmiş rol düşürme kodu testli, yayın onayı bekler. Reklam süre yenileme ve SMS tüm kayıt türleri aday testleri eklendi.
+- [ ] Reklam oturum oluşturma hız sınırı/server geçişi ve gerçek izinli kayıt→rapor kabulü: ayrı canlı paket onayı ve hosted oturum kabulü bekler.
 
 # 14 Kasım 2026 — Kalan 11 uyarı, kesintisiz güvenlik paketi
 - [x] Güncel 11 bulgu kaynak/canlı tanımlarla ayrıldı; blog/AI/cayma mevcut kaynak korumaları test edildi, deployed kaynak eşleşmesi teyitsiz bulgular kapatılmadı.

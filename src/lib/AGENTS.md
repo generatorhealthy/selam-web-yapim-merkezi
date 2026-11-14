@@ -1,2 +1,3 @@
 - Private documents persist Storage paths, not signed URLs; resolve legacy same-origin locators and request fresh five-minute URLs under current-user RLS so credentials and folder boundaries are preserved.
 - CSV downloads encode every cell with safeCsv so spreadsheet commands cannot execute and persisted evidence remains unchanged.
+- Marketing session caches carry an expiry and renew before reuse; parallel callers share one issuance promise to avoid expired-token tracking loss and duplicate requests.

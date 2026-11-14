@@ -53,7 +53,7 @@ export const sanitizeRichHtml = (html: string): string => {
       'ul', 'ol', 'li', 'a', 'img', 'figure', 'figcaption',
       'span', 'div', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td',
     ],
-    ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class', 'style', 'width', 'height'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class', 'style', 'width', 'height', 'data-list'],
     FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
     FORBID_ATTR: ['onclick', 'onload', 'onerror', 'onmouseover', 'onfocus', 'onblur'],
     ALLOW_DATA_ATTR: false,

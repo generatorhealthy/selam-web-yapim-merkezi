@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 interface RichTextEditorProps {
   value?: string;
@@ -26,7 +26,6 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 320 }: RichT
         ["link", "image"],
         ["clean"],
       ],
-      clipboard: { matchVisual: false },
     }),
     []
   );
@@ -40,7 +39,6 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 320 }: RichT
     "color",
     "background",
     "list",
-    "bullet",
     "align",
     "blockquote",
     "code-block",
