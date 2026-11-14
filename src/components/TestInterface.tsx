@@ -168,7 +168,12 @@ const TestInterface = () => {
                 </div>
               )}
 
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              {test.category === 'Beslenme Değerlendirme Formu' ? (
+                <div className="mt-6 border border-border rounded-md p-4 text-muted-foreground text-sm">
+                  <p>{questionCount} isteğe bağlı soru · Puansız değerlendirme formu</p>
+                  <p className="mt-2">Soruları yanıtlamayabilir, “Paylaşmak istemiyorum” veya “Bana uygun değil” seçeneğini kullanabilirsiniz.</p>
+                </div>
+              ) : <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                 <h4 className="font-semibold text-blue-800 mb-2">Test Hakkında:</h4>
                 <ul className="text-blue-700 text-sm space-y-1">
                   <li>• Bu test {questionCount} sorudan oluşmaktadır</li>
@@ -177,7 +182,7 @@ const TestInterface = () => {
                   <li>• Yanıtlarınızı yalnız ilgili yetkili uzman değerlendirir</li>
                   <li>• Test sonuçları sadece bilgilendirme amaçlıdır</li>
                 </ul>
-              </div>
+              </div>}
 
               <div className="mt-6 p-4 bg-amber-50 rounded-lg">
                 <h4 className="font-semibold text-amber-800 mb-2">Önemli Uyarı:</h4>
@@ -224,12 +229,12 @@ const TestInterface = () => {
                 className="w-full bg-green-600 hover:bg-green-700"
               >
                 <Play className="w-5 h-5 mr-2" />
-                Teste Başla
+                {test.category === 'Beslenme Değerlendirme Formu' ? 'Form Öncesi Bilgilendirme' : 'Teste Başla'}
               </Button>
               
-              <div className="mt-4 text-center text-sm text-muted-foreground">
+              {test.category !== 'Beslenme Değerlendirme Formu' && <div className="mt-4 text-center text-sm text-muted-foreground">
                 <p>Teste başladığınızda bilgilerinizi girmeniz istenecektir.</p>
-              </div>
+              </div>}
             </CardContent>
           </Card>
         </div>

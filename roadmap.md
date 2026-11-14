@@ -3,7 +3,8 @@
 - [x] Kullanıcı 15 özgün değerlendirme formu seçti;60isteğe bağlı soru, puan/klinik yorum yok. Katalog/ICERIK_ONAYI/SHA256SUMS security/dietitian-forms-2026-11-14 altında hazır.
 - [x] Ayrı pasif şablon veri ekleme ve service-only diyetisyen atama/tetikleyici SQL adayları hazır;2katalog testi ve yerel PostgreSQL20eşzamanlı1ekleme/19tekrar kontrolü geçti. Canlı yazım/yayın yok; RELEASE_STATUS.md sınırları açıklar.
 - [x] 14 Kasım 10:05 UTC kullanıcı 15 formun içerik ve canlı ekleme paketini onayladı; sağlık toplama açılışı kapsam dışı.
-- [ ] Onaylı 15 şablonu ekle, mevcut/yeni diyetisyenlere atomik bağla; canlı içerik eşitliği ve profil görünümünü doğrula. Mevcut sağlık izin kapısı bu görevle açılmaz.
+- [x] 15 şablon/60 soru canlı eklendi; Beyza Kılıç ve Ceren Zengin Altun'a 15'er form bağlandı. Yeni kayıt tetikleyicisi service-only; başka branşta ekleme0. Onaylı soru/seçenek özeti eşleşti. Yerel gerçek katalog profil15form, mobil taşma yok, form→kapalı izin ekranı doğrulandı;12sonuç/339randevu/2749sipariş aynı.
+- [ ] Sağlık yanıtı toplama kapsam dışı ve kapalı; ayrı hukuki/web-mobil izin kabulü bekler. Yeni web yazılarının Hostinger dağıtımı bu tur doğrulanmadı.
 
 # 14 Kasım 2026 — Uyarıların uygulanması
 - [x] Destek/kart işlevleri yayımlandı; canlı yetkisiz destek 401, kart sabit409. Yeni randevu INSERT kapısı migration canlı; geçmiş satırlar değiştirilmedi. Olumlu gerçek teslim kabulü yapılmadı.

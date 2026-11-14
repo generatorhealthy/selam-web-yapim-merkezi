@@ -1,5 +1,16 @@
 # Diyetisyen form paketi — hazırlık ve onay sınırı
 
+## 14 Kasım 2026 — Onaylı canlı ekleme
+- Kullanıcı 10:05 UTC'de içerik ve ekleme paketini onayladı; katalog SHA-256 ca3923dbe80cbe80b65a6c79acbbe000f4f111576a037a18d3550d4602c488ba korunur.
+- Service-only atama fonksiyonu ve yeni diyetisyen AFTER INSERT tetikleyicisi migration ile uygulandı; mevcut create_specialist_tests değiştirilmedi.
+- 15 şablon/60 soru eklendi; mevcut iki diyetisyene 15'er form ve kendi 60'ar sorusu atomik bağlandı. Toplam45yeni test/180soru/30eşleşme; diğer branş0.
+- Canlı soru/seçenek/metin MD5 971029cdceacdcd3139349741e18eb09 onaylı katalogla eşleşti. Soruların yeni seed işlemindeki kimlikleri md5(dietitian-question-v1:template:step) ile üretildi; draft seed UUID'leri kullanılmadı. İçerik değişmedi.
+- Anon/authenticated atama yetkisi false; service_role true. 20 yerel eşzamanlı atama bir ekleme/19tekrar;2katalog testi geçti. Son build OK.
+- Gerçek canlı katalog kullanan localhost Beyza profili:15form,476pxmobil taşma yok;form→ön bilgi→kapalı sağlık kapısı doğrulandı. Sağlık release tablosu boş; başlat düğmesi pasif; izin veya sonuç kaydı oluşturulmadı.
+-12testsonucu/339randevu/2749sipariş aynı. İzin kayıtları işleme dahil edilmedi; doğal ziyaret ölçümünün kayıtları bu sırada değişebilir.
+- Web kaynak/isteğe bağlı soru ve platform yazarlığı açıklamaları güncellendi; Hostinger web dağıtımı doğrulanmadı. Migration156öncedenvarolan linter bulgusu bildirdi,yeni bulgu oluşturmadı; bu paket onları kapatmaz.
+- Geri alma: yalnız bu15sabitşablon ve onların diyetisyen kopyaları pasiflenir; sonuç/izin/eski test silinmez. Yeni kayıt tetikleyicisi yalnız onaylı/aktif şablonları bağlar; pasif şablonları atlar.
+
 ## Hazır
 - 15 özgün, puansız form; 60 isteğe bağlı soru. Tam içerik ICERIK_ONAYI.md ve catalog.json içinde.
 - seed-drafts.sql yalnız yeni, pasif/bekleyen şablonları ve sorularını ekler; sabit kimliklerle tekrar çalıştırmada kopya üretmez.

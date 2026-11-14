@@ -1,1 +1,2 @@
 - Dietitian intake drafts remain outside app imports and deployment until exact question content and an additive publication package are approved; they have no clinical score or automated dietary interpretation.
+- Approved intake templates use fixed IDs and service-only atomic assignment; public views identify platform authorship, optional answers and no scoring without enabling the health collection release.
