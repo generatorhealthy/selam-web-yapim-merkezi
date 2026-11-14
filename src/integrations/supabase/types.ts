@@ -5952,6 +5952,116 @@ export type Database = {
           },
         ]
       }
+      order_manual_approval_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          order_id: string
+          reason: string
+          specialist_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          reason: string
+          specialist_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          reason?: string
+          specialist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_manual_approval_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_manual_approval_events_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_manual_approval_events_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_manual_approvals: {
+        Row: {
+          active: boolean
+          approved_at: string
+          approved_by: string
+          order_id: string
+          reason: string
+          reverted_at: string | null
+          reverted_by: string | null
+          specialist_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          approved_at?: string
+          approved_by: string
+          order_id: string
+          reason: string
+          reverted_at?: string | null
+          reverted_by?: string | null
+          specialist_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          approved_at?: string
+          approved_by?: string
+          order_id?: string
+          reason?: string
+          reverted_at?: string | null
+          reverted_by?: string | null
+          specialist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_manual_approvals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_manual_approvals_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_manual_approvals_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_notes: {
         Row: {
           created_at: string
@@ -9299,6 +9409,10 @@ export type Database = {
       restore_from_backup: {
         Args: { p_backup_id: number; p_table_name?: string }
         Returns: undefined
+      }
+      set_manual_order_approval: {
+        Args: { p_action: string; p_order_id: string; p_reason: string }
+        Returns: Json
       }
       settle_iyzico_payment: {
         Args: {
