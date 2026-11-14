@@ -1,0 +1,1 @@
+CREATE POLICY support_claims_service_only ON public.support_notification_claims FOR ALL TO service_role USING (true) WITH CHECK (true);

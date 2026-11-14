@@ -778,9 +778,11 @@ const DoctorDashboard = () => {
 
     setSubmitting(true);
     try {
+      const ticketId = crypto.randomUUID();
       const { error } = await supabase
         .from('support_tickets')
         .insert({
+          id: ticketId,
           specialist_id: doctor.id,
           specialist_name: doctor.name,
           specialist_email: doctor.email || doctor.user_id,
@@ -796,13 +798,7 @@ const DoctorDashboard = () => {
       // Admin ekibine bilgilendirme maili gönder
       const { error: emailError } = await supabase.functions.invoke('new-ticket-notification', {
         body: {
-          ticketId: '', // Insert işleminden sonra ID alınacak
-          specialistName: doctor.name,
-          specialistEmail: doctor.email || doctor.user_id,
-          ticketTitle: newTicket.title,
-          ticketDescription: newTicket.description,
-          category: newTicket.category,
-          priority: newTicket.priority
+          ticketId
         }
       });
 
