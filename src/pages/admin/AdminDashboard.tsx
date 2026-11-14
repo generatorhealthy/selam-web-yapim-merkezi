@@ -257,6 +257,18 @@ const AdminDashboard = () => {
       staffOnly: true
     },
     {
+      title: "Danışan Merkezi",
+      description: "Yönlendirme, başvurular ve takvim tek sayfada",
+      icon: Users,
+      gradient: "from-sky-500 via-blue-500 to-indigo-600",
+      bgGradient: "from-sky-50 to-indigo-50",
+      shadowColor: "shadow-sky-500/20",
+      route: "/divan_paneli/danisan-merkezi",
+      buttonText: "Danışan Merkezini Aç",
+      adminOnly: false,
+      staffOnly: true
+    },
+    {
       title: "Danışan Yönlendirme Sistemi",
       description: "Meta reklamlarından gelen danışan başvuruları",
       icon: UserCheck,

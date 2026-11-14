@@ -16,6 +16,7 @@ import CallReports from "./CallReports";
 import CareerApplications from "./CareerApplications";
 import ClientCalendar from "./ClientCalendar";
 import ClientReferrals from "./ClientReferrals";
+import ClientCenter from "./ClientCenter";
 import ConsentLogs from "./ConsentLogs";
 import ContractManagement from "./ContractManagement";
 import CustomerManagement from "./CustomerManagement";
@@ -81,6 +82,7 @@ const AdminWorkspace = () => (
       <Route path="specialists/add" element={<SpecialistAdd />} />
       <Route path="specialists" element={<SpecialistManagement />} />
       <Route path="specialists/edit/:id" element={<SpecialistEdit />} />
+      <Route path="danisan-merkezi" element={<ClientCenter />} />
       <Route path="client-referrals" element={<ClientReferrals />} />
       <Route path="meta-leads" element={<MetaLeads />} />
       <Route path="uzman-basvurulari" element={<UzmanApplications />} />

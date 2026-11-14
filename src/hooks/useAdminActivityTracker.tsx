@@ -16,6 +16,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/divan_paneli/appointments": "Randevu Yönetimi",
   "/divan_paneli/blog": "Blog Yönetimi",
   "/divan_paneli/reviews": "Yorum Yönetimi",
+  "/divan_paneli/danisan-merkezi": "Danışan Merkezi",
   "/divan_paneli/client-referrals": "Danışan Yönlendirme",
   "/divan_paneli/client-calendar": "Danışan Takvimi",
   "/divan_paneli/contracts": "Sözleşmeler",
