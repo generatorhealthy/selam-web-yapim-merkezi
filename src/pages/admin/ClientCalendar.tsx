@@ -47,7 +47,7 @@ interface SpecialistWithReferral extends Specialist {
   calendarNote: string;
 }
 
-const ClientCalendar = () => {
+const ClientCalendar = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [specialists, setSpecialists] = useState<SpecialistWithReferral[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -357,10 +357,10 @@ const ClientCalendar = () => {
       </Helmet>
       
       <div className="min-h-screen bg-slate-900">
-        <HorizontalNavigation />
+        {!embedded && <HorizontalNavigation />}
         
         <main className="container mx-auto px-4 py-8">
-          <AdminBackButton />
+          {!embedded && <AdminBackButton />}
           
           {/* Header */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
@@ -878,7 +878,7 @@ const ClientCalendar = () => {
           </div>
         </main>
         
-        <Footer />
+        {!embedded && <Footer />}
       </div>
     </>
   );

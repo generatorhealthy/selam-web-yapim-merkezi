@@ -140,7 +140,7 @@ const STATUS_OPTIONS = [
 
 const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
 
-const MetaLeads = () => {
+const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -366,9 +366,9 @@ const MetaLeads = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <HorizontalNavigation />
+      {!embedded && <HorizontalNavigation />}
       <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
-        <AdminBackButton />
+        {!embedded && <AdminBackButton />}
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div className="flex items-center gap-3">
@@ -667,7 +667,7 @@ const MetaLeads = () => {
           </DialogContent>
         </Dialog>
       </main>
-      <Footer />
+      {!embedded && <Footer />}
     </div>
   );
 };

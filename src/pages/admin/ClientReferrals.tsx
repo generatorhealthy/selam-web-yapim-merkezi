@@ -166,13 +166,23 @@ const phoneKey = (v: unknown) => {
 };
 
 
-const ClientReferrals = () => {
+interface ClientReferralsProps {
+  /** Inside Danışan Merkezi: hide the page's own navigation, back button and footer. */
+  embedded?: boolean;
+  /** Pre-fills the specialist search (e.g. from a Danışan Merkezi shortcut). */
+  presetSearch?: { text: string; nonce: number } | null;
+}
+
+const ClientReferrals = ({ embedded = false, presetSearch = null }: ClientReferralsProps = {}) => {
   const [specialists, setSpecialists] = useState<SpecialistReferral[]>([]);
   const [filteredSpecialists, setFilteredSpecialists] = useState<SpecialistReferral[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(presetSearch?.text ?? "");
+  useEffect(() => {
+    if (presetSearch) setSearchTerm(presetSearch.text);
+  }, [presetSearch]);
   const [clientReferralDetails, setClientReferralDetails] = useState<Record<string, ClientReferralDetail[]>>({});
   // Santralden (FreePBX) gelen "uzman telefonu açtı mı?" bilgisi
   // key: `${danışanTelefonuSon10Hane}|${uzmanDahili}` -> true/false
@@ -1272,10 +1282,10 @@ const ClientReferrals = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/50">
-      <HorizontalNavigation />
+      {!embedded && <HorizontalNavigation />}
       
       <div className="container mx-auto px-4 py-8">
-        <AdminBackButton />
+        {!embedded && <AdminBackButton />}
         
         {/* Header Section with Enhanced Design */}
         <div className="relative mb-8">
@@ -2058,7 +2068,7 @@ const ClientReferrals = () => {
         </AlertDialogContent>
       </AlertDialog>
       
-      <Footer />
+      {!embedded && <Footer />}
     </div>
   );
 };
