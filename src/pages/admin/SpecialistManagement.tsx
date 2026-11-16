@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,6 +81,8 @@ const SpecialistManagement = () => {
   const [filterSpecialty, setFilterSpecialty] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [isLoading, setIsLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(30);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const currentUser = userProfile;
   const [notesDialog, setNotesDialog] = useState<{ id: string; name: string } | null>(null);
   const [notesCounts, setNotesCounts] = useState<Record<string, number>>({});
@@ -238,7 +240,21 @@ const SpecialistManagement = () => {
     });
 
     setFilteredSpecialists(filtered);
+    setVisibleCount(30);
   }, [searchTerm, specialists, filterStatus, filterSpecialty, sortBy]);
+
+  // Sonsuz kaydırma: listenin sonu görününce 30'ar 30'ar daha fazla uzman göster
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        setVisibleCount((prev) => prev + 30);
+      }
+    }, { rootMargin: "300px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [filteredSpecialists.length]);
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     // Sadece admin'ler durumu değiştirebilir
@@ -590,7 +606,7 @@ const SpecialistManagement = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredSpecialists.map((specialist) => (
+                {filteredSpecialists.slice(0, visibleCount).map((specialist) => (
                   <Card key={specialist.id} className={`group hover:shadow-lg transition-all duration-200 border ${specialist.is_active ? 'border-green-200 bg-green-50/30' : 'border-gray-200 bg-gray-50/30'}`}>
                     <CardContent className="p-6">
                       {/* Header */}
@@ -814,6 +830,11 @@ const SpecialistManagement = () => {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+            {!isLoading && filteredSpecialists.length > visibleCount && (
+              <div ref={loadMoreRef} className="py-6 text-center text-sm text-gray-500">
+                {visibleCount} / {filteredSpecialists.length} uzman gösteriliyor — aşağı kaydırdıkça devamı yüklenir
               </div>
             )}
           </CardContent>
