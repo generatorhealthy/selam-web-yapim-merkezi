@@ -42,7 +42,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   // GEÇİCİ: abonelik (tekrarlı ödeme) şimdilik yalnız test paketinde
-  const isRecurring = (packageId ?? "") === "test-paket-link";
+  const isRecurring = false; // Kart bilgisi sitede alınmaz; tüm kart ödemeleri Hoppa sayfasında.
   const { toast } = useToast();
   const [selectedPackage, setSelectedPackage] = useState(newSaleCatalog["ozel-firsat"]);
   const [loading, setLoading] = useState(false);
