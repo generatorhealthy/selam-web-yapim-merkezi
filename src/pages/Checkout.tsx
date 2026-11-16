@@ -21,8 +21,8 @@ import ContractDialog from "@/components/ContractDialog";
 import BankTransferInfo from "@/components/BankTransferInfo";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 
-// Kart ödemesi geçici olarak kapalı (iyzico hizmeti sonlandı); yeni sağlayıcı bağlanınca true yapın.
-const CARD_PAYMENTS_ENABLED = false;
+// Kart ödemesi Hoppa ortak ödeme sayfasıyla alınır; kart bilgisi sitemize gelmez.
+const CARD_PAYMENTS_ENABLED = true;
 import { supabase } from "@/integrations/supabase/client";
 
 const turkishCities = [
@@ -69,6 +69,12 @@ const Checkout = () => {
     taxOffice: "",
     referralCode: ""
   });
+
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("odeme") === "basarisiz") {
+      toast({ title: "Ödeme tamamlanamadı", description: "Ödemeniz onaylanmadı. Kartınızdan çekim görünüyorsa bizimle iletişime geçin; aksi halde tekrar deneyebilir veya havale seçebilirsiniz.", variant: "destructive" });
+    }
+  }, []);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -247,81 +253,15 @@ const handleCreditCardPayment = async () => {
     // Sunucu kuyruğu aynı oturum için event_id = checkout_<oturum> üretir
     trackPixelEvent("InitiateCheckout", capiCheckoutEventId(getLeadSessionId()), { currency: "TRY" });
 
-    const { data, error } = await supabase.functions.invoke("create-iyzico-payment", {
-      body: {
-        // Sunucu paket/tutarı bu kayıtlı siparişten alır ve ödeme oturumunu ona bağlar.
-        orderId: savedOrderId.current,
-        packageType: selectedPackage.type,
-        customerData,
-        layout: "popup" // <-- BURAYI SABİTLEDİK
-      },
+    const { data, error } = await supabase.functions.invoke("create-hoppa-payment", {
+      // Sunucu tutarı kayıtlı siparişten alır; sonuç bankadan dönüşte sunucuda doğrulanır.
+      body: { orderId: savedOrderId.current, customerData },
     });
-
-    if (error) throw new Error(`Payment service error: ${error.message}`);
-
-    if (data?.status === "success" && data?.checkoutFormContent) {
-      // Daha önce eklenmiş form varsa sil
-      const existing = document.getElementById("iyzipay-checkout-form");
-      if (existing) existing.remove();
-
-      // Mobil uyumlu popup için CSS ekliyoruz
-      const style = document.createElement('style');
-      style.textContent = `
-        #iyzipay-checkout-form {
-          position: fixed !important;
-          top: 50% !important;
-          left: 50% !important;
-          transform: translate(-50%, -50%) !important;
-          z-index: 9999 !important;
-          background: white !important;
-          border-radius: 8px !important;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
-          max-width: 90vw !important;
-          max-height: 90vh !important;
-          overflow: auto !important;
-          padding: 20px !important;
-        }
-        
-        @media (max-width: 768px) {
-          #iyzipay-checkout-form {
-            max-width: 95vw !important;
-            max-height: 95vh !important;
-            padding: 15px !important;
-          }
-        }
-        
-        #iyzipay-checkout-form::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background: rgba(0,0,0,0.5);
-          z-index: -1;
-        }
-      `;
-      document.head.appendChild(style);
-
-      // Yeni container ekle
-      const checkoutContainer = document.createElement("div");
-      checkoutContainer.id = "iyzipay-checkout-form";
-      checkoutContainer.innerHTML = data.checkoutFormContent;
-      document.body.appendChild(checkoutContainer);
-
-      // Script'leri yeniden çalıştır
-      const scripts = checkoutContainer.querySelectorAll("script");
-      scripts.forEach((script) => {
-        const newScript = document.createElement("script");
-        if (script.src) newScript.src = script.src;
-        else newScript.textContent = script.textContent;
-        document.head.appendChild(newScript);
-      });
-    } else if (data?.paymentPageUrl) {
-      // Ayrı sekmede aç
-      window.open(data.paymentPageUrl, "_blank");
+    if (error) throw new Error("Ödeme başlatılamadı. Lütfen tekrar deneyin.");
+    if (data?.status === "success" && typeof data?.paymentUrl === "string" && data.paymentUrl.startsWith("https://")) {
+      window.location.href = data.paymentUrl;
     } else {
-      throw new Error(data?.errorMessage || "Payment initialization failed");
+      throw new Error(data?.errorMessage || "Ödeme başlatılamadı");
     }
   } catch (error: any) {
     toast({
