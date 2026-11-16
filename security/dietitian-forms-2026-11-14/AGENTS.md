@@ -1,2 +1,2 @@
-- Dietitian intake drafts remain outside app imports and deployment until exact question content and an additive publication package are approved; they have no clinical score or automated dietary interpretation.
+- Dietitian intake templates were approved and applied live on 14 Nov 2026 (15 templates, 60 questions, service-only assignment function and new-dietitian AFTER INSERT trigger); they have no clinical score or automated dietary interpretation.
 - Approved intake templates use fixed IDs and service-only atomic assignment; public views identify platform authorship, optional answers and no scoring without enabling the health collection release.
