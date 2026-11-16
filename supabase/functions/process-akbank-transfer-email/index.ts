@@ -430,6 +430,25 @@ serve(async (req) => {
 
       // Candidate only: email parsing/name/amount cannot establish receipt of funds.
       // All approvals now require confirm_bank_transfer and a checked bank statement.
+      // Otomatik onay: yalnız isim VE tutarı birebir tutan tek bekleyen sipariş.
+      const strict = (pendingOrders ?? []).filter((o: any) =>
+        namesMatch(senderName, o.customer_name ?? "") && amountMatches(amount, o.amount));
+      if (strict.length === 1 && amount != null) {
+        const notifId = crypto.randomUUID();
+        const { data: conf, error: confErr } = await supabase.rpc("auto_confirm_bank_notification", {
+          p_order_id: strict[0].id, p_amount: strict[0].amount, p_reference: notifId,
+        });
+        if (!confErr && (conf as any)?.status === "confirmed") {
+          const { error: insErr } = await supabase.from("bank_transfer_notifications").insert({
+            ...baseRow, id: notifId, status: "matched", matched_order_id: strict[0].id,
+            notes: "İsim ve tutar birebir eşleşti; otomatik onaylandı.",
+          });
+          if (insErr) console.error("notification_write_failed");
+          results.push({ status: "matched" });
+          continue;
+        }
+        console.error("auto_confirm_skipped", confErr?.message ?? (conf as any)?.status);
+      }
       const { error: insertError } = await supabase.from("bank_transfer_notifications").insert({
         ...baseRow,
         status: "unmatched",

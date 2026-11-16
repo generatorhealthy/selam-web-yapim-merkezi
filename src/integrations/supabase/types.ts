@@ -9002,6 +9002,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      auto_confirm_bank_notification: {
+        Args: { p_amount: number; p_order_id: string; p_reference: string }
+        Returns: Json
+      }
       backup_client_referrals: { Args: never; Returns: undefined }
       can_manage_users: { Args: { target_user_id?: string }; Returns: boolean }
       check_admin_login_block: {
