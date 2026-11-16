@@ -224,3 +224,9 @@ verify_jwt = false
 
 [functions.hoppa-recurring-callback]
 verify_jwt = false
+
+[functions.create-paytr-payment]
+verify_jwt = false
+
+[functions.paytr-callback]
+verify_jwt = false

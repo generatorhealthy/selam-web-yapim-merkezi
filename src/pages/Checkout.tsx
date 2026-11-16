@@ -21,8 +21,8 @@ import ContractDialog from "@/components/ContractDialog";
 import BankTransferInfo from "@/components/BankTransferInfo";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 
-// Kart ödemesi Hoppa ortak ödeme sayfasıyla alınır; kart bilgisi sitemize gelmez.
-const CARD_PAYMENTS_ENABLED = false;
+// Kart ödemesi PayTR güvenli ödeme sayfasıyla alınır; kart bilgisi sitemize gelmez.
+const CARD_PAYMENTS_ENABLED = true;
 import { supabase } from "@/integrations/supabase/client";
 
 const turkishCities = [
@@ -276,7 +276,7 @@ const handleCreditCardPayment = async () => {
       }
       return;
     }
-    const { data, error } = await supabase.functions.invoke("create-hoppa-payment", {
+    const { data, error } = await supabase.functions.invoke("create-paytr-payment", {
       // Sunucu tutarı kayıtlı siparişten alır; sonuç bankadan dönüşte sunucuda doğrulanır.
       body: { orderId: savedOrderId.current, customerData },
     });
