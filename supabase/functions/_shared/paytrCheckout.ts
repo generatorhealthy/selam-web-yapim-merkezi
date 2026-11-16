@@ -20,7 +20,8 @@ const b64utf8 = (s: string) => btoa(String.fromCharCode(...new TextEncoder().enc
 export function paytrHttpPort(http: typeof fetch = fetch): PaytrPort {
   return { getToken: async (form) => {
     const r = await http("https://www.paytr.com/odeme/api/get-token", { method: "POST", body: new URLSearchParams(form) });
-    try { return JSON.parse(await r.text()); } catch { return null; }
+    const t = await r.text();
+    try { return JSON.parse(t); } catch { return { status: "failed", reason: `http_${r.status}:${t.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 60)}` }; }
   } };
 }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -71,6 +72,7 @@ export async function startPaytrCheckout(
   const r = await ports.paytr.getToken(form);
   if (r?.status !== "success" || typeof r.token !== "string" || !/^[A-Za-z0-9]+$/.test(r.token)) {
     await ports.db.markSession(session.id, "rejected", String(r?.reason || "start_failed").slice(0, 80));
+    console.log("paytr reason:", String(r?.reason || "none").slice(0, 120));
     return { status: 200, body: { status: "failure", errorCode: "start_failed", errorMessage: "Ödeme başlatılamadı" } };
   }
   if (!(await ports.db.bindToken(session.id, `paytr:${oid}`))) {
