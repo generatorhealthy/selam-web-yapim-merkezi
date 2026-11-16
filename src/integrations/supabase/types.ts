@@ -9389,6 +9389,10 @@ export type Database = {
         Args: { p_capability_hash: string; p_operation: string; p_user: string }
         Returns: boolean
       }
+      invoice_queue_update_only: {
+        Args: { new_row: Json; old_row: Json }
+        Returns: boolean
+      }
       invoke_twitter_share_after_may1: { Args: never; Returns: undefined }
       is_admin_or_staff: { Args: never; Returns: boolean }
       is_admin_or_staff_user: { Args: never; Returns: boolean }
