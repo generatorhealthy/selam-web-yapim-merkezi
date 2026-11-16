@@ -22,8 +22,9 @@ import BankTransferInfo from "@/components/BankTransferInfo";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 
 // Kart ödemesi PayTR güvenli ödeme sayfasıyla alınır; kart bilgisi sitemize gelmez.
-const CARD_PAYMENTS_ENABLED = true;
+// Kart seçeneği paket bazında karar verilir: bkz. supabase/functions/_shared/cardPaymentPackages.ts
 import { supabase } from "@/integrations/supabase/client";
+import { cardPaymentsAllowedFor } from "../../supabase/functions/_shared/cardPaymentPackages";
 
 const turkishCities = [
   "İstanbul", "Ankara", "İzmir", "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Aksaray", "Amasya", "Antalya",
@@ -52,7 +53,8 @@ const Checkout = () => {
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
   const [card, setCard] = useState({ owner: "", number: "", month: "", year: "", cvv: "" });
-  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">(CARD_PAYMENTS_ENABLED ? "credit_card" : "bank_transfer");
+  // Kart kapalıysa varsayılan yöntem her zaman havaledir.
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("bank_transfer");
   const [clientIP, setClientIP] = useState<string>("");
   const paymentLock = useRef(false);
   const orderAttempt = useRef(createSubmissionAttempt());
@@ -91,6 +93,7 @@ const Checkout = () => {
         }
         // Navigation state may select an ID, but cannot supply price/name/scope.
         setSelectedPackage(selected);
+        setPaymentMethod(cardPaymentsAllowedFor(selected.type) ? "credit_card" : "bank_transfer");
 
         // IP fetch — 3sn timeout, hata olursa fallback
         try {
@@ -211,16 +214,19 @@ const Checkout = () => {
 
   const handlePaymentProcess = async () => {
     if (paymentLock.current || !validateForm()) return;
-    if (paymentMethod === "credit_card" && isRecurring && (card.number.replace(/\D/g, "").length < 15 || !card.month || !card.year || card.cvv.length < 3 || card.owner.trim().length < 3)) {
+    // Kart bu pakette kapalıysa hangi yöntem seçili görünürse görünsün havaleyle ilerlenir.
+    const method: "bank_transfer" | "credit_card" =
+      paymentMethod === "credit_card" && cardPaymentsAllowedFor(selectedPackage.type) ? "credit_card" : "bank_transfer";
+    if (method === "credit_card" && isRecurring && (card.number.replace(/\D/g, "").length < 15 || !card.month || !card.year || card.cvv.length < 3 || card.owner.trim().length < 3)) {
       toast({ title: "Kart bilgileri eksik", description: "Kart üzerindeki isim, numara, son kullanma tarihi ve CVV gerekli.", variant: "destructive" });
       return;
     }
     paymentLock.current = true;
     try {
       await checkoutAfterOrder(
-        () => saveOrder(paymentMethod),
+        () => saveOrder(method),
         async () => {
-          if (paymentMethod === 'bank_transfer') setShowBankInfo(true);
+          if (method === 'bank_transfer') setShowBankInfo(true);
           else await handleCreditCardPayment();
         },
       );
@@ -230,7 +236,7 @@ const Checkout = () => {
   };
 
 const handleCreditCardPayment = async () => {
-  if (!CARD_PAYMENTS_ENABLED) return;
+  if (!cardPaymentsAllowedFor(selectedPackage.type)) return;
   try {
     setLoading(true);
 
@@ -658,8 +664,8 @@ const handleCreditCardPayment = async () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`grid grid-cols-1 ${CARD_PAYMENTS_ENABLED ? "md:grid-cols-2" : ""} gap-4`}>
-                    {CARD_PAYMENTS_ENABLED && (<Button
+                  <div className={`grid grid-cols-1 ${cardPaymentsAllowedFor(selectedPackage.type) ? "md:grid-cols-2" : ""} gap-4`}>
+                    {cardPaymentsAllowedFor(selectedPackage.type) && (<Button
                       type="button"
                       variant={paymentMethod === "credit_card" ? "default" : "outline"}
                       onClick={() => setPaymentMethod("credit_card")}

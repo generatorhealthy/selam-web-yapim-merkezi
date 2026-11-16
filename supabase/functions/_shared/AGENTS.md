@@ -2,3 +2,4 @@
 - BirFatura pull authentication keeps existing provider header/query names but fails closed when the configured secret is missing; never log request headers, bodies or order response contents.
 - Appointment notifications require trusted service authority or a hashed DB-issued appointment capability; public JWT transport alone is never authority, and provider uncertainty retains the unique claim.
 - Patient contact uses Auth-confirmed phone identity and a consumed-before-send capability; public profile links remain user-initiated shares so unverified visitors cannot spend paid messaging budgets.- Card sales use the PayTR iFrame hosted page; settle only from the HMAC-verified PayTR notify callback (never the browser return) — card data never touches our servers.
+- Card availability is package-gated by `_shared/cardPaymentPackages.ts`; the checkout page and the payment-start server read that same list, so a package can never be card-enabled in one place only.

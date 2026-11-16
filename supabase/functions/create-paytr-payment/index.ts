@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { paytrHttpPort, startPaytrCheckout } from "../_shared/paytrCheckout.ts";
 import { paytrDbPort } from "../_shared/paytrDb.ts";
+import { cardPaymentsAllowedFor } from "../_shared/cardPaymentPackages.ts";
 const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const SITE = "https://doktorumol.com.tr";
 Deno.serve(async (req) => {
@@ -15,6 +16,10 @@ Deno.serve(async (req) => {
     const db = paytrDbPort(admin);
     const order = typeof body.orderId === "string" ? await db.readOrder(body.orderId).catch(() => null) : null;
     const pkg = order?.package_type ?? "ozel-firsat";
+    // Kart bu pakette henüz hazır değil: sunucu da yalnız izinli paketler için ödeme başlatır.
+    if (!cardPaymentsAllowedFor(pkg)) {
+      return Response.json({ status: "failure", errorCode: "card_unavailable", errorMessage: "Bu pakette kartla ödeme şu an kullanılamıyor; lütfen banka havalesi ile devam edin." }, { status: 409, headers });
+    }
     const orderData = order ? { id: order.id, orderNumber: `DRP-${order.id.slice(0, 8).toUpperCase()}`, package: order.package_name ?? "",
       amount: Number(order.amount), paymentMethod: "credit_card", customerName: order.customer_name ?? "" } : null;
     const userIp = (req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
