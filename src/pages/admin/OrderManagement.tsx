@@ -22,7 +22,6 @@ import { sendSms } from "@/services/smsService";
 import SendOrderEmailDialog from "@/components/SendOrderEmailDialog";
 import InvoiceReconciliationDialog from "@/components/InvoiceReconciliationDialog";
 import LegacyOrderReviewDialog from "@/components/LegacyOrderReviewDialog";
-import ManualOrderApproval from "@/components/ManualOrderApproval";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
@@ -2378,10 +2377,6 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                         min="1"
                       />
                     </div>
-                    {userProfile?.role === 'admin' && userProfile?.is_approved === true &&
-                      rawOrders.find(item => item.id === editingOrder.id)?.status === 'pending' &&
-                      ['bank_transfer', 'banka_havalesi'].includes(editingOrder.payment_method) &&
-                      <ManualOrderApproval orderId={editingOrder.id} customerName={editingOrder.customer_name} customerEmail={editingOrder.customer_email} />}
                     <div className="flex justify-end gap-2 md:col-span-2 pt-4">
                       <Button variant="ghost" onClick={handleCancelEdit}>
                         İptal
