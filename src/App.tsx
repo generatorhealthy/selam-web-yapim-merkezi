@@ -238,6 +238,7 @@ const AppContent = () => {
               <Route path="/bu-aya-ozel" element={<Navigate to="/ozel-firsat" replace />} />
               <Route path="/ozel-firsat" element={<SpecialOfferNew />} />
               <Route path="/kayit-linki" element={<RegistrationLinkOffer />} />
+              <Route path="/test-paket-link" element={<Navigate to="/odeme/test-paket-link" replace />} />
               <Route path="/odeme/:packageType" element={<Checkout />} />
               <Route path="/odeme-sayfasi" element={<Checkout />} />
               <Route path="/checkout" element={<Checkout />} />

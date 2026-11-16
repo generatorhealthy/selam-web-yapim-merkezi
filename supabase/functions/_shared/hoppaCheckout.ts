@@ -1,8 +1,14 @@
 // Hoppa (esnekpos) Ortak Ödeme Sayfası ile ilk satın alma. Kart bilgisi sitemize hiç gelmez.
 // Tarayıcı/form dönüşüne güvenilmez: sonuç yalnız sunucudan ProcessQuery ile doğrulanır ve
 // public.settle_iyzico_payment ile tek işlemde (oturum + makbuz + sipariş) onaylanır.
-import { CHECKOUT_TTL_MS, planForOrder, type DbPort, type SessionRow } from "./iyzicoCheckout.ts";
+import { CHECKOUT_TTL_MS, type DbPort, type SessionRow } from "./iyzicoCheckout.ts";
 
+/** Yeni satışta izinli paketler ve tutarları (DB guard ile aynı). test-paket-link GEÇİCİ. */
+export const HOPPA_PRICES: Record<string, number> = { "ozel-firsat": 4000, "kayit-linki": 5000, "test-paket-link": 5 };
+function planForOrder(type: unknown, amount: unknown) {
+  const price = HOPPA_PRICES[String(type || "")];
+  return price != null && Math.abs(price - Number(amount)) <= 0.005 ? { planRef: String(type), price } : null;
+}
 export type HoppaPort = {
   commonPayment: (body: Record<string, unknown>) => Promise<any>;
   processQuery: (orderRef: string) => Promise<any>;
