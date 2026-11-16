@@ -34,3 +34,4 @@
 
 - Public legal information releases record a per-document content-only decision and separate deployment verification; blocked historical-health notices remain preview-only — informational publication never certifies processing legality or activates consent capture.
 - iyzico first purchases are approved only via public.settle_iyzico_payment from a server checkout session (order→conversationId→token→Checkout Form Retrieve→subscription charge); auto-approve never approves on email alone and side effects stay in the order-approval triggers — prevents forged success and duplicate activation/invoices.
+- The Hostinger deploy keeps every /assets/ file for 14 days after the last release that used it (ages tracked in the Actions cache, .asset-ages.txt) — CDN edges or browsers holding an older index.html must still find their app files instead of showing a blank page.

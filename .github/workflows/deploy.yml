@@ -34,13 +34,13 @@ jobs:
         env:
           CI: false
 
-      # The FTP sync deletes files that were in the previous upload but not in
-      # this one. The live index.html still points at the previous app file
-      # until the last step, so keep the previous release's assets for one more
-      # deploy — otherwise visitors get a missing-file error mid-publish.
-      # Primary source: the previous run's own assets saved in the Actions
-      # cache (no FTP download needed). Fallback: download from FTP.
-      - name: Restore previous release assets from cache
+      # The FTP sync deletes files that are not in this upload. CDN edges or
+      # browsers that still hold an older index.html would then request
+      # missing app files and show a blank page. So every asset file stays
+      # on the server for RETAIN_DAYS after the last release that used it.
+      # The Actions cache carries the retained files plus their last-used time
+      # (.asset-ages.txt); FTP is only a fallback source.
+      - name: Restore retained release assets from cache
         uses: actions/cache/restore@v4
         with:
           path: .release-assets-cache
@@ -48,29 +48,41 @@ jobs:
           restore-keys: |
             release-assets-
 
-      - name: Keep the live release's assets during publish
+      - name: Keep older releases' assets for RETAIN_DAYS
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          RETAIN_DAYS: '14'
         run: |
           set +e
-          # Save this release's own assets for the next deploy (before adding kept files,
-          # so the folder never grows beyond two releases).
-          rm -rf .prev-release-assets
-          [ -d .release-assets-cache ] && mv .release-assets-cache .prev-release-assets
-          cp -a dist/assets .release-assets-cache
-          (cd dist/assets && find . -type f ! -name '.release-files.txt' | sed 's|^\./||') > /tmp/own-assets.txt
-          kept=0
-          if [ -d .prev-release-assets ]; then
-            while IFS= read -r f; do
-              name="${f#./}"
+          now=$(date +%s)
+          cutoff=$((now - RETAIN_DAYS*86400))
+          ages=/tmp/asset-ages.txt
+          : > "$ages"
+          # This release's own files are used now.
+          (cd dist/assets && find . -type f ! -name '.release-files.txt' ! -name '.asset-ages.txt' | sed 's|^\./||') > /tmp/own-assets.txt
+          while IFS= read -r n; do echo "$now $n" >> "$ages"; done < /tmp/own-assets.txt
+          kept=0; dropped=0
+          if [ -f .release-assets-cache/.asset-ages.txt ]; then
+            while IFS=' ' read -r t name; do
+              [ -z "$name" ] && continue
+              [ -f "dist/assets/$name" ] && continue
+              if [ "$t" -lt "$cutoff" ]; then dropped=$((dropped+1)); continue; fi
+              [ -f ".release-assets-cache/$name" ] || continue
+              mkdir -p "$(dirname "dist/assets/$name")"
+              cp ".release-assets-cache/$name" "dist/assets/$name" && echo "$t $name" >> "$ages" && kept=$((kept+1))
+            done < .release-assets-cache/.asset-ages.txt
+          elif [ -d .release-assets-cache ]; then
+            # Old cache format (one previous release, no ages): keep it now.
+            while IFS= read -r name; do
               [ -f "dist/assets/$name" ] && continue
               mkdir -p "$(dirname "dist/assets/$name")"
-              cp ".prev-release-assets/$name" "dist/assets/$name" && kept=$((kept+1))
-            done < <(cd .prev-release-assets && find . -type f ! -name '.release-files.txt')
-            echo "Kept $kept files from cached previous release."
+              cp ".release-assets-cache/$name" "dist/assets/$name" && echo "$now $name" >> "$ages" && kept=$((kept+1))
+            done < <(cd .release-assets-cache && find . -type f ! -name '.release-files.txt' ! -name '.asset-ages.txt' | sed 's|^\./||')
           fi
+          echo "Kept $kept retained files from cache, dropped $dropped older than $RETAIN_DAYS days."
+          # Fallback: whatever is live right now must also survive this deploy.
           base="ftp://${FTP_SERVER}/assets"
           if curl -sf --max-time 60 -u "${FTP_USERNAME}:${FTP_PASSWORD}" "${base}/.release-files.txt" -o /tmp/live-assets.txt; then
             echo "Using live release file list."
@@ -88,14 +100,18 @@ jobs:
             [ -f "dist/assets/$name" ] && continue
             mkdir -p "$(dirname "dist/assets/$name")"
             if curl -sf --max-time 120 -u "${FTP_USERNAME}:${FTP_PASSWORD}" "${base}/${name}" -o "dist/assets/$name"; then
-              kept=$((kept+1))
+              echo "$now $name" >> "$ages"; kept=$((kept+1))
             else
               rm -f "dist/assets/$name"
-              echo "Could not keep $name"
             fi
           done < /tmp/live-assets.txt
-          cp /tmp/own-assets.txt dist/assets/.release-files.txt
-          echo "Kept $kept files from the live release in total."
+          # Server-side list = every retained file, so the FTP fallback keeps them all.
+          cut -d' ' -f2- "$ages" > dist/assets/.release-files.txt
+          rm -rf .release-assets-cache
+          cp -a dist/assets .release-assets-cache
+          rm -f .release-assets-cache/.release-files.txt
+          cp "$ages" .release-assets-cache/.asset-ages.txt
+          echo "Release keeps $(wc -l < "$ages") asset files in total."
           exit 0
 
       - name: Save this release's assets for the next deploy
