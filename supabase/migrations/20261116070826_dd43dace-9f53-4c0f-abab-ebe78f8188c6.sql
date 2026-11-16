@@ -1,0 +1,2 @@
+ALTER TABLE public.support_notification_claims DROP CONSTRAINT IF EXISTS support_notification_claims_ticket_id_fkey;
+ALTER TABLE public.support_notification_claims ADD CONSTRAINT support_notification_claims_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES public.support_tickets(id) ON DELETE CASCADE;

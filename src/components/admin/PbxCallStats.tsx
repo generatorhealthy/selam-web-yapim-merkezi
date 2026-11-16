@@ -587,7 +587,6 @@ export const PbxCallStats = () => {
                             <TableHead>Uzman</TableHead>
                             <TableHead>Açtı mı?</TableHead>
                             <TableHead className="text-right">Görüşme</TableHead>
-                            <TableHead className="w-[240px]">Ses Kaydı</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -681,7 +680,6 @@ export const PbxCallStats = () => {
                         <TableHead>Aranan Danışan</TableHead>
                         <TableHead className="w-[100px] text-right">Süre</TableHead>
                         <TableHead className="w-[140px]">Durum</TableHead>
-                        <TableHead className="w-[240px]">Ses Kaydı</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
