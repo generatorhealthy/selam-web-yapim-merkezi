@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -378,6 +378,20 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       return (isNaN(db) ? 0 : db) - (isNaN(da) ? 0 : da);
     });
 
+  const PAGE_SIZE = 30;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [search, statusFilter]);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) setVisibleCount((c) => c + PAGE_SIZE);
+    }, { rootMargin: "400px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visibleCount, filtered.length]);
+
   const counts = STATUS_OPTIONS.reduce((acc, s) => {
     acc[s.value] = leads.filter((l) => l.status === s.value).length;
     return acc;
@@ -482,8 +496,9 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             </CardContent>
           </Card>
         ) : (
+          <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((lead) => {
+            {filtered.slice(0, visibleCount).map((lead) => {
               const statusMeta = STATUS_MAP[lead.status] || STATUS_OPTIONS[0];
               const isFaceToFace = lead.consultation_type === "face_to_face";
               const draft = noteDrafts[lead.id] ?? lead.notes ?? "";
@@ -627,6 +642,12 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               );
             })}
           </div>
+          {visibleCount < filtered.length && (
+            <div ref={sentinelRef} className="py-6 text-center text-sm text-muted-foreground">
+              {visibleCount} / {filtered.length} başvuru gösteriliyor — devamı için aşağı kaydırın
+            </div>
+          )}
+          </>
         )}
 
         <Dialog open={planOpen} onOpenChange={setPlanOpen}>
