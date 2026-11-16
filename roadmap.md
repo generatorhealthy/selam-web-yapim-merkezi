@@ -1,7 +1,7 @@
 # 16 Kasım 2026 — Hoppa temizliği
-- [ ] Hoppa kaynaklarını, kart alanlarını ve işlev ayarlarını kaldır; PayTR ortak tip bağımlılığını ayır.
-- [ ] Canlı dört Hoppa işlevini ve Hoppa gizli anahtarlarını sil; PayTR/havale ve tarihsel kayıtları koru.
-- [ ] PayTR testlerini, paket seçeneklerini ve eski uçların kapanmasını doğrula.
+- [x] Hoppa kaynakları, kart alanları ve işlev ayarları kaldırıldı; PayTR tipi doğrudan mevcut ödeme portundan türetildi. Tarihsel migration/kayıtlar değiştirilmedi.
+- [x] Canlı dört Hoppa işlevi ve üç gizli anahtarı silindi; isteğe bağlı HOPPA_BASE_URL zaten yoktu. Dört eski adres 404 döndü.
+- [x] 134 ortak Deno testi ve 5 paket kuralı testi geçti; üç paket tarayıcıda doğrulandı: 4000/5000 yalnız havale, test paketi kart+havale, kart alanları yok. Build OK. Gerçek ödeme yapılmadı; Hostinger web dağıtımı doğrulanmadı.
 
 # 16 Kasım 2026 — Mesafeli satış sözleşmesi düzeltmesi
 - [x] Güncel sözleşmeye unvan/MERSİS/KEP eklendi; ses kaydı alınacağı ve saklanacağı hükmü kaldırıldı, 0850/850 hatlar 0216 yapıldı. Eski metin/hash arşivlendi; geçmiş imzalı nüshalar korunarak gerçek kaynakla kamu sayfası doğrulandı.
