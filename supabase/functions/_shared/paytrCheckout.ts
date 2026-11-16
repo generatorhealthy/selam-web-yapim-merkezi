@@ -70,9 +70,9 @@ export async function startPaytrCheckout(
     timeout_limit: "30", currency: "TL", test_mode: testMode, lang: "tr",
   };
   const r = await ports.paytr.getToken(form);
-  if (r?.status !== "success" || typeof r.token !== "string" || !/^[A-Za-z0-9]+$/.test(r.token)) {
+  if (r?.status !== "success" || typeof r.token !== "string" || !/^[A-Za-z0-9_-]+$/.test(r.token)) {
     await ports.db.markSession(session.id, "rejected", String(r?.reason || "start_failed").slice(0, 80));
-    console.log("paytr reason:", String(r?.reason || "none").slice(0, 120));
+    console.log("paytr reason:", String(r?.status), String(r?.reason || "none").slice(0, 120));
     return { status: 200, body: { status: "failure", errorCode: "start_failed", errorMessage: "Ödeme başlatılamadı" } };
   }
   if (!(await ports.db.bindToken(session.id, `paytr:${oid}`))) {
