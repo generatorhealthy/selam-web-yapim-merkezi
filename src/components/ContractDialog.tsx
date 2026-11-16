@@ -98,8 +98,8 @@ useEffect(() => {
 <h3 style="color: #0369a1; margin-top: 0;">MÜŞTERI BİLGİLERİ:</h3>
 <p><strong>Müşteri Adı:</strong> ${formData.name} ${formData.surname}</p>
 <p><strong>E-posta:</strong> ${formData.email}</p>
-<p><strong>Telefon:</strong> ${formData.phone || 'Belirtilmemiş'}</p>
-<p><strong>TC Kimlik No:</strong> ${formData.tcNo || 'Belirtilmemiş'}</p>
+<p><strong>Telefon:</strong> ${(formData.phone || formData.gsmNumber) || 'Belirtilmemiş'}</p>
+<p><strong>TC Kimlik No:</strong> ${(formData.tcNo || formData.identityNumber) || 'Belirtilmemiş'}</p>
 <p><strong>Adres:</strong> ${formData.address || 'Belirtilmemiş'}</p>
 <p><strong>Şehir:</strong> ${formData.city}</p>
 <p><strong>Müşteri Tipi:</strong> ${customerType === 'individual' ? 'Bireysel' : 'Kurumsal'}</p>
@@ -224,7 +224,7 @@ Kanunun "İlgili kişinin haklarını düzenleyen" 11. maddesi kapsamındaki tal
 ALICI BİLGİLERİ:
 Ad Soyad: ${formData.name} ${formData.surname}
 E-posta: ${formData.email}
-Telefon: ${formData.phone || 'Belirtilmemiş'}
+Telefon: ${(formData.phone || formData.gsmNumber) || 'Belirtilmemiş'}
 Adres: ${formData.address || 'Belirtilmemiş'}
 Şehir: ${formData.city}
 
