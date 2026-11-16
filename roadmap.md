@@ -1,3 +1,8 @@
+# 16 Kasım 2026 — Hoppa temizliği
+- [ ] Hoppa kaynaklarını, kart alanlarını ve işlev ayarlarını kaldır; PayTR ortak tip bağımlılığını ayır.
+- [ ] Canlı dört Hoppa işlevini ve Hoppa gizli anahtarlarını sil; PayTR/havale ve tarihsel kayıtları koru.
+- [ ] PayTR testlerini, paket seçeneklerini ve eski uçların kapanmasını doğrula.
+
 # 16 Kasım 2026 — Mesafeli satış sözleşmesi düzeltmesi
 - [x] Güncel sözleşmeye unvan/MERSİS/KEP eklendi; ses kaydı alınacağı ve saklanacağı hükmü kaldırıldı, 0850/850 hatlar 0216 yapıldı. Eski metin/hash arşivlendi; geçmiş imzalı nüshalar korunarak gerçek kaynakla kamu sayfası doğrulandı.
 

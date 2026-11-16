@@ -42,8 +42,6 @@ const Checkout = () => {
   const { packageType: packageId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  // GEÇİCİ: abonelik (tekrarlı ödeme) şimdilik yalnız test paketinde
-  const isRecurring = false; // Kart bilgisi sitede alınmaz; tüm kart ödemeleri Hoppa sayfasında.
   const { toast } = useToast();
   const [selectedPackage, setSelectedPackage] = useState(newSaleCatalog["ozel-firsat"]);
   const [loading, setLoading] = useState(false);
@@ -52,7 +50,6 @@ const Checkout = () => {
   const [showPreInfoDialog, setShowPreInfoDialog] = useState(false);
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
-  const [card, setCard] = useState({ owner: "", number: "", month: "", year: "", cvv: "" });
   // Kart kapalıysa varsayılan yöntem her zaman havaledir.
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("bank_transfer");
   const [clientIP, setClientIP] = useState<string>("");
@@ -217,10 +214,6 @@ const Checkout = () => {
     // Kart bu pakette kapalıysa hangi yöntem seçili görünürse görünsün havaleyle ilerlenir.
     const method: "bank_transfer" | "credit_card" =
       paymentMethod === "credit_card" && cardPaymentsAllowedFor(selectedPackage.type) ? "credit_card" : "bank_transfer";
-    if (method === "credit_card" && isRecurring && (card.number.replace(/\D/g, "").length < 15 || !card.month || !card.year || card.cvv.length < 3 || card.owner.trim().length < 3)) {
-      toast({ title: "Kart bilgileri eksik", description: "Kart üzerindeki isim, numara, son kullanma tarihi ve CVV gerekli.", variant: "destructive" });
-      return;
-    }
     paymentLock.current = true;
     try {
       await checkoutAfterOrder(
@@ -266,22 +259,6 @@ const handleCreditCardPayment = async () => {
     // Sunucu kuyruğu aynı oturum için event_id = checkout_<oturum> üretir
     trackPixelEvent("InitiateCheckout", capiCheckoutEventId(getLeadSessionId()), { currency: "TRY" });
 
-    if (isRecurring) {
-      // Aylık abonelik: kart bilgisi yalnız bu istekte Hoppa'ya iletilir, sitede saklanmaz.
-      const { data, error } = await supabase.functions.invoke("create-hoppa-subscription", {
-        body: { orderId: savedOrderId.current, customerData, card },
-      });
-      setCard({ owner: "", number: "", month: "", year: "", cvv: "" });
-      if (error || data?.status !== "success") throw new Error(data?.errorMessage || "Abonelik başlatılamadı. Kart bilgilerini kontrol edin.");
-      const orderData = { id: data.orderId, orderNumber: `DRP-${String(data.orderId).slice(0, 8).toUpperCase()}`, package: selectedPackage.name,
-        amount: selectedPackage.price, paymentMethod: "credit_card", customerName: `${formData.name} ${formData.surname}` };
-      if (data.state === "applied" || data.state === "duplicate") {
-        navigate(`/odeme-basarili?orderData=${encodeURIComponent(JSON.stringify(orderData))}`);
-      } else {
-        toast({ title: "Abonelik oluşturuldu", description: "İlk çekimin sonucu bankadan bekleniyor. Onaylandığında size bildirilecek." });
-      }
-      return;
-    }
     const { data, error } = await supabase.functions.invoke("create-paytr-payment", {
       // Sunucu tutarı kayıtlı siparişten alır; sonuç bankadan dönüşte sunucuda doğrulanır.
       body: { orderId: savedOrderId.current, customerData },
@@ -689,24 +666,6 @@ const handleCreditCardPayment = async () => {
                       </div>
                     </Button>
                   </div>
-                  {paymentMethod === "credit_card" && isRecurring && (
-                    <div className="mt-4 space-y-3">
-                      <p className="text-sm text-muted-foreground">Aylık abonelik: {selectedPackage.price} TL bugün, sonra her ay otomatik çekilir.</p>
-                      <div><Label htmlFor="cc-owner">Kart Üzerindeki İsim</Label>
-                        <Input id="cc-owner" autoComplete="cc-name" value={card.owner} onChange={(e) => setCard({ ...card, owner: e.target.value })} /></div>
-                      <div><Label htmlFor="cc-number">Kart Numarası</Label>
-                        <Input id="cc-number" inputMode="numeric" autoComplete="cc-number" maxLength={23} value={card.number}
-                          onChange={(e) => setCard({ ...card, number: e.target.value.replace(/[^\d ]/g, "") })} /></div>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div><Label htmlFor="cc-month">Ay</Label>
-                          <Input id="cc-month" inputMode="numeric" autoComplete="cc-exp-month" placeholder="AA" maxLength={2} value={card.month} onChange={(e) => setCard({ ...card, month: e.target.value.replace(/\D/g, "") })} /></div>
-                        <div><Label htmlFor="cc-year">Yıl</Label>
-                          <Input id="cc-year" inputMode="numeric" autoComplete="cc-exp-year" placeholder="YYYY" maxLength={4} value={card.year} onChange={(e) => setCard({ ...card, year: e.target.value.replace(/\D/g, "") })} /></div>
-                        <div><Label htmlFor="cc-cvv">CVV</Label>
-                          <Input id="cc-cvv" inputMode="numeric" autoComplete="cc-csc" type="password" maxLength={4} value={card.cvv} onChange={(e) => setCard({ ...card, cvv: e.target.value.replace(/\D/g, "") })} /></div>
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>

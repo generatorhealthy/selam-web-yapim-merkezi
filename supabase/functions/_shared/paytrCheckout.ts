@@ -1,9 +1,8 @@
 // PayTR iFrame API ile ilk satın alma. Kart bilgisi sitemize hiç gelmez; PayTR sayfasında girilir.
 // Tarayıcı dönüşüne güvenilmez: sipariş yalnız imzası doğrulanmış PayTR Bildirim URL çağrısıyla,
 // public.settle_iyzico_payment üzerinden tek işlemde (oturum + makbuz + sipariş) onaylanır.
-import { CHECKOUT_TTL_MS } from "./iyzicoCheckout.ts";
-import type { HoppaDb as PaytrDb } from "./hoppaCheckout.ts";
-export type { PaytrDb };
+import { CHECKOUT_TTL_MS, type DbPort, type SessionRow } from "./iyzicoCheckout.ts";
+export type PaytrDb = DbPort & { readSessionByConversation: (ref: string) => Promise<SessionRow | null> };
 
 /** Yeni satışta izinli paketler ve tutarları (DB guard ile aynı). test-paket-link GEÇİCİ. */
 export const PAYTR_PRICES: Record<string, number> = { "ozel-firsat": 4000, "kayit-linki": 5000, "test-paket-link": 5 };
