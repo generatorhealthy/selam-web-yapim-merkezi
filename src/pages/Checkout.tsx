@@ -22,7 +22,7 @@ import BankTransferInfo from "@/components/BankTransferInfo";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 
 // Kart ödemesi Hoppa ortak ödeme sayfasıyla alınır; kart bilgisi sitemize gelmez.
-const CARD_PAYMENTS_ENABLED = true;
+const CARD_PAYMENTS_ENABLED = false;
 import { supabase } from "@/integrations/supabase/client";
 
 const turkishCities = [
