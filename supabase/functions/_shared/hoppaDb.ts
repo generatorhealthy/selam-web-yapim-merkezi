@@ -5,7 +5,7 @@ const SESSION_COLS = "id,order_id,conversation_id,iyzico_token,plan_ref,expected
 export function hoppaDbPort(admin: any): HoppaDb {
   return { ...supabaseDbPort(admin), readSessionByConversation: async (ref) => {
     const { data, error } = await admin.from("payment_checkout_sessions").select(SESSION_COLS).eq("conversation_id", ref)
-      .like("plan_ref", "hoppa:%").maybeSingle();
+      .like("plan_ref", "hoppa%").maybeSingle();
     if (error) throw new Error(error.message);
     return data;
   } };
