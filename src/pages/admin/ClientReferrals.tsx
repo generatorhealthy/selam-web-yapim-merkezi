@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
-const EmbeddedMetaLeads = lazy(() => import("./MetaLeads"));
-const EmbeddedClientCalendar = lazy(() => import("./ClientCalendar"));
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,7 +174,6 @@ interface ClientReferralsProps {
 }
 
 const ClientReferrals = ({ embedded = false, presetSearch = null }: ClientReferralsProps = {}) => {
-  const [inlinePanel, setInlinePanel] = useState<"leads" | "calendar" | null>(null);
   const [specialists, setSpecialists] = useState<SpecialistReferral[]>([]);
   const [filteredSpecialists, setFilteredSpecialists] = useState<SpecialistReferral[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1329,44 +1326,6 @@ const ClientReferrals = ({ embedded = false, presetSearch = null }: ClientReferr
           </div>
         </div>
 
-        {!embedded && (
-          <div className="mb-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {([
-                { key: "leads", title: "Danışan Yönlendirme Sistemi", desc: "Başvuruları bu sayfada görüntüle", Icon: Users },
-                { key: "calendar", title: "Danışan Takvimi", desc: "Takvim, aciller ve notlar", Icon: Calendar },
-              ] as const).map(({ key, title, desc, Icon }) => {
-                const active = inlinePanel === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setInlinePanel(active ? null : key)}
-                    className={`flex items-center gap-4 rounded-2xl border p-5 text-left shadow-sm transition-all hover:shadow-md ${active ? "border-primary bg-primary/10" : "border-border bg-card"}`}
-                  >
-                    <div className={`rounded-xl p-3 ${active ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground">{title}</p>
-                      <p className="text-sm text-muted-foreground">{active ? "Kapatmak için tekrar tıklayın" : desc}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            {/* Both panels stay mounted (loaded in the background) so switching is instant. */}
-            <Suspense fallback={null}>
-              <div className={inlinePanel === "leads" ? "mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-sm" : "hidden"}>
-                <EmbeddedMetaLeads embedded />
-              </div>
-              <div className={inlinePanel === "calendar" ? "mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-sm" : "hidden"}>
-                <EmbeddedClientCalendar embedded />
-              </div>
-            </Suspense>
-          </div>
-        )}
 
         {/* Enhanced Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
