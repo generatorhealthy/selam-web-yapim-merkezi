@@ -25,6 +25,10 @@ const Footer = () => {
               Ziyaretçi-Danışan Sözleşmesi
             </Link>
             <span className="text-gray-400">|</span>
+            <Link to="/mesafeli-satis-sozlesmesi" className="hover:text-blue-600 transition-colors">
+              Mesafeli Satış Sözleşmesi
+            </Link>
+            <span className="text-gray-400">|</span>
             <Link to="/aydinlatma-metni" className="hover:text-blue-600 transition-colors">
               Aydınlatma Metni
             </Link>
