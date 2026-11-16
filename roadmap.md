@@ -1,3 +1,6 @@
+# 16 Kasım 2026 — Mesafeli satış sözleşmesi düzeltmesi
+- [x] Güncel sözleşmeye unvan/MERSİS/KEP eklendi; ses kaydı alınacağı ve saklanacağı hükmü kaldırıldı, 0850/850 hatlar 0216 yapıldı. Eski metin/hash arşivlendi; geçmiş imzalı nüshalar korunarak gerçek kaynakla kamu sayfası doğrulandı.
+
 # 14 Kasım 2026 — Bekleyen üyeliğin bağımsız aktivasyonu
 - [x] Uzman listesi ve düzenleme ekranından yalnız yöneticiye özel, denetim kayıtlı aktivasyon/pasifleştirme eklendi. Service-only RPC/Edge yayımlandı; sipariş, ödeme ve e-posta değişmez. 4 handler testi ve 20 yerel eşzamanlı1/19 geçti; RESULT.md.
 - [ ] Ahmet Bey'in gerçek yönetici oturumundan Aktif Yap kabulü ve yeni web Hostinger dağıtımı: external_unmanaged oturum/dağıtım kanıtı bekler; burada kullanıcı adına başka yönetici seçilip işlem yapılmadı.
