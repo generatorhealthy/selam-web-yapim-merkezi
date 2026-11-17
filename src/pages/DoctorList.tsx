@@ -14,6 +14,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import LocalPagesLinks from "@/components/LocalPagesLinks";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { matchesSpecialty } from "@/lib/specialtyFilter";
 
 interface Specialist {
   id: string;
@@ -51,7 +52,7 @@ const DoctorList = () => {
   const specialties = [
     "Aile Danışmanı", "Cildiye", "Dil ve Konuşma Terapisti", 
     "Eğitim Danışmanlığı", "İlişki Danışmanı", "Kadın Doğum ve Hastalıkları",
-    "Diş Hekimi", "Psikolog", "Psikolojik Danışmanlık", "Doktor", "Uzman",
+    "Diş Hekimi", "Psikolog", "Klinik Psikolog", "Psikolojik Danışmanlık", "Doktor", "Uzman",
     "Psikolojik Danışman"
   ];
 
@@ -212,7 +213,7 @@ const DoctorList = () => {
     // Uzmanlık alanı filtresi
     if (selectedSpecialty && selectedSpecialty !== "all" && selectedSpecialty.trim()) {
       filtered = filtered.filter(specialist => 
-        specialist.specialty && specialist.specialty.toLowerCase() === selectedSpecialty.toLowerCase()
+        matchesSpecialty(specialist.specialty, selectedSpecialty)
       );
     }
 
