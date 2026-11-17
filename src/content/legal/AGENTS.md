@@ -1,0 +1,1 @@
+- Legal page text comes from legalTexts.generated.ts; run scripts/build-legal-texts.mjs after editing any .md here (its test fails on drift) — the preview mis-parses .md?raw imports as JS and blanks the page.
