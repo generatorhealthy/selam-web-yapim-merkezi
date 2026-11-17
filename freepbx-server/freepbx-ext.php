@@ -1078,7 +1078,7 @@ function csv_field($v) {
 }
 
 // CSV oluştur
-$header = "extension,name,description,tech,secret,findmefollow_enabled,findmefollow_strategy,findmefollow_grplist,findmefollow_grptime,findmefollow_changecid,findmefollow_fixedcid,voicemail_enable,voicemail_vmpwd\n";
+$header = "extension,name,description,tech,secret,findmefollow_enabled,findmefollow_strategy,findmefollow_grplist,findmefollow_grptime,findmefollow_changecid,findmefollow_fixedcid,findmefollow_pre_ring,findmefollow_postdest,voicemail_enable,voicemail_vmpwd\n";
 $fmEnabled = $followme !== '' ? 'CHECKED' : '';
 $row = implode(',', [
   $ext,
@@ -1093,6 +1093,8 @@ $row = implode(',', [
   '25',               // findmefollow_grptime
   'default',          // CID'yi trunk'ın kendi yetkili kimliğine bırak (FCT 403 önlenir)
   '',                 // fixedcid kullanılmıyor
+  '0',                // pre_ring: boş sanal dahiliyi bekletmeden uzmanın cebini çaldır
+  'app-blackhole,hangup,1', // açılmazsa çağrıyı kapat (Bad Dest hatasını önler)
   '',                 // voicemail_enable
   '',                 // voicemail_vmpwd
 ]) . "\n";
