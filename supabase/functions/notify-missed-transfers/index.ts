@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const transfers: any[] = Array.isArray((cdr as any)?.transfers) ? (cdr as any).transfers : [];
 
     const transferDiagnostics = transfers
-      .filter((t) => String(t.uzman_ext ?? "") === "1224")
+      .filter((t) => ["1224", "1277"].includes(String(t.uzman_ext ?? "")))
       .slice(0, 12)
       .map((t) => ({
         calldate: t.calldate,
@@ -83,7 +83,8 @@ Deno.serve(async (req) => {
       .filter((row: any) => {
         const src = String(row?.src ?? "");
         const dst = String(row?.dst ?? "");
-        return src === "1224" || dst === "1224" || dst.includes("5316852275");
+        return src === "1224" || dst === "1224" || dst.includes("5316852275") ||
+          src === "1277" || dst === "1277" || dst.includes("5308232275") || src.includes("5308232275");
       })
       .slice(0, 20);
     if (recentDiagnostics.length > 0) {
