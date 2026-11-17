@@ -1,6 +1,7 @@
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { buildFollowMeList } from "../_shared/followMeList.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -145,7 +146,7 @@ serve(async (req) => {
           results.push({ extension: ext, name: s.name, status: "skipped", reason: "Geçersiz dahili veya telefon" });
           continue;
         }
-        const fm = `0${digits}#`;
+        const fm = buildFollowMeList(digits);
         try {
           const response = await fetch(BULK_URL, {
             method: "POST",
@@ -184,7 +185,7 @@ serve(async (req) => {
     if (!normalizedPhone) throw new Error(`Geçersiz telefon: ${phone}`);
     // Transfer bacağını yetkili CID kullanan iki FCT rotasına sırayla gönder.
     // İlk hat dolu veya erişilemezse 81 rotası otomatik yedek olur.
-    const followme = `0${normalizedPhone}#`;
+    const followme = buildFollowMeList(normalizedPhone);
 
     // Dahililer FreePBX'te "virtual" olarak oluşturuluyor. GraphQL başarılı
     // yanıt verse bile virtual dahilinin gerçek Follow-Me kaydını her zaman

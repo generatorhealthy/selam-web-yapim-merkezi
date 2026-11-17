@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { buildFollowMeList } from "../_shared/followMeList.ts";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -563,7 +564,7 @@ serve(async (req) => {
         throw new Error(`PJSIP dahili oluşturulamadı: ${addResult?.addExtension?.message ?? "bilinmeyen hata"}`);
       }
 
-      const followMeList = `0${phone}#`;
+      const followMeList = buildFollowMeList(phone);
       await enforceFollowMeRouting(token, extension, followMeList);
       return new Response(JSON.stringify({ success: true, extension, tech: "pjsip", followMeList }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -653,9 +654,7 @@ serve(async (req) => {
         if (d.length < 10) return null;
         // keep last 10 digits (mobile without leading 0)
         d = d.slice(-10);
-        // Ön ek kullanmadan (0XXXXXXXXXX#) çıkış: Verimor rotası zorunlu CID ile
-        // uzmanın cebini çaldırır. Bu düzen sahada çalıştığı doğrulanan ayardır.
-        return `0${d}#`;
+        return buildFollowMeList(d);
       };
 
       const onlyExt = (body.extension ?? "").toString().trim();
@@ -882,9 +881,7 @@ serve(async (req) => {
       if (d.startsWith("0")) d = d.slice(1);
       if (d.length < 10) return "";
       d = d.slice(-10);
-      // Ön ek kullanmadan (0XXXXXXXXXX#) çıkış: Verimor rotası zorunlu CID ile
-      // uzmanın cebini çaldırır.
-      return `0${d}#`;
+      return buildFollowMeList(d);
     };
     const followMeList = buildFollowMe(phone);
 
