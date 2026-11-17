@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { QUICK_REGISTER_APP_MESSAGE, welcomeAddressee, type WelcomeHonorific } from "@/lib/quickRegisterMessage";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import FileUpload from "@/components/FileUpload";
@@ -42,6 +44,7 @@ const QuickRegister = () => {
   const [result, setResult] = useState<{ userId?: string; specialistId?: string; parsed?: any } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [honorific, setHonorific] = useState<WelcomeHonorific>("auto");
 
   useEffect(() => {
     if (!loading && userProfile) {
@@ -110,22 +113,25 @@ const QuickRegister = () => {
     setResult(null);
     setError(null);
     setCopied(false);
+    setHonorific("auto");
   };
 
   const buildWelcomeMessage = (p: any) => {
-    const firstName = (p?.name || "").trim().split(/\s+/)[0] || "";
+    const addressee = welcomeAddressee(p?.name || "", honorific);
     const profileUrl = p?.specialty && p?.name
       ? `https://doktorumol.com.tr/${createSpecialtySlug(p.specialty)}/${createDoctorSlug(p.name)}`
       : "";
-    return `Bu arada şundan da bahsedeyim ${firstName} Hanım/Bey bizde sizlere ekstra yönlendirme sağlıyoruz hatta size yönlendirdiğimiz kişiler için ilk görüşmeyi biz sağlıyoruz o şekilde sizin dahili numaranızı tuşlayarak size yönlendiriyoruz
+    return `Bu arada şundan da bahsedeyim ${addressee} bizde sizlere ekstra yönlendirme sağlıyoruz hatta size yönlendirdiğimiz kişiler için ilk görüşmeyi biz sağlıyoruz o şekilde sizin dahili numaranızı tuşlayarak size yönlendiriyoruz
 
 Giriş bilgileriniz;
 Kullanıcı adı : ${p?.email || ""}
-Parola : ${p?.password || ""}
+Belirlediğiniz şifreyle giriş yapabilirsiniz.
 
 Profil Linki : ${profileUrl}
 
-Profiliniz oluşturulmuştur. Link üzerinden giriş yapabilirsiniz ${firstName} Hanım/Bey.`;
+Profiliniz oluşturulmuştur. Link üzerinden giriş yapabilirsiniz ${addressee}.
+
+${QUICK_REGISTER_APP_MESSAGE}`;
   };
 
   const handleCopyMessage = async () => {
@@ -272,6 +278,24 @@ Profiliniz oluşturulmuştur. Link üzerinden giriş yapabilirsiniz ${firstName}
                       {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                       {copied ? "Kopyalandı" : "Mesajı Kopyala"}
                     </Button>
+                  </div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <Label htmlFor="welcome-honorific">Hitap</Label>
+                    <Select value={honorific} onValueChange={(value) => {
+                      if (value === "auto" || value === "Bey" || value === "Hanım") {
+                        setHonorific(value);
+                        setCopied(false);
+                      }
+                    }}>
+                      <SelectTrigger id="welcome-honorific" className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">İsme göre</SelectItem>
+                        <SelectItem value="Bey">Bey</SelectItem>
+                        <SelectItem value="Hanım">Hanım</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <Textarea
                     readOnly
