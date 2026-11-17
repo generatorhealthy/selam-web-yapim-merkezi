@@ -1,0 +1,2 @@
+ALTER TABLE public.whatsapp_bot_sessions ADD COLUMN IF NOT EXISTS wa_session_name text;
+CREATE INDEX IF NOT EXISTS idx_wa_bot_sessions_started ON public.whatsapp_bot_sessions (created_at DESC) WHERE is_test = false;

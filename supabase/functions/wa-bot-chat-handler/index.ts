@@ -203,7 +203,7 @@ Deno.serve(async (req) => {
     if (await hasActiveReferralSession(supabase, phone)) {
       // Danışan aktif yönlendirme akışındaysa cevabı bot motoruna aktar
       const engine = await supabase.functions.invoke('wa-bot-engine', {
-        body: { action: 'reply', phone, text: answerText },
+        body: { action: 'reply', phone, text: answerText, sessionName },
       });
       return json({
         ok: true,

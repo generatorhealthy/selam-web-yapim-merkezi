@@ -79,7 +79,8 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
-    const limit = Math.min(Number(body.limit) || 10, 25);
+    // Dakikada en fazla 3 yeni danışan; hatlar sırayla kullanılır (spam engeline karşı)
+    const limit = Math.min(Number(body.limit) || 3, 5);
 
     // Webhook denetimi (anket cevaplarının gelmesi için şart)
     const webhook = await ensureWebhook(supabase).catch((e) => ({ ok: false, error: (e as Error).message }));
@@ -143,7 +144,8 @@ Deno.serve(async (req) => {
       }
       results.push({ id: lead.id, phone, ok, detail: res.data ?? res.error?.message ?? null });
 
-      await new Promise((r) => setTimeout(r, 1200));
+      // Her gönderim arasında 10–18 sn rastgele bekleme
+      await new Promise((r) => setTimeout(r, 10000 + Math.floor(Math.random() * 8000)));
     }
 
     return json({ success: true, webhook, processed: results.length, results });

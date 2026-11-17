@@ -7886,6 +7886,7 @@ export type Database = {
           therapy_type: string | null
           transcript: Json
           updated_at: string
+          wa_session_name: string | null
         }
         Insert: {
           answers?: Json
@@ -7907,6 +7908,7 @@ export type Database = {
           therapy_type?: string | null
           transcript?: Json
           updated_at?: string
+          wa_session_name?: string | null
         }
         Update: {
           answers?: Json
@@ -7928,6 +7930,7 @@ export type Database = {
           therapy_type?: string | null
           transcript?: Json
           updated_at?: string
+          wa_session_name?: string | null
         }
         Relationships: []
       }

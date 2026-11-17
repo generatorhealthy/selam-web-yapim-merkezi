@@ -255,6 +255,38 @@ function getSessionNameForLineId(lineId: string) {
   return `line_${lineId.replace(/-/g, "").slice(0, 16)}`;
 }
 
+// Çalışan tüm aktif hatların oturum adları (sort_order sırasıyla)
+async function getWorkingSessionNames(supabase: any): Promise<string[]> {
+  const { data: activeLines } = await supabase
+    .from("whatsapp_lines").select("id, phone_number").eq("is_active", true)
+    .order("sort_order", { ascending: true });
+  const lines = (activeLines || []) as any[];
+  if (!lines.length) return [];
+  const res = await supabase.functions.invoke("waha-proxy", { body: { action: "sessions.list" } });
+  const sessions = Array.isArray((res.data as any)?.data) ? (res.data as any).data : [];
+  const working = (s: any) => String(s?.status || "").toUpperCase() === "WORKING";
+  const out: string[] = [];
+  for (const l of lines) {
+    const name = getSessionNameForLineId(l.id);
+    const phone = String(l.phone_number || "").replace(/\D/g, "");
+    const s = sessions.find((x: any) => working(x) && (x?.name === name ||
+      (phone && String(x?.me?.id || "").split("@")[0]?.replace(/\D/g, "") === phone)));
+    if (s && !out.includes(s.name)) out.push(s.name);
+  }
+  return out;
+}
+
+// Yeni sohbet için sıradaki hat: son başlatılan sohbetin hattından bir sonrakine geçer
+async function pickRotatingSession(supabase: any): Promise<string | null> {
+  const names = await getWorkingSessionNames(supabase);
+  if (!names.length) return null;
+  const { data: last } = await supabase.from("whatsapp_bot_sessions").select("wa_session_name")
+    .eq("is_test", false).not("wa_session_name", "is", null)
+    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const idx = names.indexOf(String(last?.wa_session_name || ""));
+  return names[(idx + 1) % names.length];
+}
+
 async function getWorkingSessionName(supabase: any): Promise<string | null> {
   const { data: activeLines } = await supabase
     .from("whatsapp_lines")
@@ -477,11 +509,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      const sessionName = await getWorkingSessionName(supabase);
-      if (!sessionName) {
-        return json({ success: false, error: "Bağlı/çalışan aktif WhatsApp hattı bulunamadı" });
-      }
-
       const phone = String(body.phone || "").replace(/\D/g, "");
       if (phone.length < 10) {
         return json({ success: false, error: "Geçerli bir telefon numarası gerekli" }, 400);
@@ -528,6 +555,19 @@ Deno.serve(async (req) => {
         .maybeSingle();
       const existing: any = existingRow;
 
+      // Hat seçimi: yeni sohbet sıradaki hattan; süren sohbet başladığı hattan devam eder
+      const workingNames = await getWorkingSessionNames(supabase);
+      let sessionName: string | null = null;
+      if (action === "start") {
+        sessionName = await pickRotatingSession(supabase);
+      } else {
+        const preferred = [existing?.wa_session_name, body.sessionName].map((x) => String(x || ""));
+        sessionName = preferred.find((n) => n && workingNames.includes(n)) || workingNames[0] || null;
+      }
+      if (!sessionName) {
+        return json({ success: false, error: "Bağlı/çalışan aktif WhatsApp hattı bulunamadı" });
+      }
+
       const pushTranscript = (s: any, from: "bot" | "client", text: string, buttons?: string[]) => {
         const t = Array.isArray(s?.transcript) ? s.transcript : [];
         t.push({ from, text, buttons });
@@ -564,6 +604,7 @@ Deno.serve(async (req) => {
             city: body.city ?? null,
             state: "awaiting_consent",
             is_test: false,
+            wa_session_name: sessionName,
             last_question: "consent",
             last_options: YES_NO,
             answers: {},
@@ -601,6 +642,7 @@ Deno.serve(async (req) => {
         transcript.push({ from: "bot", text, buttons: options });
         await saveSession(existing.id, {
           transcript,
+          wa_session_name: sessionName,
           answers,
           state: nextState ?? existing.state,
           last_question: nextStep ?? existing.last_question,
