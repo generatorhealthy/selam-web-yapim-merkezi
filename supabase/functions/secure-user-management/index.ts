@@ -265,6 +265,12 @@ serve(async (req) => {
           // Delete from reviews
           await supabaseAdmin.from('reviews').delete().eq('specialist_id', specialist.id)
           console.log('Reviews deleted')
+
+          // Profile publication settings belong only to this specialist
+          await supabaseAdmin.from('specialist_publication_events').delete().eq('specialist_id', specialist.id)
+          await supabaseAdmin.from('specialist_publication_permissions').delete().eq('specialist_id', specialist.id)
+          await supabaseAdmin.from('patient_contact_claims').delete().eq('specialist_id', specialist.id)
+          console.log('Publication settings deleted')
           
           // Finally delete the specialist record
           const { error: deleteSpecialistError } = await supabaseAdmin
