@@ -1,3 +1,9 @@
+# 18 Kasım 2026 — Reels ve Sosyal Medya Ekibi
+- [ ] Ayrı korumalı ekip rolü, yalnız Reels erişimi ve video-only özel yükleme.
+- [ ] Aktif profil + bekleyen dahil sipariş için tekil Enes WhatsApp bildirimi; gönderici 05313453014, alıcı 05050082675.
+- [ ] Fotoğraflı uzman listesi, yüklenen video görüntüleme ve yönetici indirme.
+- [ ] Yerel güvenlik/koşul testleri ve bağımsız canlı paket onayı; Enes hesabı e-posta yanıtı bekler.
+
 # 16 Kasım 2026 — Hoppa temizliği
 - [x] Hoppa kaynakları, kart alanları ve işlev ayarları kaldırıldı; PayTR tipi doğrudan mevcut ödeme portundan türetildi. Tarihsel migration/kayıtlar değiştirilmedi.
 - [x] Canlı dört Hoppa işlevi ve üç gizli anahtarı silindi; isteğe bağlı HOPPA_BASE_URL zaten yoktu. Dört eski adres 404 döndü.
