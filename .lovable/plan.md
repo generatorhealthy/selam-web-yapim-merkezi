@@ -2,7 +2,7 @@
 
 ## Kullanım
 - Divan Paneline **Reels Videoları** kartı eklenir. Uzmanlar fotoğraf, ad ve profil bağlantısıyla listelenir; seçilen uzmana video yüklenir. Videolar izlenebilir, yöneticiler indirebilir.
-- **Sosyal Medya Ekibi** hesabı yalnız bu kartı ve bu ekranı kullanır. Diğer yönetim ekranları, sipariş ayrıntıları, danışanlar ve iletişim bilgileri açılmaz. Enes'in hesabı için e-posta yanıtı beklenir; hesap bilgisi uydurulmaz.
+- **Sosyal Medya Ekibi** hesabı yalnız bu kartı ve bu ekranı kullanır. Diğer yönetim ekranları, sipariş ayrıntıları, danışanlar ve iletişim bilgileri açılmaz. Enes'in hesabı **instagram@doktorumol.com.tr** adresinde kullanıcının verdiği şifreyle oluşturulur; şifre plana, kaynak koduna veya mesajlara yazılmaz. Hesap, kısıtlı yetkiler hazırlandıktan sonra açılır; normal personel veya yönetici yetkisi verilmez.
 - Uzman profili aktif olduğunda ve kendisine ait silinmemiş bir sipariş bulunduğunda Reels işi oluşur. **Bekleyen sipariş yeterlidir; ödeme/onay koşulu eklenmez.** Sipariş önce veya profil önce oluşsa da kontrol çalışır. Aylık yenilemeler aynı uzman için tekrar mesaj üretmez.
 - Bildirim yalnız **05313453014** hattından **05050082675** numarasına gider. Hat bağlı değilse başka numaraya geçmez, bekler. Eski uzmanlara toplu mesaj gönderilmez; mevcut uygun uzmanlar ekranda görüntülenebilir.
 
