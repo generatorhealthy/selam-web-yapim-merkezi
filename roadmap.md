@@ -1,6 +1,7 @@
 # 18 Kasım 2026 — Uzman profil videoları
-- [ ] Hakkında sonuna video alanı ve uzman düzenlemesine yükleme/silme; sunucuda en fazla 6 video, sahiplik ve video doğrulaması.
-- [ ] Özel depo, herkese açık aktif profil oynatma, yerel koşul testleri ve yayın doğrulaması.
+- [x] Hakkında sonuna video alanı ve uzman düzenlemesine yükleme/silme; sunucuda en fazla 6 video, sahiplik ve video doğrulaması.
+- [x] Özel depo ve video hizmeti yayımlandı; 4 kural testi ve 12 eşzamanlı istekte 6 sınırı doğrulandı; açık profil bilgisayar/telefonda açıldı.
+- [ ] Gerçek uzman oturumuyla yükleme/izleme/silme doğrulaması: dış Supabase oturumu sağlanamadığı için kullanıcı kontrolü bekleniyor.
 
 # 18 Kasım 2026 — Reels ve Sosyal Medya Ekibi
 - [ ] Ayrı korumalı ekip rolü, yalnız Reels erişimi ve video-only özel yükleme.

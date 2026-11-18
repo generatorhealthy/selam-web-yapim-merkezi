@@ -7048,6 +7048,60 @@ export type Database = {
           },
         ]
       }
+      specialist_profile_videos: {
+        Row: {
+          byte_size: number
+          created_at: string
+          filename: string
+          id: string
+          mime_type: string
+          specialist_id: string
+          status: string
+          storage_path: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          byte_size: number
+          created_at?: string
+          filename: string
+          id?: string
+          mime_type: string
+          specialist_id: string
+          status?: string
+          storage_path: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          byte_size?: number
+          created_at?: string
+          filename?: string
+          id?: string
+          mime_type?: string
+          specialist_id?: string
+          status?: string
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialist_profile_videos_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specialist_profile_videos_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: false
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       specialist_publication_events: {
         Row: {
           active: boolean
@@ -8893,6 +8947,16 @@ export type Database = {
             }
             Returns: string
           }
+      reserve_profile_video: {
+        Args: {
+          p_actor: string
+          p_filename: string
+          p_mime: string
+          p_size: number
+          p_specialist: string
+        }
+        Returns: string
+      }
       reset_admin_login_attempts: {
         Args: { p_email: string }
         Returns: undefined

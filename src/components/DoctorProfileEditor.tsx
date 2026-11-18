@@ -14,6 +14,7 @@ import FAQSection from "@/components/FAQSection";
 import TestManagement from "@/components/TestManagement";
 import InterestsSelector from "@/components/InterestsSelector";
 import { Heart } from "lucide-react";
+import ProfileVideos from '@/components/ProfileVideos';
 
 interface FAQItem {
   question: string;
@@ -449,6 +450,7 @@ const DoctorProfileEditor = () => {
               </CardContent>
             </Card>
           )}
+          <ProfileVideos specialistId={specialist.id} editable poster={specialist.profile_picture}/>
         </TabsContent>
 
         <TabsContent value="certifications">

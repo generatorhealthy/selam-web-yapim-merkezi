@@ -1,0 +1,1 @@
+- Profile videos are independent of private Reels: only verified specialist ownership authorizes changes, reservations serialize a six-video cap, and public playback exposes only validated active-profile videos.

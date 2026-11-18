@@ -17,6 +17,7 @@ import SpecialistTests from "@/components/SpecialistTests";
 import RecentlyViewedSpecialists, { addToRecentlyViewed } from "@/components/RecentlyViewedSpecialists";
 import WhatsAppContactDialog from "@/components/WhatsAppContactDialog";
 import { InterestsDisplay } from "@/components/InterestsSelector";
+import ProfileVideos from '@/components/ProfileVideos';
 
 interface Specialist {
   id: string;
@@ -577,6 +578,7 @@ const DoctorProfile = () => {
                       </div>
                     )}
                   </div>
+                  <ProfileVideos specialistId={specialist.id} poster={specialist.profile_picture}/>
                 </CardContent>
               </Card>
             </TabsContent>
