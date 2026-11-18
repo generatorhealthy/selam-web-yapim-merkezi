@@ -1,5 +1,6 @@
 # 18 Kasım 2026 — Uzman profil videoları
-- [ ] Video yayını yönetici onayına bağla; Uzman Yönetimi'ne onay bekleyen videoları, uzmana bekleyen/ret durumunu ekle.
+- [x] Video yayını yönetici onayına bağlandı; Uzman Yönetimi'nde bekleyenler ve onay/ret, uzmanda durum gösterimi; 6 test geçti, hizmet yayımlandı.
+- [ ] Yönetici oturumuyla video onaylayıp açık profilden okuma: dış Supabase oturumuyla doğrulama sağlanamadı.
 - [x] Hakkında sonuna video alanı ve uzman düzenlemesine yükleme/silme; sunucuda en fazla 6 video, sahiplik ve video doğrulaması.
 - [x] Özel depo ve video hizmeti yayımlandı; 4 kural testi ve 12 eşzamanlı istekte 6 sınırı doğrulandı; açık profil bilgisayar/telefonda açıldı.
 - [ ] Gerçek uzman oturumuyla yükleme/izleme/silme doğrulaması: dış Supabase oturumu sağlanamadığı için kullanıcı kontrolü bekleniyor.

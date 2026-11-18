@@ -2,10 +2,13 @@ import {createClient} from 'npm:@supabase/supabase-js@2';
 import {corsHeaders} from 'npm:@supabase/supabase-js@2/cors';
 import {z} from 'npm:zod@3';
 import {detectReelsVideo} from '../_shared/reelsRules.ts';
-import {hasVideoTrack,PROFILE_VIDEO_MAX_BYTES} from '../_shared/profileVideoRules.ts';
+import {hasVideoTrack,PROFILE_VIDEO_MAX_BYTES,canReviewProfileVideo} from '../_shared/profileVideoRules.ts';
 const bucket='profile-videos';
 const schema=z.discriminatedUnion('action',[
  z.object({action:z.literal('list'),specialistId:z.string().uuid()}).strict(),
+ z.object({action:z.literal('mine'),specialistId:z.string().uuid()}).strict(),
+ z.object({action:z.literal('review-list'),offset:z.number().int().min(0).default(0)}).strict(),
+ z.object({action:z.literal('review'),videoId:z.string().uuid(),decision:z.enum(['approved','rejected'])}).strict(),
  z.object({action:z.literal('upload'),specialistId:z.string().uuid(),filename:z.string().min(1).max(200),mime:z.enum(['video/mp4','video/quicktime','video/webm']),size:z.number().int().min(17).max(PROFILE_VIDEO_MAX_BYTES)}).strict(),
  z.object({action:z.literal('finalize'),videoId:z.string().uuid()}).strict(),
  z.object({action:z.literal('delete'),videoId:z.string().uuid()}).strict(),
@@ -23,13 +26,34 @@ Deno.serve(async req=>{
   if(body.action==='list'){
    const {data:s,error}=await db.from('specialists').select('id').eq('id',body.specialistId).eq('is_active',true).maybeSingle();
    if(error)throw error;if(!s)return reply({videos:[]});
-   const {data:rows,error:readError}=await db.from('specialist_profile_videos').select('id,storage_path,created_at').eq('specialist_id',s.id).eq('status','ready').order('created_at').limit(6);
+   const {data:rows,error:readError}=await db.from('specialist_profile_videos').select('id,storage_path,created_at').eq('specialist_id',s.id).eq('status','ready').eq('moderation_status','approved').order('created_at').limit(6);
    if(readError)throw readError;
    const videos=await Promise.all((rows||[]).map(async v=>{const {data,error:signError}=await db.storage.from(bucket).createSignedUrl(v.storage_path,3600);if(signError)throw signError;return {id:v.id,url:data?.signedUrl,created_at:v.created_at};}));
    return reply({videos});
   }
   const token=req.headers.get('Authorization')?.replace(/^Bearer\s+/i,'');if(!token)return reply({error:'Giriş yapmalısınız'},401);
   const {data:{user},error:authError}=await db.auth.getUser(token);if(authError||!user)return reply({error:'Oturum doğrulanamadı'},401);
+  if(body.action==='review-list'||body.action==='review'){
+   const {data:profile}=await db.from('user_profiles').select('role,is_approved').eq('user_id',user.id).maybeSingle();
+   if(!canReviewProfileVideo(profile?.role||'',profile?.is_approved===true))return reply({error:'Yalnız yönetici video değerlendirebilir'},403);
+   if(body.action==='review'){
+    const {data:changed,error}=await db.rpc('review_profile_video',{p_actor:user.id,p_video:body.videoId,p_decision:body.decision});
+    if(error)throw error;if(!changed)return reply({error:'Video zaten değerlendirildi veya kaldırıldı'},409);
+    return reply({success:true});
+   }
+   const {data:rows,error,count}=await db.from('specialist_profile_videos').select('id,storage_path,filename,created_at,specialist_id,specialists(name,profile_picture)',{count:'exact'}).eq('status','ready').eq('moderation_status','pending').order('created_at').range(body.offset,body.offset+19);
+   if(error)throw error;
+   const videos=await Promise.all((rows||[]).map(async({storage_path,...v})=>{const {data,error}=await db.storage.from(bucket).createSignedUrl(storage_path,300);if(error)throw error;return {...v,url:data?.signedUrl};}));
+   return reply({videos,total:count||0});
+  }
+  if(body.action==='mine'){
+   const {data:owner}=await db.from('specialists').select('user_id').eq('id',body.specialistId).maybeSingle();
+   if(owner?.user_id!==user.id)return reply({error:'Yalnız kendi videolarınızı görebilirsiniz'},403);
+   const {data:rows,error}=await db.from('specialist_profile_videos').select('id,storage_path,created_at,moderation_status').eq('specialist_id',body.specialistId).eq('status','ready').order('created_at').limit(6);
+   if(error)throw error;
+   const videos=await Promise.all((rows||[]).map(async({storage_path,...v})=>{const {data,error}=await db.storage.from(bucket).createSignedUrl(storage_path,300);if(error)throw error;return {...v,url:data?.signedUrl};}));
+   return reply({videos});
+  }
   if(body.action==='upload'){
    const ext={'video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm'}[body.mime];
    if(body.filename.toLowerCase().split('.').pop()!==ext)return reply({error:'Yalnız MP4, MOV veya WebM video yükleyin'},400);

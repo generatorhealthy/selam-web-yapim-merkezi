@@ -7055,6 +7055,9 @@ export type Database = {
           filename: string
           id: string
           mime_type: string
+          moderation_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           specialist_id: string
           status: string
           storage_path: string
@@ -7067,6 +7070,9 @@ export type Database = {
           filename: string
           id?: string
           mime_type: string
+          moderation_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           specialist_id: string
           status?: string
           storage_path: string
@@ -7079,6 +7085,9 @@ export type Database = {
           filename?: string
           id?: string
           mime_type?: string
+          moderation_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           specialist_id?: string
           status?: string
           storage_path?: string
@@ -8976,6 +8985,10 @@ export type Database = {
       restore_from_backup: {
         Args: { p_backup_id: number; p_table_name?: string }
         Returns: undefined
+      }
+      review_profile_video: {
+        Args: { p_actor: string; p_decision: string; p_video: string }
+        Returns: boolean
       }
       set_manual_order_approval_internal: {
         Args: { p_action: string; p_order_id: string; p_reason: string }

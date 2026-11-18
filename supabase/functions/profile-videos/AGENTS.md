@@ -1,1 +1,1 @@
-- Profile videos are independent of private Reels: only verified specialist ownership authorizes changes, reservations serialize a six-video cap, and public playback exposes only validated active-profile videos.
+- Profile videos are independent of Reels: verified owners manage uploads, reservations serialize a six-video cap, and public playback requires ready + admin-approved status on an active profile; only approved server-verified admins review pending videos atomically.

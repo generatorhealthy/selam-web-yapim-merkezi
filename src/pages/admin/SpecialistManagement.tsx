@@ -32,6 +32,7 @@ import {
 
 } from "lucide-react";
 import { SpecialistNotesDialog } from "@/components/admin/SpecialistNotesDialog";
+import ProfileVideoReview from '@/components/admin/ProfileVideoReview';
 import { Link } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { setSpecialistPublication } from '@/lib/specialistPublication';
@@ -437,6 +438,7 @@ const SpecialistManagement = () => {
           )}
         </div>
 
+        {currentUser.role === 'admin' && <ProfileVideoReview />}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <Card className="bg-white shadow-sm border-0">
