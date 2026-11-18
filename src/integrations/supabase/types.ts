@@ -578,6 +578,9 @@ export type Database = {
       }
       appointments: {
         Row: {
+          admin_released_at: string | null
+          admin_released_by: string | null
+          admin_review_required: boolean
           appointment_date: string
           appointment_time: string
           appointment_type: string
@@ -596,6 +599,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          admin_released_at?: string | null
+          admin_released_by?: string | null
+          admin_review_required?: boolean
           appointment_date: string
           appointment_time: string
           appointment_type: string
@@ -614,6 +620,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          admin_released_at?: string | null
+          admin_released_by?: string | null
+          admin_review_required?: boolean
           appointment_date?: string
           appointment_time?: string
           appointment_type?: string

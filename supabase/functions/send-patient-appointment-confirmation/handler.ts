@@ -1,8 +1,10 @@
+import { canNotifyReviewedAppointment } from '../_shared/appointmentReview.ts';
 import { escapeHtml } from '../_shared/escapeHtml.ts';
 
 export interface ConfirmationAppointment {
   id: string; specialist_id: string; patient_name: string; patient_email: string;
   appointment_date: string; appointment_time: string; status: string;
+  admin_review_required?: boolean; admin_released_at?: string | null;
 }
 export interface ConfirmationPorts {
   identity(req: Request): Promise<{ id: string } | null>;
@@ -26,6 +28,7 @@ export async function handleConfirmation(req: Request, ports: ConfirmationPorts,
     }
     const appointment = await ports.appointment(body.appointmentId);
     if (!appointment || !(await ports.ownsSpecialist(user.id, appointment.specialist_id))) return reply(403, {error: 'Bu randevu için yetkiniz yok'});
+    if (!canNotifyReviewedAppointment(appointment)) return reply(409, {error: 'Yönetici onayı bekleniyor'});
     if (appointment.status === 'cancelled' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(appointment.patient_email || '')) return reply(409, {error: 'Randevu bildirime uygun değil'});
     if (!(await ports.claim(appointment.id))) return reply(409, {error: 'Bildirim daha önce işleme alındı'});
     let delivered = false;

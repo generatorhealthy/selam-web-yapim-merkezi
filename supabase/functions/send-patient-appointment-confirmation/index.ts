@@ -16,7 +16,7 @@ const ports: ConfirmationPorts = {
     return error ? null : data.user;
   },
   appointment: async id => {
-    const {data, error} = await database().from('appointments').select('id,specialist_id,patient_name,patient_email,appointment_date,appointment_time,status').eq('id', id).maybeSingle();
+    const {data, error} = await database().from('appointments').select('id,specialist_id,patient_name,patient_email,appointment_date,appointment_time,status,admin_review_required,admin_released_at').eq('id', id).maybeSingle();
     if (error) throw new Error('Appointment unavailable');
     return data;
   },

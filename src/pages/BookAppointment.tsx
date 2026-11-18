@@ -164,12 +164,11 @@ const BookAppointment = () => {
 
       console.log('Appointment created successfully:', appointmentId);
 
-      // Uzmana otomatik bildirim (e-posta + Doki WhatsApp) DB trigger
-      // (send_appointment_notification_email_trigger) tarafından gönderilir.
+      // Uzmana bildirim, yönetici onayından sonra DB trigger tarafından gönderilir.
       // Tekrar gönderilmemesi için frontend'den invoke kaldırıldı.
 
       submissionAttempt.current.finish(true);
-      toast.success('Randevu talebiniz kaydedildi. Uzmanın onayı bekleniyor.');
+      toast.success('Randevu talebiniz kaydedildi. Yönetici incelemesinden sonra uzmana iletilecektir.');
       
       // Form'u temizle
       setFormData({

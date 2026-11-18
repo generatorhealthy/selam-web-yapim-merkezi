@@ -2,7 +2,8 @@
 - [x] Yeni site taleplerinde uzman erişimi ve tüm bildirimler için yönetici ön onay SQL/Edge adayları hazır; geçmiş kayıtlar ve uzman tarafından açılan randevular korunur.
 - [x] Randevu kartında bekleyen +N ve sallanma; masaüstü/telefon sentetik ekranda +1, hareket azaltma ve taşma yok doğrulandı; yönetim listesi değişikliklere abone.
 - [x] 9 yerel PostgreSQL kontrolü ve 10 Bun testi geçti; 20 eşzamanlı onayda tek aktarım; build OK, gerçek kişi/mesaj testi yapılmadı.
-- [ ] Canlı onay kapısı ve Realtime yayını: ayrı kullanıcı yayın onayı kartı bekleniyor; gerçek yönetici E2E dış Supabase oturumu nedeniyle doğrulanmadı.
+- [x] Kullanıcı canlı yayın onayı verdi; onay kapısı ve Realtime uygulandı, 340 tarihsel kayıt korundu; iki bildirim hizmeti yayımlandı, yetkisiz isteklerde 401 doğrulandı; 12 Bun ve 9 PostgreSQL kontrolü geçti.
+- [ ] Gerçek yönetici onayı ve bildirim teslimi: dış Supabase oturumu nedeniyle doğrulanamıyor; gerçek müşteriye deneme mesajı gönderilmedi.
 
 # 18 Kasım 2026 — Uzman profil videoları
 - [x] Video yayını yönetici onayına bağlandı; Uzman Yönetimi'nde bekleyenler ve onay/ret, uzmanda durum gösterimi; 6 test geçti, hizmet yayımlandı.

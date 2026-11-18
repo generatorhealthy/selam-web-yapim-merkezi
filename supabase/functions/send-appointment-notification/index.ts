@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { classifyCaller, decideNotification, pickSpecialistPhone, specialistSms, patientSms as buildPatientSms } from '../_shared/appointmentNotify.ts';
 import { appointmentAuthority } from '../_shared/appointmentAuthority.ts';
+import { canNotifyReviewedAppointment } from '../_shared/appointmentReview.ts';
 import { escapeHtml } from '../_shared/escapeHtml.ts';
 
 const corsHeaders = {
@@ -128,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
     // send made-up appointment mails to an address of their choosing.
     const { data: appointmentRow, error: appointmentLookupError } = await supabase
       .from('appointments')
-      .select('id, specialist_id, patient_name, patient_email, patient_phone, appointment_date, appointment_time, appointment_type, created_at')
+      .select('id, specialist_id, patient_name, patient_email, patient_phone, appointment_date, appointment_time, appointment_type, created_at, admin_review_required, admin_released_at, status')
       .eq('id', appointmentId)
       .maybeSingle();
 
@@ -138,6 +139,11 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ error: 'Randevu bulunamadı' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
+    }
+
+    if (!canNotifyReviewedAppointment(appointmentRow)) {
+      return new Response(JSON.stringify({ success: true, skipped: true, reason: 'admin_review_pending' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const { data: specialistRecord } = await supabase
@@ -170,7 +176,7 @@ const handler = async (req: Request): Promise<Response> => {
     {
       const { data: prior } = await supabase.from('brevo_email_logs').select('id')
         .eq('template_name', 'appointment-notification').contains('metadata', { appointmentId }).limit(1);
-      const decision = decideNotification({ exists: true, alreadyNotified: !!prior?.length, createdAt: appointmentRow.created_at ?? null, now: Date.now(), caller });
+      const decision = decideNotification({ exists: true, alreadyNotified: !!prior?.length, createdAt: appointmentRow.admin_released_at ?? appointmentRow.created_at ?? null, now: Date.now(), caller });
       if (!decision.send) {
         console.log(JSON.stringify({ evt: 'appointment_notify_skipped', reason: decision.reason }));
         return new Response(JSON.stringify({ success: true, skipped: true, reason: decision.reason }),
