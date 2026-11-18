@@ -8923,6 +8923,7 @@ export type Database = {
         }
         Returns: Json
       }
+      reels_stop_if_drained: { Args: never; Returns: undefined }
       reels_sync_jobs: { Args: { p_baseline?: boolean }; Returns: number }
       register_partner_referral:
         | {
