@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION public.reels_sync_jobs(p_baseline boolean DEFAULT false) RETURNS integer
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE added integer;BEGIN
-IF current_setting('role',true) IS DISTINCT FROM 'service_role' AND NOT(session_user='postgres' AND current_setting('role',true) IN ('none','postgres')) THEN RAISE EXCEPTION 'service required' USING ERRCODE='42501';END IF;
+IF current_setting('role',true) IS DISTINCT FROM 'service_role' AND pg_trigger_depth()=0 AND NOT(session_user='postgres' AND current_setting('role',true) IN ('none','postgres')) THEN RAISE EXCEPTION 'service required' USING ERRCODE='42501';END IF;
 INSERT INTO public.reels_jobs(specialist_id,notice_status)
 SELECT s.id,'pending' FROM public.specialists s WHERE s.created_at>='2026-11-18T11:22:00Z'::timestamptz
 AND s.is_active AND s.slug IS NOT NULL AND s.user_id IS NOT NULL AND nullif(trim(s.email),'') IS NOT NULL
