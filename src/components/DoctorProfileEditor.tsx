@@ -13,7 +13,6 @@ import { User, MapPin, Award, FileText, MessageSquare, Phone, ClipboardList, Sav
 import FAQSection from "@/components/FAQSection";
 import TestManagement from "@/components/TestManagement";
 import InterestsSelector from "@/components/InterestsSelector";
-import { hasSuggestedInterests } from "@/lib/specialistInterests";
 import { Heart } from "lucide-react";
 
 interface FAQItem {
@@ -428,7 +427,8 @@ const DoctorProfileEditor = () => {
             </CardContent>
           </Card>
 
-          {hasSuggestedInterests(specialist.specialty) && (
+          {(
+
             <Card className="border shadow-sm rounded-xl overflow-hidden">
               <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-6 py-4 border-b">
                 <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">

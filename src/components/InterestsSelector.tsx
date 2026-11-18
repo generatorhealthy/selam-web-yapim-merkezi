@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { getSuggestedInterests } from "@/lib/specialistInterests";
 import { cn } from "@/lib/utils";
@@ -36,9 +37,14 @@ export default function InterestsSelector({
     }
   };
 
-  if (merged.length === 0) {
-    return null;
-  }
+  const [custom, setCustom] = useState("");
+  const addCustom = () => {
+    const item = custom.trim().replace(/\s+/g, " ").slice(0, 80);
+    if (!item) return;
+    const exists = (value || []).some((v) => v.toLocaleLowerCase("tr") === item.toLocaleLowerCase("tr"));
+    if (!exists) onChange([...(value || []), item]);
+    setCustom("");
+  };
 
   return (
     <div className={className}>
@@ -75,6 +81,25 @@ export default function InterestsSelector({
             </button>
           );
         })}
+      </div>
+
+      <div className="flex gap-2 mt-4">
+        <input
+          type="text"
+          value={custom}
+          maxLength={80}
+          onChange={(e) => setCustom(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
+          placeholder="Listede olmayan bir alan yazın"
+          className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm"
+        />
+        <button
+          type="button"
+          onClick={addCustom}
+          className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
+        >
+          <Plus className="w-4 h-4" /> Ekle
+        </button>
       </div>
 
       {value && value.length > 0 && (
