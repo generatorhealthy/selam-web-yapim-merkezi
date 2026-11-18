@@ -30,7 +30,7 @@ export default function ReelsVideos(){
  const upload=async(file:File)=>{
   if(!selected||lock.current)return;lock.current=true;setUploading(true);const job=selected;
   try{
-   if(file.size>200*1024*1024)throw new Error('Video en fazla 200 MB olabilir');
+   if(file.size>50*1024*1024)throw new Error('Video en fazla 50 MB olabilir');
    const mime=file.type||(/\.mov$/i.test(file.name)?'video/quicktime':'');
    if(!['video/mp4','video/quicktime','video/webm'].includes(mime))throw new Error('Yalnız MP4, MOV veya WebM video yükleyebilirsiniz');
    const ticket=await api({action:'upload',jobId:job.id,filename:file.name,mime,size:file.size});
@@ -57,7 +57,7 @@ export default function ReelsVideos(){
    {more&&<div className="mt-8 text-center"><Button variant="outline" disabled={busy} onClick={()=>void load(true)}>{busy?'Yükleniyor…':'Daha fazla'}</Button></div>}
   </section>
   <Dialog open={Boolean(selected)} onOpenChange={open=>{if(!open&&!uploading){setSelected(null);setPlaying('');}}}><DialogContent className="max-h-[90dvh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle className="break-words pr-6">{selected?.name}</DialogTitle></DialogHeader>
-   <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">MP4 · MOV · WebM / En fazla 200 MB</p><Button disabled={uploading} onClick={()=>input.current?.click()}><Upload className="mr-2 h-4 w-4"/>{uploading?'Yükleniyor ve doğrulanıyor…':'Video yükle'}</Button><input ref={input} type="file" accept="video/mp4,video/quicktime,video/webm,.mov" hidden onChange={e=>{const f=e.target.files?.[0];if(f)void upload(f);}}/></div>
+   <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">MP4 · MOV · WebM / En fazla 50 MB</p><Button disabled={uploading} onClick={()=>input.current?.click()}><Upload className="mr-2 h-4 w-4"/>{uploading?'Yükleniyor ve doğrulanıyor…':'Video yükle'}</Button><input ref={input} type="file" accept="video/mp4,video/quicktime,video/webm,.mov" hidden onChange={e=>{const f=e.target.files?.[0];if(f)void upload(f);}}/></div>
    {playing&&<video src={playing} controls playsInline className="aspect-video w-full rounded-lg bg-muted"/>}
    <div className="divide-y divide-border">{videos.map(v=><div key={v.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div className="flex items-center gap-3"><Film className="h-5 w-5 text-primary"/><div><p className="font-medium">{new Date(v.created_at).toLocaleDateString('tr-TR')}</p><p className="text-sm text-muted-foreground">{(v.byte_size/1024/1024).toFixed(1)} MB</p></div></div><div className="flex gap-2"><Button variant="outline" size="sm" onClick={()=>void videoUrl(v)}>İzle</Button>{admin&&<Button variant="outline" size="icon" title="Videoyu indir" onClick={()=>void videoUrl(v,true)}><Download className="h-4 w-4"/></Button>}</div></div>)}</div>
    {videos.length===0&&<p className="py-6 text-center text-muted-foreground">Henüz video yüklenmedi.</p>}

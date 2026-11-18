@@ -85,6 +85,7 @@ ALTER TABLE public.reels_uploads ENABLE ROW LEVEL SECURITY;
 CREATE POLICY reels_uploads_service ON public.reels_uploads FOR ALL TO service_role USING(true) WITH CHECK(true);
 CREATE TRIGGER reels_uploads_updated BEFORE UPDATE ON public.reels_uploads FOR EACH ROW EXECUTE FUNCTION public.reels_touch_updated_at();
 CREATE INDEX reels_uploads_actor_time ON public.reels_uploads(uploaded_by,created_at);
+CREATE INDEX reels_uploads_job ON public.reels_uploads(job_id);
 CREATE INDEX reels_videos_job_time ON public.reels_videos(job_id,created_at);
 
 CREATE FUNCTION public.reels_claim_notice() RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$

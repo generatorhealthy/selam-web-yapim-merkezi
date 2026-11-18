@@ -1,0 +1,1 @@
+- Reels media requires verified Auth identity and server-read membership; upload tickets are one-use, quarantined objects stay unreadable until container validation, and finalized object paths are never reused.

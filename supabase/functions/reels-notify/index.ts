@@ -11,7 +11,9 @@ Deno.serve(async req=>{
  const auth=await verifyAdminOrCron(req,['admin']);if(!auth.ok)return reply({error:auth.error},auth.status);
  try{
   const url=Deno.env.get('SUPABASE_URL'),key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const waha=(Deno.env.get('WAHA_BASE_URL')||Deno.env.get('WAHA_API_URL'))?.replace(/\/+$/,''),waKey=Deno.env.get('WAHA_API_KEY');
+  let waha=(Deno.env.get('WAHA_BASE_URL')||Deno.env.get('WAHA_API_URL'))?.replace(/\/dashboard.*$/,'').replace(/\/+$/,'');
+  if(waha&&!waha.startsWith('http'))waha=`https://${waha}`;
+  const waKey=Deno.env.get('WAHA_API_KEY');
   if(!url||!key||!waha||!waKey)return reply({error:'Hizmet hazır değil'},503);
   const db=createClient(url,key,{auth:{persistSession:false}});
   const {error:syncError}=await db.rpc('reels_sync_jobs',{p_baseline:false});if(syncError)throw new Error('sync');

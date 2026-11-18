@@ -1,4 +1,4 @@
-export const REELS_MAX_BYTES = 200 * 1024 * 1024;
+export const REELS_MAX_BYTES = 50 * 1024 * 1024;
 export const REELS_SENDER = '905313453014';
 export const REELS_RECIPIENT = '905050082675';
 export const REELS_BUCKET = 'reels-videos';

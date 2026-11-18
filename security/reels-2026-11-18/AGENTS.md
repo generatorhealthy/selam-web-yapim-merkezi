@@ -1,0 +1,4 @@
+- Reels membership stays separate from legacy profile roles; verify the caller on the server and minimize listings, since hiding panel cards is not access control.
+- Reels files go through private quarantine, streaming size/hash/container/video-track validation and immutable validated paths; only admins receive download links, so file extensions alone never authorize content.
+- Reels notifications use one service-only claim, a fixed connected sender and no retry after provider uncertainty; existing eligible jobs are baselined without sending a backlog.
+- Do not provision team identities before auditing callable legacy SECURITY DEFINER functions; RLS isolation alone does not constrain their owner-level reads.
