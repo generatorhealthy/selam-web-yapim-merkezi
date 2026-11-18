@@ -50,10 +50,33 @@ import {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { userProfile, loading } = useUserRole();
+  const { userProfile, user, loading } = useUserRole();
   useAdminActivityTracker(userProfile);
   const [newOrderCount, setNewOrderCount] = useState(0);
   const [newApplicationCount, setNewApplicationCount] = useState(0);
+  const [pendingAppointmentCount, setPendingAppointmentCount] = useState(0);
+
+  useEffect(() => {
+    if (!userProfile || !['admin', 'staff'].includes(userProfile.role)) return;
+    let disposed = false;
+    const refresh = async () => {
+      const { count, error } = await supabase.from('appointments')
+        .select('id', { count: 'exact', head: true })
+        .eq('created_by_specialist', false).eq('status', 'pending');
+      if (!disposed && !error && count !== null) setPendingAppointmentCount(count);
+    };
+    void refresh();
+    const channel = supabase.channel(`admin-appointment-count-${crypto.randomUUID()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => { void refresh(); })
+      .subscribe(() => { void refresh(); });
+    const onFocus = () => { void refresh(); };
+    window.addEventListener('focus', onFocus);
+    return () => {
+      disposed = true;
+      window.removeEventListener('focus', onFocus);
+      void supabase.removeChannel(channel);
+    };
+  }, [user?.id, userProfile?.role]);
 
   const openPanelPage = (route: string, openInNewTab = false) => {
     if (openInNewTab) {
@@ -897,15 +920,16 @@ const AdminDashboard = () => {
               <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {visibleCards.map((card, index) => {
                   const Icon = card.icon;
+                  const appointmentAlert = card.route === '/divan_paneli/appointments' && pendingAppointmentCount > 0;
                   return (
                     <Card 
                       key={card.route}
-                      className="group relative overflow-hidden border-0 bg-white/80 backdrop-blur-xl hover:bg-white/95 transition-all duration-500 cursor-pointer hover:scale-[1.05] hover:-translate-y-3 shadow-xl hover:shadow-2xl rounded-3xl animate-fade-in"
+                      className={`group relative overflow-hidden border-0 bg-white/80 backdrop-blur-xl hover:bg-white/95 transition-all duration-500 cursor-pointer hover:scale-[1.05] hover:-translate-y-3 shadow-xl hover:shadow-2xl rounded-3xl ${appointmentAlert ? 'appointment-review-alert' : 'animate-fade-in'}`}
                       onClick={(e) => {
                         openPanelPage(card.route, e.ctrlKey || e.metaKey);
                       }}
                       style={{
-                        animationDelay: `${index * 120}ms`,
+                        animationDelay: appointmentAlert ? '0ms' : `${index * 120}ms`,
                         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
                       }}
                     >
@@ -919,6 +943,11 @@ const AdminDashboard = () => {
                       <div className={`absolute inset-0 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-20 rounded-3xl blur-xl transition-all duration-700 -z-10`} />
                       
                       <CardHeader className="pb-6 relative z-10">
+                        {appointmentAlert && (
+                          <Badge variant="destructive" className="absolute right-4 top-4 min-w-8 justify-center text-sm tabular-nums" aria-live="polite" aria-label={`${pendingAppointmentCount} bekleyen randevu`}>
+                            +{pendingAppointmentCount}
+                          </Badge>
+                        )}
                         <div className="flex items-start justify-between mb-6">
                           <div className={`relative p-4 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-2xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-700`}>
                             <Icon className="w-8 h-8 text-white drop-shadow-lg" />

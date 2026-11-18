@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { Calendar, Clock, User, Phone, Mail, Search, UserCheck, Trash2, CheckCir
 import AdminBackButton from "@/components/AdminBackButton";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createSpecialtySlug } from "@/utils/doctorUtils";
+import { awaitsAdminReview } from "@/lib/appointmentReview";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Appointment {
@@ -22,6 +22,8 @@ interface Appointment {
   appointment_time: string;
   appointment_type: string;
   status: string;
+  admin_review_required?: boolean;
+  admin_released_at?: string | null;
   notes?: string;
   specialist_id?: string;
   consultation_topic?: string;
@@ -59,14 +61,20 @@ const AppointmentManagement = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
   const { userProfile } = useUserRole();
+  const mutationLocks = useRef(new Set<string>());
+  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchAppointments();
+    const channel = supabase.channel(`admin-appointments-${crypto.randomUUID()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => { void fetchAppointments(false); })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
   }, []);
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const { data, error } = await supabase
         .from('appointments')
         .select(`
@@ -96,50 +104,29 @@ const AppointmentManagement = () => {
   };
 
   const updateAppointmentStatus = async (appointmentId: string, newStatus: string) => {
+    if (userProfile?.role !== 'admin' || mutationLocks.current.has(appointmentId)) return;
+    const appointment = appointments.find(a => a.id === appointmentId);
+    if (!appointment) return;
+    mutationLocks.current.add(appointmentId);
+    setBusyIds(new Set(mutationLocks.current));
     try {
-      const appointment = appointments.find(a => a.id === appointmentId);
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('appointments')
         .update({ status: newStatus })
-        .eq('id', appointmentId);
+        .eq('id', appointmentId).eq('status', appointment.status)
+        .select('*').maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('Randevu başka bir işlemde değiştirildi; listeyi yenileyin.');
 
       setAppointments(prev =>
-        prev.map(a => a.id === appointmentId ? { ...a, status: newStatus } : a)
+        prev.map(a => a.id === appointmentId ? { ...a, ...data } : a)
       );
-
-      if (newStatus === 'confirmed' && appointment?.specialist_id) {
-        try {
-          const { data: specialistData } = await supabase
-            .from('specialists')
-            .select('name, specialty')
-            .eq('id', appointment.specialist_id)
-            .single();
-
-          if (specialistData) {
-            const { data: specialistSlugData } = await supabase
-              .from('specialists')
-              .select('slug')
-              .eq('id', appointment.specialist_id)
-              .single();
-            const specialtySlug = createSpecialtySlug(specialistData.specialty);
-            const profileLink = `https://doktorumol.com.tr/${specialtySlug}/${specialistSlugData?.slug || ''}`;
-            const message = `Merhaba ${appointment.patient_name}, ${specialistData.name} ile randevunuz tamamlandı. Uzmanı değerlendirmek için: ${profileLink}`;
-
-            await supabase.functions.invoke('send-sms-via-static-proxy', {
-              body: { phone: appointment.patient_phone, message }
-            });
-          }
-        } catch (smsError) {
-          console.error('SMS error:', smsError);
-        }
-      }
 
       toast({
         title: "Başarılı",
         description: newStatus === 'confirmed'
-          ? "Randevu onaylandı ve danışana SMS gönderildi."
+          ? "Randevu onaylandı."
           : "Randevu durumu güncellendi.",
       });
     } catch (error) {
@@ -149,6 +136,9 @@ const AppointmentManagement = () => {
         description: "Randevu durumu güncellenirken bir hata oluştu.",
         variant: "destructive"
       });
+    } finally {
+      mutationLocks.current.delete(appointmentId);
+      setBusyIds(new Set(mutationLocks.current));
     }
   };
 
@@ -298,7 +288,7 @@ const AppointmentManagement = () => {
         <div className="flex items-center gap-2 mb-1">
           <span className="font-semibold text-foreground truncate">{appointment.patient_name}</span>
           <Badge className={`${getStatusColor(appointment.status)} border text-xs px-2 py-0.5`}>
-            {getStatusText(appointment.status)}
+            {awaitsAdminReview(appointment) ? 'Yönetici Onayı Bekliyor' : getStatusText(appointment.status)}
           </Badge>
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -334,7 +324,7 @@ const AppointmentManagement = () => {
             size="sm"
             variant="outline"
             onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
-            disabled={appointment.status === 'confirmed'}
+            disabled={appointment.status !== 'pending' || busyIds.has(appointment.id)}
             className="h-8 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-xs"
           >
             <CheckCircle className="w-3.5 h-3.5 mr-1" />
@@ -344,7 +334,7 @@ const AppointmentManagement = () => {
             size="sm"
             variant="outline"
             onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
-            disabled={appointment.status === 'cancelled'}
+            disabled={appointment.status === 'cancelled' || busyIds.has(appointment.id)}
             className="h-8 bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 text-xs"
           >
             <XCircle className="w-3.5 h-3.5 mr-1" />
@@ -354,6 +344,7 @@ const AppointmentManagement = () => {
             size="sm"
             variant="outline"
             onClick={() => deleteAppointment(appointment.id)}
+            disabled={busyIds.has(appointment.id)}
             className="h-8 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 text-xs"
           >
             <Trash2 className="w-3.5 h-3.5" />

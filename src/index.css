@@ -10,6 +10,15 @@
   75% { transform: translateX(-1px); }
 }
 
+.appointment-review-alert {
+  animation: shake 3s ease-in-out infinite;
+  outline: 2px solid hsl(var(--primary) / 0.3);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .appointment-review-alert { animation: none; }
+}
+
 /* Flame animation styles */
 @keyframes flame-flicker {
   0%, 100% { transform: rotate(-1deg) scale(1); }
