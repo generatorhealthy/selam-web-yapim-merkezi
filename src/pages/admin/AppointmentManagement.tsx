@@ -285,8 +285,8 @@ const AppointmentManagement = () => {
   const AppointmentRow = ({ appointment }: { appointment: Appointment }) => (
     <div className="flex flex-col lg:flex-row lg:items-center gap-3 p-4 bg-white/60 rounded-xl border border-slate-100 hover:border-primary/30 hover:shadow-sm transition-all">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="font-semibold text-foreground truncate">{appointment.patient_name}</span>
+        <div className="flex flex-wrap items-center gap-2 mb-1">
+          <span className="font-semibold text-foreground break-words">{appointment.patient_name}</span>
           <Badge className={`${getStatusColor(appointment.status)} border text-xs px-2 py-0.5`}>
             {awaitsAdminReview(appointment) ? 'Yönetici Onayı Bekliyor' : getStatusText(appointment.status)}
           </Badge>
@@ -319,7 +319,7 @@ const AppointmentManagement = () => {
       </div>
 
       {canManage && (
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <Button
             size="sm"
             variant="outline"

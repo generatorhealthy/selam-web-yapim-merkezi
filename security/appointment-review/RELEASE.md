@@ -19,3 +19,4 @@
 Yerel sentetik PostgreSQL: geçmiş kayıt, ön-onay görünürlüğü, sahte onay reddi, 20 eşzamanlı onayda tek aktarım, sağlık metni dışlama ve uzman tarafından oluşturulan randevu uyumluluğu. Gerçek kullanıcı/telefon/sağlık verisi veya bildirim sağlayıcısı kullanılmaz. Dış Supabase gerçek yönetici E2E burada erişilebilir değil.
 
 9 PostgreSQL kontrolü ve 10 Bun testi geçti. Sentetik tarayıcıda bilgisayar/telefon kartı +1 gösterdi, sallanma `shake`, hareket azaltma `none`, yatay taşma ve sayfa hatası yok. Canlı erişim/bildirim/Realtime değişikliği henüz uygulanmadı; yayın onayı bekleniyor. Build OK.
+Kart düğmesinden gerçek `/divan_paneli/appointments` yoluna geçiş sentetik yönetici verileriyle doğrulandı; bilgisayar/telefonda bekleyen kayıt ve Onayla görünür. Dar satırlarda isim ve işlem düğmeleri alt satıra sarılır. Gerçek hesap onayı ve teslim doğrulanmadı.
