@@ -4,11 +4,9 @@
 - [ ] Gerçek uzman oturumuyla yükleme/izleme/silme doğrulaması: dış Supabase oturumu sağlanamadığı için kullanıcı kontrolü bekleniyor.
 
 # 18 Kasım 2026 — Reels ve Sosyal Medya Ekibi
-- [ ] Ayrı korumalı ekip rolü, yalnız Reels erişimi ve video-only özel yükleme.
-- [ ] Aktif profil + bekleyen dahil sipariş için tekil Enes WhatsApp bildirimi; gönderici 05313453014, alıcı 05050082675.
-- [ ] Fotoğraflı uzman listesi, yüklenen video görüntüleme ve yönetici indirme.
-- [ ] Yerel güvenlik/koşul testleri ve bağımsız canlı paket onayı.
-- [ ] Enes için instagram@doktorumol.com.tr hesabını verilen şifreyle yalnız korumalı Reels yetkileri hazırlandıktan sonra oluştur; şifreyi dosyalara kaydetme.
+- [x] Kullanıcı Reels ekranı ve ekip hesabını iptal etti; uzmanların kendi profil videoları korunur.
+- [ ] 18 Kasım 14:22 İstanbul sonrası yeni kayıtlı, aktif ve siparişli uzmanları Enes'e tekil WhatsApp bildirimiyle ilet; bekleyen sipariş yeterli, eski kayıtlar hariç.
+- [ ] Bildirim görevini aç, koşul/eşzamanlılık testlerini ve salt okunur canlı doğrulamayı tamamla.
 
 # 16 Kasım 2026 — Hoppa temizliği
 - [x] Hoppa kaynakları, kart alanları ve işlev ayarları kaldırıldı; PayTR tipi doğrudan mevcut ödeme portundan türetildi. Tarihsel migration/kayıtlar değiştirilmedi.

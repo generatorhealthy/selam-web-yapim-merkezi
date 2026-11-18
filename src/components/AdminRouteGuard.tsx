@@ -68,7 +68,7 @@ const AdminRouteGuard = () => {
     return <Navigate to="/" replace />;
   }
 
-  if(!reelsRouteAllowed(userProfile.role,location.pathname))return <Navigate to="/divan_paneli/reels-videolari" replace />;
+  if(!reelsRouteAllowed(userProfile.role,location.pathname))return <Navigate to="/" replace />;
   return <Outlet />;
 };
 

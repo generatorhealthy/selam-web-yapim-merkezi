@@ -45,7 +45,7 @@ import {
   Server,
   Briefcase,
   Handshake,
-  TrendingUp, Film
+  TrendingUp
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -131,7 +131,6 @@ const AdminDashboard = () => {
   const isMuhasebe = userProfile?.role === 'muhasebe';
 
   const adminCards = [
-    {title:'Reels Videoları',description:'',icon:Film,gradient:'from-primary to-primary',bgGradient:'from-muted to-muted',shadowColor:'shadow-sm',route:'/divan_paneli/reels-videolari',buttonText:'Reels Videolarını Aç',adminOnly:true},
     {
       title: "Kurumsal İş Ortakları",
       description: "Referans kodu ile uzman getiren partner kurumlar, komisyonlar ve ödemeler",
@@ -760,7 +759,7 @@ const AdminDashboard = () => {
   ];
 
   const visibleCards = adminCards.filter(card => {
-    if(userProfile?.role==='social_media')return card.route==='/divan_paneli/reels-videolari';
+    if(userProfile?.role==='social_media')return false;
     if (isMuhasebe) {
       return (card as any).muhasebeOnly;
     }

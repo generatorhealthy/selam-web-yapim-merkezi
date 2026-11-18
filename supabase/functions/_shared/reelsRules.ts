@@ -23,5 +23,5 @@ export function detectReelsVideo(bytes: Uint8Array, mime: string, filename: stri
 }
 export function reelsMessage(name: string, slug: string, specialtySlug: string) {
   const safeName = name.replace(/[\r\n\u0000-\u001f]/g, ' ').trim().slice(0, 200);
-  return `Merhaba Enes Bey, yeni uzmanımız ${safeName} için Reels videosu hazırlamanızı rica ederiz. Uzman profili: https://doktorumol.com.tr/${encodeURIComponent(specialtySlug)}/${encodeURIComponent(slug)}. Hazırladığınız videoyu Divan Paneli → Reels Videoları bölümünden ilgili uzmana yükleyebilirsiniz. Emeğiniz için teşekkür ederiz. Doktorum Ol Ekibi`;
+  return `Merhaba Enes Bey, yeni uzmanımız ${safeName} için Reels videosu hazırlamanızı rica ederiz. Uzman profili: https://doktorumol.com.tr/${encodeURIComponent(specialtySlug)}/${encodeURIComponent(slug)}. Emeğiniz ve desteğiniz için teşekkür ederiz. Doktorum Ol Ekibi`;
 }

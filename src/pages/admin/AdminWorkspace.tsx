@@ -65,14 +65,12 @@ import UzmanApplications from "./UzmanApplications";
 import WhatsappBotManagement from "./WhatsappBotManagement";
 import WhatsappBulkSend from "./WhatsappBulkSend";
 import WhatsappManagement from "./WhatsappManagement";
-import ReelsVideos from './ReelsVideos';
 
 const AdminWorkspace = () => (
     <Routes>
       <Route index element={<AdminAuth />} />
       <Route element={<AdminRouteGuard />}>
       <Route path="dashboard" element={<AdminDashboard />} />
-      <Route path="reels-videolari" element={<ReelsVideos />} />
       <Route path="tests" element={<TestManagement />} />
       <Route path="packages" element={<PackageManagement />} />
       <Route path="pre-info-form" element={<PreInfoFormManagement />} />
