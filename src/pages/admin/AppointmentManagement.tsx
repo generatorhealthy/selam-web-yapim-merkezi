@@ -283,7 +283,7 @@ const AppointmentManagement = () => {
   const canManage = userProfile?.role === 'admin';
 
   const AppointmentRow = ({ appointment }: { appointment: Appointment }) => (
-    <div className="flex flex-col lg:flex-row lg:items-center gap-3 p-4 bg-white/60 rounded-xl border border-slate-100 hover:border-primary/30 hover:shadow-sm transition-all">
+    <div className="flex flex-col lg:flex-row lg:items-center gap-3 p-4 bg-card/60 rounded-xl border border-border hover:border-primary/30 hover:shadow-sm transition-all">
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2 mb-1">
           <span className="font-semibold text-foreground break-words">{appointment.patient_name}</span>
@@ -360,9 +360,9 @@ const AppointmentManagement = () => {
     const monthKeys = Object.keys(monthlyBreakdown).sort().reverse();
 
     return (
-      <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+      <Card className="bg-card/90 backdrop-blur-sm border-border shadow-sm hover:shadow-md transition-all overflow-hidden">
         <div
-          className="p-5 cursor-pointer hover:bg-slate-50/50 transition-colors"
+          className="p-5 cursor-pointer hover:bg-muted/50 transition-colors"
           onClick={() => toggleSpecialist(group.id)}
         >
           <div className="flex items-center gap-4">
@@ -389,7 +389,7 @@ const AppointmentManagement = () => {
 
             {/* Mini Stats */}
             <div className="hidden md:flex items-center gap-3">
-              <div className="text-center px-3 py-1.5 bg-slate-100 rounded-lg">
+              <div className="text-center px-3 py-1.5 bg-muted rounded-lg">
                 <p className="text-lg font-bold text-foreground">{group.stats.total}</p>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Toplam</p>
               </div>
@@ -433,7 +433,7 @@ const AppointmentManagement = () => {
 
         {/* Expanded: Monthly breakdown */}
         {isExpanded && (
-          <div className="border-t border-slate-100 px-5 pb-5">
+          <div className="border-t border-border px-5 pb-5">
             {monthKeys.map(monthLabel => (
               <div key={monthLabel} className="mt-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -457,7 +457,7 @@ const AppointmentManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="container mx-auto max-w-7xl">
         <AdminBackButton />
 
@@ -468,7 +468,7 @@ const AppointmentManagement = () => {
               <Calendar className="w-8 h-8 text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-foreground">
                 Randevu Yönetimi
               </h1>
               <p className="text-muted-foreground">Uzman bazlı randevu takibi ve yönetimi</p>
@@ -524,21 +524,21 @@ const AppointmentManagement = () => {
               placeholder="Hasta adı, email veya uzman adı ile ara..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11 h-11 bg-white/80 backdrop-blur-sm border-slate-200"
+              className="pl-11 h-11 bg-card/80 backdrop-blur-sm border-border"
             />
           </div>
 
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-fit">
-            <TabsList className="bg-white/80 border border-slate-200">
-              <TabsTrigger value="specialists" className="data-[state=active]:bg-primary data-[state=active]:text-white text-xs">
+            <TabsList className="bg-card/80 border border-border">
+              <TabsTrigger value="specialists" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
                 <Users className="w-4 h-4 mr-1" />
                 Uzman Bazlı
               </TabsTrigger>
-              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-white text-xs">
+              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
                 <BarChart3 className="w-4 h-4 mr-1" />
                 Tümü
               </TabsTrigger>
-              <TabsTrigger value="monthly" className="data-[state=active]:bg-primary data-[state=active]:text-white text-xs">
+              <TabsTrigger value="monthly" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
                 <CalendarDays className="w-4 h-4 mr-1" />
                 Aylık
               </TabsTrigger>
@@ -549,7 +549,7 @@ const AppointmentManagement = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 px-3 rounded-lg border border-slate-200 bg-white/80 text-sm"
+              className="h-11 px-3 rounded-lg border border-border bg-card/80 text-sm"
             >
               <option value="all">Tüm Durumlar</option>
               <option value="pending">Bekleyen</option>
@@ -562,7 +562,7 @@ const AppointmentManagement = () => {
 
         {/* Monthly navigation */}
         {viewMode === 'monthly' && (
-          <Card className="bg-white/80 border-slate-200 shadow-sm mb-6">
+          <Card className="bg-card/80 border-border shadow-sm mb-6">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <Button
@@ -598,7 +598,7 @@ const AppointmentManagement = () => {
         {/* Content */}
         {loading ? (
           <div className="text-center py-16">
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/80 rounded-xl shadow-sm">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-card/80 rounded-xl shadow-sm">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
               <span className="text-muted-foreground">Randevular yükleniyor...</span>
             </div>
@@ -606,7 +606,7 @@ const AppointmentManagement = () => {
         ) : viewMode === 'specialists' ? (
           /* Specialist-based view */
           specialistGroups.length === 0 ? (
-            <Card className="bg-white/80 border-slate-200">
+            <Card className="bg-card/80 border-border">
               <CardContent className="text-center py-16">
                 <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground text-lg">Randevu bulunmuyor.</p>
@@ -622,7 +622,7 @@ const AppointmentManagement = () => {
         ) : (
           /* All / Monthly view */
           filteredAppointments.length === 0 ? (
-            <Card className="bg-white/80 border-slate-200">
+            <Card className="bg-card/80 border-border">
               <CardContent className="text-center py-16">
                 <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground text-lg">Randevu bulunmuyor.</p>
