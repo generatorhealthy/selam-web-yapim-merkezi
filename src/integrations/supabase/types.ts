@@ -6118,6 +6118,54 @@ export type Database = {
         }
         Relationships: []
       }
+      reels_jobs: {
+        Row: {
+          created_at: string
+          id: string
+          notice_claimed_at: string | null
+          notice_message_id: string | null
+          notice_sent_at: string | null
+          notice_status: string
+          specialist_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notice_claimed_at?: string | null
+          notice_message_id?: string | null
+          notice_sent_at?: string | null
+          notice_status?: string
+          specialist_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notice_claimed_at?: string | null
+          notice_message_id?: string | null
+          notice_sent_at?: string | null
+          notice_status?: string
+          specialist_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reels_jobs_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "public_specialists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reels_jobs_specialist_id_fkey"
+            columns: ["specialist_id"]
+            isOneToOne: true
+            referencedRelation: "specialists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reels_team_members: {
         Row: {
           active: boolean
@@ -6138,6 +6186,97 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      reels_uploads: {
+        Row: {
+          byte_size: number
+          created_at: string
+          filename: string
+          id: string
+          job_id: string
+          mime_type: string
+          status: string
+          storage_path: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          byte_size: number
+          created_at?: string
+          filename: string
+          id: string
+          job_id: string
+          mime_type: string
+          status?: string
+          storage_path: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          byte_size?: number
+          created_at?: string
+          filename?: string
+          id?: string
+          job_id?: string
+          mime_type?: string
+          status?: string
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reels_uploads_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "reels_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reels_videos: {
+        Row: {
+          byte_size: number
+          created_at: string
+          id: string
+          job_id: string
+          mime_type: string
+          sha256: string
+          storage_path: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          byte_size: number
+          created_at?: string
+          id?: string
+          job_id: string
+          mime_type: string
+          sha256: string
+          storage_path: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          byte_size?: number
+          created_at?: string
+          id?: string
+          job_id?: string
+          mime_type?: string
+          sha256?: string
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reels_videos_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "reels_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       registration_analytics: {
         Row: {
@@ -8720,6 +8859,17 @@ export type Database = {
           is_now_blocked: boolean
         }[]
       }
+      reels_claim_notice: { Args: never; Returns: Json }
+      reels_list_jobs_server: {
+        Args: {
+          p_actor: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+        }
+        Returns: Json
+      }
+      reels_sync_jobs: { Args: { p_baseline?: boolean }; Returns: number }
       register_partner_referral:
         | {
             Args: {

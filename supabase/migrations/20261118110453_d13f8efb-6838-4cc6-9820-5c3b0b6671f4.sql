@@ -1,0 +1,43 @@
+CREATE TABLE public.reels_jobs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(),specialist_id uuid UNIQUE REFERENCES public.specialists(id) ON DELETE SET NULL,notice_status text NOT NULL DEFAULT 'pending',notice_claimed_at timestamptz,notice_sent_at timestamptz,notice_message_id text,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
+GRANT SELECT ON public.reels_jobs TO authenticated;
+GRANT ALL ON public.reels_jobs TO service_role;
+ALTER TABLE public.reels_jobs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY reels_jobs_admin ON public.reels_jobs FOR SELECT TO authenticated USING(public.is_admin_user());
+CREATE TABLE public.reels_videos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(),job_id uuid NOT NULL REFERENCES public.reels_jobs(id),uploaded_by uuid NOT NULL,storage_path text NOT NULL UNIQUE,mime_type text NOT NULL,byte_size bigint NOT NULL,sha256 text NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
+GRANT SELECT ON public.reels_videos TO authenticated;
+GRANT ALL ON public.reels_videos TO service_role;
+ALTER TABLE public.reels_videos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY reels_videos_admin ON public.reels_videos FOR SELECT TO authenticated USING(public.is_admin_user());
+CREATE TRIGGER reels_jobs_updated BEFORE UPDATE ON public.reels_jobs FOR EACH ROW EXECUTE FUNCTION public.reels_touch_updated_at();
+CREATE TRIGGER reels_videos_updated BEFORE UPDATE ON public.reels_videos FOR EACH ROW EXECUTE FUNCTION public.reels_touch_updated_at();
+CREATE FUNCTION public.reels_sync_jobs(p_baseline boolean DEFAULT false) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$DECLARE added integer; BEGIN
+IF current_setting('role',true) IS DISTINCT FROM 'service_role' AND NOT(session_user='postgres' AND current_setting('role',true) IN ('none','postgres')) THEN RAISE EXCEPTION 'service required' USING ERRCODE='42501'; END IF;
+INSERT INTO public.reels_jobs(specialist_id,notice_status) SELECT s.id,CASE WHEN p_baseline THEN 'legacy' ELSE 'pending' END FROM public.specialists s WHERE s.is_active=true AND s.slug IS NOT NULL AND s.user_id IS NOT NULL AND nullif(trim(s.email),'') IS NOT NULL AND EXISTS(SELECT 1 FROM public.orders o WHERE lower(trim(o.customer_email))=lower(trim(s.email)) AND o.deleted_at IS NULL AND o.status IN ('pending','approved','completed')) AND (SELECT count(*) FROM public.specialists x WHERE lower(trim(x.email))=lower(trim(s.email)))=1 ON CONFLICT(specialist_id) DO NOTHING;
+GET DIAGNOSTICS added=ROW_COUNT;RETURN added;END $$;
+REVOKE ALL ON FUNCTION public.reels_sync_jobs(boolean) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.reels_sync_jobs(boolean) TO service_role;
+SELECT public.reels_sync_jobs(true);
+CREATE FUNCTION public.reels_list_jobs_server(p_actor uuid,p_offset integer DEFAULT 0,p_limit integer DEFAULT 30,p_search text DEFAULT '') RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE result jsonb;BEGIN
+IF current_setting('role',true) IS DISTINCT FROM 'service_role' OR NOT(EXISTS(SELECT 1 FROM public.user_profiles WHERE user_id=p_actor AND role='admin' AND is_approved) OR EXISTS(SELECT 1 FROM public.reels_team_members WHERE user_id=p_actor AND active)) THEN RAISE EXCEPTION 'reels access required' USING ERRCODE='42501';END IF;
+IF p_offset<0 OR p_limit<1 OR p_limit>50 OR length(p_search)>100 THEN RAISE EXCEPTION 'invalid pagination' USING ERRCODE='22023';END IF;
+SELECT coalesce(jsonb_agg(row_to_json(items)),'[]'::jsonb) INTO result FROM(SELECT j.id,s.name,s.profile_picture,s.slug,s.specialty,j.created_at,CASE WHEN EXISTS(SELECT 1 FROM public.user_profiles WHERE user_id=p_actor AND role='admin' AND is_approved) THEN j.notice_status ELSE NULL END AS notice_status,(SELECT count(*) FROM public.reels_videos v WHERE v.job_id=j.id) AS video_count FROM public.reels_jobs j JOIN public.specialists s ON s.id=j.specialist_id WHERE s.is_active=true AND s.slug IS NOT NULL AND(p_search='' OR position(lower(p_search) in lower(s.name))>0) ORDER BY j.created_at DESC,j.id LIMIT p_limit OFFSET p_offset) items; RETURN result;END $$;
+REVOKE ALL ON FUNCTION public.reels_list_jobs_server(uuid,integer,integer,text) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.reels_list_jobs_server(uuid,integer,integer,text) TO service_role;
+CREATE TABLE public.reels_uploads(id uuid PRIMARY KEY,job_id uuid NOT NULL REFERENCES public.reels_jobs(id),uploaded_by uuid NOT NULL,storage_path text UNIQUE NOT NULL,filename text NOT NULL,mime_type text NOT NULL,byte_size bigint NOT NULL,status text NOT NULL DEFAULT 'pending',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.reels_uploads TO service_role;
+ALTER TABLE public.reels_uploads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY reels_uploads_service ON public.reels_uploads FOR ALL TO service_role USING(true) WITH CHECK(true);
+CREATE TRIGGER reels_uploads_updated BEFORE UPDATE ON public.reels_uploads FOR EACH ROW EXECUTE FUNCTION public.reels_touch_updated_at();
+CREATE INDEX reels_uploads_actor_time ON public.reels_uploads(uploaded_by,created_at);
+CREATE INDEX reels_videos_job_time ON public.reels_videos(job_id,created_at);
+CREATE FUNCTION public.reels_claim_notice() RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$DECLARE picked public.reels_jobs;s public.specialists;BEGIN
+IF current_setting('role',true) IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'service required' USING ERRCODE='42501';END IF;
+PERFORM pg_advisory_xact_lock(hashtextextended('reels-notice-global',0));
+IF EXISTS(SELECT 1 FROM public.reels_jobs WHERE notice_claimed_at>now()-interval '1 minute') THEN RETURN NULL;END IF;
+SELECT j.* INTO picked FROM public.reels_jobs j JOIN public.specialists sp ON sp.id=j.specialist_id WHERE j.notice_status='pending' AND sp.is_active AND sp.slug IS NOT NULL AND EXISTS(SELECT 1 FROM public.orders o WHERE lower(trim(o.customer_email))=lower(trim(sp.email)) AND o.deleted_at IS NULL AND o.status IN ('pending','approved','completed')) ORDER BY j.created_at,j.id LIMIT 1 FOR UPDATE OF j SKIP LOCKED;
+IF picked.id IS NULL THEN RETURN NULL;END IF;
+SELECT * INTO s FROM public.specialists WHERE id=picked.specialist_id;
+UPDATE public.reels_jobs SET notice_status='unknown',notice_claimed_at=now() WHERE id=picked.id;
+RETURN jsonb_build_object('id',picked.id,'name',s.name,'slug',s.slug,'specialty',s.specialty);END $$;
+REVOKE ALL ON FUNCTION public.reels_claim_notice() FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.reels_claim_notice() TO service_role;

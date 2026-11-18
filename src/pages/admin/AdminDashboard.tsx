@@ -45,7 +45,7 @@ import {
   Server,
   Briefcase,
   Handshake,
-  TrendingUp
+  TrendingUp, Film
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -131,6 +131,7 @@ const AdminDashboard = () => {
   const isMuhasebe = userProfile?.role === 'muhasebe';
 
   const adminCards = [
+    {title:'Reels Videoları',description:'',icon:Film,gradient:'from-primary to-primary',bgGradient:'from-muted to-muted',shadowColor:'shadow-sm',route:'/divan_paneli/reels-videolari',buttonText:'Reels Videolarını Aç',adminOnly:true},
     {
       title: "Kurumsal İş Ortakları",
       description: "Referans kodu ile uzman getiren partner kurumlar, komisyonlar ve ödemeler",
@@ -759,6 +760,7 @@ const AdminDashboard = () => {
   ];
 
   const visibleCards = adminCards.filter(card => {
+    if(userProfile?.role==='social_media')return card.route==='/divan_paneli/reels-videolari';
     if (isMuhasebe) {
       return (card as any).muhasebeOnly;
     }
@@ -783,6 +785,7 @@ const AdminDashboard = () => {
     if (isStaff) return 'Staff';
     if (isLegal) return 'Hukuk Birimi';
     if (isMuhasebe) return 'Muhasebe Birimi';
+    if(userProfile?.role==='social_media')return 'Sosyal Medya Ekibi';
     return 'Kullanıcı';
   };
 
@@ -801,7 +804,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!userProfile || !['admin', 'staff', 'legal', 'muhasebe'].includes(userProfile.role)) {
+  if (!userProfile || !['admin', 'staff', 'legal', 'muhasebe','social_media'].includes(userProfile.role)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-rose-50 flex items-center justify-center">
         <div className="bg-white/95 backdrop-blur-lg p-10 rounded-3xl shadow-2xl text-center border border-red-100/50">

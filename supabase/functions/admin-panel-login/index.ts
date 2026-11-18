@@ -33,6 +33,10 @@ Deno.serve(async req => {
     if (!error && data.user && data.session) {
       const { data: profile, error: profileError } = await admin.from('user_profiles').select('role,is_approved').eq('user_id', data.user.id).maybeSingle();
       permitted = !profileError && profile?.is_approved === true && ['admin','staff','legal','muhasebe','partner'].includes(profile.role);
+      if(!permitted){
+        const {data:member,error:memberError}=await admin.from('reels_team_members').select('active').eq('user_id',data.user.id).maybeSingle();
+        permitted=!memberError&&member?.active===true&&profile?.role==='user';
+      }
     }
     if (!permitted || !data.session) {
       if (data.session) await auth.auth.signOut();

@@ -3,9 +3,9 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 
-type UserRole = Database["public"]["Enums"]["user_role"];
+type UserRole = Database["public"]["Enums"]["user_role"] | "social_media";
 
-export const PANEL_ROLES: UserRole[] = ["admin", "staff", "legal", "muhasebe"];
+export const PANEL_ROLES: UserRole[] = ["admin", "staff", "legal", "muhasebe", "social_media"];
 
 export interface UserProfile {
   role: UserRole;
@@ -108,6 +108,9 @@ const timedSignal = (timeoutMs: number, parent?: AbortSignal) => {
 };
 
 const fetchProfile = async (user: User, parentSignal?: AbortSignal): Promise<UserProfile> => {
+  const {data:member,error:memberError}=await supabase.from('reels_team_members').select('active').eq('user_id',user.id).maybeSingle();
+  if(memberError)throw memberError;
+  if(member?.active)return {role:'social_media',is_approved:true,name:'Sosyal Medya Ekibi',email:user.email};
   const panel = timedSignal(PROFILE_REQUEST_TIMEOUT, parentSignal);
 
   const { data: panelProfiles, error } = await supabase

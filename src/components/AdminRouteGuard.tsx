@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PANEL_ROLES, useUserRole } from "@/hooks/useUserRole";
+import {reelsRouteAllowed} from '@/lib/reelsAccess';
 
 const AdminRouteGuard = () => {
   const location = useLocation();
@@ -67,6 +68,7 @@ const AdminRouteGuard = () => {
     return <Navigate to="/" replace />;
   }
 
+  if(!reelsRouteAllowed(userProfile.role,location.pathname))return <Navigate to="/divan_paneli/reels-videolari" replace />;
   return <Outlet />;
 };
 

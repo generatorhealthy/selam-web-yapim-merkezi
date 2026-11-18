@@ -10,7 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff } from "lucide-react";
 import { solveLoginChallenge } from "@/lib/adminLogin";
-import { primeUserRoleCache } from "@/hooks/useUserRole";
+import { primeUserRoleCache, type UserProfile } from "@/hooks/useUserRole";
 
 const AdminAuth = () => {
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -78,7 +78,9 @@ const AdminAuth = () => {
         12_000,
         'Profil kontrolü zaman aşımına uğradı. Lütfen tekrar deneyin.'
       );
-      const profile = panelProfiles?.[0];
+      const {data:member,error:memberError}=await supabase.from('reels_team_members').select('active').eq('user_id',authData.user.id).maybeSingle();
+      if(memberError)throw memberError;
+      const profile:UserProfile|undefined=member?.active?{role:'social_media',is_approved:true,name:'Sosyal Medya Ekibi',email:authData.user.email}:panelProfiles?.[0];
 
       if (profileError) {
         console.error('Profil sorgu hatası:', profileError);
@@ -100,7 +102,7 @@ const AdminAuth = () => {
       }
 
       // Admin, staff, legal, muhasebe veya partner kontrolü
-      if (!['admin', 'staff', 'legal', 'muhasebe', 'partner'].includes(profile.role)) {
+      if (!['admin', 'staff', 'legal', 'muhasebe', 'partner','social_media'].includes(profile.role)) {
         await supabase.auth.signOut();
         toast({
           title: "Yetkisiz Erişim",
@@ -121,7 +123,7 @@ const AdminAuth = () => {
         return;
       }
 
-      try {
+      if(profile.role!=='social_media')try {
         await withTimeout(
           async () => await supabase.rpc('reset_admin_login_attempts', {
             p_email: authData.user.email ?? loginData.email
@@ -142,6 +144,7 @@ const AdminAuth = () => {
 
       // Başarılı giriş
       const roleText = profile.role === 'admin' ? 'Admin' :
+                       profile.role === 'social_media' ? 'Sosyal Medya Ekibi' :
                        profile.role === 'staff' ? 'Staff' :
                        profile.role === 'legal' ? 'Hukuk Birimi' :
                        profile.role === 'partner' ? 'İş Ortağı' : 'Muhasebe Birimi';
@@ -152,7 +155,9 @@ const AdminAuth = () => {
 
       primeUserRoleCache(authData.user.id, profile, authData.user);
 
-      if (profile.role === 'partner') {
+      if(profile.role==='social_media'){
+        navigate('/divan_paneli/reels-videolari');
+      }else if (profile.role === 'partner') {
         navigate('/partner');
       } else {
         navigate('/divan_paneli/dashboard');
