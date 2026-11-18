@@ -51,17 +51,19 @@ GRANT EXECUTE ON FUNCTION public.reels_sync_jobs(boolean) TO service_role;
 -- Existing eligible specialists are available in the workspace, never spammed.
 SELECT public.reels_sync_jobs(true);
 
-CREATE FUNCTION public.reels_list_jobs(p_offset integer DEFAULT 0,p_limit integer DEFAULT 30,p_search text DEFAULT '')
+CREATE FUNCTION public.reels_list_jobs_server(p_actor uuid,p_offset integer DEFAULT 0,p_limit integer DEFAULT 30,p_search text DEFAULT '')
  RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
  DECLARE result jsonb;
  BEGIN
- IF NOT(public.is_admin_user() OR public.has_reels_team_access()) THEN
+ IF current_setting('role',true) IS DISTINCT FROM 'service_role' OR NOT (
+ EXISTS(SELECT 1 FROM public.user_profiles WHERE user_id=p_actor AND role='admin' AND is_approved)
+ OR EXISTS(SELECT 1 FROM public.reels_team_members WHERE user_id=p_actor AND active)) THEN
  RAISE EXCEPTION 'reels access required' USING ERRCODE='42501'; END IF;
  IF p_offset<0 OR p_limit<1 OR p_limit>50 OR length(p_search)>100 THEN
  RAISE EXCEPTION 'invalid pagination' USING ERRCODE='22023'; END IF;
  SELECT coalesce(jsonb_agg(row_to_json(items)),'[]'::jsonb) INTO result FROM (
- SELECT j.id,s.name,s.profile_picture,s.slug,j.created_at,
- CASE WHEN public.is_admin_user() THEN j.notice_status ELSE NULL END AS notice_status,
+ SELECT j.id,s.name,s.profile_picture,s.slug,s.specialty,j.created_at,
+ CASE WHEN EXISTS(SELECT 1 FROM public.user_profiles WHERE user_id=p_actor AND role='admin' AND is_approved) THEN j.notice_status ELSE NULL END AS notice_status,
  (SELECT count(*) FROM public.reels_videos v WHERE v.job_id=j.id) AS video_count
  FROM public.reels_jobs j JOIN public.specialists s ON s.id=j.specialist_id
  WHERE s.is_active=true AND s.slug IS NOT NULL AND (p_search='' OR position(lower(p_search) in lower(s.name))>0)
@@ -69,8 +71,21 @@ CREATE FUNCTION public.reels_list_jobs(p_offset integer DEFAULT 0,p_limit intege
  ) items;
  RETURN result;
  END $$;
-REVOKE ALL ON FUNCTION public.reels_list_jobs(integer,integer,text) FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.reels_list_jobs(integer,integer,text) TO authenticated;
+REVOKE ALL ON FUNCTION public.reels_list_jobs_server(uuid,integer,integer,text) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.reels_list_jobs_server(uuid,integer,integer,text) TO service_role;
+
+CREATE TABLE public.reels_uploads (
+ id uuid PRIMARY KEY, job_id uuid NOT NULL REFERENCES public.reels_jobs(id),
+ uploaded_by uuid NOT NULL, storage_path text UNIQUE NOT NULL, filename text NOT NULL,
+ mime_type text NOT NULL, byte_size bigint NOT NULL, status text NOT NULL DEFAULT 'pending',
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+GRANT ALL ON public.reels_uploads TO service_role;
+ALTER TABLE public.reels_uploads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY reels_uploads_service ON public.reels_uploads FOR ALL TO service_role USING(true) WITH CHECK(true);
+CREATE TRIGGER reels_uploads_updated BEFORE UPDATE ON public.reels_uploads FOR EACH ROW EXECUTE FUNCTION public.reels_touch_updated_at();
+CREATE INDEX reels_uploads_actor_time ON public.reels_uploads(uploaded_by,created_at);
+CREATE INDEX reels_videos_job_time ON public.reels_videos(job_id,created_at);
 
 CREATE FUNCTION public.reels_claim_notice() RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
  DECLARE picked public.reels_jobs; s public.specialists;
@@ -87,7 +102,7 @@ CREATE FUNCTION public.reels_claim_notice() RETURNS jsonb LANGUAGE plpgsql SECUR
  IF picked.id IS NULL THEN RETURN NULL; END IF;
  SELECT * INTO s FROM public.specialists WHERE id=picked.specialist_id;
  UPDATE public.reels_jobs SET notice_status='unknown',notice_claimed_at=now() WHERE id=picked.id;
- RETURN jsonb_build_object('id',picked.id,'name',s.name,'slug',s.slug);
+ RETURN jsonb_build_object('id',picked.id,'name',s.name,'slug',s.slug,'specialty',s.specialty);
  END $$;
 REVOKE ALL ON FUNCTION public.reels_claim_notice() FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.reels_claim_notice() TO service_role;

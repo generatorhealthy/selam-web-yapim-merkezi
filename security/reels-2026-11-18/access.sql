@@ -6,11 +6,12 @@ CREATE TABLE public.reels_team_members (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.reels_team_members TO authenticated;
 GRANT ALL ON public.reels_team_members TO service_role;
 ALTER TABLE public.reels_team_members ENABLE ROW LEVEL SECURITY;
-CREATE POLICY reels_team_admin ON public.reels_team_members FOR ALL TO authenticated
- USING(public.is_admin_user()) WITH CHECK(public.is_admin_user());
-CREATE POLICY reels_team_self ON public.reels_team_members FOR SELECT TO authenticated USING(user_id=auth.uid());
+CREATE POLICY reels_team_read ON public.reels_team_members FOR SELECT TO authenticated USING(user_id=auth.uid() OR public.is_admin_user());
+CREATE POLICY reels_team_insert ON public.reels_team_members FOR INSERT TO authenticated WITH CHECK(public.is_admin_user());
+CREATE POLICY reels_team_update ON public.reels_team_members FOR UPDATE TO authenticated USING(public.is_admin_user()) WITH CHECK(public.is_admin_user());
+CREATE POLICY reels_team_delete ON public.reels_team_members FOR DELETE TO authenticated USING(public.is_admin_user());
 
-CREATE FUNCTION public.has_reels_team_access() RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
+CREATE FUNCTION public.has_reels_team_access() RETURNS boolean LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
  SELECT EXISTS(SELECT 1 FROM public.reels_team_members WHERE user_id=auth.uid() AND active);
 $$;
 REVOKE ALL ON FUNCTION public.has_reels_team_access() FROM PUBLIC,anon;

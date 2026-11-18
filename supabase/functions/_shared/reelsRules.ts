@@ -21,7 +21,7 @@ export function detectReelsVideo(bytes: Uint8Array, mime: string, filename: stri
   if (ext === 'mp4' && mime === 'video/mp4' && ['isom','iso2','mp41','mp42','avc1','M4V ','dash'].includes(brand)) return 'mp4';
   return null;
 }
-export function reelsMessage(name: string, slug: string) {
+export function reelsMessage(name: string, slug: string, specialtySlug: string) {
   const safeName = name.replace(/[\r\n\u0000-\u001f]/g, ' ').trim().slice(0, 200);
-  return `Merhaba Enes Bey, yeni uzmanımız ${safeName} için Reels videosu hazırlamanızı rica ederiz. Uzman profili: https://doktorumol.com.tr/uzman/${encodeURIComponent(slug)}. Hazırladığınız videoyu Divan Paneli → Reels Videoları bölümünden ilgili uzmana yükleyebilirsiniz. Emeğiniz için teşekkür ederiz. Doktorum Ol Ekibi`;
+  return `Merhaba Enes Bey, yeni uzmanımız ${safeName} için Reels videosu hazırlamanızı rica ederiz. Uzman profili: https://doktorumol.com.tr/${encodeURIComponent(specialtySlug)}/${encodeURIComponent(slug)}. Hazırladığınız videoyu Divan Paneli → Reels Videoları bölümünden ilgili uzmana yükleyebilirsiniz. Emeğiniz için teşekkür ederiz. Doktorum Ol Ekibi`;
 }
