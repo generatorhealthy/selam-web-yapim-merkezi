@@ -6118,6 +6118,27 @@ export type Database = {
         }
         Relationships: []
       }
+      reels_team_members: {
+        Row: {
+          active: boolean
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       registration_analytics: {
         Row: {
           click_events: Json | null
@@ -8597,6 +8618,7 @@ export type Database = {
         Args: { p_specialist_id: string }
         Returns: number
       }
+      has_reels_team_access: { Args: never; Returns: boolean }
       health_test_commit: {
         Args: {
           p_answers: Json
