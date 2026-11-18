@@ -26,7 +26,7 @@ Deno.serve(async req=>{
   const session=Array.isArray(sessions)?sessions.find(s=>s.status==='WORKING'&&s.me?.id?.split('@')[0]===REELS_SENDER):null;
   if(!session?.name)return reply({waiting:true});
   const {data:job,error}=await db.rpc('reels_claim_notice');if(error)throw new Error('claim');
-  if(!job)return reply({skipped:true});
+  if(!job){await db.rpc('reels_stop_if_drained');return reply({skipped:true});}
   // Claim stays unknown on timeout/non-OK: never blindly repeat a possibly delivered message.
   const sent=await fetch(`${waha}/api/sendText`,{method:'POST',headers,signal:AbortSignal.timeout(20000),body:JSON.stringify({session:session.name,chatId:`${REELS_RECIPIENT}@c.us`,text:reelsMessage(job.name,job.slug,specialtySlug(job.specialty||'')),linkPreview:false})});
   if(!sent.ok)return reply({unknown:true},502);
@@ -34,6 +34,7 @@ Deno.serve(async req=>{
   if(!id)return reply({unknown:true},502);
   const {error:saved}=await db.from('reels_jobs').update({notice_status:'sent',notice_sent_at:new Date().toISOString(),notice_message_id:id}).eq('id',job.id).eq('notice_status','unknown');
   if(saved)return reply({unknown:true},503);
+  await db.rpc('reels_stop_if_drained');
   return reply({accepted:true});
  }catch{return reply({error:'Bildirim tamamlanamadı'},503);}
 });

@@ -1,0 +1,9 @@
+CREATE FUNCTION public.wake_enes_specialist_notice() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$DECLARE relevant boolean:=false;BEGIN
+IF TG_TABLE_NAME='specialists' THEN relevant:=NEW.created_at>='2026-11-18T11:22:00Z'::timestamptz AND NEW.is_active AND NEW.slug IS NOT NULL AND EXISTS(SELECT 1 FROM public.orders o WHERE lower(trim(o.customer_email))=lower(trim(NEW.email)) AND o.deleted_at IS NULL AND o.status IN ('pending','approved','completed'));
+ELSIF TG_TABLE_NAME='orders' THEN relevant:=NEW.deleted_at IS NULL AND NEW.status IN ('pending','approved','completed') AND EXISTS(SELECT 1 FROM public.specialists s WHERE s.created_at>='2026-11-18T11:22:00Z'::timestamptz AND s.is_active AND s.slug IS NOT NULL AND lower(trim(s.email))=lower(trim(NEW.customer_email)));
+END IF;
+IF relevant THEN PERFORM net.http_post(url:='https://irnfwewabogveofwemvg.supabase.co/functions/v1/reels-notify',headers:=jsonb_build_object('Content-Type','application/json','x-internal-cron-token',(SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name='internal_cron_token' LIMIT 1)),body:='{}'::jsonb,timeout_milliseconds:=55000);END IF;
+RETURN NEW;EXCEPTION WHEN OTHERS THEN RETURN NEW;END $$;
+REVOKE ALL ON FUNCTION public.wake_enes_specialist_notice() FROM PUBLIC,anon,authenticated;
+CREATE TRIGGER enes_notice_specialist AFTER INSERT OR UPDATE OF is_active,slug,email ON public.specialists FOR EACH ROW EXECUTE FUNCTION public.wake_enes_specialist_notice();
+CREATE TRIGGER enes_notice_order AFTER INSERT OR UPDATE OF status,deleted_at ON public.orders FOR EACH ROW EXECUTE FUNCTION public.wake_enes_specialist_notice();

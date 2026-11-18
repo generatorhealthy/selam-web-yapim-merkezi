@@ -5,8 +5,8 @@
 
 # 18 Kasım 2026 — Reels ve Sosyal Medya Ekibi
 - [x] Kullanıcı Reels ekranı ve ekip hesabını iptal etti; uzmanların kendi profil videoları korunur.
-- [ ] 18 Kasım 14:22 İstanbul sonrası yeni kayıtlı, aktif ve siparişli uzmanları Enes'e tekil WhatsApp bildirimiyle ilet; bekleyen sipariş yeterli, eski kayıtlar hariç.
-- [ ] Bildirim görevini aç, koşul/eşzamanlılık testlerini ve salt okunur canlı doğrulamayı tamamla.
+- [x] 18 Kasım 14:22 İstanbul sonrası yeni kayıtlı, aktif ve siparişli uzmanları Enes'e tekil WhatsApp bildirimiyle ilet; bekleyen sipariş yeterli, eski kayıtlar hariç.
+- [ ] Olayla uyanan, kuyruk boşalınca duran bildirim görevini tamamla ve salt okunur doğrula.
 
 # 16 Kasım 2026 — Hoppa temizliği
 - [x] Hoppa kaynakları, kart alanları ve işlev ayarları kaldırıldı; PayTR tipi doğrudan mevcut ödeme portundan türetildi. Tarihsel migration/kayıtlar değiştirilmedi.
