@@ -1,5 +1,7 @@
 import {test,expect} from 'bun:test';
-import {canAddProfileVideo,ownsProfileVideo,hasVideoTrack} from '../../supabase/functions/_shared/profileVideoRules';
+import {canAddProfileVideo,ownsProfileVideo,hasVideoTrack,publicProfileVideo,canReviewProfileVideo} from '../../supabase/functions/_shared/profileVideoRules';
+test('pending and rejected videos never publish',()=>{expect(publicProfileVideo('ready','pending')).toBe(false);expect(publicProfileVideo('ready','rejected')).toBe(false);expect(publicProfileVideo('ready','approved')).toBe(true);expect(publicProfileVideo('validating','approved')).toBe(false);});
+test('only approved admin may review videos',()=>{expect(canReviewProfileVideo('admin',true)).toBe(true);for(const role of ['staff','specialist','user'])expect(canReviewProfileVideo(role,true)).toBe(false);expect(canReviewProfileVideo('admin',false)).toBe(false);});
 test('six videos maximum: sixth allowed, seventh denied',()=>{expect(canAddProfileVideo(5)).toBe(true);expect(canAddProfileVideo(6)).toBe(false);});
 test('only the owning specialist can modify videos',()=>{expect(ownsProfileVideo('owner','owner')).toBe(true);expect(ownsProfileVideo('owner','other')).toBe(false);});
 test('audio-only container is rejected',()=>{expect(hasVideoTrack(new TextEncoder().encode('ftypisom audio'),'video/mp4')).toBe(false);});
