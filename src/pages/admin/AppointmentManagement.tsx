@@ -371,7 +371,7 @@ const AppointmentManagement = () => {
             variant="outline"
             onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
             disabled={appointment.status === 'cancelled' || busyIds.has(appointment.id)}
-            className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
+            className="h-8 text-destructive dark:text-foreground border-destructive/30 hover:bg-destructive/10 text-xs"
           >
             <XCircle className="w-3.5 h-3.5 mr-1" />
             {awaitsAdminReview(appointment) ? 'Talebi reddet' : 'Randevuyu iptal et'}

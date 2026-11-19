@@ -4,6 +4,7 @@
 `release-request.sql` yönetici ön kontrolünü uzman kesinleştirmesinden ayırır: satır kilitli RPC yalnız aktarım tarihini sunucuda damgalar; status pending kalır. Uzman ancak aktarım sonrası görür. Mevcut onaydan önce confirmed yazımı reddedilir; geçmiş satırlar değişmez. Bildirim tetiklerinin taşıma/yetki/tekil claim mekanizması korunur.
 Yayın onayı sonrası SQL migration ve yalnız uzman talep bildirimi için `canNotifySpecialistRequest` kapısı gerekir; hasta kesinleştirme kapısı confirmed şartını korur. `INDEPENDENT_RELEASE_ENABLED` ancak bunlar yayımlanınca açılır. Şimdilik düğme kapalı; eski Onayla ön kontrol satırında sunulmaz.
 9 Bun testi, 11 sentetik PostgreSQL kontrolü (20 eşzamanlı aktarımda 1 başarı), 1280/390 test transportuyla arayüz readback geçti. Canlı yönetici/teslim testi yapılmadı. Geri alma: bağımsız aktarım düğmesini kapat, mevcut gizlilik kapılarını koru; aktarılmış kayıtları geri yazma veya yeniden bildirime sokma.
+Son kontrol mevcut kapalı düğmeyle tekrarlandı: 1280/390 ve açık/koyu temalarda üç talebin tamamı ayrı ön kontrolde; her birinde aktarım kapalı, randevu kesinleştirme yok. Sentetik ret bir status cancelled yazımı yaptı, ön kontrol sayısını azalttı; sonraki Tümü ekranı reddedilmiş ve iletilmiş pending kayıtları gösterdi, diğer ön kontrol taleplerini göstermedi. Koyu temada ret düğmesi kontrastı düzeltildi. Gerçek yönetici oturumu ve canlı bildirim teslimi doğrulanmadı.
 
 ## Kapsam
 - Yeni site talepleri önce yönetici onayında; uzman yalnız yönetici Onayla işlemi sonrası görür.
