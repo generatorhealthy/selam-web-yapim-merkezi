@@ -51,7 +51,7 @@ interface SpecialistGroup {
 }
 
 // Enable only after the independent DB release and specialist-notification deployment are approved.
-const INDEPENDENT_RELEASE_ENABLED = false;
+const INDEPENDENT_RELEASE_ENABLED = true;
 
 const AppointmentManagement = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);

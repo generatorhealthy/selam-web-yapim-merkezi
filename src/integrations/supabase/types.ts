@@ -9734,6 +9734,36 @@ export type Database = {
             }
             Returns: string
           }
+      release_appointment_to_specialist: {
+        Args: { p_appointment_id: string }
+        Returns: {
+          admin_released_at: string | null
+          admin_released_by: string | null
+          admin_review_required: boolean
+          appointment_date: string
+          appointment_time: string
+          appointment_type: string
+          consultation_topic: string | null
+          created_at: string | null
+          created_by_specialist: boolean | null
+          id: string
+          ip_address: string | null
+          notes: string | null
+          patient_email: string
+          patient_name: string
+          patient_phone: string
+          patient_user_id: string | null
+          specialist_id: string | null
+          status: string
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       reserve_profile_video: {
         Args: {
           p_actor: string
