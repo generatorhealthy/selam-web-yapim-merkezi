@@ -231,6 +231,11 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
           );
         }
+      } else if (msg.includes("weak") || msg.includes("password")) {
+        return new Response(
+          JSON.stringify({ error: "Şifre çok zayıf veya daha önce sızdırılmış bilinen bir şifre. Lütfen metindeki şifreyi daha güçlü bir şifreyle değiştirin (örn. büyük/küçük harf, rakam ve sembol içeren en az 10 karakter)." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       } else {
         return new Response(
           JSON.stringify({ error: "Kullanıcı oluşturulamadı: " + createErr.message }),

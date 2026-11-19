@@ -71,7 +71,11 @@ const QuickRegister = () => {
       const { data, error } = await supabase.functions.invoke("quick-register-specialist", {
         body: { rawText, mode: "preview" },
       });
-      if (error) throw error;
+      if (error) {
+        let msg = error.message;
+        try { const b = await (error as any).context?.json?.(); if (b?.error) msg = b.error; } catch { /* yanıt gövdesi okunamadı */ }
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
       setParsed(data.parsed);
       toast({ title: "Hazır", description: "Bilgiler ayrıştırıldı, kontrol edin." });
@@ -91,7 +95,11 @@ const QuickRegister = () => {
       const { data, error } = await supabase.functions.invoke("quick-register-specialist", {
         body: { rawText, profile_picture: profilePicture || null, mode: "create" },
       });
-      if (error) throw error;
+      if (error) {
+        let msg = error.message;
+        try { const b = await (error as any).context?.json?.(); if (b?.error) msg = b.error; } catch { /* yanıt gövdesi okunamadı */ }
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
       setResult({ userId: data.userId, specialistId: data.specialistId, parsed: data.parsed });
       toast({
