@@ -213,8 +213,3 @@ verify_jwt = false
 [functions.meta-capi-event]
 verify_jwt = false
 
-[functions.create-paytr-payment]
-verify_jwt = false
-
-[functions.paytr-callback]
-verify_jwt = false

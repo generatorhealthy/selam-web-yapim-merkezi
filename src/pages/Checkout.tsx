@@ -1,5 +1,3 @@
-import { trackLeadEvent, getLeadSessionId } from "@/lib/leadTracking";
-import { trackPixelEvent, capiCheckoutEventId } from "@/lib/metaPixel";
 import { useState, useEffect, useRef } from "react";
 import { createSubmissionAttempt } from '@/lib/submissionAttempt';
 import { newSaleCatalog, newSalePackage } from "@/lib/newSaleCatalog";
@@ -14,17 +12,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Building, User, Banknote, CreditCard } from "lucide-react";
+import { ArrowLeft, Building, User, Banknote } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getClientIP } from "@/utils/ipUtils";
 import ContractDialog from "@/components/ContractDialog";
 import BankTransferInfo from "@/components/BankTransferInfo";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 
-// Kart ödemesi PayTR güvenli ödeme sayfasıyla alınır; kart bilgisi sitemize gelmez.
-// Kart seçeneği paket bazında karar verilir: bkz. supabase/functions/_shared/cardPaymentPackages.ts
+// Ödeme yalnızca banka havalesiyle alınır; kart sağlayıcısı anlaşması yoktur.
 import { supabase } from "@/integrations/supabase/client";
-import { cardPaymentsAllowedFor } from "../../supabase/functions/_shared/cardPaymentPackages";
 
 const turkishCities = [
   "İstanbul", "Ankara", "İzmir", "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Aksaray", "Amasya", "Antalya",
@@ -50,12 +46,11 @@ const Checkout = () => {
   const [showPreInfoDialog, setShowPreInfoDialog] = useState(false);
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
-  // Kart kapalıysa varsayılan yöntem her zaman havaledir.
-  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("bank_transfer");
+  // Tek ödeme yöntemi: banka havalesi.
+  const paymentMethod = "bank_transfer" as const;
   const [clientIP, setClientIP] = useState<string>("");
   const paymentLock = useRef(false);
   const orderAttempt = useRef(createSubmissionAttempt());
-  const savedOrderId = useRef<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -73,12 +68,6 @@ const Checkout = () => {
   });
 
   useEffect(() => {
-    if (new URLSearchParams(location.search).get("odeme") === "basarisiz") {
-      toast({ title: "Ödeme tamamlanamadı", description: "Ödemeniz onaylanmadı. Kartınızdan çekim görünüyorsa bizimle iletişime geçin; aksi halde tekrar deneyebilir veya havale seçebilirsiniz.", variant: "destructive" });
-    }
-  }, []);
-
-  useEffect(() => {
     const initializeData = async () => {
       setLoading(true);
 
@@ -90,7 +79,6 @@ const Checkout = () => {
         }
         // Navigation state may select an ID, but cannot supply price/name/scope.
         setSelectedPackage(selected);
-        setPaymentMethod(cardPaymentsAllowedFor(selected.type) ? "credit_card" : "bank_transfer");
 
         // IP fetch — 3sn timeout, hata olursa fallback
         try {
@@ -211,74 +199,18 @@ const Checkout = () => {
 
   const handlePaymentProcess = async () => {
     if (paymentLock.current || !validateForm()) return;
-    // Kart bu pakette kapalıysa hangi yöntem seçili görünürse görünsün havaleyle ilerlenir.
-    const method: "bank_transfer" | "credit_card" =
-      paymentMethod === "credit_card" && cardPaymentsAllowedFor(selectedPackage.type) ? "credit_card" : "bank_transfer";
     paymentLock.current = true;
     try {
       await checkoutAfterOrder(
-        () => saveOrder(method),
+        () => saveOrder(paymentMethod),
         async () => {
-          if (method === 'bank_transfer') setShowBankInfo(true);
-          else await handleCreditCardPayment();
+          setShowBankInfo(true);
         },
       );
     } finally {
       paymentLock.current = false;
     }
   };
-
-const handleCreditCardPayment = async () => {
-  if (!cardPaymentsAllowedFor(selectedPackage.type)) return;
-  try {
-    setLoading(true);
-
-    const customerData = {
-      name: formData.name,
-      surname: formData.surname,
-      email: formData.email,
-      gsmNumber: formData.gsmNumber,
-      identityNumber: formData.identityNumber,
-      registrationAddress: formData.address,
-      city: formData.city,
-      billingAddress: formData.address,
-      billingCity: formData.city,
-      billingZipCode: formData.zipCode,
-      shippingAddress: formData.address,
-      shippingCity: formData.city,
-      shippingZipCode: formData.zipCode,
-      customerType,
-      companyName: customerType === "company" ? formData.companyName : "",
-      taxNumber: customerType === "company" ? formData.taxNumber : "",
-      taxOffice: customerType === "company" ? formData.taxOffice : ""
-    };
-
-
-
-    trackLeadEvent("checkout_started", { package: selectedPackage.type });
-    // Sunucu kuyruğu aynı oturum için event_id = checkout_<oturum> üretir
-    trackPixelEvent("InitiateCheckout", capiCheckoutEventId(getLeadSessionId()), { currency: "TRY" });
-
-    const { data, error } = await supabase.functions.invoke("create-paytr-payment", {
-      // Sunucu tutarı kayıtlı siparişten alır; sonuç bankadan dönüşte sunucuda doğrulanır.
-      body: { orderId: savedOrderId.current, customerData },
-    });
-    if (error) throw new Error("Ödeme başlatılamadı. Lütfen tekrar deneyin.");
-    if (data?.status === "success" && typeof data?.paymentUrl === "string" && data.paymentUrl.startsWith("https://")) {
-      window.location.href = data.paymentUrl;
-    } else {
-      throw new Error(data?.errorMessage || "Ödeme başlatılamadı");
-    }
-  } catch (error: any) {
-    toast({
-      title: "Ödeme Hatası",
-      description: error.message || "Ödeme başlatılamadı. Lütfen tekrar deneyin.",
-      variant: "destructive",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
 
   const saveOrder = async (paymentMethod: string) => {
     const orderId = orderAttempt.current.begin({ formData, customerType, packageType: selectedPackage.type, amount: selectedPackage.price, paymentMethod });
@@ -329,7 +261,6 @@ const handleCreditCardPayment = async () => {
           : 'Sipariş kaydı doğrulanamadı. Ödeme başlatılmadı; bağlantınızı kontrol edip tekrar deneyin.');
       }
       orderAttempt.current.finish(true);
-      savedOrderId.current = orderId;
 
       // Yeni sipariş SMS bildirimi gönder
       try {
@@ -636,29 +567,16 @@ const handleCreditCardPayment = async () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
+                    <Banknote className="h-5 w-5" />
                     Ödeme Yöntemi
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`grid grid-cols-1 ${cardPaymentsAllowedFor(selectedPackage.type) ? "md:grid-cols-2" : ""} gap-4`}>
-                    {cardPaymentsAllowedFor(selectedPackage.type) && (<Button
-                      type="button"
-                      variant={paymentMethod === "credit_card" ? "default" : "outline"}
-                      onClick={() => setPaymentMethod("credit_card")}
-                      className={`h-auto p-4 justify-start ${paymentMethod === "credit_card" ? "bg-gray-900 hover:bg-gray-800 text-white" : "border-gray-300 hover:bg-gray-50"}`}
-                    >
-                      <CreditCard className="h-6 w-6 mr-3" />
-                      <div className="text-left">
-                        <div className="font-semibold">Kredi Kartı</div>
-                        <div className="text-xs text-muted-foreground">Güvenli ödeme</div>
-                      </div>
-                    </Button>)}
+                  <div className="grid grid-cols-1 gap-4">
                     <Button
                       type="button"
-                      variant={paymentMethod === "bank_transfer" ? "default" : "outline"}
-                      onClick={() => setPaymentMethod("bank_transfer")}
-                      className={`h-auto p-4 justify-start ${paymentMethod === "bank_transfer" ? "bg-gray-900 hover:bg-gray-800 text-white" : "border-gray-300 hover:bg-gray-50"}`}
+                      variant="default"
+                      className="h-auto p-4 justify-start bg-gray-900 hover:bg-gray-800 text-white"
                     >
                       <Banknote className="h-6 w-6 mr-3" />
                       <div className="text-left">
@@ -747,13 +665,7 @@ const handleCreditCardPayment = async () => {
                       className="w-full"
                       size="lg"
                     >
-                      {loading ? (
-                        "İşleniyor..."
-                      ) : paymentMethod === "credit_card" ? (
-                        "Kredi Kartı ile Öde"
-                      ) : (
-                        "Banka Havalesi ile Öde"
-                      )}
+                      {loading ? "İşleniyor..." : "Banka Havalesi ile Öde"}
                     </Button>
                   </div>
                 </CardContent>

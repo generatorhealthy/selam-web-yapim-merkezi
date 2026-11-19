@@ -23,6 +23,9 @@
 - [x] 18 Kasım 14:22 İstanbul sonrası yeni kayıtlı, aktif ve siparişli uzmanları Enes'e tekil WhatsApp bildirimiyle ilet; bekleyen sipariş yeterli, eski kayıtlar hariç.
 - [x] Olayla uyanan, kuyruk boşalınca duran bildirim hazır; canlı iki tetik doğrulandı, hat bağlı, 78 eski kayıt bildirim dışı. Gerçek Enes teslimi doğal yeni kayıtta doğrulanacak; deneme mesajı gönderilmedi.
 
+# 19 Kasım 2026 — PayTR temizliği
+- [x] PayTR anlaşması olmadığından create-paytr-payment ve paytr-callback işlevleri, paytrCheckout/paytrDb ortak kodları ve kart paket kapısı silindi; ödeme sayfası yalnız havale sunar, geçici test paketi kaldırıldı. Tarihsel migration/kayıtlar değiştirilmedi.
+
 # 16 Kasım 2026 — Hoppa temizliği
 - [x] Hoppa kaynakları, kart alanları ve işlev ayarları kaldırıldı; PayTR tipi doğrudan mevcut ödeme portundan türetildi. Tarihsel migration/kayıtlar değiştirilmedi.
 - [x] Canlı dört Hoppa işlevi ve üç gizli anahtarı silindi; isteğe bağlı HOPPA_BASE_URL zaten yoktu. Dört eski adres 404 döndü.
