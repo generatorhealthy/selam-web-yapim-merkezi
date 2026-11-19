@@ -1,3 +1,8 @@
+# 19 Kasım 2026 — Randevu engelleme ve telefon doğrulaması
+- [ ] Ekrandaki kişinin adı/telefon/e-posta ve kayıtlı IP bilgisiyle yeni taleplerini engelle; geçmiş kayıtları koru.
+- [ ] Randevu öncesi SMS kodu için tek kullanımlık, telefonla bağlı sunucu doğrulaması ve web/mobil ekranlarını sentetik testlerle hazırla.
+- [ ] Telefon doğrulaması canlı geçişi: ayrı yayın onayı ve gerçek SMS teslim kabulü bekler; yeni akış onay öncesi kapalıdır.
+
 # 19 Kasım 2026 — Ön kontrol ile uzman kabulünü ayırma
 - [x] Ayrı ön kontrol sekmesi, Uzmana ilet / Talebi reddet işlemleri ve uzman bekleyen durumu ayrıldı; yeni aktarım düğmesi canlı onayına kadar kapalı.
 - [x] Randevuyu pending bırakan atomik SQL adayı: 11 sentetik PostgreSQL kontrolü, 9 Bun testi; 1280/390 arayüzde test transportuyla tek RPC/uzman yanıtı bekleniyor, taşma/hata yok. Gerçek hesap/teslim doğrulanmadı.
