@@ -20,3 +20,5 @@ Service-only `appointment_phone_release.enabled=false`; frontend sabiti false. C
 
 ## Kabul sınırı
 Yerel PostgreSQL: cooldown, beş deneme, tek proof, farklı telefonda ret, başarısız transaction sonrası tüketilmemiş proof, anonim doğrudan INSERT/RPC ret, özel tablo erişim ret, 20 eşzamanlı randevuda tek başarı, engelli numarada sıfır SMS challenge. Gerçek SMS teslimi ve harici Supabase yönetici oturumu doğrulanmadı.
+
+Üç form 1280/390 genişlik ve açık/koyu temada 12 sentetik tarayıcı akışında kontrol edildi: doğrulamadan gönderim yok → SMS kodu → doğrulandı → tek randevu isteği → başarı ekranı. Mobil cihaz koşulu ve SMS/randevu cevapları yalnız tarayıcıda taklit edildi; gerçek cihaz veya üretim teslim kabulü değildir. Koyu görünümde doğrulama satırının kontrastı düzeltildi. Canlı yayın kapalı kalır.

@@ -1,6 +1,6 @@
 # 19 Kasım 2026 — Randevu engelleme ve telefon doğrulaması
 - [x] Kişi mevcut sunucu engel listesine adı/telefon/e-posta ile eklendi ve okundu; IP kaydı yok, IP engeli yapılamadı; geçmiş randevu korundu.
-- [x] SMS kodu için tek kullanımlık telefon kanıtı SQL/handler adayları ve üç web/mobil formu kapalı sabitle hazır; 7 Bun testi + 7 yerel SQL kabul grubu (20 eşzamanlı tek başarı) geçti. Engelli isim sentetik tarayıcıda reddedildi, telefon ekranında taşma/runtime hata yok; build OK.
+- [x] SMS kodu için tek kullanımlık telefon kanıtı SQL/handler adayları ve üç web/mobil formu kapalı sabitle hazır; 7 Bun testi + 7 yerel SQL kabul grubu (20 eşzamanlı tek başarı) geçti. Üç formun 12 sentetik tarayıcı akışı (1280/390, açık/koyu) doğrulamasız ret→kod→telefon doğrulama→tek randevu→başarı adımlarından geçti; doğrulama alanının koyu kontrastı düzeltildi. Gerçek SMS/cihaz kabulü değil; canlı yayın kapalı.
 - [ ] Telefon doğrulaması canlı geçişi: ayrı yayın onayı ve gerçek SMS teslim kabulü bekler; yeni akış onay öncesi kapalıdır.
 
 # 19 Kasım 2026 — Ön kontrol ile uzman kabulünü ayırma
