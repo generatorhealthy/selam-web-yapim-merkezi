@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createSubmissionAttempt, appointmentErrorMessage } from '@/lib/submissionAttempt';
+import { AppointmentPhoneVerification } from '@/components/AppointmentPhoneVerification';
+import { APPOINTMENT_PHONE_ENABLED, phoneRequest } from '@/lib/appointmentPhone';
 
 interface Specialist {
   id: string;
@@ -280,6 +282,8 @@ const RandevuSayfasi = () => {
     }));
   };
 
+  const [phoneProof, setPhoneProof] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -311,6 +315,7 @@ const RandevuSayfasi = () => {
     }
 
     if (submitLock.current) return;
+    if (APPOINTMENT_PHONE_ENABLED && !phoneProof) { toast({title:'Telefon doğrulaması gerekli',description:'SMS koduyla telefonunuzu doğrulayın.',variant:'destructive'}); return; }
     const appointmentId = submissionAttempt.current.begin({ selectedSpecialist, date: format(selectedDate, 'yyyy-MM-dd'), selectedTime, appointmentType, ...formData });
     if (!appointmentId) return;
     submitLock.current = true;
@@ -320,9 +325,7 @@ const RandevuSayfasi = () => {
       // Convert Turkish appointment type labels to database constraint values
       const dbAppointmentType = appointmentType === 'Online' ? 'online' : 'face-to-face';
 
-      const { error } = await supabase
-        .from('appointments')
-        .insert({
+      const appointmentData = {
           id: appointmentId,
           specialist_id: selectedSpecialist,
           appointment_date: format(selectedDate, 'yyyy-MM-dd'),
@@ -334,7 +337,10 @@ const RandevuSayfasi = () => {
           // Sağlık açıklaması toplanmaz: serbest not alanı bilinçli olarak yok.
           notes: null,
           status: 'pending'
-        });
+        };
+      const { error } = APPOINTMENT_PHONE_ENABLED
+        ? await phoneRequest({action:'book',proof:phoneProof,appointment:appointmentData}).then(() => ({error:null}))
+        : await supabase.from('appointments').insert(appointmentData);
 
       if (error) throw error;
 
@@ -344,6 +350,7 @@ const RandevuSayfasi = () => {
       });
 
       resetForm();
+      setPhoneProof('');
 
     } catch (error) {
       console.error('Error creating appointment:', error);
@@ -641,6 +648,7 @@ const RandevuSayfasi = () => {
                   required
                 />
               </div>
+              <AppointmentPhoneVerification phone={formData.patientPhone} name={formData.patientName} email={formData.patientEmail} onVerified={setPhoneProof}/>
             </CardContent>
           </Card>
         );

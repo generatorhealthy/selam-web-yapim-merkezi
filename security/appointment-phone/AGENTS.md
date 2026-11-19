@@ -1,0 +1,2 @@
+- Keep phone verification candidates outside deployed functions until separately approved; public OTP challenges are appointment-only, never account login authority.
+- Consume a phone-bound proof in the same transaction as appointment insertion; no browser flag or caller IP grants authority.

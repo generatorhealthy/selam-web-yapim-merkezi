@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { createSubmissionAttempt, appointmentErrorMessage } from "@/lib/submissionAttempt";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
+import { AppointmentPhoneVerification } from '@/components/AppointmentPhoneVerification';
+import { APPOINTMENT_PHONE_ENABLED, phoneRequest } from '@/lib/appointmentPhone';
 
 const BookAppointment = () => {
   const { specialtySlug, doctorName } = useParams();
@@ -27,6 +29,7 @@ const BookAppointment = () => {
   const [specialist, setSpecialist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [phoneProof, setPhoneProof] = useState('');
   // Çift tıklama/eşzamanlı gönderim kilidi: state güncellemesi beklenmeden anında kapanır.
   const submitLock = useRef(false);
   const submissionAttempt = useRef(createSubmissionAttempt());
@@ -130,6 +133,7 @@ const BookAppointment = () => {
     }
 
     if (submitLock.current) return;
+    if (APPOINTMENT_PHONE_ENABLED && !phoneProof) { toast.error('Randevu için telefonunuzu SMS koduyla doğrulayın.'); return; }
     const appointmentId = submissionAttempt.current.begin({ specialistId: specialist.id, ...formData });
     if (!appointmentId) return;
     submitLock.current = true;
@@ -151,9 +155,9 @@ const BookAppointment = () => {
 
 
 
-      const { error } = await supabase
-        .from('appointments')
-        .insert([appointmentData]);
+      const { error } = APPOINTMENT_PHONE_ENABLED
+        ? await phoneRequest({action:'book',proof:phoneProof,appointment:appointmentData}).then(() => ({error:null}))
+        : await supabase.from('appointments').insert([appointmentData]);
 
       if (error) {
         console.error('Database error:', error);
@@ -168,6 +172,7 @@ const BookAppointment = () => {
       // Tekrar gönderilmemesi için frontend'den invoke kaldırıldı.
 
       submissionAttempt.current.finish(true);
+      setPhoneProof('');
       toast.success('Randevu talebiniz kaydedildi. Yönetici incelemesinden sonra uzmana iletilecektir.');
       
       // Form'u temizle
@@ -355,6 +360,7 @@ const BookAppointment = () => {
                   </div>
                 </div>
 
+                <AppointmentPhoneVerification phone={formData.patientPhone} name={formData.patientName} email={formData.patientEmail} onVerified={setPhoneProof}/>
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <Clock className="w-5 h-5 text-blue-600" />

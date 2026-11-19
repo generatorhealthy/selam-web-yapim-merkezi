@@ -18,8 +18,8 @@ export const isBlockedPhone = (raw?: string | null): boolean => {
 };
 
 // Kötüye kullanım nedeniyle engellenen isimler ve e-postalar.
-export const BLOCKED_NAMES = ["yusuf kara"];
-export const BLOCKED_EMAILS = ["tubitak38@gmail.com"];
+export const BLOCKED_NAMES = ["yusuf kara", "levent deniz"];
+export const BLOCKED_EMAILS = ["tubitak38@gmail.com", "lvntdeniz06@gmail.com"];
 
 const normalizeName = (raw?: string | null): string =>
   (raw || "").toLocaleLowerCase("tr-TR").replace(/\s+/g, " ").trim();
@@ -39,4 +39,4 @@ export const isBlockedVisitor = (v: {
   name?: string | null;
   email?: string | null;
   phone?: string | null;
-}): boolean => isBlockedName(v.name) || isBlockedEmail(v.email) || isBlockedPhone(v.phone);
+}): boolean => isBlockedName(v.name) || isBlockedEmail(v.email) || isBlockedPhone(v.phone) || normalizeBlockPhone(v.phone).slice(-10) === '5418857525';

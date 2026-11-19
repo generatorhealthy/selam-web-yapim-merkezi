@@ -6,6 +6,8 @@ import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { useToast } from "@/hooks/use-toast";
 import { Video, Users, Check, ChevronRight, ChevronLeft } from "lucide-react";
 import { getAvailableSlotsForDate, formatDateKey } from "@/utils/availabilityUtils";
+import { AppointmentPhoneVerification } from '@/components/AppointmentPhoneVerification';
+import { APPOINTMENT_PHONE_ENABLED, phoneRequest } from '@/lib/appointmentPhone';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -23,6 +25,7 @@ export default function MobileBooking() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneProof, setPhoneProof] = useState('');
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   // Çift tıklama/eşzamanlı gönderim kilidi: state güncellemesi beklenmeden anında kapanır.
@@ -96,11 +99,11 @@ export default function MobileBooking() {
       return;
     }
     if (submitLock.current) return;
+    if (APPOINTMENT_PHONE_ENABLED && !phoneProof) { toast({title:'Telefon doğrulaması gerekli',description:'SMS koduyla telefonunuzu doğrulayın.',variant:'destructive'}); return; }
     submitLock.current = true;
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("appointments").insert([
-        {
+      const appointmentData = {
           id: crypto.randomUUID(),
           specialist_id: specialistId,
           appointment_date: formatDateKey(selectedDate),
@@ -111,8 +114,10 @@ export default function MobileBooking() {
           patient_email: email,
           patient_phone: phone,
           status: "pending",
-        },
-      ]);
+        };
+      const { error } = APPOINTMENT_PHONE_ENABLED
+        ? await phoneRequest({action:'book',proof:phoneProof,appointment:appointmentData}).then(() => ({error:null}))
+        : await supabase.from('appointments').insert([appointmentData]);
       if (error) throw error;
       toast({ title: "Randevu alındı", description: "Yakında onay alacaksınız" });
       navigate("/mobile/appointments");
@@ -304,6 +309,7 @@ export default function MobileBooking() {
             <Input label="Ad Soyad" value={name} onChange={setName} placeholder="Adınız" />
             <Input label="E-posta" value={email} onChange={setEmail} placeholder="email@ornek.com" type="email" />
             <Input label="Telefon" value={phone} onChange={setPhone} placeholder="05XX XXX XX XX" type="tel" />
+            <AppointmentPhoneVerification phone={phone} name={name} email={email} onVerified={setPhoneProof}/>
             <p className="text-sm text-muted-foreground">Bu başvuruda sağlık açıklaması alınmaz. Yalnız iletişim ve randevu bilgilerinizi paylaşın.</p>
           </div>
         )}
