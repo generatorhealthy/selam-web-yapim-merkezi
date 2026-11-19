@@ -133,7 +133,7 @@ const QuickRegister = () => {
 
 Giriş bilgileriniz;
 Kullanıcı adı : ${p?.email || ""}
-Belirlediğiniz şifreyle giriş yapabilirsiniz.
+${p?.password ? `Şifre : ${p.password}` : "Belirlediğiniz şifreyle giriş yapabilirsiniz."}
 
 Profil Linki : ${profileUrl}
 
