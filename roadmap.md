@@ -1,3 +1,8 @@
+# 19 Kasım 2026 — Ön kontrol ile uzman kabulünü ayırma
+- [x] Ayrı ön kontrol sekmesi, Uzmana ilet / Talebi reddet işlemleri ve uzman bekleyen durumu ayrıldı; yeni aktarım düğmesi canlı onayına kadar kapalı.
+- [x] Randevuyu pending bırakan atomik SQL adayı: 11 sentetik PostgreSQL kontrolü, 9 Bun testi; 1280/390 arayüzde test transportuyla tek RPC/uzman yanıtı bekleniyor, taşma/hata yok. Gerçek hesap/teslim doğrulanmadı.
+- [ ] Canlı SQL/bildirim geçişi: ayrı kullanıcı yayın onayı bekleniyor; mevcut kesinleştirme işlemi ön kontrolde kullanılmayacak.
+
 # 18 Kasım 2026 — Randevu yönetici ön onayı
 - [x] Yeni site taleplerinde uzman erişimi ve tüm bildirimler için yönetici ön onay SQL/Edge adayları hazır; geçmiş kayıtlar ve uzman tarafından açılan randevular korunur.
 - [x] Randevu kartında bekleyen +N ve sallanma; masaüstü/telefon sentetik ekranda +1, hareket azaltma ve taşma yok doğrulandı; yönetim listesi değişikliklere abone.

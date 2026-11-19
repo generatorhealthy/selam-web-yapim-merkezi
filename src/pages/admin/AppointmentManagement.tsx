@@ -50,11 +50,14 @@ interface SpecialistGroup {
   };
 }
 
+// Enable only after the independent DB release and specialist-notification deployment are approved.
+const INDEPENDENT_RELEASE_ENABLED = false;
+
 const AppointmentManagement = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState<'specialists' | 'all' | 'monthly'>('specialists');
+  const [viewMode, setViewMode] = useState<'review' | 'specialists' | 'all' | 'monthly'>('review');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [expandedSpecialists, setExpandedSpecialists] = useState<Set<string>>(new Set());
   const [selectedSpecialist, setSelectedSpecialist] = useState<SpecialistGroup | null>(null);
@@ -107,6 +110,7 @@ const AppointmentManagement = () => {
     if (userProfile?.role !== 'admin' || mutationLocks.current.has(appointmentId)) return;
     const appointment = appointments.find(a => a.id === appointmentId);
     if (!appointment) return;
+    if (awaitsAdminReview(appointment) && newStatus !== 'cancelled') return;
     mutationLocks.current.add(appointmentId);
     setBusyIds(new Set(mutationLocks.current));
     try {
@@ -127,7 +131,7 @@ const AppointmentManagement = () => {
         title: "Başarılı",
         description: newStatus === 'confirmed'
           ? "Randevu onaylandı."
-          : "Randevu durumu güncellendi.",
+          : awaitsAdminReview(appointment) ? "Talep reddedildi; uzmana iletilmedi." : "Randevu durumu güncellendi.",
       });
     } catch (error) {
       console.error('Error updating appointment:', error);
@@ -138,6 +142,26 @@ const AppointmentManagement = () => {
       });
     } finally {
       mutationLocks.current.delete(appointmentId);
+      setBusyIds(new Set(mutationLocks.current));
+    }
+  };
+
+  const releaseAppointment = async (appointment: Appointment) => {
+    if (!INDEPENDENT_RELEASE_ENABLED || userProfile?.role !== 'admin' || !awaitsAdminReview(appointment) || mutationLocks.current.has(appointment.id)) return;
+    mutationLocks.current.add(appointment.id);
+    setBusyIds(new Set(mutationLocks.current));
+    try {
+      // Narrow candidate RPC contract until the separately approved migration regenerates types.
+      const client = supabase as unknown as { rpc: (name: 'release_appointment_to_specialist', args: { p_appointment_id: string }) => PromiseLike<{ data: Appointment | null; error: unknown }> };
+      const { data, error } = await client.rpc('release_appointment_to_specialist', { p_appointment_id: appointment.id });
+      if (error) throw error;
+      if (!data || data.status !== 'pending' || !data.admin_released_at) throw new Error('release_not_verified');
+      setAppointments(prev => prev.map(a => a.id === appointment.id ? { ...a, ...data } : a));
+      toast({ title: 'Uzmana iletildi', description: 'Talep uzman değerlendirmesinde; randevu henüz kesinleşmedi.' });
+    } catch {
+      toast({ title: 'Talep iletilemedi', description: 'Aktarım etkin değil veya talebin durumu değişti. Listeyi yenileyip kontrol edin.', variant: 'destructive' });
+    } finally {
+      mutationLocks.current.delete(appointment.id);
       setBusyIds(new Set(mutationLocks.current));
     }
   };
@@ -185,6 +209,7 @@ const AppointmentManagement = () => {
     return {
       total: appointments.length,
       pending: appointments.filter(a => a.status === 'pending').length,
+      review: appointments.filter(awaitsAdminReview).length,
       confirmed: appointments.filter(a => a.status === 'confirmed').length,
       cancelled: appointments.filter(a => a.status === 'cancelled').length,
       completed: appointments.filter(a => a.status === 'completed').length,
@@ -196,7 +221,7 @@ const AppointmentManagement = () => {
   const specialistGroups = useMemo(() => {
     const groups: Record<string, SpecialistGroup> = {};
 
-    appointments.forEach(appointment => {
+    appointments.filter(a => !awaitsAdminReview(a)).forEach(appointment => {
       const specId = appointment.specialist_id || 'unknown';
       if (!groups[specId]) {
         groups[specId] = {
@@ -232,7 +257,7 @@ const AppointmentManagement = () => {
 
   // Filtered appointments for all/monthly views
   const filteredAppointments = useMemo(() => {
-    let filtered = appointments;
+    let filtered = appointments.filter(a => viewMode === 'review' ? awaitsAdminReview(a) : !awaitsAdminReview(a));
 
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
@@ -288,9 +313,12 @@ const AppointmentManagement = () => {
         <div className="flex flex-wrap items-center gap-2 mb-1">
           <span className="font-semibold text-foreground break-words">{appointment.patient_name}</span>
           <Badge className={`${getStatusColor(appointment.status)} border text-xs px-2 py-0.5`}>
-            {awaitsAdminReview(appointment) ? 'Yönetici Onayı Bekliyor' : getStatusText(appointment.status)}
+            {awaitsAdminReview(appointment) ? 'Ön kontrol bekliyor' : appointment.admin_released_at && appointment.status === 'pending' ? 'Uzmana iletildi · Uzman yanıtı bekleniyor' : getStatusText(appointment.status)}
           </Badge>
         </div>
+        {appointment.specialists && (
+          <p className="text-sm text-foreground mb-2">Uzman: {appointment.specialists.name} <span className="text-muted-foreground">· {appointment.specialists.specialty}</span></p>
+        )}
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5" />
@@ -320,7 +348,15 @@ const AppointmentManagement = () => {
 
       {canManage && (
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <Button
+          {awaitsAdminReview(appointment) ? <Button
+            size="sm"
+            onClick={() => releaseAppointment(appointment)}
+            disabled={!INDEPENDENT_RELEASE_ENABLED || busyIds.has(appointment.id)}
+            title={!INDEPENDENT_RELEASE_ENABLED ? 'Canlı aktarım için yayın onayı bekleniyor' : 'Talebi uzmana ilet'}
+            className="h-8 text-xs"
+          >
+            <UserCheck className="w-3.5 h-3.5 mr-1" />Uzmana ilet
+          </Button> : <Button
             size="sm"
             variant="outline"
             onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
@@ -328,19 +364,19 @@ const AppointmentManagement = () => {
             className="h-8 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-xs"
           >
             <CheckCircle className="w-3.5 h-3.5 mr-1" />
-            Onayla
-          </Button>
+            Randevuyu onayla
+          </Button>}
           <Button
             size="sm"
             variant="outline"
             onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
             disabled={appointment.status === 'cancelled' || busyIds.has(appointment.id)}
-            className="h-8 bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 text-xs"
+            className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
           >
             <XCircle className="w-3.5 h-3.5 mr-1" />
-            İptal
+            {awaitsAdminReview(appointment) ? 'Talebi reddet' : 'Randevuyu iptal et'}
           </Button>
-          <Button
+          {!awaitsAdminReview(appointment) && <Button
             size="sm"
             variant="outline"
             onClick={() => deleteAppointment(appointment.id)}
@@ -348,7 +384,7 @@ const AppointmentManagement = () => {
             className="h-8 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 text-xs"
           >
             <Trash2 className="w-3.5 h-3.5" />
-          </Button>
+          </Button>}
         </div>
       )}
     </div>
@@ -528,8 +564,11 @@ const AppointmentManagement = () => {
             />
           </div>
 
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-fit">
-            <TabsList className="bg-card/80 border border-border">
+          <Tabs value={viewMode} onValueChange={(v) => { setViewMode(v as typeof viewMode); setStatusFilter('all'); }} className="w-full md:w-fit">
+            <TabsList className="bg-card/80 border border-border h-auto flex flex-wrap justify-start">
+              <TabsTrigger value="review" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
+                <UserCheck className="w-4 h-4 mr-1" />Ön kontrol <span className="ml-2 tabular-nums">{globalStats.review}</span>
+              </TabsTrigger>
               <TabsTrigger value="specialists" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
                 <Users className="w-4 h-4 mr-1" />
                 Uzman Bazlı
@@ -545,7 +584,7 @@ const AppointmentManagement = () => {
             </TabsList>
           </Tabs>
 
-          {viewMode !== 'specialists' && (
+          {viewMode !== 'specialists' && viewMode !== 'review' && (
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -560,6 +599,12 @@ const AppointmentManagement = () => {
           )}
         </div>
 
+        {viewMode === 'review' && (
+          <div className="mb-5 border-b border-border pb-4">
+            <h2 className="text-xl font-semibold text-foreground">Yönetici ön kontrolü</h2>
+            <p className="text-sm text-muted-foreground mt-1">Uzmana henüz iletilmeyen talepler · {globalStats.review}</p>
+          </div>
+        )}
         {/* Monthly navigation */}
         {viewMode === 'monthly' && (
           <Card className="bg-card/80 border-border shadow-sm mb-6">
@@ -625,7 +670,7 @@ const AppointmentManagement = () => {
             <Card className="bg-card/80 border-border">
               <CardContent className="text-center py-16">
                 <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-lg">Randevu bulunmuyor.</p>
+                <p className="text-muted-foreground text-lg">{viewMode === 'review' ? 'Ön kontrol bekleyen talep yok.' : 'Randevu bulunmuyor.'}</p>
               </CardContent>
             </Card>
           ) : (

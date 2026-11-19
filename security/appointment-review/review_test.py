@@ -1,6 +1,7 @@
 """Minimal synthetic PostgreSQL. No production variables, records or delivery."""
-import concurrent.futures, os, pathlib, subprocess, tempfile
+import concurrent.futures, os, pathlib, subprocess, tempfile, sys
 ROOT = pathlib.Path(__file__).parent
+independent = '--independent-release' in sys.argv
 with tempfile.TemporaryDirectory(prefix='appointment-review-') as tmp:
     os.chmod(tmp, 0o777)
     def pg(*args):
@@ -66,6 +67,8 @@ with tempfile.TemporaryDirectory(prefix='appointment-review-') as tmp:
         TRUNCATE net.requests;
         """)
         q(ROOT.joinpath('review.sql').read_text())
+        if independent:
+            q(ROOT.joinpath('release-request.sql').read_text())
         assert value("SELECT NOT admin_review_required AND admin_released_at IS NULL AND status='pending' FROM appointments WHERE id='22222222-2222-4222-8222-222222222222'") == 't'
         print('PASS historical pending appointment unchanged')
         q(f"INSERT INTO appointments(id,specialist_id,patient_user_id,status,notes) VALUES('{record}','{owner}','{patient}','confirmed','synthetic clinical text')")
@@ -80,21 +83,37 @@ with tempfile.TemporaryDirectory(prefix='appointment-review-') as tmp:
         q(identity(owner)+f"UPDATE appointments SET status='confirmed' WHERE id='{record}'")
         assert value(f"SELECT status FROM appointments WHERE id='{record}'") == 'pending'
         result=q(identity(patient)+f"UPDATE appointments SET status='confirmed' WHERE id='{record}'",False)
-        assert result.returncode and 'appointment_review_admin_required' in result.stderr
-        result=q(identity(admin)+f"UPDATE appointments SET admin_released_at=now() WHERE id='{record}'",False)
+        assert result.returncode and ('appointment_release_before_specialist_confirmation' if independent else 'appointment_review_admin_required') in result.stderr
+        result=q(identity(patient if independent else admin)+f"UPDATE appointments SET admin_released_at=now() WHERE id='{record}'",False)
         assert result.returncode and 'appointment_review_fields_immutable' in result.stderr
         print('PASS specialist cannot self-approve; patient and caller release spoof blocked')
-        def approve(_): return q(identity(admin)+f"UPDATE appointments SET status='confirmed' WHERE id='{record}' AND status='pending'",False)
+        if independent:
+            result=q(identity(admin)+f"UPDATE appointments SET status='confirmed' WHERE id='{record}'",False)
+            assert result.returncode and 'appointment_release_before_specialist_confirmation' in result.stderr
+            result=q(identity(patient)+f"SELECT release_appointment_to_specialist('{record}')",False)
+            assert result.returncode and 'appointment_review_admin_required' in result.stderr
+            result=q("SET ROLE anon; SELECT release_appointment_to_specialist('"+record+"')",False)
+            assert result.returncode and 'permission denied' in result.stderr
+            print('PASS admin cannot confirm before release; patient/anon cannot release')
+        def approve(_):
+            sql = f"SELECT release_appointment_to_specialist('{record}')" if independent else f"UPDATE appointments SET status='confirmed' WHERE id='{record}' AND status='pending'"
+            return q(identity(admin)+sql,False)
         with concurrent.futures.ThreadPoolExecutor(max_workers=20) as pool:
             results=list(pool.map(approve,range(20)))
-        assert all(r.returncode==0 for r in results)
+        assert sum(r.returncode==0 for r in results) == (1 if independent else 20)
+        if independent:
+            assert value(f"SELECT status FROM appointments WHERE id='{record}'") == 'pending'
+            print('PASS admin release does not confirm specialist appointment')
         assert value(f"SELECT admin_released_at IS NOT NULL AND admin_released_by='{admin}'::uuid FROM appointments WHERE id='{record}'") == 't'
         assert value('SELECT count(*) FROM net.requests') == '2'
         assert value(f"SELECT count(*) FROM appointment_notification_authority WHERE appointment_id='{record}'") == '1'
         assert value("SELECT count(*) FROM net.requests WHERE body ? 'notes' OR body ? 'patientName'") == '0'
         assert value(identity(owner)+f"SELECT count(*) FROM appointments WHERE id='{record}'") == '1'
         print('PASS 20 concurrent admin approvals: one release, one email capability, one push, no health payload')
-        q(identity(admin)+f"UPDATE appointments SET status='confirmed' WHERE id='{record}'")
+        if independent:
+            result=q(identity(admin)+f"SELECT release_appointment_to_specialist('{record}')",False)
+            assert result.returncode and 'appointment_review_pending_required' in result.stderr
+        q(identity(owner if independent else admin)+f"UPDATE appointments SET status='confirmed' WHERE id='{record}'")
         assert value('SELECT count(*) FROM net.requests') == '2'
         print('PASS repeated approval never repeats notifications')
         q(f"INSERT INTO appointments(id,specialist_id,status,created_by_specialist) VALUES('33333333-3333-4333-8333-333333333333','{owner}','pending',true)")

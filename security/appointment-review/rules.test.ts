@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { awaitsAdminReview, canNotifyReviewedAppointment } from '../../src/lib/appointmentReview';
+import { awaitsAdminReview, canNotifyReviewedAppointment, canNotifySpecialistRequest } from '../../src/lib/appointmentReview';
 import { canNotifyReviewedAppointment as canNotifyServer } from '../../supabase/functions/_shared/appointmentReview';
 import { handleConfirmation, type ConfirmationPorts } from '../../supabase/functions/send-patient-appointment-confirmation/handler';
 test('deployed server gate blocks pending and releases only admin-confirmed requests', () => {
@@ -42,4 +42,14 @@ test('cancelled reviewed request does not trigger specialist notification', () =
 test('historical and specialist-created appointments retain existing behavior', () => {
   expect(canNotifyReviewedAppointment({ status: 'pending' })).toBe(true);
   expect(awaitsAdminReview({ status: 'pending', created_by_specialist: true, admin_review_required: false })).toBe(false);
+});
+test('administrative release leaves pending request for specialist, not patient confirmation', () => {
+  const row = { status: 'pending', admin_review_required: true, admin_released_at: '2026-11-19T07:30:00Z' };
+  expect(awaitsAdminReview(row)).toBe(false);
+  expect(canNotifySpecialistRequest(row)).toBe(true);
+  expect(canNotifyReviewedAppointment(row)).toBe(false);
+});
+test('unreleased or rejected requests never notify specialists', () => {
+  expect(canNotifySpecialistRequest({ status: 'pending', admin_review_required: true })).toBe(false);
+  expect(canNotifySpecialistRequest({ status: 'cancelled', admin_review_required: true, admin_released_at: '2026-11-19T07:30:00Z' })).toBe(false);
 });

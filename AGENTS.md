@@ -33,3 +33,4 @@
 - Public legal information releases record a per-document content-only decision and separate deployment verification; blocked historical-health notices remain preview-only — informational publication never certifies processing legality or activates consent capture.
 - Deploy keeps /assets/ files 14 days after last use (.asset-ages.txt in Actions cache) — stale CDN index.html must not blank-page.
 - Appointment admin-review uses restrictive specialist RLS and server-stamped release gates in DB triggers and shared Edge notification rules; preserve historical rows and validate changes in synthetic PostgreSQL before separately approved releases.
+- Admin pre-review releases requests through a locked RPC without confirming them; specialist-request and patient-confirmation notification gates stay separate to avoid false booking confirmations.
