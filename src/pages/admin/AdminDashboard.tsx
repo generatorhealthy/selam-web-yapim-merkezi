@@ -62,7 +62,7 @@ const AdminDashboard = () => {
     const refresh = async () => {
       const { count, error } = await supabase.from('appointments')
         .select('id', { count: 'exact', head: true })
-        .eq('created_by_specialist', false).eq('status', 'pending');
+        .eq('created_by_specialist', false).eq('status', 'pending').eq('admin_review_required', true).is('admin_released_at', null);
       if (!disposed && !error && count !== null) setPendingAppointmentCount(count);
     };
     void refresh();
