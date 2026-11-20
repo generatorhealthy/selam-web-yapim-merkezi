@@ -255,7 +255,7 @@ IP Adresi: ${clientIP}`;
             </div>
           ) : (
             <div 
-              className="min-w-0 max-w-full whitespace-pre-line text-left text-sm leading-7 font-sans text-foreground [overflow-wrap:anywhere] sm:text-base [&_*]:!max-w-full [&_*]:!whitespace-normal [&_*]:[overflow-wrap:anywhere] [&_p]:my-3 [&_table]:!w-full [&_table]:table-fixed [&_pre]:!whitespace-pre-wrap"
+              className="min-w-0 max-w-full whitespace-pre-line text-left text-sm leading-7 font-sans text-foreground [overflow-wrap:anywhere] sm:text-base [&_*]:!max-w-full [&_*]:!whitespace-normal [&_*]:[overflow-wrap:anywhere] [&_*]:!text-foreground [&_*]:!bg-transparent [&_*]:!border-border [&_p]:my-3 [&_table]:!w-full [&_table]:table-fixed [&_pre]:!whitespace-pre-wrap"
               dangerouslySetInnerHTML={{ 
                 __html: sanitizeRichHtml(contractType === "preInfo" ? contractContent : getDistanceSalesContent().replace(/\n/g, '<br>'))
               }}
