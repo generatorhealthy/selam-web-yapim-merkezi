@@ -1,0 +1,1 @@
+REVOKE ALL ON public.appointment_phone_challenges, public.appointment_phone_release FROM anon, authenticated; GRANT ALL ON public.appointment_phone_challenges TO service_role; GRANT SELECT, UPDATE, INSERT ON public.appointment_phone_release TO service_role;
