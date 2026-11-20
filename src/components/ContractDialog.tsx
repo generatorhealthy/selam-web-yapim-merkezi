@@ -7,9 +7,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { X } from "lucide-react";
 import { sanitizeRichHtml } from "@/utils/sanitize";
 import { supabase } from "@/integrations/supabase/client";
 import { withCommitmentDisclosure } from "@/lib/contractDisclosure";
@@ -239,35 +236,32 @@ IP Adresi: ${clientIP}`;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] p-0">
-        <DialogHeader className="p-6 pb-0">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold">
+      <DialogContent className="flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-4xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b border-border px-5 py-5 pr-12 text-left sm:px-6">
+          <div className="min-w-0">
+            <DialogTitle className="text-lg font-semibold leading-snug sm:text-xl">
               {getTitle()}
             </DialogTitle>
             <DialogDescription className="sr-only">
               {contractType === "preInfo" ? "Ön bilgilendirme formu içeriği" : "Mesafeli satış sözleşmesi içeriği"}
             </DialogDescription>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </DialogHeader>
         
-        <ScrollArea className="px-6 pb-6 max-h-96">
+        <div className="min-h-0 min-w-0 overflow-y-auto overflow-x-hidden px-5 py-6 sm:px-6" role="region" aria-label={getTitle()} tabIndex={0}>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-pulse h-8 w-full rounded bg-muted"></div>
             </div>
           ) : (
             <div 
-              className="text-base leading-relaxed font-sans text-foreground"
+              className="min-w-0 max-w-full whitespace-pre-line text-left text-sm leading-7 font-sans text-foreground [overflow-wrap:anywhere] sm:text-base [&_*]:!max-w-full [&_*]:!whitespace-normal [&_*]:[overflow-wrap:anywhere] [&_p]:my-3 [&_table]:!w-full [&_table]:table-fixed [&_pre]:!whitespace-pre-wrap"
               dangerouslySetInnerHTML={{ 
                 __html: sanitizeRichHtml(contractType === "preInfo" ? contractContent : getDistanceSalesContent().replace(/\n/g, '<br>'))
               }}
             />
           )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
