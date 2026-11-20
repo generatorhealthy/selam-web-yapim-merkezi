@@ -576,6 +576,57 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_phone_challenges: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+          proof_hash: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone: string
+          proof_hash?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          proof_hash?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      appointment_phone_release: {
+        Row: {
+          enabled: boolean
+          id: boolean
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           admin_released_at: string | null
@@ -9232,6 +9283,28 @@ export type Database = {
       admin_update_specialist_slug: {
         Args: { p_new_slug: string; p_specialist_id: string }
         Returns: Json
+      }
+      appointment_contact_blocked: {
+        Args: { p_email: string; p_name: string; p_phone: string }
+        Returns: boolean
+      }
+      appointment_phone_book: {
+        Args: { p_appointment: Json; p_proof_hash: string }
+        Returns: string
+      }
+      appointment_phone_send: {
+        Args: {
+          p_code_hash: string
+          p_email: string
+          p_id: string
+          p_name: string
+          p_phone: string
+        }
+        Returns: string
+      }
+      appointment_phone_verify: {
+        Args: { p_code_hash: string; p_id: string; p_proof_hash: string }
+        Returns: boolean
       }
       attach_dietitian_intake_forms_v1: {
         Args: { p_specialist: string }

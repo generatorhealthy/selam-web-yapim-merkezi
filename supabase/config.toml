@@ -66,6 +66,9 @@ verify_jwt = false
 [functions.send-sms-via-static-proxy]
 verify_jwt = false
 
+[functions.appointment-phone]
+verify_jwt = false
+
 [functions.get-proxy-ip]
 verify_jwt = false
 

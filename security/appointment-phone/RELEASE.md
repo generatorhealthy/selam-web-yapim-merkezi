@@ -1,4 +1,7 @@
-# Randevu telefon doğrulaması — yayın bekliyor
+# Randevu telefon doğrulaması — onaylı yayın
+
+## Yayın durumu
+Kullanıcı telefon doğrulamasını canlıda etkinleştirmeyi onayladı. SMS kullanıcı adı/şifresi güvenli formda tamamlandı. Şema kapalı yayın anahtarıyla uygulandı; appointment-phone ve mevcut SMS hizmeti yayımlandı. Canlı yetkisiz istek 401; 4 Deno, 7 Bun ve 7 yerel SQL test grubu başarılı. Güncel önizleme 1280/390 SMS düğmesini gösteriyor; gerçek SMS gönderilmedi. Web dağıtımının yeni alanı sunduğu doğrulanmadan sunucu zorunluluğu açılmaz. Eski mağaza sürümleri yeni randevu için güncelleme gerektirir; Hostinger/mağaza dağıtımı ayrıca doğrulanmalıdır. Önceden bulunan 155 linter bulgusu bu migration ile artmadı.
 
 ## Tamamlanan bağımsız engel
 Ekrandaki randevunun sahibi mevcut `blocked_visitors` listesine adı, kayıtlı e-postası ve telefonu ile eklendi. Eski randevu iptal edilmedi/değiştirilmedi. İlgili randevunun `ip_address` değeri boş olduğundan IP engeli uygulanamadı; adres tahmin edilmez ve istemcinin verdiği IP kimlik kanıtı değildir.

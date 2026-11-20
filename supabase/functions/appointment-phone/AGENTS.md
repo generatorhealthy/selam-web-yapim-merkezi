@@ -1,0 +1,2 @@
+- Public challenges grant appointment-only phone proofs, never account access; booking consumes the phone-bound proof atomically.
+- Never log SMS codes, proofs, phone numbers or provider bodies; uncertain deliveries must not be blindly retried.

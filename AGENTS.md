@@ -34,4 +34,4 @@
 - Deploy keeps /assets/ files 14 days after last use (.asset-ages.txt in Actions cache) — stale CDN index.html must not blank-page.
 - Appointment admin-review uses restrictive specialist RLS and server-stamped release gates in DB triggers and shared Edge notification rules; preserve historical rows and validate changes in synthetic PostgreSQL before separately approved releases.
 - Admin pre-review releases requests through a locked RPC without confirming them; specialist-request and patient-confirmation notification gates stay separate to avoid false booking confirmations.
-- Public appointments use single-use phone proofs; phone-release candidates stay outside deployed functions until approved, preserving panel booking and historical rows.
+- Public appointments require atomic single-use phone proofs; preserve panel booking and historical rows, never grant account access through appointment OTP.

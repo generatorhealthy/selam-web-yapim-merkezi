@@ -1,7 +1,8 @@
 # 19 Kasım 2026 — Randevu engelleme ve telefon doğrulaması
 - [x] Kişi mevcut sunucu engel listesine adı/telefon/e-posta ile eklendi ve okundu; IP kaydı yok, IP engeli yapılamadı; geçmiş randevu korundu.
 - [x] SMS kodu için tek kullanımlık telefon kanıtı SQL/handler adayları ve üç web/mobil formu kapalı sabitle hazır; 7 Bun testi + 7 yerel SQL kabul grubu (20 eşzamanlı tek başarı) geçti. Üç formun 12 sentetik tarayıcı akışı (1280/390, açık/koyu) doğrulamasız ret→kod→telefon doğrulama→tek randevu→başarı adımlarından geçti; doğrulama alanının koyu kontrastı düzeltildi. Gerçek SMS/cihaz kabulü değil; canlı yayın kapalı.
-- [ ] Telefon doğrulaması canlı geçişi: 19 Kasım 13:19 UTC yayın onayı alındı; 7 Bun ve 7 yerel PostgreSQL kontrolü tekrar geçti. Mevcut SMS işlevinin gerektirdiği VERIMOR_USERNAME ve VERIMOR_PASSWORD gizli ayarları yok; randevuları kesmemek için yayın anahtarı kapalı tutulur. Güvenli formdan ayarlar ve ardından dağıtım/doğal SMS teslim kabulü beklenir.
+- [x] Telefon doğrulaması yayın onayı alındı; eksik SMS bilgileri güvenli formda kaydedildi. Kapalı anahtarlı migration uygulandı, appointment-phone ve SMS hizmeti yayımlandı; 4 Deno + 7 Bun + 7 yerel SQL kontrolü geçti, canlı yetkisiz çağrı 401. Güncel ekran 1280/390 SMS düğmesi ve taşmasız görünüm doğrulandı.
+- [ ] Web dağıtımında SMS alanı görüldükten sonra sunucu zorunluluğu açılacak; ilk yayın isteği eski ekranı sunduğundan anahtar henüz kapalıdır. Gerçek SMS teslimi yalnız doğal izinli işlemde doğrulanır; mağaza sürümü/Hostinger dağıtımı bu ortamdan doğrulanmadı.
 
 # 19 Kasım 2026 — Ön kontrol ile uzman kabulünü ayırma
 - [x] Ayrı ön kontrol sekmesi, Uzmana ilet / Talebi reddet işlemleri ve uzman bekleyen durumu ayrıldı; yeni aktarım düğmesi canlı onayına kadar kapalı.
