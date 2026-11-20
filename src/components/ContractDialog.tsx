@@ -10,6 +10,7 @@ import {
 import { sanitizeRichHtml } from "@/utils/sanitize";
 import { supabase } from "@/integrations/supabase/client";
 import { withCommitmentDisclosure } from "@/lib/contractDisclosure";
+import { buildDistanceSalesHtml } from "@/lib/distanceSalesContract";
 
 interface ContractDialogProps {
   open: boolean;
@@ -165,73 +166,9 @@ ${selectedPackage.price === 2398 ? `
 
   const getDistanceSalesContent = () => {
     if (savedDistanceSalesHtml) {
-      return savedDistanceSalesHtml;
+      return savedDistanceSalesHtml.replace(/\n/g, '<br>');
     }
-    return `KİŞİSEL VERİLERE İLİŞKİN AYDINLATMA METNİ
-
-Doktorumol.com.tr ("doktorumol" veya "Şirket") olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
-
-Bu kapsamda bilgi vermekle yükümlü olduğumuz konular aşağıdaki gibidir:
-
-1. Veri sorumlusunun ve varsa temsilcisinin kimliği
-
-Veri sorumlusu; doktorumol.com.tr'dir.
-
-2. Kişisel verilerin hangi amaçla işleneceği
-
-Ad, soyadı, telefon numarası, e-posta adresi, adres bilgileri, ödeme aracı bilgileri ve bunlarla sınırlı olmamak üzere varsa internet sitesi veya çağrı merkezi aracılığıyla iletmiş olduğunuz genel ve özel nitelikli kategorilerdeki kişisel verileriniz, internet sitesinde üyeliğinizin oluşturulması, Doktorumol üyeliği sebebiyle aldığınız hizmetlerin sunumu, alınan hizmet ile ilgili sizinle iletişime geçilmesi, müşteri ilişkilerinde sağlıklı ve uzun süreli etkileşim kurulması, onay vermeniz halinde tarafınıza ticari elektronik ileti gönderilmesi, talep ve şikayetlerinizin takibi ile ilerde oluşabilecek uyuşmazlık ve sorunların çözülmesi ve mevzuattan kaynaklanan zamanaşımı süresi doğrultusunda bu kişisel verilerinizin Doktorumol tarafından saklanması amacı ile işlenmektedir.
-
-Ayrıca, internet sitemizi ziyaretiniz ve kullanımınız sırasında internet sayfası sunucusu tarafından sabit sürücünüze iletilen küçük metin dosyaları ("Çerezler") aracılığıyla elde edilen kullanılan tarayıcı, IP adresi, internet bağlantınız, site kullanımlarınız hakkındaki bilgiler, bilgisayarınızdaki işletim sistemi ve benzeri kategorilerdeki kişisel verileriniz, internet sitesinin düzgün bir şekilde çalışabilmesi, ziyaret edilebilmesi ve özelliklerinden faydalanılması, internet sitesinde sayfalar arasında bilgileri taşıyabilmek ve bilgileri tekrardan girmek zorunluluğunun ortadan kaldırılması amaçları ile işlenmektedir.
-
-3. Şirket tarafından işlenen kişisel verilerin kimlere ve hangi amaçla aktarılabileceği
-
-Kişisel verileriniz 2. maddede belirtilen amaçların yerine getirilebilmesi için Doktorumol hissedarları, iş ortakları, hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına aktarılabilecektir.
-
-4. Kişisel veri toplamanın yöntemi ve hukuki sebebi
-
-Şirketimizin internet sitesi veya çağrı merkezi aracılığıyla, tamamen veya kısmen otomatik yollarla elde edilen kişisel verileriniz, kanunda açıkça öngörülmesi, Doktorumol ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel verilerinizin işlenmesinin gerekli olması, iletişim hakkının tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması ve açık rızanız hukuki sebepleri ile toplanmaktadır.
-
-5. Kişisel verileriniz ile ilgili Kanun kapsamındaki haklarınız aşağıdaki şekildedir:
-
-(a) Kişisel verilerinizin işlenip işlenmediğini öğrenme, (b) Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme, (c) Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme, (ç) Yurt içinde veya yurt dışında kişisel verilerin aktarıldığı üçüncü kişileri bilme, (d) Kişisel verilerinizin eksik veya yanlış işlenmiş olması halinde bunların düzeltilmesini isteme, (e) Kişisel verilerinizin işlenmesini gerektiren sebeplerin ortadan kalkması halinde kişisel verilerinizin silinmesini veya yok edilmesini isteme, (f) (d) ve (e) bentleri uyarınca yapılan işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme, (g) İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle kişinin kendisi aleyhine bir sonucun ortaya çıkmasına itiraz etme, (ğ) Kişisel verilerin kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması halinde zararın giderilmesini talep etme.
-
-Bu haklarınızı yazılı olarak veya güvenli elektronik imza, mobil imza, kayıtlı elektronik posta (KEP) adresi ya da Şirket'in sisteminde kayıtlı bulunan elektronik posta adresini kullanmak suretiyle (Bu kapsamda info@doktorumol.com.tr e-posta adresi üzerinden Şirket'e ulaşabilirsiniz) veya başvuru amacına yönelik geliştirilmiş bir yazılım ya da uygulama vasıtasıyla Şirket'e iletebilirsiniz.
-
-Bilginize sunarız.
-
-Çağrı Merkezi Aydınlatma Metni
-
-Doktorumol.com.tr olarak, işbu Aydınlatma Metni ile, Kişisel Verilerin Korunması Kanunu ("Kanun") ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında aydınlatma yükümlülüğümüzün yerine getirilmesi amaçlanmaktadır.
-
-Doktoru mol; çağrı merkezini arayanların paylaşmış olduğu ad-soyad, iletişim bilgisi ve ses kaydına ait kişisel verilerni;
-
-- Arayan kişiye doğru hitap edilebilmesi,
-- Aramanın teyidi ve iletişim faaliyetlerinin yürütülmesi,
-- Görüşme talep edilen uzman için randevu oluşturulması,
-- Arayan kişinin uzmana yönlendirilmesi,
-- Talep ve şikayetlerin takibi,
-- Doğabilecek uyuşmazlıklarda delil olarak kullanılması amaçlarıyla sınırlı olarak işlemektedir.
-
-Kişisel verileriniz yukarıda belirtilen amaçların yerine getirilebilmesi için Şirket'in hissedarları, iş ortakları, hizmet aldığı şirketler ile yetkili kamu kurum ve kuruluşlarına ve randevu oluşturma talebinde bulunduğunuz ilgili uzmana aktarılabilecektir.
-
-Kişisel sağlık verilerinizi çağrı merkezi ile görüşmeniz sırasında paylaşmamanızı rica ederiz.Şirketimiz aracılığıyla randevu oluşturma talebiniz kapsamında çağrı merkezi aracılığıyla edilen kişisel verileriniz, Şirket ile aranızda kurulabilecek hukuki ilişkinin devamı için kişisel verilerinizin işlenmesinin gerekli olması, randevu oluşturulmasına ilişkin hakkınızın tesisi, kullanılması veya korunması için veri işlemenin zorunlu olması hukuki sebepleri ile telefon yoluyla otomatik olarak işlenmektedir.
-
-Kanunun "İlgili kişinin haklarını düzenleyen" 11. maddesi kapsamındaki taleplerinizi, "Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğe" göre Doktorumol.com.tr'nin Şirket mailine info@doktorumol.com.tr'ye iletebilirsiniz.
-
-ALICI BİLGİLERİ:
-Ad Soyad: ${formData.name} ${formData.surname}
-E-posta: ${formData.email}
-Telefon: ${(formData.phone || formData.gsmNumber) || 'Belirtilmemiş'}
-Adres: ${formData.address || 'Belirtilmemiş'}
-Şehir: ${formData.city}
-
-ÜRÜN/HİZMET BİLGİLERİ:
-Ürün/Hizmet: ${selectedPackage.name}
-Fiyat: ${selectedPackage.price.toLocaleString('tr-TR')} ₺
-Ödeme Şekli: ${paymentMethod === 'credit_card' ? 'Kredi Kartı' : 'Banka Havalesi/EFT'}
-
-Sözleşme Tarihi: ${new Date(orderCreatedAt).toLocaleDateString('tr-TR')}
-IP Adresi: ${clientIP}`;
+    return buildDistanceSalesHtml({ formData, selectedPackage, paymentMethod, customerType, clientIP, orderCreatedAt });
   };
 
   return (
@@ -255,9 +192,9 @@ IP Adresi: ${clientIP}`;
             </div>
           ) : (
             <div 
-              className="min-w-0 max-w-full whitespace-pre-line text-left text-sm leading-7 font-sans text-foreground [overflow-wrap:anywhere] sm:text-base [&_*]:!max-w-full [&_*]:!whitespace-normal [&_*]:[overflow-wrap:anywhere] [&_*]:!text-foreground [&_*]:!bg-transparent [&_*]:!border-border [&_p]:my-3 [&_table]:!w-full [&_table]:table-fixed [&_pre]:!whitespace-pre-wrap"
+              className="min-w-0 max-w-full text-left text-sm leading-7 font-sans text-foreground [overflow-wrap:anywhere] sm:text-base [&_*]:!max-w-full [&_*]:!whitespace-normal [&_*]:[overflow-wrap:anywhere] [&_*]:!text-foreground [&_*]:!bg-transparent [&_*]:!border-border [&_p]:my-3 [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-6 [&_hr]:my-6 [&_table]:!w-full [&_table]:table-fixed [&_pre]:!whitespace-pre-wrap"
               dangerouslySetInnerHTML={{ 
-                __html: sanitizeRichHtml(contractType === "preInfo" ? contractContent : getDistanceSalesContent().replace(/\n/g, '<br>'))
+                __html: sanitizeRichHtml(contractType === "preInfo" ? contractContent : getDistanceSalesContent())
               }}
             />
           )}
