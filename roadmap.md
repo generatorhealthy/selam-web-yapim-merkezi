@@ -1,4 +1,6 @@
 # 21 Kasım 2026 — Toplu arama saatleri ve Yanlış Ulaşanlar
+- [x] Hepsini ara kapsam hatası düzeltildi: kategori/limit doğrulaması dispatch yerine istek içinde; 5 sentetik gerçek-handler + 10 ortak Deno testi ve build OK. Gerçek arama başlatılmadı.
+- [ ] Bu hata düzeltmesinin ayrı canlı hizmet yayını kullanıcı onayını bekliyor; geri dönüş önceki index.ts sürümünün yeniden yayımıdır. Harici yönetici oturumu nedeniyle gerçek panel kabulü burada doğrulanamadı.
 - [x] Arama saatleri 10:00–18:00; Yanlış Ulaşanlar için admin düğmesi, ayrı seçim ve imzalı tuşlama aktarımı eklendi. İki hizmet yayımlandı; yeni gerçek toplu arama başlatılmadı.
 - [x] Hepsini ara 1000 kayıt sınırı kaldırıldı; 10 Deno + 8 PHP kontrolü geçti, build OK, yetkisiz arama401/bildirim403. Mevcut hızla 300 kişi6–7saat,1600kişi35–38saat tahmini bildirildi; 18:00 sonrası devam için çalışma saatinde yeniden başlatma gerekir. Gerçek yönetici ekranı kabulü harici oturum nedeniyle burada doğrulanamadı.
 

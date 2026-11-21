@@ -104,11 +104,6 @@ async function dispatch(svc: any, call: any, prefix: "auto" | "81") {
   const webhook = `${base}/functions/v1/lead-ivr-webhook?t=${t}`;
   await svc.from("lead_ivr_calls").update({ state: "dialing", dispatched_at: new Date().toISOString() }).eq("id", call.id);
   try {
-    const sourceStatus = bulkIvrStatus(body.status);
-    if ((action === "eligible" || action === "start") && !sourceStatus) return json({ error: "Geçersiz arama kategorisi" }, 400);
-    if (action === "start" && body.limit !== undefined && (!Number.isInteger(body.limit) || body.limit < 1 || body.limit > 1000)) {
-      return json({ error: "Geçersiz deneme kişi sayısı" }, 400);
-    }
     const result = await pbx("call", {
       number: localMobile(call.phone), prefix, area: call.area_key, call_id: call.id,
       webhook, ring_seconds: RING_SECONDS,
@@ -193,6 +188,11 @@ Deno.serve(async (req) => {
   const action = String(body.action || "");
 
   try {
+    const sourceStatus = bulkIvrStatus(body.status);
+    if ((action === "eligible" || action === "start") && !sourceStatus) return json({ error: "Geçersiz arama kategorisi" }, 400);
+    if (action === "start" && body.limit !== undefined && (!Number.isInteger(body.limit) || body.limit < 1 || body.limit > 1000)) {
+      return json({ error: "Geçersiz deneme kişi sayısı" }, 400);
+    }
     if (action === "sample") {
       const area = (body.area in AREA_LABELS ? body.area : "bireysel") as AreaKey;
       const mp3 = await tts(areaMessage(area), "mp3_44100_128");
