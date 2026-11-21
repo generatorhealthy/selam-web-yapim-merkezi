@@ -80,7 +80,12 @@ function setMeta(html, { title, description, url, image, type, robots }) {
 const ROOT_RE = /<div id="root">[\s\S]*?<\/div>/;
 function setRoot(html, inner, extraHead = "") {
   if (!ROOT_RE.test(html)) throw new Error("#root bulunamadı");
-  return html.replace(ROOT_RE, () => `<div id="root"><div class="seo-pre">${inner}</div></div>`).replace("</head>", () => `${extraHead}</head>`);
+  // Progressive enhancement, identical for visitors and crawlers: retain real
+  // HTML and show it immediately without JS. With JS, briefly suppress only
+  // the unstyled fallback while React starts, never the rendered application.
+  // If startup is slow or fails, restore readable content after 1.8 seconds.
+  const startupPresentation = `<script>(function(){var s=document.createElement('style');s.textContent='.seo-pre{visibility:hidden}';document.head.appendChild(s);window.setTimeout(function(){s.remove();},1800);})();</script>`;
+  return html.replace(ROOT_RE, () => `<div id="root"><div class="seo-pre">${inner}</div></div>`).replace("</head>", () => `${extraHead}${startupPresentation}</head>`);
 }
 
 function write(rel, html) {

@@ -1,3 +1,8 @@
+# 22 Kasım 2026 — İlk açılıştaki düz metin görünümü
+- [x] Gerçek ön-render HTML korunarak yalnız JavaScript açıkken düz metin için kısa başlangıç beklemesi eklendi; JavaScript kapalıyken metin hemen görünür, yavaş/hatalı açılışta 1,8 saniyede geri gelir. Uygulamanın kendisi gizlenmez.
+- [x] Yerel hızlı/yavaş/JavaScript kapalı açılış doğrulandı: ilk metin flaşı yok, yavaş açılışta metin geri geliyor, uygulama görünür; canonical geçiş testi ve 4 yayın regresyonu geçti, build OK.
+- [ ] Hostinger dağıtımı sonrası canlı açılış kontrolü — harici dağıtımın tamamlanması gerekir.
+
 # 22 Kasım 2026 — Ana sayfa arama görünürlüğü
 - [x] Canlı ana/www/http/index.html/pre ana sayfa yönlendirmeleri, Googlebot masaüstü/mobil HTTP200, robots izinli ve 1730 URL'li sitemap doğru domain doğrulandı.
 - [x] Fatih's Google Search Console: ana sayfa PASS, Google/user canonical aynı; 21 Kasım17:06UTC başarılı tarama; sitemap0hata/0uyarı. Marka ana sayfa 28gün ortalama1.14→1.77, tıklama87→29; 20–21Kasım verileri eksik/güncellenebilir, son günler1.sıra.
