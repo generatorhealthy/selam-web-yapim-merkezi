@@ -5427,10 +5427,13 @@ export type Database = {
           campaign_id: string
           created_at: string
           digit: string | null
+          dispatched_at: string | null
           id: string
-          lead_id: string
+          lead_id: string | null
           notified_at: string | null
+          pbx_call_id: string | null
           phone: string
+          state: string
         }
         Insert: {
           area_key: string
@@ -5438,10 +5441,13 @@ export type Database = {
           campaign_id: string
           created_at?: string
           digit?: string | null
+          dispatched_at?: string | null
           id?: string
-          lead_id: string
+          lead_id?: string | null
           notified_at?: string | null
+          pbx_call_id?: string | null
           phone: string
+          state?: string
         }
         Update: {
           area_key?: string
@@ -5449,10 +5455,13 @@ export type Database = {
           campaign_id?: string
           created_at?: string
           digit?: string | null
+          dispatched_at?: string | null
           id?: string
-          lead_id?: string
+          lead_id?: string | null
           notified_at?: string | null
+          pbx_call_id?: string | null
           phone?: string
+          state?: string
         }
         Relationships: [
           {

@@ -58,7 +58,7 @@ export default function BulkIvrDialog() {
           <DialogHeader>
             <DialogTitle>Açmayanları otomatik ara</DialogTitle>
             <DialogDescription>
-              Arayan numara: <b>0216 706 06 11</b>. Aynı anda en fazla 2 arama, yalnız 09:30–20:00 arası.
+              Arayan numara: <b>0531 789 38 80</b> (santral 81 hattı). Aynı anda en fazla 2 arama, yalnız 09:30–20:00 arası.
               1'i tuşlayanlar ve 2'yi tuşlayanlar ayrı kartlara geçer.
             </DialogDescription>
           </DialogHeader>

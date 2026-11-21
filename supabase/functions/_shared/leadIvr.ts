@@ -48,3 +48,22 @@ export function statusFromDigit(digit: string | null | undefined): "ivr_pressed_
   if (digit === "2") return "ivr_pressed_2";
   return null;
 }
+
+// 90XXXXXXXXXX → 05XXXXXXXXX (santralin çevireceği biçim)
+export function localMobile(phone90: string): string {
+  return "0" + phone90.replace(/\D/g, "").slice(2);
+}
+
+// Otomatik arama yalnız Türkiye saatiyle 09:30–20:00 arası.
+export function inCallWindow(d: Date): boolean {
+  const tr = new Date(d.getTime() + 3 * 3600e3);
+  const m = tr.getUTCHours() * 60 + tr.getUTCMinutes();
+  return m >= 9 * 60 + 30 && m < 20 * 60;
+}
+
+// Çağrıya özel webhook imzası (HMAC-SHA256, hex).
+export async function callToken(callId: string, secret: string): Promise<string> {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const s = await crypto.subtle.sign("HMAC", k, new TextEncoder().encode("lead-ivr:" + callId));
+  return Array.from(new Uint8Array(s)).map((x) => x.toString(16).padStart(2, "0")).join("");
+}
