@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { isBlockedPhone } from "../_shared/blocklist.ts";
+import { IVR_LINES, ivrDialPrefix } from "../_shared/ivrLines.ts";
 import {
   AREA_LABELS, AreaKey, areaFromTherapy, areaMessage, callToken, inCallWindow, localMobile, normalizeMobile,
   REPLY_1, REPLY_2,
@@ -14,7 +15,6 @@ const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
 const VOICE_ID = "pFZP5JQG7iQjIQuC4Bku"; // Lily – kadın sesi
-const DIAL_PREFIX = "81"; // FCT0606 hattı
 const CLI = "905317893880";
 const CLI_LABEL = "0531 789 38 80";
 const MAX_PARALLEL = 2;
@@ -49,6 +49,7 @@ async function pbx(action: string, extra: Record<string, unknown> = {}) {
   if (r.status === 404) throw new Error("Santralde freepbx-ivr.php dosyası yok. Önce dosyayı yükleyin.");
   let p: any = null;
   try { p = JSON.parse(t); } catch { /* */ }
+  if (p?.code === "lines_busy") throw new Error("IVR_LINES_BUSY");
   if (!r.ok || !p?.success) throw new Error(p?.error ? `Santral: ${p.error}` : `Santral hata ${r.status}`);
   return p;
 }
@@ -96,17 +97,25 @@ async function ensureSounds(svc: any) {
   );
 }
 
-async function dispatch(svc: any, call: any) {
-  const base = Deno.env.get("SUPABASE_URL")!;
-  const t = await callToken(call.id, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+async function dispatch(svc: any, call: any, prefix: "auto" | "81") {
+  const base = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!base || !key) throw new Error("Arama hizmeti ayarları eksik");
+  const t = await callToken(call.id, key);
   const webhook = `${base}/functions/v1/lead-ivr-webhook?t=${t}`;
   await svc.from("lead_ivr_calls").update({ state: "dialing", dispatched_at: new Date().toISOString() }).eq("id", call.id);
   try {
-    await pbx("call", {
-      number: localMobile(call.phone), prefix: DIAL_PREFIX, area: call.area_key, call_id: call.id,
+    const result = await pbx("call", {
+      number: localMobile(call.phone), prefix, area: call.area_key, call_id: call.id,
       webhook, ring_seconds: RING_SECONDS,
     });
+    await svc.from("lead_ivr_calls").update({ pbx_call_id: `line:${result.prefix || "81"}` }).eq("id", call.id);
+    return true;
   } catch (e) {
+    if ((e as Error).message === "IVR_LINES_BUSY") {
+      await svc.from("lead_ivr_calls").update({ state: "queued", dispatched_at: null }).eq("id", call.id);
+      return false;
+    }
     await svc.from("lead_ivr_calls").update({ state: "failed", call_status: (e as Error).message.slice(0, 200) }).eq("id", call.id);
     throw e;
   }
@@ -137,8 +146,12 @@ async function tick(svc: any) {
     }
     return { finishing: true };
   }
-  for (const c of next.slice(0, slots)) await dispatch(svc, c);
-  return { started: Math.min(slots, next.length) };
+  let started = 0;
+  for (const c of next.slice(0, slots)) {
+    if (await dispatch(svc, c, ivrDialPrefix(st))) started++;
+    else break;
+  }
+  return { started };
 }
 
 async function tickLoop(svc: any) {
@@ -167,7 +180,10 @@ Deno.serve(async (req) => {
   const auth = await verifyAdminOrCron(req, ["admin"]);
   if (!auth.ok) return json({ error: auth.error }, auth.status);
 
-  const svc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const serviceUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!serviceUrl || !serviceKey) return json({ error: "Arama hizmeti ayarları eksik" }, 500);
+  const svc = createClient(serviceUrl, serviceKey);
   let body: any = {};
   try { body = await req.json(); } catch { /* */ }
   const action = String(body.action || "");
@@ -181,7 +197,8 @@ Deno.serve(async (req) => {
 
     if (action === "eligible") {
       const leads = await eligibleLeads(svc);
-      return json({ count: leads.length, cli: CLI_LABEL });
+      const st = await pbx("status");
+      return json({ count: leads.length, cli: CLI_LABEL, dual_line: st.dual_line === true, lines: IVR_LINES });
     }
 
     if (action === "tick") { kick(svc); return json({ ok: true }); }
@@ -208,6 +225,7 @@ Deno.serve(async (req) => {
     }
 
     await ensureSounds(svc);
+    const lineStatus = await pbx("status");
 
     type Row = { lead_id: string | null; phone: string; area: AreaKey };
     let rows: Row[];
@@ -222,8 +240,9 @@ Deno.serve(async (req) => {
 
     const { data: camp, error: ce } = await svc.from("lead_ivr_campaigns").insert({
       cli: CLI, total: rows.length, status: testPhone ? "test" : "running", webhook_token_hash: "per-call",
-    }).select("id").single();
+    }).select("id").maybeSingle();
     if (ce) throw ce;
+    if (!camp) throw new Error("Arama kaydı oluşturulamadı");
 
     const { data: calls, error: ie } = await svc.from("lead_ivr_calls").insert(
       rows.map((r) => ({ campaign_id: camp.id, lead_id: r.lead_id, phone: r.phone, area_key: r.area })),
@@ -231,7 +250,12 @@ Deno.serve(async (req) => {
     if (ie) throw ie;
 
     if (testPhone) {
-      await dispatch(svc, calls![0]);
+      const first = calls?.[0];
+      if (!first) throw new Error("Deneme araması oluşturulamadı");
+      if (!await dispatch(svc, first, ivrDialPrefix(lineStatus))) {
+        await svc.from("lead_ivr_calls").update({ state: "cancelled" }).eq("id", first.id);
+        throw new Error("Hatlar meşgul; deneme araması başlatılmadı. Biraz sonra tekrar deneyin.");
+      }
       return json({ ok: true, count: 1, campaign_id: camp.id });
     }
     kick(svc);

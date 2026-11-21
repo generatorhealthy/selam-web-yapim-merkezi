@@ -32,6 +32,7 @@ export default function BulkIvrDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState<number | null>(null);
+  const [dualLine, setDualLine] = useState(false);
   const [area, setArea] = useState("cift");
   const [audio, setAudio] = useState<string | null>(null);
   const [testPhone, setTestPhone] = useState("");
@@ -45,7 +46,11 @@ export default function BulkIvrDialog() {
 
   const openDialog = () => {
     setOpen(true);
-    run("count", async () => setCount((await call({ action: "eligible" })).count));
+    run("count", async () => {
+      const result = await call({ action: "eligible" });
+      setCount(result.count);
+      setDualLine(result.dual_line === true);
+    });
   };
 
   return (
@@ -58,7 +63,7 @@ export default function BulkIvrDialog() {
           <DialogHeader>
             <DialogTitle>Açmayanları otomatik ara</DialogTitle>
             <DialogDescription>
-              Arayan numara: <b>0531 789 38 80</b> (santral 81 hattı). Aynı anda en fazla 2 arama, yalnız 09:30–20:00 arası.
+              {dualLine ? <>Arayan numaralar: <b>0531 789 38 80</b> (81) ve <b>0532 822 22 75</b> (80). Her hattan en fazla 1, toplam 2 arama.</> : <>Arayan numara: <b>0531 789 38 80</b> (81 hattı). İkinci hat için santral güncellemesi bekleniyor.</>} Yalnız 09:30–20:00 arası.
               1'i tuşlayanlar ve 2'yi tuşlayanlar ayrı kartlara geçer.
             </DialogDescription>
           </DialogHeader>

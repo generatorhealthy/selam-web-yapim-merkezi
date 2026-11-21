@@ -591,4 +591,9 @@
 - [ ] Aşama 7: paket bazlı kontrollü yayın; her pakette commit SHA + gerçek URL doğrulaması.
 - [x] Aşama 1 düzeltme: eski tek anahtarlı çerez onayının yeni amaçlara otomatik aktarımı kaldırıldı (kapsam kanıtı yok); eski ziyaretçiye amaç bazlı bant yeniden gösteriliyor, eski kayıtlar değiştirilmedi. 7 tarayıcı senaryosu + 5 node + 4 Deno testi geçti.
 - [x] Meta CAPI izin kapısı: kişisel verili Lead/CompleteRegistration/Purchase/InitiateCheckout/QualifiedLead olayları yalnız user_consent_logs'ta sunucu doğrulamalı 'advertising' izni varken gönderilir; kanıt yoksa olay kuyrukta bekler (held), sipariş/ödeme etkilenmez. Reklam izni sunucu kaydı henüz hiçbir kullanıcıda olmadığından CAPI fiilen beklemede — ayrı kabul paketi.
-- [ ] FreePBX otomatik arama: kod hazır; santrale freepbx-ivr.php yüklenmesi ve Beni ara testi kullanıcıda
+- [x] FreePBX 81 hattı: kullanıcı deneme aramasını aldı ve 2 tuşunun işlendiğini doğruladı.
+
+## 21 Kasım 2026 — İki hatlı toplu IVR
+- [x] Onaylı iki hat seçimi ve her hatta tek arama kilidi hazır; 8 Deno ve 8 sentetik PHP kontrolü geçti. Eski yardımcıda 81 korunur; panel yalnız santral dual_line bildirince iki hattı gösterir.
+- [x] lead-ivr-campaign yayımlandı (SHA d621b674bcf23570767bf651af6720ed26cdaa797c84be2782feb122ce8a5636); build OK, girişsiz arama düğmesi yok. Anahtarı koruyan ve geri dönüş yedeği alan güncelleme dosyası hazır; gerçek kişiye arama başlatılmadı.
+- [ ] Santralde güncelleme dosyasını çalıştırma ve iki hattın gerçek arama/tuş kabulü — Hostinger sunucu erişimi kullanıcıda; burada gerçek yönetici/FreePBX oturumu yok.

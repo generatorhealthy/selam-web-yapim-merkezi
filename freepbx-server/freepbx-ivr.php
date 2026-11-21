@@ -36,6 +36,16 @@ function active_count() {
 }
 function pending_count() { global $SPOOL; return count(glob($SPOOL . '/doktorumol-*.call') ?: []); }
 
+// Called under one shared flock: include ringing Local channels and pending files.
+function ivr_line_busy($prefix, $channels, $pending, $reservedUntil, $now) {
+  if ($reservedUntil > $now) return true;
+  if (preg_match('/^Local\/' . preg_quote($prefix, '/') . '5\d{9}@from-internal-/m', $channels)) return true;
+  foreach ($pending as $body) {
+    if (strpos($body, 'Channel: Local/' . $prefix) === 0) return true;
+  }
+  return false;
+}
+
 if ($action === 'setup') {
   if (!is_dir($SOUND_DIR) && !@mkdir($SOUND_DIR, 0775, true)) out(['success' => false, 'error' => 'Ses klasörü oluşturulamadı'], 500);
   $files = is_array($in['files'] ?? null) ? $in['files'] : [];
@@ -74,28 +84,53 @@ CTX;
   out(['success' => $ok, 'error' => $ok ? null : 'Arama akışı santrale yüklenemedi']);
 }
 
-if ($action === 'status') out(['success' => true, 'active' => active_count(), 'pending' => pending_count()]);
+if ($action === 'status') out(['success' => true, 'active' => active_count(), 'pending' => pending_count(), 'dual_line' => true]);
 
 if ($action === 'call') {
   $num  = preg_replace('/\D/', '', (string)($in['number'] ?? ''));
-  $pre  = preg_replace('/\D/', '', (string)($in['prefix'] ?? ''));
+  $pre  = (string)($in['prefix'] ?? '');
   $area = (string)($in['area'] ?? '');
   $cid  = (string)($in['call_id'] ?? '');
   $url  = (string)($in['webhook'] ?? '');
-  if (!preg_match('/^05\d{9}$/', $num) || !preg_match('/^\d{0,3}$/', $pre) || !preg_match('/^[a-z]{2,20}$/', $area)
+  if (!preg_match('/^05\d{9}$/', $num) || !in_array($pre, ['auto', '80', '81'], true) || !preg_match('/^[a-z]{2,20}$/', $area)
       || !preg_match('/^[0-9a-f-]{36}$/', $cid) || !preg_match('#^https://[a-z0-9.-]+\.supabase\.co/functions/v1/lead-ivr-webhook\?[A-Za-z0-9=&_-]+$#', $url)) {
     out(['success' => false, 'error' => 'Geçersiz arama bilgisi'], 400);
   }
+  if (!is_dir($TMP)) @mkdir($TMP, 0775, true);
+  $lock = @fopen("$TMP/doktorumol-lines.lock", 'c');
+  if (!$lock || !flock($lock, LOCK_EX)) out(['success' => false, 'error' => 'Hat kilidi alınamadı'], 503);
+  $channels = ast('core show channels concise');
+  if (stripos($channels, 'Unable to connect') !== false || stripos($channels, 'Permission denied') !== false) {
+    out(['success' => false, 'error' => 'Santral hat durumu okunamadı'], 503);
+  }
+  $pending = [];
+  foreach (glob($SPOOL . '/doktorumol-*.call') ?: [] as $file) $pending[] = (string)@file_get_contents($file);
+  $selected = null;
+  foreach ($pre === 'auto' ? ['81', '80'] : [$pre] as $line) {
+    $reservation = "$TMP/doktorumol-line-$line.until";
+    if (!ivr_line_busy($line, $channels, $pending, (int)@file_get_contents($reservation), time())) {
+      $selected = $line;
+      break;
+    }
+  }
+  if ($selected === null) out(['success' => false, 'code' => 'lines_busy', 'error' => 'Her iki hat da meşgul'], 409);
+  $pre = $selected;
+  $reservation = "$TMP/doktorumol-line-$pre.until";
+  // Protect the brief gap between spool consumption and Local channel creation.
+  if (@file_put_contents($reservation, (string)(time() + 10)) === false) out(['success' => false, 'error' => 'Hat ayrılamadı'], 503);
   $wait = max(20, min(60, (int)($in['ring_seconds'] ?? 40)));
-  $body = "Channel: Local/{$pre}" . substr($num, 1) . "@from-internal\nMaxRetries: 0\nWaitTime: {$wait}\n"
+  $body = "Channel: Local/{$pre}" . substr($num, 1) . "@from-internal/n\nMaxRetries: 0\nWaitTime: {$wait}\n"
         . "Context: doktorumol-ivr\nExtension: s\nPriority: 1\n"
         . "Setvar: IVR_AREA={$area}\nSetvar: IVR_CALL={$cid}\nSetvar: IVR_URL={$url}\n";
   if (!is_dir($TMP)) @mkdir($TMP, 0775, true);
   $tmp = "$TMP/doktorumol-$cid.call";
   if (@file_put_contents($tmp, $body) === false || !@rename($tmp, "$SPOOL/doktorumol-$cid.call")) {
+    @unlink($reservation);
     out(['success' => false, 'error' => 'Arama dosyası santrale yazılamadı'], 500);
   }
-  out(['success' => true]);
+  flock($lock, LOCK_UN);
+  fclose($lock);
+  out(['success' => true, 'prefix' => $pre]);
 }
 
 if ($action === 'stop') {
