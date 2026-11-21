@@ -144,7 +144,18 @@ async function tickLoop(svc: any) {
     if (r.idle || r.waiting) return r;
     await new Promise((res) => setTimeout(res, 10_000));
   }
+  // İş bitmediyse kendini bir tur daha çağırır; kampanya bitince zincir durur.
+  await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/lead-ivr-campaign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+    body: JSON.stringify({ action: "tick" }), signal: AbortSignal.timeout(3000),
+  }).catch(() => {});
   return { ok: true };
+}
+
+function kick(svc: any) {
+  // @ts-ignore EdgeRuntime Supabase'de var
+  EdgeRuntime.waitUntil(tickLoop(svc).catch((e) => console.error("tick", (e as Error).message)));
 }
 
 Deno.serve(async (req) => {
@@ -169,7 +180,7 @@ Deno.serve(async (req) => {
       return json({ count: leads.length, cli: CLI_LABEL });
     }
 
-    if (action === "tick") return json(await tickLoop(svc));
+    if (action === "tick") { kick(svc); return json({ ok: true }); }
 
     if (action === "stop") {
       await svc.from("lead_ivr_campaigns").update({ status: "stopped", updated_at: new Date().toISOString() }).eq("status", "running");
@@ -185,7 +196,11 @@ Deno.serve(async (req) => {
 
     if (!testPhone) {
       const { data: running } = await svc.from("lead_ivr_campaigns").select("id").eq("status", "running").limit(1).maybeSingle();
-      if (running) return json({ error: "Zaten devam eden bir toplu arama var. Önce durdurun." }, 409);
+      if (running) {
+        kick(svc);
+        return json({ error: "Zaten devam eden bir toplu arama var; kaldığı yerden sürdürülüyor. Yeniden başlatmak için önce durdurun." }, 409);
+      }
+      if (!inCallWindow(new Date())) return json({ error: "Toplu arama yalnız 09:30–20:00 arası başlatılabilir." }, 400);
     }
 
     await ensureSounds(svc);
@@ -215,11 +230,7 @@ Deno.serve(async (req) => {
       await dispatch(svc, calls![0]);
       return json({ ok: true, count: 1, campaign_id: camp.id });
     }
-    if (!inCallWindow(new Date())) {
-      return json({ ok: true, count: rows.length, campaign_id: camp.id, message: "Aramalar 09:30'da başlayacak" });
-    }
-    // @ts-ignore EdgeRuntime Supabase'de var
-    EdgeRuntime.waitUntil(tickLoop(svc).catch((e) => console.error("tick", (e as Error).message)));
+    kick(svc);
     return json({ ok: true, count: rows.length, campaign_id: camp.id });
   } catch (e) {
     console.error("lead-ivr-campaign error", (e as Error).message);
