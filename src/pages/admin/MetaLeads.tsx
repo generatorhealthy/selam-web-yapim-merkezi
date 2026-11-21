@@ -16,6 +16,7 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import AiCallPanel from "@/components/admin/AiCallPanel";
 import BulkIvrDialog from "@/components/admin/BulkIvrDialog";
+import { useUserRole } from "@/hooks/useUserRole";
 import { expertsForTherapy } from "@/lib/leadIvr";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -196,6 +197,7 @@ export const loadAllLeads = (force = false): Promise<any[]> => {
 };
 
 const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
+  const { userProfile: ivrRole } = useUserRole();
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>(() => (leadsCache as Lead[]) ?? []);
   const [loading, setLoading] = useState(!leadsCache);
@@ -451,7 +453,7 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 {bulkSmsLoading ? "Gönderiliyor..." : "Tekrar Başvuru SMS Gönder"}
               </Button>
             )}
-            {statusFilter === "no_answer" && <BulkIvrDialog />}
+            {statusFilter === "no_answer" && ivrRole?.role === "admin" && <BulkIvrDialog />}
             <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
