@@ -15,7 +15,7 @@ import urllib.error
 
 PROJECT_HOST = "irnfwewabogveofwemvg.supabase.co"
 UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-URL = re.compile(r"^https://" + re.escape(PROJECT_HOST) + r"/functions/v1/lead-ivr-webhook\?t=([0-9a-f]{64})$")
+URL = re.compile(r"^https://" + re.escape(PROJECT_HOST) + r"/functions/v1/lead-ivr-webhook\\?\?t=([0-9a-f]{64})$")  # AMI escapes ? as \?
 
 def iso(timestamp):
     return datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc).isoformat()

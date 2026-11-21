@@ -40,6 +40,14 @@ class ObserverTests(unittest.TestCase):
         observer.handle({"Event": "VarSet", "Uniqueid": "x", "Variable": "IVR_URL", "Value": "https://evil.invalid?t=" + "a" * 64})
         observer.heartbeat()
         self.assertEqual(self.events, [])
+    def test_ami_escaped_question_mark_url_is_accepted(self):
+        observer = Observer(self.events.append)
+        observer.handle({"Event": "Newchannel", "Uniqueid": "y", "Channel": self.channel})
+        observer.handle({"Event": "VarSet", "Uniqueid": "y", "Variable": "__IVR_CALL", "Value": "00000000-0000-0000-0000-000000000002"})
+        observer.handle({"Event": "VarSet", "Uniqueid": "y", "Variable": "__IVR_URL", "Value": "https://irnfwewabogveofwemvg.supabase.co/functions/v1/lead-ivr-webhook\\?t=" + "b" * 64})
+        observer.handle({"Event": "Hangup", "Uniqueid": "y", "Cause": "17"})
+        self.assertEqual(self.events[-1]["token"], "b" * 64)
+        self.assertEqual(self.events[-1]["reason"], "busy")
     def test_outbox_survives_restart_and_deduplicates(self):
         import time
         import datetime
