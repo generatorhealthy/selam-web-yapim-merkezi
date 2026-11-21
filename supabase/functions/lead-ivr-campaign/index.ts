@@ -248,6 +248,10 @@ Deno.serve(async (req) => {
     }).select("id").maybeSingle();
     if (ce) throw ce;
     if (!camp) throw new Error("Arama kaydı oluşturulamadı");
+    if (!testPhone) {
+      const { error: metadataError } = await svc.from("lead_ivr_campaign_metadata").insert({ campaign_id: camp.id, source_status: sourceStatus });
+      if (metadataError) throw metadataError;
+    }
 
     const { data: calls, error: ie } = await svc.from("lead_ivr_calls").insert(
       rows.map((r) => ({ campaign_id: camp.id, lead_id: r.lead_id, phone: r.phone, area_key: r.area })),

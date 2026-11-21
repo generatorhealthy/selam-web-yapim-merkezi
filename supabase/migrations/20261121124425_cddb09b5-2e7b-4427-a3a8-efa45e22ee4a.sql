@@ -1,0 +1,2 @@
+CREATE POLICY "Service manages IVR event metadata" ON public.lead_ivr_call_events FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Service manages IVR campaign metadata" ON public.lead_ivr_campaign_metadata FOR ALL TO service_role USING (true) WITH CHECK (true);

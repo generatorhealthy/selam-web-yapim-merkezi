@@ -1,11 +1,11 @@
-# İstatistik hazırlığı — canlıya uygulanmadı
+# İstatistik yayını — santral kurulumu bekliyor
 
-Web ekranı hazır; veri hizmeti ve olay kaydı canlı onay bekler. Ekran bu hizmet olmadan anlaşılır bağlantı/açılış uyarısı gösterir; sahte veri içermez.
+21 Kasım 2026 12:40 UTC kullanıcı onayıyla SQL ve üç Edge hizmeti canlı yayımlandı. İstatistik anonim403, biçimli imzasız olay403 döndü; yeni service-only politikalar doğrulandı. Web ekranı hazır; gerçek oturum kabulü bu harici Supabase ortamında doğrulanamadı. Hostinger observer kurulmadan açılma/kapanma saniyeleri gelmez; sahte veri içermez. Önceden var olan 155 güvenlik bulgusu bu paketten bağımsızdır; yeni uyarı yoktur.
 
 ## Ayrı canlı paket
 - schema.sql: eklemeli olay tablosu, service-only imzalı olay RPC'si, yalnız service erişimli özet görünümü. Mevcut çağrı/lead satırlarına dokunmaz; mevcut personel yetkileri korunur.
-- edge-statistics.ts, statistics-handler.ts ve ortak kurallar onaydan sonra kendi işlev dizinine doğru içe aktarımlarla taşınıp `lead-ivr-statistics` olarak yayımlanır. Yetki, doğrulanmış oturumun caller-scoped get_my_panel_access sonucudur; yalnız onaylı admin.
-- edge-telemetry.ts ve telemetry-handler.ts `lead-ivr-telemetry` olarak yayımlanır. Çağrı HMAC imzası olmadan olay kabul edilmez. 1/2 geçmiş kategori güncellemeleri mevcut webhook'ta kalır.
+- edge-statistics.ts, statistics-handler.ts ve ortak kurallar doğru içe aktarımlarla `lead-ivr-statistics` olarak yayımlandı. Yetki, doğrulanmış oturumun caller-scoped get_my_panel_access sonucudur; yalnız onaylı admin.
+- edge-telemetry.ts ve telemetry-handler.ts `lead-ivr-telemetry` olarak yayımlandı. Çağrı HMAC imzası olmadan olay kabul edilmez. 1/2 geçmiş kategori güncellemeleri mevcut webhook'ta kalır.
 - Bu paket arama hızını, 24 saat kuralını, saatleri veya kapasiteyi değiştirmez. Yeni otomatik arama başlatmaz.
 
 ## Hostinger santral hazırlığı
