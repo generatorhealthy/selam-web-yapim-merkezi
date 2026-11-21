@@ -5420,6 +5420,44 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_ivr_call_events: {
+        Row: {
+          call_id: string
+          event_key: string
+          kind: string
+          line: string
+          occurred_at: string
+          reason: string | null
+          received_at: string
+        }
+        Insert: {
+          call_id: string
+          event_key: string
+          kind: string
+          line: string
+          occurred_at: string
+          reason?: string | null
+          received_at?: string
+        }
+        Update: {
+          call_id?: string
+          event_key?: string
+          kind?: string
+          line?: string
+          occurred_at?: string
+          reason?: string | null
+          received_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_ivr_call_events_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "lead_ivr_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_ivr_calls: {
         Row: {
           area_key: string
@@ -5476,6 +5514,29 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "danisan_basvurulari"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_ivr_campaign_metadata: {
+        Row: {
+          campaign_id: string
+          source_status: string
+        }
+        Insert: {
+          campaign_id: string
+          source_status: string
+        }
+        Update: {
+          campaign_id?: string
+          source_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_ivr_campaign_metadata_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "lead_ivr_campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -9248,6 +9309,27 @@ export type Database = {
       }
     }
     Views: {
+      lead_ivr_telemetry: {
+        Row: {
+          answered_at: string | null
+          call_id: string | null
+          digit_at: string | null
+          end_reason: string | null
+          ended_at: string | null
+          line: string | null
+          observed_at: string | null
+          ringing_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_ivr_call_events_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "lead_ivr_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_reviews: {
         Row: {
           comment: string | null
@@ -9912,6 +9994,17 @@ export type Database = {
           blocked_until: string
           is_now_blocked: boolean
         }[]
+      }
+      record_ivr_telemetry: {
+        Args: {
+          p_call_id: string
+          p_event_key: string
+          p_kind: string
+          p_line: string
+          p_occurred_at: string
+          p_reason?: string
+        }
+        Returns: boolean
       }
       reels_claim_notice: { Args: never; Returns: Json }
       reels_list_jobs_server: {
