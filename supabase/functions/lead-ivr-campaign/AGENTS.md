@@ -1,0 +1,1 @@
+- Bulk IVR runs only from an admin click (one Verimor campaign, 0216 line, 09:30–20:00, 2 threads, 24h re-call skip) with pre-recorded ElevenLabs audio; lead-ivr-webhook moves leads only from no_answer via a hashed per-campaign token — auditable and spoof-proof.
