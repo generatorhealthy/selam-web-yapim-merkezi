@@ -453,7 +453,7 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 {bulkSmsLoading ? "Gönderiliyor..." : "Tekrar Başvuru SMS Gönder"}
               </Button>
             )}
-            {statusFilter === "no_answer" && ivrRole?.role === "admin" && <BulkIvrDialog />}
+            {(statusFilter === "no_answer" || statusFilter === "wrong") && ivrRole?.role === "admin" && <BulkIvrDialog key={statusFilter} status={statusFilter} />}
             <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}

@@ -1,16 +1,14 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { verifyAdminOrCron } from "../_shared/adminAuth.ts";
 import { isBlockedPhone } from "../_shared/blocklist.ts";
 import { IVR_LINES, ivrDialPrefix } from "../_shared/ivrLines.ts";
 import {
   AREA_LABELS, AreaKey, areaFromTherapy, areaMessage, callToken, inCallWindow, localMobile, normalizeMobile,
-  REPLY_1, REPLY_2,
+  REPLY_1, REPLY_2, bulkIvrStatus, BulkIvrStatus, readIvrPages, selectIvrBatch,
 } from "../_shared/leadIvr.ts";
 
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
-};
+const cors = { ...corsHeaders, "Access-Control-Allow-Headers": `${corsHeaders["Access-Control-Allow-Headers"]}, x-cron-secret` };
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
@@ -98,6 +96,7 @@ async function ensureSounds(svc: any) {
 }
 
 async function dispatch(svc: any, call: any, prefix: "auto" | "81") {
+  if (!inCallWindow(new Date())) return false;
   const base = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!base || !key) throw new Error("Arama hizmeti ayarları eksik");
@@ -105,6 +104,11 @@ async function dispatch(svc: any, call: any, prefix: "auto" | "81") {
   const webhook = `${base}/functions/v1/lead-ivr-webhook?t=${t}`;
   await svc.from("lead_ivr_calls").update({ state: "dialing", dispatched_at: new Date().toISOString() }).eq("id", call.id);
   try {
+    const sourceStatus = bulkIvrStatus(body.status);
+    if ((action === "eligible" || action === "start") && !sourceStatus) return json({ error: "Geçersiz arama kategorisi" }, 400);
+    if (action === "start" && body.limit !== undefined && (!Number.isInteger(body.limit) || body.limit < 1 || body.limit > 1000)) {
+      return json({ error: "Geçersiz deneme kişi sayısı" }, 400);
+    }
     const result = await pbx("call", {
       number: localMobile(call.phone), prefix, area: call.area_key, call_id: call.id,
       webhook, ring_seconds: RING_SECONDS,
@@ -196,7 +200,8 @@ Deno.serve(async (req) => {
     }
 
     if (action === "eligible") {
-      const leads = await eligibleLeads(svc);
+      if (!sourceStatus) return json({ error: "Geçersiz arama kategorisi" }, 400);
+      const leads = await eligibleLeads(svc, sourceStatus);
       const st = await pbx("status");
       return json({ count: leads.length, cli: CLI_LABEL, dual_line: st.dual_line === true, lines: IVR_LINES });
     }
@@ -211,6 +216,8 @@ Deno.serve(async (req) => {
     }
 
     if (action !== "start") return json({ error: "Geçersiz işlem" }, 400);
+    if (!sourceStatus) return json({ error: "Geçersiz arama kategorisi" }, 400);
+    if (!inCallWindow(new Date())) return json({ error: "Arama yalnız 10:00–18:00 arası başlatılabilir." }, 400);
 
     const testPhone = body.test_phone ? normalizeMobile(String(body.test_phone)) : null;
     if (body.test_phone && !testPhone) return json({ error: "Geçerli bir cep numarası girin" }, 400);
@@ -221,7 +228,6 @@ Deno.serve(async (req) => {
         kick(svc);
         return json({ error: "Zaten devam eden bir toplu arama var; kaldığı yerden sürdürülüyor. Yeniden başlatmak için önce durdurun." }, 409);
       }
-      if (!inCallWindow(new Date())) return json({ error: "Toplu arama yalnız 09:30–20:00 arası başlatılabilir." }, 400);
     }
 
     await ensureSounds(svc);
@@ -233,8 +239,7 @@ Deno.serve(async (req) => {
       const area = (body.area in AREA_LABELS ? body.area : "bireysel") as AreaKey;
       rows = [{ lead_id: null, phone: testPhone, area }];
     } else {
-      const limit = Math.min(Math.max(Number(body.limit) || 1000, 1), 1000);
-      rows = (await eligibleLeads(svc)).slice(0, limit);
+      rows = selectIvrBatch(await eligibleLeads(svc, sourceStatus), body.limit);
     }
     if (rows.length === 0) return json({ error: "Aranacak danışan yok" }, 400);
 
@@ -266,12 +271,20 @@ Deno.serve(async (req) => {
   }
 });
 
-async function eligibleLeads(svc: any) {
-  const { data, error } = await svc.from("danisan_basvurulari").select("id, phone, therapy_type").eq("status", "no_answer").limit(1000);
-  if (error) throw error;
+async function eligibleLeads(svc: any, status: BulkIvrStatus) {
+  const data = await readIvrPages<any>(async (from, to) => {
+    const result = await svc.from("danisan_basvurulari").select("id, phone, therapy_type")
+      .eq("status", status).order("id").range(from, to);
+    if (result.error) throw result.error;
+    return result.data || [];
+  });
   const since = new Date(Date.now() - 864e5).toISOString();
-  const { data: recent } = await svc.from("lead_ivr_calls").select("lead_id")
-    .gte("created_at", since).neq("state", "cancelled").not("lead_id", "is", null).limit(5000);
+  const recent = await readIvrPages<any>(async (from, to) => {
+    const result = await svc.from("lead_ivr_calls").select("lead_id")
+      .gte("created_at", since).neq("state", "cancelled").not("lead_id", "is", null).order("id").range(from, to);
+    if (result.error) throw result.error;
+    return result.data || [];
+  });
   const skip = new Set((recent || []).map((r: any) => r.lead_id));
   const seen = new Set<string>();
   const out: { lead_id: string; phone: string; area: AreaKey }[] = [];

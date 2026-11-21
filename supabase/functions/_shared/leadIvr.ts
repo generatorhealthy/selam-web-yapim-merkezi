@@ -1,5 +1,25 @@
 // Shared rules for the "Açmayanlar" bulk IVR call (press 1 / press 2).
 export type AreaKey = "bireysel" | "cocuk" | "cift" | "aile" | "iliski";
+export const BULK_IVR_STATUSES = ["no_answer", "wrong"] as const;
+export type BulkIvrStatus = typeof BULK_IVR_STATUSES[number];
+
+export function bulkIvrStatus(value: unknown): BulkIvrStatus | null {
+  if (value === undefined || value === "no_answer") return "no_answer";
+  return value === "wrong" ? "wrong" : null;
+}
+
+export async function readIvrPages<T>(fetchPage: (from: number, to: number) => Promise<T[]>): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += 1000) {
+    const page = await fetchPage(from, from + 999);
+    rows.push(...page);
+    if (page.length < 1000) return rows;
+  }
+}
+
+export function selectIvrBatch<T>(rows: T[], limit: unknown): T[] {
+  return limit === undefined ? rows : rows.slice(0, Number(limit));
+}
 
 export const AREA_LABELS: Record<AreaKey, string> = {
   bireysel: "Bireysel Terapi",
@@ -54,11 +74,11 @@ export function localMobile(phone90: string): string {
   return "0" + phone90.replace(/\D/g, "").slice(2);
 }
 
-// Otomatik arama yalnız Türkiye saatiyle 09:30–20:00 arası.
+// Otomatik arama yalnız Türkiye saatiyle 10:00–18:00 arası.
 export function inCallWindow(d: Date): boolean {
   const tr = new Date(d.getTime() + 3 * 3600e3);
   const m = tr.getUTCHours() * 60 + tr.getUTCMinutes();
-  return m >= 9 * 60 + 30 && m < 20 * 60;
+  return m >= 10 * 60 && m < 18 * 60;
 }
 
 // Çağrıya özel webhook imzası (HMAC-SHA256, hex).

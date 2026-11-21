@@ -28,7 +28,7 @@ async function call(body: Record<string, unknown>) {
   return data;
 }
 
-export default function BulkIvrDialog() {
+export default function BulkIvrDialog({ status = "no_answer" }: { status?: "no_answer" | "wrong" }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState<number | null>(null);
@@ -47,7 +47,7 @@ export default function BulkIvrDialog() {
   const openDialog = () => {
     setOpen(true);
     run("count", async () => {
-      const result = await call({ action: "eligible" });
+      const result = await call({ action: "eligible", status });
       setCount(result.count);
       setDualLine(result.dual_line === true);
     });
@@ -61,9 +61,9 @@ export default function BulkIvrDialog() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Açmayanları otomatik ara</DialogTitle>
+            <DialogTitle>{status === "wrong" ? "Yanlış ulaşanları otomatik ara" : "Açmayanları otomatik ara"}</DialogTitle>
             <DialogDescription>
-              {dualLine ? <>Arayan numaralar: <b>0531 789 38 80</b> (81) ve <b>0532 822 22 75</b> (80). Her hattan en fazla 1, toplam 2 arama.</> : <>Arayan numara: <b>0531 789 38 80</b> (81 hattı). İkinci hat için santral güncellemesi bekleniyor.</>} Yalnız 09:30–20:00 arası.
+              {dualLine ? <>Arayan numaralar: <b>0531 789 38 80</b> (81) ve <b>0532 822 22 75</b> (80). Her hattan en fazla 1, toplam 2 arama.</> : <>Arayan numara: <b>0531 789 38 80</b> (81 hattı). İkinci hat için santral güncellemesi bekleniyor.</>} Yalnız 10:00–18:00 arası.
               1'i tuşlayanlar ve 2'yi tuşlayanlar ayrı kartlara geçer.
             </DialogDescription>
           </DialogHeader>
@@ -88,7 +88,7 @@ export default function BulkIvrDialog() {
               <div className="flex gap-2">
                 <Input placeholder="05xx xxx xx xx" value={testPhone} onChange={(e) => setTestPhone(e.target.value)} />
                 <Button variant="outline" disabled={!!busy || !testPhone} onClick={() => run("test", async () => {
-                  await call({ action: "start", test_phone: testPhone, area });
+                  await call({ action: "start", test_phone: testPhone, area, status });
                   toast({ title: "Deneme araması başlatıldı", description: "Telefonunuz birazdan çalacak." });
                 })}>{busy === "test" ? "Başlatılıyor..." : "Beni ara"}</Button>
               </div>
@@ -101,12 +101,12 @@ export default function BulkIvrDialog() {
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" disabled={!!busy || !count} onClick={() => run("small", async () => {
-                  const r = await call({ action: "start", limit: 5 });
+                  const r = await call({ action: "start", limit: 5, status });
                   toast({ title: "Küçük deneme başladı", description: `${r.count} kişi aranacak.` });
                 })}>İlk 5 kişiyle dene</Button>
                 <Button disabled={!!busy || !count} onClick={() => run("all", async () => {
                   if (!confirm(`${count} danışan otomatik aranacak. Onaylıyor musunuz?`)) return;
-                  const r = await call({ action: "start" });
+                  const r = await call({ action: "start", status });
                   toast({ title: "Toplu arama başladı", description: `${r.count} kişi sırayla aranacak.` });
                 })}>Hepsini ara</Button>
                 <Button variant="destructive" disabled={!!busy} onClick={() => run("stop", async () => {

@@ -1,3 +1,7 @@
+# 21 Kasım 2026 — Toplu arama saatleri ve Yanlış Ulaşanlar
+- [x] Arama saatleri 10:00–18:00; Yanlış Ulaşanlar için admin düğmesi, ayrı seçim ve imzalı tuşlama aktarımı eklendi. İki hizmet yayımlandı; yeni gerçek toplu arama başlatılmadı.
+- [x] Hepsini ara 1000 kayıt sınırı kaldırıldı; 10 Deno + 8 PHP kontrolü geçti, build OK, yetkisiz arama401/bildirim403. Mevcut hızla 300 kişi6–7saat,1600kişi35–38saat tahmini bildirildi; 18:00 sonrası devam için çalışma saatinde yeniden başlatma gerekir. Gerçek yönetici ekranı kabulü harici oturum nedeniyle burada doğrulanamadı.
+
 # 19 Kasım 2026 — Randevu engelleme ve telefon doğrulaması
 - [x] Kişi mevcut sunucu engel listesine adı/telefon/e-posta ile eklendi ve okundu; IP kaydı yok, IP engeli yapılamadı; geçmiş randevu korundu.
 - [x] SMS kodu için tek kullanımlık telefon kanıtı SQL/handler adayları ve üç web/mobil formu kapalı sabitle hazır; 7 Bun testi + 7 yerel SQL kabul grubu (20 eşzamanlı tek başarı) geçti. Üç formun 12 sentetik tarayıcı akışı (1280/390, açık/koyu) doğrulamasız ret→kod→telefon doğrulama→tek randevu→başarı adımlarından geçti; doğrulama alanının koyu kontrastı düzeltildi. Gerçek SMS/cihaz kabulü değil; canlı yayın kapalı.
