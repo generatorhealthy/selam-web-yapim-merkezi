@@ -35,3 +35,4 @@
 - Appointment admin-review uses restrictive specialist RLS and server-stamped release gates in DB triggers and shared Edge notification rules; preserve historical rows and validate changes in synthetic PostgreSQL before separately approved releases.
 - Admin pre-review releases requests through a locked RPC without confirming them; specialist-request and patient-confirmation notification gates stay separate to avoid false booking confirmations.
 - Public appointments require atomic single-use phone proofs; preserve panel booking and historical rows, never grant account access through appointment OTP.
+- Açmayanlar bulk IVR runs only from an admin click via lead-ivr-campaign (one Verimor campaign, 0216 line, 09:30–20:00, max 2 threads, 24h re-call skip); pre-recorded ElevenLabs announcements, no live AI; lead-ivr-webhook moves leads only from no_answer using a hashed per-campaign token — keeps calls auditable and spoof-proof.

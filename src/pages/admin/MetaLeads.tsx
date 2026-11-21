@@ -15,6 +15,8 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import AiCallPanel from "@/components/admin/AiCallPanel";
+import BulkIvrDialog from "@/components/admin/BulkIvrDialog";
+import { expertsForTherapy } from "@/lib/leadIvr";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy, PhoneForwarded, Send } from "lucide-react";
@@ -135,6 +137,22 @@ const STATUS_OPTIONS = [
     badge: "bg-blue-100 text-blue-700 border-blue-300",
     card: "border-blue-200 bg-blue-50/40",
     dot: "bg-blue-500",
+  },
+  {
+    value: "ivr_pressed_1",
+    label: "1'i Tuşlayanlar",
+    hint: "Otomatik aramada aranmak istedi",
+    badge: "bg-emerald-100 text-emerald-700 border-emerald-300",
+    card: "border-emerald-200 bg-emerald-50/40",
+    dot: "bg-emerald-500",
+  },
+  {
+    value: "ivr_pressed_2",
+    label: "2'yi Tuşlayanlar",
+    hint: "Otomatik aramada aranmak istemedi",
+    badge: "bg-orange-100 text-orange-700 border-orange-300",
+    card: "border-orange-200 bg-orange-50/40",
+    dot: "bg-orange-500",
   },
 ];
 
@@ -433,6 +451,7 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 {bulkSmsLoading ? "Gönderiliyor..." : "Tekrar Başvuru SMS Gönder"}
               </Button>
             )}
+            {statusFilter === "no_answer" && <BulkIvrDialog />}
             <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}
@@ -621,6 +640,9 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                       <Badge variant="outline" className={`mb-2 text-xs ${statusMeta.badge}`}>
                         {statusMeta.label}
                       </Badge>
+                      {lead.status === "ivr_pressed_1" && (
+                        <div className="mb-2 text-xs text-muted-foreground">Bakacak uzman: {expertsForTherapy(lead.therapy_type)}</div>
+                      )}
                       <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
                         <SelectTrigger className="h-9 text-sm">
                           <SelectValue />

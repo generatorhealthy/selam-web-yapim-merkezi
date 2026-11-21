@@ -5396,6 +5396,120 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_ivr_announcements: {
+        Row: {
+          announcement_id: string
+          created_at: string
+          key: string
+          text: string
+          voice_id: string
+        }
+        Insert: {
+          announcement_id: string
+          created_at?: string
+          key: string
+          text: string
+          voice_id: string
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string
+          key?: string
+          text?: string
+          voice_id?: string
+        }
+        Relationships: []
+      }
+      lead_ivr_calls: {
+        Row: {
+          area_key: string
+          call_status: string | null
+          campaign_id: string
+          created_at: string
+          digit: string | null
+          id: string
+          lead_id: string
+          notified_at: string | null
+          phone: string
+        }
+        Insert: {
+          area_key: string
+          call_status?: string | null
+          campaign_id: string
+          created_at?: string
+          digit?: string | null
+          id?: string
+          lead_id: string
+          notified_at?: string | null
+          phone: string
+        }
+        Update: {
+          area_key?: string
+          call_status?: string | null
+          campaign_id?: string
+          created_at?: string
+          digit?: string | null
+          id?: string
+          lead_id?: string
+          notified_at?: string | null
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_ivr_calls_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "lead_ivr_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_ivr_calls_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "danisan_basvurulari"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_ivr_campaigns: {
+        Row: {
+          cli: string
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          status: string
+          total: number
+          updated_at: string
+          verimor_campaign_id: string | null
+          webhook_token_hash: string
+        }
+        Insert: {
+          cli: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          status?: string
+          total?: number
+          updated_at?: string
+          verimor_campaign_id?: string | null
+          webhook_token_hash: string
+        }
+        Update: {
+          cli?: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          status?: string
+          total?: number
+          updated_at?: string
+          verimor_campaign_id?: string | null
+          webhook_token_hash?: string
+        }
+        Relationships: []
+      }
       lead_pipeline: {
         Row: {
           manual: boolean
