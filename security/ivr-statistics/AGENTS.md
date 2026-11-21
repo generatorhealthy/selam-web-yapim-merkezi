@@ -1,2 +1,3 @@
 - Deploy telemetry and statistics only after separate approval; keep the PBX observer uninstalled until host setup is verified, and never interpret missing events as answered/unanswered outcomes.
 - Use the shared ivrStatistics rules for both server filters/aggregates and UI; separate tests from real lead calls and preserve unknown historical durations.
+- Host installation must fail closed on active/pending calls under the PHP dispatcher lock, add only a localhost read-only AMI account, preserve secrets and routing in private backups, and patch only call-variable inheritance; reload the manager without restarting Asterisk — prevents disruptions and credential exposure.
