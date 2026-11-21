@@ -87,7 +87,7 @@ if ($action === 'call') {
     out(['success' => false, 'error' => 'Geçersiz arama bilgisi'], 400);
   }
   $wait = max(20, min(60, (int)($in['ring_seconds'] ?? 40)));
-  $body = "Channel: Local/{$pre}{$num}@from-internal\nMaxRetries: 0\nWaitTime: {$wait}\n"
+  $body = "Channel: Local/{$pre}" . substr($num, 1) . "@from-internal\nMaxRetries: 0\nWaitTime: {$wait}\n"
         . "Context: doktorumol-ivr\nExtension: s\nPriority: 1\n"
         . "Setvar: IVR_AREA={$area}\nSetvar: IVR_CALL={$cid}\nSetvar: IVR_URL={$url}\n";
   if (!is_dir($TMP)) @mkdir($TMP, 0775, true);
