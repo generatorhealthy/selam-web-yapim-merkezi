@@ -19,6 +19,8 @@ export default {
 		},
 		extend: {
 			colors: {
+				'ivr-success': 'hsl(var(--ivr-success))',
+				'ivr-success-soft': 'hsl(var(--ivr-success-soft))',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

@@ -1,0 +1,19 @@
+[Unit]
+Description=Doktorum Ol IVR metadata observer
+After=network-online.target asterisk.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/doktorumol-ivr-observer/collector.py
+Restart=on-failure
+RestartSec=5
+User=root
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/doktorumol-ivr-observer
+
+[Install]
+WantedBy=multi-user.target

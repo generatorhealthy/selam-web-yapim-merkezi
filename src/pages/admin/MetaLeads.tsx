@@ -16,11 +16,12 @@ import Footer from "@/components/Footer";
 import AdminBackButton from "@/components/AdminBackButton";
 import AiCallPanel from "@/components/admin/AiCallPanel";
 import BulkIvrDialog from "@/components/admin/BulkIvrDialog";
+import IvrStatisticsPanel from "@/components/admin/IvrStatisticsPanel";
 import { useUserRole } from "@/hooks/useUserRole";
 import { expertsForTherapy } from "@/lib/leadIvr";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy, PhoneForwarded, Send } from "lucide-react";
+import { Activity, RefreshCw, Phone, Search, Video, MapPin, UserCheck, StickyNote, Check, Clock, Copy, PhoneForwarded, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -198,6 +199,7 @@ export const loadAllLeads = (force = false): Promise<any[]> => {
 
 const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { userProfile: ivrRole } = useUserRole();
+  const [statisticsOpen, setStatisticsOpen] = useState(false);
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>(() => (leadsCache as Lead[]) ?? []);
   const [loading, setLoading] = useState(!leadsCache);
@@ -417,6 +419,14 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     return acc;
   }, {} as Record<string, number>);
 
+  if (statisticsOpen && ivrRole?.role === "admin") return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {!embedded && <HorizontalNavigation />}
+      <main className="flex-1 container mx-auto max-w-7xl px-4 py-6"><IvrStatisticsPanel onBack={() => setStatisticsOpen(false)} /></main>
+      {!embedded && <Footer />}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {!embedded && <HorizontalNavigation />}
@@ -433,7 +443,7 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               <p className="text-sm text-muted-foreground">Meta reklamlarından gelen danışan başvuruları</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               Otomatik (15 dk)
@@ -454,6 +464,7 @@ const MetaLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               </Button>
             )}
             {(statusFilter === "no_answer" || statusFilter === "wrong") && ivrRole?.role === "admin" && <BulkIvrDialog key={statusFilter} status={statusFilter} />}
+            {ivrRole?.role === "admin" && <Button variant="outline" size="sm" onClick={() => setStatisticsOpen(true)}><Activity className="mr-2 h-4 w-4" />Otomatik Arama İstatistiği</Button>}
             <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="shrink-0">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Güncelleniyor..." : "Şimdi Güncelle"}

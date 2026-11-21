@@ -42,6 +42,11 @@
 @tailwind components;
 @tailwind utilities;
 
+.ivr-progress { appearance: none; border: 0; overflow: hidden; border-radius: 4px; background: hsl(var(--muted)); }
+.ivr-progress::-webkit-progress-bar { background: hsl(var(--muted)); }
+.ivr-progress::-webkit-progress-value { background: hsl(var(--primary)); }
+.ivr-progress::-moz-progress-bar { background: hsl(var(--primary)); }
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -71,6 +76,9 @@ All colors MUST be HSL.
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+
+    --ivr-success: 155 65% 30%;
+    --ivr-success-soft: 155 40% 95%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
@@ -161,6 +169,8 @@ All colors MUST be HSL.
   }
 
   .dark {
+    --ivr-success: 155 55% 65%;
+    --ivr-success-soft: 155 30% 13%;
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 

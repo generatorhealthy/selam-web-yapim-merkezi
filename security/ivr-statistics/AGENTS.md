@@ -1,0 +1,2 @@
+- Keep telemetry migration, collector and Edge candidates outside deployed paths until separate release approval; statistics never dispatch calls and missing PBX events never imply answered/unanswered outcomes.
+- Use the shared ivrStatistics rules for both server filters/aggregates and UI; separate tests from real lead calls and preserve unknown historical durations.

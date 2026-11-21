@@ -1,0 +1,17 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { callResult, secondsBetween, summarizeCalls, remainingWorkSeconds, isActiveCall, type IvrCall } from "./ivrStatistics";
+const base: IvrCall = { id: "a", campaign_id: "c", lead_id: "l", phone: "905550000001", area_key: "cift", state: "done", digit: null, call_status: "no_digit", created_at: "2026-11-21T10:00:00Z", dispatched_at: "2026-11-21T10:00:00Z", notified_at: null, pbx_call_id: "line:81" };
+test("legacy no_digit is not proof of an unanswered call", () => assert.equal(callResult(base), "unknown"));
+test("verified unanswered hangup has its own result", () => assert.equal(callResult({ ...base, ended_at: "2026-11-21T10:00:40Z", end_reason: "no_answer" }), "no_answer"));
+test("verified busy hangup is not unanswered", () => assert.equal(callResult({ ...base, ended_at: "2026-11-21T10:00:02Z", end_reason: "busy" }), "busy"));
+test("answer without a key is not unanswered", () => assert.equal(callResult({ ...base, answered_at: "2026-11-21T10:00:10Z", ended_at: "2026-11-21T10:00:32Z" }), "no_key"));
+test("key 1 remains distinct", () => assert.equal(callResult({ ...base, digit: "1" }), "pressed_1"));
+test("key 2 remains distinct", () => assert.equal(callResult({ ...base, digit: "2" }), "pressed_2"));
+test("missing and inverted timestamps never invent durations", () => { assert.equal(secondsBetween(null, base.created_at), null); assert.equal(secondsBetween("2026-11-21T10:01:00Z", base.created_at), null); });
+test("talk time stops at recorded hangup", () => assert.equal(secondsBetween("2026-11-21T10:00:10Z", "2026-11-21T10:00:32Z"), 22));
+test("all 1607 rows contribute to statistics", () => assert.equal(summarizeCalls(Array.from({ length: 1607 }, () => base)).total, 1607));
+test("unmeasured old calls do not dilute mean talk duration", () => assert.equal(summarizeCalls([base, { ...base, answered_at: "2026-11-21T10:00:10Z", ended_at: "2026-11-21T10:00:32Z" }]).averageTalk, 22));
+test("pressing a key does not finish an observed live call", () => { const call = { ...base, digit: "1", answered_at: base.created_at, observed_at: base.created_at }; assert.equal(isActiveCall(call), true); assert.equal(summarizeCalls([call]).completed, 0); });
+test("remaining time is unknown without ten measured completed attempts", () => assert.equal(remainingWorkSeconds([base]), null));
+test("two lines estimate ten queued 40-second calls at 200 seconds", () => assert.equal(remainingWorkSeconds([...Array.from({ length: 10 }, () => ({ ...base, ended_at: "2026-11-21T10:00:40Z" })), ...Array.from({ length: 10 }, () => ({ ...base, state: "queued", dispatched_at: null }))]), 200));
