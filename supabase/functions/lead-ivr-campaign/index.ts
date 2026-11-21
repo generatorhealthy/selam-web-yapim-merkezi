@@ -54,7 +54,7 @@ async function uploadAnnouncement(apiKey: string, name: string, mp3: Uint8Array)
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString(),
   });
   const t = await r.text();
-  if (!r.ok) throw new Error(`Verimor anons yükleme hata ${r.status}: ${t}`);
+  if (!r.ok) throw new Error(r.status === 401 ? "Verimor API anahtarı geçersiz. Bulutsantralim panelinden yeni anahtarı girin." : `Verimor anons yükleme hata ${r.status}`);
   try { const p = JSON.parse(t); return String(p.id ?? p.announcement_id ?? t).trim(); } catch { return t.trim(); }
 }
 
