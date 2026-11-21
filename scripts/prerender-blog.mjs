@@ -80,11 +80,12 @@ function setMeta(html, { title, description, url, image, type, robots }) {
 const ROOT_RE = /<div id="root">[\s\S]*?<\/div>/;
 function setRoot(html, inner, extraHead = "") {
   if (!ROOT_RE.test(html)) throw new Error("#root bulunamadı");
-  // Progressive enhancement, identical for visitors and crawlers: retain real
-  // HTML and show it immediately without JS. With JS, briefly suppress only
-  // the unstyled fallback while React starts, never the rendered application.
-  // If startup is slow or fails, restore readable content after 1.8 seconds.
-  const startupPresentation = `<script>(function(){var s=document.createElement('style');s.textContent='.seo-pre{visibility:hidden}';document.head.appendChild(s);window.setTimeout(function(){s.remove();},1800);})();</script>`;
+  // Real content is visible at first paint, even before CSS/JS downloads.
+  // Reuse the global theme and bootstrap styles rather than hiding the page.
+  const css = readFileSync(resolve('src/index.css'), 'utf8');
+  const theme = css.match(/:root\s*\{[\s\S]*?\}/)?.[0] || '';
+  const presentation = css.split('/* PRERENDER_START */')[1]?.split('/* PRERENDER_END */')[0] || '';
+  const startupPresentation = `<style data-prerender-presentation>${theme}${presentation}</style>`;
   return html.replace(ROOT_RE, () => `<div id="root"><div class="seo-pre">${inner}</div></div>`).replace("</head>", () => `${extraHead}${startupPresentation}</head>`);
 }
 
@@ -222,7 +223,8 @@ async function main() {
   const cssHref = rawTemplate.match(/<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/)?.[1];
   if (!jsSrc || !cssHref) throw new Error("şablonda uygulama dosyaları bulunamadı");
   writeFileSync(resolve(DIST, "boot.js"), `import ${JSON.stringify(jsSrc)};\n`, "utf8");
-  writeFileSync(resolve(DIST, "boot.css"), `@import url(${JSON.stringify(cssHref)});\n`, "utf8");
+  // Serve the actual CSS at the stable URL: no extra render-blocking @import hop.
+  writeFileSync(resolve(DIST, "boot.css"), readFileSync(resolve(DIST, cssHref.slice(1)), 'utf8'), "utf8");
   const template = rawTemplate
     .replace(/<link rel="modulepreload"[^>]*>\s*/g, "")
     .replace(`src="${jsSrc}"`, 'src="/boot.js"')
@@ -480,10 +482,14 @@ async function main() {
     const title = template.match(/<title>([\s\S]*?)<\/title>/)?.[1] || "Doktorum Ol";
     const description = template.match(/<meta name="description" content="([^"]*)"/)?.[1] || "";
     const body = `
+      ${NAV}
+      <header class="seo-home-hero">
       <h1>Doktorum Ol ile Size Uygun Uzmanı Bulun</h1>
       <p>${description}</p>
+      <p><a href="/uzmanlar">Uzmanları incele</a></p>
       <h2>Branşlar</h2>
       <ul>${specialtyPages.map((x) => `<li><a href="/uzmanlik/${x.slug}">${esc(x.name)}</a></li>`).join("")}</ul>
+      </header>
       <h2>Uzmanlarımız</h2>
       <ul>${specialists.slice(0, 40).map(specialistCard).join("")}</ul>
       <p><a href="/uzmanlar">Tüm uzmanları gör</a></p>

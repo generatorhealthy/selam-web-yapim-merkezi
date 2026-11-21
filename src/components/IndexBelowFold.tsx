@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -24,6 +24,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
   const navigate = useNavigate();
   const [reviews, setReviews] = useState<any[]>([]);
   const [specialists, setSpecialists] = useState<any[]>([]);
+  const reviewsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchRandomReviews = async () => {
@@ -45,7 +46,20 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
         console.error('Error fetching reviews:', error);
       }
     };
-    fetchRandomReviews();
+    // Reviews and portrait requests must not compete with the first screen.
+    const section = reviewsRef.current;
+    if (!section) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      void fetchRandomReviews();
+      return;
+    }
+    const observer = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      observer.disconnect();
+      void fetchRandomReviews();
+    }, { rootMargin: '300px' });
+    observer.observe(section);
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -188,7 +202,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
       <AppPromoSection />
 
       {/* Reviews Section */}
-      <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 py-16">
+      <div ref={reviewsRef} className="bg-gradient-to-br from-gray-50 to-blue-50/30 py-16">
         <div className="container mx-auto px-4">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">

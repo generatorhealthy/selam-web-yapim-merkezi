@@ -42,6 +42,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* PRERENDER_START */
+.seo-pre { min-height: 100vh; font-family: Arial, sans-serif; color: hsl(var(--foreground)); background: hsl(var(--background)); line-height: 1.6; }
+.seo-pre > :not(.seo-home-hero) { max-width: 1120px; margin: 20px auto; padding: 0 24px; }
+.seo-pre h1 { font-size: 32px; line-height: 1.2; margin: 0 0 24px; }
+.seo-pre h2 { font-size: 24px; }
+.seo-pre a { color: hsl(var(--primary)); }
+.seo-pre nav { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.seo-pre img { max-width: 100%; height: auto; }
+.seo-pre .seo-home-hero { box-sizing: border-box; min-height: 70vh; padding: 64px 24px 40px; text-align: center; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+.seo-home-hero > * { max-width: 1000px; margin-left: auto; margin-right: auto; }
+.seo-home-hero p { max-width: 700px; }
+.seo-home-hero a { color: inherit; }
+.seo-home-hero ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 24px; padding: 0; list-style: none; }
+@media (max-width: 640px) { .seo-pre .seo-home-hero { padding-top: 40px; } .seo-pre h1 { font-size: 28px; } }
+/* PRERENDER_END */
+
 .ivr-progress { appearance: none; border: 0; overflow: hidden; border-radius: 4px; background: hsl(var(--muted)); }
 .ivr-progress::-webkit-progress-bar { background: hsl(var(--muted)); }
 .ivr-progress::-webkit-progress-value { background: hsl(var(--primary)); }
