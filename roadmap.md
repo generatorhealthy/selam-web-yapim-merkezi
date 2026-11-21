@@ -1,3 +1,9 @@
+# 22 Kasım 2026 — Ana sayfa arama görünürlüğü
+- [x] Canlı ana/www/http/index.html/pre ana sayfa yönlendirmeleri, Googlebot masaüstü/mobil HTTP200, robots izinli ve 1730 URL'li sitemap doğru domain doğrulandı.
+- [x] Fatih's Google Search Console: ana sayfa PASS, Google/user canonical aynı; 21 Kasım17:06UTC başarılı tarama; sitemap0hata/0uyarı. Marka ana sayfa 28gün ortalama1.14→1.77, tıklama87→29; 20–21Kasım verileri eksik/güncellenebilir, son günler1.sıra.
+- [x] Prerender canonical Helmet sahipliğine bağlandı; uzman listesine yükleme dahil kendi canonical'ı eklendi. Gerçek helper ile localhost ana→uzmanlar→geri geçişinde tek doğru canonical testi ve2 yayın regresyonu geçti; buildOK. İnceleme .lovable/reviews/home-seo-2026-11-22.md.
+- [ ] Yeni canonical değişikliğinin Hostinger dağıtım sonrası gerçek HTML/DOM kabulü — GitHub/FTP yürütme erişimi burada yok; kod kaydı sonrası otomatik dağıtım bekler. Sıralama toparlanması garanti veya doğrulanmış değildir.
+
 # 21 Kasım 2026 — Toplu arama saatleri ve Yanlış Ulaşanlar
 - [x] 21 Kasım 13:04 UTC santral kurulumu onaylandı, kullanıcı toplu aramayı durdurdu; localhost:5038, Python3.11 ve manager_custom include kullanıcı çıktısıyla doğrulandı. Gizli anahtarsız tek dosya kurulum/yedek/geri dönüş hazır; 12 kurulum + 7 observer testi ve 7 yerel PostgreSQL grubu geçti. Hostinger çalıştırma ve gerçek olay kabulü aşağıdaki açık görevdir.
 - [x] Onaylı Otomatik Arama İstatistiği ekranı: admin düğmesi, iki hat, sayaç/sonuç ayrımı, kampanya/tarih/hat/tür/sonuç/ad filtreleri, 50'li geçmiş, detay ve CSV; 32 Bun + 7 Python + 7 sentetik PostgreSQL kabul grubu (20 tekrarda tek olay). 1280/390 sentetik filtre→detay→CSV→geri dönüş ve taşmasız görünüm doğrulandı. Gerçek oturum/hat kabulü değil.

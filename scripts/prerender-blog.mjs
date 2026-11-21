@@ -59,7 +59,9 @@ function setMeta(html, { title, description, url, image, type, robots }) {
   rep(/<meta name="description"[^>]*>/, `<meta name="description" content="${esc(description)}" />`);
   html = html.replace(/<meta name="keywords"[^>]*>\s*/, "");
   html = html.replace(/<link rel="canonical"[^>]*>\s*/g, "");
-  html = html.replace("</head>", `<link rel="canonical" href="${url}" />\n</head>`);
+  // Helmet must adopt this server-rendered tag on hydration and replace it on
+  // navigation, rather than append a second (possibly homepage) canonical.
+  html = html.replace("</head>", `<link rel="canonical" href="${url}" data-rh="true" />\n</head>`);
   if (robots) rep(/<meta name="robots"[^>]*>/, `<meta name="robots" content="${robots}" />`);
   rep(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${esc(title)}" />`);
   rep(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${esc(description)}" />`);

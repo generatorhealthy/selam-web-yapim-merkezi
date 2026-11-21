@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -276,9 +277,19 @@ const DoctorList = () => {
     navigate(`/${specialtySlug}/${specialist.slug}`);
   };
 
+  const seoHead = (
+    <Helmet>
+      <title>Uzmanlar - Psikolog ve Aile Danışmanı Randevusu | Doktorum Ol</title>
+      <meta name="description" content="Doktorum Ol uzmanlarının profillerini inceleyin: psikolog, klinik psikolog, aile danışmanı ve psikolojik danışmanlar. Online veya yüz yüze randevu alın." />
+      <link rel="canonical" href="https://doktorumol.com.tr/uzmanlar" />
+      <meta property="og:url" content="https://doktorumol.com.tr/uzmanlar" />
+    </Helmet>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>
+        {seoHead}
         <HorizontalNavigation />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
@@ -293,6 +304,7 @@ const DoctorList = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>
+      {seoHead}
       <HorizontalNavigation />
       
       {/* Header Section */}
