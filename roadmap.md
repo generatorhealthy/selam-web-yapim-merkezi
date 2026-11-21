@@ -1,4 +1,5 @@
 # 21 Kasım 2026 — Toplu arama saatleri ve Yanlış Ulaşanlar
+- [ ] Otomatik Arama İstatistiği: admin için ayrı ekran; görsel yerleşim ve canlı veri toplama planı onaya sunulacak. Kim aranıyor, açılma/kapanma süreleri, 1/2/tuşsuz, yanıtsız/meşgul/hata ayrımı santral kanıtıyla gösterilecek; geçmişe süre uydurulmayacak.
 - [x] Hepsini ara kapsam hatası düzeltildi: kategori/limit doğrulaması dispatch yerine istek içinde; 5 sentetik gerçek-handler + 10 ortak Deno testi ve build OK. Gerçek arama başlatılmadı.
 - [x] Kullanıcı onayıyla lead-ivr-campaign düzeltmesi canlı yayımlandı (SHA256 9d757e536eb9464789a82545073fe1864e2fc8e20811196a511f2e80a2167934); yeni arama başlatılmadı. Geri dönüş önceki index.ts sürümünün yeniden yayımıdır. Harici yönetici oturumu nedeniyle gerçek panel kabulü burada doğrulanamadı.
 - [x] Arama saatleri 10:00–18:00; Yanlış Ulaşanlar için admin düğmesi, ayrı seçim ve imzalı tuşlama aktarımı eklendi. İki hizmet yayımlandı; yeni gerçek toplu arama başlatılmadı.
