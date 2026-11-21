@@ -32,14 +32,18 @@ async function pbx(action: string, extra: Record<string, unknown> = {}) {
   const url = pbxUrl();
   const secret = (Deno.env.get("FREEPBX_BULK_SECRET") ?? "").trim();
   if (!url || !secret) throw new Error("Santral bağlantı bilgisi eksik");
+  const send = (u: string) => fetch(u, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ secret, action, ...extra }), signal: AbortSignal.timeout(20000),
+  });
   let r: Response;
   try {
-    r = await fetch(url, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ secret, action, ...extra }), signal: AbortSignal.timeout(20000),
-    });
-  } catch {
-    throw new Error("Santrale ulaşılamadı");
+    r = await send(url);
+  } catch (e) {
+    // Santralin alan adı yok; IP üzerindeki HTTPS sertifikası geçersiz olduğu için HTTP'ye düş.
+    if (!/^https:/i.test(url)) throw new Error("Santrale ulaşılamadı");
+    try { r = await send(url.replace(/^https:/i, "http:")); }
+    catch { throw new Error("Santrale ulaşılamadı"); }
   }
   const t = await r.text();
   if (r.status === 404) throw new Error("Santralde freepbx-ivr.php dosyası yok. Önce dosyayı yükleyin.");
