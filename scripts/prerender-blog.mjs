@@ -20,6 +20,7 @@ import { buildLocalPages, localTitle, localHeading, localDescription, localFaq }
 
 import { approvedLegalPages } from "./legalPublication.mjs";
 import { staticLegalFiles } from "./legal-static-package.mjs";
+import { captureHomeOpening } from "./home-opening.mjs";
 
 const SITE = "https://doktorumol.com.tr";
 const SUPABASE_URL = "https://irnfwewabogveofwemvg.supabase.co";
@@ -514,23 +515,14 @@ async function main() {
   {
     const title = template.match(/<title>([\s\S]*?)<\/title>/)?.[1] || "Doktorum Ol";
     const description = template.match(/<meta name="description" content="([^"]*)"/)?.[1] || "";
-    const body = `
-      ${NAV}
-      <header class="seo-home-hero">
-      <h1>Doktorum Ol ile Size Uygun Uzmanı Bulun</h1>
-      <p>${description}</p>
-      <p><a href="/uzmanlar">Uzmanları incele</a></p>
-      <h2>Branşlar</h2>
-      <ul>${specialtyPages.map((x) => `<li><a href="/uzmanlik/${x.slug}">${esc(x.name)}</a></li>`).join("")}</ul>
-      </header>
-      <h2>Uzmanlarımız</h2>
-      <ul>${specialists.slice(0, 40).map(specialistCard).join("")}</ul>
-      <p><a href="/uzmanlar">Tüm uzmanları gör</a></p>
-      <h2>Son Yazılar</h2>
-      <ul>${posts.slice(0, 20).map((p) => `<li><a href="/blog/${p.slug}">${esc(p.title)}</a></li>`).join("")}</ul>
-      ${NAV}`;
+    const opening = await captureHomeOpening({ template: rawTemplate, css: readFileSync(resolve(DIST, 'boot.css'), 'utf8'), directory: DIST });
     const homeTemplate = template.replace('</head>', `${homeModulePreloads(readFileSync(resolve(DIST, jsSrc.slice(1)), 'utf8'), jsSrc)}\n</head>`);
-    write("pre/home.html", setRoot(setMeta(homeTemplate, { title, description, url: `${SITE}/` }), body));
+    // Same DOM and CSS as the real page, not a second simplified design.
+    // Inline the matched styles so neither boot.css nor JavaScript delays paint.
+    const home = setMeta(homeTemplate, { title, description, url: `${SITE}/` })
+      .replace(ROOT_RE, () => `<div id="root">${opening.html}</div>`)
+      .replace('</head>', () => `<style data-home-opening>${opening.css}</style></head>`);
+    write("pre/home.html", home);
     sm("/", { changefreq: "daily", priority: "1.0" });
   }
 

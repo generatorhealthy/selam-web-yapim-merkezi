@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Prepare browser for existing home presentation capture
+        run: npx playwright install --with-deps chromium
+
       - name: Build project
         run: npm run build
         env:

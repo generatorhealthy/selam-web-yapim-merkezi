@@ -1,3 +1,7 @@
+# 22 Kasım 2026 — İlk görüntüde farklı tasarım
+- [x] Ana sayfanın sade şablonu yerine mevcut gerçek tasarım offline tarayıcıyla alınır; yalnız ilk ekranın eşleşen CSS kuralları HTML içinde, mobil/masaüstü menüler mevcut tasarımdan. Kayıt/ödeme/izin/arama kuralları değişmedi. 390/588/1280 gecikmiş JS ilk görüntü taşmasız, ardından arama penceresi açılıyor; 16 Node güvenli capture/izin/yayın/açılış testi ve canonical gezinme geçti, build OK.
+- [ ] Hostinger yayın sonrası açılış ve 95+ PageSpeed kabulü — canlı hâlâ sade seo-home-hero sunuyor; FTP/Actions yürütme erişimi burada yok, yeni puan doğrulanmadı. Diğer ön-render sayfalar bu değişiklikte yeniden tasarlanmadı.
+
 # 22 Kasım 2026 — Onaylanan teknik SEO düzeltmeleri
 - [x] Yeni 87 puanlı rapor incelendi: ana sayfada app/core HTML modulepreload ile boot beklemeden indirilir; kaynak içeriksiz sourcemap açıldı. JS/CSS engelli 390/1280 ilk görüntü 96/140ms, taşma0; canlı tek yavaş ağ denemesi FCP488ms (PageSpeed değildir). Gereksiz JS/CSS ve uzun görevler bütünüyle kaldırılmadı; diğer sayfa stilleri/kodları silinmedi, gerçek web_vitals0 ve 95+ kanıtı yok.
 - [x] Gerçek 404, yalnız mevcut bloglara eski adres yönlendirmesi, eski kategori 301 ve çift eğik çizgi düzeltmesi; eksik robots.txt bloga gitmez.
