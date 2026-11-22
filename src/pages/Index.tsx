@@ -136,32 +136,27 @@ const Index = () => {
 
       
       {/* Hero Section */}
-      <div className="hero-section above-fold bg-gradient-to-br from-primary via-blue-600 to-purple-700 text-white relative overflow-hidden min-h-[70vh]">
-        <div className="absolute inset-0 will-change-auto">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-white/30 to-transparent rounded-full blur-3xl opacity-80"></div>
-          <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-l from-white/20 to-transparent rounded-full blur-2xl opacity-70"></div>
-          <div className="absolute bottom-20 left-1/3 w-40 h-40 bg-gradient-to-t from-white/25 to-transparent rounded-full blur-3xl opacity-75"></div>
-        </div>
+      <div className="hero-section above-fold bg-white text-gray-900 relative overflow-hidden min-h-[70vh] border-b border-gray-100">
         
         <div className="container mx-auto px-4 py-12 md:py-20 relative z-10">
           <div className="max-w-6xl mx-auto">
             <header className="text-center mb-8 md:mb-12">
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white">
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-gray-900">
                 Doktorum Ol ile Size Uygun Uzmanı Bulun
               </h1>
-              <p className="mt-4 text-base md:text-lg text-white/90 max-w-2xl mx-auto">
+              <p className="mt-4 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
                 Psikolog, aile danışmanı, diyetisyen ve birçok branşta güvenilir uzmanlarla kolayca randevu alın.
               </p>
             </header>
             {/* Enhanced Search Form */}
-            <div ref={searchContainerRef} className="bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-10 shadow-2xl mb-8 md:mb-12 mx-2 md:mx-0 border border-white/20">
+            <div ref={searchContainerRef} className="bg-white rounded-2xl p-6 md:p-10 shadow-sm mb-8 md:mb-12 mx-2 md:mx-0 border border-gray-200">
               <div className="space-y-6 md:space-y-8">
                 {/* Appointment Type Toggle */}
                 <div className="flex justify-center">
                   <RadioGroup 
                     value={appointmentType} 
                     onValueChange={setAppointmentType}
-                    className="flex gap-1 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-2 w-full max-w-lg border border-gray-200/50"
+                    className="flex gap-1 bg-gray-50 rounded-2xl p-2 w-full max-w-lg border border-gray-200"
                   >
                     <div className="flex items-center flex-1">
                       <RadioGroupItem value="yüzyüze" id="yüzyüze" className="sr-only" />
@@ -169,8 +164,8 @@ const Index = () => {
                         htmlFor="yüzyüze" 
                         className={`flex items-center justify-center gap-3 px-6 py-4 rounded-xl cursor-pointer transition-all duration-300 font-semibold text-base flex-1 group ${
                           appointmentType === "yüzyüze" 
-                            ? "bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg transform scale-[1.02]" 
-                            : "text-gray-600 hover:bg-white/80 hover:shadow-md"
+                            ? "bg-primary text-primary-foreground shadow-sm" 
+                            : "text-gray-600 hover:bg-white"
                         }`}
                       >
                         <div className={`p-1 rounded-lg ${appointmentType === "yüzyüze" ? "bg-white/20" : "bg-gray-200/50"}`}>
@@ -185,8 +180,8 @@ const Index = () => {
                         htmlFor="online" 
                         className={`flex items-center justify-center gap-3 px-6 py-4 rounded-xl cursor-pointer transition-all duration-300 font-semibold text-base flex-1 group ${
                           appointmentType === "online" 
-                            ? "bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg transform scale-[1.02]" 
-                            : "text-gray-600 hover:bg-white/80 hover:shadow-md"
+                            ? "bg-primary text-primary-foreground shadow-sm" 
+                            : "text-gray-600 hover:bg-white"
                         }`}
                       >
                         <div className={`p-1 rounded-lg ${appointmentType === "online" ? "bg-white/20" : "bg-gray-200/50"}`}>
@@ -201,27 +196,25 @@ const Index = () => {
                 {/* Search Inputs */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
                   <div className="lg:col-span-6 relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div className="relative">
                       <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-primary z-10" />
                       <Input
                         placeholder="Uzman, branş veya kurum ara..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-14 h-16 text-gray-900 border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/20 text-lg rounded-xl bg-white/90 backdrop-blur-sm transition-all duration-300 hover:border-primary/50"
+                        className="pl-14 h-16 text-gray-900 border border-gray-300 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/25 text-lg rounded-xl bg-white transition-colors"
                       />
                     </div>
                   </div>
                   
                   <div className="lg:col-span-3 relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div className="relative">
                       <MapPin className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-primary z-20" />
                       <Select value={selectedCity} onValueChange={setSelectedCity}>
-                        <SelectTrigger aria-label="Şehir seçin" className="pl-14 h-16 text-gray-900 border-2 border-gray-200 focus:border-primary text-lg rounded-xl bg-white/90 backdrop-blur-sm transition-all duration-300 hover:border-primary/50">
+                        <SelectTrigger aria-label="Şehir seçin" className="pl-14 h-16 text-gray-900 border border-gray-300 focus:border-primary text-lg rounded-xl bg-white transition-colors">
                           <SelectValue placeholder="Şehir seçin" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white/95 backdrop-blur-lg border-2 border-gray-200 shadow-xl max-h-60 overflow-y-auto rounded-xl">
+                        <SelectContent className="bg-white border border-gray-200 shadow-md max-h-60 overflow-y-auto rounded-xl">
                           {cities.map((city) => (
                             <SelectItem key={city} value={city} className="text-base hover:bg-primary/10 transition-colors">{city}</SelectItem>
                           ))}
@@ -233,7 +226,7 @@ const Index = () => {
                   <div className="lg:col-span-3">
                     <Button 
                       onClick={handleSearch}
-                      className="w-full h-16 bg-gradient-to-r from-primary via-blue-600 to-purple-600 hover:from-primary/90 hover:via-blue-700 hover:to-purple-700 text-white font-bold text-lg rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 border-2 border-white/20"
+                      className="w-full h-16 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg rounded-xl shadow-sm transition-colors"
                     >
                       <Search className="w-6 h-6 mr-3" />
                       <span className="hidden sm:inline">Randevu Ara</span>
@@ -276,7 +269,7 @@ const Index = () => {
                                     className="avatar-image object-cover"
                                     loading="lazy"
                                   />
-                                  <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                                  <AvatarFallback className="bg-blue-50 text-blue-700">
                                     <User className="w-6 h-6" />
                                   </AvatarFallback>
                                 </Avatar>
@@ -333,13 +326,13 @@ const Index = () => {
 
             {/* Popular Specialties */}
             <div className="text-center px-2 md:px-0">
-              <h2 className="text-lg md:text-xl font-medium mb-4 md:mb-6 text-blue-100">Branşlar</h2>
+              <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6 text-gray-800">Branşlar</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3 max-w-6xl mx-auto">
                 {popularSpecialties.slice(0, 10).map((specialty, index) => (
                   <button
                     key={index}
                     onClick={() => handleSpecialtyClick(specialty)}
-                    className="px-2 py-2 md:px-4 md:py-3 bg-white/10 backdrop-blur-sm text-white rounded-full hover:bg-white/20 transition-all duration-300 text-xs md:text-sm font-medium border border-white/20 hover:border-white/40 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
+                    className="px-2 py-2 md:px-4 md:py-3 bg-white text-gray-700 rounded-full hover:border-primary hover:text-primary transition-colors text-xs md:text-sm font-medium border border-gray-200 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
                     title={specialty.name}
                   >
                     <span className="block truncate px-1">{specialty.name}</span>
@@ -347,7 +340,7 @@ const Index = () => {
                 ))}
                 <button
                   onClick={() => navigate('/uzmanlar')}
-                  className="px-2 py-2 md:px-4 md:py-3 bg-white/20 backdrop-blur-sm text-white rounded-full hover:bg-white/30 transition-all duration-300 text-xs md:text-sm font-medium border border-white/30 hover:border-white/50 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
+                  className="px-2 py-2 md:px-4 md:py-3 bg-gray-100 text-gray-800 rounded-full hover:bg-gray-200 transition-colors text-xs md:text-sm font-medium border border-gray-200 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
                 >
                   <span className="block truncate px-1">Tümünü Göster</span>
                 </button>

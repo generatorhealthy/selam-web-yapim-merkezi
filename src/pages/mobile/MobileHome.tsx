@@ -319,8 +319,8 @@ export default function MobileHome() {
             <div
               className="rounded-[24px] p-5 relative overflow-hidden"
               style={{
-                background: "linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(224 82% 54%) 100%)",
-                boxShadow: "0 12px 28px -8px hsl(217 91% 60% / 0.45)",
+                background: "hsl(214 88% 50%)",
+                boxShadow: "0 1px 2px hsl(220 30% 20% / 0.06)",
               }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -391,8 +391,8 @@ export default function MobileHome() {
             <div
               className="rounded-[24px] p-5 relative overflow-hidden"
               style={{
-                background: "linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(224 82% 54%) 100%)",
-                boxShadow: "0 12px 28px -8px hsl(217 91% 60% / 0.45)",
+                background: "hsl(214 88% 50%)",
+                boxShadow: "0 1px 2px hsl(220 30% 20% / 0.06)",
               }}
             >
               <div className="flex items-center justify-between mb-4">
@@ -656,7 +656,7 @@ export default function MobileHome() {
           onClick={() => navigate("/mobile/search")}
           className="w-full relative overflow-hidden rounded-[24px] text-left m-pressable"
           style={{
-            background: "linear-gradient(135deg, hsl(var(--m-tint-lilac)) 0%, hsl(var(--m-tint-sky)) 100%)",
+            background: "hsl(var(--muted))",
             minHeight: 160,
           }}
         >

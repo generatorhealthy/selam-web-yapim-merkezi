@@ -28,19 +28,17 @@ const Phone = ({ className = "", children }: { className?: string; children: Rea
 const Line = ({ w = "w-full", c = "bg-gray-200" }: { w?: string; c?: string }) => <div className={`h-1.5 rounded-full ${c} ${w}`} />;
 
 const AppPromoSection = () => (
-  <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 py-16">
-    <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-2xl" />
-    <div className="absolute -bottom-32 -left-20 w-[30rem] h-[30rem] bg-indigo-400/20 rounded-full blur-3xl" />
+  <section className="relative overflow-hidden bg-gray-50 py-16 border-y border-gray-200">
     <div className="container mx-auto px-4 relative">
       <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-        <div className="text-white">
-          <span className="inline-flex items-center gap-2 bg-white/15 border border-white/25 rounded-full px-3 py-1 text-xs font-semibold mb-4">
+        <div className="text-gray-900 min-w-0">
+          <span className="inline-flex items-center gap-2 bg-white border border-gray-200 text-primary rounded-full px-3 py-1 text-xs font-semibold mb-4">
             <Bell className="w-3.5 h-3.5" /> Yeni · Mobil Uygulama
           </span>
-          <h2 className="text-3xl lg:text-4xl font-bold leading-tight">
+          <h2 className="text-3xl lg:text-4xl font-bold leading-tight text-gray-900">
             Doktorum Ol<br />Mobil Uygulaması
           </h2>
-          <p className="mt-4 text-blue-50 leading-relaxed max-w-lg">
+          <p className="mt-4 text-gray-600 leading-relaxed max-w-lg">
             Sağlık hizmetlerine erişim artık çok daha kolay! Randevularınızı yönetin, uzmanlarla iletişime geçin ve sağlık içeriklerine her an ulaşın.
           </p>
           <ul className="mt-6 space-y-3">
@@ -50,10 +48,10 @@ const AppPromoSection = () => (
               ["Güncel ", "sağlık içeriklerine", " anında erişim"],
             ].map(([a, b, c], i) => (
               <li key={i} className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <span className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 text-primary flex items-center justify-center flex-shrink-0">
                   <Check className="w-4 h-4" />
                 </span>
-                <span className="text-blue-50">{a}<strong className="text-white">{b}</strong>{c}</span>
+                <span className="text-gray-600">{a}<strong className="text-gray-900">{b}</strong>{c}</span>
               </li>
             ))}
           </ul>
@@ -71,10 +69,10 @@ const AppPromoSection = () => (
           </div>
         </div>
 
-        <div className="relative flex justify-center items-end h-[380px] sm:h-[420px]">
+        <div className="relative flex justify-center items-end h-[380px] sm:h-[420px] min-w-0 overflow-hidden">
           <Phone className="absolute left-1/2 -translate-x-[130%] sm:-translate-x-[135%] bottom-4 -rotate-6 scale-90 opacity-95">
             <div className="p-3 pt-7 space-y-2">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 mx-auto" />
+              <div className="w-12 h-12 rounded-full bg-primary mx-auto" />
               <Line w="w-2/3 mx-auto" c="bg-gray-300" />
               <Line w="w-1/2 mx-auto" c="bg-blue-200" />
               <div className="h-6 rounded-lg bg-blue-600 mt-3" />
@@ -97,7 +95,7 @@ const AppPromoSection = () => (
               {[1,2].map(i => (
                 <div key={i} className="rounded-lg border border-gray-100 p-1.5 space-y-1">
                   <div className="flex items-center gap-1">
-                    <div className="w-4 h-4 rounded-full bg-indigo-200" />
+                    <div className="w-4 h-4 rounded-full bg-blue-100" />
                     <div className="flex">{[...Array(5)].map((_, s) => <Star key={s} className="w-2 h-2 text-yellow-400 fill-yellow-400" />)}</div>
                   </div>
                   <Line /><Line w="w-3/4" />
@@ -113,13 +111,13 @@ const AppPromoSection = () => (
               <p className="text-[9px] font-semibold text-gray-700">Makaleler</p>
               {[1,2,3].map(i => (
                 <div key={i} className="space-y-1">
-                  <div className="h-14 rounded-lg bg-gradient-to-br from-slate-200 to-blue-100" />
+                  <div className="h-14 rounded-lg bg-gray-100" />
                   <Line w="w-4/5" c="bg-gray-300" /><Line w="w-1/2" />
                 </div>
               ))}
             </div>
           </Phone>
-          <div className="absolute z-20 right-0 sm:right-4 bottom-0 bg-white rounded-xl shadow-xl px-4 py-3">
+          <div className="absolute z-20 right-0 sm:right-4 bottom-0 bg-white rounded-xl shadow-md border border-gray-200 px-4 py-3">
             <div className="flex gap-0.5">{[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />)}</div>
             <p className="text-xs text-gray-700 mt-1 leading-snug">Kullanıcılar tarafından<br />yüksek puan</p>
           </div>
