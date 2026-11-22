@@ -1,3 +1,7 @@
+# 22 Kasım 2026 — Ana sayfada "açık ve ferah" görünüm
+- [x] Mor/gradyan izleri kaldırıldı: hero, adımlar, değerlendirmeler, platform ve mobil uygulama bölümleri beyaz/açık zemine geçti; mavi yalnız düğme, bağlantı ve küçük ikon kutularında. Emojili satır "Hızlı onay · Güvenli platform" oldu; aşırı büyük başlıklar küçüldü; cam efekt, parlayan leke, koyu gölge ve büyüyen hover'lar kalktı. Arama, randevu, kayıt, ödeme ve izin akışları değişmedi. 390/1280 Playwright kontrollerinde konsol hatası 0, sağdan taşan metin 0 (mobil uygulama bölümündeki 450px'lik taşma min-w-0 ile giderildi), build OK.
+- [ ] Kullanıcı beğeni onayı ve Hostinger yayını — görüntüler yerel önizlemeden alındı, canlı siteye henüz çıkarılmadı; Google ilk açılış görüntüsünün yeni tasarımla üretilmesi ayrıca doğrulanmadı.
+
 # 22 Kasım 2026 — İlk görüntüde farklı tasarım
 - [x] Ana sayfanın sade şablonu yerine mevcut gerçek tasarım offline tarayıcıyla alınır; yalnız ilk ekranın eşleşen CSS kuralları HTML içinde, mobil/masaüstü menüler mevcut tasarımdan. Kayıt/ödeme/izin/arama kuralları değişmedi. 390/588/1280 gecikmiş JS ilk görüntü taşmasız, ardından arama penceresi açılıyor; 16 Node güvenli capture/izin/yayın/açılış testi ve canonical gezinme geçti, build OK.
 - [ ] Hostinger yayın sonrası açılış ve 95+ PageSpeed kabulü — canlı hâlâ sade seo-home-hero sunuyor; FTP/Actions yürütme erişimi burada yok, yeni puan doğrulanmadı. Diğer ön-render sayfalar bu değişiklikte yeniden tasarlanmadı.
