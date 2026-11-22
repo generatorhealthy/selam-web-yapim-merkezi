@@ -240,7 +240,8 @@ RewriteCond %{REQUEST_URI} !^/randevu-al/
 RewriteCond %{REQUEST_URI} !^/yazilar/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|webp)$
+# Dosya uzantılı adresler (robots.txt, sitemap.xml, .txt doğrulama dosyaları vb.) asla /blog/'a yönlenmez
+RewriteCond %{REQUEST_URI} !\.[A-Za-z0-9]+$
 RewriteRule ^([^/]+)/?$ /blog/$1 [R=301,L]
 
 # BirFatura API proxy routes (with token passthrough)
@@ -299,7 +300,8 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/assets/
 RewriteCond %{REQUEST_URI} !^/api/
-RewriteCond %{REQUEST_URI} !\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|xml|webp)$
+# Dosya uzantılı adresler (robots.txt, sitemap.xml, .txt doğrulama dosyaları vb.) asla /blog/'a yönlenmez
+RewriteCond %{REQUEST_URI} !\.[A-Za-z0-9]+$
 RewriteRule ^(.*)$ /index.html [L,QSA]
 
 
