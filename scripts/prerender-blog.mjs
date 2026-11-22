@@ -105,6 +105,16 @@ function stableBootSource(source, entryUrl) {
   });
 }
 
+// Prerendered pages already carry their own inline styles, so the full app
+// stylesheet must not hold back the first paint. It is preloaded in parallel
+// and applied just before React mounts (main.tsx awaits __dkoBootReady), after
+// the plain page has painted — the app never renders without its styles.
+function nonBlockingBootCss() {
+  return `<script>(function(){var r,c=0,p=0,d=0;window.__dkoBootReady=new Promise(function(x){r=x});function go(){if(d)return;d=1;var l=document.getElementById('dko-boot-css');if(!l||l.rel==='stylesheet'){r();return}var t=setTimeout(r,3000);l.onload=l.onerror=function(){clearTimeout(t);r()};l.rel='stylesheet'}function check(){if(c&&p)go()}window.__dkoCssDone=function(){c=1;check()};setTimeout(function(){c=1;check()},6000);function painted(){requestAnimationFrame(function(){setTimeout(function(){p=1;check()},0)})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',painted);else painted()})();</script>
+    <link rel="preload" as="style" crossorigin href="/boot.css" id="dko-boot-css" onload="this.onload=null;window.__dkoCssDone&&window.__dkoCssDone()" onerror="window.__dkoCssDone&&window.__dkoCssDone()">
+    <noscript><link rel="stylesheet" crossorigin href="/boot.css"></noscript>`;
+}
+
 const NAV = `<nav aria-label="Site"><a href="/">Ana Sayfa</a> · <a href="/uzmanlar">Uzmanlar</a> · <a href="/uzmanlik/psikolog">Psikolog</a> · <a href="/uzmanlik/aile-danismani">Aile Danışmanı</a> · <a href="/blog">Blog</a> · <a href="/hakkimizda">Hakkımızda</a> · <a href="/iletisim">İletişim</a></nav>`;
 const crumbs = (items) =>
   `<nav aria-label="Konum">${items.map(([n, u]) => (u ? `<a href="${u}">${esc(n)}</a>` : esc(n))).join(" › ")}</nav>`;
@@ -238,7 +248,8 @@ async function main() {
   const template = rawTemplate
     .replace(/<link rel="modulepreload"[^>]*>\s*/g, "")
     .replace(`src="${jsSrc}"`, 'src="/boot.js"')
-    .replace(`href="${cssHref}"`, 'href="/boot.css"');
+    .replace(`<link rel="stylesheet" crossorigin href="${cssHref}">`, () => nonBlockingBootCss());
+  if (!template.includes('id="dko-boot-css"')) throw new Error("boot.css bağlantısı dönüştürülemedi");
 
   const [posts, specialistsRaw] = await Promise.all([loadPosts(key), rpc(key, "get_public_specialists")]);
   const specialists = (specialistsRaw || [])

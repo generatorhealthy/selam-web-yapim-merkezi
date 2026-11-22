@@ -24,3 +24,18 @@ test('inlining preserves the Vite preload asset table', () => {
   const code = 'const deps=["assets/panel-123.js","assets/panel-123.css"];';
   assert.equal(stableBootSource(code, '/assets/app-123.js'), code);
 });
+const cssHelper = source.slice(source.indexOf('function nonBlockingBootCss('), source.indexOf('const NAV ='));
+const nonBlockingBootCss = vm.runInNewContext(`${cssHelper}\nnonBlockingBootCss`, {});
+
+test('prerendered pages do not block first paint on the full app stylesheet', () => {
+  const html = nonBlockingBootCss();
+  assert.doesNotMatch(html.replace(/<noscript>[\s\S]*?<\/noscript>/, ''), /rel="stylesheet"/);
+  assert.match(html, /rel="preload" as="style" crossorigin href="\/boot.css"/);
+  assert.match(html, /<noscript><link rel="stylesheet" crossorigin href="\/boot.css"><\/noscript>/);
+});
+
+test('app start waits for the stylesheet to be applied', () => {
+  const main = readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8');
+  assert.match(main, /__dkoBootReady\.then\(start, start\)/);
+  assert.match(nonBlockingBootCss(), /l\.rel='stylesheet'/);
+});
