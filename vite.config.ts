@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     assetsDir: "assets",
     target: "es2020",
     minify: "esbuild",
-    sourcemap: false,
+    sourcemap: true,
     emptyOutDir: true,
     // Two stable files: the visitor app and one panel file (admin, specialist,
     // partner, voice). Visitors never download panel code; deploys keep the
@@ -34,6 +34,7 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
+        sourcemapExcludeSources: true,
         entryFileNames: "assets/app-[hash].js",
         chunkFileNames: (chunk) => (chunk.name === "panel" ? "assets/panel-[hash].js" : "assets/app-core-[hash].js"),
         // Visitor files: app-*.js (tiny entry) + app-core-*.js (everything reached
@@ -45,7 +46,8 @@ export default defineConfig(({ mode }) => ({
             const entries = [...getModuleIds()].filter((m) => getModuleInfo(m)?.isEntry);
             const stack = [...entries];
             while (stack.length) {
-              const m = stack.pop()!;
+              const m = stack.pop();
+              if (!m) continue;
               if (staticFromEntry.has(m)) continue;
               staticFromEntry.add(m);
               for (const dep of getModuleInfo(m)?.importedIds || []) stack.push(dep);

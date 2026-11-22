@@ -24,6 +24,15 @@ test('inlining preserves the Vite preload asset table', () => {
   const code = 'const deps=["assets/panel-123.js","assets/panel-123.css"];';
   assert.equal(stableBootSource(code, '/assets/app-123.js'), code);
 });
+const preloadHelper = source.slice(source.indexOf('function homeModulePreloads('), source.indexOf('// Prerendered pages already'));
+const homeModulePreloads = vm.runInNewContext(`${preloadHelper}\nhomeModulePreloads`, { Buffer, URL });
+test('home discovers the core at HTML parse time instead of waiting for boot', () => {
+  const result = homeModulePreloads('import{a}from"./app-core-123.js";a();', '/assets/app-123.js');
+  assert.equal(result, '<link rel="modulepreload" crossorigin href="/assets/app-core-123.js">');
+});
+test('home preloads legacy monolithic entry but not dynamic panels', () => {
+  assert.equal(homeModulePreloads("import('./panel-123.js')", '/assets/app-old.js'), '<link rel="modulepreload" crossorigin href="/assets/app-old.js">');
+});
 const cssHelper = source.slice(source.indexOf('function nonBlockingBootCss('), source.indexOf('const NAV ='));
 const nonBlockingBootCss = vm.runInNewContext(`${cssHelper}\nnonBlockingBootCss`, {});
 

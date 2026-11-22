@@ -127,6 +127,9 @@ jobs:
           rm -rf .deploy-shell/assets .deploy-shell/index.html
           cp dist/index.html .deploy-index/index.html
 
+      - name: Verify all public SEO pages before publish
+        run: python3 scripts/verify-seo-release.py dist
+
       - name: Verify every generated page asset exists
         run: |
           node - <<'NODE'
@@ -175,3 +178,6 @@ jobs:
           state-name: .ftp-index-state.json
           timeout: 120000
           log-level: minimal
+
+      - name: Verify live sitemap, redirects and real 404 responses
+        run: python3 scripts/verify-seo-release.py dist --live

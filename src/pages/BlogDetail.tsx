@@ -442,12 +442,7 @@ const BlogDetail = () => {
                 }
               : { "@type": "Person", "name": blog.author_name },
             "publisher": {
-              "@type": "Organization",
-              "name": "Doktorum Ol",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "https://doktorumol.com.tr/logo.png"
-              }
+              "@id": "https://doktorumol.com.tr/#organization"
             },
             "mainEntityOfPage": {
               "@type": "WebPage",
@@ -479,12 +474,7 @@ const BlogDetail = () => {
               ? { "@type": "Person", "name": reviewer.name, "jobTitle": reviewer.title }
               : { "@type": "Organization", "name": "Doktorum Ol Sağlık İçerik Editörleri" },
             "publisher": {
-              "@type": "Organization",
-              "name": "Doktorum Ol",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "https://doktorumol.com.tr/logo.png"
-              }
+              "@id": "https://doktorumol.com.tr/#organization"
             }
           })}
         </script>

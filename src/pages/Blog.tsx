@@ -350,9 +350,7 @@ const Blog = () => {
             "description": "Psikoloji ve danışmanlık alanlarında uzman yazıları",
             "url": "https://doktorumol.com.tr/blog",
             "publisher": {
-              "@type": "Organization",
-              "name": "Doktorum Ol",
-              "logo": { "@type": "ImageObject", "url": "https://doktorumol.com.tr/logo.png" }
+              "@id": "https://doktorumol.com.tr/#organization"
             }
           })}
         </script>

@@ -1,0 +1,3 @@
+- Public SEO release checks must use the existing prerender output and test every sitemap URL before and after Hostinger deployment; incomplete HTML stops publication to avoid turning real pages into 404s.
+- Only the homepage preloads versioned visitor JavaScript in HTML; other prerendered pages keep stable boot URLs to avoid re-uploading unchanged content.
+- Production source maps exclude source contents; diagnostics must not publish original project files.

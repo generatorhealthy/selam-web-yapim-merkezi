@@ -1,3 +1,9 @@
+# 22 Kasım 2026 — Onaylanan teknik SEO düzeltmeleri
+- [x] Yeni 87 puanlı rapor incelendi: ana sayfada app/core HTML modulepreload ile boot beklemeden indirilir; kaynak içeriksiz sourcemap açıldı. JS/CSS engelli 390/1280 ilk görüntü 96/140ms, taşma0; canlı tek yavaş ağ denemesi FCP488ms (PageSpeed değildir). Gereksiz JS/CSS ve uzun görevler bütünüyle kaldırılmadı; diğer sayfa stilleri/kodları silinmedi, gerçek web_vitals0 ve 95+ kanıtı yok.
+- [x] Gerçek 404, yalnız mevcut bloglara eski adres yönlendirmesi, eski kategori 301 ve çift eğik çizgi düzeltmesi; eksik robots.txt bloga gitmez.
+- [x] Tek kurum kimliği; canlı öncesi1729/1729HTTP200, gerçek üretim helper + Apache sonrası1729/1729HTTP200; 8HTTP/15Node/1canonical testi,404→uzmanlar tarayıcı readback ve buildOK. Kayıt/ödeme/panel/test/randevu yolları korunur, DB veya izin değişmedi.
+- [ ] Hostinger dağıtımı sonrası tüm sitemap adreslerinin, gerçek 404 yanıtlarının ve yeni mobil PageSpeed puanının canlı kabulü — GitHub/FTP yürütme erişimi burada yok; Actions'a yayın öncesi/sonrası otomatik kontroller eklendi. Canlı hâlâ app-mJfd7DmS.js kullanıyor; yeni modulepreload/sourcemap ve 95+ puan doğrulanmadı.
+
 # 22 Kasım 2026 — PageSpeed uyarıları ve beyaz ekran
 - [x] Tüm gönderilen raporlar OCR/görsel, canlı HTML ve 390/1280 tarayıcı kontrolüyle karşılaştırıldı; gerçek ziyaretçi hız verisi yok (ölçüm kapalı, yeniden açılmadı).
 - [x] Yakınlaştırma serbest; aynı Inter fontu Latin/Türkçe yerel42KB (134KB yerine), geç font kayması önlendi; çerez bandı ilk çizimde ve ResizeObserver verisiyle, mobil menü ilk render doğru. Başlık/landmark/kontrast düzeltildi; stable boot küçük giriş kodunu doğrudan taşıyarak ek giriş isteğini kaldırır, büyük eski girişler hashed korunur.

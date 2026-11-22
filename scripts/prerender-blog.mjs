@@ -11,9 +11,10 @@
  *   - dist/pre/<yol>.html          (uzmanlar, branşlar, uzman profilleri, kurumsal/yasal sayfalar)
  *   - dist/sitemap.xml             (aynı veriden, yalnız gerçekten var olan sayfalar)
  * .htaccess bu dosyaları ilgili adreste sunar. React yüklenince #root içeriği
- * normal şekilde değişir. Hata olursa build asla kırılmaz (mevcut dosyalar kalır).
+ * normal şekilde değişir. Eksik ön-render yayını gerçek sayfaları 404 yapabileceği
+ * için üretim hatasında yayın durur; çalışan sürüm değiştirilmez.
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { resolve, dirname } from "path";
 import { buildLocalPages, localTitle, localHeading, localDescription, localFaq } from "../src/lib/localSeo.js";
 
@@ -103,6 +104,17 @@ function stableBootSource(source, entryUrl) {
     const assetPath = new URL(specifier, `https://doktorumol.com.tr${entryUrl}`).pathname;
     return `${quote}${assetPath}${quote}`;
   });
+}
+
+// Only home preloads the current core: one HTML changes per release, not all
+// 1,700 stable pages. Discover the app at HTML parse time, parallel to boot/CSS.
+function homeModulePreloads(source, entryUrl) {
+  const staticImports = [...source.matchAll(/(?:import|export)\s*(?:[^"';]*?\bfrom\s*)?["'](\.?\.?\/[^"']+\.js)["']/g)];
+  const paths = staticImports.length && Buffer.byteLength(source, 'utf8') <= 32768
+    ? staticImports.map(m => new URL(m[1], `https://doktorumol.com.tr${entryUrl}`).pathname)
+    : [entryUrl];
+  return [...new Set(paths)].filter(p => /^\/assets\/[A-Za-z0-9_-]+\.js$/.test(p))
+    .map(p => `<link rel="modulepreload" crossorigin href="${p}">`).join('\n');
 }
 
 // Prerendered pages already carry their own inline styles, so the full app
@@ -333,7 +345,7 @@ async function main() {
           address: d.city ? { "@type": "PostalAddress", addressLocality: d.city, addressCountry: "TR" } : undefined,
           alumniOf: d.education && d.education !== "None" ? d.education : undefined,
           knowsAbout: interests.length ? interests : undefined,
-          worksFor: { "@type": "Organization", name: "Doktorum Ol", url: SITE },
+          worksFor: { "@id": `${SITE}/#organization` },
         },
         crumbLd(trail),
       ],
@@ -456,8 +468,8 @@ async function main() {
           datePublished: date,
           dateModified: p.updated_at || date,
           inLanguage: "tr-TR",
-          author: { "@type": p.author_name ? "Person" : "Organization", name: p.author_name || "Doktorum Ol" },
-          publisher: { "@type": "Organization", name: "Doktorum Ol", logo: { "@type": "ImageObject", url: `${SITE}/logo.png` } },
+          author: p.author_name ? { "@type": "Person", name: p.author_name } : { "@id": `${SITE}/#organization` },
+          publisher: { "@id": `${SITE}/#organization` },
         },
         crumbLd(trail),
       ],
@@ -517,7 +529,8 @@ async function main() {
       <h2>Son Yazılar</h2>
       <ul>${posts.slice(0, 20).map((p) => `<li><a href="/blog/${p.slug}">${esc(p.title)}</a></li>`).join("")}</ul>
       ${NAV}`;
-    write("pre/home.html", setRoot(setMeta(template, { title, description, url: `${SITE}/` }), body));
+    const homeTemplate = template.replace('</head>', `${homeModulePreloads(readFileSync(resolve(DIST, jsSrc.slice(1)), 'utf8'), jsSrc)}\n</head>`);
+    write("pre/home.html", setRoot(setMeta(homeTemplate, { title, description, url: `${SITE}/` }), body));
     sm("/", { changefreq: "daily", priority: "1.0" });
   }
 
@@ -554,12 +567,13 @@ async function main() {
     ...testBlocks.map((b) => "  " + b.trim()),
     `</urlset>`,
   ].join("\n");
-  if (sitemap.length > 50) writeFileSync(resolve(DIST, "sitemap.xml"), xml, "utf8");
+  if (sitemap.length <= 50 || !posts.length || !specialists.length) throw new Error("Eksik SEO verisi: yayın durduruldu");
+  writeFileSync(resolve(DIST, "sitemap.xml"), xml, "utf8");
 
   console.log(`SEO ön-render: ${posts.length} yazı, ${profiles} uzman, ${specialtyPages.length} branş, ${localPages.length} şehir/online, ${STATIC_PAGES.length + 3} sayfa; sitemap ${sitemap.length + testBlocks.length} URL`);
 }
 
 main().catch((err) => {
-  console.warn(`SEO ön-render atlandı (${err.message})`);
-  if (!existsSync(resolve(DIST, "index.html"))) process.exitCode = 0;
+  console.error(`SEO ön-render başarısız; yayın durduruldu (${err.message})`);
+  process.exitCode = 1;
 });

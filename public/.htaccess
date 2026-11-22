@@ -19,6 +19,13 @@ SetEnvIf Request_URI "^/divan_paneli(?:/|$)" ADMIN_PANEL_ROUTE=1
 RewriteCond %{HTTP_HOST} ^www\.doktorumol\.com\.tr$ [NC]
 RewriteRule ^(.*)$ https://doktorumol.com.tr/$1 [R=301,L]
 
+# Normalize only client-requested duplicate slashes, never internal rewrites.
+# Query strings are retained; root // becomes /, not another // redirect.
+RewriteCond %{THE_REQUEST} "\s/{2,}([^?\s]*)"
+RewriteRule ^ /%1 [R=301,L,NE]
+RewriteCond %{THE_REQUEST} "\s/([^?\s]*?)/{2,}([^?\s]*)"
+RewriteRule ^ /%1/%2 [R=301,L,NE]
+
 # ============================================
 # SITEMAP - Kendi domainimizde GERÇEK dosya olarak sunulur.
 # (Google cross-host sitemap yönlendirmelerini yok sayıyor.)
@@ -180,6 +187,10 @@ RewriteRule ^rss\.xml$ https://irnfwewabogveofwemvg.supabase.co/functions/v1/gen
 
 # Disable directory browsing
 Options -Indexes
+# /blog is a routed HTML page, not the generated blog/ storage directory.
+<IfModule mod_dir.c>
+    DirectorySlash Off
+</IfModule>
 
 # Specific URL redirects
 RewriteRule ^premium-paket-33-3/?$ /paketler [R=301,L]
@@ -218,6 +229,9 @@ RewriteRule ^disclosure-text/?$ /aydinlatma-metni [R=301,L]
 RewriteRule ^explicit-consent/?$ /acik-riza [R=301,L]
 RewriteRule ^distance-sales-contract/?$ /mesafeli-satis-sozlesmesi [R=301,L]
 RewriteRule ^Blog/(.*)$ /blog/$1 [R=301,L]
+# Retired WordPress categories have a relevant destination, not a profile page.
+RewriteRule ^category/(uzman-psikolog|psikolog|klinik-psikolog|aile-danismani)/?$ /uzmanlar [R=301,L]
+RewriteRule ^category(?:/.*)?$ /blog [R=301,L]
 # Sondaki eğik çizgiyi kaldır (/uzmanlar/ -> /uzmanlar); gerçek klasörlere dokunma
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/(api|assets)/
@@ -242,7 +256,12 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 # Dosya uzantılı adresler (robots.txt, sitemap.xml, .txt doğrulama dosyaları vb.) asla /blog/'a yönlenmez
 RewriteCond %{REQUEST_URI} !\.[A-Za-z0-9]+$
+# Never redirect an invented slug (or a temporarily missing robots.txt).
+RewriteCond %{DOCUMENT_ROOT}/blog/$1.html -f
 RewriteRule ^([^/]+)/?$ /blog/$1 [R=301,L]
+
+RewriteCond %{DOCUMENT_ROOT}/blog/$1.html -f
+RewriteRule ^yazilar/([A-Za-z0-9_-]+)/?$ /blog/$1 [R=301,L]
 
 # BirFatura API proxy routes (with token passthrough)
 # Try proxy first
@@ -281,9 +300,9 @@ RewriteRule ^blog\.html$ /blog [R=301,L]
 RewriteCond %{THE_REQUEST} \s/blog/[^/\s]+\.html
 RewriteRule ^blog/([A-Za-z0-9_-]+)\.html$ /blog/$1 [R=301,L]
 RewriteCond %{DOCUMENT_ROOT}/blog.html -f
-RewriteRule ^blog/?$ /blog.html [L]
+RewriteRule ^blog/?$ /blog.html [END]
 RewriteCond %{DOCUMENT_ROOT}/blog/$1.html -f
-RewriteRule ^blog/([A-Za-z0-9_-]+)/?$ /blog/$1.html [L]
+RewriteRule ^blog/([A-Za-z0-9_-]+)/?$ /blog/$1.html [END]
 
 # Ön-render edilmiş diğer sayfalar (ana sayfa, uzmanlar, branşlar, uzman profilleri, kurumsal)
 # /pre/ klasörü doğrudan açılırsa asıl adrese yönlendir (kopya adres olmasın)
@@ -292,21 +311,28 @@ RewriteRule ^pre/home\.html$ / [R=301,L]
 RewriteCond %{THE_REQUEST} \s/pre/[^\s]+\.html
 RewriteRule ^pre/(.+)\.html$ /$1 [R=301,L]
 RewriteCond %{DOCUMENT_ROOT}/pre/home.html -f
-RewriteRule ^$ /pre/home.html [L]
+RewriteRule ^$ /pre/home.html [END]
 RewriteCond %{DOCUMENT_ROOT}/pre/$1.html -f
-RewriteRule ^([a-z0-9-]+(?:/[A-Za-z0-9_-]+)?)$ /pre/$1.html [L]
+RewriteRule ^([a-z0-9-]+(?:/[A-Za-z0-9_-]+)?)$ /pre/$1.html [END]
 
+# Only actual application workflows may use the SPA fallback. Public blog,
+# specialty and profile pages must have a generated file above, otherwise 404.
+# Preserve registration, payment, panels, native and appointment/test workflows.
+RewriteRule ^$ /index.html [END]
+RewriteRule ^(?:doki-logos|paketler|kampanyali-paket|kampanyali-premium-paket|indirimli-paket|bu-aya-ozel|ozel-firsat|kayit-linki|odeme-sayfasi|odeme-basarili|checkout|payment-success|randevu-sayfasi|danismanlik-randevusu-al|giris-yap|sifre-sifirla|kayit-ol|sesli-asistan|uye-ol|danisan-giris|danisan-paneli|partner-giris|partner|kariyer|doktor-paneli|cagri-merkezi-aydinlatma-metni|ziyaretci-danisman-sozlesmesi)$ /index.html [END,QSA]
+RewriteRule ^(?:odeme|checkout)/[^/]+$ /index.html [END,QSA]
+RewriteRule ^(?:divan_paneli|mobile)(?:/.*)?$ /index.html [END,QSA]
+RewriteRule ^kvkk-taslak/[^/]+$ /index.html [END,QSA]
+RewriteRule ^randevu-al/[^/]+/[^/]+$ /index.html [END,QSA]
+RewriteRule ^(?:test|test-al)/[^/]+(?:/[^/]+)?$ /index.html [END,QSA]
+RewriteRule ^test-sonuc/[^/]+/[^/]+$ /index.html [END,QSA]
+RewriteRule ^[^/]+/[^/]+/(?:uzmani-degerlendir|test/[^/]+)$ /index.html [END,QSA]
+
+# Serve real files (including robots/sitemap), but never mask a missing asset.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !^/assets/
-RewriteCond %{REQUEST_URI} !^/api/
-# Dosya uzantılı adresler (robots.txt, sitemap.xml, .txt doğrulama dosyaları vb.) asla /blog/'a yönlenmez
-RewriteCond %{REQUEST_URI} !\.[A-Za-z0-9]+$
-RewriteRule ^(.*)$ /index.html [L,QSA]
-
-
-# ErrorDocument overrides removed to preserve real 404/500 responses
-# (prevents missing JS/CSS files from being rewritten to / and breaking hydration)
+RewriteRule ^ - [R=404,L]
+ErrorDocument 404 /404.html
 # ===== Charset (HTTP header) =====
 AddDefaultCharset UTF-8
 <IfModule mod_headers.c>
