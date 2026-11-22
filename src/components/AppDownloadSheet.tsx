@@ -76,7 +76,7 @@ const AppDownloadSheet = () => {
             className="h-14 w-14 rounded-2xl shadow-lg"
           />
           <div>
-            <h3 className="text-xl font-bold text-white">Doktorum Ol</h3>
+            <h2 className="text-xl font-bold text-white">Doktorum Ol</h2>
             <p className="text-sm text-white/80">Ücretsiz — iOS &amp; Android</p>
           </div>
         </div>

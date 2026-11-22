@@ -1,5 +1,13 @@
 @tailwind base;
 
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: optional;
+  src: url('/fonts/inter-latin-tr-v1.woff2') format('woff2');
+}
+
 /* Shake animation for notification buttons */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -43,7 +51,7 @@
 @tailwind utilities;
 
 /* PRERENDER_START */
-.seo-pre { min-height: 100vh; font-family: Arial, sans-serif; color: hsl(var(--foreground)); background: hsl(var(--background)); line-height: 1.6; }
+.seo-pre { max-width: none; margin: 0; padding: 0; min-height: 100vh; font-family: 'Inter', system-ui, sans-serif; color: hsl(var(--foreground)); background: hsl(var(--background)); line-height: 1.6; }
 .seo-pre > :not(.seo-home-hero) { max-width: 1120px; margin: 20px auto; padding: 0 24px; }
 .seo-pre h1 { font-size: 32px; line-height: 1.2; margin: 0 0 24px; }
 .seo-pre h2 { font-size: 24px; }
@@ -337,7 +345,7 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    touch-action: pan-y;
+    touch-action: pan-x pan-y pinch-zoom;
   }
   
   /* LCP Optimization - Prevent CLS from images */
@@ -421,12 +429,8 @@ All colors MUST be HSL.
   
   /* Cookie banner - keep small and non-LCP */
   [data-cookie-consent] {
-    content-visibility: auto;
+    content-visibility: visible;
     contain: layout paint;
-    max-width: 480px;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    [data-cookie-consent] { will-change: transform, opacity; }
   }
 }
 

@@ -14,6 +14,7 @@ import { createSpecialtySlug } from "@/utils/doctorUtils";
 import AppointmentWizard from "@/components/AppointmentWizard";
 import AppDownloadSheet from "@/components/AppDownloadSheet";
 import IndexBelowFold from "@/components/IndexBelowFold";
+import Footer from "@/components/Footer";
 
 const popularSpecialties = [
   { name: "Psikolog", slug: "psikolog" },
@@ -131,7 +132,7 @@ const Index = () => {
         <meta property="og:url" content="https://doktorumol.com.tr/" />
       </Helmet>
       <HorizontalNavigation />
-      
+      <main>
 
       
       {/* Hero Section */}
@@ -282,9 +283,9 @@ const Index = () => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
-                                  <h4 className="text-sm font-semibold text-gray-900 truncate">
+                                  <p className="text-sm font-semibold text-gray-900 truncate">
                                     {specialist.name}
-                                  </h4>
+                                  </p>
                                   <div className="flex items-center space-x-1 text-yellow-400">
                                     <Star className="w-4 h-4 fill-current" />
                                     <span className="text-sm text-gray-600">{specialist.rating}</span>
@@ -332,7 +333,7 @@ const Index = () => {
 
             {/* Popular Specialties */}
             <div className="text-center px-2 md:px-0">
-              <h3 className="text-lg md:text-xl font-medium mb-4 md:mb-6 text-blue-100">Branşlar</h3>
+              <h2 className="text-lg md:text-xl font-medium mb-4 md:mb-6 text-blue-100">Branşlar</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3 max-w-6xl mx-auto">
                 {popularSpecialties.slice(0, 10).map((specialty, index) => (
                   <button
@@ -357,6 +358,8 @@ const Index = () => {
       </div>
 
       <IndexBelowFold onSearch={handleSearch} />
+      </main>
+      <Footer />
 
       <AppointmentWizard 
         open={wizardOpen} 

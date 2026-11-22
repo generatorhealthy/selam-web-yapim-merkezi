@@ -83,8 +83,8 @@ const AppPromoSection = () => (
             </div>
           </Phone>
           <Phone className="relative z-10 bottom-8">
-            <div className="bg-blue-600 px-3 pt-7 pb-3 text-white">
-              <p className="text-[9px] opacity-80">Merhaba</p>
+            <div className="bg-primary px-3 pt-7 pb-3 text-primary-foreground">
+              <p className="text-[9px]">Merhaba</p>
               <p className="text-xs font-bold">Doktorum Ol</p>
               <div className="mt-2 flex items-center gap-1 bg-white rounded-md px-2 py-1">
                 <Search className="w-2.5 h-2.5 text-gray-400" /><Line w="w-2/3" />

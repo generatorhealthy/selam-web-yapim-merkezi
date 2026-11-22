@@ -8,7 +8,9 @@ import { readChoice, saveChoices, type Purpose } from "@/lib/consent";
 const PURPOSES: Purpose[] = ["analytics", "advertising"];
 
 const CookieConsent = () => {
-  const [showBanner, setShowBanner] = useState(false);
+  const [showBanner, setShowBanner] = useState(() =>
+    !Capacitor.isNativePlatform() && PURPOSES.some((purpose) => readChoice(purpose) === null)
+  );
   const [showSettings, setShowSettings] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [advertising, setAdvertising] = useState(false);
@@ -20,9 +22,12 @@ const CookieConsent = () => {
     const root = document.documentElement;
     if (!showBanner || !boxRef.current) { root.style.removeProperty("--cookie-banner-h"); return; }
     const el = boxRef.current;
-    const set = () => root.style.setProperty("--cookie-banner-h", `${Math.ceil(el.getBoundingClientRect().height) + 8}px`);
-    set();
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(set) : null;
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(entries => {
+      const entry = entries[0];
+      if (!entry) return;
+      const height = entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
+      root.style.setProperty("--cookie-banner-h", `${Math.ceil(height) + 8}px`);
+    }) : null;
     ro?.observe(el);
     return () => { ro?.disconnect(); root.style.removeProperty("--cookie-banner-h"); };
   }, [showBanner, showSettings]);
@@ -30,23 +35,6 @@ const CookieConsent = () => {
   const syncSwitches = useCallback(() => {
     setAnalytics(readChoice("analytics") === "granted");
     setAdvertising(readChoice("advertising") === "granted");
-  }, []);
-
-  useEffect(() => {
-    // Apple App Store guideline 5.1.2(i): native uygulamada çerez/tracking bildirimi gösterme
-    if (Capacitor.isNativePlatform()) return;
-
-    // KVKK: izin gerektiren ölçüm onaydan önce başlamaz; cevabı olmayan herkese bant gösterilir.
-    const unanswered = PURPOSES.some((purpose) => readChoice(purpose) === null);
-    if (!unanswered) return;
-
-    const show = () => setShowBanner(true);
-    if (typeof (window as any).requestIdleCallback === "function") {
-      (window as any).requestIdleCallback(show, { timeout: 2000 });
-    } else {
-      const t = setTimeout(show, 1500);
-      return () => clearTimeout(t);
-    }
   }, []);
 
   // Footer'daki "Çerez Tercihleri" bağlantısı bandı yeniden açar (geri çekme yolu).

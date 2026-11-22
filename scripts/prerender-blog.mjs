@@ -95,6 +95,16 @@ function write(rel, html) {
   writeFileSync(file, html, "utf8");
 }
 
+// Inline only Vite's tiny entry into the stable boot URL. Keep large/legacy
+// entries hashed, and keep every imported chunk in /assets (retained by deploy).
+function stableBootSource(source, entryUrl) {
+  if (Buffer.byteLength(source, 'utf8') > 32768) return `import ${JSON.stringify(entryUrl)};\n`;
+  return source.replace(/(["'])(\.\.?\/[^"']+)\1/g, (_match, quote, specifier) => {
+    const assetPath = new URL(specifier, `https://doktorumol.com.tr${entryUrl}`).pathname;
+    return `${quote}${assetPath}${quote}`;
+  });
+}
+
 const NAV = `<nav aria-label="Site"><a href="/">Ana Sayfa</a> · <a href="/uzmanlar">Uzmanlar</a> · <a href="/uzmanlik/psikolog">Psikolog</a> · <a href="/uzmanlik/aile-danismani">Aile Danışmanı</a> · <a href="/blog">Blog</a> · <a href="/hakkimizda">Hakkımızda</a> · <a href="/iletisim">İletişim</a></nav>`;
 const crumbs = (items) =>
   `<nav aria-label="Konum">${items.map(([n, u]) => (u ? `<a href="${u}">${esc(n)}</a>` : esc(n))).join(" › ")}</nav>`;
@@ -222,7 +232,7 @@ async function main() {
   const jsSrc = rawTemplate.match(/<script type="module" crossorigin src="(\/assets\/app-[^"]+\.js)"><\/script>/)?.[1];
   const cssHref = rawTemplate.match(/<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/)?.[1];
   if (!jsSrc || !cssHref) throw new Error("şablonda uygulama dosyaları bulunamadı");
-  writeFileSync(resolve(DIST, "boot.js"), `import ${JSON.stringify(jsSrc)};\n`, "utf8");
+  writeFileSync(resolve(DIST, "boot.js"), stableBootSource(readFileSync(resolve(DIST, jsSrc.slice(1)), 'utf8'), jsSrc), "utf8");
   // Serve the actual CSS at the stable URL: no extra render-blocking @import hop.
   writeFileSync(resolve(DIST, "boot.css"), readFileSync(resolve(DIST, cssHref.slice(1)), 'utf8'), "utf8");
   const template = rawTemplate

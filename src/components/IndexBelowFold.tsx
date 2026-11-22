@@ -6,7 +6,6 @@ import { Star, Users, Calendar, MessageSquare, UserCheck, Check, ArrowRight, Bra
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Footer from "@/components/Footer";
 import AppPromoSection from "@/components/AppPromoSection";
 
 const specialistTypes = [
@@ -71,9 +70,9 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
             Yeni • Mobil Uygulamamız Yayında!
           </div>
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2">
             Doktorum Ol Mobilde
-          </h3>
+          </h2>
           <p className="text-sm text-gray-600 mb-5">
             Uygulamamızı hemen indirin, randevularınızı cebinizden yönetin.
           </p>
@@ -155,7 +154,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
               {[
                 { num: "01", title: "İhtiyacına uygun uzman keşfet", desc: <><span className="font-semibold text-blue-600">Bulunduğun bölgedeki</span> deneyimli ve değerlendirme puanı yüksek uzmanı kolayca keşfet.</>, icon: UserCheck, color: "blue" },
                 { num: "02", title: "Uygun zamanı seç ve randevunu al", desc: <><span className="font-semibold text-purple-600">Takviminden sana en uygun</span> tarih ve saati belirleyerek randevunu hemen oluştur.</>, icon: Calendar, color: "purple" },
-                { num: "03", title: "Randevu hatırlatıcısı al", desc: <>Randevu saatin yaklaşırken <span className="font-semibold text-green-600">SMS ya da WhatsApp</span> üzerinden sana hatırlatma gönderelim.</>, icon: MessageSquare, color: "green" },
+                { num: "03", title: "Randevu hatırlatıcısı al", desc: <>Randevu saatin yaklaşırken <span className="font-semibold text-ivr-success">SMS ya da WhatsApp</span> üzerinden sana hatırlatma gönderelim.</>, icon: MessageSquare, color: "green" },
               ].map((step) => (
                 <div key={step.num} className="group relative">
                   <div className="relative">
@@ -371,7 +370,6 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
         </div>
       </div>
 
-      <Footer />
     </>
   );
 };

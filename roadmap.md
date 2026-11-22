@@ -1,3 +1,9 @@
+# 22 Kasım 2026 — PageSpeed uyarıları ve beyaz ekran
+- [x] Tüm gönderilen raporlar OCR/görsel, canlı HTML ve 390/1280 tarayıcı kontrolüyle karşılaştırıldı; gerçek ziyaretçi hız verisi yok (ölçüm kapalı, yeniden açılmadı).
+- [x] Yakınlaştırma serbest; aynı Inter fontu Latin/Türkçe yerel42KB (134KB yerine), geç font kayması önlendi; çerez bandı ilk çizimde ve ResizeObserver verisiyle, mobil menü ilk render doğru. Başlık/landmark/kontrast düzeltildi; stable boot küçük giriş kodunu doğrudan taşıyarak ek giriş isteğini kaldırır, büyük eski girişler hashed korunur.
+- [x] 13 kaynak/izin/yasal regresyon, canonical gezinme testi, 390/1280 axe0uyarı, randevu penceresi→uzmanlar→geri, çerez reddi reload ve JS kapalı/engelli gerçek HTML görünürlüğü geçti; build OK. Ödeme/kayıt/sağlık/arama/izin kuralları değişmedi.
+- [ ] Hostinger yeni dağıtım sonrası gerçek mobil PageSpeed ve boot/core/CSS kabulü — GitHub/FTP yürütme erişimi burada yok; canlı hâlâ eski font ve zoom kısıtını sunuyor. Kullanılmayan JS/CSS önerileri tamamen giderilmedi; tek sayfa ölçümünde diğer ekran kodu kullanımsız görünür. Ayrıntılar .lovable/reviews/performance-2026-11-22.md.
+
 # 22 Kasım 2026 — İlk açılıştaki düz metin görünümü
 - [x] Gerçek ön-render HTML korunarak yalnız JavaScript açıkken düz metin için kısa başlangıç beklemesi eklendi; JavaScript kapalıyken metin hemen görünür, yavaş/hatalı açılışta 1,8 saniyede geri gelir. Uygulamanın kendisi gizlenmez.
 - [x] Yerel hızlı/yavaş/JavaScript kapalı açılış doğrulandı: ilk metin flaşı yok, yavaş açılışta metin geri geliyor, uygulama görünür; canonical geçiş testi ve 4 yayın regresyonu geçti, build OK.

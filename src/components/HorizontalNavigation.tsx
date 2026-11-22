@@ -143,7 +143,7 @@ export function HorizontalNavigation() {
   return (
     <>
       <AdminTopBar userRole={userRole} />
-      <div className="bg-white shadow-sm border-b relative">
+      <header className="bg-white shadow-sm border-b relative">
         <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -206,8 +206,10 @@ export function HorizontalNavigation() {
                   </button>
                 </>
               )}
+              {!authInitialized && <span aria-hidden="true" className="w-36 h-8 rounded-full bg-muted animate-pulse" />}
               <button
                 className="flex flex-col items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Menüyü aç"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 {isMobileMenuOpen ? (
@@ -417,7 +419,7 @@ export function HorizontalNavigation() {
         )}
 
         </div>
-      </div>
+      </header>
 
         <RegistrationForm
           isOpen={showRegistrationForm} 
