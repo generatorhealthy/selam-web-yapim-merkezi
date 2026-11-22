@@ -143,7 +143,7 @@ const SpecialOfferNew = () => {
               
               <CardContent className="p-8">
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {packageFeatures.map((feature, index) => (
                       <FeatureBox 
                         key={index} 

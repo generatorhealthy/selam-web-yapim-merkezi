@@ -1,3 +1,6 @@
+# 22 Kasım 2026 — Paket sayfasında içerik listesi
+- [ ] /ozel-firsat paket kartındaki "paketin içindekiler" listesi 656 piksel gibi dar genişliklerde tek sütuna düşüyordu; 640 pikselden itibaren iki sütuna geçecek şekilde üç sayfada (SpecialOfferNew, SpecialOffer, RegistrationLinkOffer) düzeltildi. 656'da 15 satır → 8 satır, yatay taşma 0, metin kesilmesi yok; 390 pikselde okunabilirlik için tek sütun korundu. Kullanıcı onayı ve Hostinger yayını bekliyor.
+
 # 22 Kasım 2026 — Ana sayfada "açık ve ferah" görünüm
 - [x] Mor/gradyan izleri kaldırıldı: hero, adımlar, değerlendirmeler, platform ve mobil uygulama bölümleri beyaz/açık zemine geçti; mavi yalnız düğme, bağlantı ve küçük ikon kutularında. Emojili satır "Hızlı onay · Güvenli platform" oldu; aşırı büyük başlıklar küçüldü; cam efekt, parlayan leke, koyu gölge ve büyüyen hover'lar kalktı. Arama, randevu, kayıt, ödeme ve izin akışları değişmedi. 390/1280 Playwright kontrollerinde konsol hatası 0, sağdan taşan metin 0 (mobil uygulama bölümündeki 450px'lik taşma min-w-0 ile giderildi), build OK.
 - [ ] Kullanıcı beğeni onayı ve Hostinger yayını — görüntüler yerel önizlemeden alındı, canlı siteye henüz çıkarılmadı; Google ilk açılış görüntüsünün yeni tasarımla üretilmesi ayrıca doğrulanmadı.
