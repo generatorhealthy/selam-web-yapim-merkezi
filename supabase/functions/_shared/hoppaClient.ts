@@ -5,6 +5,7 @@ export const HOPPA_BASE = {
   test: "https://posservicetest.esnekpos.com",
   prod: "https://posservice.esnekpos.com",
 } as const;
+export const HOPPA_RELAY = "https://doktorumol.com.tr/hoppa-relay.php";
 export type HoppaEnv = keyof typeof HOPPA_BASE;
 
 export interface HoppaMerchant { merchant: string; merchantKey: string; env: HoppaEnv }
@@ -72,7 +73,9 @@ export function isPaid(r: { STATUS?: string; RETURN_CODE?: string } | null | und
 }
 
 async function post(m: HoppaMerchant, path: string, body: unknown) {
-  const res = await fetch(HOPPA_BASE[m.env] + path, { method: "POST",
+  // Hoppa requires a static source IP: route through our Hostinger relay.
+  const url = `${HOPPA_RELAY}?env=${m.env}&path=${encodeURIComponent(path)}`;
+  const res = await fetch(url, { method: "POST",
     headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     signal: AbortSignal.timeout(30000) });
   if (!res.ok) throw new Error(`Hoppa HTTP ${res.status}`);
