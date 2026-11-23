@@ -6,3 +6,4 @@
 - QualifiedLead threshold crossings are written once to lead_qualification_history (immutable, rule-versioned) via _shared/qualification.ts; the event uses the real crossing time and is never sent if the first crossing came after payment — keeps Meta timing truthful and prevents re-sends.
 - iyzico first purchases are approved only via public.settle_iyzico_payment from a server checkout session (order→conversationId→token→Checkout Form Retrieve→subscription charge); auto-approve never approves on email alone and side effects stay in the order-approval triggers — prevents forged success and duplicate activation/invoices.
 
+- Hoppa recurring card billing goes only through _shared/hoppaClient.ts: hosted CommonPaymentDealer for the first charge, ProcessQuery server-side as the only proof, ListCustomerCards by CUSTOMER_GSM, then METHOD 2 charges with UNIQUE_KEY — card data never touches our servers; checkout stays card-free until approved live activation.
