@@ -23,10 +23,10 @@ if (isset($_GET['check']) && $_GET['check'] === 'ip') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Read input once and log
+    // Read input once. The body carries Verimor credentials and the recipient's
+    // phone number, so it is never written to the hosting's error log.
     $raw = file_get_contents('php://input');
-    error_log('SMS Relay Request: ' . $raw);
-    
+
     // Get POST data
     $input = json_decode($raw, true);
     
