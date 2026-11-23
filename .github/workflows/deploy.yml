@@ -73,7 +73,7 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           RETAIN_DAYS: '14'
         run: |
-          set +e
+          set -euo pipefail
           now=$(date +%s)
           cutoff=$((now - RETAIN_DAYS*86400))
           ages=/tmp/asset-ages.txt
@@ -89,14 +89,16 @@ jobs:
               if [ "$t" -lt "$cutoff" ]; then dropped=$((dropped+1)); continue; fi
               [ -f ".release-assets-cache/$name" ] || continue
               mkdir -p "$(dirname "dist/assets/$name")"
-              cp ".release-assets-cache/$name" "dist/assets/$name" && echo "$t $name" >> "$ages" && kept=$((kept+1))
+              cp ".release-assets-cache/$name" "dist/assets/$name"
+              echo "$t $name" >> "$ages"; kept=$((kept+1))
             done < .release-assets-cache/.asset-ages.txt
           elif [ -d .release-assets-cache ]; then
             # Old cache format (one previous release, no ages): keep it now.
             while IFS= read -r name; do
               [ -f "dist/assets/$name" ] && continue
               mkdir -p "$(dirname "dist/assets/$name")"
-              cp ".release-assets-cache/$name" "dist/assets/$name" && echo "$now $name" >> "$ages" && kept=$((kept+1))
+              cp ".release-assets-cache/$name" "dist/assets/$name"
+              echo "$now $name" >> "$ages"; kept=$((kept+1))
             done < <(cd .release-assets-cache && find . -type f ! -name '.release-files.txt' ! -name '.asset-ages.txt' | sed 's|^\./||')
           fi
           echo "Kept $kept retained files from cache, dropped $dropped older than $RETAIN_DAYS days."
@@ -110,8 +112,8 @@ jobs:
               for (const f of s.data || []) if (f.type === "file" && !f.name.startsWith(".")) console.log(f.name);
             ' > /tmp/live-assets.txt
           else
-            : > /tmp/live-assets.txt
-            echo "Could not read live file list over FTP."
+            echo "Could not verify live assets; stopping before FTP publish."
+            exit 1
           fi
           while IFS= read -r name; do
             [ -z "$name" ] && continue
@@ -121,6 +123,8 @@ jobs:
               echo "$now $name" >> "$ages"; kept=$((kept+1))
             else
               rm -f "dist/assets/$name"
+              echo "Could not retain a live asset; stopping before FTP publish."
+              exit 1
             fi
           done < /tmp/live-assets.txt
           # Server-side list = every retained file, so the FTP fallback keeps them all.
