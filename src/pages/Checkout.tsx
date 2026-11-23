@@ -603,10 +603,7 @@ const Checkout = () => {
                         className="h-auto p-4 justify-start"
                       >
                         <CreditCard className="h-6 w-6 mr-3" />
-                        <div className="text-left whitespace-normal">
-                          <div className="font-semibold">Kredi / Banka Kartı (aylık otomatik)</div>
-                          <div className="text-xs opacity-80">Kartınızı Hoppa güvenli ödeme sayfasında girin ve “Kart bilgilerimi kaydet” kutusunu işaretleyin.</div>
-                        </div>
+                        <span className="font-semibold">Kredi Kartı</span>
                       </Button>
                     )}
                   </div>
