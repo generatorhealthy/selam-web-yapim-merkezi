@@ -243,7 +243,7 @@ export function HorizontalNavigation() {
                 >
                   <Avatar className="w-9 h-9 border-2 border-blue-100">
                     <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
-                    <AvatarFallback className="bg-blue-50 text-blue-700 text-sm font-medium">
+                    <AvatarFallback className="bg-[image:var(--home-nav-gradient)] text-primary-foreground text-sm font-medium">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -262,7 +262,7 @@ export function HorizontalNavigation() {
                 >
                   <Avatar className="w-9 h-9 border-2 border-blue-100">
                     <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
-                    <AvatarFallback className="bg-blue-50 text-blue-700 text-sm font-medium">
+                    <AvatarFallback className="bg-[image:var(--home-nav-gradient)] text-primary-foreground text-sm font-medium">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -372,7 +372,7 @@ export function HorizontalNavigation() {
                   >
                     <Avatar className="w-11 h-11 border-2 border-blue-100">
                       <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
-                      <AvatarFallback className="bg-blue-50 text-blue-700 text-sm font-medium">
+                      <AvatarFallback className="bg-[image:var(--home-nav-gradient)] text-primary-foreground text-sm font-medium">
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>

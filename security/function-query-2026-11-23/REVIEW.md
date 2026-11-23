@@ -10,4 +10,4 @@ Canlı işlev tanımları ve anon/authenticated EXECUTE yetkileri salt okunur so
 ## Yayın adayı
 `candidate.sql` yalnız bir işlevin dinamik sorgusunu kaldırır. Tablo, veri, yetki, ödeme, yedekleme veya zamanlayıcı değişikliği yoktur. Yerel sentetik PostgreSQL testi kimlik ayrımını ve boş oturum fallback'ini kontrol eder.
 
-Canlıya uygulanmadan önce ayrı kullanıcı onayı gerekir. Uygulandıktan sonra işlev tanımı yeniden okunmalı ve tarama yenilenmelidir; etiketin kaybolacağı garanti edilmez. Geri alma aynı kimlik sınırlı eski gövdeyi geri getirir; herhangi bir yetki genişletilmez.
+23 Kasım 2026 10:48 UTC kullanıcı onayıyla aday canlıya uygulandı. Sonraki salt okunur sorgu sabit SELECT, auth.uid() sınırı ve değişmeyen anon/authenticated EXECUTE yetkilerini doğruladı. Yedekleme ve geri yükleme değiştirilmedi. Tarama etiketi henüz yeniden doğrulanmadı; kaybolacağı garanti edilmez. Geri alma aynı kimlik sınırlı eski gövdeyi geri getirir; herhangi bir yetki genişletilmez.
