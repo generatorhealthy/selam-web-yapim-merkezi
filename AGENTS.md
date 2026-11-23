@@ -36,3 +36,4 @@
 - Admin pre-review releases requests through a locked RPC without confirming them; specialist-request and patient-confirmation notification gates stay separate to avoid false booking confirmations.
 - Public appointments require atomic single-use phone proofs; preserve panel booking and historical rows, never grant account access through appointment OTP.
 - Install PBX observers only idle to protect calls.
+- CI browser preparation replaces regional EC2 Ubuntu mirrors with the official HTTPS archive and bounds network waits before any FTP upload; keep package signature checks and non-interrupting publish concurrency intact to avoid stalled queues without partial live releases.

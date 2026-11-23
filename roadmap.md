@@ -1,3 +1,7 @@
+# 23 Kasım 2026 — GitHub yayın hazırlığı takılıyor
+- [x] Ekran görüntüsünde #2635 dosya yüklemeden önce Chromium bağımlılık kurulumunda; bölgesel Ubuntu EC2 aynası tekrar tekrar Ign döndürüyor. Resmî HTTPS Ubuntu aynasına geçiş, bağlantı süre/tekrar sınırları ve hazırlık için 10 dakika sınırı eklendi; FTP sırası ve yayını yarıda kesmeme korunur.
+- [ ] Yeni GitHub çalışmasının hazırlığı tamamlaması ve Hostinger yayınının bitmesi — Actions yürütme erişimi yok; eski çalışan iş yeni ayarları alamaz, hazırlıkta kaldığı teyit edilerek kullanıcı tarafından iptal edilmeli.
+
 # 23 Kasım 2026 — Hoppa ödeme sayfası açılmıyor
 - [x] 10:47:54 UTC hoppa-subscription canlı hata kaydı doğrulandı: Hoppa sunucu çıkış IP'sine işlem izni vermiyor. Sipariş ve kart ekranı değil, sağlayıcı IP yetkilendirmesi engeli.
 - [x] İlgili tüm Checkout adresleri, ödeme dönüşü, admin tekrar deneme, günlük cron, ortak dört Hoppa isteği ve canlı sipariş koruma/aktivasyon/fatura işlevleri koddan okundu. Bulgular .lovable/reviews/hoppa-ip-sweep-2026-11-23.md içinde. Deno testindeki iki dönüş tipi düzeltildi; uygulama davranışı değişmedi.

@@ -31,7 +31,12 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Prepare browser for existing home presentation capture
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 10
+        env:
+          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: '120000'
+        run: |
+          sudo python3 scripts/prepare-ci-apt.py
+          npx playwright install --with-deps chromium
 
       - name: Build project
         run: npm run build
