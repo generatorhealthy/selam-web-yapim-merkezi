@@ -27,6 +27,7 @@ const PaymentSuccess = () => {
   const [loading, setLoading] = useState(true);
   const [verifiedPayment, setVerifiedPayment] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [cardNotice] = useState(() => new URLSearchParams(window.location.search).get('kart'));
 
   const bankInfo = {
     accountName: "DOKTORUM OL BİLGİ VE TEKNOLOJİ HİZMETLERİ",
@@ -157,6 +158,12 @@ const PaymentSuccess = () => {
                     ? 'Siparişiniz alınmıştır. Aşağıdaki hesap bilgilerine ödemenizi yapabilirsiniz.'
                     : verifiedPayment ? 'Ödemeniz doğrulandı. Üyelik durumunuzu uzman panelinizden kontrol edebilirsiniz.' : 'Bu sayfanın açılması ödemenin başarılı olduğunu göstermez. Yeniden ödeme yapmadan önce uzman panelinizden veya destek hattından durumunuzu teyit edin.'}
                 </p>
+                {cardNotice === 'kart-yok' && (
+                  <p className="mt-3 rounded-md bg-muted p-3 text-sm text-foreground">İlk ödemeniz alındı ancak kartınız kaydedilmedi. Sonraki ayların otomatik ödenmesi için lütfen bizimle iletişime geçin.</p>
+                )}
+                {cardNotice === 'hata' && (
+                  <p className="mt-3 rounded-md bg-destructive/10 p-3 text-sm text-destructive">Kart ödemesi doğrulanamadı. Tekrar denemeden önce destek hattından durumu teyit edin.</p>
+                )}
               </CardHeader>
 
               <CardContent className="space-y-6">

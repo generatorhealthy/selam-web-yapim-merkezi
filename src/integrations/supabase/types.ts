@@ -5327,6 +5327,130 @@ export type Database = {
         }
         Relationships: []
       }
+      hoppa_charges: {
+        Row: {
+          amount: number
+          charge_key: string
+          created_at: string
+          created_order_id: string | null
+          error: string | null
+          id: string
+          order_ref: string
+          period: number
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          charge_key: string
+          created_at?: string
+          created_order_id?: string | null
+          error?: string | null
+          id?: string
+          order_ref: string
+          period: number
+          status?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          charge_key?: string
+          created_at?: string
+          created_order_id?: string | null
+          error?: string | null
+          id?: string
+          order_ref?: string
+          period?: number
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hoppa_charges_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "hoppa_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hoppa_subscriptions: {
+        Row: {
+          cancelled_at: string | null
+          card_masked: string | null
+          card_unique_key: string | null
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          failed_attempts: number
+          id: string
+          last_error: string | null
+          monthly_amount: number
+          next_charge_at: string | null
+          order_id: string
+          order_ref: string
+          package_name: string
+          package_type: string | null
+          paid_months: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          card_masked?: string | null
+          card_unique_key?: string | null
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          failed_attempts?: number
+          id?: string
+          last_error?: string | null
+          monthly_amount: number
+          next_charge_at?: string | null
+          order_id: string
+          order_ref: string
+          package_name: string
+          package_type?: string | null
+          paid_months?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          card_masked?: string | null
+          card_unique_key?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          failed_attempts?: number
+          id?: string
+          last_error?: string | null
+          monthly_amount?: number
+          next_charge_at?: string | null
+          order_id?: string
+          order_ref?: string
+          package_name?: string
+          package_type?: string | null
+          paid_months?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hoppa_subscriptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instagram_post_templates: {
         Row: {
           data_base64: string

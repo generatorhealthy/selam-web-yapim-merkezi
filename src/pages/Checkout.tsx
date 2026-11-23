@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Building, User, Banknote } from "lucide-react";
+import { ArrowLeft, Building, User, Banknote, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getClientIP } from "@/utils/ipUtils";
 import ContractDialog from "@/components/ContractDialog";
@@ -46,8 +46,9 @@ const Checkout = () => {
   const [showPreInfoDialog, setShowPreInfoDialog] = useState(false);
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
-  // Tek ödeme yöntemi: banka havalesi.
-  const paymentMethod = "bank_transfer" as const;
+  // Kartla ödeme (Hoppa) önce deneme için yalnız ?kart=1 ile görünür.
+  const cardEnabled = new URLSearchParams(location.search).get("kart") === "1";
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("bank_transfer");
   const [clientIP, setClientIP] = useState<string>("");
   const paymentLock = useRef(false);
   const orderAttempt = useRef(createSubmissionAttempt());
@@ -204,6 +205,16 @@ const Checkout = () => {
       await checkoutAfterOrder(
         () => saveOrder(paymentMethod),
         async () => {
+          if (paymentMethod === 'credit_card') {
+            const orderId = JSON.parse(localStorage.getItem('lastOrder') || '{}').id;
+            const { data, error } = await supabase.functions.invoke('hoppa-subscription', { body: { action: 'start', orderId } });
+            if (error || !data?.url) {
+              toast({ title: "Ödeme sayfası açılamadı", description: data?.error || "Lütfen tekrar deneyin veya havale ile ödeyin.", variant: "destructive" });
+              return;
+            }
+            window.location.href = data.url;
+            return;
+          }
           setShowBankInfo(true);
         },
       );
@@ -575,14 +586,29 @@ const Checkout = () => {
                   <div className="grid grid-cols-1 gap-4">
                     <Button
                       type="button"
-                      variant="default"
-                      className="h-auto p-4 justify-start bg-gray-900 hover:bg-gray-800 text-white"
+                      variant={paymentMethod === "bank_transfer" ? "default" : "outline"}
+                      onClick={() => setPaymentMethod("bank_transfer")}
+                      className="h-auto p-4 justify-start"
                     >
                       <Banknote className="h-6 w-6 mr-3" />
                       <div className="text-left">
                         <div className="font-semibold">Banka Havalesi</div>
                       </div>
                     </Button>
+                    {cardEnabled && (
+                      <Button
+                        type="button"
+                        variant={paymentMethod === "credit_card" ? "default" : "outline"}
+                        onClick={() => setPaymentMethod("credit_card")}
+                        className="h-auto p-4 justify-start"
+                      >
+                        <CreditCard className="h-6 w-6 mr-3" />
+                        <div className="text-left whitespace-normal">
+                          <div className="font-semibold">Kredi / Banka Kartı (aylık otomatik)</div>
+                          <div className="text-xs opacity-80">Kartınızı Hoppa güvenli ödeme sayfasında girin ve “Kart bilgilerimi kaydet” kutusunu işaretleyin.</div>
+                        </div>
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -665,7 +691,7 @@ const Checkout = () => {
                       className="w-full"
                       size="lg"
                     >
-                      {loading ? "İşleniyor..." : "Banka Havalesi ile Öde"}
+                      {loading ? "İşleniyor..." : paymentMethod === "credit_card" ? "Kartla Öde" : "Banka Havalesi ile Öde"}
                     </Button>
                   </div>
                 </CardContent>
