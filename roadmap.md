@@ -1,3 +1,7 @@
+# 23 Kasım 2026 — Hoppa ödeme sayfası açılmıyor
+- [x] 10:47:54 UTC hoppa-subscription canlı hata kaydı doğrulandı: Hoppa sunucu çıkış IP'sine işlem izni vermiyor. Sipariş ve kart ekranı değil, sağlayıcı IP yetkilendirmesi engeli.
+- [ ] Hoppa ile Edge Function çıkış IP kısıtının güvenli çözümünün teyidi; ardından kullanıcının gerçek ödeme sayfası açılışını doğrulaması. Gerçek tahsilat/test müşteri kaydı gönderilmedi, ödeme veya erişim ayarları değiştirilmedi.
+
 # 23 Kasım 2026 — Ana sayfa renkleri ve kritik güvenlik uyarısı
 - [x] Önceki mavi/mor ana sayfa renkleri semantik renklerle geri getirildi; 390/1280 görünüm taşmasız, randevu penceresi açılıyor, konsol hatası yok. Dokuz açılış testi geçti. Hostinger yayın sonucu henüz doğrulanmadı.
 - [x] Üç işlevin canlı tanımı doğrulandı: yedekleme/geri yükleme yönetici kapıları ve anon engeli mevcut; rol sorgusu yalnız auth.uid() kullanıyor. Gereksiz dinamik sorguyu kaldıran aday security/function-query-2026-11-23 içinde; beş yerel PostgreSQL kontrolü geçti; sonraki kullanıcı onayıyla canlıya uygulandı.
