@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
     const smsData = {
       username: username,
       password: password,
-      source_addr: '902167060611',
+      source_addr: (Deno.env.get('SMS_SENDER') || Deno.env.get('VERIMOR_SENDER') || 'Doktorum Ol').trim(),
       source_addr_type: '5',
       msg_header: 'Doktorum Ol',
       custom_id: Date.now().toString(),
@@ -73,13 +73,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     // (kişisel veri içeren kayıt satırı kaldırıldı)
 
-    const response = await fetch(verimorUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(smsData)
-    });
+    // Verimor only accepts whitelisted static IPs; Edge Function IPs change,
+    // so send through the Hostinger relay (same path as the other SMS functions).
+    const relayUrl = Deno.env.get('SMS_RELAY_URL');
+    const relayToken = Deno.env.get('SMS_RELAY_TOKEN');
+    const scrapingBeeApiKey = Deno.env.get('SCRAPINGBEE_API_KEY');
+    let response: Response;
+    if (relayUrl) {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (relayToken) headers['Authorization'] = `Bearer ${relayToken}`;
+      response = await fetch(relayUrl, { method: 'POST', headers, body: JSON.stringify(smsData) });
+    } else if (scrapingBeeApiKey) {
+      const sbUrl = `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}` +
+        `&url=${encodeURIComponent(verimorUrl)}&render_js=false&premium_proxy=true&country_code=tr&method=POST&forward_headers=true`;
+      response = await fetch(sbUrl, { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Spb-Content-Type': 'application/json' },
+        body: JSON.stringify(smsData) });
+    } else {
+      throw new Error('No SMS relay configured');
+    }
 
     console.log('Verimor API response status:', response.status);
     
