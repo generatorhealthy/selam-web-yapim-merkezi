@@ -21,6 +21,7 @@ import { buildLocalPages, localTitle, localHeading, localDescription, localFaq }
 import { approvedLegalPages } from "./legalPublication.mjs";
 import { staticLegalFiles } from "./legal-static-package.mjs";
 import { captureHomeOpening } from "./home-opening.mjs";
+import { releaseJson } from "./release-fetch.mjs";
 
 const SITE = "https://doktorumol.com.tr";
 const SUPABASE_URL = "https://irnfwewabogveofwemvg.supabase.co";
@@ -137,20 +138,16 @@ const crumbLd = (items) => ({
 });
 
 async function rest(key, path) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+  return releaseJson(`${SUPABASE_URL}/rest/v1/${path}`, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
   });
-  if (!res.ok) throw new Error(`${path.split("?")[0]} HTTP ${res.status}`);
-  return res.json();
 }
 async function rpc(key, fn, body = {}) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+  return releaseJson(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method: "POST",
     headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`${fn} HTTP ${res.status}`);
-  return res.json();
 }
 async function fetchAll(key, table, cols) {
   const all = [];

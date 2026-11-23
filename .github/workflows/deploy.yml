@@ -28,6 +28,11 @@ jobs:
           node-version: '24'
 
       - name: Install dependencies
+        timeout-minutes: 10
+        env:
+          npm_config_fetch_retries: '2'
+          npm_config_fetch_timeout: '60000'
+          npm_config_fetch_retry_maxtimeout: '30000'
         run: npm install --legacy-peer-deps
 
       - name: Prepare browser for existing home presentation capture
@@ -39,6 +44,7 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Build project
+        timeout-minutes: 15
         run: npm run build
         env:
           CI: false
@@ -50,6 +56,7 @@ jobs:
       # The Actions cache carries the retained files plus their last-used time
       # (.asset-ages.txt); FTP is only a fallback source.
       - name: Restore retained release assets from cache
+        timeout-minutes: 5
         uses: actions/cache/restore@v4
         with:
           path: .release-assets-cache
@@ -58,6 +65,8 @@ jobs:
             release-assets-
 
       - name: Keep older releases' assets for RETAIN_DAYS
+        # Failure here stops before FTP; never upload a partial retained set.
+        timeout-minutes: 15
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -124,12 +133,14 @@ jobs:
           exit 0
 
       - name: Save this release's assets for the next deploy
+        timeout-minutes: 5
         uses: actions/cache/save@v4
         with:
           path: .release-assets-cache
           key: release-assets-${{ github.run_id }}
 
       - name: Prepare ordered release
+        timeout-minutes: 5
         run: |
           mkdir -p .deploy-shell .deploy-index
           cp -a dist/. .deploy-shell/
@@ -137,9 +148,11 @@ jobs:
           cp dist/index.html .deploy-index/index.html
 
       - name: Verify all public SEO pages before publish
+        timeout-minutes: 5
         run: python3 scripts/verify-seo-release.py dist
 
       - name: Verify every generated page asset exists
+        timeout-minutes: 5
         run: |
           node - <<'NODE'
           const fs = require('fs');
@@ -189,4 +202,6 @@ jobs:
           log-level: minimal
 
       - name: Verify live sitemap, redirects and real 404 responses
+        # Read-only acceptance after activation, not an FTP interruption.
+        timeout-minutes: 30
         run: python3 scripts/verify-seo-release.py dist --live

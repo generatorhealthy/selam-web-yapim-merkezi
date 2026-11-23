@@ -1,5 +1,6 @@
 # 23 Kasım 2026 — GitHub yayın hazırlığı takılıyor
 - [x] Ekran görüntüsünde #2635 dosya yüklemeden önce Chromium bağımlılık kurulumunda; bölgesel Ubuntu EC2 aynası tekrar tekrar Ign döndürüyor. Resmî HTTPS Ubuntu aynasına geçiş, bağlantı süre/tekrar sınırları ve hazırlık için 10 dakika sınırı eklendi; FTP sırası ve yayını yarıda kesmeme korunur.
+- [x] 12:03 UTC onayıyla paket kurulumu, sayfa üretimi, eski dosyaları toplama/önbellek ve SEO kontrolleri süreyle sınırlandı; REST/RPC veri yanıtı başlık ve gövdesi boyunca 45 saniye sınırı kullanır. Eksik hazırlıkta FTP başlamaz; üç FTP adımı ve 14 günlük saklama değiştirilmedi.
 - [ ] Yeni GitHub çalışmasının hazırlığı tamamlaması ve Hostinger yayınının bitmesi — Actions yürütme erişimi yok; eski çalışan iş yeni ayarları alamaz, hazırlıkta kaldığı teyit edilerek kullanıcı tarafından iptal edilmeli.
 
 # 23 Kasım 2026 — Hoppa ödeme sayfası açılmıyor
