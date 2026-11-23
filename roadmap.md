@@ -1,6 +1,6 @@
 # 23 Kasım 2026 — Ana sayfa renkleri ve kritik güvenlik uyarısı
-- [ ] Ana sayfanın önceki renklerini mevcut işleyişi koruyarak geri getir ve telefon/bilgisayarda doğrula.
-- [ ] Üç ayrıcalıklı işlevin canlı tanımını doğrula; gereksiz dinamik sorgu için güvenli düzeltme ve test hazırla.
+- [x] Önceki mavi/mor ana sayfa renkleri semantik renklerle geri getirildi; 390/1280 görünüm taşmasız, randevu penceresi açılıyor, konsol hatası yok. Dokuz açılış testi geçti. Hostinger yayın sonucu henüz doğrulanmadı.
+- [x] Üç işlevin canlı tanımı doğrulandı: yedekleme/geri yükleme yönetici kapıları ve anon engeli mevcut; rol sorgusu yalnız auth.uid() kullanıyor. Gereksiz dinamik sorguyu kaldıran aday security/function-query-2026-11-23 içinde; beş yerel PostgreSQL kontrolü geçti, canlıya uygulanmadı.
 - [ ] Hazırlanan erişim düzeltmesinin canlı yayını için ayrı onay al.
 
 # 22 Kasım 2026 — Paket sayfasında içerik listesi
