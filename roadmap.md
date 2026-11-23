@@ -1,7 +1,8 @@
 # 23 Kasım 2026 — Ana sayfa renkleri ve kritik güvenlik uyarısı
 - [x] Önceki mavi/mor ana sayfa renkleri semantik renklerle geri getirildi; 390/1280 görünüm taşmasız, randevu penceresi açılıyor, konsol hatası yok. Dokuz açılış testi geçti. Hostinger yayın sonucu henüz doğrulanmadı.
 - [x] Üç işlevin canlı tanımı doğrulandı: yedekleme/geri yükleme yönetici kapıları ve anon engeli mevcut; rol sorgusu yalnız auth.uid() kullanıyor. Gereksiz dinamik sorguyu kaldıran aday security/function-query-2026-11-23 içinde; beş yerel PostgreSQL kontrolü geçti, canlıya uygulanmadı.
-- [ ] Hazırlanan erişim düzeltmesinin canlı yayını için ayrı onay al.
+- [ ] Kullanıcı 23 Kasım 10:48 UTC'de rol sorgusu adayının canlı yayınını onayladı; uygula ve işlev tanımını/yetkilerini tekrar doğrula.
+- [ ] Kapsam kontrolü: ayrı mobil ana sayfa kartlarının eski renklerini ve ilk açılış üreticisini kontrol et.
 
 # 22 Kasım 2026 — Paket sayfasında içerik listesi
 - [ ] /ozel-firsat paket kartındaki "paketin içindekiler" listesi 656 piksel gibi dar genişliklerde tek sütuna düşüyordu; 640 pikselden itibaren iki sütuna geçecek şekilde üç sayfada (SpecialOfferNew, SpecialOffer, RegistrationLinkOffer) düzeltildi. 656'da 15 satır → 8 satır, yatay taşma 0, metin kesilmesi yok; 390 pikselde okunabilirlik için tek sütun korundu. Kullanıcı onayı ve Hostinger yayını bekliyor.
