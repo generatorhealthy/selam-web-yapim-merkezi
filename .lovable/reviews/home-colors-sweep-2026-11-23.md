@@ -5,7 +5,7 @@ Kural: tasarım incelemesi uygulama onayı değildir; ana sayfanın önceki renk
 | Yer | Okunan/çalıştırılan kontrol | Sonuç |
 | --- | --- | --- |
 | Web ana sayfa başlık, arama, Online/Yüz Yüze, branşlar | Index.tsx okundu; 390/1280 tarayıcıda görüntülendi, randevu düğmesi açıldı | Mavi/mor renkler geri geldi, taşma ve pageerror yok |
-| Masaüstü/telefon menüsü ve avatar alanları | HorizontalNavigation.tsx okundu | Menü düğmelerinin gradyanları geri geldi; avatar fallback önceki tek renkli kalan yerlerden biri, davranış/kimlik değişmedi |
+| Masaüstü/telefon menüsü ve avatar alanları | HorizontalNavigation.tsx okundu | Menü düğmeleri ve üç avatar fallback alanının eski gradyanları geri getirildi; davranış/kimlik değişmedi |
 | Nasıl Çalışır, yorumlar, uzman/platform bölümleri | IndexBelowFold.tsx okundu | Bölüm/başlık ve ana düğmelerin renkleri geri getirildi; veri okuma aynı |
 | Mobil uygulama tanıtımı | AppPromoSection.tsx okundu | Mavi gradyan bölüm ve beyaz yazılar geri geldi; taşma düzeltmeleri korundu |
 | Ayrı native ana sayfa, yaklaşan randevu ve son incelenen kartı | MobileHome.tsx iki koşullu dalı okundu | Eski mavi gradyan ve gölge geri getirildi; veri sorguları değişmedi; gerçek oturum/native cihazda görüntülenmedi |
