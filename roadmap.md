@@ -651,3 +651,7 @@
 
 # 23 Kasım 2026 — Hoppa kartlı abonelik
 - [ ] Kullanıcı denemesiz canlı kurulum istedi — Hoppa ödeme sayfasında "Kart bilgilerimi kaydet" seçeneği yok; açılmadan aylık çekim çalışamaz. Hoppa yanıtı bekleniyor.
+
+# 23 Kasım 2026 — Hoppa kartlı abonelik
+- [x] Kart seçeneği (?kart=1), Hoppa ödeme sayfası, sunucu doğrulaması, günlük otomatik çekim (3 deneme), admin /divan_paneli/kart-abonelikleri.
+- [ ] Sahibin gerçek kartla ilk ödeme denemesi ve herkese açma — kullanıcı denemesi bekliyor.
