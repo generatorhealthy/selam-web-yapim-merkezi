@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createSubmissionAttempt } from '@/lib/submissionAttempt';
 import { newSaleCatalog, newSalePackage } from "@/lib/newSaleCatalog";
 import { checkoutAfterOrder } from '@/lib/checkoutSubmission';
+import { paymentErrorMessage } from '@/lib/paymentError';
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -209,7 +210,7 @@ const Checkout = () => {
             const orderId = JSON.parse(localStorage.getItem('lastOrder') || '{}').id;
             const { data, error } = await supabase.functions.invoke('hoppa-subscription', { body: { action: 'start', orderId } });
             if (error || !data?.url) {
-              toast({ title: "Ödeme sayfası açılamadı", description: data?.error || "Lütfen tekrar deneyin veya havale ile ödeyin.", variant: "destructive" });
+              toast({ title: "Ödeme sayfası açılamadı", description: await paymentErrorMessage(data, error), variant: "destructive" });
               return;
             }
             window.location.href = data.url;
@@ -225,7 +226,10 @@ const Checkout = () => {
 
   const saveOrder = async (paymentMethod: string) => {
     const orderId = orderAttempt.current.begin({ formData, customerType, packageType: selectedPackage.type, amount: selectedPackage.price, paymentMethod });
-    if (!orderId) return false;
+    if (!orderId) {
+      toast({ title: 'Siparişiniz zaten kaydedildi', description: 'Yeni bir ödeme başlatmadan önce destek hattından mevcut siparişinizi teyit edin.', variant: 'destructive' });
+      return false;
+    }
     try {
       setLoading(true);
       

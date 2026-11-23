@@ -28,3 +28,11 @@ Uygulama, Edge Function, izinler, cron, merchant ayarları ve geçmiş ödenmiş
 1. Hoppa'nın güvenli sunucu IP yetkilendirme çözümünü teyit etmesi gerekiyor; sağlayıcı panel erişimi yok.
 2. Hata aktarımı, kanıtsız alt metin ve bağlantı hatası/kart yokluğu ayrımı için bağımsız web/Edge yayın onayı gerekiyor. Otomatik dağıtılan dosyalar onaysız değiştirilmedi.
 3. İzin çözüldükten sonra kullanıcının doğal işleminde hosted sayfa açılışı, ödeme dönüşü ve kart saklama uçtan uca doğrulanmalı. Yerel testler bu doğrulamanın yerine geçmez.
+
+## 10:56 UTC onayı sonrası uygulama
+- Checkout/admin hata aktarımı güvenli sınıflandırılmış kodlardan okunur; sağlayıcının ham metni kullanıcıya ve yeni hata günlüklerine aktarılmaz.
+- Başarısız kart sorgusu boş kart listesi değildir. Otomatik çekim önce başarılı liste bekler; hata halinde charge claim/deneme tüketimi/tahsilat yok. İlk ödemesi ProcessQuery ile kanıtlanan ancak kart sorgusu belirsiz yeni abonelik needs_review olur, otomatik çekime girmez. Mevcut sonuçları kesinleşmiş abonelikler geri doldurulmadı.
+- kart-yok URL metni doğrulanmış ödeme olmadan “ilk ödeme alındı” demez. Tekrar tıklamada yeni sipariş oluşturmadan mevcut siparişin teyidi istenir.
+- 11 Deno + 6 Bun testi geçti. Sentetik Playwright akışında yalnız bir sipariş ve bir Hoppa isteği yakalandı; 502 IP açıklaması göründü, ikinci tıklama yeni istek üretmedi. Bütün Supabase istekleri yakalandı, gerçek müşteri/test siparişi/tahsilat gönderilmedi.
+- hoppa-subscription başarıyla yayımlandı; gönderilen kaynak SHA256 b5663d2949cb0b9544f9bb25ab7988406f8b3ab202213f061902374a2253555b. Build OK. Gerçek hosted ödeme, yönetici işlemi ve Hostinger web yayını doğrulanmadı; IP yetkisi sağlayıcıda çözülmeyi bekliyor.
+- İzin, cron, merchant ve geçmiş ödenmiş/gönderilmiş/iptal edilmiş kayıtlar değişmedi. Geri dönüş: bu onay paketinin önceki web/Edge kaynak sürümünü yeniden yayımlama; veri migration'ı yok.

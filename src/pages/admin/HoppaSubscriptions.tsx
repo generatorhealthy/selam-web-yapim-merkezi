@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { paymentErrorMessage } from '@/lib/paymentError';
 
 const LABEL: Record<string, string> = {
   initializing: "Ödeme bekleniyor", active: "Aktif", card_missing: "Kart kayıtlı değil",
@@ -27,7 +28,8 @@ const HoppaSubscriptions = () => {
     setBusy(id);
     const { data, error } = await supabase.functions.invoke("hoppa-subscription", { body: { action, id } });
     setBusy(null);
-    toast({ title: error || data?.error ? "İşlem yapılamadı" : action === "cancel" ? "İptal edildi" : `Sonuç: ${data?.result}`, description: data?.error, variant: error || data?.error ? "destructive" : "default" });
+    const failed = error || data?.error || data?.result === 'unavailable';
+    toast({ title: failed ? "İşlem yapılamadı" : action === "cancel" ? "İptal edildi" : `Sonuç: ${data?.result}`, description: failed ? await paymentErrorMessage(data, error) : undefined, variant: failed ? "destructive" : "default" });
     void load();
   };
   return (

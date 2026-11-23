@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { buildCommonPayment, buildSavedCardCharge, hoppa, isPaid, orderRef, pickUsableCard, type HoppaMerchant, type HoppaCustomer } from "../_shared/hoppaClient.ts";
-import { addMonth, chargeKey, nextRetry, paymentUrl } from "./logic.ts";
+import { addMonth, chargeKey, nextRetry, paymentUrl, providerFailure, requireCardList } from "./logic.ts";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 const db = createClient(URL_, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -37,7 +37,7 @@ async function start(orderId: string) {
   const c = { ...customerOf(o), city: o.customer_city ?? undefined, address: o.customer_address ?? undefined };
   const res = await hoppa.startCommonPayment(merchant(), buildCommonPayment(merchant(), ref, amount, `${FN}?action=callback&ref=${ref}`, c, `${o.package_name} - 1. ay`));
   const url = paymentUrl(res);
-  if (!url) { console.error("hoppa start", res?.RETURN_MESSAGE); return json({ error: "Ödeme sayfası açılamadı" }, 502); }
+  if (!url) { const failure = providerFailure(res); console.error("hoppa start", failure.code); return json(failure, 502); }
   return json({ url });
 }
 
@@ -46,29 +46,42 @@ async function callback(ref: string) {
   if (!/^DO[0-9a-f]{22}$/i.test(ref)) return go("hata");
   const { data: s } = await db.from("hoppa_subscriptions").select("*").eq("order_ref", ref).maybeSingle();
   if (!s) return go("hata");
-  if (s.status !== "initializing") return go(s.status === "card_missing" ? "kart-yok" : "ok");
+  if (s.status !== "initializing") return go(s.status === "needs_review" ? "kart-kontrol" : s.status === "card_missing" ? "kart-yok" : "ok");
   const q = await hoppa.processQuery(merchant(), ref).catch(() => null);
-  if (!isPaid(q)) { await db.from("hoppa_subscriptions").update({ last_error: q?.RETURN_MESSAGE ?? "ödeme doğrulanamadı" }).eq("id", s.id); return go("hata"); }
-  const card = pickUsableCard((await hoppa.listCardsByGsm(merchant(), s.customer_phone).catch(() => null))?.CARDS ?? null);
+  if (!isPaid(q)) { await db.from("hoppa_subscriptions").update({ last_error: providerFailure(q).error }).eq("id", s.id).eq("status", "initializing"); return go("hata"); }
+  let card: ReturnType<typeof pickUsableCard> = null;
+  let cardLookupFailed = false;
+  try {
+    const listed = await hoppa.listCardsByGsm(merchant(), s.customer_phone);
+    requireCardList(listed);
+    card = pickUsableCard(listed.CARDS);
+  } catch { cardLookupFailed = true; }
   const now = new Date();
   const { data: claimed } = await db.from("hoppa_subscriptions").update({
-    status: card ? "active" : "card_missing", card_unique_key: card?.UNIQUE_KEY ?? null, card_masked: card?.CARD_MASKED_NUMBER ?? null,
-    paid_months: 1, next_charge_at: addMonth(now).toISOString(), last_error: null,
+    status: cardLookupFailed ? "needs_review" : card ? "active" : "card_missing", card_unique_key: card?.UNIQUE_KEY ?? null, card_masked: card?.CARD_MASKED_NUMBER ?? null,
+    paid_months: 1, next_charge_at: addMonth(now).toISOString(), last_error: cardLookupFailed ? providerFailure(null).error : null,
   }).eq("id", s.id).eq("status", "initializing").select("id");
   if (claimed?.length) {
     await db.from("orders").update({ status: "approved", payment_status: "paid", approved_at: now.toISOString(), payment_transaction_id: ref }).eq("id", s.order_id).eq("status", "pending");
   }
-  return go(card ? "ok" : "kart-yok");
+  return go(cardLookupFailed ? "kart-kontrol" : card ? "ok" : "kart-yok");
 }
 
 async function chargeOne(s: any) {
+  // A failed lookup is not proof that no card exists. Do not consume an
+  // attempt or initiate a charge until the provider has returned a card list.
+  let listed: ReturnType<typeof pickUsableCard>;
+  try {
+    const response = await hoppa.listCardsByGsm(merchant(), s.customer_phone);
+    requireCardList(response);
+    listed = pickUsableCard(response.CARDS);
+  } catch { return "unavailable"; }
   const period = s.paid_months + 1;
   const key = chargeKey(s.id, period, s.failed_attempts);
   const ref = orderRef("DR", crypto.randomUUID());
   const { error: dup } = await db.from("hoppa_charges").insert({ subscription_id: s.id, charge_key: key, order_ref: ref, period, amount: s.monthly_amount });
   if (dup) return "skipped";
   let card = s.card_unique_key;
-  const listed = pickUsableCard((await hoppa.listCardsByGsm(merchant(), s.customer_phone).catch(() => null))?.CARDS ?? null);
   if (listed) card = listed.UNIQUE_KEY;
   let r: any = null, unknown = false;
   if (card) {
@@ -96,7 +109,7 @@ async function chargeOne(s: any) {
     return "paid";
   }
   const failed = s.failed_attempts + 1, retry = nextRetry(failed, now);
-  const msg = card ? (r?.RETURN_MESSAGE ?? "Çekim reddedildi") : "Kayıtlı kart bulunamadı";
+  const msg = card ? providerFailure(r).error : "Kayıtlı kart bulunamadı";
   await db.from("hoppa_charges").update({ status: "failed", error: msg }).eq("charge_key", key);
   await db.from("hoppa_subscriptions").update({ failed_attempts: failed, last_error: msg,
     status: retry ? "retrying" : "failed", next_charge_at: retry ? retry.toISOString() : s.next_charge_at }).eq("id", s.id);
@@ -139,5 +152,5 @@ Deno.serve(async (req) => {
       return json({ result: await chargeOne(s) });
     }
     return json({ error: "Geçersiz istek" }, 400);
-  } catch (e) { console.error(e); return json({ error: "Beklenmeyen hata" }, 500); }
+  } catch { console.error("hoppa provider_unavailable"); return json(providerFailure(null), 500); }
 });

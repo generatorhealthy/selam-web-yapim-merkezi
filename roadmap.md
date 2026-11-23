@@ -1,7 +1,7 @@
 # 23 Kasım 2026 — Hoppa ödeme sayfası açılmıyor
 - [x] 10:47:54 UTC hoppa-subscription canlı hata kaydı doğrulandı: Hoppa sunucu çıkış IP'sine işlem izni vermiyor. Sipariş ve kart ekranı değil, sağlayıcı IP yetkilendirmesi engeli.
 - [x] İlgili tüm Checkout adresleri, ödeme dönüşü, admin tekrar deneme, günlük cron, ortak dört Hoppa isteği ve canlı sipariş koruma/aktivasyon/fatura işlevleri koddan okundu. Bulgular .lovable/reviews/hoppa-ip-sweep-2026-11-23.md içinde. Deno testindeki iki dönüş tipi düzeltildi; uygulama davranışı değişmedi.
-- [ ] Hata yanıtını Checkout ve admin ekranına güvenli aktarma, kart listeleme bağlantı hatasını kart yokluğu saymama ve ilk ödeme tekrarının sessiz durmasını açıklama: ayrı kullanıcı akışı/Edge yayını onayı gerekir; otomatik yayınlanan Edge dosyalarına dokunulmadı.
+- [x] Kullanıcı 23 Kasım 10:56 UTC onayıyla güvenli hata aktarımı Checkout/admin'e uygulandı; kart listeleme bağlantı hatası kart yokluğu sayılmaz, başarısız sorguda çekim/deneme tüketimi yok; ilk ödeme dönüşünde kart sorgusu belirsizse needs_review ile otomatik çekim dışında kalır. URL alt metni ödenmiş saymaz; ikinci tıklama açıklanır. 17 test ve sentetik tarayıcı akışı geçti, build OK; hoppa-subscription başarıyla yayımlandı. Gerçek ödeme yapılmadı; Hostinger yeni web mesajlarının yayını ayrıca doğrulanmalı.
 - [ ] Hoppa ile Edge Function çıkış IP kısıtının güvenli çözümünün teyidi; ardından kullanıcının gerçek ödeme sayfası açılışını doğrulaması. Gerçek tahsilat/test müşteri kaydı gönderilmedi, ödeme veya erişim ayarları değiştirilmedi.
 
 # 23 Kasım 2026 — Ana sayfa renkleri ve kritik güvenlik uyarısı

@@ -158,8 +158,11 @@ const PaymentSuccess = () => {
                     ? 'Siparişiniz alınmıştır. Aşağıdaki hesap bilgilerine ödemenizi yapabilirsiniz.'
                     : verifiedPayment ? 'Ödemeniz doğrulandı. Üyelik durumunuzu uzman panelinizden kontrol edebilirsiniz.' : 'Bu sayfanın açılması ödemenin başarılı olduğunu göstermez. Yeniden ödeme yapmadan önce uzman panelinizden veya destek hattından durumunuzu teyit edin.'}
                 </p>
-                {cardNotice === 'kart-yok' && (
+                {cardNotice === 'kart-yok' && verifiedPayment && (
                   <p className="mt-3 rounded-md bg-muted p-3 text-sm text-foreground">İlk ödemeniz alındı ancak kartınız kaydedilmedi. Sonraki ayların otomatik ödenmesi için lütfen bizimle iletişime geçin.</p>
+                )}
+                {cardNotice === 'kart-kontrol' && (
+                  <p className="mt-3 rounded-md bg-muted p-3 text-sm text-foreground">Kart saklama durumu Hoppa bağlantısı nedeniyle teyit edilemedi. Yeniden ödeme yapmadan önce destek hattıyla iletişime geçin.</p>
                 )}
                 {cardNotice === 'hata' && (
                   <p className="mt-3 rounded-md bg-destructive/10 p-3 text-sm text-destructive">Kart ödemesi doğrulanamadı. Tekrar denemeden önce destek hattından durumu teyit edin.</p>
