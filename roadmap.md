@@ -648,3 +648,6 @@
 - [x] 1280/390 hızlı ve 3sn gecikmeli açılış, JS kapalı/tamamen engellenmiş uygulama, fallback uzman bağlantısı, yorumların kaydırma sonrası isteği ve canonical gezinmesi geçti; 4 yasal regresyon ve build OK.
 - [ ] Hostinger dağıtımı sonrası yeni PageSpeed/ilk açılış ölçümü — harici yayın tamamlanması ve GitHub yürütme erişimi gerekir; sıfır gecikme veya tüm PageSpeed uyarılarının giderildiği iddia edilmez.
 - [ ] Hoppa kartlı aylık abonelik — API zinciri denemede doğrulandı; bekleyen: Hoppa ödeme sayfasında "Kart bilgilerimi kaydet" seçeneğinin açılması
+
+# 23 Kasım 2026 — Hoppa kartlı abonelik
+- [ ] Kullanıcı denemesiz canlı kurulum istedi — Hoppa ödeme sayfasında "Kart bilgilerimi kaydet" seçeneği yok; açılmadan aylık çekim çalışamaz. Hoppa yanıtı bekleniyor.
