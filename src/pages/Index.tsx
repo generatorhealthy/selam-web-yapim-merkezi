@@ -136,20 +136,20 @@ const Index = () => {
 
       
       {/* Hero Section */}
-      <div className="hero-section above-fold bg-white text-gray-900 relative overflow-hidden min-h-[70vh] border-b border-gray-100">
+      <div className="hero-section above-fold bg-[image:var(--home-gradient)] text-primary-foreground relative overflow-hidden min-h-[70vh]">
         
         <div className="container mx-auto px-4 py-12 md:py-20 relative z-10">
           <div className="max-w-6xl mx-auto">
             <header className="text-center mb-8 md:mb-12">
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-gray-900">
+              <h1 className="text-3xl md:text-5xl font-bold text-primary-foreground">
                 Doktorum Ol ile Size Uygun Uzmanı Bulun
               </h1>
-              <p className="mt-4 text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+              <p className="mt-4 text-base md:text-lg text-primary-foreground/90 max-w-2xl mx-auto">
                 Psikolog, aile danışmanı, diyetisyen ve birçok branşta güvenilir uzmanlarla kolayca randevu alın.
               </p>
             </header>
             {/* Enhanced Search Form */}
-            <div ref={searchContainerRef} className="bg-white rounded-2xl p-6 md:p-10 shadow-sm mb-8 md:mb-12 mx-2 md:mx-0 border border-gray-200">
+            <div ref={searchContainerRef} className="bg-card/95 rounded-2xl p-6 md:p-10 shadow-sm mb-8 md:mb-12 mx-2 md:mx-0 border border-primary-foreground/20">
               <div className="space-y-6 md:space-y-8">
                 {/* Appointment Type Toggle */}
                 <div className="flex justify-center">
@@ -164,7 +164,7 @@ const Index = () => {
                         htmlFor="yüzyüze" 
                         className={`flex items-center justify-center gap-3 px-6 py-4 rounded-xl cursor-pointer transition-all duration-300 font-semibold text-base flex-1 group ${
                           appointmentType === "yüzyüze" 
-                            ? "bg-primary text-primary-foreground shadow-sm" 
+                            ? "bg-[image:var(--home-action-gradient)] text-primary-foreground shadow-sm" 
                             : "text-gray-600 hover:bg-white"
                         }`}
                       >
@@ -180,7 +180,7 @@ const Index = () => {
                         htmlFor="online" 
                         className={`flex items-center justify-center gap-3 px-6 py-4 rounded-xl cursor-pointer transition-all duration-300 font-semibold text-base flex-1 group ${
                           appointmentType === "online" 
-                            ? "bg-primary text-primary-foreground shadow-sm" 
+                            ? "bg-[image:var(--home-action-gradient)] text-primary-foreground shadow-sm" 
                             : "text-gray-600 hover:bg-white"
                         }`}
                       >
@@ -226,7 +226,7 @@ const Index = () => {
                   <div className="lg:col-span-3">
                     <Button 
                       onClick={handleSearch}
-                      className="w-full h-16 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg rounded-xl shadow-sm transition-colors"
+                      className="w-full h-16 bg-[image:var(--home-action-gradient)] hover:opacity-90 text-primary-foreground font-semibold text-lg rounded-xl shadow-sm transition-opacity"
                     >
                       <Search className="w-6 h-6 mr-3" />
                       <span className="hidden sm:inline">Randevu Ara</span>
@@ -326,13 +326,13 @@ const Index = () => {
 
             {/* Popular Specialties */}
             <div className="text-center px-2 md:px-0">
-              <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6 text-gray-800">Branşlar</h2>
+              <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6 text-primary-foreground">Branşlar</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3 max-w-6xl mx-auto">
                 {popularSpecialties.slice(0, 10).map((specialty, index) => (
                   <button
                     key={index}
                     onClick={() => handleSpecialtyClick(specialty)}
-                    className="px-2 py-2 md:px-4 md:py-3 bg-white text-gray-700 rounded-full hover:border-primary hover:text-primary transition-colors text-xs md:text-sm font-medium border border-gray-200 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
+                    className="px-2 py-2 md:px-4 md:py-3 bg-primary-foreground/10 text-primary-foreground rounded-full hover:bg-primary-foreground/20 transition-colors text-xs md:text-sm font-medium border border-primary-foreground/20 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
                     title={specialty.name}
                   >
                     <span className="block truncate px-1">{specialty.name}</span>
@@ -340,7 +340,7 @@ const Index = () => {
                 ))}
                 <button
                   onClick={() => navigate('/uzmanlar')}
-                  className="px-2 py-2 md:px-4 md:py-3 bg-gray-100 text-gray-800 rounded-full hover:bg-gray-200 transition-colors text-xs md:text-sm font-medium border border-gray-200 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
+                  className="px-2 py-2 md:px-4 md:py-3 bg-primary-foreground/20 text-primary-foreground rounded-full hover:bg-primary-foreground/30 transition-colors text-xs md:text-sm font-medium border border-primary-foreground/30 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center text-center leading-tight"
                 >
                   <span className="block truncate px-1">Tümünü Göster</span>
                 </button>

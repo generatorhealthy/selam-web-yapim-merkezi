@@ -1,3 +1,8 @@
+# 23 Kasım 2026 — Ana sayfa renkleri ve kritik güvenlik uyarısı
+- [ ] Ana sayfanın önceki renklerini mevcut işleyişi koruyarak geri getir ve telefon/bilgisayarda doğrula.
+- [ ] Üç ayrıcalıklı işlevin canlı tanımını doğrula; gereksiz dinamik sorgu için güvenli düzeltme ve test hazırla.
+- [ ] Hazırlanan erişim düzeltmesinin canlı yayını için ayrı onay al.
+
 # 22 Kasım 2026 — Paket sayfasında içerik listesi
 - [ ] /ozel-firsat paket kartındaki "paketin içindekiler" listesi 656 piksel gibi dar genişliklerde tek sütuna düşüyordu; 640 pikselden itibaren iki sütuna geçecek şekilde üç sayfada (SpecialOfferNew, SpecialOffer, RegistrationLinkOffer) düzeltildi. 656'da 15 satır → 8 satır, yatay taşma 0, metin kesilmesi yok; 390 pikselde okunabilirlik için tek sütun korundu. Kullanıcı onayı ve Hostinger yayını bekliyor.
 

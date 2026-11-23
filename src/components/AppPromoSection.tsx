@@ -28,17 +28,17 @@ const Phone = ({ className = "", children }: { className?: string; children: Rea
 const Line = ({ w = "w-full", c = "bg-gray-200" }: { w?: string; c?: string }) => <div className={`h-1.5 rounded-full ${c} ${w}`} />;
 
 const AppPromoSection = () => (
-  <section className="relative overflow-hidden bg-gray-50 py-16 border-y border-gray-200">
+  <section className="relative overflow-hidden bg-[image:var(--home-app-gradient)] py-16">
     <div className="container mx-auto px-4 relative">
       <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-        <div className="text-gray-900 min-w-0">
-          <span className="inline-flex items-center gap-2 bg-white border border-gray-200 text-primary rounded-full px-3 py-1 text-xs font-semibold mb-4">
+        <div className="text-primary-foreground min-w-0">
+          <span className="inline-flex items-center gap-2 bg-primary-foreground/15 border border-primary-foreground/25 rounded-full px-3 py-1 text-xs font-semibold mb-4">
             <Bell className="w-3.5 h-3.5" /> Yeni · Mobil Uygulama
           </span>
-          <h2 className="text-3xl lg:text-4xl font-bold leading-tight text-gray-900">
+          <h2 className="text-3xl lg:text-4xl font-bold leading-tight text-primary-foreground">
             Doktorum Ol<br />Mobil Uygulaması
           </h2>
-          <p className="mt-4 text-gray-600 leading-relaxed max-w-lg">
+          <p className="mt-4 text-primary-foreground/90 leading-relaxed max-w-lg">
             Sağlık hizmetlerine erişim artık çok daha kolay! Randevularınızı yönetin, uzmanlarla iletişime geçin ve sağlık içeriklerine her an ulaşın.
           </p>
           <ul className="mt-6 space-y-3">
@@ -48,10 +48,10 @@ const AppPromoSection = () => (
               ["Güncel ", "sağlık içeriklerine", " anında erişim"],
             ].map(([a, b, c], i) => (
               <li key={i} className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 text-primary flex items-center justify-center flex-shrink-0">
+                <span className="w-7 h-7 rounded-full bg-primary-foreground/20 flex items-center justify-center flex-shrink-0">
                   <Check className="w-4 h-4" />
                 </span>
-                <span className="text-gray-600">{a}<strong className="text-gray-900">{b}</strong>{c}</span>
+                <span className="text-primary-foreground/90">{a}<strong className="text-primary-foreground">{b}</strong>{c}</span>
               </li>
             ))}
           </ul>

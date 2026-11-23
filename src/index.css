@@ -89,6 +89,18 @@ All colors MUST be HSL.
     --primary: 214 88% 50%;
     --primary-foreground: 0 0% 100%;
 
+    /* Existing home palette, restored without changing the page layout. */
+    --home-blue: 221 83% 53%;
+    --home-indigo: 243 75% 59%;
+    --home-purple: 271 81% 56%;
+    --home-purple-deep: 272 72% 47%;
+    --home-gradient: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--home-blue)), hsl(var(--home-purple-deep)));
+    --home-action-gradient: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--home-blue)), hsl(var(--home-purple)));
+    --home-nav-gradient: linear-gradient(90deg, hsl(var(--home-blue)), hsl(var(--home-indigo)));
+    --home-app-gradient: linear-gradient(135deg, hsl(var(--home-blue)), hsl(217 91% 60%), hsl(var(--home-indigo)));
+    --home-soft-gradient: linear-gradient(135deg, hsl(var(--background)), hsl(var(--secondary)), hsl(270 100% 98%));
+    --home-title-gradient: linear-gradient(90deg, hsl(var(--foreground)), hsl(226 71% 40%), hsl(273 67% 32%));
+
     --secondary: 210 40% 96%;
     --secondary-foreground: 214 88% 45%;
 

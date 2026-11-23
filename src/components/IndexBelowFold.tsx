@@ -9,10 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import AppPromoSection from "@/components/AppPromoSection";
 
 const specialistTypes = [
-  { icon: Brain, title: "Psikolog", description: "Ruh sağlığı uzmanları", color: "bg-primary" },
-  { icon: Heart, title: "Aile Danışmanı", description: "Aile ve çift terapistleri", color: "bg-primary" },
+  { icon: Brain, title: "Psikolog", description: "Ruh sağlığı uzmanları", color: "bg-[image:var(--home-nav-gradient)]" },
+  { icon: Heart, title: "Aile Danışmanı", description: "Aile ve çift terapistleri", color: "bg-[image:var(--home-action-gradient)]" },
   { icon: Stethoscope, title: "Doktor", description: "Tıp doktorları", color: "bg-primary" },
-  { icon: Users2, title: "Uzman", description: "Diğer sağlık uzmanları", color: "bg-primary" },
+  { icon: Users2, title: "Uzman", description: "Diğer sağlık uzmanları", color: "bg-[image:var(--home-nav-gradient)]" },
 ];
 
 interface IndexBelowFoldProps {
@@ -64,7 +64,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
   return (
     <>
       {/* Mobile App Download Banner - sadece mobilde görünür */}
-      <section className="md:hidden relative py-8 px-4 overflow-hidden bg-gray-50 border-y border-gray-200">
+      <section className="md:hidden relative py-8 px-4 overflow-hidden bg-[image:var(--home-soft-gradient)] border-y border-border">
         <div className="max-w-md mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white border border-gray-200 text-primary px-4 py-1.5 rounded-full text-xs font-semibold mb-3">
             <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
@@ -115,14 +115,14 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
       </section>
 
       {/* How It Works Section */}
-      <div className="relative py-16 md:py-24 overflow-hidden bg-white">
+      <div className="relative py-16 md:py-24 overflow-hidden bg-[image:var(--home-soft-gradient)]">
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-14">
             <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-primary px-6 py-2 rounded-full text-sm font-semibold mb-6">
               <div className="w-2 h-2 bg-primary rounded-full"></div>
               3 Adım'da Uzmana Kavuş.
             </div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6 leading-tight">
+            <h2 className="text-3xl lg:text-4xl font-bold bg-[image:var(--home-title-gradient)] bg-clip-text text-transparent mb-6 leading-tight">
               Nasıl Çalışır?
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -144,7 +144,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
                     <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200 h-full">
                       <div className="relative z-10 text-center">
                         <div className="relative mb-6 inline-block">
-                          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto">
+                          <div className="w-16 h-16 bg-[image:var(--home-action-gradient)] rounded-full flex items-center justify-center mx-auto">
                             <span className="text-xl font-semibold text-primary-foreground">{step.num}</span>
                           </div>
                           <div className="absolute -top-2 -right-2 w-10 h-10 bg-blue-50 border border-blue-100 rounded-full flex items-center justify-center">
@@ -165,7 +165,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
             <div className="inline-flex flex-col items-center">
               <Button 
                 onClick={onSearch}
-                className="group bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg px-10 py-6 rounded-xl shadow-sm transition-colors"
+                className="group bg-[image:var(--home-nav-gradient)] hover:opacity-90 text-primary-foreground font-semibold text-lg px-10 py-6 rounded-xl shadow-sm transition-opacity"
               >
                 <span className="mr-3">Hemen Randevu Al</span>
                 <ArrowRight className="w-5 h-5" />
@@ -181,7 +181,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
       <AppPromoSection />
 
       {/* Reviews Section */}
-      <div ref={reviewsRef} className="bg-gray-50 py-16 border-y border-gray-200">
+      <div ref={reviewsRef} className="bg-[image:var(--home-soft-gradient)] py-16 border-y border-border">
         <div className="container mx-auto px-4">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
@@ -254,7 +254,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
       <div className="bg-white py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6 text-gray-900">Danışan Yönlendirme Platformu</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-6 bg-[image:var(--home-action-gradient)] bg-clip-text text-transparent">Danışan Yönlendirme Platformu</h2>
             <p className="text-lg text-gray-600 mb-12 leading-relaxed max-w-3xl mx-auto">
               Doktorumol.com.tr ile hastalarınıza daha iyi hizmet verin, randevu takibinizi kolaylaştırın ve online görüşme imkanlarıyla pratiğinizi genişletin.
             </p>
@@ -275,7 +275,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
           </div>
 
           <div className="relative mb-8 overflow-hidden">
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+            <div className="bg-[image:var(--home-soft-gradient)] border border-border rounded-2xl p-6 md:p-8 shadow-sm">
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex items-center gap-4 md:gap-6">
                     <div className="w-16 h-16 md:w-20 md:h-20 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
@@ -289,7 +289,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
                     </div>
                   </div>
                   <Link to="/ozel-firsat">
-                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg px-8 py-6 rounded-xl shadow-sm transition-colors whitespace-nowrap">
+                    <Button className="bg-[image:var(--home-action-gradient)] hover:opacity-90 text-primary-foreground font-semibold text-lg px-8 py-6 rounded-xl shadow-sm transition-opacity whitespace-nowrap">
                       <span>Detayları Gör</span>
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
@@ -335,7 +335,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
           </div>
 
           <div className="text-center">
-            <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg px-8 py-6 rounded-lg shadow-sm transition-colors">
+            <Button asChild className="bg-[image:var(--home-nav-gradient)] hover:opacity-90 text-primary-foreground font-semibold text-lg px-8 py-6 rounded-lg shadow-sm transition-opacity">
               <Link to="/ozel-firsat">
                 Detayları İncele
                 <ArrowRight className="w-5 h-5 ml-2" />
