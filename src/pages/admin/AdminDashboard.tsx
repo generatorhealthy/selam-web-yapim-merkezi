@@ -613,13 +613,13 @@ const AdminDashboard = () => {
       adminOnly: true
     },
     {
-      title: "İyzico Ödemeleri",
-      description: "Başarısız abonelik ödemelerini takip et ve yeniden dene",
+      title: "Hoppa Ödemeleri",
+      description: "Kartlı abonelikleri ve başarısız çekimleri takip et",
       icon: CreditCard,
       gradient: "from-violet-500 via-purple-500 to-indigo-600",
       bgGradient: "from-violet-50 to-indigo-50",
       shadowColor: "shadow-violet-500/20",
-      route: "/divan_paneli/iyzico-payments",
+      route: "/divan_paneli/kart-abonelikleri",
       buttonText: "Ödemeleri Görüntüle",
       adminOnly: true
     },
@@ -879,7 +879,7 @@ const AdminDashboard = () => {
                       { title: "Siparişler", route: "/divan_paneli/orders", icon: ShoppingCart, gradient: "from-pink-500 to-rose-600" },
                       { title: "Müşteri Yönetimi", route: "/divan_paneli/customers", icon: Users, gradient: "from-teal-500 to-cyan-600" },
                       { title: "Hukuki İşlemler", route: "/divan_paneli/legal-proceedings", icon: Scale, gradient: "from-rose-500 to-red-600" },
-                      { title: "İyzico Ödemeleri", route: "/divan_paneli/iyzico-payments", icon: CreditCard, gradient: "from-violet-500 to-indigo-600" },
+                      { title: "Hoppa Ödemeleri", route: "/divan_paneli/kart-abonelikleri", icon: CreditCard, gradient: "from-violet-500 to-indigo-600" },
                       { title: "Görüşme Raporları", route: "/divan_paneli/call-reports", icon: Phone, gradient: "from-rose-500 to-purple-600" },
                       { title: "Sözleşmeler", route: "/divan_paneli/contracts", icon: FileText, gradient: "from-emerald-500 to-teal-600" },
                       { title: "Danışan Takvimi", route: "/divan_paneli/client-calendar", icon: Calendar, gradient: "from-purple-500 to-blue-600" },

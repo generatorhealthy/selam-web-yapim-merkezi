@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Clock, CreditCard, RefreshCw } from "lucide-react";
 import { paymentErrorMessage } from '@/lib/paymentError';
 
 const LABEL: Record<string, string> = {
@@ -17,10 +19,14 @@ type Sub = { id: string; customer_name: string; customer_phone: string; package_
 const HoppaSubscriptions = () => {
   const { toast } = useToast();
   const [rows, setRows] = useState<Sub[]>([]);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const load = async () => {
+    setLoading(true);
     const { data } = await (supabase as any).from("hoppa_subscriptions").select("*").order("created_at", { ascending: false }).limit(200);
     setRows(data ?? []);
+    setLoading(false);
   };
   useEffect(() => { void load(); }, []);
   const act = async (id: string, action: "retry" | "cancel") => {
@@ -33,8 +39,23 @@ const HoppaSubscriptions = () => {
     void load();
   };
   return (
-    <div className="container mx-auto p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Kartlı Abonelikler</h1>
+    <div className="container mx-auto max-w-6xl p-4 space-y-6">
+      <Button variant="outline" size="sm" onClick={() => navigate("/divan_paneli")}><ArrowLeft className="h-4 w-4 mr-2" />Geri Dön</Button>
+      <div>
+        <h1 className="text-2xl font-bold text-primary">Hoppa Ödemeleri</h1>
+        <p className="text-sm text-muted-foreground">Kartlı abonelikleri takip edin, başarısız çekimleri yeniden deneyin</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card><CardContent className="flex items-center gap-3 p-4">
+          <div className="rounded-lg bg-primary/10 p-2"><Clock className="h-5 w-5 text-primary" /></div>
+          <div><div className="font-medium">Otomatik Çekim Aktif</div><div className="text-xs text-muted-foreground">Her gün 10:00'da; başarısız çekim 3. ve 7. gün tekrar denenir</div></div>
+        </CardContent></Card>
+        <Card><CardContent className="flex items-center gap-3 p-4">
+          <div className="rounded-lg bg-primary/10 p-2"><CreditCard className="h-5 w-5 text-primary" /></div>
+          <div className="flex-1"><div className="font-medium">Manuel Kontrol</div><div className="text-xs text-muted-foreground">Listeyi yenile ve durumu kontrol et</div></div>
+          <Button size="sm" disabled={loading} onClick={() => void load()}><RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />Kontrol Et</Button>
+        </CardContent></Card>
+      </div>
       {rows.length === 0 && <p className="text-muted-foreground">Henüz kartlı abonelik yok.</p>}
       {rows.map((s) => (
         <Card key={s.id}>
