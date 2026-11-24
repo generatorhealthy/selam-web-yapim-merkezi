@@ -38,3 +38,4 @@
 - Public appointments require atomic single-use phone proofs; preserve panel booking and historical rows, never grant account access through appointment OTP.
 - Install PBX observers only idle to protect calls.
 - CI preparation uses official HTTPS Ubuntu mirrors and bounded steps; SEO JSON requests bound headers and bodies and fail closed. Keep package signatures, 14-day asset retention and uninterrupted FTP concurrency; preparation timeouts must stop before uploading incomplete releases.
+- Hoppa card-missing recovery: /kart-kaydet?t=<card_save_token> pays the next month early on Hoppa's page (save-card ticked) and advances next_charge_at; SMS on first card_missing and one reminder per due date via the daily recurring cron — card data never touches our servers.

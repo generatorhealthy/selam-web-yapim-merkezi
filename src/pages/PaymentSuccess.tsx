@@ -28,6 +28,7 @@ const PaymentSuccess = () => {
   const [verifiedPayment, setVerifiedPayment] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [cardNotice] = useState(() => new URLSearchParams(window.location.search).get('kart'));
+  const [saveToken] = useState(() => new URLSearchParams(window.location.search).get('t'));
 
   const bankInfo = {
     accountName: "DOKTORUM OL BİLGİ VE TEKNOLOJİ HİZMETLERİ",
@@ -159,7 +160,11 @@ const PaymentSuccess = () => {
                     : verifiedPayment ? 'Ödemeniz doğrulandı. Üyelik durumunuzu uzman panelinizden kontrol edebilirsiniz.' : 'Bu sayfanın açılması ödemenin başarılı olduğunu göstermez. Yeniden ödeme yapmadan önce uzman panelinizden veya destek hattından durumunuzu teyit edin.'}
                 </p>
                 {cardNotice === 'kart-yok' && verifiedPayment && (
-                  <p className="mt-3 rounded-md bg-muted p-3 text-sm text-foreground">İlk ödemeniz alındı ancak kartınız kaydedilmedi. Sonraki ayların otomatik ödenmesi için lütfen bizimle iletişime geçin.</p>
+                  <div className="mt-3 rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-foreground space-y-3">
+                    <p className="font-semibold">Ödemeniz alındı, ancak kartınız kaydedilmedi. Aboneliğinizin her ay otomatik devam etmesi için kartınızı kaydedin.</p>
+                    <p>Kart kaydetme bağlantısını telefonunuza SMS olarak da gönderdik.</p>
+                    {saveToken && <Button asChild className="w-full"><a href={`/kart-kaydet?t=${saveToken}`}>Kartımı kaydet</a></Button>}
+                  </div>
                 )}
                 {cardNotice === 'kart-kontrol' && (
                   <p className="mt-3 rounded-md bg-muted p-3 text-sm text-foreground">Kart saklama durumu Hoppa bağlantısı nedeniyle teyit edilemedi. Yeniden ödeme yapmadan önce destek hattıyla iletişime geçin.</p>

@@ -35,6 +35,7 @@ import CampaignPremiumPackage from "./pages/CampaignPremiumPackage";
 import SpecialOffer from "./pages/SpecialOffer";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import CardSave from "./pages/CardSave";
 import Privacy from "./pages/Privacy";
 import DisclosureText from "./pages/DisclosureText";
 import ExplicitConsent from "./pages/ExplicitConsent";
@@ -187,6 +188,7 @@ const AppContent = () => {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/checkout/:packageType" element={<Checkout />} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
+              <Route path="/kart-kaydet" element={<CardSave />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
               <Route path="/privacy" element={<Privacy />} />
@@ -245,6 +247,7 @@ const AppContent = () => {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/checkout/:packageType" element={<Checkout />} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
+              <Route path="/kart-kaydet" element={<CardSave />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/gizlilik-politikasi" element={<Privacy />} />
               <Route path="/disclosure-text" element={legalCandidate("disclosure") ? <LegalPage document="disclosure" /> : <DisclosureText />} />

@@ -5381,6 +5381,10 @@ export type Database = {
         Row: {
           cancelled_at: string | null
           card_masked: string | null
+          card_missing_notified_at: string | null
+          card_reminder_for: string | null
+          card_save_ref: string | null
+          card_save_token: string | null
           card_unique_key: string | null
           created_at: string
           customer_email: string
@@ -5402,6 +5406,10 @@ export type Database = {
         Insert: {
           cancelled_at?: string | null
           card_masked?: string | null
+          card_missing_notified_at?: string | null
+          card_reminder_for?: string | null
+          card_save_ref?: string | null
+          card_save_token?: string | null
           card_unique_key?: string | null
           created_at?: string
           customer_email: string
@@ -5423,6 +5431,10 @@ export type Database = {
         Update: {
           cancelled_at?: string | null
           card_masked?: string | null
+          card_missing_notified_at?: string | null
+          card_reminder_for?: string | null
+          card_save_ref?: string | null
+          card_save_token?: string | null
           card_unique_key?: string | null
           created_at?: string
           customer_email?: string
