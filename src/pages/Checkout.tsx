@@ -35,8 +35,9 @@ const turkishCities = [
   "Yozgat", "Zonguldak"
 ];
 
-const Checkout = () => {
-  const { packageType: packageId } = useParams();
+const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
+  const { packageType: routePackage } = useParams();
+  const packageId = fixedPackage ?? routePackage;
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -47,8 +48,7 @@ const Checkout = () => {
   const [showPreInfoDialog, setShowPreInfoDialog] = useState(false);
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
-  // Kartla ödeme (Hoppa) önce deneme için yalnız ?kart=1 ile görünür.
-  const cardEnabled = new URLSearchParams(location.search).get("kart") === "1";
+  const cardEnabled = true;
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("bank_transfer");
   const [clientIP, setClientIP] = useState<string>("");
   const paymentLock = useRef(false);
@@ -166,7 +166,7 @@ const Checkout = () => {
       }
     }
 
-    if (!contractAccepted) {
+    if (!contractAccepted && !(selectedPackage as any).existingCustomer) {
       toast({
         title: "Sözleşme Onayı",
         description: "Devam etmek için sözleşmeleri kabul etmelisiniz.",
@@ -352,6 +352,7 @@ const Checkout = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <Helmet>
         <title>Ödeme Sayfası - Doktorumol</title>
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="description" content="Güvenli ödeme sayfası" />
       </Helmet>
 
@@ -629,16 +630,16 @@ const Checkout = () => {
                   <Separator />
 
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    {selectedPackage.originalPrice && <div className="flex justify-between">
                       <span>Paket Fiyatı:</span>
                       <span className="line-through text-muted-foreground">
                         ₺{selectedPackage.originalPrice?.toLocaleString('tr-TR')}
                       </span>
-                    </div>
-                    <div className="flex justify-between font-semibold text-lg">
+                    </div>}
+                    {selectedPackage.originalPrice && <div className="flex justify-between font-semibold text-lg">
                       <span>İndirimli Fiyat:</span>
                       <span className="text-primary">₺{selectedPackage.price.toLocaleString('tr-TR')}</span>
-                    </div>
+                    </div>}
                     <div className="flex justify-between font-bold text-xl border-t pt-2">
                       <span>Toplam:</span>
                       <span>₺{selectedPackage.price.toLocaleString('tr-TR')}</span>
@@ -649,7 +650,7 @@ const Checkout = () => {
 
                   {/* Sözleşme Onay Kısmı - SABİT KALACAK */}
                   <div className="space-y-3">
-                    <div className="flex items-start space-x-2">
+                    {!(selectedPackage as any).existingCustomer && <div className="flex items-start space-x-2">
                       <Checkbox
                         id="contract-acceptance"
                         checked={contractAccepted}
@@ -676,11 +677,11 @@ const Checkout = () => {
                         </button>
                         ni kabul ediyorum.
                       </Label>
-                    </div>
+                    </div>}
 
                     <Button
                       onClick={handlePaymentProcess}
-                      disabled={loading || !contractAccepted}
+                      disabled={loading || (!contractAccepted && !(selectedPackage as any).existingCustomer)}
                       className="w-full"
                       size="lg"
                     >

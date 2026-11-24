@@ -185,6 +185,12 @@ const AppContent = () => {
             <>
               <Route path="/odeme/:packageType" element={<Checkout />} />
               <Route path="/odeme-sayfasi" element={<Checkout />} />
+              <Route path="/aktif-odeme" element={<Checkout fixedPackage="aktif-odeme" />} />
+              <Route path="/abonelik-devami" element={<Checkout fixedPackage="abonelik-devami" />} />
+              <Route path="/odeme-linki" element={<Checkout fixedPackage="odeme-linki" />} />
+              <Route path="/blog/aktif-odeme" element={<Navigate to="/aktif-odeme" replace />} />
+              <Route path="/blog/abonelik-devami" element={<Navigate to="/abonelik-devami" replace />} />
+              <Route path="/blog/odeme-linki" element={<Navigate to="/odeme-linki" replace />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/checkout/:packageType" element={<Checkout />} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
@@ -244,6 +250,12 @@ const AppContent = () => {
               <Route path="/kayit-linki" element={<RegistrationLinkOffer />} />
               <Route path="/odeme/:packageType" element={<Checkout />} />
               <Route path="/odeme-sayfasi" element={<Checkout />} />
+              <Route path="/aktif-odeme" element={<Checkout fixedPackage="aktif-odeme" />} />
+              <Route path="/abonelik-devami" element={<Checkout fixedPackage="abonelik-devami" />} />
+              <Route path="/odeme-linki" element={<Checkout fixedPackage="odeme-linki" />} />
+              <Route path="/blog/aktif-odeme" element={<Navigate to="/aktif-odeme" replace />} />
+              <Route path="/blog/abonelik-devami" element={<Navigate to="/abonelik-devami" replace />} />
+              <Route path="/blog/odeme-linki" element={<Navigate to="/odeme-linki" replace />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/checkout/:packageType" element={<Checkout />} />
               <Route path="/odeme-basarili" element={<PaymentSuccess />} />
