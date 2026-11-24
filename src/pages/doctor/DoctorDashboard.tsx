@@ -394,7 +394,7 @@ const MembershipRequiredBanner = () => {
         <div className="lg:w-72 rounded-2xl bg-background border p-5 space-y-3">
           <p className="text-sm font-semibold text-foreground">Premium Paket · 12 Aylık</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-sm line-through text-muted-foreground">6.500 ₺</span>
+            <span className="text-sm line-through text-muted-foreground">8.500 ₺</span>
             <span className="text-3xl font-bold text-foreground">5.000 ₺</span>
             <span className="text-sm text-muted-foreground">/ aylık</span>
           </div>
