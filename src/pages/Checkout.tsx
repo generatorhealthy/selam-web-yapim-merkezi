@@ -557,6 +557,33 @@ const Checkout = () => {
                     </div>
                   )}
 
+                  {/* Ödeme Yöntemi */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Ödeme Yöntemi</Label>
+                    <div className={`grid gap-3 ${cardEnabled ? "grid-cols-2" : "grid-cols-1"}`}>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("bank_transfer")}
+                        aria-pressed={paymentMethod === "bank_transfer"}
+                        className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-4 text-sm font-semibold transition-colors ${paymentMethod === "bank_transfer" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:border-primary/50"}`}
+                      >
+                        <Banknote className="h-6 w-6" />
+                        Banka Havalesi
+                      </button>
+                      {cardEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod("credit_card")}
+                          aria-pressed={paymentMethod === "credit_card"}
+                          className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-4 text-sm font-semibold transition-colors ${paymentMethod === "credit_card" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:border-primary/50"}`}
+                        >
+                          <CreditCard className="h-6 w-6" />
+                          Kredi Kartı
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Davet Kodu (Opsiyonel) */}
                   <div className="p-4 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5">
                     <Label htmlFor="referralCode" className="text-sm font-semibold flex items-center gap-2">
@@ -578,41 +605,6 @@ const Checkout = () => {
                 </CardContent>
               </Card>
 
-              {/* Ödeme Yöntemi */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Banknote className="h-5 w-5" />
-                    Ödeme Yöntemi
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 gap-4">
-                    <Button
-                      type="button"
-                      variant={paymentMethod === "bank_transfer" ? "default" : "outline"}
-                      onClick={() => setPaymentMethod("bank_transfer")}
-                      className="h-auto p-4 justify-start"
-                    >
-                      <Banknote className="h-6 w-6 mr-3" />
-                      <div className="text-left">
-                        <div className="font-semibold">Banka Havalesi</div>
-                      </div>
-                    </Button>
-                    {cardEnabled && (
-                      <Button
-                        type="button"
-                        variant={paymentMethod === "credit_card" ? "default" : "outline"}
-                        onClick={() => setPaymentMethod("credit_card")}
-                        className="h-auto p-4 justify-start"
-                      >
-                        <CreditCard className="h-6 w-6 mr-3" />
-                        <span className="font-semibold">Kredi Kartı</span>
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Sağ Taraf - Özet */}
