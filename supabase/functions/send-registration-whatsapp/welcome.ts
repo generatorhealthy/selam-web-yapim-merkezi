@@ -35,6 +35,6 @@ export function buildWelcomeMessage(name: string, email: string) {
     `📲 *Play Store:*\nhttps://play.google.com/store/apps/details?id=app.lovable.doktorumol\n\n` +
     `Uygulamamızı indirerek yukarıdaki e-posta adresiniz ve kayıt sırasında belirlediğiniz şifrenizle uzman hesabınıza giriş yapabilirsiniz.\n\n` +
     `📌 Üyelik ödemenizi henüz tamamlamadıysanız profilinizin yayına alınması için ödemenizi tamamlayabilirsiniz:\n` +
-    `https://doktorumol.com.tr/ozel-firsat\n\n` +
+    `https://doktorumol.com.tr/kayit-linki\n\n` +
     `Saygılarımızla,\n*Doktorumol.com.tr Ekibi* 👨‍⚕️👩‍⚕️`;
 }

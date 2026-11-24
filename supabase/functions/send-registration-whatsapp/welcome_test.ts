@@ -1,4 +1,4 @@
-import { canReceiveWelcome, normalizePhoneToWa } from "./welcome.ts";
+import { canReceiveWelcome, normalizePhoneToWa, buildWelcomeMessage } from "./welcome.ts";
 
 const now = Date.parse("2026-10-06T12:00:00Z");
 const recipient = { user_id: "owner", phone: "0532 123 45 67", created_at: "2026-10-06T11:00:00Z" };
@@ -17,4 +17,9 @@ Deno.test("Welcome cannot expose another specialist's login email", () => {
 });
 Deno.test("Only registrations within 24 hours can receive welcome", () => {
   assert(!canReceiveWelcome({ ...recipient, created_at: "2026-10-05T11:59:59Z" }, "owner", "05321234567", now));
+});
+Deno.test("Welcome payment link points to the 5000 TL package page", () => {
+  const msg = buildWelcomeMessage("Ayşe Yılmaz", "ayse@example.invalid");
+  assert(msg.includes("https://doktorumol.com.tr/kayit-linki"));
+  assert(!msg.includes("/ozel-firsat"));
 });
