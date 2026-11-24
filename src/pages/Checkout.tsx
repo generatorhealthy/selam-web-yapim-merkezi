@@ -200,6 +200,8 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
   };
 
   const [redirecting, setRedirecting] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [showReferral, setShowReferral] = useState(false);
 
   const handlePaymentProcess = async () => {
     if (paymentLock.current || !validateForm()) return;
@@ -354,7 +356,7 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen bg-muted">
       <Helmet>
         <title>Ödeme Sayfası - Doktorumol</title>
         <meta name="robots" content="noindex, nofollow" />
@@ -363,341 +365,99 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
 
       <HorizontalNavigation />
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Geri Dön
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Ödeme Sayfası</h1>
+      <div className="mx-auto w-full max-w-md px-4 py-6">
+        <button type="button" onClick={() => navigate(-1)} className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
+          <ArrowLeft className="h-4 w-4" /> Geri
+        </button>
+
+        {/* Fiyat kartı */}
+        <div className="flex items-center justify-between rounded-2xl bg-card p-5 shadow-sm">
+          <div>
+            <div className="text-sm text-muted-foreground">{selectedPackage.name}</div>
+            <div className="text-2xl font-bold text-foreground">
+              {selectedPackage.price.toLocaleString('tr-TR')} ₺<span className="text-sm font-normal text-muted-foreground">/ay</span>
             </div>
+            {selectedPackage.originalPrice && <div className="text-xs text-muted-foreground line-through">{selectedPackage.originalPrice.toLocaleString('tr-TR')} ₺</div>}
           </div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Sol Taraf - Form */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Müşteri Tipi Seçimi */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Müşteri Bilgileri
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex gap-4">
-                    <Button
-                      type="button"
-                      variant={customerType === "individual" ? "default" : "outline"}
-                      onClick={() => setCustomerType("individual")}
-                      className={`flex-1 ${customerType === "individual" ? "bg-gray-900 hover:bg-gray-800 text-white" : "border-gray-300 hover:bg-gray-50"}`}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Bireysel
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={customerType === "company" ? "default" : "outline"}
-                      onClick={() => setCustomerType("company")}
-                      className={`flex-1 ${customerType === "company" ? "bg-gray-900 hover:bg-gray-800 text-white" : "border-gray-300 hover:bg-gray-50"}`}
-                    >
-                      <Building className="h-4 w-4 mr-2" />
-                      Kurumsal
-                    </Button>
-                  </div>
-
-                  {/* Kişisel Bilgiler */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Ad *</Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="Adınız"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="surname">Soyad *</Label>
-                      <Input
-                        id="surname"
-                        name="surname"
-                        value={formData.surname}
-                        onChange={handleInputChange}
-                        placeholder="Soyadınız"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="email">E-posta *</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder="ornek@email.com"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="gsmNumber">Telefon *</Label>
-                      <Input
-                        id="gsmNumber"
-                        name="gsmNumber"
-                        value={formData.gsmNumber}
-                        onChange={handleInputChange}
-                        placeholder="+905xxxxxxxxx"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="identityNumber">TC Kimlik No *</Label>
-                      <Input
-                        id="identityNumber"
-                        name="identityNumber"
-                        value={formData.identityNumber}
-                        onChange={handleInputChange}
-                        placeholder="12345678901"
-                        maxLength={11}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="city">Şehir *</Label>
-                      <Select value={formData.city} onValueChange={(value) => handleSelectChange('city', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Şehir seçin" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {turkishCities.map((city) => (
-                            <SelectItem key={city} value={city}>
-                              {city}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="zipCode">Posta Kodu</Label>
-                      <Input
-                        id="zipCode"
-                        name="zipCode"
-                        value={formData.zipCode}
-                        onChange={handleInputChange}
-                        placeholder="34100"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="address">Adres *</Label>
-                    <Textarea
-                      id="address"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      placeholder="Adresinizi girin"
-                      rows={2}
-                      required
-                    />
-                  </div>
-
-                  {/* Kurumsal Bilgiler */}
-                  {customerType === "company" && (
-                    <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                      <h4 className="font-semibold">Kurumsal Bilgiler</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="companyName">Firma Adı *</Label>
-                          <Input
-                            id="companyName"
-                            name="companyName"
-                            value={formData.companyName}
-                            onChange={handleInputChange}
-                            placeholder="Firma adı"
-                            required={customerType === "company"}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="taxNumber">Vergi Numarası *</Label>
-                          <Input
-                            id="taxNumber"
-                            name="taxNumber"
-                            value={formData.taxNumber}
-                            onChange={handleInputChange}
-                            placeholder="1234567890"
-                            required={customerType === "company"}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="taxOffice">Vergi Dairesi</Label>
-                        <Input
-                          id="taxOffice"
-                          name="taxOffice"
-                          value={formData.taxOffice}
-                          onChange={handleInputChange}
-                          placeholder="Vergi dairesi"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Ödeme Yöntemi */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Ödeme Yöntemi</Label>
-                    <div className={`grid gap-3 ${cardEnabled ? "grid-cols-2" : "grid-cols-1"}`}>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("bank_transfer")}
-                        aria-pressed={paymentMethod === "bank_transfer"}
-                        className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-4 text-sm font-semibold transition-colors ${paymentMethod === "bank_transfer" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:border-primary/50"}`}
-                      >
-                        <Banknote className="h-6 w-6" />
-                        Banka Havalesi
-                      </button>
-                      {cardEnabled && (
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod("credit_card")}
-                          aria-pressed={paymentMethod === "credit_card"}
-                          className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-4 text-sm font-semibold transition-colors ${paymentMethod === "credit_card" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:border-primary/50"}`}
-                        >
-                          <CreditCard className="h-6 w-6" />
-                          Kredi Kartı
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Davet Kodu (Opsiyonel) */}
-                  <div className="p-4 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5">
-                    <Label htmlFor="referralCode" className="text-sm font-semibold flex items-center gap-2">
-                      🎁 Davet Kodu (Opsiyonel)
-                    </Label>
-                    <p className="text-xs text-muted-foreground mt-1 mb-2">
-                      Bir uzman sizi davet ettiyse kodunu girin. Kayıt sonrası bu kod otomatik bağlanır.
-                    </p>
-                    <Input
-                      id="referralCode"
-                      name="referralCode"
-                      value={formData.referralCode}
-                      onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value.toUpperCase() }))}
-                      placeholder="Örn: A1B2C3D4"
-                      maxLength={8}
-                      className="uppercase tracking-wider font-mono"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-            </div>
-
-            {/* Sağ Taraf - Özet */}
-            <div className="space-y-6">
-              <Card className="sticky top-4">
-                <CardHeader>
-                  <CardTitle>Sipariş Özeti</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h4 className="font-semibold">{selectedPackage.name}</h4>
-                    <div className="text-sm text-muted-foreground">
-                      {selectedPackage.features?.slice(0, 3).map((feature: string, index: number) => (
-                        <div key={index}>• {feature}</div>
-                      ))}
-                      {selectedPackage.features?.length > 3 && (
-                        <div>... ve {selectedPackage.features.length - 3} özellik daha</div>
-                      )}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    {selectedPackage.originalPrice && <div className="flex justify-between">
-                      <span>Paket Fiyatı:</span>
-                      <span className="line-through text-muted-foreground">
-                        ₺{selectedPackage.originalPrice?.toLocaleString('tr-TR')}
-                      </span>
-                    </div>}
-                    {selectedPackage.originalPrice && <div className="flex justify-between font-semibold text-lg">
-                      <span>İndirimli Fiyat:</span>
-                      <span className="text-primary">₺{selectedPackage.price.toLocaleString('tr-TR')}</span>
-                    </div>}
-                    <div className="flex justify-between font-bold text-xl border-t pt-2">
-                      <span>Toplam:</span>
-                      <span>₺{selectedPackage.price.toLocaleString('tr-TR')}</span>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Sözleşme Onay Kısmı - SABİT KALACAK */}
-                  <div className="space-y-3">
-                    {!(selectedPackage as any).existingCustomer && <div className="flex items-start space-x-2">
-                      <Checkbox
-                        id="contract-acceptance"
-                        checked={contractAccepted}
-                        onCheckedChange={(checked) => setContractAccepted(checked === true)}
-                      />
-                      <Label 
-                        htmlFor="contract-acceptance" 
-                        className="text-sm leading-relaxed cursor-pointer"
-                      >
-                        <button
-                          type="button"
-                          onClick={handlePreInfoLinkClick}
-                          className="text-primary underline hover:no-underline"
-                        >
-                          Ön Bilgilendirme Formu
-                        </button>
-                        {" ve "}
-                        <button
-                          type="button"
-                          onClick={handleDistanceSalesLinkClick}
-                          className="text-primary underline hover:no-underline"
-                        >
-                          Mesafeli Satış Sözleşmesi
-                        </button>
-                        ni kabul ediyorum.
-                      </Label>
-                    </div>}
-
-                    <Button
-                      onClick={handlePaymentProcess}
-                      disabled={loading || (!contractAccepted && !(selectedPackage as any).existingCustomer)}
-                      className="w-full"
-                      size="lg"
-                    >
-                      {loading ? "İşleniyor..." : paymentMethod === "credit_card" ? "Kartla Öde" : "Banka Havalesi ile Öde"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          {selectedPackage.originalPrice && selectedPackage.originalPrice > selectedPackage.price && (
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              %{Math.round((1 - selectedPackage.price / selectedPackage.originalPrice) * 100)} indirim
+            </span>
+          )}
         </div>
+
+        {/* Ödeme yöntemi */}
+        <div className="mb-2 mt-6 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Ödeme yöntemi</div>
+        <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card shadow-sm">
+          {([["credit_card", "Kredi Kartı", CreditCard], ["bank_transfer", "Banka Havalesi", Banknote]] as const).map(([val, label, Icon]) => (
+            <button key={val} type="button" onClick={() => setPaymentMethod(val)} aria-pressed={paymentMethod === val}
+              className="flex w-full items-center justify-between px-4 py-3.5 text-left text-base text-foreground">
+              <span className="flex items-center gap-3"><Icon className="h-5 w-5 text-primary" />{label}</span>
+              <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === val ? "border-primary" : "border-border"}`}>
+                {paymentMethod === val && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Fatura bilgileri */}
+        <div className="mb-2 mt-6 flex items-center justify-between px-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Fatura bilgileri</span>
+          <button type="button" className="text-sm text-primary" onClick={() => setCustomerType(customerType === "company" ? "individual" : "company")}>
+            {customerType === "company" ? "‹ Bireysel" : "Kurumsal ›"}
+          </button>
+        </div>
+        <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card shadow-sm [&_input]:h-12 [&_input]:rounded-none [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-4 [&_input]:text-base [&_input]:shadow-none [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0">
+          {customerType === "company" && <>
+            <Input aria-label="Firma adı" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Firma adı" />
+            <Input aria-label="Vergi numarası" name="taxNumber" value={formData.taxNumber} onChange={handleInputChange} placeholder="Vergi numarası" />
+            <Input aria-label="Vergi dairesi" name="taxOffice" value={formData.taxOffice} onChange={handleInputChange} placeholder="Vergi dairesi" />
+          </>}
+          <Input aria-label="Ad Soyad" autoComplete="name" value={fullName} onChange={(e) => {
+            const v = e.target.value; setFullName(v);
+            const parts = v.trim().split(/\s+/);
+            setFormData(prev => ({ ...prev, name: parts.length > 1 ? parts.slice(0, -1).join(" ") : parts[0] || "", surname: parts.length > 1 ? parts[parts.length - 1] : "" }));
+          }} placeholder="Ad Soyad" />
+          <Input aria-label="E-posta" name="email" type="email" autoComplete="email" value={formData.email} onChange={handleInputChange} placeholder="E-posta" />
+          <Input aria-label="Telefon" name="gsmNumber" type="tel" autoComplete="tel" value={formData.gsmNumber} onChange={handleInputChange} placeholder="Telefon (05xx xxx xx xx)" />
+          <Input aria-label="TC Kimlik No" name="identityNumber" inputMode="numeric" value={formData.identityNumber} onChange={handleInputChange} placeholder="TC Kimlik No" maxLength={11} />
+          <Select value={formData.city} onValueChange={(value) => handleSelectChange('city', value)}>
+            <SelectTrigger aria-label="Şehir" className="h-12 rounded-none border-0 px-4 text-base shadow-none focus:ring-0 focus:ring-offset-0">
+              <SelectValue placeholder="Şehir seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {turkishCities.map((city) => <SelectItem key={city} value={city}>{city}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Textarea aria-label="Adres" name="address" autoComplete="street-address" value={formData.address} onChange={handleInputChange}
+            placeholder="Açık adres (mahalle, sokak, bina no, daire, ilçe)" rows={3}
+            className="resize-none rounded-none border-0 bg-transparent px-4 py-3 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0" />
+        </div>
+
+        {/* Davet kodu */}
+        {showReferral ? (
+          <Input className="mt-3 uppercase tracking-wider" aria-label="Davet kodu" value={formData.referralCode}
+            onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value.toUpperCase() }))} placeholder="Davet kodu (Örn: A1B2C3D4)" maxLength={8} />
+        ) : (
+          <button type="button" className="mt-3 px-1 text-sm text-primary" onClick={() => setShowReferral(true)}>Davet kodu ekle</button>
+        )}
+
+        {/* Sözleşme + buton */}
+        {!(selectedPackage as any).existingCustomer && (
+          <div className="mt-5 flex items-start gap-3 px-1">
+            <Checkbox id="contract-acceptance" className="mt-0.5" checked={contractAccepted} onCheckedChange={(c) => setContractAccepted(c === true)} />
+            <Label htmlFor="contract-acceptance" className="text-sm font-normal leading-relaxed text-muted-foreground">
+              <button type="button" onClick={handlePreInfoLinkClick} className="text-primary">Ön Bilgilendirme</button>
+              {" ve "}
+              <button type="button" onClick={handleDistanceSalesLinkClick} className="text-primary">Mesafeli Satış Sözleşmesi</button>
+              'ni kabul ediyorum.
+            </Label>
+          </div>
+        )}
+        <Button onClick={handlePaymentProcess} disabled={loading || (!contractAccepted && !(selectedPackage as any).existingCustomer)}
+          className="mt-4 h-14 w-full rounded-2xl text-base font-semibold" size="lg">
+          {loading ? "İşleniyor..." : paymentMethod === "credit_card" ? "Kredi Kartı ile Al" : "Banka Havalesi Olarak Al"}
+        </Button>
       </div>
 
       {redirecting && (
