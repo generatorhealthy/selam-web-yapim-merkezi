@@ -39,7 +39,7 @@ const HoppaSubscriptions = () => {
     void load();
   };
   return (
-    <div className="container mx-auto max-w-6xl p-4 space-y-6">
+    <div className="container mx-auto max-w-[1800px] p-4 space-y-6">
       <Button variant="outline" size="sm" onClick={() => navigate("/divan_paneli")}><ArrowLeft className="h-4 w-4 mr-2" />Geri Dön</Button>
       <div>
         <h1 className="text-2xl font-bold text-primary">Hoppa Ödemeleri</h1>
@@ -57,25 +57,29 @@ const HoppaSubscriptions = () => {
         </CardContent></Card>
       </div>
       {rows.length === 0 && <p className="text-muted-foreground">Henüz kartlı abonelik yok.</p>}
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
       {rows.map((s) => (
-        <Card key={s.id}>
-          <CardHeader className="pb-2"><CardTitle className="text-base flex flex-wrap items-center gap-2">
-            {s.customer_name} <Badge variant={s.status === "active" ? "default" : s.status === "failed" || s.status === "needs_review" ? "destructive" : "secondary"}>{LABEL[s.status] ?? s.status}</Badge>
-          </CardTitle></CardHeader>
-          <CardContent className="text-sm space-y-1">
-            <div>{s.package_name} · {Number(s.monthly_amount).toLocaleString("tr-TR")} ₺/ay · {s.paid_months} ay ödendi</div>
-            <div>Tel: {s.customer_phone} · Kart: {s.card_masked ?? "—"}</div>
-            <div>Sonraki çekim: {s.next_charge_at ? new Date(s.next_charge_at).toLocaleDateString("tr-TR") : "—"} · Başarısız deneme: {s.failed_attempts}</div>
-            {s.last_error && <div className="text-destructive">{s.last_error}</div>}
+        <Card key={s.id} className="flex flex-col">
+          <CardHeader className="p-3 pb-1 space-y-1"><CardTitle className="text-sm truncate" title={s.customer_name}>{s.customer_name}</CardTitle>
+            <Badge className="w-fit text-[10px]" variant={s.status === "active" ? "default" : s.status === "failed" || s.status === "needs_review" ? "destructive" : "secondary"}>{LABEL[s.status] ?? s.status}</Badge>
+          </CardHeader>
+          <CardContent className="p-3 pt-1 text-xs space-y-0.5 flex-1 flex flex-col">
+            <div className="truncate" title={s.package_name}>{s.package_name}</div>
+            <div className="font-medium">{Number(s.monthly_amount).toLocaleString("tr-TR")} ₺/ay · {s.paid_months} ay</div>
+            <div className="text-muted-foreground">{s.customer_phone}</div>
+            <div className="text-muted-foreground">Kart: {s.card_masked ?? "—"}</div>
+            <div className="text-muted-foreground">Sonraki: {s.next_charge_at ? new Date(s.next_charge_at).toLocaleDateString("tr-TR") : "—"} · Hata: {s.failed_attempts}</div>
+            {s.last_error && <div className="text-destructive line-clamp-2" title={s.last_error}>{s.last_error}</div>}
             {s.status !== "cancelled" && (
-              <div className="flex gap-2 pt-2">
-                {["failed", "retrying", "card_missing"].includes(s.status) && <Button size="sm" disabled={busy === s.id} onClick={() => act(s.id, "retry")}>Tekrar dene</Button>}
-                <Button size="sm" variant="outline" disabled={busy === s.id} onClick={() => act(s.id, "cancel")}>Aboneliği iptal et</Button>
+              <div className="flex flex-wrap gap-1 pt-2 mt-auto">
+                {["failed", "retrying", "card_missing"].includes(s.status) && <Button size="sm" className="h-7 px-2 text-xs" disabled={busy === s.id} onClick={() => act(s.id, "retry")}>Tekrar dene</Button>}
+                <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={busy === s.id} onClick={() => act(s.id, "cancel")}>İptal et</Button>
               </div>
             )}
           </CardContent>
         </Card>
       ))}
+      </div>
     </div>
   );
 };
