@@ -73,8 +73,13 @@ def validate_live(urls):
     checks = [(url, 200, None) for url in urls]
     checks.extend((SITE + path, status, target) for path, status, target in [
         ('/robots.txt', 200, None), ('/sitemap.xml', 200, None),
-        ('/yok-boyle-bir-sayfa-xyz', 404, None), ('/blog/yok-boyle-bir-sayfa-xyz', 404, None),
-        ('/psikolog/nur-seyda-peker', 404, None), ('/assets/seo-missing.js', 404, None),
+        ('/yok-boyle-bir-sayfa-xyz', 404, None),
+        # Content routes use the SPA when no prerender exists, so newly added
+        # posts/profiles remain reachable between deploys. The app decides
+        # whether the requested content exists; HTTP 200 here is intentional.
+        ('/blog/yok-boyle-bir-sayfa-xyz', 200, None),
+        ('/psikolog/nur-seyda-peker', 200, None), ('/uzmanlik/yeni-brans', 200, None),
+        ('/assets/seo-missing.js', 404, None), ('/seo-missing.txt', 404, None),
         ('/category/uzman-psikolog/', 301, '/uzmanlar'), ('/category/psikoloji/', 301, '/blog'),
         ('//', 301, '/'), ('/kayit-ol', 200, None), ('/giris-yap', 200, None),
         ('/checkout', 200, None), ('/doktor-paneli', 200, None), ('/divan_paneli', 200, None),
