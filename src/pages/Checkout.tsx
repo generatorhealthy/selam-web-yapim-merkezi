@@ -389,10 +389,10 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
         {/* Ödeme yöntemi */}
         <div className="mb-2 mt-6 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Ödeme yöntemi</div>
         <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card shadow-sm">
-          {([["credit_card", "Kredi Kartı", CreditCard], ["bank_transfer", "Banka Havalesi", Banknote]] as const).map(([val, label, Icon]) => (
+          {([["credit_card", "Kredi Kartı", "💳"], ["bank_transfer", "Banka Havalesi", "🏦"]] as const).map(([val, label, icon]) => (
             <button key={val} type="button" onClick={() => setPaymentMethod(val)} aria-pressed={paymentMethod === val}
               className="flex w-full items-center justify-between px-4 py-3.5 text-left text-base text-foreground">
-              <span className="flex items-center gap-3"><Icon className="h-5 w-5 text-primary" />{label}</span>
+              <span className="flex items-center gap-3"><span className="text-xl leading-none" aria-hidden="true">{icon}</span>{label}</span>
               <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === val ? "border-primary" : "border-border"}`}>
                 {paymentMethod === val && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
               </span>
