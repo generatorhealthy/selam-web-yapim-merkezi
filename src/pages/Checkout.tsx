@@ -199,9 +199,13 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
     return true;
   };
 
+  const [redirecting, setRedirecting] = useState(false);
+
   const handlePaymentProcess = async () => {
     if (paymentLock.current || !validateForm()) return;
     paymentLock.current = true;
+    if (paymentMethod === 'credit_card') setRedirecting(true);
+    let leaving = false;
     try {
       await checkoutAfterOrder(
         () => saveOrder(paymentMethod),
@@ -213,6 +217,7 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
               toast({ title: "Ödeme sayfası açılamadı", description: await paymentErrorMessage(data, error), variant: "destructive" });
               return;
             }
+            leaving = true;
             window.location.href = data.url;
             return;
           }
@@ -221,6 +226,7 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
       );
     } finally {
       paymentLock.current = false;
+      if (!leaving) setRedirecting(false);
     }
   };
 
@@ -282,7 +288,7 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
         const now = new Date();
         const orderDateTime = `${now.toLocaleDateString('tr-TR')} ${now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
         
-        await supabase.functions.invoke('send-new-order-sms', {
+        void supabase.functions.invoke('send-new-order-sms', {
           body: {
             customerName: `${formData.name} ${formData.surname}`,
             customerPhone: formData.gsmNumber,
@@ -293,7 +299,6 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
             customerCity: formData.city
           }
         });
-        console.log('Order notification SMS sent');
       } catch (smsError) {
         console.error('Failed to send order notification SMS:', smsError);
         // SMS hatası sipariş oluşturmayı engellemez
@@ -694,6 +699,14 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
           </div>
         </div>
       </div>
+
+      {redirecting && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/90 backdrop-blur-sm" role="status" aria-live="polite">
+          <div className="h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-lg font-semibold text-foreground">Güvenli ödeme sayfasına yönlendiriliyorsunuz…</p>
+          <p className="text-sm text-muted-foreground">Lütfen sayfayı kapatmayın.</p>
+        </div>
+      )}
 
       {/* Dialog'lar */}
       <ContractDialog
