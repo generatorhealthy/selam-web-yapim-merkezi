@@ -11,6 +11,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { awaitsAdminReview } from "@/lib/appointmentReview";
+import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Appointment {
@@ -127,10 +128,27 @@ const AppointmentManagement = () => {
         prev.map(a => a.id === appointmentId ? { ...a, ...data } : a)
       );
 
+      let smsSent = false;
+      if (newStatus === 'confirmed' && data.status === 'confirmed' && appointment.specialist_id && appointment.patient_phone) {
+        try {
+          const { data: sp } = await supabase.from('specialists')
+            .select('name, specialty, slug').eq('id', appointment.specialist_id).maybeSingle();
+          if (sp) {
+            const profileLink = `https://doktorumol.com.tr/${createSpecialtySlug(sp.specialty)}/${sp.slug || ''}`;
+            const { error: smsError } = await supabase.functions.invoke('send-sms-via-static-proxy', {
+              body: { phone: appointment.patient_phone, message: `Merhaba ${appointment.patient_name}, ${sp.name} ile randevunuz onaylandı. Uzman profili: ${profileLink}` }
+            });
+            smsSent = !smsError;
+          }
+        } catch (smsError) {
+          console.error('SMS error:', smsError);
+        }
+      }
+
       toast({
         title: "Başarılı",
         description: newStatus === 'confirmed'
-          ? "Randevu onaylandı."
+          ? (smsSent ? "Randevu onaylandı ve danışana SMS gönderildi." : "Randevu onaylandı; danışana SMS gönderilemedi.")
           : awaitsAdminReview(appointment) ? "Talep reddedildi; uzmana iletilmedi." : "Randevu durumu güncellendi.",
       });
     } catch (error) {

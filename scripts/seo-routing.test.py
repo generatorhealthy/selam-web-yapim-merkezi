@@ -108,9 +108,15 @@ Require all granted
         print(f'All {len(paths)} sitemap paths return 200 with the actual .htaccess')
 
     def test_nonexistent_pages_are_real_404(self):
-        for path in ['/yok-boyle-bir-sayfa-xyz', '/blog/yok-boyle-bir-sayfa-xyz', '/yazilar/yok-boyle-bir-sayfa-xyz', '/psikolog/nur-seyda-peker', '/uzmanlik/olmayan-brans', '/assets/missing.js', '/missing.txt']:
+        for path in ['/yok-boyle-bir-sayfa-xyz', '/yazilar/yok-boyle-bir-sayfa-xyz', '/assets/missing.js', '/missing.txt']:
             with self.subTest(path=path):
                 self.assertEqual(self.get(path).status_code, 404)
+
+    def test_content_added_after_deploy_opens_in_app(self):
+        # New posts/profiles/branches have no generated file until the next deploy.
+        for path in ['/blog/bu-sabah-yayinlanan-yazi', '/psikolog/yeni-onaylanan-uzman', '/uzmanlik/yeni-brans']:
+            with self.subTest(path=path):
+                self.assertEqual(self.get(path).status_code, 200)
 
     def test_categories_redirect_to_relevant_lists(self):
         for path, destination in [('/category/uzman-psikolog/', '/uzmanlar'), ('/category/psikoloji/', '/blog')]:

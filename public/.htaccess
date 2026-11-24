@@ -327,6 +327,13 @@ RewriteRule ^randevu-al/[^/]+/[^/]+$ /index.html [END,QSA]
 RewriteRule ^(?:test|test-al)/[^/]+(?:/[^/]+)?$ /index.html [END,QSA]
 RewriteRule ^test-sonuc/[^/]+/[^/]+$ /index.html [END,QSA]
 RewriteRule ^[^/]+/[^/]+/(?:uzmani-degerlendir|test/[^/]+)$ /index.html [END,QSA]
+# Content created after the last deploy (new blog posts, newly approved
+# specialists, new specialty pages) has no generated file yet; let the app
+# render it from live data instead of a dead 404 until the next deploy.
+RewriteRule ^(?:uzmanlar|blog)$ /index.html [END,QSA]
+RewriteRule ^blog/[A-Za-z0-9_-]+$ /index.html [END,QSA]
+RewriteRule ^uzmanlik/[a-z0-9-]+$ /index.html [END,QSA]
+RewriteRule ^[a-z0-9-]+/[A-Za-z0-9_-]+$ /index.html [END,QSA]
 
 # Serve real files (including robots/sitemap), but never mask a missing asset.
 RewriteCond %{REQUEST_FILENAME} !-f
