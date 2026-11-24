@@ -2,11 +2,79 @@ import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Star, Users, Calendar, Headphones, Globe, Clock, Shield, Award, Zap, Heart, Target, Crown, BookOpen } from "lucide-react";
+import { Check, Star, Users, Calendar, Headphones, Globe, Clock, Shield, Award, Zap, Heart, Target, Crown, BookOpen, BarChart3, ChevronDown, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { FeatureBox } from "@/components/FeatureBox";
+import { premiumFeatures, premiumPlusExtras } from "@/lib/newSaleCatalog";
+import { useState } from "react";
 import { registrationLinkPricing, registrationLinkDiscountPercent } from "@/lib/registrationLinkPricing";
+
+const VISIBLE = 6;
+
+type PlanCardProps = {
+  id: string; title: string; icon: React.ElementType; tagline: string;
+  price: number; originalPrice: number; features: string[]; baseFeatures?: string[];
+  intro?: string; featured?: boolean;
+};
+
+const PlanCard = ({ id, title, icon: Icon, tagline, price, originalPrice, features, baseFeatures, intro, featured }: PlanCardProps) => {
+  const [open, setOpen] = useState(false);
+  const shown = open ? features : features.slice(0, VISIBLE);
+  const hidden = features.length - VISIBLE;
+  return (
+    <div className={`rounded-3xl overflow-hidden bg-card shadow-2xl border-2 ${featured ? 'border-primary' : 'border-primary/30'}`}>
+      <div className="px-6 py-5 bg-gradient-to-r from-primary to-primary/70 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 text-2xl md:text-3xl font-bold text-primary-foreground">
+          <Icon className="w-7 h-7" /> {title}
+        </h3>
+        {featured && <Badge className="bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30">En Kapsamlı</Badge>}
+      </div>
+      <div className="p-6 space-y-5">
+        <p className="text-muted-foreground">{tagline}</p>
+        <div>
+          <div className="flex items-baseline gap-3">
+            <span className="text-4xl font-bold text-foreground">₺{price.toLocaleString('tr-TR')}</span>
+            <span className="text-lg text-muted-foreground line-through">₺{originalPrice.toLocaleString('tr-TR')}</span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">KDV hariç / Ay · 12 aylık abonelik</p>
+        </div>
+        <Link to={`/odeme/${id}`} state={{ packageData: { id } }} className="block">
+          <Button size="lg" className="w-full rounded-full py-6 text-lg font-semibold">{title} planı seçin</Button>
+        </Link>
+        <div className="flex gap-3">
+          <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+          <div>
+            <p className="font-semibold text-foreground">Akıllı Profil Yönetimi</p>
+            <p className="text-sm text-muted-foreground">Profilinizi saniyeler içinde profesyonelleştirin</p>
+          </div>
+        </div>
+        <div className="border-t border-border pt-4">
+          {intro && <p className="font-semibold text-foreground mb-3">{intro}</p>}
+          <ul className="space-y-3">
+            {shown.map((f) => (
+              <li key={f} className="flex items-center gap-3 text-foreground">
+                <span className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                  <Check className="w-4 h-4 text-primary-foreground" />
+                </span>
+                {f}
+              </li>
+            ))}
+          </ul>
+          {hidden > 0 && (
+            <button type="button" onClick={() => setOpen(!open)} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+              {open ? 'Daha az göster' : `Devamını gör (+${hidden})`}
+              <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+          )}
+          {baseFeatures && open && (
+            <p className="mt-3 text-xs text-muted-foreground">Premium paketteki {baseFeatures.length} özelliğin tamamı dahildir.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const RegistrationLinkOffer = () => {
   const handleWhatsAppContact = () => {
@@ -16,23 +84,6 @@ const RegistrationLinkOffer = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  const packageFeatures = [
-    "Her Ay Danışan Yönlendirme Garantisi",
-    "Detaylı Profil",
-    "Uzman Profili",
-    "İletişim",
-    "Adres ve Konum",
-    "Video Yayınlama",
-    "Danışan Görüşleri",
-    "Uzman Sayfasına Özgün Seo Çalışması",
-    "Online Randevu Takimi",
-    "Yapay Zeka Destekli Blog Sayfası",
-    "Sosyal Medya Paylaşımları",
-    "Danışan Takibi",
-    "Yapay Zeka Destekli Testler",
-    "SMS Hatırlatıcısı",
-    "Dahili Hat Tanımlama"
-  ];
 
   const statistics = [
     { number: "Her Ay", label: "Danışan Yönlendirme Garantisi", icon: Target },
@@ -117,103 +168,28 @@ const RegistrationLinkOffer = () => {
             </div>
           </div>
           
-          {/* Main Package Card */}
-          <div className="max-w-4xl mx-auto">
-            <Card className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 overflow-hidden">
-              <CardHeader className="text-center p-8 bg-gradient-to-r from-primary/5 to-primary/10">
-                <div className="flex justify-center items-center gap-2 mb-4">
-                  <Crown className="w-8 h-8 text-primary" />
-                  <Badge className="bg-primary/20 text-primary border-primary/30 text-lg px-4 py-1">
-                    PREMIUM PAKET
-                  </Badge>
-                </div>
-                
-                <div className="text-center mb-6">
-                  <div className="flex items-center justify-center gap-3 mb-2">
-                    <span className="text-3xl md:text-4xl font-bold text-primary">{registrationLinkPricing.price}₺</span>
-                    <span className="text-xl text-muted-foreground line-through">{registrationLinkPricing.originalPrice}₺</span>
-                  </div>
-                  <Badge className="bg-red-100 text-red-700 border-red-200 text-sm px-3 py-1">
-                    %{registrationLinkDiscountPercent} İndirim - Özel Fırsat!
-                  </Badge>
-                </div>
-                
-                <p className="text-lg text-muted-foreground">
-                  12 Aylık Abonelik
-                </p>
-              </CardHeader>
-              
-              <CardContent className="p-8">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {packageFeatures.map((feature, index) => (
-                      <FeatureBox 
-                        key={index} 
-                        title={feature}
-                        variant={index === 0 ? "highlight" : "default"}
-                      />
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="mt-8 p-6 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl">
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    <Award className="w-6 h-6 text-primary" />
-                    <span className="font-semibold text-lg">Bu Paketi Neden Seçmelisiniz?</span>
-                  </div>
-                  <div className="grid md:grid-cols-3 gap-4 text-center">
-                    <div className="flex flex-col items-center">
-                      <Clock className="w-8 h-8 text-primary mb-2" />
-                      <span className="text-sm text-gray-600">Zamanınızı Tasarruf Edin</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <Target className="w-8 h-8 text-primary mb-2" />
-                      <span className="text-sm text-gray-600">Danışan Portföy Artışı</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <Globe className="w-8 h-8 text-primary mb-2" />
-                      <span className="text-sm text-gray-600">Online Görünürlüğünüzü Artırın</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-4 mt-8">
-                  <Link 
-                    to="/odeme/kayit-linki" 
-                    state={{
-                      packageData: {
-                        id: 'kayit-linki',
-                        name: "Premium Paket - Özel Fırsat",
-                        ...registrationLinkPricing,
-                        features: packageFeatures
-                      }
-                    }}
-                    className="flex-1"
-                  >
-                    <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-lg">
-                      <Crown className="w-5 h-5 mr-2" />
-                      Satın Al - 5000₺
-                    </Button>
-                  </Link>
-                  
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    onClick={handleWhatsAppContact}
-                    className="sm:w-auto border-primary text-primary hover:bg-primary hover:text-white py-4"
-                  >
-                    <Headphones className="w-5 h-5 mr-2" />
-                    WhatsApp Destek
-                  </Button>
-                </div>
-                
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <span className="font-semibold">Bilgilendirme:</span> Paket satın alımınız sonrası ekibimiz, profilinizin yayına alınması için sizinle iletişime geçecektir.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Package Cards */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto items-start">
+            <PlanCard
+              id="kayit-linki" title="Premium" icon={BarChart3}
+              tagline="Online görünürlüğünüzü güçlendirin ve daha fazla danışan kazanın."
+              price={registrationLinkPricing.price} originalPrice={registrationLinkPricing.originalPrice}
+              features={premiumFeatures}
+            />
+            <PlanCard
+              id="premium-plus" title="Premium Plus" icon={Crown} featured
+              tagline="Size özel web sitesi, alan adı ve kurumsal e-posta ile tam dijital kimlik."
+              price={7500} originalPrice={12500}
+              intro="Tüm Premium özellikleri ve:" features={premiumPlusExtras} baseFeatures={premiumFeatures}
+            />
+          </div>
+          <div className="max-w-5xl mx-auto mt-6 flex flex-col items-center gap-4">
+            <Button size="lg" variant="outline" onClick={handleWhatsAppContact} className="bg-white/90 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+              <Headphones className="w-5 h-5 mr-2" /> WhatsApp Destek
+            </Button>
+            <p className="text-sm text-white/90 text-center max-w-2xl">
+              <span className="font-semibold">Bilgilendirme:</span> Paket satın alımınız sonrası ekibimiz, profilinizin yayına alınması için sizinle iletişime geçecektir.
+            </p>
           </div>
         </div>
       </section>
