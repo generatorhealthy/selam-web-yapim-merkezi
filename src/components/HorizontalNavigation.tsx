@@ -119,7 +119,7 @@ export function HorizontalNavigation() {
   const navigationItems = [
     { path: "/", label: "Anasayfa" },
     { path: "/uzmanlar", label: "Uzmanlar" },
-    { path: "/ozel-firsat", label: "Fiyatlandırma" },
+    { path: "/kayit-linki", label: "Fiyatlandırma" },
     { path: "/blog", label: "Blog" },
     { path: "/iletisim", label: "İletişim" }
   ];

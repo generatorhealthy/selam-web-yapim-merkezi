@@ -76,7 +76,7 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
       try {
         const selected = newSalePackage(packageId ?? location.state?.packageData?.id);
         if (!selected) {
-          navigate('/ozel-firsat', { replace: true });
+          navigate('/kayit-linki', { replace: true });
           return;
         }
         // Navigation state may select an ID, but cannot supply price/name/scope.

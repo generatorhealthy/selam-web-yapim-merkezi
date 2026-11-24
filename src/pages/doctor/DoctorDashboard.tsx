@@ -395,14 +395,14 @@ const MembershipRequiredBanner = () => {
           <p className="text-sm font-semibold text-foreground">Premium Paket · 12 Aylık</p>
           <div className="flex items-baseline gap-2">
             <span className="text-sm line-through text-muted-foreground">6.500 ₺</span>
-            <span className="text-3xl font-bold text-foreground">4.000 ₺</span>
+            <span className="text-3xl font-bold text-foreground">5.000 ₺</span>
             <span className="text-sm text-muted-foreground">/ aylık</span>
           </div>
-          <p className="text-xs text-muted-foreground">12 ay taahhüt ile 6.500 ₺ yerine 4.000 ₺. Koşullar ödeme sayfasındaki sözleşmelerde yer alır.</p>
+          <p className="text-xs text-muted-foreground">12 ay taahhüt ile 8.500 ₺ yerine 5.000 ₺. Koşullar ödeme sayfasındaki sözleşmelerde yer alır.</p>
           <Button
             className="w-full h-12 rounded-xl font-semibold"
-            onClick={() => navigate('/odeme/ozel-firsat', {
-              state: { packageData: { id: 'ozel-firsat', name: 'Premium Paket - Özel Fırsat', price: 4000, originalPrice: 6500, features: MEMBERSHIP_FEATURES } },
+            onClick={() => navigate('/odeme/kayit-linki', {
+              state: { packageData: { id: 'kayit-linki', name: 'Premium Paket - Özel Fırsat', price: 5000, originalPrice: 8500, features: MEMBERSHIP_FEATURES } },
             })}
           >
             Paketi Satın Al

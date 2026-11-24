@@ -288,7 +288,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
                       <p className="text-gray-600 mt-2 text-sm md:text-base">Her ay danışan yönlendirme garantisi ile risksiz büyüme</p>
                     </div>
                   </div>
-                  <Link to="/ozel-firsat">
+                  <Link to="/kayit-linki">
                     <Button className="bg-[image:var(--home-action-gradient)] hover:opacity-90 text-primary-foreground font-semibold text-lg px-8 py-6 rounded-xl shadow-sm transition-opacity whitespace-nowrap">
                       <span>Detayları Gör</span>
                       <ArrowRight className="w-5 h-5 ml-2" />
@@ -336,7 +336,7 @@ const IndexBelowFold = ({ onSearch }: IndexBelowFoldProps) => {
 
           <div className="text-center">
             <Button asChild className="bg-[image:var(--home-nav-gradient)] hover:opacity-90 text-primary-foreground font-semibold text-lg px-8 py-6 rounded-lg shadow-sm transition-opacity">
-              <Link to="/ozel-firsat">
+              <Link to="/kayit-linki">
                 Detayları İncele
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>

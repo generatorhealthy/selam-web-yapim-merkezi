@@ -42,6 +42,7 @@ const SpecialOfferNew = () => {
   return (
     <>
       <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
         <title>Özel Fırsat - 4000₺ Doktor Randevu Sistemi | DoktorumOl</title>
         <meta name="description" content="Özel fırsat 4000₺'ye profesyonel doktor randevu sistemi! 7/24 online randevu, hasta takibi, SMS hatırlatma ve daha fazlası. Hemen başlayın!" />
         <meta name="keywords" content="doktor randevu sistemi, online randevu, hasta takibi, tıbbi yazılım, kampanya, 4000 tl" />

@@ -521,7 +521,7 @@ const SpecialistRegistration = () => {
       // SMS gönder (arka planda)
       if (phone) {
         try {
-          const smsMessage = `Sayın ${formData.name}, Doktorumol.com.tr profiliniz oluşturuldu. Profilinizin yayına alınması için ödemenizi tamamlayın: https://doktorumol.com.tr/ozel-firsat`;
+          const smsMessage = `Sayın ${formData.name}, Doktorumol.com.tr profiliniz oluşturuldu. Profilinizin yayına alınması için ödemenizi tamamlayın: https://doktorumol.com.tr/kayit-linki`;
           await sendSms(phone, smsMessage);
           console.log('Welcome SMS sent to', phone);
         } catch (smsErr) {
@@ -1185,13 +1185,13 @@ const SpecialistRegistration = () => {
                 </div>
 
                 <Button
-                  onClick={() => navigate('/odeme/ozel-firsat', {
+                  onClick={() => navigate('/odeme/kayit-linki', {
                     state: {
                       packageData: {
-                        id: 'ozel-firsat',
+                        id: 'kayit-linki',
                         name: "Premium Paket - Özel Fırsat",
-                        price: 4000,
-                        originalPrice: 6500,
+                        price: 5000,
+                        originalPrice: 8500,
                         features: packageFeatures
                       }
                     }

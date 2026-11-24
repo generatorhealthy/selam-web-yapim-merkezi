@@ -18,6 +18,8 @@ Disallow: /blog/aktif-odeme
 Disallow: /blog/abonelik-devami
 Disallow: /blog/odeme-linki
 Disallow: /kart-kaydet
+Disallow: /ozel-firsat
+Disallow: /blog/ozel-firsat
 Disallow: /kariyer
 Disallow: /partner
 Disallow: /partner-giris

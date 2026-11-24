@@ -97,7 +97,7 @@ const RegistrationForm = ({ isOpen, onClose }: RegistrationFormProps) => {
       toast.success("Başvurunuz başarıyla gönderildi! En kısa sürede size dönüş yapacağız.");
       
       // Özel fırsat sayfasına yönlendir
-      navigate('/ozel-firsat');
+      navigate('/kayit-linki');
       
       // Formu temizle ve kapat
       setFormData({
