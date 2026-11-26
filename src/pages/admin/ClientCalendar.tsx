@@ -59,6 +59,7 @@ const ClientCalendar = ({ embedded = false }: { embedded?: boolean } = {}) => {
       return next;
     });
   const [loading, setLoading] = useState(!calendarCache);
+  const [urgentTab, setUrgentTab] = useState<"other" | "diet">("other");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
@@ -314,6 +315,12 @@ const ClientCalendar = ({ embedded = false }: { embedded?: boolean } = {}) => {
       if (aNoReferral && bNoReferral) return a.daysUntilPayment - b.daysUntilPayment;
       return (b.daysSinceLastReferral!) - (a.daysSinceLastReferral!);
     });
+
+  const isDietitian = (s: SpecialistWithReferral) =>
+    (s.specialty || "").toLocaleLowerCase("tr-TR").includes("diyet");
+  const urgentDietitians = urgentSpecialists.filter(isDietitian);
+  const urgentOthers = urgentSpecialists.filter(s => !isDietitian(s));
+  const visibleUrgent = urgentTab === "diet" ? urgentDietitians : urgentOthers;
 
   const groupedByPaymentDay = specialists.reduce((acc, specialist) => {
     const day = specialist.payment_day || 0;
@@ -615,10 +622,25 @@ const ClientCalendar = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     </p>
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  {([["other", "Psikolog, Aile Danışmanı vb.", urgentOthers.length], ["diet", "Diyetisyenler", urgentDietitians.length]] as const).map(([key, label, count]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setUrgentTab(key)}
+                      className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${urgentTab === key ? "bg-white text-red-900" : "bg-red-800 text-red-100 hover:bg-red-700"}`}
+                    >
+                      {label} ({count})
+                    </button>
+                  ))}
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-red-800">
-                  {urgentSpecialists.map(specialist => {
+                  {visibleUrgent.length === 0 && (
+                    <p className="p-5 text-red-300 text-sm">Bu grupta acil yönlendirme bekleyen uzman yok.</p>
+                  )}
+                  {visibleUrgent.map(specialist => {
                     const consultation = getSpecialistConsultation(specialist);
                     return (
                     <div 
