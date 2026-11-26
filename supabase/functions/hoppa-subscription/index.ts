@@ -77,6 +77,7 @@ async function callback(ref: string) {
   let cardLookupFailed = false;
   try {
     const listed = await hoppa.listCardsByGsm(merchant(), s.customer_phone);
+    logCardShape("callback", listed);
     requireCardList(listed);
     card = pickUsableCard(listed.CARDS);
   } catch { cardLookupFailed = true; }
@@ -203,6 +204,26 @@ async function recurring() {
   return json({ processed: data?.length ?? 0, reminders, ...out });
 }
 
+function logCardShape(where: string, r: any) {
+  // Shape only: never log card numbers, keys or phones.
+  console.log("hoppa cards", where, JSON.stringify({ keys: r && typeof r === "object" ? Object.keys(r) : typeof r,
+    code: r?.RETURN_CODE, status: r?.STATUS, msg: typeof r?.RETURN_MESSAGE === "string" ? r.RETURN_MESSAGE.slice(0, 120) : undefined,
+    cards: Array.isArray(r?.CARDS) ? r.CARDS.length : r?.CARDS === null ? "null" : typeof r?.CARDS }));
+}
+
+async function recheck(id: string) {
+  const { data: s } = await db.from("hoppa_subscriptions").select("*").eq("id", id).maybeSingle();
+  if (!s || s.status !== "needs_review") return json({ error: "Kontrol gerekmiyor" }, 409);
+  const listed = await hoppa.listCardsByGsm(merchant(), s.customer_phone).catch(() => null);
+  logCardShape("recheck", listed);
+  if (!Array.isArray(listed?.CARDS)) return json({ result: "unknown" });
+  const card = pickUsableCard(listed.CARDS);
+  await db.from("hoppa_subscriptions").update({ status: card ? "active" : "card_missing", card_unique_key: card?.UNIQUE_KEY ?? null,
+    card_masked: card?.CARD_MASKED_NUMBER ?? null, last_error: null }).eq("id", s.id).eq("status", "needs_review");
+  if (!card) await notifyCardMissing(s);
+  return json({ result: card ? "active" : "card_missing" });
+}
+
 async function isAdmin(req: Request) {
   const token = req.headers.get("Authorization")?.replace("Bearer ", "");
   if (!token) return false;
@@ -223,6 +244,11 @@ Deno.serve(async (req) => {
     if (body.action === "recurring") return await recurring();
     if (body.action === "saveinfo") return await saveInfo(String(body.token ?? ""));
     if (body.action === "savestart") return await saveStart(String(body.token ?? ""));
+    if (body.action === "recheck") {
+      if (!(await isAdmin(req))) return json({ error: "Yetkisiz" }, 403);
+      if (!UUID.test(String(body.id))) return json({ error: "Geçersiz" }, 400);
+      return await recheck(String(body.id));
+    }
     if (body.action === "retry" || body.action === "cancel") {
       if (!(await isAdmin(req))) return json({ error: "Yetkisiz" }, 403);
       if (!UUID.test(String(body.id))) return json({ error: "Geçersiz" }, 400);

@@ -167,7 +167,7 @@ const PaymentSuccess = () => {
                   </div>
                 )}
                 {cardNotice === 'kart-kontrol' && (
-                  <p className="mt-3 rounded-md bg-muted p-3 text-sm text-foreground">Kart saklama durumu Hoppa bağlantısı nedeniyle teyit edilemedi. Yeniden ödeme yapmadan önce destek hattıyla iletişime geçin.</p>
+                  <p className="mt-3 rounded-md bg-muted p-3 text-sm text-foreground">Ödemeniz alındı. Kartınızın kayıt durumunu ekibimiz kontrol ediyor; tekrar ödeme yapmanıza gerek yoktur.</p>
                 )}
                 {cardNotice === 'hata' && (
                   <p className="mt-3 rounded-md bg-destructive/10 p-3 text-sm text-destructive">Kart ödemesi doğrulanamadı. Tekrar denemeden önce destek hattından durumu teyit edin.</p>

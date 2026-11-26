@@ -29,7 +29,7 @@ const HoppaSubscriptions = () => {
     setLoading(false);
   };
   useEffect(() => { void load(); }, []);
-  const act = async (id: string, action: "retry" | "cancel") => {
+  const act = async (id: string, action: "retry" | "cancel" | "recheck") => {
     if (action === "cancel" && !confirm("Abonelik iptal edilsin mi? Sonraki aylarda çekim yapılmaz.")) return;
     setBusy(id);
     const { data, error } = await supabase.functions.invoke("hoppa-subscription", { body: { action, id } });
@@ -72,6 +72,7 @@ const HoppaSubscriptions = () => {
             {s.last_error && <div className="text-destructive line-clamp-2" title={s.last_error}>{s.last_error}</div>}
             {s.status !== "cancelled" && (
               <div className="flex flex-wrap gap-1 pt-2 mt-auto">
+                {s.status === "needs_review" && <Button size="sm" className="h-7 px-2 text-xs" disabled={busy === s.id} onClick={() => act(s.id, "recheck")}>Kartı kontrol et</Button>}
                 {["failed", "retrying", "card_missing"].includes(s.status) && <Button size="sm" className="h-7 px-2 text-xs" disabled={busy === s.id} onClick={() => act(s.id, "retry")}>Tekrar dene</Button>}
                 <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={busy === s.id} onClick={() => act(s.id, "cancel")}>İptal et</Button>
               </div>
