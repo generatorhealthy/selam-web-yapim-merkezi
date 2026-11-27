@@ -10,7 +10,7 @@ test('mevcut müşteri linkleri sözleşme istemez', () => {
   for (const k of ['aktif-odeme', 'abonelik-devami', 'odeme-linki']) assert.equal(newSalePackage(k)?.existingCustomer, true);
   assert.notEqual(newSalePackage('ozel-firsat')?.existingCustomer, true);
 });
-test('yalnız tanımlı satış kimlikleri', () => assert.deepEqual(Object.keys(newSaleCatalog).sort(), ['abonelik-devami', 'aktif-odeme', 'kayit-linki', 'odeme-linki', 'ozel-firsat']));
+test('yalnız tanımlı satış kimlikleri', () => assert.deepEqual(Object.keys(newSaleCatalog).sort(), ['abonelik-devami', 'aktif-odeme', 'kayit-linki', 'odeme-linki', 'ozel-firsat', 'premium-plus']));
 test('eski ve miras nesne kimlikleri yeni satış değildir', () => {
   for (const key of ['campaign', 'premium', 'basic', 'professional', 'special-offer', 'campaign-premium', 'discounted', 'full', 'test-paket-link', '__proto__', 'constructor', '', null]) {
     assert.equal(newSalePackage(key), null);
