@@ -9759,6 +9759,9 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      staff_access_status: { Args: never; Returns: Json }
+      staff_access_window_open: { Args: { p_ts: string }; Returns: boolean }
+      staff_hours_ok: { Args: never; Returns: boolean }
       track_lead_event: {
         Args: {
           p_event_id?: string
