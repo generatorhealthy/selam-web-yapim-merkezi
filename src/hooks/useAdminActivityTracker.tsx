@@ -37,6 +37,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/divan_paneli/employee-salaries": "Çalışan Maaşları",
   "/divan_paneli/iyzico-payments": "İyzico Ödemeleri",
   "/divan_paneli/kart-abonelikleri": "Hoppa Ödemeleri",
+  "/divan_paneli/garanti-odemeleri": "Garanti BBVA Ödemeleri",
   "/divan_paneli/cancellation-fees": "Cayma Bedelleri",
   "/divan_paneli/specialist-applications": "Uzman Başvuruları",
   "/divan_paneli/staff-attendance": "Çalışma Saatleri",

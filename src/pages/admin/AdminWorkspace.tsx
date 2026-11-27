@@ -37,6 +37,7 @@ import PackageManagement from "./PackageManagement";
 import PartnerManagement from "./PartnerManagement";
 import PaymentManagement from "./PaymentManagement";
 import HoppaSubscriptions from "./HoppaSubscriptions";
+import GarantiPayments from "./GarantiPayments";
 import PbxManagement from "./PbxManagement";
 import PreInfoFormManagement from "./PreInfoFormManagement";
 import ProspectiveRegistrations from "./ProspectiveRegistrations";
@@ -93,6 +94,7 @@ const AdminWorkspace = () => (
       <Route path="reviews" element={<ReviewManagement />} />
       <Route path="payments" element={<PaymentManagement />} />
       <Route path="kart-abonelikleri" element={<HoppaSubscriptions />} />
+      <Route path="garanti-odemeleri" element={<GarantiPayments />} />
       <Route path="orders/new" element={<NewOrder />} />
       <Route path="orders" element={<OrderManagement />} />
       <Route path="banka-havalesi-bildirimleri" element={<BankTransferNotifications />} />

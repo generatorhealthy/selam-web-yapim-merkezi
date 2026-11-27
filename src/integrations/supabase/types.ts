@@ -4374,6 +4374,163 @@ export type Database = {
         }
         Relationships: []
       }
+      garanti_settings: {
+        Row: {
+          enabled: boolean
+          id: boolean
+          package_providers: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+          package_providers?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+          package_providers?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      garanti_subscriptions: {
+        Row: {
+          auth_code: string | null
+          bank_order_id: string
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          host_ref: string | null
+          id: string
+          is_test: boolean
+          last_error: string | null
+          last_error_code: string | null
+          monthly_amount: number
+          next_charge_at: string | null
+          order_id: string
+          package_name: string | null
+          paid_count: number
+          recurring_status: string
+          status: string
+          total_payments: number
+          updated_at: string
+        }
+        Insert: {
+          auth_code?: string | null
+          bank_order_id: string
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          host_ref?: string | null
+          id?: string
+          is_test?: boolean
+          last_error?: string | null
+          last_error_code?: string | null
+          monthly_amount: number
+          next_charge_at?: string | null
+          order_id: string
+          package_name?: string | null
+          paid_count?: number
+          recurring_status?: string
+          status?: string
+          total_payments?: number
+          updated_at?: string
+        }
+        Update: {
+          auth_code?: string | null
+          bank_order_id?: string
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          host_ref?: string | null
+          id?: string
+          is_test?: boolean
+          last_error?: string | null
+          last_error_code?: string | null
+          monthly_amount?: number
+          next_charge_at?: string | null
+          order_id?: string
+          package_name?: string | null
+          paid_count?: number
+          recurring_status?: string
+          status?: string
+          total_payments?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "garanti_subscriptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      garanti_transactions: {
+        Row: {
+          amount: number | null
+          auth_code: string | null
+          bank_order_id: string
+          created_at: string
+          error_message: string | null
+          hash_verified: boolean
+          host_ref: string | null
+          id: string
+          kind: string
+          md_status: string | null
+          proc_return_code: string | null
+          subscription_id: string | null
+          success: boolean
+        }
+        Insert: {
+          amount?: number | null
+          auth_code?: string | null
+          bank_order_id: string
+          created_at?: string
+          error_message?: string | null
+          hash_verified?: boolean
+          host_ref?: string | null
+          id?: string
+          kind: string
+          md_status?: string | null
+          proc_return_code?: string | null
+          subscription_id?: string | null
+          success?: boolean
+        }
+        Update: {
+          amount?: number | null
+          auth_code?: string | null
+          bank_order_id?: string
+          created_at?: string
+          error_message?: string | null
+          hash_verified?: boolean
+          host_ref?: string | null
+          id?: string
+          kind?: string
+          md_status?: string | null
+          proc_return_code?: string | null
+          subscription_id?: string | null
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "garanti_transactions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "garanti_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_test_consent_events: {
         Row: {
           action: string

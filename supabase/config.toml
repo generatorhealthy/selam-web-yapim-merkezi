@@ -222,3 +222,6 @@ verify_jwt = false
 
 [functions.lead-ivr-campaign]
 verify_jwt = false
+
+[functions.garanti-payment]
+verify_jwt = false

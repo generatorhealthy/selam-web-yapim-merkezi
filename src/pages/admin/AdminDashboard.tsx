@@ -880,6 +880,7 @@ const AdminDashboard = () => {
                       { title: "Müşteri Yönetimi", route: "/divan_paneli/customers", icon: Users, gradient: "from-teal-500 to-cyan-600" },
                       { title: "Hukuki İşlemler", route: "/divan_paneli/legal-proceedings", icon: Scale, gradient: "from-rose-500 to-red-600" },
                       { title: "Hoppa Ödemeleri", route: "/divan_paneli/kart-abonelikleri", icon: CreditCard, gradient: "from-violet-500 to-indigo-600" },
+                      { title: "Garanti BBVA Ödemeleri", route: "/divan_paneli/garanti-odemeleri", icon: CreditCard, gradient: "from-emerald-500 to-teal-600" },
                       { title: "Görüşme Raporları", route: "/divan_paneli/call-reports", icon: Phone, gradient: "from-rose-500 to-purple-600" },
                       { title: "Sözleşmeler", route: "/divan_paneli/contracts", icon: FileText, gradient: "from-emerald-500 to-teal-600" },
                       { title: "Danışan Takvimi", route: "/divan_paneli/client-calendar", icon: Calendar, gradient: "from-purple-500 to-blue-600" },
