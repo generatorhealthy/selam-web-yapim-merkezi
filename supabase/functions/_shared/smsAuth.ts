@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { staffWindowOpen } from "./staffHours.ts";
 
 // Who may send an SMS through the paid SMS gateway:
 //  - trusted server code / cron (service role key or x-cron-secret)
@@ -42,6 +43,9 @@ export async function verifySmsCaller(
     .select("role, is_approved")
     .eq("user_id", user.id)
     .maybeSingle();
+  if (profile?.role === "staff" && !staffWindowOpen()) {
+    return { ok: false, status: 403, error: "Personel hesapları yalnızca Pzt–Cmt 09:30–18:30 arasında kullanılabilir" };
+  }
   if (profile && PANEL_ROLES.includes(profile.role) && profile.is_approved === true) {
     return { ok: true };
   }

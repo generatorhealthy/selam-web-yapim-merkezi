@@ -112,6 +112,15 @@ const AdminAuth = () => {
         return;
       }
 
+      if (profile.role === 'staff') {
+        const { data: st } = await supabase.rpc('staff_access_status' as never);
+        if (!(st as { open?: boolean } | null)?.open) {
+          await supabase.auth.signOut();
+          toast({ title: "Mesai Dışı", description: "Personel hesapları yalnızca Pazartesi–Cumartesi 09:30–18:30 (İstanbul saati) arasında giriş yapabilir.", variant: "destructive" });
+          return;
+        }
+      }
+
       // Onay kontrolü
       if (!profile.is_approved) {
         await supabase.auth.signOut();

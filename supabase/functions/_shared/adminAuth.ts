@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { staffWindowOpen } from "./staffHours.ts";
 
 // Verifies that an incoming request is either:
 //  - a trusted server/cron call (Authorization Bearer == SERVICE_ROLE_KEY), or
@@ -57,6 +58,9 @@ export async function verifyAdminOrCron(
     .eq("user_id", user.id)
     .maybeSingle();
 
+  if (profile?.role === "staff" && !staffWindowOpen()) {
+    return { ok: false, status: 403, error: "Personel hesapları yalnızca Pzt–Cmt 09:30–18:30 arasında kullanılabilir" };
+  }
   if (!profile || !allowedRoles.includes(profile.role) || profile.is_approved !== true) {
     return { ok: false, status: 403, error: "Bu işlem için yetkiniz yok" };
   }

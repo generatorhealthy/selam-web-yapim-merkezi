@@ -121,6 +121,13 @@ const fetchProfile = async (user: User, parentSignal?: AbortSignal): Promise<Use
 
   if (error) throw error;
   const profile = panelProfiles?.[0];
+  if (profile?.role === "staff") {
+    const { data: st } = await supabase.rpc("staff_access_status" as never);
+    if (!(st as { open?: boolean } | null)?.open) {
+      await supabase.auth.signOut();
+      return FALLBACK_PROFILE;
+    }
+  }
   if (profile) return profile;
 
   const patientReq = timedSignal(PROFILE_REQUEST_TIMEOUT, parentSignal);
