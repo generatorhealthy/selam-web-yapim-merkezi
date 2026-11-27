@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.panel_gate_ok() FROM public, anon;

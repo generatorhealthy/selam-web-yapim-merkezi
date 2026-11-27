@@ -21,6 +21,36 @@ const AdminAuth = () => {
   const nextChallenge = useRef<Parameters<typeof solveLoginChallenge>[0] | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  // Divan gate: null = checking, true = code required before the form is shown.
+  const [gateRequired, setGateRequired] = useState<boolean | null>(null);
+  const [gateTicket, setGateTicket] = useState<string | null>(null);
+  const [gateCode, setGateCode] = useState("");
+  const [gateError, setGateError] = useState("");
+
+  useEffect(() => {
+    let alive = true;
+    supabase.functions.invoke('admin-panel-login', { body: { action: 'gate_status' } })
+      .then(({ data, error }) => { if (alive) setGateRequired(error ? true : data?.required === true); })
+      .catch(() => { if (alive) setGateRequired(true); });
+    return () => { alive = false; };
+  }, []);
+
+  const submitGate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitLock.current) return;
+    submitLock.current = true; setIsLoading(true); setGateError("");
+    try {
+      const res = await supabase.functions.invoke('admin-panel-login', { body: { action: 'gate', code: gateCode.trim() } });
+      if (res.error || !res.data?.ticket) {
+        let msg = 'Kod hatalı.';
+        try { msg = (await res.error?.context?.json())?.error || msg; } catch { /* generic */ }
+        setGateError(msg); setGateCode("");
+        return;
+      }
+      setGateTicket(res.data.ticket);
+    } catch { setGateError('Bağlantı hatası.'); }
+    finally { submitLock.current = false; setIsLoading(false); }
+  };
 
   const withTimeout = async <T,>(operation: () => Promise<T>, timeoutMs: number, message: string): Promise<T> => {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -61,12 +91,13 @@ const AdminAuth = () => {
       const solution = await solveLoginChallenge(ticket);
       nextChallenge.current = null;
       const response = await supabase.functions.invoke('admin-panel-login', {
-        body: { action: 'login', email: loginData.email, password: loginData.password, token: ticket.token, solution },
+        body: { action: 'login', email: loginData.email, password: loginData.password, token: ticket.token, solution, ...(gateTicket ? { gateTicket } : {}) },
       });
       if (response.error || !response.data?.session) {
         let failed = response.data;
         try { failed = await response.error?.context?.json(); } catch { /* Generic failure only. */ }
         if (failed?.token && failed?.challenge) nextChallenge.current = failed;
+        if (failed?.gate) { setGateTicket(null); setGateRequired(true); setGateError('Kodun süresi doldu, yeniden girin.'); return; }
         toast({ title: 'Giriş Hatası', description: 'Giriş doğrulanamadı. Bilgilerinizi kontrol edip tekrar deneyin.', variant: 'destructive' });
         return;
       }
@@ -184,6 +215,42 @@ const AdminAuth = () => {
       setIsLoading(false);
     }
   };
+
+  if (gateRequired === null || (gateRequired && !gateTicket)) {
+    return (
+      <>
+        <Helmet>
+          <title>Doktorum Ol</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-background flex items-center justify-center px-4">
+          {gateRequired === null ? (
+            <div className="h-10 w-48 rounded-md bg-muted animate-pulse" />
+          ) : (
+            <form onSubmit={submitGate} className="w-full max-w-xs space-y-3">
+              <Label htmlFor="gate-code" className="sr-only">Kod</Label>
+              <Input
+                id="gate-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                autoFocus
+                maxLength={12}
+                value={gateCode}
+                onChange={(e) => setGateCode(e.target.value)}
+                placeholder="Kod"
+                className="text-center tracking-[0.4em] text-lg"
+                disabled={isLoading}
+              />
+              {gateError && <p className="text-sm text-destructive text-center">{gateError}</p>}
+              <Button type="submit" className="w-full" disabled={isLoading || gateCode.trim().length < 6}>
+                {isLoading ? "..." : "Devam"}
+              </Button>
+            </form>
+          )}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

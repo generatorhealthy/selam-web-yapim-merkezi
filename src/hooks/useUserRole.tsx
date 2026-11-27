@@ -121,6 +121,13 @@ const fetchProfile = async (user: User, parentSignal?: AbortSignal): Promise<Use
 
   if (error) throw error;
   const profile = panelProfiles?.[0];
+  if (profile && ["admin", "staff", "legal", "muhasebe", "partner"].includes(profile.role)) {
+    const { data: gateOk, error: gateError } = await supabase.rpc("panel_gate_ok" as never);
+    if (!gateError && gateOk === false) {
+      await supabase.auth.signOut();
+      return FALLBACK_PROFILE;
+    }
+  }
   if (profile?.role === "staff") {
     const { data: st } = await supabase.rpc("staff_access_status" as never);
     if (!(st as { open?: boolean } | null)?.open) {
