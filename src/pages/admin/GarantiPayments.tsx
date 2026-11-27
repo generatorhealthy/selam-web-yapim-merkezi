@@ -11,7 +11,7 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 
 const PROVIDERS = { hoppa: "Hoppa", garanti: "Garanti BBVA", bank_transfer: "Yalnız Havale" } as const;
 const PACKAGES = { expert_os: "Expert OS (5.000 TL)", expert_os_plus: "Expert OS Plus (7.500 TL)" } as const;
-const STATUS: Record<string, string> = { initializing: "Ödeme bekleniyor", paid: "Ödendi", completed: "12 ödeme tamamlandı", failed: "Başarısız", cancelled: "İptal" };
+const STATUS: Record<string, string> = { refunded: "İade edildi", initializing: "Ödeme bekleniyor", paid: "Ödendi", completed: "12 ödeme tamamlandı", failed: "Başarısız", cancelled: "İptal" };
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString("tr-TR") : "—");
 
 const GarantiPayments = () => {
@@ -20,7 +20,7 @@ const GarantiPayments = () => {
   const [settings, setSettings] = useState<any>(null);
   const [subs, setSubs] = useState<any[]>([]);
   const [txns, setTxns] = useState<any[]>([]);
-  const [ctrlAmount, setCtrlAmount] = useState("1");
+  const [bankNote, setBankNote] = useState("");
   const [ctrlUser, setCtrlUser] = useState<"PROVAUT" | "PROVOOS">("PROVAUT");
   const [controls, setControls] = useState<any[]>([]);
   const db = supabase as any;
@@ -49,10 +49,10 @@ const GarantiPayments = () => {
     return data;
   };
   const startControl = async () => {
-    const amount = Number(ctrlAmount);
-    if (!(amount >= 1 && amount <= 10)) { toast({ title: "Tutar 1–10 TL arasında olmalı", variant: "destructive" }); return; }
+    const amount = 1;
+    if (bankNote.trim().length < 5) { toast({ title: "Bankanın canlı kontrol işlemine izin verdiğini not olarak yazın", variant: "destructive" }); return; }
     if (!confirm(`GERÇEK ${amount} TL tek seferlik kontrol tahsilatı yapılacak (${ctrlUser}). Abonelik veya 12 aylık talimat oluşmaz. Onaylıyor musunuz?`)) return;
-    const { data, error } = await supabase.functions.invoke("garanti-payment", { body: { action: "start_control", amount, provUser: ctrlUser, confirm: true } });
+    const { data, error } = await supabase.functions.invoke("garanti-payment", { body: { action: "start_control", amount, provUser: ctrlUser, confirm: true, bankApprovalNote: bankNote.trim() } });
     if (error || !data?.action) { toast({ title: "Başlatılamadı", description: data?.error, variant: "destructive" }); return; }
     const f = document.createElement("form");
     f.method = "POST"; f.action = data.action;
@@ -105,21 +105,23 @@ const GarantiPayments = () => {
         <CardHeader><CardTitle className="text-base">Kontrollü canlı ödeme (yalnız yönetici)</CardTitle></CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p className="text-xs text-muted-foreground">Tek seferlik 3D Secure tahsilat; sipariş, abonelik veya tekrarlı talimat oluşturmaz, paket fiyatını değiştirmez. Muhasebede “kontrol işlemi” olarak ayrı tutulur.</p>
+          <Input placeholder="Bankanın izin teyidi (kim, ne zaman, hangi kanal)" value={bankNote} onChange={(e) => setBankNote(e.target.value)} />
+          <p className="text-xs text-muted-foreground">PROVOOS yalnız PROVAUT denemesi kesin başarısız doğrulanınca açılır. Sonucu belirsiz işlem varken yeni tahsilat başlatılmaz; otomatik yeniden deneme yoktur.</p>
           <div className="flex flex-wrap items-center gap-2">
-            <Input className="w-24" type="number" min={1} max={10} value={ctrlAmount} onChange={(e) => setCtrlAmount(e.target.value)} />
-            <span>TL ·</span>
+            <span className="font-semibold">1 TL ·</span>
             {(["PROVAUT", "PROVOOS"] as const).map((u) => <Button key={u} size="sm" variant={ctrlUser === u ? "default" : "outline"} onClick={() => setCtrlUser(u)}>{u}</Button>)}
             <Button onClick={startControl}>Kontrol ödemesini başlat</Button>
           </div>
           {controls.map((c) => (
-            <div key={c.id} className="flex flex-wrap items-center gap-2 border-t pt-2">
+            <div key={c.id} className="border-t pt-2 space-y-2"><div className="flex flex-wrap items-center gap-2">
               <span>{new Date(c.created_at).toLocaleString("tr-TR")}</span><span>{c.bank_order_id}</span><span>{c.amount} TL · {c.prov_user}</span>
               <Badge variant={c.status === "paid" ? "default" : c.status === "failed" ? "destructive" : "outline"}>{STATUS[c.status] ?? c.status}</Badge>
               <span>Hash: {c.hash_verified ? "doğru" : "—"}</span>{c.refunded_amount > 0 && <span>İade: {c.refunded_amount} TL</span>}
               {c.error_message && <span className="text-destructive">{c.proc_return_code} {c.error_message}</span>}
               <Button size="sm" variant="outline" onClick={() => call({ action: "query", kind: "control", id: c.id }, "Banka sorgusu")}>Sorgula</Button>
-              {c.status === "paid" && <Button size="sm" variant="outline" onClick={() => refund("control", c.id, Number(c.amount) - Number(c.refunded_amount))}>İade</Button>}
+              {c.status === "paid" && <Button size="sm" variant="outline" onClick={() => refund("control", c.id, Number(c.amount) - Number(c.refunded_amount))}>Tam iade</Button>}
             </div>
+              <ControlDetails c={c} /></div>
           ))}
         </CardContent>
       </Card>
@@ -166,3 +168,18 @@ const GarantiPayments = () => {
   );
 };
 export default GarantiPayments;
+
+const MD: Record<string, string> = { "1": "Tam doğrulama", "2": "Kart/banka kayıtlı değil", "3": "Kart kayıtlı değil", "4": "Doğrulama denemesi", "0": "Doğrulama başarısız", "5": "Doğrulama yapılamadı", "7": "Sistem hatası" };
+function ControlDetails({ c }: { c: any }) {
+  const r = c.bank_response ?? {}, q = c.last_query?.summary, rf = c.refund_result;
+  const rows: [string, unknown][] = [
+    ["Banka işlem sonucu", r.response ?? (c.status === "paid" ? "Approved" : c.status === "initializing" ? "Dönüş bekleniyor" : "—")],
+    ["Banka cevap kodu", c.proc_return_code], ["Hata açıklaması", c.error_message], ["3D Secure", c.md_status ? `${c.md_status} – ${MD[c.md_status] ?? ""}` : null],
+    ["Hash doğrulama", c.hash_verified ? "Doğru" : c.status === "initializing" ? "—" : "Doğrulanmadı"], ["Sipariş no", c.bank_order_id],
+    ["Provizyon no", c.auth_code], ["Referans no", c.host_ref], ["Tahsil edilen", `${c.amount} TL`], ["İşlem tarihi", r.txn_time ?? new Date(c.created_at).toLocaleString("tr-TR")],
+    ["API kullanıcısı", c.prov_user], ["Kesin başarısız", c.status === "failed" ? (c.confirmed_failed ? "Evet" : "Hayır – Sorgula") : null], ["Banka izin notu", c.bank_approval_note],
+    ["Son sorgu", q ? `${new Date(c.last_query.at).toLocaleString("tr-TR")} · kod ${q.returnCode ?? "—"} · ${q.status ?? q.message ?? ""} · ${q.authAmount ?? ""}` : null],
+    ["İade", rf ? `${rf.ok ? "Onaylandı" : "Reddedildi"} · kod ${rf.code ?? "—"} ${rf.message ?? ""} · banka sorgusu: ${rf.verify ? JSON.stringify({ kod: rf.verify.returnCode, durum: rf.verify.status }) : "—"}` : null],
+  ];
+  return <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-1 text-xs">{rows.filter(([, v]) => v != null && v !== "").map(([k, v]) => <div key={k}><dt className="text-muted-foreground">{k}</dt><dd className="break-all">{String(v)}</dd></div>)}</dl>;
+}

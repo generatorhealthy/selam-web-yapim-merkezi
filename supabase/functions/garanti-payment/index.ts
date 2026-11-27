@@ -79,7 +79,12 @@ async function callback(req: Request) {
     const { data: c } = await db.from("garanti_control_payments").select("*").eq("bank_order_id", oid).maybeSingle();
     if (!c) return go("hata", true);
     const ok = verified && form["procreturncode"] === "00" && (!form["txnamount"] || form["txnamount"] === toKurus(Number(c.amount)));
-    await db.from("garanti_control_payments").update({ ...fields, status: ok ? "paid" : "failed", error_message: errText(ok), updated_at: now() }).eq("id", c.id).eq("status", "initializing");
+    // Only a hash-verified bank decline counts as a definite failure; anything else needs Sorgula before a new charge.
+    const bank_response = { response: form["response"] ?? null, proc_return_code: form["procreturncode"] ?? null, error_code: form["errorcode"] ?? null,
+      error_message: form["errmsg"] ?? null, md_status: form["mdstatus"] ?? null, md_error: form["mderrormessage"] ?? null, txn_amount: form["txnamount"] ?? null,
+      auth_code: form["authcode"] ?? null, host_ref: form["hostrefnum"] ?? null, txn_time: form["txntimestamp"] ?? now(), hash_verified: verified };
+    await db.from("garanti_control_payments").update({ ...fields, bank_response, status: ok ? "paid" : "failed", confirmed_failed: !ok && verified && !!form["procreturncode"],
+      error_message: errText(ok), updated_at: now() }).eq("id", c.id).eq("status", "initializing");
     return go(ok ? "ok" : "hata", true);
   }
   if (!/^GB[0-9A-F]{22}$/.test(oid)) return go("hata");
@@ -117,7 +122,8 @@ async function reconcile(s: any, ip: string) {
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("start"), orderId: z.string().uuid() }),
   z.object({ action: z.literal("settings"), enabled: z.boolean().optional(), package_providers: z.record(z.enum(["hoppa", "garanti", "bank_transfer"])).optional() }),
-  z.object({ action: z.literal("start_control"), amount: z.number().min(1).max(10), provUser: z.enum(["PROVAUT", "PROVOOS"]), confirm: z.literal(true) }),
+  z.object({ action: z.literal("start_control"), amount: z.literal(1), provUser: z.enum(["PROVAUT", "PROVOOS"]), confirm: z.literal(true),
+    bankApprovalNote: z.string().trim().min(5).max(300) }),
   z.object({ action: z.literal("query"), kind: z.enum(["subscription", "control"]), id: z.string().uuid() }),
   z.object({ action: z.literal("refund"), kind: z.enum(["subscription", "control"]), id: z.string().uuid(), amount: z.number().positive(), confirm: z.literal(true) }),
   z.object({ action: z.literal("recurring_cancel"), id: z.string().uuid(), stage: z.enum(["requested", "confirmed"]), note: z.string().min(3).max(300) }),
@@ -150,8 +156,16 @@ Deno.serve(async (req) => {
     return error ? json({ error: "Kaydedilemedi" }, 500) : json({ ok: true });
   }
   if (b.action === "start_control") {
+    const { data: prev } = await db.from("garanti_control_payments").select("prov_user,status,confirmed_failed").order("created_at", { ascending: false });
+    // Never start a second charge while an earlier outcome is unknown, paid-unrefunded handling is up to the admin, and no automatic retries exist.
+    if ((prev ?? []).some((p) => p.status === "initializing" || (p.status === "failed" && !p.confirmed_failed)))
+      return json({ error: "Önceki kontrol işleminin sonucu kesinleşmedi. Önce Sorgula ile bankadan doğrulayın." }, 409);
+    if (b.provUser === "PROVOOS" && !(prev ?? []).some((p) => p.prov_user === "PROVAUT" && p.status === "failed" && p.confirmed_failed))
+      return json({ error: "PROVOOS yalnız PROVAUT denemesinin kesin başarısız olduğu doğrulandıktan sonra kullanılabilir." }, 409);
+    if (b.provUser === "PROVAUT" && (prev ?? []).some((p) => p.prov_user === "PROVAUT" && ["paid", "refunded"].includes(p.status)))
+      return json({ error: "PROVAUT ile başarılı kontrol işlemi zaten var." }, 409);
     const bankOrderId = "GC" + crypto.randomUUID().replace(/-/g, "").slice(0, 22).toUpperCase();
-    const { error } = await db.from("garanti_control_payments").insert({ bank_order_id: bankOrderId, amount: b.amount, prov_user: b.provUser, started_by: adminId });
+    const { error } = await db.from("garanti_control_payments").insert({ bank_order_id: bankOrderId, amount: b.amount, prov_user: b.provUser, started_by: adminId, bank_approval_note: b.bankApprovalNote });
     if (error) return json({ error: "Kontrol ödemesi oluşturulamadı" }, 500);
     return json(await oosForm({ orderId: bankOrderId, amountTl: b.amount, email: "info@doktorumol.com.tr", ip: ipOf(req), recurring: false, provUser: b.provUser }));
   }
@@ -164,19 +178,31 @@ Deno.serve(async (req) => {
       if (table === "garanti_subscriptions") return json({ result: "ok", ...(await reconcile(row, ipOf(req))) });
       const raw = await xml("orderinq", row.bank_order_id, toKurus(Number(row.amount)), ipOf(req));
       const summary = summarize(raw);
-      await db.from(table).update({ last_query: { at: now(), summary }, updated_at: now() }).eq("id", row.id);
+      const patch: Record<string, unknown> = { last_query: { at: now(), summary }, updated_at: now() };
+      // Resolve an unknown outcome only from the bank's own answer.
+      if (row.status === "initializing" || (row.status === "failed" && !row.confirmed_failed)) {
+        if (summary.returnCode === "00" && summary.authAmount === toKurus(Number(row.amount))) Object.assign(patch, { status: "paid", auth_code: summary.authCode, host_ref: summary.retref, error_message: null });
+        else if (summary.returnCode) Object.assign(patch, { status: "failed", confirmed_failed: true, proc_return_code: summary.returnCode, error_message: (summary.errorMsg || summary.sysErr || summary.message || "Bankada onaylı satış yok").slice(0, 300) });
+      }
+      await db.from(table).update(patch).eq("id", row.id);
       return json({ result: "ok", summary });
     } catch { return json({ error: "Bankaya ulaşılamadı", result: "unavailable" }, 502); }
   }
   if (b.action === "refund") {
     const paidTotal = table === "garanti_subscriptions" ? Number(row.monthly_amount) : Number(row.amount);
-    if (!["paid", "completed"].includes(row.status)) return json({ error: "Yalnız ödenmiş işlemler iade edilebilir" }, 409);
+    if (!["paid", "completed"].includes(row.status) || (table === "garanti_control_payments" && Number(row.refunded_amount) > 0)) return json({ error: "Yalnız ödenmiş işlemler iade edilebilir" }, 409);
     if (b.amount + Number(row.refunded_amount) > paidTotal + 1e-9) return json({ error: "İade tutarı ödenen tutarı aşamaz" }, 409);
     let raw: string;
     try { raw = await xml("refund", row.bank_order_id, toKurus(b.amount), ipOf(req)); } catch { return json({ error: "Banka yanıtı alınamadı; iadeyi tekrar denemeden önce Sorgula ile kontrol edin.", result: "unknown" }, 502); }
     const summary = summarize(raw);
     const ok = summary.returnCode === "00";
     if (ok) await db.from(table).update({ refunded_amount: Number(row.refunded_amount) + b.amount, updated_at: now() }).eq("id", row.id);
+    if (table === "garanti_control_payments") {
+      let verify: unknown = null; // re-read from the bank so the refund is confirmed independently of the refund reply
+      try { if (ok) verify = summarize(await xml("orderinq", row.bank_order_id, toKurus(Number(row.amount)), ipOf(req))); } catch { verify = { error: "Sorgu yapılamadı" }; }
+      await db.from(table).update({ refund_result: { at: now(), ok, code: summary.returnCode, message: summary.errorMsg || summary.sysErr || summary.message, retref: summary.retref, verify },
+        ...(ok && Number(row.refunded_amount) + b.amount >= Number(row.amount) - 1e-9 ? { status: "refunded" } : {}) }).eq("id", row.id);
+    }
     if (table === "garanti_subscriptions") await db.from("garanti_transactions").insert({ subscription_id: row.id, bank_order_id: row.bank_order_id, kind: "refund", amount: b.amount, success: ok,
       proc_return_code: summary.returnCode, host_ref: summary.retref, error_message: ok ? null : (summary.errorMsg || summary.sysErr || "İade reddedildi").slice(0, 300) });
     return json(ok ? { result: "ok", summary } : { error: summary.errorMsg || summary.sysErr || "İade reddedildi", code: summary.returnCode }, ok ? 200 : 409);

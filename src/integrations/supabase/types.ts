@@ -4378,7 +4378,10 @@ export type Database = {
         Row: {
           amount: number
           auth_code: string | null
+          bank_approval_note: string | null
           bank_order_id: string
+          bank_response: Json | null
+          confirmed_failed: boolean
           created_at: string
           error_message: string | null
           hash_verified: boolean
@@ -4388,6 +4391,7 @@ export type Database = {
           md_status: string | null
           proc_return_code: string | null
           prov_user: string
+          refund_result: Json | null
           refunded_amount: number
           started_by: string | null
           status: string
@@ -4396,7 +4400,10 @@ export type Database = {
         Insert: {
           amount: number
           auth_code?: string | null
+          bank_approval_note?: string | null
           bank_order_id: string
+          bank_response?: Json | null
+          confirmed_failed?: boolean
           created_at?: string
           error_message?: string | null
           hash_verified?: boolean
@@ -4406,6 +4413,7 @@ export type Database = {
           md_status?: string | null
           proc_return_code?: string | null
           prov_user: string
+          refund_result?: Json | null
           refunded_amount?: number
           started_by?: string | null
           status?: string
@@ -4414,7 +4422,10 @@ export type Database = {
         Update: {
           amount?: number
           auth_code?: string | null
+          bank_approval_note?: string | null
           bank_order_id?: string
+          bank_response?: Json | null
+          confirmed_failed?: boolean
           created_at?: string
           error_message?: string | null
           hash_verified?: boolean
@@ -4424,6 +4435,7 @@ export type Database = {
           md_status?: string | null
           proc_return_code?: string | null
           prov_user?: string
+          refund_result?: Json | null
           refunded_amount?: number
           started_by?: string | null
           status?: string
