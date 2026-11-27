@@ -48,6 +48,9 @@ const PlanCard = ({ id, title, icon: Icon, tagline, price, originalPrice, featur
             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">12 Aylık Abonelik</span>
           </div>
         </div>
+        <Link to={`/odeme/${id}`} state={{ packageData: { id } }} className="block">
+          <Button size="lg" variant={featured ? 'default' : 'outline'} className="w-full rounded-full py-6 text-lg font-semibold border-2 border-primary">{title} planı seçin →</Button>
+        </Link>
         <div className="flex gap-3">
           <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
           <div>
@@ -77,9 +80,6 @@ const PlanCard = ({ id, title, icon: Icon, tagline, price, originalPrice, featur
             <p className="mt-3 text-xs text-muted-foreground">Premium paketteki {baseFeatures.length} özelliğin tamamı dahildir.</p>
           )}
         </div>
-        <Link to={`/odeme/${id}`} state={{ packageData: { id } }} className="block">
-          <Button size="lg" variant={featured ? 'default' : 'outline'} className="w-full rounded-full py-6 text-lg font-semibold border-2 border-primary">{title} planı seçin →</Button>
-        </Link>
       </div>
     </div>
   );
