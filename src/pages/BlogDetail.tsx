@@ -14,6 +14,7 @@ import BlogSpecialistCard from "@/components/BlogSpecialistCard";
 import { Helmet } from "react-helmet-async";
 import { SafeHtmlContent } from "@/components/SafeHtmlContent";
 import { Capacitor } from "@capacitor/core";
+import { EDITOR_LABEL, authorDisplayName } from "@/lib/authorLabel";
 
 const isNativeApp = Capacitor.isNativePlatform();
 
@@ -287,9 +288,9 @@ const BlogDetail = () => {
       };
     }
     return {
-      name: 'Doktorum Ol Sağlık İçerik Editörleri',
-      title: 'Sağlık İçerik Editörleri',
-      displayName: 'Doktorum Ol Sağlık İçerik Editörleri',
+      name: EDITOR_LABEL,
+      title: EDITOR_LABEL,
+      displayName: EDITOR_LABEL,
       type: 'editorial' as const,
     };
   }, [blog, specialist]);
@@ -472,7 +473,7 @@ const BlogDetail = () => {
               : { "@type": "Person", "name": blog.author_name },
             "reviewedBy": reviewer && reviewer.type === 'specialist'
               ? { "@type": "Person", "name": reviewer.name, "jobTitle": reviewer.title }
-              : { "@type": "Organization", "name": "Doktorum Ol Sağlık İçerik Editörleri" },
+              : { "@type": "Organization", "name": EDITOR_LABEL },
             "publisher": {
               "@id": "https://doktorumol.com.tr/#organization"
             }
@@ -545,13 +546,9 @@ const BlogDetail = () => {
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">
-                    {blog.author_name === 'Admin' || blog.author_name === 'admin' 
-                      ? 'Sağlık İçerik Editörü'
-                      : blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                        ? 'Sağlık İçerik Editörü' 
-                        : blog.author_type === 'specialist' && blog.specialists?.specialty
-                          ? blog.specialists.specialty
-                          : blog.author_name}
+                    {blog.author_type === 'specialist' && blog.specialists?.specialty
+                      ? blog.specialists.specialty
+                      : authorDisplayName(blog.author_name, blog.author_type)}
                   </span>
                 </div>
               </div>
@@ -711,13 +708,7 @@ const BlogDetail = () => {
               {/* Author Info */}
               <div>
                 <h3 className="font-semibold text-lg mb-2">
-                  {blog.author_name === 'Admin' || blog.author_name === 'admin' 
-                    ? 'Doktorum Ol Sağlık İçerik Editörleri'
-                    : blog.author_type === 'specialist' 
-                      ? blog.author_name
-                      : (blog.author_type === 'admin' || blog.author_type === 'staff' || blog.author_type === 'editor' 
-                        ? 'Doktorum Ol Sağlık İçerik Editörleri' 
-                        : blog.author_name)}
+                  {authorDisplayName(blog.author_name, blog.author_type)}
                 </h3>
               </div>
               

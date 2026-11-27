@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
+import { authorDisplayName } from "@/lib/authorLabel";
 
 interface BlogPost {
   id: string;
@@ -299,18 +300,7 @@ const Blog = () => {
     return `${minutes} dakika`;
   };
 
-  const getAuthorTypeText = (blog: BlogPost) => {
-    // Check if it's admin content
-    if (blog.author_name === 'Admin' || blog.author_name === 'admin') {
-      return "Sağlık İçerik Editörü";
-    }
-    
-    // If the author_name is not a standard editor name, it's likely a specialist
-    if (blog.author_name && !['Editör', 'Staff Editörü', 'Doktorum Ol', 'Admin', 'admin'].includes(blog.author_name)) {
-      return blog.author_name;
-    }
-    return "Sağlık İçerik Editörü";
-  };
+  const getAuthorTypeText = (blog: BlogPost) => authorDisplayName(blog.author_name);
 
 
   if (loading) {

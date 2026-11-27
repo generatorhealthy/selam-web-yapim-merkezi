@@ -5,6 +5,7 @@ import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { SafeHtmlContent } from "@/components/SafeHtmlContent";
 import { Clock, Eye, Share2, BookOpen } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
+import { authorDisplayName } from "@/lib/authorLabel";
 
 const isNativeApp = Capacitor.isNativePlatform();
 
@@ -202,10 +203,10 @@ export default function MobileBlogDetail() {
                   className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
                   style={{ background: "hsl(var(--m-ink))", color: "hsl(var(--m-bg))" }}
                 >
-                  {(blog.author_name === 'Admin' || blog.author_name === 'admin' ? 'Sağlık İçerik Editörü' : blog.author_name).charAt(0).toUpperCase()}
+                  {authorDisplayName(blog.author_name).charAt(0).toUpperCase()}
                 </div>
                 <span className="text-[13px] font-semibold pr-1" style={{ color: "hsl(var(--m-text-primary))" }}>
-                  {blog.author_name === 'Admin' || blog.author_name === 'admin' ? 'Doktorum Ol Sağlık İçerik Editörleri' : blog.author_name}
+                  {authorDisplayName(blog.author_name)}
                 </span>
               </div>
             )}
@@ -335,7 +336,7 @@ export default function MobileBlogDetail() {
                       </p>
                       {r.author_name && (
                         <p className="text-[11px] mt-1.5 truncate" style={{ color: "hsl(var(--m-text-secondary))" }}>
-                          {r.author_name === 'Admin' || r.author_name === 'admin' ? 'Sağlık İçerik Editörü' : r.author_name}
+                          {authorDisplayName(r.author_name)}
                         </p>
                       )}
                     </div>

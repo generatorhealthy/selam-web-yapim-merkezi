@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
+import { authorDisplayName } from "@/lib/authorLabel";
 import {
   Search,
   Calendar,
@@ -833,13 +834,13 @@ export default function MobileHome() {
                         className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
                         style={{ background: "hsl(var(--m-ink))", color: "hsl(var(--m-bg))" }}
                       >
-                        {post.author_name.charAt(0).toUpperCase()}
+                        {authorDisplayName(post.author_name).charAt(0).toUpperCase()}
                       </div>
                       <span
                         className="text-[11px] font-semibold truncate"
                         style={{ color: "hsl(var(--m-text-secondary))" }}
                       >
-                        {post.author_name}
+                        {authorDisplayName(post.author_name)}
                       </span>
                     </div>
                   )}

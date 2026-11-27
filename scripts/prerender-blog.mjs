@@ -17,6 +17,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { resolve, dirname } from "path";
 import { buildLocalPages, localTitle, localHeading, localDescription, localFaq } from "../src/lib/localSeo.js";
+import { authorDisplayName } from "../src/lib/authorLabel.js";
 
 import { approvedLegalPages } from "./legalPublication.mjs";
 import { staticLegalFiles } from "./legal-static-package.mjs";
@@ -466,7 +467,7 @@ async function main() {
           datePublished: date,
           dateModified: p.updated_at || date,
           inLanguage: "tr-TR",
-          author: p.author_name ? { "@type": "Person", name: p.author_name } : { "@id": `${SITE}/#organization` },
+          author: p.author_name ? { "@type": "Person", name: authorDisplayName(p.author_name) } : { "@id": `${SITE}/#organization` },
           publisher: { "@id": `${SITE}/#organization` },
         },
         crumbLd(trail),
@@ -476,7 +477,7 @@ async function main() {
       ${crumbs([["Ana Sayfa", "/"], ["Blog", "/blog"], [p.title, null]])}
       <article>
         <h1>${esc(p.title)}</h1>
-        ${p.author_name ? `<p>Yazar: ${esc(p.author_name)}</p>` : ""}
+        ${p.author_name ? `<p>Yazar: ${esc(authorDisplayName(p.author_name))}</p>` : ""}
         ${date ? `<p><time datetime="${esc(date)}">${new Date(date).toLocaleDateString("tr-TR", { year: "numeric", month: "long", day: "numeric" })}</time></p>` : ""}
         ${p.featured_image ? `<img src="${esc(p.featured_image)}" alt="${esc(p.title)}" />` : ""}
         ${cleanHtml(p.content)}
