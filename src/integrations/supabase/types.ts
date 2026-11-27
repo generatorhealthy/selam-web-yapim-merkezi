@@ -6180,6 +6180,75 @@ export type Database = {
         }
         Relationships: []
       }
+      panel_gate_config: {
+        Row: {
+          backup_code_hashes: string[]
+          enabled: boolean
+          id: number
+          pending_secret: string | null
+          totp_secret: string | null
+          updated_at: string
+        }
+        Insert: {
+          backup_code_hashes?: string[]
+          enabled?: boolean
+          id?: number
+          pending_secret?: string | null
+          totp_secret?: string | null
+          updated_at?: string
+        }
+        Update: {
+          backup_code_hashes?: string[]
+          enabled?: boolean
+          id?: number
+          pending_secret?: string | null
+          totp_secret?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      panel_gate_failures: {
+        Row: {
+          failures: number
+          key: string
+          locked_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          failures?: number
+          key: string
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          failures?: number
+          key?: string
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      panel_gate_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       partner_commission_payments: {
         Row: {
           amount: number
@@ -9594,6 +9663,7 @@ export type Database = {
           first_paid_at: string
         }[]
       }
+      panel_gate_ok: { Args: never; Returns: boolean }
       prepare_patient_contact: {
         Args: {
           p_specialist_id: string
