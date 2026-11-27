@@ -77,7 +77,7 @@ const PlanCard = ({ id, title, icon: Icon, tagline, price, originalPrice, featur
             </button>
           )}
           {baseFeatures && open && (
-            <p className="mt-3 text-xs text-muted-foreground">Premium paketteki {baseFeatures.length} özelliğin tamamı dahildir.</p>
+            <p className="mt-3 text-xs text-muted-foreground">Expert OS paketindeki {baseFeatures.length} özelliğin tamamı dahildir.</p>
           )}
         </div>
       </div>
@@ -161,13 +161,13 @@ const RegistrationLinkOffer = () => {
           {/* Package Cards */}
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto items-start">
             <PlanCard
-              id="kayit-linki" title="Premium" icon={BarChart3}
+              id="kayit-linki" title="Expert OS" icon={BarChart3}
               tagline="Online görünürlüğünüzü güçlendirin ve daha fazla danışan kazanın."
               price={registrationLinkPricing.price} originalPrice={registrationLinkPricing.originalPrice}
               features={premiumFeatures}
             />
             <PlanCard
-              id="premium-plus" title="Premium Plus" icon={Crown} featured
+              id="premium-plus" title="Expert OS Plus" icon={Crown} featured
               tagline="Size özel web sitesi, alan adı ve kurumsal e-posta ile tam dijital kimlik."
               price={7500} originalPrice={12500}
               features={[...premiumFeatures, ...premiumPlusExtras]}

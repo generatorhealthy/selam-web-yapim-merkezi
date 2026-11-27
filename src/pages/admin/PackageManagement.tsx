@@ -64,7 +64,7 @@ const PackageManagement = () => {
     },
     {
       id: "ozel-firsat",
-      name: "Premium Paket - Özel Fırsat",
+      name: "Expert OS Paket - Özel Fırsat",
       price: 4000,
       originalPrice: 6500,
       features: [

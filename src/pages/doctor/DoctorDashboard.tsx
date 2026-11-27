@@ -380,7 +380,7 @@ const MembershipRequiredBanner = () => {
           <h2 className="text-xl font-bold text-foreground">Üyeliğinizi kullanmak için paketi satın almanız gerekiyor</h2>
           <p className="text-sm text-muted-foreground">
             Profiliniz oluşturuldu; aşağıdan bilgilerinizi kontrol edip düzenleyebilirsiniz. Danışanların sizi görebilmesi
-            ve randevu alabilmesi için Premium Paket satın alınmalıdır. Kartla ödemeniz onaylandığı anda profiliniz
+            ve randevu alabilmesi için Expert OS Paket satın alınmalıdır. Kartla ödemeniz onaylandığı anda profiliniz
             beklemeden otomatik olarak aktif hale gelir.
           </p>
           <ul className="grid sm:grid-cols-2 gap-2 pt-1">
@@ -392,7 +392,7 @@ const MembershipRequiredBanner = () => {
           </ul>
         </div>
         <div className="lg:w-72 rounded-2xl bg-background border p-5 space-y-3">
-          <p className="text-sm font-semibold text-foreground">Premium Paket · 12 Aylık</p>
+          <p className="text-sm font-semibold text-foreground">Expert OS Paket · 12 Aylık</p>
           <div className="flex items-baseline gap-2">
             <span className="text-sm line-through text-muted-foreground">8.500 ₺</span>
             <span className="text-3xl font-bold text-foreground">5.000 ₺</span>
@@ -402,7 +402,7 @@ const MembershipRequiredBanner = () => {
           <Button
             className="w-full h-12 rounded-xl font-semibold"
             onClick={() => navigate('/odeme/kayit-linki', {
-              state: { packageData: { id: 'kayit-linki', name: 'Premium Paket - Özel Fırsat', price: 5000, originalPrice: 8500, features: MEMBERSHIP_FEATURES } },
+              state: { packageData: { id: 'kayit-linki', name: 'Expert OS Paket - Özel Fırsat', price: 5000, originalPrice: 8500, features: MEMBERSHIP_FEATURES } },
             })}
           >
             Paketi Satın Al

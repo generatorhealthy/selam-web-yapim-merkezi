@@ -123,7 +123,7 @@ const SpecialOfferNew = () => {
                 <div className="flex justify-center items-center gap-2 mb-4">
                   <Crown className="w-8 h-8 text-primary" />
                   <Badge className="bg-primary/20 text-primary border-primary/30 text-lg px-4 py-1">
-                    PREMIUM PAKET
+                    EXPERT OS PAKET
                   </Badge>
                 </div>
                 
@@ -182,7 +182,7 @@ const SpecialOfferNew = () => {
                     state={{
                       packageData: {
                         id: 'ozel-firsat',
-                        name: "Premium Paket - Özel Fırsat",
+                        name: "Expert OS Paket - Özel Fırsat",
                         price: 4000,
                         originalPrice: 6500,
                         features: packageFeatures

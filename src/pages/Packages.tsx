@@ -130,7 +130,7 @@ const Packages = () => {
               {/* Enhanced main title */}
               <h1 className="text-6xl md:text-7xl font-bold mb-8 leading-tight">
                 <span className="bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                  Premium Paketler
+                  Expert OS Paketleri
                 </span>
               </h1>
               

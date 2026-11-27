@@ -198,7 +198,7 @@ const NewOrder = () => {
                     id="packageName"
                     value={formData.packageName}
                     onChange={(e) => handleInputChange("packageName", e.target.value)}
-                    placeholder="Örn: Premium Paket"
+                    placeholder="Örn: Expert OS Paket"
                     required
                   />
                 </div>

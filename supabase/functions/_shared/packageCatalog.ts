@@ -22,14 +22,14 @@ export const PACKAGE_CATALOG: Record<string, PackageDef> = {
   // Kullanıcının doğruladığı iki kampanya paketi (iyzico planı ₺5.000,00 / ₺4.000,00).
   "kayit-linki": {
     key: "kayit-linki",
-    name: "Premium Paket - Özel Fırsat",
+    name: "Expert OS Paket - Özel Fırsat",
     price: 5000,
     originalPrice: 8500,
     planId: "29429127-2e4f-48ee-a2b7-708a068de378",
   },
   "ozel-firsat": {
     key: "ozel-firsat",
-    name: "Premium Paket - Özel Fırsat",
+    name: "Expert OS Paket - Özel Fırsat",
     price: 4000,
     originalPrice: 6500,
     planId: "e0d7e6b7-e665-4460-ab8f-6bb6e7a2c652",
@@ -37,7 +37,7 @@ export const PACKAGE_CATALOG: Record<string, PackageDef> = {
   // Eski özel teklif: 3600 TL planı.
   "special-offer": {
     key: "special-offer",
-    name: "Premium Paket",
+    name: "Expert OS Paket",
     price: 3600,
     originalPrice: 7200,
     planId: "92feac6d-1181-4b78-b0c2-3b5d5742adff",
@@ -53,7 +53,7 @@ export const PACKAGE_CATALOG: Record<string, PackageDef> = {
   },
   "basic": {
     key: "basic",
-    name: "Premium Paket",
+    name: "Expert OS Paket",
     price: null,
     originalPrice: null,
     planId: "205eb35c-e122-401f-aef7-618daf3732f8",
@@ -76,7 +76,7 @@ export const PACKAGE_CATALOG: Record<string, PackageDef> = {
   // düşüyorlardı. Artık ödeme başlatılmaz, ta ki doğru plan kodu tanımlanana kadar.
   "campaign-premium": {
     key: "campaign-premium",
-    name: "Kampanyalı Premium Paket",
+    name: "Kampanyalı Expert OS Paket",
     price: null,
     originalPrice: null,
     planId: null,

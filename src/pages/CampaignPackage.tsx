@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 
 const campaignPackage = {
-  name: "Kampanyalı Premium Paket",
+  name: "Kampanyalı Expert OS Paket",
   price: 2398,
   originalPrice: 4999,
   features: [
@@ -38,8 +38,8 @@ const CampaignPackage = () => {
   return (
     <>
       <Helmet>
-        <title>Kampanyalı Premium Paket - Doktorum Ol</title>
-        <meta name="description" content="Kampanyalı Premium Paket ile %52 indirim. Aylık 2398₺ ile profesyonel doktor üyeliği avantajları." />
+        <title>Kampanyalı Expert OS Paket - Doktorum Ol</title>
+        <meta name="description" content="Kampanyalı Expert OS Paket ile %52 indirim. Aylık 2398₺ ile profesyonel doktor üyeliği avantajları." />
         <meta name="keywords" content="kampanyalı paket, premium paket, doktor üyelik, indirimli paket" />
       </Helmet>
       
@@ -72,7 +72,7 @@ const CampaignPackage = () => {
             </div>
             
             <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent leading-tight">
-              Kampanyalı Premium Paket
+              Kampanyalı Expert OS Paket
             </h1>
             
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">

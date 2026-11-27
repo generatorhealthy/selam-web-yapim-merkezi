@@ -1189,7 +1189,7 @@ const SpecialistRegistration = () => {
                     state: {
                       packageData: {
                         id: 'kayit-linki',
-                        name: "Premium Paket - Özel Fırsat",
+                        name: "Expert OS Paket - Özel Fırsat",
                         price: 5000,
                         originalPrice: 8500,
                         features: packageFeatures

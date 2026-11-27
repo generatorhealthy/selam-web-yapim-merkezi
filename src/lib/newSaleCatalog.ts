@@ -14,13 +14,13 @@ export const premiumPlusExtras = [
 ];
 const features = premiumFeatures;
 export const newSaleCatalog = {
-  'ozel-firsat': { type: 'ozel-firsat', name: 'Premium Paket - Özel Fırsat', price: 4000, originalPrice: 6500, features },
-  'kayit-linki': { type: 'kayit-linki', name: 'Premium Paket - Özel Fırsat', price: 5000, originalPrice: 8500, features },
-  'premium-plus': { type: 'premium-plus', name: 'Premium Plus Paket', price: 7500, originalPrice: 12500, features: [...premiumFeatures, ...premiumPlusExtras] },
+  'ozel-firsat': { type: 'ozel-firsat', name: 'Expert OS Paket - Özel Fırsat', price: 4000, originalPrice: 6500, features },
+  'kayit-linki': { type: 'kayit-linki', name: 'Expert OS Paket - Özel Fırsat', price: 5000, originalPrice: 8500, features },
+  'premium-plus': { type: 'premium-plus', name: 'Expert OS Plus Paket', price: 7500, originalPrice: 12500, features: [...premiumFeatures, ...premiumPlusExtras] },
   // Already-registered customers: no contract step, not indexed.
-  'aktif-odeme': { type: 'aktif-odeme', name: 'Premium Paket - Abonelik Devamı', price: 4000, originalPrice: undefined as number | undefined, features, existingCustomer: true },
-  'abonelik-devami': { type: 'abonelik-devami', name: 'Premium Paket - Abonelik Devamı', price: 3600, originalPrice: undefined as number | undefined, features, existingCustomer: true },
-  'odeme-linki': { type: 'odeme-linki', name: 'Premium Paket - Abonelik Devamı', price: 3000, originalPrice: undefined as number | undefined, features, existingCustomer: true },
+  'aktif-odeme': { type: 'aktif-odeme', name: 'Expert OS Paket - Abonelik Devamı', price: 4000, originalPrice: undefined as number | undefined, features, existingCustomer: true },
+  'abonelik-devami': { type: 'abonelik-devami', name: 'Expert OS Paket - Abonelik Devamı', price: 3600, originalPrice: undefined as number | undefined, features, existingCustomer: true },
+  'odeme-linki': { type: 'odeme-linki', name: 'Expert OS Paket - Abonelik Devamı', price: 3000, originalPrice: undefined as number | undefined, features, existingCustomer: true },
 };
 export const existingCustomerLinks = ['aktif-odeme', 'abonelik-devami', 'odeme-linki'] as const;
 export function newSalePackage(key: unknown) {

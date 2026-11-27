@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 
 const campaignPremiumPackage = {
-  name: "Kampanyalı Premium Paket",
+  name: "Kampanyalı Expert OS Paket",
   price: 3600,
   originalPrice: 7200,
   features: [
@@ -30,7 +30,7 @@ const campaignPremiumPackage = {
 const CampaignPremiumPackage = () => {
   const handleWhatsAppContact = () => {
     const phoneNumber = "905335822275";
-    const message = "Merhaba, Kampanyalı Premium Paket ile ilgili bilgi almak istiyorum";
+    const message = "Merhaba, Kampanyalı Expert OS Paketi ile ilgili bilgi almak istiyorum";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -40,7 +40,7 @@ const CampaignPremiumPackage = () => {
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
         <meta name="googlebot" content="noindex, nofollow" />
-        <title>Kampanyalı Premium Paket - Doktorum Ol</title>
+        <title>Kampanyalı Expert OS Paket - Doktorum Ol</title>
       </Helmet>
       
       <HorizontalNavigation />
@@ -62,7 +62,7 @@ const CampaignPremiumPackage = () => {
               </div>
               
               <h1 className="text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                Kampanyalı Premium Paket
+                Kampanyalı Expert OS Paket
               </h1>
               
               <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-6 py-3 rounded-full font-semibold shadow-sm">
