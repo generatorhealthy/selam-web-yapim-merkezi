@@ -108,7 +108,7 @@ ${row("Onaylanan Sözleşme Versiyonu", DISTANCE_SALES_VERSION)}
 ${row("Ön Bilgilendirme Versiyonu", PRE_INFO_VERSION)}
 ${row("Elektronik Onay Yöntemi", "Ödeme sayfasında sözleşme onay kutusunun işaretlenmesi")}
 <h3>5. HİZMET KOŞULLARI</h3>
-<p>Expert OS Paket kapsamında sunulan hizmetler, elektronik olarak onaylanan üyelik sözleşmesinin ve ilgili hizmet paketinin hükümlerine tabidir.</p>
+<p>Expert OS (Profesyonel Uzman Yönetim Yazılımı) / Expert OS Plus (Entegre Uzman Yönetim Yazılımı) paketleri kapsamında sunulan hizmetler, elektronik olarak onaylanan üyelik sözleşmesinin ve ilgili hizmet paketinin hükümlerine tabidir.</p>
 <p>Aylık hizmet bedeli, ${COMMITMENT_MONTHS} aylık taahhüt süresi, fesih koşulları, danışan yönlendirme garantisi ve varsa otomatik yenileme hükümleri, Hizmet Alan'a sözleşmenin kurulmasından önce sunulur.</p>
 <p>Hizmet Alan'ın kanundan doğan hakları saklıdır.</p>
 <p><strong>Doktorum Ol Bilgi ve Teknoloji Hizmetleri Limited Şirketi</strong></p>`;

@@ -13,12 +13,12 @@ import { registrationLinkPricing, registrationLinkDiscountPercent } from "@/lib/
 const VISIBLE = 6;
 
 type PlanCardProps = {
-  id: string; title: string; icon: React.ElementType; tagline: string;
+  id: string; title: string; subtitle?: string; icon: React.ElementType; tagline: string;
   price: number; originalPrice: number; features: string[]; baseFeatures?: string[];
   intro?: string; featured?: boolean;
 };
 
-const PlanCard = ({ id, title, icon: Icon, tagline, price, originalPrice, features, baseFeatures, intro, featured }: PlanCardProps) => {
+const PlanCard = ({ id, title, subtitle, icon: Icon, tagline, price, originalPrice, features, baseFeatures, intro, featured }: PlanCardProps) => {
   const [open, setOpen] = useState(false);
   const shown = open ? features : features.slice(0, VISIBLE);
   const hidden = features.length - VISIBLE;
@@ -35,6 +35,7 @@ const PlanCard = ({ id, title, icon: Icon, tagline, price, originalPrice, featur
           </h3>
           {featured && <Badge className="rounded-full">En Kapsamlı</Badge>}
         </div>
+        {subtitle && <p className="mt-1 text-sm md:text-base text-muted-foreground">{subtitle}</p>}
         <p className="mt-2 text-muted-foreground">{tagline}</p>
       </div>
       <div className="relative p-6 space-y-5">
@@ -161,13 +162,13 @@ const RegistrationLinkOffer = () => {
           {/* Package Cards */}
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto items-start">
             <PlanCard
-              id="kayit-linki" title="Expert OS" icon={BarChart3}
+              id="kayit-linki" title="Expert OS" subtitle="Profesyonel Uzman Yönetim Yazılımı" icon={BarChart3}
               tagline="Online görünürlüğünüzü güçlendirin ve daha fazla danışan kazanın."
               price={registrationLinkPricing.price} originalPrice={registrationLinkPricing.originalPrice}
               features={premiumFeatures}
             />
             <PlanCard
-              id="premium-plus" title="Expert OS Plus" icon={Crown} featured
+              id="premium-plus" title="Expert OS Plus" subtitle="Entegre Uzman Yönetim Yazılımı" icon={Crown} featured
               tagline="Size özel web sitesi, alan adı ve kurumsal e-posta ile tam dijital kimlik."
               price={7500} originalPrice={12500}
               features={[...premiumFeatures, ...premiumPlusExtras]}

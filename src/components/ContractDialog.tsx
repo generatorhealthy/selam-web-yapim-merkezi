@@ -48,7 +48,7 @@ useEffect(() => {
     if (savedPreInfoHtml) {
       // Eski sözleşmelere hizmet süresi maddesini ekle
       let content = savedPreInfoHtml;
-      const serviceDurationClause = `<p style="margin-top: 15px;"><strong>Toplam Hizmet Süresi (Taahhütlü):</strong> Expert OS üyelik başlangıç imza tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.</p>
+      const serviceDurationClause = `<p style="margin-top: 15px;"><strong>Toplam Hizmet Süresi (Taahhütlü):</strong> Expert OS (Profesyonel Uzman Yönetim Yazılımı) üyelik başlangıç imza tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.</p>
 
 <p style="margin-top: 10px;">Her ay danışan yönlendirmesi garantisi verilmektedir. İlgili ay içinde yönlendirme yapılmazsa, o aya ait ücret iade edilir ve üyelik ücretsiz olarak iptal edilebilir. Bu hak yalnızca yönlendirme yapılmayan aylar için geçerlidir.</p>`;
       
@@ -134,7 +134,7 @@ ${selectedPackage.price === 2398 ? `
 <p style="margin-top: 10px;"><strong>Bilgilendirme:</strong> Bu hizmet, belirlenen taahhüt süresi kapsamında özel indirimden yararlanmaktadır. Taahhüt sebebiyle hizmet bedeli 4.999 TL yerine 2.398 TL olarak uygulanmaktadır.</p>
 ` : ''}
 
-<p style="margin-top: 15px;"><strong>Toplam Hizmet Süresi (Taahhütlü):</strong> Expert OS üyelik başlangıç imza tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.</p>
+<p style="margin-top: 15px;"><strong>Toplam Hizmet Süresi (Taahhütlü):</strong> Expert OS (Profesyonel Uzman Yönetim Yazılımı) üyelik başlangıç imza tarihiyle birlikte 365 Gün ( 12 Ay ) Taahhütlü Hizmet Süresi.</p>
 
 <p style="margin-top: 10px;">Her ay danışan yönlendirmesi garantisi verilmektedir. İlgili ay içinde yönlendirme yapılmazsa, o aya ait ücret iade edilir ve üyelik ücretsiz olarak iptal edilebilir. Bu hak yalnızca yönlendirme yapılmayan aylar için geçerlidir.</p>
 
