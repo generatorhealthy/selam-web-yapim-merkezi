@@ -23,25 +23,31 @@ const PlanCard = ({ id, title, icon: Icon, tagline, price, originalPrice, featur
   const shown = open ? features : features.slice(0, VISIBLE);
   const hidden = features.length - VISIBLE;
   return (
-    <div className={`rounded-3xl overflow-hidden bg-card shadow-2xl border-2 ${featured ? 'border-primary' : 'border-primary/30'}`}>
-      <div className="px-6 py-5 bg-gradient-to-r from-primary to-primary/70 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-2xl md:text-3xl font-bold text-primary-foreground">
-          <Icon className="w-7 h-7" /> {title}
-        </h3>
-        {featured && <Badge className="bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30">En Kapsamlı</Badge>}
+    <div className={`relative rounded-[2rem] overflow-hidden bg-card/90 backdrop-blur-xl shadow-2xl ring-1 ${featured ? 'ring-primary/60' : 'ring-primary-foreground/60'}`}>
+      <svg className="absolute inset-x-0 top-0 w-full h-48 pointer-events-none" viewBox="0 0 400 190" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 0H400V120C330 160 260 90 190 125C120 160 60 135 0 150Z" className="fill-primary/10" />
+        <path d="M120 0H400V70C340 105 290 40 230 70C180 95 140 50 120 0Z" className="fill-primary/10" />
+      </svg>
+      <div className="relative px-6 pt-7 pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-2xl md:text-3xl font-bold text-foreground">
+            <Icon className="w-7 h-7 text-primary" /> {title}
+          </h3>
+          {featured && <Badge className="rounded-full">En Kapsamlı</Badge>}
+        </div>
+        <p className="mt-2 text-muted-foreground">{tagline}</p>
       </div>
-      <div className="p-6 space-y-5">
-        <p className="text-muted-foreground">{tagline}</p>
+      <div className="relative p-6 space-y-5">
         <div>
-          <div className="flex items-baseline gap-3">
-            <span className="text-4xl font-bold text-foreground">₺{price.toLocaleString('tr-TR')}</span>
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <span className="text-4xl font-bold text-foreground">₺{price.toLocaleString('tr-TR')}<span className="text-lg font-semibold"> /ay</span></span>
             <span className="text-lg text-muted-foreground line-through">₺{originalPrice.toLocaleString('tr-TR')}</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">KDV dahil / Ay · 12 aylık abonelik</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">KDV dahil</span>
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">12 Aylık Abonelik</span>
+          </div>
         </div>
-        <Link to={`/odeme/${id}`} state={{ packageData: { id } }} className="block">
-          <Button size="lg" className="w-full rounded-full py-6 text-lg font-semibold">{title} planı seçin</Button>
-        </Link>
         <div className="flex gap-3">
           <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
           <div>
@@ -54,7 +60,7 @@ const PlanCard = ({ id, title, icon: Icon, tagline, price, originalPrice, featur
           <ul className="space-y-3">
             {shown.map((f) => (
               <li key={f} className="flex items-center gap-3 text-foreground">
-                <span className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                <span className="w-6 h-6 rounded-full bg-primary/80 shadow-sm flex items-center justify-center shrink-0">
                   <Check className="w-4 h-4 text-primary-foreground" />
                 </span>
                 {f}
@@ -71,6 +77,9 @@ const PlanCard = ({ id, title, icon: Icon, tagline, price, originalPrice, featur
             <p className="mt-3 text-xs text-muted-foreground">Premium paketteki {baseFeatures.length} özelliğin tamamı dahildir.</p>
           )}
         </div>
+        <Link to={`/odeme/${id}`} state={{ packageData: { id } }} className="block">
+          <Button size="lg" variant={featured ? 'default' : 'outline'} className="w-full rounded-full py-6 text-lg font-semibold border-2 border-primary">{title} planı seçin →</Button>
+        </Link>
       </div>
     </div>
   );
