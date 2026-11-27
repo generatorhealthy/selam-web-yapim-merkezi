@@ -4374,6 +4374,63 @@ export type Database = {
         }
         Relationships: []
       }
+      garanti_control_payments: {
+        Row: {
+          amount: number
+          auth_code: string | null
+          bank_order_id: string
+          created_at: string
+          error_message: string | null
+          hash_verified: boolean
+          host_ref: string | null
+          id: string
+          last_query: Json | null
+          md_status: string | null
+          proc_return_code: string | null
+          prov_user: string
+          refunded_amount: number
+          started_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          auth_code?: string | null
+          bank_order_id: string
+          created_at?: string
+          error_message?: string | null
+          hash_verified?: boolean
+          host_ref?: string | null
+          id?: string
+          last_query?: Json | null
+          md_status?: string | null
+          proc_return_code?: string | null
+          prov_user: string
+          refunded_amount?: number
+          started_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          auth_code?: string | null
+          bank_order_id?: string
+          created_at?: string
+          error_message?: string | null
+          hash_verified?: boolean
+          host_ref?: string | null
+          id?: string
+          last_query?: Json | null
+          md_status?: string | null
+          proc_return_code?: string | null
+          prov_user?: string
+          refunded_amount?: number
+          started_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       garanti_settings: {
         Row: {
           enabled: boolean
@@ -4411,12 +4468,16 @@ export type Database = {
           is_test: boolean
           last_error: string | null
           last_error_code: string | null
+          last_query: Json | null
+          last_reconciled_at: string | null
           monthly_amount: number
           next_charge_at: string | null
           order_id: string
           package_name: string | null
           paid_count: number
+          recurring_cancel_note: string | null
           recurring_status: string
+          refunded_amount: number
           status: string
           total_payments: number
           updated_at: string
@@ -4433,12 +4494,16 @@ export type Database = {
           is_test?: boolean
           last_error?: string | null
           last_error_code?: string | null
+          last_query?: Json | null
+          last_reconciled_at?: string | null
           monthly_amount: number
           next_charge_at?: string | null
           order_id: string
           package_name?: string | null
           paid_count?: number
+          recurring_cancel_note?: string | null
           recurring_status?: string
+          refunded_amount?: number
           status?: string
           total_payments?: number
           updated_at?: string
@@ -4455,12 +4520,16 @@ export type Database = {
           is_test?: boolean
           last_error?: string | null
           last_error_code?: string | null
+          last_query?: Json | null
+          last_reconciled_at?: string | null
           monthly_amount?: number
           next_charge_at?: string | null
           order_id?: string
           package_name?: string | null
           paid_count?: number
+          recurring_cancel_note?: string | null
           recurring_status?: string
+          refunded_amount?: number
           status?: string
           total_payments?: number
           updated_at?: string

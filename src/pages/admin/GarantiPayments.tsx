@@ -11,7 +11,7 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 
 const PROVIDERS = { hoppa: "Hoppa", garanti: "Garanti BBVA", bank_transfer: "Yalnız Havale" } as const;
 const PACKAGES = { expert_os: "Expert OS (5.000 TL)", expert_os_plus: "Expert OS Plus (7.500 TL)" } as const;
-const STATUS: Record<string, string> = { initializing: "Ödeme bekleniyor", paid: "İlk ödeme alındı", failed: "Başarısız", cancelled: "İptal" };
+const STATUS: Record<string, string> = { initializing: "Ödeme bekleniyor", paid: "Ödendi", completed: "12 ödeme tamamlandı", failed: "Başarısız", cancelled: "İptal" };
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString("tr-TR") : "—");
 
 const GarantiPayments = () => {
@@ -20,15 +20,18 @@ const GarantiPayments = () => {
   const [settings, setSettings] = useState<any>(null);
   const [subs, setSubs] = useState<any[]>([]);
   const [txns, setTxns] = useState<any[]>([]);
-  const [testOrder, setTestOrder] = useState("");
+  const [ctrlAmount, setCtrlAmount] = useState("1");
+  const [ctrlUser, setCtrlUser] = useState<"PROVAUT" | "PROVOOS">("PROVAUT");
+  const [controls, setControls] = useState<any[]>([]);
   const db = supabase as any;
   const load = async () => {
-    const [s, a, t] = await Promise.all([
+    const [s, a, t, c] = await Promise.all([
       db.from("garanti_settings").select("*").maybeSingle(),
       db.from("garanti_subscriptions").select("*").order("created_at", { ascending: false }).limit(200),
       db.from("garanti_transactions").select("*").order("created_at", { ascending: false }).limit(200),
+      db.from("garanti_control_payments").select("*").order("created_at", { ascending: false }).limit(50),
     ]);
-    setSettings(s.data); setSubs(a.data ?? []); setTxns(t.data ?? []);
+    setSettings(s.data); setSubs(a.data ?? []); setTxns(t.data ?? []); setControls(c.data ?? []);
   };
   useEffect(() => { void load(); }, []);
 
@@ -38,16 +41,37 @@ const GarantiPayments = () => {
     toast({ title: error || data?.error ? "Kaydedilemedi" : "Kaydedildi", variant: error || data?.error ? "destructive" : "default" });
     void load();
   };
-  const startTest = async () => {
-    const { data, error } = await supabase.functions.invoke("garanti-payment", { body: { action: "start", orderId: testOrder.trim() } });
+  const call = async (body: Record<string, unknown>, okTitle: string) => {
+    const { data, error } = await supabase.functions.invoke("garanti-payment", { body });
+    const failed = error || data?.error;
+    toast({ title: failed ? "İşlem yapılamadı" : okTitle, description: failed ? String(data?.error ?? "Bağlantı hatası") : data?.summary ? `Kod: ${data.summary.returnCode ?? "—"} · Durum: ${data.summary.status ?? "—"}${data.sales !== undefined ? ` · Bankada onaylı tahsilat: ${data.sales}` : ""}` : undefined, variant: failed ? "destructive" : "default" });
+    void load();
+    return data;
+  };
+  const startControl = async () => {
+    const amount = Number(ctrlAmount);
+    if (!(amount >= 1 && amount <= 10)) { toast({ title: "Tutar 1–10 TL arasında olmalı", variant: "destructive" }); return; }
+    if (!confirm(`GERÇEK ${amount} TL tek seferlik kontrol tahsilatı yapılacak (${ctrlUser}). Abonelik veya 12 aylık talimat oluşmaz. Onaylıyor musunuz?`)) return;
+    const { data, error } = await supabase.functions.invoke("garanti-payment", { body: { action: "start_control", amount, provUser: ctrlUser, confirm: true } });
     if (error || !data?.action) { toast({ title: "Başlatılamadı", description: data?.error, variant: "destructive" }); return; }
-    if (!confirm(`Bu GERÇEK bir ${Number(data.fields.txnamount) / 100} TL tahsilattır ve 12 aylık talimat oluşturur. Devam edilsin mi?`)) return;
     const f = document.createElement("form");
     f.method = "POST"; f.action = data.action;
     Object.entries(data.fields as Record<string, string>).forEach(([k, v]) => { const i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = v; f.appendChild(i); });
     document.body.appendChild(f); f.submit();
   };
-  const unavailable = () => toast({ title: "Banka teyidi bekleniyor", description: "Sorgulama, iade ve talimat iptali bankanın parametreleri doğrulanınca açılacak. Şimdilik Garanti Sanal POS panelinden yapın." });
+  const refund = (kind: "subscription" | "control", id: string, max: number) => {
+    const v = prompt(`İade tutarı (TL, en çok ${max}):`, String(max));
+    const amount = Number(v?.replace(",", "."));
+    if (!v || !(amount > 0)) return;
+    if (!confirm(`GERÇEK ${amount} TL iade bankaya gönderilecek. Onaylıyor musunuz?`)) return;
+    void call({ action: "refund", kind, id, amount, confirm: true }, "İade bankada onaylandı");
+  };
+  const cancelRecurring = (id: string, stage: "requested" | "confirmed") => {
+    const note = prompt(stage === "requested" ? "Banka panelinde talimat iptali başlatıldı. Not (kim/ne zaman):" : "Bankada iptalin tamamlandığını gördünüz mü? Doğrulama notu:");
+    if (!note || note.trim().length < 3) return;
+    void call({ action: "recurring_cancel", id, stage, note: note.trim() }, stage === "requested" ? "İptal bankada bekliyor olarak işaretlendi" : "Talimat iptali doğrulandı");
+  };
+  const RSTATUS: Record<string, string> = { none: "Yok", requested: "Bankaya iletildi", cancel_pending_bank: "İptal bankada bekliyor", cancelled_confirmed: "İptal doğrulandı" };
 
   return (
     <div className="p-4 space-y-4">
@@ -74,10 +98,29 @@ const GarantiPayments = () => {
             </div>
           ))}
           <p className="text-xs text-muted-foreground">Seçim yalnız yeni satışlar için kaydedilir; ödeme sayfası Garanti’yi ancak aktivasyon onayından sonra kullanacak. Mevcut Hoppa abonelikleri taşınmaz.</p>
-          <div className="flex gap-2 pt-2">
-            <Input placeholder="Bekleyen sipariş ID (kontrollü test)" value={testOrder} onChange={(e) => setTestOrder(e.target.value)} />
-            <Button onClick={startTest} disabled={!testOrder.trim()}>Test ödemesi başlat</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Kontrollü canlı ödeme (yalnız yönetici)</CardTitle></CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p className="text-xs text-muted-foreground">Tek seferlik 3D Secure tahsilat; sipariş, abonelik veya tekrarlı talimat oluşturmaz, paket fiyatını değiştirmez. Muhasebede “kontrol işlemi” olarak ayrı tutulur.</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input className="w-24" type="number" min={1} max={10} value={ctrlAmount} onChange={(e) => setCtrlAmount(e.target.value)} />
+            <span>TL ·</span>
+            {(["PROVAUT", "PROVOOS"] as const).map((u) => <Button key={u} size="sm" variant={ctrlUser === u ? "default" : "outline"} onClick={() => setCtrlUser(u)}>{u}</Button>)}
+            <Button onClick={startControl}>Kontrol ödemesini başlat</Button>
           </div>
+          {controls.map((c) => (
+            <div key={c.id} className="flex flex-wrap items-center gap-2 border-t pt-2">
+              <span>{new Date(c.created_at).toLocaleString("tr-TR")}</span><span>{c.bank_order_id}</span><span>{c.amount} TL · {c.prov_user}</span>
+              <Badge variant={c.status === "paid" ? "default" : c.status === "failed" ? "destructive" : "outline"}>{STATUS[c.status] ?? c.status}</Badge>
+              <span>Hash: {c.hash_verified ? "doğru" : "—"}</span>{c.refunded_amount > 0 && <span>İade: {c.refunded_amount} TL</span>}
+              {c.error_message && <span className="text-destructive">{c.proc_return_code} {c.error_message}</span>}
+              <Button size="sm" variant="outline" onClick={() => call({ action: "query", kind: "control", id: c.id }, "Banka sorgusu")}>Sorgula</Button>
+              {c.status === "paid" && <Button size="sm" variant="outline" onClick={() => refund("control", c.id, Number(c.amount) - Number(c.refunded_amount))}>İade</Button>}
+            </div>
+          ))}
         </CardContent>
       </Card>
 
@@ -89,11 +132,16 @@ const GarantiPayments = () => {
             <div>{s.package_name} · {Number(s.monthly_amount).toLocaleString("tr-TR")} ₺</div>
             <div>Ödenen: {s.paid_count}/{s.total_payments} · Kalan: {s.total_payments - s.paid_count}</div>
             <div>Sonraki tahsilat (tahmini): {fmt(s.next_charge_at)}</div>
-            <div>Talimat: {s.recurring_status === "requested" ? "Bankaya iletildi (teyit bekliyor)" : "Yok"}</div>
+            <div>Talimat: {RSTATUS[s.recurring_status] ?? s.recurring_status}</div>
+            {s.last_reconciled_at && <div className="text-xs text-muted-foreground">Son banka mutabakatı: {new Date(s.last_reconciled_at).toLocaleString("tr-TR")}</div>}
+            {s.refunded_amount > 0 && <div>İade: {s.refunded_amount} ₺</div>}
             <div className="text-xs text-muted-foreground">Ref: {s.bank_order_id}{s.host_ref ? ` · ${s.host_ref}` : ""}</div>
             {s.last_error && <div className="text-xs text-destructive">{s.last_error_code} {s.last_error}</div>}
             <div className="flex gap-1 pt-1">
-              {["Sorgula", "İade", "Talimatı iptal"].map((l) => <Button key={l} size="sm" variant="outline" onClick={unavailable}>{l}</Button>)}
+              <Button size="sm" variant="outline" onClick={() => call({ action: "query", kind: "subscription", id: s.id }, "Banka sorgusu")}>Sorgula</Button>
+              {["paid", "completed"].includes(s.status) && <Button size="sm" variant="outline" onClick={() => refund("subscription", s.id, Number(s.monthly_amount) - Number(s.refunded_amount))}>İade</Button>}
+              {s.recurring_status === "requested" && <Button size="sm" variant="outline" onClick={() => cancelRecurring(s.id, "requested")}>Talimat iptali başlat</Button>}
+              {s.recurring_status === "cancel_pending_bank" && <Button size="sm" variant="outline" onClick={() => cancelRecurring(s.id, "confirmed")}>Bankada iptali doğrula</Button>}
             </div>
           </CardContent></Card>
         ))}
