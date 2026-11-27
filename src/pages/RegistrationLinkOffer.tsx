@@ -6,11 +6,35 @@ import { Check, Star, Users, Calendar, Headphones, Globe, Clock, Shield, Award, 
 import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { FeatureBox } from "@/components/FeatureBox";
-import { premiumFeatures, premiumPlusExtras } from "@/lib/newSaleCatalog";
 import { useState } from "react";
 import { registrationLinkPricing, registrationLinkDiscountPercent } from "@/lib/registrationLinkPricing";
 
 const VISIBLE = 6;
+const expertOsFeatures = [
+  "Dijital Uzman Profil Yönetim Sistemi",
+  "Kişiselleştirilmiş Uzman Web Arayüzü",
+  "Online Randevu Otomasyon Sistemi",
+  "Danışan İlişkileri Yönetim Sistemi (CRM)",
+  "Yapay Zekâ Destekli İçerik Üretim Modülü",
+  "Yapay Zekâ Destekli Değerlendirme Modülü",
+  "SMS Bildirim ve Hatırlatma Otomasyonu",
+  "Dijital İletişim Entegrasyonu",
+  "Coğrafi Konum ve Harita Entegrasyonu",
+  "Video İçerik Yönetim Modülü",
+  "Dijital Geri Bildirim Yönetim Sistemi",
+  "Entegre IP Telefon ve Dahili Hat Hizmeti",
+  "Arama Motoru Optimizasyonu (SEO)",
+  "Dijital İçerik ve Sosyal Medya Paylaşım Hizmeti",
+  "Aylık Danışan Yönlendirme Garantisi",
+];
+const expertOsPlusExtras = [
+  "Kişiselleştirilmiş Profesyonel Web Sitesi",
+  "Alan Adı (Domain) Yönetim Hizmeti",
+  "Web Yazılım Altyapısı ve Yönetim Sistemi",
+  "Yönetilen Bulut Sunucu ve Hosting Altyapısı",
+  "SSL Sertifikası ve Şifreli İletişim Altyapısı",
+  "Kurumsal E-Posta Altyapısı ve Entegrasyonu",
+];
 
 type PlanCardProps = {
   id: string; title: string; subtitle?: string; icon: React.ElementType; tagline: string;
@@ -50,20 +74,20 @@ const PlanCard = ({ id, title, subtitle, icon: Icon, tagline, price, originalPri
           </div>
         </div>
         <Link to={`/odeme/${id}`} state={{ packageData: { id } }} className="block">
-          <Button size="lg" variant={featured ? 'default' : 'outline'} className="w-full rounded-full py-6 text-lg font-semibold border-2 border-primary">{title} planı seçin →</Button>
+          <Button size="lg" variant={featured ? 'default' : 'outline'} className="w-full rounded-full py-6 text-lg font-semibold border-2 border-primary">{title} Planını Seçin →</Button>
         </Link>
         <div className="flex gap-3">
           <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
           <div>
-            <p className="font-semibold text-foreground">Akıllı Profil Yönetimi</p>
-            <p className="text-sm text-muted-foreground">Profilinizi saniyeler içinde profesyonelleştirin</p>
+            <p className="font-semibold text-foreground">Akıllı Profil Yönetim Modülü</p>
+            <p className="text-sm text-muted-foreground">Dijital profilinizi akıllı yazılım teknolojileriyle kolayca oluşturun ve yönetin.</p>
           </div>
         </div>
         <div className="border-t border-border pt-4">
           {intro && <p className="font-semibold text-foreground mb-3">{intro}</p>}
           <ul className="space-y-3">
             {shown.map((f) => (
-              <li key={f} className="flex items-center gap-3 text-foreground">
+              <li key={f} className={`flex items-center gap-3 text-foreground ${baseFeatures && !baseFeatures.includes(f) ? 'font-semibold text-primary' : ''}`}>
                 <span className="w-6 h-6 rounded-full bg-primary/80 shadow-sm flex items-center justify-center shrink-0">
                   <Check className="w-4 h-4 text-primary-foreground" />
                 </span>
@@ -73,12 +97,9 @@ const PlanCard = ({ id, title, subtitle, icon: Icon, tagline, price, originalPri
           </ul>
           {hidden > 0 && (
             <button type="button" onClick={() => setOpen(!open)} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
-              {open ? 'Daha az göster' : `Devamını gör (+${hidden})`}
+              {open ? 'Özellikleri Daralt' : `Tüm Özellikleri İncele (+${hidden})`}
               <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
             </button>
-          )}
-          {baseFeatures && open && (
-            <p className="mt-3 text-xs text-muted-foreground">Expert OS paketindeki {baseFeatures.length} özelliğin tamamı dahildir.</p>
           )}
         </div>
       </div>
@@ -163,15 +184,15 @@ const RegistrationLinkOffer = () => {
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto items-start">
             <PlanCard
               id="kayit-linki" title="Expert OS" subtitle="Profesyonel Uzman Yönetim Yazılımı" icon={BarChart3}
-              tagline="Online görünürlüğünüzü güçlendirin ve daha fazla danışan kazanın."
+              tagline="Yapay zekâ destekli yazılım, akıllı otomasyon ve dijital yönetim teknolojileriyle mesleki süreçlerinizi tek platform üzerinden yönetin."
               price={registrationLinkPricing.price} originalPrice={registrationLinkPricing.originalPrice}
-              features={premiumFeatures}
+              features={expertOsFeatures}
             />
             <PlanCard
               id="premium-plus" title="Expert OS Plus" subtitle="Entegre Uzman Yönetim Yazılımı" icon={Crown} featured
-              tagline="Size özel web sitesi, alan adı ve kurumsal e-posta ile tam dijital kimlik."
+              tagline="Yapay zekâ, dijital otomasyon, kişiselleştirilmiş web yazılımı ve bulut teknolojilerini bütünleşik bir dijital altyapı üzerinden yönetin."
               price={7500} originalPrice={12500}
-              features={[...premiumFeatures, ...premiumPlusExtras]}
+              features={[...expertOsFeatures, ...expertOsPlusExtras]} baseFeatures={expertOsFeatures}
             />
           </div>
           <div className="max-w-5xl mx-auto mt-6 flex flex-col items-center gap-4">
