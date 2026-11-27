@@ -48,8 +48,10 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
   const [showPreInfoDialog, setShowPreInfoDialog] = useState(false);
   const [showDistanceSalesDialog, setShowDistanceSalesDialog] = useState(false);
   const [showBankInfo, setShowBankInfo] = useState(false);
-  const cardEnabled = true;
+  // Hoppa günlük tekil satış limiti 5000 TL: Expert OS Plus (7500 TL) yalnızca havale ile alınır.
+  const cardEnabled = selectedPackage.type !== "premium-plus";
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card">("bank_transfer");
+  useEffect(() => { if (!cardEnabled) setPaymentMethod("bank_transfer"); }, [cardEnabled]);
   const [clientIP, setClientIP] = useState<string>("");
   const paymentLock = useRef(false);
   const orderAttempt = useRef(createSubmissionAttempt());
@@ -206,6 +208,7 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
   const handlePaymentProcess = async () => {
     if (paymentLock.current || !validateForm()) return;
     paymentLock.current = true;
+    if (paymentMethod === "credit_card" && !cardEnabled) { setPaymentMethod("bank_transfer"); return; }
     if (paymentMethod === 'credit_card') setRedirecting(true);
     let leaving = false;
     try {
@@ -389,7 +392,7 @@ const Checkout = ({ fixedPackage }: { fixedPackage?: string } = {}) => {
         {/* Ödeme yöntemi */}
         <div className="mb-2 mt-6 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Ödeme yöntemi</div>
         <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card shadow-sm">
-          {([["credit_card", "Kredi Kartı", "💳"], ["bank_transfer", "Banka Havalesi", "🏦"]] as const).map(([val, label, icon]) => (
+          {([["credit_card", "Kredi Kartı", "💳"], ["bank_transfer", "Banka Havalesi", "🏦"]] as const).filter(([val]) => cardEnabled || val !== "credit_card").map(([val, label, icon]) => (
             <button key={val} type="button" onClick={() => setPaymentMethod(val)} aria-pressed={paymentMethod === val}
               className="flex w-full items-center justify-between px-4 py-3.5 text-left text-base text-foreground">
               <span className="flex items-center gap-3"><span className="text-xl leading-none" aria-hidden="true">{icon}</span>{label}</span>
