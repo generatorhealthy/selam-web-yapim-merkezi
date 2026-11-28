@@ -268,14 +268,15 @@ const V4 = ({ onWhatsApp }: { onWhatsApp: () => void }) => {
 };
 
 export const OFFER_VARIANTS = ["1", "2", "3", "4"];
+
+/* Yalnızca ?tasarim=... ile açılan taslak incelemelerinde görünen şerit */
+export const OfferDraftSwitcher = ({ v }: { v: string }) => (
+  <div className="sticky top-0 z-40 flex justify-center gap-2 bg-foreground/90 py-2 text-sm text-background">
+    Taslak:{OFFER_VARIANTS.map((x) => <a key={x} href={`?tasarim=${x}`} className={`rounded px-2 ${x === v ? "bg-primary text-primary-foreground" : ""}`}>{x}</a>)}
+  </div>
+);
+
 export const OfferBelowVariant = ({ v, onWhatsApp }: { v: string; onWhatsApp: () => void }) => {
-  const C = { "1": V1, "2": V2, "3": V3, "4": V4 }[v] ?? V1;
-  return (
-    <>
-      <div className="sticky top-0 z-40 flex justify-center gap-2 bg-foreground/90 py-2 text-sm text-background">
-        Taslak:{OFFER_VARIANTS.map((x) => <a key={x} href={`?tasarim=${x}`} className={`rounded px-2 ${x === v ? "bg-primary text-primary-foreground" : ""}`}>{x}</a>)}
-      </div>
-      <C onWhatsApp={onWhatsApp} />
-    </>
-  );
+  const C = { "1": V1, "2": V2, "3": V3, "4": V4 }[v] ?? V3;
+  return <C onWhatsApp={onWhatsApp} />;
 };

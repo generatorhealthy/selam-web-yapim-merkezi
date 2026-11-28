@@ -8,7 +8,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { FeatureBox } from "@/components/FeatureBox";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { OfferBelowVariant, OFFER_VARIANTS } from "@/components/offer/OfferBelowVariants";
+import { OfferBelowVariant, OfferDraftSwitcher, OFFER_VARIANTS } from "@/components/offer/OfferBelowVariants";
 import { registrationLinkPricing, registrationLinkDiscountPercent } from "@/lib/registrationLinkPricing";
 
 const VISIBLE = 6;
@@ -125,8 +125,9 @@ const RegistrationLinkOffer = () => {
   ];
 
   const [searchParams] = useSearchParams();
-  const tasarim = searchParams.get("tasarim");
-  const lightOffer = tasarim === "3";
+  const draft = searchParams.get("tasarim");
+  const activeVariant = draft && OFFER_VARIANTS.includes(draft) ? draft : "3";
+  const lightOffer = activeVariant === "3";
 
   return (
     <>
@@ -156,7 +157,7 @@ const RegistrationLinkOffer = () => {
             </Badge>
             
             <p className={`text-xl md:text-2xl max-w-3xl mx-auto mb-8 leading-relaxed ${lightOffer ? "text-foreground" : "text-white/90"}`}>
-              Dijital dünyadaki profesyonel varlığınızı güçlendirin ve daha fazla danışan ulaşın
+              Dijital dünyadaki profesyonel varlığınızı güçlendirin ve daha fazla danışana ulaşın
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 max-w-4xl mx-auto">
@@ -212,130 +213,8 @@ const RegistrationLinkOffer = () => {
         </div>
       </section>
 
-      {tasarim && OFFER_VARIANTS.includes(tasarim) ? <OfferBelowVariant v={tasarim} onWhatsApp={handleWhatsAppContact} /> : <>
-      {/* Features Showcase Section */}
-      <section className="py-20 bg-gradient-to-b from-background to-primary/5">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Öne Çıkan <span className="text-primary">Özelliklerimiz</span>
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Profesyonel platformumuz ile dijital varlığınızı güçlendirin
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-12 mb-20">
-            {/* Yapay Zeka Destekli Blog Sayfası */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                <BookOpen className="w-10 h-10 text-primary" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Yapay Zeka Destekli Blog Sayfası</h3>
-              <p className="text-muted-foreground mb-6 max-w-md">
-                Yapay zeka teknolojisi ile branşınıza özel profesyonel blog yazıları oluşturun. SEO uyumlu içeriklerle Google'da üst sıralarda yer alın.
-              </p>
-              <div className="bg-primary/5 p-6 rounded-xl w-full max-w-md">
-                <div className="text-3xl font-bold text-primary mb-2">Yapay Zeka</div>
-                <div className="text-sm text-muted-foreground">Destekli Blog İçerik Oluşturma</div>
-              </div>
-            </div>
-
-            {/* Yapay Zeka Destekli Testler */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                <Zap className="w-10 h-10 text-primary" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4">Yapay Zeka Destekli Testler</h3>
-              <p className="text-muted-foreground mb-6 max-w-md">
-                Modern Yapay Zeka teknolojisi ile hazırlanmış özel testler sayesinde danışanlarınızı daha iyi anlayın ve profesyonel hizmet sunun.
-              </p>
-              <div className="bg-primary/5 p-6 rounded-xl w-full max-w-md">
-                <div className="text-3xl font-bold text-primary mb-2">Yapay Zeka</div>
-                <div className="text-sm text-muted-foreground">Destekli Test Sistemi</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Standard Features Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Tüm Paketlerde <span className="text-primary">Standart Özellikler</span>
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Her pakette yer alan premium özellikler ile işinizi dijital dünyada güçlendirin
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-4 gap-8">
-            <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
-              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Danışan Portföyünüzü Artırın</h3>
-              <p className="text-muted-foreground text-sm">
-                Profesyonel dijital varlığınızla daha fazla danışana ulaşın ve portföyünüzü büyütün
-              </p>
-            </Card>
-            
-            <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
-              <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Zengin Reklamlar</h3>
-              <p className="text-muted-foreground text-sm">
-                Google ve sosyal medya platformlarında zengin içerikli reklam yönetimi
-              </p>
-            </Card>
-            
-            <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
-              <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Randevu Sistemi</h3>
-              <p className="text-muted-foreground text-sm">
-                Online randevu yönetimi ve takip sistemi
-              </p>
-            </Card>
-            
-            <Card className="text-center p-8 hover:shadow-lg transition-shadow border-primary/20">
-              <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Headphones className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Müşteri Desteği</h3>
-              <p className="text-muted-foreground text-sm">
-                Anlık profesyonel teknik destek hizmeti
-              </p>
-            </Card>
-          </div>
-        </div>
-      </section>
-      
-      {/* Questions Section */}
-      <section className="py-16 bg-gradient-to-br from-gray-900 via-purple-900 to-purple-800">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Sorularınız mı var?
-          </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Size yardımcı olmaktan mutluluk duyarız. Uzman ekibimiz her zaman yanınızda ve en iyi çözümü birlikte bulalım.
-          </p>
-          
-          <Button 
-            size="lg" 
-            onClick={handleWhatsAppContact}
-            className="bg-white text-gray-900 hover:bg-white/90 font-semibold py-4 px-8 rounded-full"
-          >
-            <Headphones className="w-5 h-5 mr-2" />
-            WhatsApp ile Anında İletişim
-          </Button>
-        </div>
-      </section>
-      </>}
+      {draft && OFFER_VARIANTS.includes(draft) && <OfferDraftSwitcher v={draft} />}
+      <OfferBelowVariant v={activeVariant} onWhatsApp={handleWhatsAppContact} />
     </>
   );
 };
