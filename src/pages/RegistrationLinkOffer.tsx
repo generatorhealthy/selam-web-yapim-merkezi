@@ -133,7 +133,7 @@ const RegistrationLinkOffer = () => {
     <>
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
-        <title>Özel Fırsat - 5000₺ Doktor Randevu Sistemi | DoktorumOl</title>
+        <title>Expert OS &amp; Expert OS Plus | Doktorum Ol</title>
         <meta name="description" content="Özel fırsat 5000₺'ye profesyonel doktor randevu sistemi! 7/24 online randevu, hasta takibi, SMS hatırlatma ve daha fazlası. Hemen başlayın!" />
         <meta name="keywords" content="doktor randevu sistemi, online randevu, hasta takibi, tıbbi yazılım, kampanya, 5000 tl" />
       </Helmet>
