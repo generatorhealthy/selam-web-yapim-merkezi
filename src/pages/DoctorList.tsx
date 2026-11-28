@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
-import { MapPin, Search, MessageCircle, Phone, CheckCircle, SlidersHorizontal, Video, Users, Clock, Star, CalendarDays, BadgeCheck, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Search, MessageCircle, Phone, CheckCircle, SlidersHorizontal, Video, Users, Clock, Star, CalendarDays, BadgeCheck, ChevronDown } from "lucide-react";
 import "@/components/home/home.css";
 import "./doctor-list.css";
 import { Link, useNavigate } from "react-router-dom";
@@ -244,16 +244,34 @@ const DoctorList = () => {
     if (sortBy === "puan") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     return list;
   })();
-  const totalPages = Math.max(1, Math.ceil(sortedSpecialists.length / PAGE_SIZE));
-  const safePage = Math.min(listPage, totalPages);
-  const pageItems = sortedSpecialists.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const goToPage = (n: number) => {
-    setListPage(n);
-    document.getElementById("uzman-listesi")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
-    (n) => n === 1 || n === totalPages || Math.abs(n - safePage) <= 1,
-  );
+  const pageItems = (() => {
+    const n = sortedSpecialists.length;
+    if (n === 0) return [] as { s: typeof sortedSpecialists[number]; k: string }[];
+    const out: { s: typeof sortedSpecialists[number]; k: string }[] = [];
+    const count = listPage * PAGE_SIZE;
+    for (let i = 0; i < count; i++) {
+      const round = Math.floor(i / n);
+      let item = sortedSpecialists[i % n];
+      if (round > 0) {
+        // deterministic shuffle per round so repeats come in a different order
+        const order = sortedSpecialists.map((x, idx) => ({ x, r: Math.sin((idx + 1) * (round + 7) * 9301) }))
+          .sort((p, q) => p.r - q.r).map((o) => o.x);
+        item = order[i % n];
+      }
+      out.push({ s: item, k: `${item.id}-${round}` });
+    }
+    return out;
+  })();
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el || loading || sortedSpecialists.length === 0) return;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) setListPage((p) => p + 1);
+    }, { rootMargin: "600px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [loading, sortedSpecialists.length, listPage]);
 
   const typeFilter = (
     <div className="ex-panel">
@@ -311,7 +329,7 @@ const DoctorList = () => {
 
         <main className="min-w-0">
           <div className="ex-toolbar">
-            <p><strong>{loading ? "…" : sortedSpecialists.length} uzman</strong> listeleniyor</p>
+            <p><strong>Uzmanlarımız</strong> listeleniyor</p>
             <label className="ex-sort">Sırala:
               <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setListPage(1); }}>
                 <option value="onerilen">Önerilen</option>
@@ -328,13 +346,13 @@ const DoctorList = () => {
             <div className="ex-card text-center text-[hsl(var(--home-copy))]">Arama kriterlerinize uygun uzman bulunamadı.</div>
           ) : (
             <div className="grid gap-5">
-              {pageItems.map((specialist) => {
+              {pageItems.map(({ s: specialist, k: itemKey }) => {
                 const specialtySlug = createSpecialtySlug(specialist.specialty);
                 const profileUrl = `/${specialtySlug}/${specialist.slug}`;
                 const initials = specialist.name.split(" ").filter(Boolean).slice(-2).map((w) => w[0]).join("").toLocaleUpperCase("tr-TR");
                 const types = getAppointmentTypes(specialist);
                 return (
-                  <article key={specialist.id} className="ex-card">
+                  <article key={itemKey} className="ex-card">
                     <div className="ex-card-body">
                       <Link to={profileUrl} className="ex-photo" aria-label={`${specialist.name} profili`}>
                         {specialist.profile_picture ? (
@@ -380,18 +398,7 @@ const DoctorList = () => {
             </div>
           )}
 
-          {!loading && totalPages > 1 && (
-            <nav className="ex-pagination" aria-label="Sayfalar">
-              <button type="button" disabled={safePage === 1} onClick={() => goToPage(safePage - 1)} aria-label="Önceki sayfa"><ChevronLeft className="h-4 w-4" /></button>
-              {pageNumbers.map((n, i) => (
-                <span key={n} className="contents">
-                  {i > 0 && n - pageNumbers[i - 1] > 1 && <span className="px-1 text-[hsl(var(--home-copy))]">…</span>}
-                  <button type="button" onClick={() => goToPage(n)} className={n === safePage ? "ex-page-active" : ""} aria-current={n === safePage ? "page" : undefined}>{n}</button>
-                </span>
-              ))}
-              <button type="button" disabled={safePage === totalPages} onClick={() => goToPage(safePage + 1)} aria-label="Sonraki sayfa"><ChevronRight className="h-4 w-4" /></button>
-            </nav>
-          )}
+          {!loading && sortedSpecialists.length > 0 && <div ref={loadMoreRef} aria-hidden="true" className="h-10" />}
 
           <LocalPagesLinks specialists={specialists} className="mt-8" />
 
