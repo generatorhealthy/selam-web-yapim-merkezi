@@ -10,7 +10,6 @@ import FeaturedExperts from "@/components/home/FeaturedExperts";
 import ExpertJoin from "@/components/home/ExpertJoin";
 import BlogSection from "@/components/home/BlogSection";
 import FAQ from "@/components/home/FAQ";
-import Marquee from "@/components/home/Marquee";
 import HomeFooter from "@/components/home/HomeFooter";
 import "@/components/home/home.css";
 
@@ -34,7 +33,6 @@ export default function Index() {
         <ExpertJoin />
         <BlogSection />
         <FAQ />
-        <Marquee />
       </main>
       <HomeFooter />
       <AppDownloadSheet />
