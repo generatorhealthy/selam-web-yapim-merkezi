@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Crown, Star, Users, Target, Eye, CalendarCheck, Globe, Check, Minus, Laptop, Headphones, Sparkles, ArrowRight } from "lucide-react";
+import { BarChart3, Crown, Star, Users, Target, Eye, CalendarCheck, Globe, Check, Minus, Laptop, Headphones, ArrowRight } from "lucide-react";
 
 const steps = [
   { icon: Eye, title: "Görünürlük", text: "Uzman profilinizle dijitalde yerinizi alın, daha fazla danışana ulaşın." },
@@ -148,32 +148,88 @@ const V2 = ({ onWhatsApp }: { onWhatsApp: () => void }) => (
   </section>
 );
 
-/* 3 — Koyu premium, bento */
+/* 3 — Apple ışık: bento, açık yüzeyler, ince çizgiler */
 const V3 = ({ onWhatsApp }: { onWhatsApp: () => void }) => (
-  <section className="py-20 bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950">
+  <section className="py-20 bg-muted/70">
     <div className="container mx-auto px-4">
-      <Head dark />
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
+      <div className="mx-auto mb-12 max-w-3xl text-center">
+        <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">Expert OS</p>
+        <h2 className="mt-3 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
+          Expert OS ile başlayın, <span className="text-primary">Expert OS Plus</span> ile ölçekleyin.
+        </h2>
+        <p className="mt-5 text-lg text-muted-foreground">
+          Dijital varlığınızı adım adım büyütün: önce görünür olun, süreçlerinizi yönetin,
+          ardından kapsamlı bir dijital altyapıyla markanızı güçlendirin.
+        </p>
+      </div>
+
+      <div className="mb-4 grid gap-4 md:grid-cols-3">
         {steps.map((s, i) => (
-          <div key={s.title} className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-            <s.icon className="h-8 w-8 text-primary" /><p className="mt-4 text-xs uppercase tracking-widest text-white/50">Adım {i + 1}</p>
-            <h3 className="text-xl font-bold text-white">{s.title}</h3><p className="mt-2 text-sm text-white/70">{s.text}</p>
+          <div key={s.title} className="rounded-3xl border border-border/70 bg-card p-7 shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
+              <s.icon className="h-5 w-5 text-primary" />
+            </div>
+            <p className="mt-5 text-xs font-medium uppercase tracking-widest text-muted-foreground">Adım {i + 1}</p>
+            <h3 className="mt-1 text-lg font-semibold tracking-tight">{s.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
           </div>
         ))}
       </div>
-      <div className="grid lg:grid-cols-2 gap-4 mb-12">
+
+      <div className="mb-4 grid gap-4 lg:grid-cols-5">
         {packs.map((p) => (
-          <div key={p.key} className={`rounded-3xl border p-7 ${p.badge ? "border-primary/60 bg-primary/15" : "border-white/10 bg-white/5"}`}>
-            <div className="flex items-center gap-3 text-white"><p.icon className="h-7 w-7 text-primary" /><h3 className="text-2xl font-bold">{p.name}</h3>{p.badge && <Sparkles className="h-5 w-5 text-primary" />}</div>
-            <p className="mt-2 text-white/70">{p.lead}</p>
-            <ul className="mt-5 space-y-3 text-sm text-white/80">
-              <li><b className="text-white">Kazanımlar: </b>{p.gain}</li><li><b className="text-white">Kimler için: </b>{p.who}</li><li><b className="text-white">Hedef: </b>{p.goal}</li>
-            </ul>
+          <div
+            key={p.key}
+            className={`rounded-3xl border p-8 shadow-sm ${
+              p.badge ? "border-primary/30 bg-primary/5 lg:col-span-3" : "border-border/70 bg-card lg:col-span-2"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card shadow-sm">
+                <p.icon className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="text-2xl font-semibold tracking-tight">{p.name}</h3>
+              {p.badge && (
+                <span className="ml-auto rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
+                  {p.badge}
+                </span>
+              )}
+            </div>
+            <p className="mt-4 text-base text-muted-foreground">{p.lead}</p>
+            <dl className="mt-6 space-y-4 border-t border-border/70 pt-5 text-sm">
+              <div>
+                <dt className="font-semibold">Neler kazanırsınız</dt>
+                <dd className="mt-1 leading-relaxed text-muted-foreground">{p.gain}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">Kimler tercih etmeli</dt>
+                <dd className="mt-1 leading-relaxed text-muted-foreground">{p.who}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">Hangi hedefe hizmet eder</dt>
+                <dd className="mt-1 leading-relaxed text-muted-foreground">{p.goal}</dd>
+              </div>
+            </dl>
           </div>
         ))}
       </div>
-      <div className="grid lg:grid-cols-2 gap-8"><Table dark /><Faq dark /></div>
-      <Contact onWhatsApp={onWhatsApp} dark />
+
+      <div className="mb-4">
+        <PlusBanner />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <h3 className="mb-3 text-xl font-semibold tracking-tight">Karşılaştırın</h3>
+          <Table />
+        </div>
+        <div className="lg:col-span-2">
+          <h3 className="mb-3 text-xl font-semibold tracking-tight">Sıkça sorulan sorular</h3>
+          <Faq />
+        </div>
+      </div>
+
+      <Contact onWhatsApp={onWhatsApp} />
     </div>
   </section>
 );
