@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, Check, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { iconUrl } from "./media";
 
 const slides = [
@@ -9,9 +10,73 @@ const slides = [
   { title: "İyi oluş, her gün yanınızda", text: "Uzmanların hazırladığı içeriklerle kendinizi tanıyın; desteğinizi seans arasında da sürdürün." },
 ];
 
+type ExpertPreview = {
+  id: string;
+  initials: string;
+  name: string;
+  type: string;
+  rating: number | null;
+};
+
+const fallbackExperts: ExpertPreview[] = [
+  { id: "merve-akyuz", initials: "MA", name: "Uzm. Psk. Merve Akyüz", type: "Online", rating: 4.9 },
+  { id: "sevgi-ogur", initials: "SÖ", name: "Sevgi Ögür", type: "Yüz yüze", rating: 5 },
+];
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "UZ";
+  if (parts.length === 1) return parts[0].slice(0, 2).toLocaleUpperCase("tr-TR");
+  return parts.slice(-2).map((part) => part.charAt(0)).join("").toLocaleUpperCase("tr-TR");
+}
+
 export default function PromoCards() {
   const [slide, setSlide] = useState(0);
+  const [experts, setExperts] = useState<ExpertPreview[]>(fallbackExperts);
   const move = (direction: number) => setSlide((current) => (current + direction + slides.length) % slides.length);
+
+  useEffect(() => {
+    let active = true;
+
+    void supabase.rpc("get_public_specialists").then(({ data, error }) => {
+      if (!active || error || !Array.isArray(data)) return;
+
+      const publicExperts = (data as Array<{
+        id: string;
+        name: string;
+        specialty: string;
+        rating?: number;
+        online_consultation?: boolean;
+        face_to_face_consultation?: boolean;
+      }>).filter((expert) => expert.id && expert.name?.trim());
+      const shuffled = [...publicExperts];
+
+      for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+      }
+
+      const nextExperts = shuffled.slice(0, 2).map((expert) => {
+        const consultationTypes = [
+          expert.online_consultation ? "Online" : null,
+          expert.face_to_face_consultation ? "Yüz yüze" : null,
+        ].filter((value): value is string => Boolean(value));
+        const rating = Number(expert.rating);
+
+        return {
+          id: expert.id,
+          initials: getInitials(expert.name),
+          name: expert.name.trim(),
+          type: consultationTypes.join(" · ") || expert.specialty,
+          rating: Number.isFinite(rating) && rating > 0 ? rating : null,
+        };
+      });
+
+      if (nextExperts.length) setExperts(nextExperts);
+    });
+
+    return () => { active = false; };
+  }, []);
 
   return (
     <section id="nasil-calisir" className="scroll-mt-24 py-16 md:py-24">
@@ -29,11 +94,11 @@ export default function PromoCards() {
               <div className="text-[11px]"><strong className="block text-home-ink">Doktorum Ol</strong><span className="text-home-copy">Randevunuz onaylandı</span></div>
             </div>
             <div className="space-y-2">
-              {[{ initials: "MA", name: "Uzm. Psk. Merve Akyüz", type: "Online", rating: "4.9" }, { initials: "SÖ", name: "Sevgi Ögür", type: "Yüz yüze", rating: "5.0" }].map((expert) => (
-                <div key={expert.name} className="flex items-center gap-3 rounded-xl bg-background/80 p-2.5">
+              {experts.map((expert) => (
+                <div key={expert.id} className="flex items-center gap-3 rounded-xl bg-background/80 p-2.5">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-home-blue text-[10px] font-bold text-home-brand">{expert.initials}</span>
                   <span className="min-w-0 flex-1"><strong className="block truncate text-[11px] text-home-ink">{expert.name}</strong><small className="text-[10px] text-home-copy">{expert.type}</small></span>
-                  <span className="flex items-center gap-1 text-[10px] text-home-copy">{expert.rating}<Star size={11} className="fill-home-star text-home-star" /></span>
+                  {expert.rating !== null && <span className="flex items-center gap-1 text-[10px] text-home-copy">{expert.rating.toFixed(1)}<Star size={11} className="fill-home-star text-home-star" /></span>}
                 </div>
               ))}
             </div>

@@ -680,3 +680,4 @@
 - [x] Ana sayfa ön-render üretimini yeni açılışla uyumlu tut; masaüstü/mobil görünüm ve etkileşimleri doğrula.
 - [x] Öne çıkan uzman kartlarında gerçek profil fotoğraflarını göster.
 - [x] Ana sayfa logosunun beyaz arka planını saydam yap.
+- [x] Danışan tanıtım kartındaki iki uzmanı her yenilemede tüm herkese açık kayıtlar arasından rastgele seç.
