@@ -34,7 +34,8 @@
 .pr-card-featured .pr-check{background:hsl(var(--background));color:hsl(var(--home-brand))}
 .pr-more{position:relative;z-index:1;display:inline-flex;align-items:center;gap:.25rem;margin-top:1rem;font-size:.8rem;font-weight:700;color:hsl(var(--home-brand))}
 .pr-card-featured .pr-more{color:inherit}
-.pr-watermark{position:absolute;right:-10px;bottom:-10px;width:120px;opacity:.12;pointer-events:none}
+.pr-watermark{position:absolute;right:-10px;bottom:-10px;width:120px;opacity:.12;pointer-events:none;filter:drop-shadow(0 16px 24px hsl(var(--home-ink)/.30)) drop-shadow(0 4px 6px hsl(var(--home-ink)/.18))}
+.pr-card:not(.pr-card-featured) .pr-watermark{opacity:.17}
 .pr-step{padding:1.5rem;border-radius:24px;color:hsl(var(--home-ink))}
 .pr-step-blue{background:hsl(var(--home-card-blue)/.45)}.pr-step-green{background:hsl(var(--home-mint))}.pr-step-peach{background:hsl(var(--home-peach)/.55)}
 .pr-step-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:12px;background:hsl(var(--background));color:hsl(var(--home-brand))}

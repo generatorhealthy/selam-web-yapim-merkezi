@@ -61,7 +61,7 @@ const PlanCard = ({ id, title, subtitle, icon: Icon, tagline, price, originalPri
           <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
       )}
-      {featured && <img src={iconUrl} alt="" aria-hidden="true" className="pr-watermark" />}
+      <img src={iconUrl} alt="" aria-hidden="true" className="pr-watermark" />
     </div>
   );
 };
