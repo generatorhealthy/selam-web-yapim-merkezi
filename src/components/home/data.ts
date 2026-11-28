@@ -29,14 +29,6 @@ export const featuredExperts = [
   { initials: "GA", name: "Psk. Gülşah Afşar", specialty: "Psikolog", detail: "İstanbul · Online · Yüz yüze", href: "/psikolog/psk-gulsah-afsar", tone: "peach" },
 ];
 
-export const testimonials = [
-  { initials: "T*T", specialist: "Psk. Dan. Ferhat Arslan", quote: "Tek kelimeyle mükemmel diyebilirim. Uzun zamandır çalışıyoruz ve ilk günden son gittiğim güne aramızda inanılmaz fark var." },
-  { initials: "F*K", specialist: "Aile Dan. Gülistan Ak", quote: "Ailevi ve her türlü sosyal ilişkide yanımda olan eşsiz bir insan. Bana kattıkları için minnettarım, herkese öneririm." },
-  { initials: "N*F", specialist: "Psk. Dan. Ferhat Arslan", quote: "Ferhat hocam kendimle ilgili o kadar çok şeyi fark etmemi sağladı ki. Her konuda müthiş bir insan." },
-  { initials: "E*D", specialist: "Uzm. Psk. Merve Akyüz", quote: "Online görüşmeler hayatımı kolaylaştırdı. Kendimi güvende ve anlaşılmış hissettim." },
-  { initials: "S*Y", specialist: "Dyt. Aslıhan Özçelik Dar", quote: "Beslenme alışkanlıklarım tamamen değişti. Süreç boyunca hep motive edici ve ulaşılabilirdi." },
-];
-
 export const blogCards = [
   { category: "Psikoloji", title: "EMDR Terapisi Nedir? Travmalar Nasıl İyileşir?", href: "/blog/emdr-terapisi-nedir-travmalar-nasil-iyilesir", tone: "blue" },
   { category: "İlişkiler", title: "Kendini Tekrarlayan İlişkilerden Kurtulmanın Yolu", href: "/blog/kendini-tekrarlayan-iliskilerden-kurtulmanin-yolu-sema-terapi", tone: "mint" },

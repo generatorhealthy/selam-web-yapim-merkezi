@@ -12,7 +12,7 @@ export default function ExpertJoin() {
             <h2 className="mt-4 max-w-xl text-3xl font-extrabold leading-[1.08] tracking-[-0.045em] text-home-green md:text-5xl">Uzmanlığınızı daha fazla kişiye ulaştırın</h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-home-copy">Doktorum Ol ile profilinizi oluşturun, danışanlarınızla daha kolay buluşun ve randevu süreçlerinizi tek yerden yönetin.</p>
             <div className="mt-8 flex flex-wrap gap-7">
-              {[['Ücretsiz','profil oluşturma'],['4.9','danışan puanı'],['7/24','online erişim']].map(([value,label]) => <div key={label}><strong className="block text-2xl font-extrabold text-home-green">{value}</strong><span className="mt-1 block text-[11px] text-home-copy">{label}</span></div>)}
+              {[['Expert Paketi','profil oluşturma'],['4.9','danışan puanı'],['7/24','online erişim']].map(([value,label]) => <div key={label}><strong className="block text-2xl font-extrabold text-home-green">{value}</strong><span className="mt-1 block text-[11px] text-home-copy">{label}</span></div>)}
             </div>
             <Link to="/kayit-ol" className="home-button mt-9 bg-home-ink text-primary-foreground">Uzman olarak katılın <ArrowUpRight size={17} /></Link>
           </div>
