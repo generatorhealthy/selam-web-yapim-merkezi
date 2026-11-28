@@ -674,3 +674,7 @@
 # 23 Kasım 2026 — Hoppa kartlı abonelik
 - [x] Kart seçeneği (?kart=1), Hoppa ödeme sayfası, sunucu doğrulaması, günlük otomatik çekim (3 deneme), admin /divan_paneli/kart-abonelikleri.
 - [ ] Sahibin gerçek kartla ilk ödeme denemesi ve herkese açma — kullanıcı denemesi bekliyor.
+
+# 28 Kasım 2026 — Manus ana sayfa tasarımı
+- [x] PDF'teki bölümleri ve yüklenen görsellerle yeni ana sayfayı oluştur; menü, arama, uzman, blog ve mağaza bağlantılarını gerçek rotalara bağla.
+- [x] Ana sayfa ön-render üretimini yeni açılışla uyumlu tut; masaüstü/mobil görünüm ve etkileşimleri doğrula.

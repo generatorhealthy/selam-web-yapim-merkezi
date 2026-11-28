@@ -100,6 +100,23 @@ All colors MUST be HSL.
     --home-app-gradient: linear-gradient(135deg, hsl(var(--home-blue)), hsl(217 91% 60%), hsl(var(--home-indigo)));
     --home-soft-gradient: linear-gradient(135deg, hsl(var(--background)), hsl(var(--secondary)), hsl(270 100% 98%));
     --home-title-gradient: linear-gradient(90deg, hsl(var(--foreground)), hsl(226 71% 40%), hsl(273 67% 32%));
+    /* Manus homepage palette: brand blue, quiet ink and pastel surfaces. */
+    --home-brand: 230 81% 51%;
+    --home-brand-dark: 231 82% 40%;
+    --home-brand-soft: 225 90% 73%;
+    --home-ink: 237 24% 22%;
+    --home-copy: 233 9% 47%;
+    --home-line: 240 20% 93%;
+    --home-page: 240 17% 96%;
+    --home-blue: 224 100% 97%;
+    --home-card-blue: 224 100% 91%;
+    --home-sky: 210 100% 93%;
+    --home-mint: 91 86% 96%;
+    --home-green: 115 73% 24%;
+    --home-peach: 18 100% 92%;
+    --home-star: 45 96% 55%;
+    --home-button-gradient: linear-gradient(90deg, hsl(221 83% 53%), hsl(243 75% 59%));
+    --home-shadow: 0 12px 34px -16px hsl(var(--home-ink) / 0.18);
     --mobile-home-card-gradient: linear-gradient(135deg, hsl(217 91% 60%), hsl(224 82% 54%));
     --mobile-home-card-shadow: 0 12px 28px -8px hsl(217 91% 60% / 0.45);
     --mobile-home-feature-gradient: linear-gradient(135deg, hsl(var(--m-tint-lilac)), hsl(var(--m-tint-sky)));

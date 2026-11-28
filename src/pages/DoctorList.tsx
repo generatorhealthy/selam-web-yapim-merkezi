@@ -15,7 +15,7 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import Footer from "@/components/Footer";
 import LocalPagesLinks from "@/components/LocalPagesLinks";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { matchesSpecialty } from "@/lib/specialtyFilter";
+import { matchesAppointmentType, matchesSpecialty } from "@/lib/specialtyFilter";
 
 interface Specialist {
   id: string;
@@ -46,15 +46,16 @@ const DoctorList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedAppointmentType, setSelectedAppointmentType] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const ITEMS_PER_PAGE = 12;
   
   const specialties = [
     "Aile Danışmanı", "Cildiye", "Dil ve Konuşma Terapisti", 
-    "Eğitim Danışmanlığı", "İlişki Danışmanı", "Kadın Doğum ve Hastalıkları",
+    "Eğitim Danışmanlığı", "İlişki Danışmanı", "Kadın Doğum ve Hastalıkları", "Kadın Hastalıkları ve Doğum",
     "Diş Hekimi", "Psikolog", "Klinik Psikolog", "Psikolojik Danışmanlık", "Doktor", "Uzman",
-    "Psikolojik Danışman"
+    "Psikolojik Danışman", "Diyetisyen", "Psikiyatri", "Romatoloji", "Genel Cerrahi", "Tıbbi Onkoloji"
   ];
 
   const cities = [
@@ -77,14 +78,18 @@ const DoctorList = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const search = urlParams.get('search');
     const city = urlParams.get('city');
+    const specialty = urlParams.get('specialty');
+    const appointmentType = urlParams.get('appointmentType');
     
     if (search) setSearchTerm(search);
     if (city) setSelectedCity(city);
+    if (specialty) setSelectedSpecialty(specialty);
+    if (appointmentType === 'online' || appointmentType === 'yüzyüze') setSelectedAppointmentType(appointmentType);
   }, []);
 
   useEffect(() => {
     filterSpecialists();
-  }, [specialists, searchTerm, selectedSpecialty, selectedCity]);
+  }, [specialists, searchTerm, selectedSpecialty, selectedCity, selectedAppointmentType]);
 
   useEffect(() => {
     updateDisplayedSpecialists();
@@ -224,6 +229,9 @@ const DoctorList = () => {
         specialist.city && specialist.city.toLowerCase() === selectedCity.toLowerCase()
       );
     }
+
+    // Ana sayfa ve randevu sihirbazından gelen görüşme türü filtresi
+    filtered = filtered.filter(specialist => matchesAppointmentType(specialist, selectedAppointmentType));
 
     setFilteredSpecialists(filtered);
     setCurrentPage(0); // Filtre değiştiğinde sayfayı sıfırla

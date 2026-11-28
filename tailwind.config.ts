@@ -19,6 +19,20 @@ export default {
 		},
 		extend: {
 			colors: {
+				home: {
+					brand: { DEFAULT: 'hsl(var(--home-brand))', dark: 'hsl(var(--home-brand-dark))', soft: 'hsl(var(--home-brand-soft))' },
+					ink: 'hsl(var(--home-ink))',
+					copy: 'hsl(var(--home-copy))',
+					line: 'hsl(var(--home-line))',
+					page: 'hsl(var(--home-page))',
+					blue: 'hsl(var(--home-blue))',
+					'card-blue': 'hsl(var(--home-card-blue))',
+					sky: 'hsl(var(--home-sky))',
+					mint: 'hsl(var(--home-mint))',
+					green: 'hsl(var(--home-green))',
+					peach: 'hsl(var(--home-peach))',
+					star: 'hsl(var(--home-star))'
+				},
 				'ivr-success': 'hsl(var(--ivr-success))',
 				'ivr-success-soft': 'hsl(var(--ivr-success-soft))',
 				border: 'hsl(var(--border))',
