@@ -1,8 +1,42 @@
+import { useEffect, useState } from "react";
 import { Heart, Search, ShieldCheck, Video } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { iconUrl } from "./media";
+import { pickRandomItems } from "./randomSelection";
 import SearchCard from "./SearchCard";
 
+type SpecialistPhoto = {
+  id: string;
+  name: string;
+  photo: string;
+};
+
 export default function Hero() {
+  const [specialists, setSpecialists] = useState<SpecialistPhoto[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    void supabase.rpc("get_public_specialists").then(({ data, error }) => {
+      if (!active || error || !Array.isArray(data)) return;
+
+      const withPhotos = (data as Array<{
+        id: string;
+        name: string;
+        profile_picture?: string | null;
+      }>).flatMap((specialist) => {
+        const photo = specialist.profile_picture?.trim();
+        const name = specialist.name?.trim();
+        if (!specialist.id || !name || !photo) return [];
+        return [{ id: specialist.id, name, photo }];
+      });
+
+      setSpecialists(pickRandomItems(withPhotos, 3));
+    });
+
+    return () => { active = false; };
+  }, []);
+
   return (
     <section className="hero-section home-wave-section overflow-hidden pb-16 pt-12 md:pb-24 md:pt-16">
       <div className="home-container relative z-10">
@@ -20,11 +54,23 @@ export default function Hero() {
               <a href="#nasil-calisir" className="home-button home-button-outline">Nasıl çalışır?</a>
             </div>
             <div className="mt-8 flex items-center gap-3">
-              <div className="flex -space-x-2" aria-hidden="true">
-                <span className="home-avatar bg-home-card-blue">MA</span>
-                <span className="home-avatar bg-home-mint">SÖ</span>
-                <span className="home-avatar bg-home-peach">GA</span>
-                <span className="home-avatar bg-home-brand text-primary-foreground">+</span>
+              <div className="flex -space-x-2" aria-label="Kayıtlı uzmanlarımızdan seçilen profiller">
+                {specialists.length > 0 ? specialists.map((specialist) => (
+                  <img
+                    key={specialist.id}
+                    src={specialist.photo}
+                    alt={specialist.name}
+                    title={specialist.name}
+                    width="34"
+                    height="34"
+                    loading="eager"
+                    decoding="async"
+                    className="home-avatar bg-home-card-blue object-cover"
+                  />
+                )) : ["MA", "SÖ", "GA"].map((initials) => (
+                  <span key={initials} className="home-avatar bg-home-card-blue" aria-hidden="true">{initials}</span>
+                ))}
+                <span className="home-avatar bg-home-brand text-primary-foreground" aria-hidden="true">+</span>
               </div>
               <p className="text-xs leading-5 text-home-copy sm:text-sm"><strong className="font-bold text-home-ink">Doğrulanmış uzmanlar</strong><br className="sm:hidden" /> size yardımcı olmak için burada</p>
             </div>
