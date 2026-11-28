@@ -126,6 +126,7 @@ const RegistrationLinkOffer = () => {
 
   const [searchParams] = useSearchParams();
   const tasarim = searchParams.get("tasarim");
+  const lightOffer = tasarim === "3";
 
   return (
     <>
@@ -139,36 +140,36 @@ const RegistrationLinkOffer = () => {
       <HorizontalNavigation />
       
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br from-blue-600 via-blue-500 to-purple-600 overflow-hidden">
+      <section className={`relative min-h-screen overflow-hidden ${lightOffer ? "bg-muted/70 text-foreground" : "bg-gradient-to-br from-blue-600 via-blue-500 to-purple-600"}`}>
         {/* Background decorations - GPU accelerated, no reflow */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        {!lightOffer && <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl will-change-transform" style={{ contain: 'strict' }}></div>
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl will-change-transform" style={{ contain: 'strict' }}></div>
           <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-white/10 rounded-full blur-2xl will-change-transform" style={{ contain: 'strict' }}></div>
-        </div>
+        </div>}
         
         <div className="relative z-10 container mx-auto px-4 py-20">
           <div className="text-center mb-16">
-            <Badge className="mb-6 bg-white/20 text-white border-white/30 text-lg px-6 py-2">
+            <Badge className={`mb-6 text-lg px-6 py-2 ${lightOffer ? "bg-primary/10 text-primary border-primary/20" : "bg-white/20 text-white border-white/30"}`}>
               <Zap className="w-5 h-5 mr-2" />
               ÖZEL FIRSAT
             </Badge>
             
-            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed">
+            <p className={`text-xl md:text-2xl max-w-3xl mx-auto mb-8 leading-relaxed ${lightOffer ? "text-foreground" : "text-white/90"}`}>
               Dijital dünyadaki profesyonel varlığınızı güçlendirin ve daha fazla danışan ulaşın
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 max-w-4xl mx-auto">
-              <div className="flex items-center text-white/90">
-                <Check className="w-5 h-5 mr-2 text-white" />
+              <div className={`flex items-center ${lightOffer ? "text-muted-foreground" : "text-white/90"}`}>
+                <Check className={`w-5 h-5 mr-2 ${lightOffer ? "text-primary" : "text-white"}`} />
                 7/24 Online Randevu
               </div>
-              <div className="flex items-center text-white/90">
-                <Check className="w-5 h-5 mr-2 text-white" />
+              <div className={`flex items-center ${lightOffer ? "text-muted-foreground" : "text-white/90"}`}>
+                <Check className={`w-5 h-5 mr-2 ${lightOffer ? "text-primary" : "text-white"}`} />
                 Danışan Yönlendirme
               </div>
-              <div className="flex items-center text-white/90">
-                <Check className="w-5 h-5 mr-2 text-white" />
+              <div className={`flex items-center ${lightOffer ? "text-muted-foreground" : "text-white/90"}`}>
+                <Check className={`w-5 h-5 mr-2 ${lightOffer ? "text-primary" : "text-white"}`} />
                 Yapay Zeka Destekli Testler
               </div>
             </div>
@@ -177,10 +178,10 @@ const RegistrationLinkOffer = () => {
           {/* Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-4xl mx-auto">
             {statistics.map((stat, index) => (
-              <div key={index} className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl">
-                <stat.icon className="w-10 h-10 text-white mx-auto mb-3" />
-                <div className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.number}</div>
-                <div className="text-white/80 text-sm md:text-base">{stat.label}</div>
+              <div key={index} className={`text-center p-6 rounded-2xl ${lightOffer ? "bg-card border border-border/70 shadow-sm" : "bg-white/10 backdrop-blur-sm"}`}>
+                <stat.icon className={`w-10 h-10 mx-auto mb-3 ${lightOffer ? "text-primary" : "text-white"}`} />
+                <div className={`text-3xl md:text-4xl font-bold mb-1 ${lightOffer ? "text-foreground" : "text-white"}`}>{stat.number}</div>
+                <div className={`text-sm md:text-base ${lightOffer ? "text-muted-foreground" : "text-white/80"}`}>{stat.label}</div>
               </div>
             ))}
           </div>
@@ -201,17 +202,17 @@ const RegistrationLinkOffer = () => {
             />
           </div>
           <div className="max-w-5xl mx-auto mt-6 flex flex-col items-center gap-4">
-            <Button size="lg" variant="outline" onClick={handleWhatsAppContact} className="bg-white/90 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+            <Button size="lg" variant="outline" onClick={handleWhatsAppContact} className="bg-card/90 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
               <Headphones className="w-5 h-5 mr-2" /> WhatsApp Destek
             </Button>
-            <p className="text-sm text-white/90 text-center max-w-2xl">
+            <p className={`text-sm text-center max-w-2xl ${lightOffer ? "text-muted-foreground" : "text-white/90"}`}>
               <span className="font-semibold">Bilgilendirme:</span> Paket satın alımınız sonrası ekibimiz, profilinizin yayına alınması için sizinle iletişime geçecektir.
             </p>
           </div>
         </div>
       </section>
 
-      {OFFER_VARIANTS.includes(tasarim ?? "") ? <OfferBelowVariant v={tasarim!} onWhatsApp={handleWhatsAppContact} /> : <>
+      {tasarim && OFFER_VARIANTS.includes(tasarim) ? <OfferBelowVariant v={tasarim} onWhatsApp={handleWhatsAppContact} /> : <>
       {/* Features Showcase Section */}
       <section className="py-20 bg-gradient-to-b from-background to-primary/5">
         <div className="container mx-auto px-4">
