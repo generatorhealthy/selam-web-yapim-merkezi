@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { expertOsFeatures, expertOsPlusExtras } from "@/lib/expertOsFeatures";
 import { BarChart3, Crown, Star, Users, Target, Eye, CalendarCheck, Globe, Check, Minus, Laptop, Headphones, ArrowRight } from "lucide-react";
 
 const steps = [
@@ -19,11 +20,10 @@ const packs = [
     goal: "Dijitalde tam kontrol sahibi olmak, kurumsal bir çevrimiçi varlık oluşturmak ve uzun vadede uzman markanızı ölçeklemek." },
 ];
 const rows: [string, boolean][] = [
-  ["Uzman profil yönetimi", true], ["Online randevu otomasyonu", true], ["Danışan ilişkileri yönetimi (CRM)", true],
-  ["Yapay zekâ destekli içerik üretimi", true], ["Yapay zekâ destekli değerlendirme testleri", true], ["Kişiselleştirilmiş uzman web arayüzü", true],
-  ["Profesyonel web sitesi (kişiselleştirilmiş)", false], ["Alan adı (domain) yönetimi", false], ["Hosting (bulut sunucu altyapısı)", false],
-  ["SSL sertifikası (güvenli bağlantı)", false], ["Kurumsal e-posta altyapısı", false],
+  ...expertOsFeatures.map((f): [string, boolean] => [f, true]),
+  ...expertOsPlusExtras.map((f): [string, boolean] => [f, false]),
 ];
+const TABLE_VISIBLE = 6;
 const faqs = [
   ["Paketler arasındaki temel fark nedir?", "Expert OS uzman yönetim yazılımının tüm modüllerini içerir. Expert OS Plus bunlara ek olarak size özel web sitesi, alan adı, hosting, SSL ve kurumsal e-posta altyapısı sunar."],
   ["Alan adı ve hosting dahil mi?", "Alan adı, hosting, SSL ve kurumsal e-posta yalnızca Expert OS Plus paketinde yer alır."],
@@ -42,20 +42,29 @@ const Faq = ({ dark }: { dark?: boolean }) => (
   </Accordion>
 );
 
-const Table = ({ dark }: { dark?: boolean }) => (
+const Table = ({ dark }: { dark?: boolean }) => {
+  const [open, setOpen] = useState(false);
+  const shown = open ? rows : rows.slice(0, TABLE_VISIBLE);
+  return (
   <div className={`overflow-hidden rounded-2xl border ${dark ? "border-white/15 bg-white/5 text-white" : "bg-card shadow-sm"}`}>
     <div className={`grid grid-cols-[1fr_90px_110px] gap-2 px-5 py-3 text-sm font-semibold ${dark ? "bg-white/10" : "bg-primary/5"}`}>
       <span>Özellik</span><span className="text-center">Expert OS</span><span className="text-center">Expert OS Plus</span>
     </div>
-    {rows.map(([label, both]) => (
+    {shown.map(([label, both]) => (
       <div key={label} className={`grid grid-cols-[1fr_90px_110px] gap-2 px-5 py-2.5 text-sm border-t ${dark ? "border-white/10" : ""}`}>
         <span>{label}</span>
         <span className="flex justify-center">{both ? <Check className="h-5 w-5 text-emerald-500" /> : <Minus className="h-5 w-5 opacity-40" />}</span>
         <span className="flex justify-center"><Check className="h-5 w-5 text-emerald-500" /></span>
       </div>
     ))}
+    <div className={`border-t px-5 py-3 text-center ${dark ? "border-white/10" : ""}`}>
+      <Button variant="ghost" size="sm" onClick={() => setOpen(!open)} className="font-semibold text-primary">
+        {open ? "Daha az göster" : `Tüm özellikleri incele (${rows.length})`}
+      </Button>
+    </div>
   </div>
-);
+  );
+};
 
 const Head = ({ dark }: { dark?: boolean }) => (
   <div className="text-center max-w-3xl mx-auto mb-12">

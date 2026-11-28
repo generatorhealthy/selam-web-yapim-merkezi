@@ -1,0 +1,25 @@
+export const expertOsFeatures = [
+  "Dijital Uzman Profil Yönetim Sistemi",
+  "Kişiselleştirilmiş Uzman Web Arayüzü",
+  "Online Randevu Otomasyon Sistemi",
+  "Danışan İlişkileri Yönetim Sistemi (CRM)",
+  "Yapay Zekâ Destekli İçerik Üretim Modülü",
+  "Yapay Zekâ Destekli Değerlendirme Modülü",
+  "SMS Bildirim ve Hatırlatma Otomasyonu",
+  "Dijital İletişim Entegrasyonu",
+  "Coğrafi Konum ve Harita Entegrasyonu",
+  "Video İçerik Yönetim Modülü",
+  "Dijital Geri Bildirim Yönetim Sistemi",
+  "Entegre IP Telefon ve Dahili Hat Hizmeti",
+  "Arama Motoru Optimizasyonu (SEO)",
+  "Dijital İçerik ve Sosyal Medya Paylaşım Hizmeti",
+  "Aylık Danışan Yönlendirme Garantisi",
+];
+export const expertOsPlusExtras = [
+  "Kişiselleştirilmiş Profesyonel Web Sitesi",
+  "Alan Adı (Domain) Yönetim Hizmeti",
+  "Web Yazılım Altyapısı ve Yönetim Sistemi",
+  "Yönetilen Bulut Sunucu ve Hosting Altyapısı",
+  "SSL Sertifikası ve Şifreli İletişim Altyapısı",
+  "Kurumsal E-Posta Altyapısı ve Entegrasyonu",
+];
