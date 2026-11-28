@@ -678,3 +678,5 @@
 # 28 Kasım 2026 — Manus ana sayfa tasarımı
 - [x] PDF'teki bölümleri ve yüklenen görsellerle yeni ana sayfayı oluştur; menü, arama, uzman, blog ve mağaza bağlantılarını gerçek rotalara bağla.
 - [x] Ana sayfa ön-render üretimini yeni açılışla uyumlu tut; masaüstü/mobil görünüm ve etkileşimleri doğrula.
+- [x] Öne çıkan uzman kartlarında gerçek profil fotoğraflarını göster.
+- [x] Ana sayfa logosunun beyaz arka planını saydam yap.
