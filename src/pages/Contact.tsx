@@ -197,8 +197,7 @@ const Contact = () => {
           <iframe title="Doktorum Ol ofis konumu" src={`https://www.google.com/maps?q=${MAP_QUERY}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
           <span className="cp-pin"><img src={iconUrl} alt="" /></span>
           <div className="cp-map-card">
-            <h3 className="font-bold text-lg">Ofisimizi ziyaret edin</h3>
-            <p className="cp-copy text-sm my-2">Küçükbakkalköy Mah. Selvili Sok. No:4/20 Ataşehir / İstanbul</p>
+            <p className="cp-copy text-sm mb-3">Küçükbakkalköy Mah. Selvili Sok. No:4/20 Ataşehir / İstanbul</p>
             <a href={`https://www.google.com/maps/dir/?api=1&destination=${MAP_QUERY}`} target="_blank" rel="noopener noreferrer" className="cp-btn"><Navigation className="h-4 w-4" /> Yol tarifi al</a>
           </div>
         </section>
