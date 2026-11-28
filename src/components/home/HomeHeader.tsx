@@ -32,13 +32,14 @@ export default function HomeHeader() {
         <Brand />
         <nav aria-label="Ana menü" className="hidden items-center gap-1.5 lg:flex">
           {items.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) => `home-nav-link ${isActive ? "home-nav-link-active" : ""}`}
-            >
-              {item.label}
-            </NavLink>
+            <span key={item.to}>
+              <NavLink
+                to={item.to}
+                className={({ isActive }) => `home-nav-link ${isActive ? "home-nav-link-active" : ""}`}
+              >
+                {item.label}
+              </NavLink>
+            </span>
           ))}
         </nav>
         <div className="hidden items-center gap-2.5 sm:flex">

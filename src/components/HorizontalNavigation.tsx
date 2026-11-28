@@ -174,7 +174,7 @@ export function HorizontalNavigation() {
                         to={item.path} 
                         className={`px-6 py-3 font-medium transition-all duration-300 rounded-full border ${
                           isActive(item.path) 
-                            ? "text-primary-foreground bg-[image:var(--home-nav-gradient)] border-transparent" 
+                            ? "text-primary-foreground bg-[image:var(--home-button-gradient)] border-transparent"
                             : "text-gray-700 hover:text-blue-600 hover:bg-blue-50 border-gray-200 hover:border-blue-200"
                         }`}
                       >
@@ -200,7 +200,7 @@ export function HorizontalNavigation() {
                   </button>
                   <button
                     onClick={() => navigate('/kayit-ol')}
-                    className="px-3 py-1.5 text-[11px] font-semibold text-primary-foreground bg-[image:var(--home-nav-gradient)] rounded-full hover:opacity-90 transition-opacity whitespace-nowrap"
+                    className="px-3 py-1.5 text-[11px] font-semibold text-primary-foreground bg-[image:var(--home-button-gradient)] rounded-full hover:opacity-90 transition-opacity whitespace-nowrap"
                   >
                     Üye Ol
                   </button>
@@ -243,7 +243,7 @@ export function HorizontalNavigation() {
                 >
                   <Avatar className="w-9 h-9 border-2 border-blue-100">
                     <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
-                    <AvatarFallback className="bg-[image:var(--home-nav-gradient)] text-primary-foreground text-sm font-medium">
+                    <AvatarFallback className="bg-[image:var(--home-button-gradient)] text-primary-foreground text-sm font-medium">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -262,7 +262,7 @@ export function HorizontalNavigation() {
                 >
                   <Avatar className="w-9 h-9 border-2 border-blue-100">
                     <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
-                    <AvatarFallback className="bg-[image:var(--home-nav-gradient)] text-primary-foreground text-sm font-medium">
+                    <AvatarFallback className="bg-[image:var(--home-button-gradient)] text-primary-foreground text-sm font-medium">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -285,7 +285,7 @@ export function HorizontalNavigation() {
                   </Button>
                   <Button 
                     onClick={() => navigate('/giris-yap')}
-                    className="bg-[image:var(--home-nav-gradient)] hover:opacity-90 text-primary-foreground font-medium rounded-full transition-opacity px-6 py-2"
+                    className="bg-[image:var(--home-button-gradient)] hover:opacity-90 text-primary-foreground font-medium rounded-full transition-opacity px-6 py-2"
                   >
                     Giriş Yap
                   </Button>
@@ -372,7 +372,7 @@ export function HorizontalNavigation() {
                   >
                     <Avatar className="w-11 h-11 border-2 border-blue-100">
                       <AvatarImage src={userProfile?.profile_picture || undefined} alt="Profil" />
-                      <AvatarFallback className="bg-[image:var(--home-nav-gradient)] text-primary-foreground text-sm font-medium">
+                      <AvatarFallback className="bg-[image:var(--home-button-gradient)] text-primary-foreground text-sm font-medium">
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
@@ -391,7 +391,7 @@ export function HorizontalNavigation() {
                 {authInitialized && !isLoggedIn && (
                   <div className="space-y-3">
                     <Button
-                      className="w-full h-12 text-[16px] bg-[image:var(--home-nav-gradient)] hover:opacity-90 text-primary-foreground font-semibold rounded-2xl"
+                      className="w-full h-12 text-[16px] bg-[image:var(--home-button-gradient)] hover:opacity-90 text-primary-foreground font-semibold rounded-2xl"
                       onClick={() => {
                         navigate("/giris-yap");
                         setIsMobileMenuOpen(false);

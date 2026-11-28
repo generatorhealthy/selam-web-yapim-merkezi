@@ -15,7 +15,7 @@
 .home-button-outline{color:hsl(var(--home-brand));border-color:hsl(var(--home-line));background:hsl(var(--background))}
 .home-button-outline:hover{border-color:hsl(var(--home-brand-soft));box-shadow:var(--home-shadow)}
 .home-button-small{min-height:40px;padding:.55rem 1.2rem;font-size:.82rem}
-.home-nav-link{display:inline-flex;padding:.62rem 1.05rem;border:1px solid hsl(var(--home-line));border-radius:999px;color:hsl(var(--home-ink));font-size:.82rem;font-weight:550;transition:all .2s ease}
+.home-nav-link{display:inline;padding:.75rem 1.5rem;border:1px solid hsl(var(--home-line));border-radius:999px;color:hsl(var(--home-ink));font-size:1rem;font-weight:500;transition:all .2s ease}
 .home-nav-link:hover{color:hsl(var(--home-brand));border-color:hsl(var(--home-brand-soft))}
 .home-nav-link-active{color:hsl(var(--primary-foreground));border-color:transparent;background:var(--home-button-gradient)}
 .home-nav-link-active:hover{color:hsl(var(--primary-foreground))}
