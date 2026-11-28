@@ -1,20 +1,15 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Search, MessageCircle, Phone, CheckCircle, Filter } from "lucide-react";
+import { MapPin, Search, MessageCircle, Phone, CheckCircle, SlidersHorizontal, Video, Users, Clock, Star, CalendarDays, BadgeCheck, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import "@/components/home/home.css";
+import "./doctor-list.css";
 import { Link, useNavigate } from "react-router-dom";
 import { resolveCallNumber } from "@/utils/callNumber";
 import { createSpecialtySlug } from "@/utils/doctorUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
-import Footer from "@/components/Footer";
 import LocalPagesLinks from "@/components/LocalPagesLinks";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { matchesAppointmentType, matchesSpecialty } from "@/lib/specialtyFilter";
 
 interface Specialist {
@@ -37,19 +32,16 @@ interface Specialist {
 const DoctorList = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [filteredSpecialists, setFilteredSpecialists] = useState<Specialist[]>([]);
-  const [displayedSpecialists, setDisplayedSpecialists] = useState<Specialist[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedAppointmentType, setSelectedAppointmentType] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const ITEMS_PER_PAGE = 12;
+  const PAGE_SIZE = 10;
+  const [listPage, setListPage] = useState(1);
+  const [sortBy, setSortBy] = useState("onerilen");
   
   const specialties = [
     "Aile Danışmanı", "Cildiye", "Dil ve Konuşma Terapisti", 
@@ -91,28 +83,7 @@ const DoctorList = () => {
     filterSpecialists();
   }, [specialists, searchTerm, selectedSpecialty, selectedCity, selectedAppointmentType]);
 
-  useEffect(() => {
-    updateDisplayedSpecialists();
-  }, [filteredSpecialists, currentPage]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (loadingMore || !hasMore) return;
-      
-      // Use a threshold for better browser compatibility (Chrome/Edge pixel rounding issues)
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = window.innerHeight;
-      const threshold = 200; // pixels before bottom to trigger load
-      
-      if (scrollTop + clientHeight >= scrollHeight - threshold) {
-        loadMoreSpecialists();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loadingMore, hasMore]);
 
   const fetchSpecialists = async () => {
     try {
@@ -234,34 +205,7 @@ const DoctorList = () => {
     filtered = filtered.filter(specialist => matchesAppointmentType(specialist, selectedAppointmentType));
 
     setFilteredSpecialists(filtered);
-    setCurrentPage(0); // Filtre değiştiğinde sayfayı sıfırla
-  };
-
-  const updateDisplayedSpecialists = () => {
-    const total = filteredSpecialists.length;
-    if (total === 0) {
-      setDisplayedSpecialists([]);
-      setHasMore(false);
-      return;
-    }
-    const count = (currentPage + 1) * ITEMS_PER_PAGE;
-    // Loop back to the beginning when we run out of specialists
-    const newDisplayed = Array.from({ length: count }, (_, i) => filteredSpecialists[i % total]);
-    setDisplayedSpecialists(newDisplayed);
-    // Always allow loading more so the list cycles endlessly
-    setHasMore(true);
-  };
-
-  const loadMoreSpecialists = async () => {
-    if (loadingMore || !hasMore) return;
-    
-    setLoadingMore(true);
-    
-    // Simulate loading delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    setCurrentPage(prev => prev + 1);
-    setLoadingMore(false);
+    setListPage(1);
   };
 
   const getAppointmentTypes = (specialist: Specialist) => {
@@ -294,262 +238,170 @@ const DoctorList = () => {
     </Helmet>
   );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>
-        {seoHead}
-        <HorizontalNavigation />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Uzmanlar yükleniyor...</p>
-          </div>
-        </div>
-        <Footer />
+  const sortedSpecialists = (() => {
+    const list = [...filteredSpecialists];
+    if (sortBy === "deneyim") list.sort((a, b) => (b.experience || 0) - (a.experience || 0));
+    if (sortBy === "puan") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    return list;
+  })();
+  const totalPages = Math.max(1, Math.ceil(sortedSpecialists.length / PAGE_SIZE));
+  const safePage = Math.min(listPage, totalPages);
+  const pageItems = sortedSpecialists.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const goToPage = (n: number) => {
+    setListPage(n);
+    document.getElementById("uzman-listesi")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
+    (n) => n === 1 || n === totalPages || Math.abs(n - safePage) <= 1,
+  );
+
+  const typeFilter = (
+    <div className="ex-panel">
+      <div className="ex-panel-title"><SlidersHorizontal className="h-5 w-5" /> Görüşme türü</div>
+      <div className="ex-segment">
+        {[{ v: "", l: "Tümü", I: Users }, { v: "online", l: "Online", I: Video }, { v: "yüzyüze", l: "Yüz yüze", I: Users }].map(({ v, l, I }) => (
+          <button key={l} type="button" onClick={() => setSelectedAppointmentType(v)} className={`ex-segment-btn ${selectedAppointmentType === v ? "ex-segment-btn-active" : ""}`}>
+            {v === "online" ? <Video className="h-4 w-4" /> : v ? <Users className="h-4 w-4" /> : null}{l}
+          </button>
+        ))}
       </div>
-    );
-  }
+      <div className="mt-4 grid gap-3">
+        <label className="ex-field"><Search className="h-4 w-4" />
+          <input placeholder="Uzman adı, branş veya şehir" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        </label>
+        <select className="ex-select" aria-label="Uzmanlık alanı" value={selectedSpecialty || "all"} onChange={(e) => setSelectedSpecialty(e.target.value)}>
+          <option value="all">Tüm uzmanlık alanları</option>
+          {specialties.map((sp) => <option key={sp} value={sp}>{sp}</option>)}
+        </select>
+        <select className="ex-select" aria-label="Şehir" value={selectedCity || "all"} onChange={(e) => setSelectedCity(e.target.value)}>
+          <option value="all">Tüm şehirler</option>
+          {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        {(searchTerm || selectedSpecialty || selectedCity || selectedAppointmentType) && (
+          <button type="button" className="ex-clear" onClick={() => { setSearchTerm(""); setSelectedSpecialty(""); setSelectedCity(""); setSelectedAppointmentType(""); }}>
+            Filtreleri temizle
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f0f2f5' }}>
+    <div className="home-page ex-page min-h-screen">
       {seoHead}
       <HorizontalNavigation />
-      
-      {/* Header Section */}
-      <div className="bg-white py-8 md:py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-2xl md:text-4xl font-bold mb-2 md:mb-4" style={{ color: '#4f7cff' }}>
-            Uzmanlar
-          </h1>
-          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-            Alanında uzman, deneyimli uzmanlarla tanışın. Sağlığınız için en doğru rehberliği alın ve hemen randevu oluşturun.
-          </p>
+
+      <section className="ex-hero">
+        <div className="home-container relative z-10 text-center">
+          <p className="ex-eyebrow">Uzmanlar</p>
+          <h1 className="ex-title">Size en uygun <span>uzmanı</span> keşfedin</h1>
+          <p className="ex-lead">Online veya yüz yüze görüşme seçin; doğrulanmış profilleri inceleyip hemen randevu oluşturun.</p>
         </div>
-      </div>
+      </section>
 
-      <div className="container mx-auto px-4 py-4 md:py-8">
-        {/* Filter Section */}
-        <div className="bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 rounded-3xl shadow-lg border border-white/40 p-6 md:p-8 mb-6 md:mb-8 backdrop-blur-sm">
-          <div className="flex items-center gap-4 mb-6 md:mb-8">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
-              <Filter className="w-6 h-6 md:w-7 md:h-7 text-white" />
-            </div>
-            <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Uzman Ara & Filtrele
-            </h2>
+      <div className="home-container ex-layout" id="uzman-listesi">
+        <aside className="ex-aside">
+          {typeFilter}
+          <div className="ex-cta">
+            <p className="ex-cta-kicker">Uzman mısınız?</p>
+            <p className="ex-cta-text">Profilinizi oluşturun, danışanlarla buluşun.</p>
+            <Link to="/kayit-ol" className="home-button home-button-primary w-full">Uzman olarak katılın</Link>
           </div>
-          
-          <div className={`grid gap-4 md:gap-6 ${isMobile ? 'grid-cols-1' : 'md:grid-cols-4'}`}>
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-hover:text-blue-500 transition-colors" />
-              <Input
-                placeholder="Doktor adı, branş veya şehir..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-14 text-base border-2 border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm hover:border-blue-300 focus:border-blue-500 transition-all duration-300 shadow-sm"
-              />
-            </div>
-            
-            <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
-              <SelectTrigger className="h-14 text-base border-2 border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm hover:border-blue-300 focus:border-blue-500 transition-all duration-300 shadow-sm">
-                <SelectValue placeholder="Uzmanlık Alanı Seçin" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-2 bg-white/95 backdrop-blur-md shadow-xl">
-                <SelectItem value="all" className="rounded-lg">Tümü</SelectItem>
-                {specialties.map(specialty => (
-                  <SelectItem key={specialty} value={specialty} className="rounded-lg">
-                    {specialty}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        </aside>
 
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
-              <SelectTrigger className="h-14 text-base border-2 border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm hover:border-blue-300 focus:border-blue-500 transition-all duration-300 shadow-sm">
-                <SelectValue placeholder="Şehir Seçin" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-2 bg-white/95 backdrop-blur-md shadow-xl max-h-60">
-                <SelectItem value="all" className="rounded-lg">Tümü</SelectItem>
-                {cities.map(city => (
-                  <SelectItem key={city} value={city} className="rounded-lg">
-                    {city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setSearchTerm("");
-                setSelectedSpecialty("");
-                setSelectedCity("");
-                setCurrentPage(0);
-              }}
-              className="h-14 text-base border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-2xl font-semibold bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-sm"
-            >
-              Filtreleri Temizle
-            </Button>
+        <main className="min-w-0">
+          <div className="ex-toolbar">
+            <p><strong>{loading ? "…" : sortedSpecialists.length} uzman</strong> listeleniyor</p>
+            <label className="ex-sort">Sırala:
+              <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setListPage(1); }}>
+                <option value="onerilen">Önerilen</option>
+                <option value="deneyim">Deneyim</option>
+                <option value="puan">Puan</option>
+              </select>
+              <ChevronDown className="h-4 w-4" />
+            </label>
           </div>
-          
-        </div>
 
-        <LocalPagesLinks specialists={specialists} className="mb-6 md:mb-8" />
-
-        {filteredSpecialists.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">Arama kriterlerinize uygun uzman bulunamadı.</p>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-4 md:space-y-8">
-              {displayedSpecialists.map((specialist, index) => {
+          {loading ? (
+            <div className="grid gap-5">{[0, 1, 2].map((i) => <div key={i} className="ex-card h-64 animate-pulse" />)}</div>
+          ) : pageItems.length === 0 ? (
+            <div className="ex-card text-center text-[hsl(var(--home-copy))]">Arama kriterlerinize uygun uzman bulunamadı.</div>
+          ) : (
+            <div className="grid gap-5">
+              {pageItems.map((specialist) => {
                 const specialtySlug = createSpecialtySlug(specialist.specialty);
-                
+                const profileUrl = `/${specialtySlug}/${specialist.slug}`;
+                const initials = specialist.name.split(" ").filter(Boolean).slice(-2).map((w) => w[0]).join("").toLocaleUpperCase("tr-TR");
+                const types = getAppointmentTypes(specialist);
                 return (
-                  <Card key={`${specialist.id}-${index}`} className="bg-white border-0 shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-2xl overflow-hidden animate-fade-in">
-
-                    <CardContent className="p-4 md:p-8">
-                      <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex gap-8'}`}>
-                        {/* Doctor Image */}
-                        <div className={`${isMobile ? 'self-center' : 'flex-shrink-0'}`}>
-                          <img
-                            src={specialist.profile_picture || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face"}
-                            alt={specialist.name}
-                            className={`${isMobile ? 'w-24 h-24' : 'w-40 h-40'} rounded-2xl object-cover cursor-pointer hover:opacity-80 transition-opacity`}
-                            onClick={() => handleProfileClick(specialist)}
-                          />
+                  <article key={specialist.id} className="ex-card">
+                    <div className="ex-card-body">
+                      <Link to={profileUrl} className="ex-photo" aria-label={`${specialist.name} profili`}>
+                        {specialist.profile_picture ? (
+                          <img src={specialist.profile_picture} alt={specialist.name} loading="eager" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                        ) : null}
+                        <span className="ex-photo-fallback">{initials}</span>
+                        <span className="ex-photo-badge"><BadgeCheck className="h-5 w-5" /></span>
+                      </Link>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <h2 className="ex-name"><Link to={profileUrl}>{specialist.name}</Link></h2>
+                          <span className="ex-verified"><CheckCircle className="h-4 w-4" /> Onaylı profil</span>
                         </div>
-
-                        {/* Doctor Info */}
-                        <div className="flex-1">
-                          <div className={`${isMobile ? 'text-center' : 'flex items-start justify-between'} mb-4`}>
-                            <div>
-                              <div className={`${isMobile ? 'flex flex-col items-center gap-2' : 'flex items-center gap-3'} mb-3`}>
-                                <h3 
-                                  className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors`}
-                                  onClick={() => handleProfileClick(specialist)}
-                                >
-                                  {specialist.name}
-                                </h3>
-                                <div className="flex items-center gap-2 text-green-600">
-                                  <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
-                                  <span className="text-xs md:text-sm font-semibold">Onaylı Profil</span>
-                                </div>
-                              </div>
-                              
-                              <div className={`mb-4 ${isMobile ? 'flex justify-center' : ''}`}>
-                                <Badge className="text-sm px-4 py-2 rounded-xl font-semibold" style={{ backgroundColor: '#e3f2fd', color: '#1976d2' }}>
-                                  👤 {specialist.specialty}
-                                </Badge>
-                              </div>
-
-                              <div className={`${isMobile ? 'flex flex-col items-center gap-2' : 'flex items-center gap-6'} text-base text-gray-600 mb-4`}>
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="w-5 h-5" />
-                                  {specialist.city}
-                                </div>
-                                {specialist.experience && (
-                                  <span className="flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                    {specialist.experience} yıl deneyim
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          {specialist.bio && (
-                            <p className={`text-gray-600 text-base leading-relaxed mb-6 line-clamp-3 ${isMobile ? 'text-center text-sm' : ''}`}>
-                              {specialist.bio}
-                            </p>
-                          )}
-
-                          {/* Consultation Types */}
-                          <div className={`${isMobile ? 'flex justify-center' : 'flex'} gap-4 mb-6 md:mb-8`}>
-                            {getAppointmentTypes(specialist).map((type) => (
-                              <Badge 
-                                key={type} 
-                                variant="outline" 
-                                className={`text-sm px-4 py-2 rounded-xl font-semibold ${
-                                  type === 'Online' 
-                                    ? 'border-green-200 text-green-700 bg-green-50' 
-                                    : 'border-purple-200 text-purple-700 bg-purple-50'
-                                }`}
-                              >
-                                {type === 'Online' ? '🌐 Online' : '👥 Yüz Yüze'}
-                              </Badge>
-                            ))}
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-4'}`}>
-                            <Button 
-                              asChild 
-                              className={`${isMobile ? 'w-full' : ''} h-12 px-8 text-base font-semibold rounded-xl text-white`} 
-                              style={{ backgroundColor: '#4f7cff' }}
-                            >
-                              <Link to={`/${specialtySlug}/${specialist.slug}`}>
-                                Profili İncele
-                              </Link>
-                            </Button>
-                            
-                            <Button 
-                              variant="outline" 
-                              asChild 
-                              className={`${isMobile ? 'w-full' : ''} h-12 px-8 text-base font-semibold rounded-xl border-2`}
-                              style={{ borderColor: '#4f7cff', color: '#4f7cff' }}
-                            >
-                              <Link to={`/randevu-al/${specialtySlug}/${specialist.slug}`}>
-                                📅 Randevu Al
-                              </Link>
-                            </Button>
-
-                            {/* Contact Buttons */}
-                            {specialist.phone && (
-                              <div className={`${isMobile ? 'flex justify-center' : 'flex'} gap-3`}>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => handleWhatsAppClick(specialist.phone)}
-                                  className="w-12 h-12 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
-                                  title="WhatsApp"
-                                >
-                                  <MessageCircle className="w-5 h-5" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => handleCallClick(specialist.phone)}
-                                  className="w-12 h-12 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
-                                  title="Ara"
-                                >
-                                  <Phone className="w-5 h-5" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+                        <div className="ex-meta">
+                          <span className="ex-chip">{specialist.specialty}</span>
+                          {specialist.city && <span><MapPin className="h-4 w-4" />{specialist.city}</span>}
+                          {specialist.experience ? <span><Clock className="h-4 w-4" />{specialist.experience} yıl deneyim</span> : null}
+                          {specialist.rating ? <span><Star className="h-4 w-4 fill-current text-[hsl(var(--home-star))]" />{Number(specialist.rating).toFixed(1)}</span> : null}
+                        </div>
+                        {specialist.bio && <p className="ex-bio">{specialist.bio}</p>}
+                        <div className="flex flex-wrap gap-2">
+                          {types.map((t) => (
+                            <span key={t} className={t === "Online" ? "ex-type ex-type-online" : "ex-type ex-type-face"}>
+                              {t === "Online" ? <Video className="h-4 w-4" /> : <Users className="h-4 w-4" />}{t === "Online" ? "Online" : "Yüz yüze"}
+                            </span>
+                          ))}
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <div className="ex-actions">
+                      <Link to={`/randevu-al/${specialtySlug}/${specialist.slug}`} className="home-button home-button-primary"><CalendarDays className="h-4 w-4" /> Randevu al</Link>
+                      <Link to={profileUrl} className="home-button home-button-outline">Profili incele</Link>
+                      {specialist.phone && (
+                        <>
+                          <button type="button" className="ex-icon-btn" title="WhatsApp" aria-label="WhatsApp" onClick={() => handleWhatsAppClick(specialist.phone)}><MessageCircle className="h-5 w-5" /></button>
+                          <button type="button" className="ex-icon-btn" title="Ara" aria-label="Ara" onClick={() => handleCallClick(specialist.phone)}><Phone className="h-5 w-5" /></button>
+                        </>
+                      )}
+                    </div>
+                  </article>
                 );
               })}
             </div>
+          )}
 
-            {/* Loading More Indicator */}
-            {loadingMore && (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Daha fazla uzman yükleniyor...</p>
-              </div>
-            )}
+          {!loading && totalPages > 1 && (
+            <nav className="ex-pagination" aria-label="Sayfalar">
+              <button type="button" disabled={safePage === 1} onClick={() => goToPage(safePage - 1)} aria-label="Önceki sayfa"><ChevronLeft className="h-4 w-4" /></button>
+              {pageNumbers.map((n, i) => (
+                <span key={n} className="contents">
+                  {i > 0 && n - pageNumbers[i - 1] > 1 && <span className="px-1 text-[hsl(var(--home-copy))]">…</span>}
+                  <button type="button" onClick={() => goToPage(n)} className={n === safePage ? "ex-page-active" : ""} aria-current={n === safePage ? "page" : undefined}>{n}</button>
+                </span>
+              ))}
+              <button type="button" disabled={safePage === totalPages} onClick={() => goToPage(safePage + 1)} aria-label="Sonraki sayfa"><ChevronRight className="h-4 w-4" /></button>
+            </nav>
+          )}
 
+          <LocalPagesLinks specialists={specialists} className="mt-8" />
 
-          </>
-        )}
+          <div className="ex-cta ex-cta-mobile">
+            <p className="ex-cta-kicker">Uzman mısınız?</p>
+            <p className="ex-cta-text">Profilinizi oluşturun, danışanlarla buluşun.</p>
+            <Link to="/kayit-ol" className="home-button home-button-primary w-full">Uzman olarak katılın</Link>
+          </div>
+        </main>
       </div>
-      <Footer />
     </div>
   );
 };
