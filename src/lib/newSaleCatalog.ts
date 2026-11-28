@@ -13,6 +13,10 @@ export const premiumPlusExtras = [
   'SSL Güvenlik Sertifikası ve Entegrasyonu', 'Alan Adına Özel Kurumsal E-Posta Sistemi',
 ];
 const features = premiumFeatures;
+// Display-only naming for legacy subscriptions; never rewrite signed snapshots or prices.
+export function orderPackageDisplayName(name: string, amount: number) {
+  return [4000, 3600, 2998].includes(Number(amount)) ? 'Expert OS' : name;
+}
 export const newSaleCatalog = {
   'ozel-firsat': { type: 'ozel-firsat', name: 'Expert OS Paket - Özel Fırsat', price: 4000, originalPrice: 6500, features },
   'kayit-linki': { type: 'kayit-linki', name: 'Expert OS Paket - Özel Fırsat', price: 5000, originalPrice: 8500, features },

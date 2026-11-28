@@ -2,3 +2,4 @@
 - CSV downloads encode every cell with safeCsv so spreadsheet commands cannot execute and persisted evidence remains unchanged.
 - Marketing session caches carry an expiry and renew before reuse; parallel callers share one issuance promise to avoid expired-token tracking loss and duplicate requests.
 - Public blog author names come from `src/lib/authorLabel.js` so app routes and prerendered HTML agree; editor signatures map to the shared label and only real specialist names pass through.
+- Legacy order names use orderPackageDisplayName for display; preserve persisted billing names, amounts and signed snapshots to avoid rewriting historical evidence.

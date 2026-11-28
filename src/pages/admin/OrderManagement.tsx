@@ -27,6 +27,7 @@ import { tr } from "date-fns/locale";
 import { generatePreInfoPDF } from "@/services/pdfService";
 import { useUserRole } from "@/hooks/useUserRole";
 import { getSubscriptionPriceAction } from "@/lib/subscriptionPriceAction";
+import { orderPackageDisplayName } from "@/lib/newSaleCatalog";
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -1960,7 +1961,7 @@ işlemlerin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmes
                             {/* Package & Payment Info */}
                             <div className="space-y-2">
                               <div>
-                                <div className="font-semibold text-gray-900">{order.package_name}</div>
+                                <div className="font-semibold text-gray-900">{orderPackageDisplayName(order.package_name, order.amount)}</div>
                                 <div className="text-sm text-muted-foreground">{order.package_type}</div>
                               </div>
                               <div className="flex items-center justify-between">
@@ -2490,7 +2491,7 @@ IBAN: TR95 0004 6007 2188 8000 3848 15`);
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium">{order.package_name}</div>
+                            <div className="font-medium">{orderPackageDisplayName(order.package_name, order.amount)}</div>
                           </TableCell>
                           <TableCell>
                             <div className="font-semibold">{order.amount.toLocaleString('tr-TR')} ₺</div>
