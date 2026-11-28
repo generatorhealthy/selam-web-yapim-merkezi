@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { Facebook, Instagram, Linkedin } from "lucide-react";
 import publication from "@/content/legal/publication.json";
 import { canShowLegalCandidate } from "@/lib/legalPublication.js";
@@ -20,9 +21,11 @@ const social = [
   { href: "https://www.instagram.com/doktorumolcom.tr", label: "Instagram", icon: Instagram },
 ];
 
+const isNativeApp = Capacitor.isNativePlatform();
+
 export default function HomeFooter() {
   return (
-    <footer className="bg-home-blue py-10 text-home-ink">
+    <footer className="home-page bg-home-blue py-10 text-home-ink">
       <div className="home-container">
         <div className="flex flex-col justify-between gap-7 border-b border-home-line pb-8 sm:flex-row sm:items-center">
           <div><Brand /><p className="mt-4 max-w-md text-sm leading-6 text-home-copy">Uzmanlarla güvenli, kolay ve hızlı bir şekilde buluşmanızı sağlayan dijital sağlık platformu.</p></div>
@@ -35,9 +38,10 @@ export default function HomeFooter() {
         <nav aria-label="Yasal ve destek bağlantıları" className="flex flex-wrap justify-center gap-2 py-7">
           {legalLinks.map((item) => <Link key={item.to} to={item.to} className="rounded-full border border-home-line bg-background px-4 py-2 text-[11px] font-medium text-home-ink transition-colors hover:text-home-brand">{item.label}</Link>)}
           {canShowLegalCandidate(publication.documents.call, window.location.hostname) && <Link to="/cagri-merkezi-aydinlatma-metni" className="rounded-full border border-home-line bg-background px-4 py-2 text-[11px] font-medium text-home-ink">Çağrı Merkezi Aydınlatma Metni</Link>}
-          <button type="button" onClick={() => window.dispatchEvent(new Event("open-cookie-settings"))} className="rounded-full border border-home-line bg-background px-4 py-2 text-[11px] font-medium text-home-ink">Çerez Tercihleri</button>
+          {!isNativeApp && <button type="button" onClick={() => window.dispatchEvent(new Event("open-cookie-settings"))} className="rounded-full border border-home-line bg-background px-4 py-2 text-[11px] font-medium text-home-ink">Çerez Tercihleri</button>}
         </nav>
         <p className="rounded-2xl border border-background/70 bg-background/45 p-5 text-center text-[11px] leading-5 text-home-copy">Doktorumol.com.tr, sağlık profesyonelleri ile danışanlar arasında köprü kuran bağımsız bir dijital platformdur. Platformumuzda paylaşılan görüşler, ilgili uzmanların talebi veya ricası olmaksızın, kullanıcılar tarafından özgür iradeleriyle kaleme alınmaktadır. Amacımız, kamuoyunu sağlık konularında bilgilendirmek ve doktora ulaşım sürecini şeffaflaştırmaktır. Web sitemiz, herhangi bir sağlık kurumunu veya uzmanını referans göstermemekte; yalnızca bilgi sunumu ve erişim desteği sağlamaktadır.</p>
+        {isNativeApp && <p className="mt-5 rounded-2xl border border-home-line bg-home-peach p-4 text-center text-xs leading-relaxed text-home-ink">⚕️ <strong>Tıbbi Uyarı:</strong> Bu sitedeki bilgiler genel bilgilendirme amaçlıdır ve hekim tavsiyesi yerine geçmez. Tanı, tedavi ve sağlığınızla ilgili her karar için mutlaka bir doktora danışın. Acil durumlarda 112'yi arayın.</p>}
         <p className="mt-8 border-t border-home-line pt-6 text-center text-xs font-medium text-home-copy">Doktorumol.com.tr © Copyright 2026. Tüm Hakları saklıdır.</p>
       </div>
     </footer>

@@ -2,11 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { usePlatform } from "@/hooks/usePlatform";
 import { MobileLayout } from "@/components/MobileLayout";
 import ScrollToTop from "@/components/ScrollToTop";
+import HomeFooter from "@/components/home/HomeFooter";
 import CookieConsent from "@/components/CookieConsent";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
@@ -121,6 +122,15 @@ const LegacyBlogRedirect = () => {
 const MobileBlogDetailRedirect = () => {
   const { slug } = useParams<{ slug: string }>();
   return <Navigate to={slug ? `/mobile/blog/${slug}` : "/mobile/home"} replace />;
+};
+
+const SiteFooter = () => {
+  const { pathname } = useLocation();
+  const isHomePage = pathname === "/";
+  const isDivanPanel = pathname === "/divan_paneli" || pathname.startsWith("/divan_paneli/");
+
+  if (isHomePage || isDivanPanel) return null;
+  return <HomeFooter />;
 };
 
 const AppContent = () => {
@@ -314,6 +324,7 @@ const AppContent = () => {
           )}
         </Routes>
         </ErrorBoundary>
+      <SiteFooter />
     </>
   );
 };
