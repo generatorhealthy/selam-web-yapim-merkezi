@@ -676,6 +676,9 @@
 - [ ] Sahibin gerçek kartla ilk ödeme denemesi ve herkese açma — kullanıcı denemesi bekliyor.
 
 # 28 Kasım 2026 — Manus ana sayfa tasarımı
+- [x] Blog kartlarında tüm yayınlanmış yazılardan her yenilemede rastgele üç içerik ve bulanık kapak arka planı göster.
+- [x] Mobil randevu görselindeki bildirim kutusunu ortala ve aşağı al; yeşil uzman kartındaki görseli görünür yap.
+- [x] Google Play simgesini doğru, siyah mağaza işaretiyle değiştir; mobil ve masaüstünde doğrula. Dört seçim testi, iki yenileme ve 390/1280 tarayıcı kontrolleri geçti; konsol/ağ hatası ve yatay taşma yok.
 - [x] PDF'teki bölümleri ve yüklenen görsellerle yeni ana sayfayı oluştur; menü, arama, uzman, blog ve mağaza bağlantılarını gerçek rotalara bağla.
 - [x] Ana sayfa ön-render üretimini yeni açılışla uyumlu tut; masaüstü/mobil görünüm ve etkileşimleri doğrula.
 - [x] Öne çıkan uzman kartlarında gerçek profil fotoğraflarını göster.

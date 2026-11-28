@@ -16,8 +16,8 @@ export default function ExpertJoin() {
             </div>
             <Link to="/kayit-ol" className="home-button mt-9 bg-home-ink text-primary-foreground">Uzman olarak katılın <ArrowUpRight size={17} /></Link>
           </div>
-          <div className="relative flex min-h-[380px] items-end justify-center px-8 pt-8">
-            <img src={expertUrl} alt="Tabletini tutan Doktorum Ol uzmanı" width="1000" height="1000" loading="lazy" className="max-h-[480px] w-auto object-contain object-bottom" />
+          <div className="relative flex min-h-[350px] items-end justify-center px-5 pt-8 sm:min-h-[380px] sm:px-8">
+            <img src={expertUrl} alt="Tabletini tutan Doktorum Ol uzmanı" width="800" height="1000" loading="eager" decoding="async" className="h-[340px] w-full max-w-[420px] object-contain object-bottom sm:h-[420px] md:h-[480px]" />
             <div className="home-float-card bottom-10 left-4 sm:left-8">
               <img src={iconUrl} alt="" width="36" height="36" />
               <span><strong>Yeni danışan talebi</strong><small>Online · Bugün 16:00</small></span>

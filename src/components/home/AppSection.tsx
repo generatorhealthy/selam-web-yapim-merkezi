@@ -18,7 +18,7 @@ export default function AppSection() {
               <span><small>App Store'dan</small><strong>İndirin</strong></span>
             </a>
             <a href={PLAY_STORE} target="_blank" rel="noopener noreferrer" className="home-store-button" aria-label="Doktorum Ol uygulamasını Google Play'den indir">
-              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor" aria-hidden="true"><path d="m3.6 2.3 10.1 9.7-3.1 3L3 3.6c0-.5.2-1 .6-1.3Zm11.5 11.1 3.1-1.8c1.2-.7 1.2-1.8 0-2.5l-2.1-1.2-3.4 3.2 2.4 2.3ZM3.6 21.7c.5.4 1.2.4 1.8.1l10.8-6.2-2.5-2.4-10.1 8.5Z"/></svg>
+              <svg viewBox="0 0 24 24" className="h-7 w-7 text-home-ink" fill="currentColor" aria-hidden="true"><path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg>
               <span><small>Google Play'den</small><strong>İndirin</strong></span>
             </a>
           </div>

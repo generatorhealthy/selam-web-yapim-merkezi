@@ -9,7 +9,7 @@ export default function AppointmentSection() {
         <div className="relative mx-auto w-full max-w-lg">
           <span className="absolute left-[4%] top-[18%] text-5xl font-light leading-none text-home-brand" aria-hidden="true">″</span>
           <img src={clientUrl} alt="Telefonuyla online görüşmeye hazırlanan danışan" width="1000" height="1000" loading="lazy" className="mx-auto w-full max-w-[480px]" />
-          <div className="home-float-card right-[2%] top-[12%]">
+          <div className="home-float-card left-1/2 right-auto top-[24%] -ml-[145px] w-[290px] justify-center sm:left-auto sm:right-[2%] sm:top-[12%] sm:ml-0 sm:w-auto">
             <img src={iconUrl} alt="" width="36" height="36" />
             <span><strong>Doktorum Ol</strong><small>Görüşmeniz başlamak üzere</small></span>
           </div>
