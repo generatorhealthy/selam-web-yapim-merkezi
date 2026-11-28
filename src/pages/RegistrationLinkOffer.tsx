@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { FeatureBox } from "@/components/FeatureBox";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { OfferBelowVariant, OFFER_VARIANTS } from "@/components/offer/OfferBelowVariants";
 import { registrationLinkPricing, registrationLinkDiscountPercent } from "@/lib/registrationLinkPricing";
 
 const VISIBLE = 6;
@@ -122,6 +124,9 @@ const RegistrationLinkOffer = () => {
     { number: "500.000+", label: "Başarılı Randevu", icon: Calendar }
   ];
 
+  const [searchParams] = useSearchParams();
+  const tasarim = searchParams.get("tasarim");
+
   return (
     <>
       <Helmet>
@@ -206,6 +211,7 @@ const RegistrationLinkOffer = () => {
         </div>
       </section>
 
+      {OFFER_VARIANTS.includes(tasarim ?? "") ? <OfferBelowVariant v={tasarim!} onWhatsApp={handleWhatsAppContact} /> : <>
       {/* Features Showcase Section */}
       <section className="py-20 bg-gradient-to-b from-background to-primary/5">
         <div className="container mx-auto px-4">
@@ -328,6 +334,7 @@ const RegistrationLinkOffer = () => {
           </Button>
         </div>
       </section>
+      </>}
     </>
   );
 };
