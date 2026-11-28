@@ -1,625 +1,207 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Calendar, Clock, User, Search } from "lucide-react";
-import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { HorizontalNavigation } from "@/components/HorizontalNavigation";
-import Footer from "@/components/Footer";
+import { useMemo, useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { useQuery } from "@tanstack/react-query";
+import { Search, Clock, ArrowRight, ArrowUpRight, BookOpen } from "lucide-react";
+import "@/components/home/home.css";
+import "./blog-page.css";
+import { supabase } from "@/integrations/supabase/client";
+import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { authorDisplayName } from "@/lib/authorLabel";
+import { iconUrl } from "@/components/home/media";
+import { useToast } from "@/hooks/use-toast";
+import { BLOG_CATEGORIES, blogCategoryOf, type BlogCategory } from "@/lib/blogCategory";
 
-interface BlogPost {
-  id: string;
-  title: string;
-  content: string;
-  excerpt: string | null;
-  featured_image: string | null;
-  slug: string;
-  author_name: string;
-  created_at: string;
-  updated_at: string;
-  status: string;
-  meta_title: string | null;
-  meta_description: string | null;
-  tags: string[] | null;
+interface Post { id: string; title: string; excerpt: string | null; image: string | null; slug: string; author: string; date: string; category: BlogCategory }
+
+const PER_PAGE = 9;
+const CHUNK = 1000;
+
+async function fetchAll(table: "blogs" | "blog_posts", cols: string, order: string) {
+  const rows: any[] = [];
+  for (let from = 0; ; from += CHUNK) {
+    const { data, error } = await (supabase.from(table) as any).select(cols).eq("status", "published").order(order, { ascending: false }).range(from, from + CHUNK - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < CHUNK) return rows;
+  }
 }
+
+async function loadPosts(): Promise<Post[]> {
+  const [a, b] = await Promise.all([
+    fetchAll("blogs", "id,title,excerpt,featured_image,slug,author_name,created_at,tags", "created_at"),
+    fetchAll("blog_posts", "id,title,excerpt,featured_image,slug,author_name,published_at,created_at,keywords", "published_at"),
+  ]);
+  const map = new Map<string, Post>();
+  const add = (r: any, date: string, tags: string[] | null) => {
+    const prev = map.get(r.slug);
+    if (prev) { if (!prev.image && r.featured_image) prev.image = r.featured_image; return; }
+    map.set(r.slug, { id: r.id, title: r.title, excerpt: r.excerpt ?? null, image: r.featured_image ?? null, slug: r.slug, author: r.author_name || "", date, category: blogCategoryOf(r.title || "", tags) });
+  };
+  a.forEach((r) => add(r, r.created_at, r.tags));
+  b.forEach((r) => add(r, r.published_at || r.created_at, r.keywords ? String(r.keywords).split(",") : null));
+  return [...map.values()].sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime());
+}
+
+const tagClass = (c: BlogCategory) => c === "Beslenme" ? "bp-tag-green" : c === "Kadın Sağlığı" ? "bp-tag-peach" : "bp-tag-blue";
+const Tag = ({ c, white }: { c: BlogCategory; white?: boolean }) => <span className={`bp-tag ${tagClass(c)} ${white ? "bp-tag-white" : ""}`}>{c}</span>;
+const Img = ({ p, eager }: { p: Post; eager?: boolean }) => p.image ? <img src={p.image} alt={p.title} loading={eager ? "eager" : "lazy"} decoding="async" /> : null;
+
+const pageList = (cur: number, total: number) => {
+  const s = new Set([1, total, cur - 1, cur, cur + 1].filter((n) => n >= 1 && n <= total));
+  return [...s].sort((a, b) => a - b);
+};
 
 const Blog = () => {
   const { toast } = useToast();
-  const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [params, setParams] = useSearchParams();
+  const q = params.get("q") || "";
+  const cat = (params.get("kategori") || "") as BlogCategory | "";
+  const page = Math.max(1, Number(params.get("sayfa")) || 1);
+  const [text, setText] = useState(q);
+  const [email, setEmail] = useState("");
+  const [subscribing, setSubscribing] = useState(false);
 
-  const POSTS_PER_PAGE = 12;
+  const update = (patch: Record<string, string>) => setParams((prev) => {
+    const n = new URLSearchParams(prev);
+    Object.entries(patch).forEach(([k, v]) => (v ? n.set(k, v) : n.delete(k)));
+    return n;
+  }, { replace: true });
 
-  useEffect(() => {
-    fetchBlogs(0, true);
-  }, []);
+  useEffect(() => { const t = setTimeout(() => { if (text !== q) update({ q: text, sayfa: "" }); }, 300); return () => clearTimeout(t); }, [text]);
 
-  // Arama yapıldığında tüm sonuçları getir
-  useEffect(() => {
-    if (searchTerm) {
-      fetchAllBlogsForSearch();
-    } else {
-      // Arama temizlendiğinde ilk sayfayı yükle
-      fetchBlogs(0, true);
-    }
-  }, [searchTerm]);
+  const { data: posts = [], isLoading, isError } = useQuery({ queryKey: ["public-blog-list"], queryFn: loadPosts, staleTime: 5 * 60_000, retry: 2 });
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (loadingMore || !hasMore || searchTerm) return;
-      
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      
-      // Sayfa sonundan 1000px önce yeni içerik yükle
-      if (scrollTop + clientHeight >= scrollHeight - 1000) {
-        loadMorePosts();
-      }
-    };
+  const filtered = useMemo(() => {
+    const term = q.toLocaleLowerCase("tr-TR");
+    return posts.filter((p) => (!cat || p.category === cat) && (!term || p.title.toLocaleLowerCase("tr-TR").includes(term)));
+  }, [posts, q, cat]);
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loadingMore, hasMore, searchTerm, page]);
+  const featured = filtered[0];
+  const highlights = filtered.slice(1, 4);
+  const rest = filtered.slice(4);
+  const totalPages = Math.max(1, Math.ceil(rest.length / PER_PAGE));
+  const cur = Math.min(page, totalPages);
+  const pageItems = rest.slice((cur - 1) * PER_PAGE, cur * PER_PAGE);
+  const goPage = (n: number) => { update({ sayfa: n > 1 ? String(n) : "" }); document.getElementById("tum-yazilar")?.scrollIntoView({ behavior: "smooth" }); };
 
-  // Yavaş bağlantılarda tek denemede kopabildiği için istekler birkaç kez denenir
-  const withRetry = async <T,>(run: () => PromiseLike<{ data: T; error: any }>) => {
-    let last: { data: T; error: any } = { data: null as unknown as T, error: null };
-    for (let attempt = 0; attempt < 3; attempt++) {
-      last = await run();
-      if (!last.error) return last;
-      console.warn(`Blog isteği denemesi ${attempt + 1} başarısız:`, last.error.message);
-      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)));
-    }
-    return last;
+  const subscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { toast({ title: "Geçerli bir e-posta girin", variant: "destructive" }); return; }
+    setSubscribing(true);
+    const { error } = await supabase.functions.invoke("send-contact-email", { body: { name: "Blog bülteni abonesi", email: email.trim(), subject: "Blog bülteni aboneliği", message: `${email.trim()} adresi blog bültenine abone olmak istiyor.` } });
+    setSubscribing(false);
+    if (error) { toast({ title: "Abonelik alınamadı", description: "Lütfen tekrar deneyin.", variant: "destructive" }); return; }
+    setEmail("");
+    toast({ title: "Abonelik talebiniz alındı", description: "Yeni yazılardan sizi haberdar edeceğiz." });
   };
-
-  const fetchBlogs = async (pageNum: number = 0, isInitial: boolean = false) => {
-    try {
-      if (isInitial) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-
-      const from = pageNum * POSTS_PER_PAGE;
-      const to = from + POSTS_PER_PAGE - 1;
-
-      // Yayınlanan blogları blogs ve blog_posts tablolarından paralel çek
-      const [blogsRes, blogPostsRes] = await Promise.all([
-        withRetry(() =>
-          supabase
-            .from('blogs')
-            .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
-            .eq('status', 'published')
-            .order('created_at', { ascending: false })
-            .range(from, to)
-        ),
-        withRetry(() =>
-          supabase
-            .from('blog_posts')
-            .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
-            .eq('status', 'published')
-            .order('published_at', { ascending: false })
-            .range(from, to)
-        )
-      ]);
-
-      if (blogsRes.error || blogPostsRes.error) {
-        console.error('Blog yazıları çekilirken hata:', blogsRes.error || blogPostsRes.error);
-        toast({
-          title: "Hata",
-          description: "Blog yazıları yüklenirken bir hata oluştu.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const blogsData = (blogsRes.data as BlogPost[]) || [];
-
-      // blog_posts kayıtlarını BlogPost şekline map'le (özellikle staff yazıları için)
-      const mappedFromBlogPosts: BlogPost[] = (blogPostsRes.data || []).map((p: any) => ({
-        id: p.id,
-        title: p.title,
-        content: p.content,
-        excerpt: p.excerpt ?? null,
-        featured_image: p.featured_image ?? null,
-        slug: p.slug,
-        author_name: p.author_name,
-        created_at: p.published_at || p.created_at,
-        updated_at: p.published_at || p.created_at,
-        status: p.status,
-        meta_title: p.seo_title ?? null,
-        meta_description: p.seo_description ?? null,
-        tags: p.keywords ? String(p.keywords).split(',').map((t: string) => t.trim()) : null,
-      }));
-
-      // Önce birleşik listeyi oluştur, sonra slug bazında tekilleştir ve eksik görseli blog_posts'dan doldur
-      const combinedRaw = [...blogsData, ...mappedFromBlogPosts];
-      const bySlug = new Map<string, BlogPost>();
-      combinedRaw.forEach((item) => {
-        const existing = bySlug.get(item.slug);
-        if (!existing) {
-          bySlug.set(item.slug, item);
-        } else {
-          bySlug.set(item.slug, {
-            ...existing,
-            featured_image: existing.featured_image || item.featured_image || null,
-            excerpt: existing.excerpt ?? item.excerpt ?? null,
-            meta_title: existing.meta_title ?? item.meta_title ?? null,
-            meta_description: existing.meta_description ?? item.meta_description ?? null,
-            tags: existing.tags ?? item.tags ?? null,
-            created_at: existing.created_at || item.created_at,
-          });
-        }
-      });
-
-      const mergedList = Array.from(bySlug.values()).sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setBlogs((prev) => {
-        const base = isInitial ? [] : prev;
-        const nextCombined = [...base, ...mergedList];
-        const uniqueBySlug = new Map<string, BlogPost>();
-        nextCombined.forEach((b) => {
-          const exist = uniqueBySlug.get(b.slug);
-          if (!exist) uniqueBySlug.set(b.slug, b);
-        });
-        return Array.from(uniqueBySlug.values());
-      });
-
-      // En az bir kaynaktan tam sayfa geldiyse devam var kabul edelim
-      const hasMoreFromEither = ((blogsData.length || 0) === POSTS_PER_PAGE) || ((mappedFromBlogPosts.length || 0) === POSTS_PER_PAGE);
-      setHasMore(hasMoreFromEither);
-
-      setPage(pageNum);
-    } catch (error) {
-      console.error('Beklenmeyen hata:', error);
-      toast({
-        title: "Hata",
-        description: "Beklenmeyen bir hata oluştu.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  const fetchAllBlogsForSearch = async () => {
-    try {
-      setLoading(true);
-      
-      // Tüm yayınlanmış blogları çek (sınır olmadan)
-      const [blogsRes, blogPostsRes] = await Promise.all([
-        withRetry(() =>
-          supabase
-            .from('blogs')
-            .select('id,title,content,excerpt,featured_image,slug,author_name,created_at,updated_at,status,meta_title,meta_description,tags')
-            .eq('status', 'published')
-            .order('created_at', { ascending: false })
-        ),
-        withRetry(() =>
-          supabase
-            .from('blog_posts')
-            .select('id,title,content,excerpt,featured_image,slug,author_name,published_at,created_at,status,seo_title,seo_description,keywords')
-            .eq('status', 'published')
-            .order('published_at', { ascending: false })
-        )
-      ]);
-
-      if (blogsRes.error || blogPostsRes.error) {
-        console.error('Blog yazıları çekilirken hata:', blogsRes.error || blogPostsRes.error);
-        toast({
-          title: "Hata",
-          description: "Blog yazıları yüklenirken bir hata oluştu.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const blogsData = (blogsRes.data as BlogPost[]) || [];
-      const mappedFromBlogPosts: BlogPost[] = (blogPostsRes.data || []).map((p: any) => ({
-        id: p.id,
-        title: p.title,
-        content: p.content,
-        excerpt: p.excerpt ?? null,
-        featured_image: p.featured_image ?? null,
-        slug: p.slug,
-        author_name: p.author_name,
-        created_at: p.published_at || p.created_at,
-        updated_at: p.published_at || p.created_at,
-        status: p.status,
-        meta_title: p.seo_title ?? null,
-        meta_description: p.seo_description ?? null,
-        tags: p.keywords ? String(p.keywords).split(',').map((t: string) => t.trim()) : null,
-      }));
-
-      const combinedRaw = [...blogsData, ...mappedFromBlogPosts];
-      const bySlug = new Map<string, BlogPost>();
-      combinedRaw.forEach((item) => {
-        const existing = bySlug.get(item.slug);
-        if (!existing) {
-          bySlug.set(item.slug, item);
-        } else {
-          bySlug.set(item.slug, {
-            ...existing,
-            featured_image: existing.featured_image || item.featured_image || null,
-            excerpt: existing.excerpt ?? item.excerpt ?? null,
-            meta_title: existing.meta_title ?? item.meta_title ?? null,
-            meta_description: existing.meta_description ?? item.meta_description ?? null,
-            tags: existing.tags ?? item.tags ?? null,
-            created_at: existing.created_at || item.created_at,
-          });
-        }
-      });
-
-      const mergedList = Array.from(bySlug.values()).sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setBlogs(mergedList);
-      setHasMore(false); // Arama modunda infinite scroll kapalı
-    } catch (error) {
-      console.error('Beklenmeyen hata:', error);
-      toast({
-        title: "Hata",
-        description: "Beklenmeyen bir hata oluştu.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMorePosts = async () => {
-    if (!hasMore || loadingMore) return;
-    const nextPage = page + 1;
-    await fetchBlogs(nextPage, false);
-  };
-
-  const filteredBlogs = blogs.filter(blog =>
-    blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    blog.author_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (blog.excerpt && blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (blog.content && blog.content.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (blog.tags && blog.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
-  );
-
-  const getReadTime = (wordCount: number | null) => {
-    if (!wordCount) return "5 dakika";
-    const minutes = Math.ceil(wordCount / 200);
-    return `${minutes} dakika`;
-  };
-
-  const getAuthorTypeText = (blog: BlogPost) => authorDisplayName(blog.author_name);
-
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <HorizontalNavigation />
-        <div className="flex items-center justify-center py-32">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Yükleniyor...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="home-page min-h-screen">
       <Helmet>
         <title>Blog - Psikoloji ve Danışmanlık Yazıları | Doktorum Ol</title>
-        <meta name="description" content="Psikoloji, aile danışmanlığı, diyetisyen ve fizyoterapi alanlarında uzman görüşleri, güncel makaleler ve faydalı bilgiler. 1000+ uzman yazısı." />
+        <meta name="description" content="Psikoloji, aile danışmanlığı, diyetisyen ve fizyoterapi alanlarında uzman görüşleri, güncel makaleler ve faydalı bilgiler." />
         <link rel="canonical" href="https://doktorumol.com.tr/blog" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://doktorumol.com.tr/blog" />
         <meta property="og:title" content="Blog - Psikoloji ve Danışmanlık Yazıları | Doktorum Ol" />
         <meta property="og:description" content="Psikoloji, aile danışmanlığı, diyetisyen ve fizyoterapi alanlarında uzman görüşleri, güncel makaleler ve faydalı bilgiler." />
         <meta property="og:image" content="https://doktorumol.com.tr/logo.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Blog - Psikoloji ve Danışmanlık Yazıları | Doktorum Ol" />
-        <meta name="twitter:description" content="Psikoloji, aile danışmanlığı, diyetisyen ve fizyoterapi alanlarında uzman görüşleri, güncel makaleler ve faydalı bilgiler." />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": "Doktorum Ol Blog",
-            "description": "Psikoloji ve danışmanlık alanlarında uzman yazıları",
-            "url": "https://doktorumol.com.tr/blog",
-            "publisher": {
-              "@id": "https://doktorumol.com.tr/#organization"
-            }
-          })}
-        </script>
+        <script type="application/ld+json">{JSON.stringify({ "@context": "https://schema.org", "@type": "CollectionPage", name: "Doktorum Ol Blog", url: "https://doktorumol.com.tr/blog", publisher: { "@id": "https://doktorumol.com.tr/#organization" } })}</script>
       </Helmet>
       <HorizontalNavigation />
-      
-      {/* Clean Simple Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-16 text-center max-w-4xl">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
-            Blog
-          </h1>
-          <p className="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto">
-            Psikoloji ve danışmanlık dünyasından güncel içerikler, uzman görüşleri ve faydalı bilgiler
-          </p>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-12 max-w-7xl">
-        {/* Clean Search Section */}
-        <div className="mb-12">
-          <div className="max-w-2xl mx-auto">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                placeholder="Blog yazılarında ara..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-6 py-6 border-gray-300 rounded-xl text-base shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+      <section className="bp-hero">
+        <div className="home-container relative z-10 text-center">
+          <p className="bp-eyebrow">Blog</p>
+          <h1 className="bp-title">İyi oluş üzerine <span>iyi içerikler</span></h1>
+          <p className="bp-lead">Psikoloji ve sağlık dünyasından güncel içerikler, uzman görüşleri ve faydalı bilgiler.</p>
+          <form className="bp-search" role="search" onSubmit={(e) => { e.preventDefault(); update({ q: text, sayfa: "" }); }}>
+            <Search className="h-5 w-5" />
+            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Blog yazılarında ara..." aria-label="Blog yazılarında ara" />
+            <button type="submit" className="bp-btn">Ara</button>
+          </form>
+          <div className="bp-cats">
+            {["", ...BLOG_CATEGORIES].map((c) => (
+              <button key={c || "all"} type="button" aria-pressed={cat === c} onClick={() => update({ kategori: c, sayfa: "" })} className={`bp-cat ${cat === c ? "bp-cat-active" : ""}`}>{c || "Tümü"}</button>
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* Blog Content */}
-        {filteredBlogs.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="max-w-md mx-auto">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                <Search className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                {searchTerm ? "Sonuç Bulunamadı" : "Blog Yazısı Bulunamadı"}
-              </h3>
-              <p className="text-gray-600 text-lg">
-                {searchTerm 
-                  ? "Arama kriterlerine uygun blog yazısı bulunamadı." 
-                  : "Henüz yayınlanmış blog yazısı bulunmamaktadır."
-                }
-              </p>
-            </div>
-          </div>
-        ) : searchTerm ? (
-          // Search Results Grid
-          <div>
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Arama Sonuçları</h2>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBlogs.map((blog, index) => (
-                <Link key={blog.id} to={`/blog/${blog.slug}`} className="group">
-                  <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white rounded-xl h-full">
-                    <CardContent className="p-0">
-                      {blog.featured_image ? (
-                        <div className="relative overflow-hidden h-48">
-                          <img
-                            src={blog.featured_image}
-                            alt={blog.title}
-                            loading={index === 0 ? 'eager' : 'lazy'}
-                            decoding="async"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-                      ) : (
-                        <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <div className="text-5xl opacity-20">📝</div>
-                        </div>
-                      )}
-                      
-                      <div className="p-5">
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                          <span className="font-medium">{getAuthorTypeText(blog)}</span>
-                          <span>•</span>
-                          <span>5 dakika okuma</span>
-                        </div>
-
-                        <h3 className="font-bold text-lg mb-3 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {blog.title}
-                        </h3>
-                        
-                        {blog.excerpt && (
-                          <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                            {blog.excerpt}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
+      <main className="home-container">
+        {isLoading ? (
+          <div className="bp-top"><div className="bp-card h-[520px] animate-pulse" /><div className="bp-side h-[520px] animate-pulse" /></div>
+        ) : isError ? (
+          <p className="text-center py-20 bp-lead">Blog yazıları yüklenemedi. Lütfen sayfayı yenileyin.</p>
+        ) : !featured ? (
+          <p className="text-center py-20 bp-lead">{q || cat ? "Aramanıza uygun yazı bulunamadı." : "Henüz yayınlanmış yazı yok."}</p>
         ) : (
-          // Two Column Layout: Featured + Recent Posts
-          <div className="grid lg:grid-cols-12 gap-12">
-            {/* Left Column - Featured Post */}
-            <div className="lg:col-span-7">
-              {filteredBlogs.length > 0 && (
-                <Link to={`/blog/${filteredBlogs[0].slug}`} className="group block">
-                  <Card className="overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 bg-white rounded-2xl">
-                    <CardContent className="p-0">
-                      {filteredBlogs[0].featured_image && (
-                        <div className="relative overflow-hidden aspect-video">
-                          <img
-                            src={filteredBlogs[0].featured_image}
-                            alt={filteredBlogs[0].title}
-                            fetchPriority="high"
-                            decoding="async"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-                      )}
-                      
-                      <div className="p-8">
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                          <span className="font-medium">{getAuthorTypeText(filteredBlogs[0])}</span>
-                          <span>•</span>
-                          <span>5 dakika okuma</span>
-                        </div>
-                        
-                        <h3 className="text-3xl font-bold text-gray-900 mb-4 leading-tight group-hover:text-blue-600 transition-colors">
-                          {filteredBlogs[0].title}
-                        </h3>
-                        
-                        {filteredBlogs[0].excerpt && (
-                          <p className="text-gray-600 text-base mb-6 leading-relaxed line-clamp-3">
-                            {filteredBlogs[0].excerpt}
-                          </p>
-                        )}
-                        
-                        <div className="flex items-center gap-4">
-                          <Badge className="bg-blue-600 text-white border-0 px-3 py-1 rounded-md">
-                            {getAuthorTypeText(filteredBlogs[0])}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+          <>
+            <section className="bp-top">
+              <Link to={`/blog/${featured.slug}`} className="bp-card block">
+                <div className="bp-feature-img"><Img p={featured} eager /><Tag c={featured.category} white /></div>
+                <div className="bp-feature-body">
+                  <p className="bp-meta">{authorDisplayName(featured.author)} • <Clock className="h-4 w-4" /> 5 dakika okuma</p>
+                  <h2 className="bp-feature-title">{featured.title}</h2>
+                  {featured.excerpt && <p className="bp-excerpt" style={{ WebkitLineClamp: 3 }}>{featured.excerpt}</p>}
+                  <span className="bp-btn mt-5">Yazıyı oku <ArrowRight className="h-4 w-4" /></span>
+                </div>
+              </Link>
+              {highlights.length > 0 && (
+                <aside className="bp-side">
+                  <h2><BookOpen className="h-5 w-5" /> Öne çıkanlar</h2>
+                  {highlights.map((p) => (
+                    <Link key={p.slug} to={`/blog/${p.slug}`} className="bp-mini">
+                      {p.image ? <img src={p.image} alt="" loading="lazy" /> : <span className="bp-mini-ph" />}
+                      <div className="min-w-0"><Tag c={p.category} /><h3>{p.title}</h3><p className="bp-meta">{authorDisplayName(p.author)} • 5 dk</p></div>
+                    </Link>
+                  ))}
+                </aside>
               )}
-            </div>
+            </section>
 
-            {/* Right Column - Recent Posts */}
-            <div className="lg:col-span-5">
-              <div className="space-y-6">
-                {filteredBlogs.slice(1, 4).map((blog) => (
-                  <Link key={blog.id} to={`/blog/${blog.slug}`} className="group block">
-                    <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white rounded-xl">
-                      <CardContent className="p-0">
-                        <div className="flex gap-4 p-4">
-                          {blog.featured_image && (
-                            <div className="flex-shrink-0 w-32 h-32 relative overflow-hidden rounded-lg">
-                              <img
-                                src={blog.featured_image}
-                                alt={blog.title}
-                                loading="lazy"
-                                decoding="async"
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                            </div>
-                          )}
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
-                              <span className="font-medium">{getAuthorTypeText(blog)}</span>
-                              <span>•</span>
-                              <span>5 dakika okuma</span>
-                            </div>
-                            
-                            <h3 className="font-bold text-base mb-2 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
-                              {blog.title}
-                            </h3>
-                            
-                            {blog.excerpt && (
-                              <p className="text-gray-600 text-sm line-clamp-2 mb-3 leading-relaxed">
-                                {blog.excerpt}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center justify-end">
-                              <div className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                →
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* All Other Posts Grid */}
-        {!searchTerm && filteredBlogs.length > 4 && (
-          <div className="mt-16">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Tüm Yazılar</h2>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBlogs.slice(4).map((blog) => (
-                <Link key={blog.id} to={`/blog/${blog.slug}`} className="group">
-                  <Card className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white rounded-xl h-full">
-                    <CardContent className="p-0">
-                      {blog.featured_image ? (
-                        <div className="relative overflow-hidden h-48">
-                         <img
-                            src={blog.featured_image}
-                            alt={blog.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        </div>
-                      ) : (
-                        <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <div className="text-5xl opacity-20">📝</div>
-                        </div>
-                      )}
-                      
-                      <div className="p-5">
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                          <span className="font-medium">{getAuthorTypeText(blog)}</span>
-                          <span>•</span>
-                          <span>5 dakika okuma</span>
-                        </div>
-
-                        <h3 className="font-bold text-lg mb-3 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {blog.title}
-                        </h3>
-                        
-                        {blog.excerpt && (
-                          <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                            {blog.excerpt}
-                          </p>
-                        )}
+            {rest.length > 0 && (
+              <section id="tum-yazilar" style={{ scrollMarginTop: 90 }}>
+                <div className="bp-head"><h2>Tüm <span>yazılar</span></h2><span className="bp-count">{filtered.length.toLocaleString("tr-TR")} yazı</span></div>
+                <div className="bp-grid">
+                  {pageItems.map((p) => (
+                    <Link key={p.slug} to={`/blog/${p.slug}`} className="bp-card">
+                      <div className="bp-grid-img"><Img p={p} /><Tag c={p.category} /></div>
+                      <div className="bp-grid-body">
+                        <p className="bp-meta">{authorDisplayName(p.author)} • 5 dk okuma</p>
+                        <h3>{p.title}</h3>
+                        {p.excerpt && <p className="bp-excerpt text-sm" style={{ WebkitLineClamp: 2 }}>{p.excerpt}</p>}
+                        <div className="bp-read mt-4">Yazıyı oku <span className="bp-arrow"><ArrowUpRight className="h-4 w-4" /></span></div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
+                    </Link>
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <nav className="bp-pages" aria-label="Sayfalar">
+                    {pageList(cur, totalPages).map((n, i, arr) => (
+                      <span key={n} className="contents">
+                        {i > 0 && n - arr[i - 1] > 1 && <span className="self-center px-1">…</span>}
+                        <button type="button" onClick={() => goPage(n)} className={n === cur ? "bp-page-active" : ""} aria-current={n === cur ? "page" : undefined}>{n}</button>
+                      </span>
+                    ))}
+                    <button type="button" aria-label="Sonraki sayfa" disabled={cur >= totalPages} onClick={() => goPage(cur + 1)}><ArrowRight className="h-4 w-4" /></button>
+                  </nav>
+                )}
+              </section>
+            )}
+          </>
         )}
 
-        {/* Loading Indicator */}
-        {loadingMore && (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600 text-base font-medium">Daha fazla blog yazısı yükleniyor...</p>
-            </div>
-          </div>
-        )}
-        
-        {/* No More Posts */}
-        {!hasMore && filteredBlogs.length > 0 && !searchTerm && (
-          <div className="text-center py-12">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 rounded-full">
-              <p className="text-gray-600 font-medium">Tüm blog yazıları gösteriliyor</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <Footer />
+        <section className="bp-news">
+          <img src={iconUrl} alt="" />
+          <div className="flex-1"><h2>Yeni yazılardan <span>ilk siz</span> haberdar olun</h2><p>Uzmanlarımızın hazırladığı içerikler her hafta e-posta kutunuzda.</p></div>
+          <form onSubmit={subscribe}>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-posta adresiniz" aria-label="E-posta adresiniz" />
+            <button type="submit" className="bp-btn" disabled={subscribing}>{subscribing ? "..." : "Abone ol"}</button>
+          </form>
+        </section>
+      </main>
     </div>
   );
 };

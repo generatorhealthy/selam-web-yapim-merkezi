@@ -117,6 +117,10 @@ All colors MUST be HSL.
     --home-star: 45 96% 55%;
     --home-button-gradient: linear-gradient(90deg, hsl(221 83% 53%), hsl(243 75% 59%));
     --home-shadow: 0 12px 34px -16px hsl(var(--home-ink) / 0.18);
+    --home-whatsapp: 145 69% 39%;
+    --home-rust: 18 63% 39%;
+    --home-leaf: 99 72% 92%;
+    --home-danger: 0 72% 51%;
     --mobile-home-card-gradient: linear-gradient(135deg, hsl(217 91% 60%), hsl(224 82% 54%));
     --mobile-home-card-shadow: 0 12px 28px -8px hsl(217 91% 60% / 0.45);
     --mobile-home-feature-gradient: linear-gradient(135deg, hsl(var(--m-tint-lilac)), hsl(var(--m-tint-sky)));

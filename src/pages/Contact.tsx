@@ -1,457 +1,209 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Phone,
-  MessageCircle,
-  Mail,
-  Video,
-  MapPin,
-  Clock,
-  Send,
-  ArrowUpRight,
-  CheckCircle,
-  Headphones,
-  Shield,
-} from "lucide-react";
+import { Phone, MessageCircle, Mail, Video, MapPin, Clock, Send, ArrowUpRight, CheckCircle, Headphones, Shield, Building2, Navigation } from "lucide-react";
+import "@/components/home/home.css";
+import "./contact-page.css";
 import { useToast } from "@/hooks/use-toast";
 import { HorizontalNavigation } from "@/components/HorizontalNavigation";
-import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import { iconUrl } from "@/components/home/media";
 import officeImage from "@/assets/contact-office.jpg";
 
 const CALL_CENTER_NUMBER = "0530 823 22 75";
-const CALL_CENTER_TEL = "+905308232275";
-const WHATSAPP_NUMBER = "905308232275";
+const CALL_TEL = "05308232275";
+const WHATSAPP_URL = "https://wa.me/905308232275";
 const EMAIL = "info@doktorumol.com.tr";
-const COMPANY_TITLE = "Doktorum Ol Bilgi ve Teknoloji Hizmetleri Ltd. Şti.";
-const ADDRESS = "Ataşehir / İstanbul";
-const ADDRESS_STREET = "Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No: 20";
-const ADDRESS_DISTRICT = "Ataşehir / İstanbul";
+const MAP_QUERY = encodeURIComponent("Küçükbakkalköy Mah. Selvili Sok. No:4/20 Ataşehir İstanbul");
+const TOPICS = ["Üyelik", "Randevu", "Ödeme", "Teknik destek", "Diğer"];
+
+type Fields = { name: string; email: string; phone: string; message: string };
+const EMPTY: Fields = { name: "", email: "", phone: "", message: "" };
+
+function validate(f: Fields) {
+  const e: Partial<Record<keyof Fields, string>> = {};
+  if (f.name.trim().length < 2) e.name = "Ad soyad girin.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) e.email = "Geçerli bir e-posta girin.";
+  const digits = f.phone.replace(/\D/g, "");
+  if (!/^(90)?0?5\d{9}$/.test(digits)) e.phone = "Geçerli bir cep telefonu girin (05XX XXX XX XX).";
+  if (f.message.trim().length < 5) e.message = "Mesajınızı yazın.";
+  return e;
+}
 
 const Contact = () => {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [form, setForm] = useState<Fields>(EMPTY);
+  const [topic, setTopic] = useState(TOPICS[0]);
+  const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-  });
+  const set = (k: keyof Fields) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm((p) => ({ ...p, [k]: e.target.value }));
+    if (errors[k]) setErrors((p) => ({ ...p, [k]: undefined }));
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!formData.name || !formData.email || !formData.phone || !formData.message) {
-      toast({
-        title: "Eksik Bilgi",
-        description: "Lütfen zorunlu alanları doldurun.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
+    const v = validate(form);
+    setErrors(v);
+    if (Object.keys(v).length) return;
+    setSending(true);
     try {
-      const { error: dbError } = await supabase.from("specialist_applications").insert([
-        {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          subject: formData.subject || null,
-          message: formData.message,
-          source: "contact_form",
-        },
-      ]);
+      const payload = { name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim(), subject: topic, message: form.message.trim() };
+      const { error: dbError } = await supabase.from("specialist_applications").insert([{ ...payload, source: "contact_form" }]);
       if (dbError) console.error("DB kayıt hatası:", dbError);
-
-      const { data, error } = await supabase.functions.invoke("send-contact-email", {
-        body: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          subject: formData.subject || "İletişim Formu Mesajı",
-          message: formData.message,
-        },
-      });
-
-      if (error) {
-        console.error("Supabase Function Error:", error);
-        throw new Error(error.message || "E-posta gönderim hatası");
-      }
-
-      console.log("Email sent successfully:", data);
-
-      toast({
-        title: "Mesaj Gönderildi",
-        description: "Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağız.",
-      });
-
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
-      });
-    } catch (error: any) {
-      console.error("Contact form error:", error);
-      toast({
-        title: "Hata",
-        description: `Mesaj gönderilirken bir hata oluştu: ${error.message}`,
-        variant: "destructive",
-      });
+      const { error } = await supabase.functions.invoke("send-contact-email", { body: payload });
+      if (error) throw new Error(error.message || "E-posta gönderim hatası");
+      setSent(true);
+      setForm(EMPTY);
+    } catch (err: any) {
+      toast({ title: "Mesaj gönderilemedi", description: "Lütfen tekrar deneyin veya bizi arayın.", variant: "destructive" });
+      console.error("Contact form error:", err);
     } finally {
-      setIsSubmitting(false);
+      setSending(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const contactCards = [
-    {
-      icon: Phone,
-      title: "Bizi Arayın",
-      value: CALL_CENTER_NUMBER,
-      href: `tel:${CALL_CENTER_TEL}`,
-      description: "Doğrudan arayarak destek alabilirsiniz.",
-    },
-    {
-      icon: MessageCircle,
-      title: "Mesaj Gönderin",
-      value: "WhatsApp",
-      href: `https://wa.me/${WHATSAPP_NUMBER}`,
-      description: "WhatsApp üzerinden hızlıca iletişime geçin.",
-    },
-    {
-      icon: Mail,
-      title: "E-posta Gönderin",
-      value: EMAIL,
-      href: `mailto:${EMAIL}`,
-      description: "Her türlü sorunuz için bize e-posta gönderin.",
-    },
-    {
-      icon: Video,
-      title: "Görüşme Planlayın",
-      value: "Online / Yüz Yüze",
-      href: "/danismanlik-randevusu-al",
-      description: "Size uygun bir saatte görüşme planlayın.",
-    },
+  const channels = [
+    { icon: Phone, title: "Bizi Arayın", value: CALL_CENTER_NUMBER, href: `tel:${CALL_TEL}`, desc: "Doğrudan arayarak destek alabilirsiniz.", bg: "cp-bg-blue" },
+    { icon: MessageCircle, title: "Mesaj Gönderin", value: "WhatsApp", href: WHATSAPP_URL, desc: "WhatsApp üzerinden hızlıca iletişime geçin.", bg: "cp-bg-mint" },
+    { icon: Mail, title: "E-posta Gönderin", value: EMAIL, href: `mailto:${EMAIL}`, desc: "Her türlü sorunuz için bize e-posta gönderin.", bg: "cp-bg-peach" },
+    { icon: Video, title: "Görüşme Planlayın", value: "Online / Yüz Yüze", to: "/danismanlik-randevusu-al", desc: "Size uygun bir saatte görüşme planlayın.", bg: "cp-bg-sky" },
   ];
 
-  const benefits = [
-    { icon: Headphones, text: "7/24 uzman destek hattı" },
-    { icon: Clock, text: "Hafta içi ve cumartesi 09:00 - 18:00" },
-    { icon: Shield, text: "Güvenli ve hızlı geri dönüş" },
-  ];
+  const field = (k: keyof Fields, label: string, props: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <div className="cp-field">
+      <label htmlFor={`c-${k}`}>{label} *</label>
+      <input id={`c-${k}`} value={form[k]} onChange={set(k)} className={errors[k] ? "cp-err" : ""} aria-invalid={!!errors[k]} {...props} />
+      {errors[k] && <p className="cp-errtext">{errors[k]}</p>}
+    </div>
+  );
 
   return (
-    <>
+    <div className="home-page min-h-screen">
       <Helmet>
-        <title>İletişim | Doktorum Ol Randevu Sitesi</title>
-        <meta
-          name="description"
-          content="Doktorum Ol ile iletişime geçin. Uzmanlara danışan yönlendirme, üyelik ve randevu sistemleri hakkında bilgi alın."
-        />
-        <meta property="og:title" content="İletişim | Doktorum Ol Randevu Sitesi" />
-        <meta
-          property="og:description"
-          content="Doktorum Ol ile iletişime geçin. Uzmanlara danışan yönlendirme, üyelik ve randevu sistemleri hakkında bilgi alın."
-        />
+        <title>İletişim | Doktorum Ol</title>
+        <meta name="description" content="Doktorum Ol ile iletişime geçin. Danışan yönlendirme, üyelik ve randevu sistemleri hakkında bilgi alın." />
+        <meta property="og:title" content="İletişim | Doktorum Ol" />
+        <meta property="og:description" content="Doktorum Ol ile iletişime geçin. Danışan yönlendirme, üyelik ve randevu sistemleri hakkında bilgi alın." />
         <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary" />
       </Helmet>
+      <HorizontalNavigation />
 
-      <div className="min-h-screen bg-background">
-        <HorizontalNavigation />
+      <section className="cp-hero">
+        <div className="home-container relative z-10 text-center">
+          <p className="cp-eyebrow">İletişim</p>
+          <h1 className="cp-title">Size nasıl <span>yardımcı olabiliriz?</span></h1>
+          <p className="cp-lead">Danışan yönlendirme, üyelik ve randevu sistemlerimiz hakkında bilgi almak için bize ulaşın. En kısa sürede dönüş yapacağız.</p>
+        </div>
+      </section>
 
-        <main className="container mx-auto px-4 py-16 md:py-24">
-          <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="text-center mb-14 md:mb-20">
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-5">
-                İletişim
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Uzmanlara danışan yönlendirme, üyelik ve randevu sistemlerimiz hakkında
-                bilgi almak için bizimle iletişime geçin. En kısa sürede size dönüş yapacağız.
-              </p>
+      <main className="home-container">
+        <section className="cp-intro">
+          <div className="cp-photo">
+            <img src={officeImage} alt="Doktorum Ol ofisi" width={1200} height={800} loading="lazy" />
+            <span className="cp-pill"><MapPin className="h-4 w-4" /> Ataşehir / İstanbul</span>
+          </div>
+          <div className="cp-intro-body">
+            <div className="cp-kicker"><img src={iconUrl} alt="" /> DESTEK EKİBİ</div>
+            <h2 className="cp-h2">Sizin için <span>buradayız</span></h2>
+            <p className="cp-copy">Danışan ve uzman memnuniyeti odaklı ekibimiz, tüm soru ve önerileriniz için destek sağlamaktadır. Telefon, e-posta veya WhatsApp üzerinden bize kolayca ulaşabilirsiniz.</p>
+            <div className="cp-infos">
+              <div className="cp-info"><Building2 className="cp-ic h-5 w-5 flex-none" /><div><small>ÜNVAN</small><p>Doktorum Ol Bilgi ve Teknoloji Hizmetleri Ltd. Şti.</p></div></div>
+              <div className="cp-info"><MapPin className="cp-ic h-5 w-5 flex-none" /><div><small>ADRES</small><p>Küçükbakkalköy Mahallesi Selvili Sokak No:4 İç Kapı No:20 Ataşehir / İstanbul</p></div></div>
             </div>
-
-            {/* Location / Office Card */}
-            <Card className="overflow-hidden border border-border/60 shadow-sm rounded-3xl mb-8 md:mb-12">
-              <div className="grid md:grid-cols-2">
-                <div className="relative h-64 md:h-auto min-h-[360px]">
-                  <img
-                    src={officeImage}
-                    alt="Doktorum Ol ofisi"
-                    className="absolute inset-0 w-full h-full object-cover"
-                    width={1200}
-                    height={800}
-                    loading="lazy"
-                  />
-                  <div className="absolute bottom-5 left-5 right-5">
-                    <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-md rounded-full text-sm font-medium text-foreground shadow-sm">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      {ADDRESS}
-                    </div>
-                  </div>
-                </div>
-                <div className="p-8 md:p-12 flex flex-col justify-center bg-card">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-primary" />
-                    </div>
-                    <span className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
-                      Destek Ekibi
-                    </span>
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                    Sizin için buradayız
-                  </h2>
-                  <p className="text-muted-foreground leading-relaxed mb-8">
-                    Danışan ve uzman memnuniyeti odaklı ekibimiz, tüm soru ve önerileriniz
-                    için destek sağlamaktadır. Telefon, e-posta veya WhatsApp üzerinden
-                    bize kolayca ulaşabilirsiniz.
-                  </p>
-                  <div className="rounded-2xl border border-border/60 bg-muted/40 p-5 mb-8">
-                    <div className="grid sm:grid-cols-2 gap-5">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
-                          Ünvan
-                        </p>
-                        <p className="text-sm font-medium text-foreground leading-relaxed">
-                          {COMPANY_TITLE}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
-                          Adres
-                        </p>
-                        <p className="text-sm font-medium text-foreground leading-relaxed">
-                          {ADDRESS_STREET}
-                          <br />
-                          {ADDRESS_DISTRICT}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    className="w-fit h-12 px-7 rounded-full bg-foreground text-primary-foreground hover:bg-foreground/90 font-semibold gap-2"
-                    onClick={() => window.location.href = `tel:${CALL_CENTER_TEL}`}
-                  >
-                    Hemen Ara
-                    <ArrowUpRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
-            {/* Contact Method Cards */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12 md:mb-16">
-              {contactCards.map((card) => (
-                <Link
-                  key={card.title}
-                  to={card.href}
-                  target={card.href.startsWith("http") || card.href.startsWith("mailto") || card.href.startsWith("tel") ? "_blank" : undefined}
-                  rel={card.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                  className="group"
-                >
-                  <Card className="h-full border border-border/60 shadow-sm rounded-3xl hover:shadow-md hover:border-primary/20 transition-all duration-200 bg-card">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-5">
-                        <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                          <card.icon className="w-5 h-5 text-foreground group-hover:text-primary transition-colors" />
-                        </div>
-                        <ArrowUpRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </div>
-                      <h3 className="font-semibold text-foreground text-lg mb-1">{card.title}</h3>
-                      <p className="text-foreground font-medium mb-2">{card.value}</p>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{card.description}</p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-
-            {/* Form + Info Section */}
-            <div className="grid lg:grid-cols-2 gap-6 md:gap-10">
-              {/* Left: Info */}
-              <Card className="border border-border/60 shadow-sm rounded-3xl bg-card h-fit">
-                <CardContent className="p-8 md:p-10">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                      <Send className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-foreground">Bize Yazın</h2>
-                      <p className="text-sm text-muted-foreground">En kısa sürede dönüş yapacağız</p>
-                    </div>
-                  </div>
-
-                  <p className="text-muted-foreground leading-relaxed mb-8">
-                    Üyelik, danışan yönlendirme, ödeme, profil yönetimi veya teknik konularda
-                    destek almak için formu doldurun. Ekibimiz talebinizi en hızlı şekilde
-                    değerlendirecektir.
-                  </p>
-
-                  <div className="space-y-4">
-                    {benefits.map((benefit) => (
-                      <div
-                        key={benefit.text}
-                        className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50"
-                      >
-                        <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center shrink-0">
-                          <benefit.icon className="w-5 h-5 text-primary" />
-                        </div>
-                        <span className="font-medium text-foreground">{benefit.text}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-8 pt-8 border-t border-border">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <Clock className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground mb-2">Çalışma Saatleri</h3>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <p>Pazartesi - Cuma: 09:00 - 18:00</p>
-                          <p>Cumartesi: 09:00 - 18:00</p>
-                          <p>Pazar: Kapalı</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Right: Form */}
-              <Card className="border border-border/60 shadow-sm rounded-3xl bg-card">
-                <CardContent className="p-8 md:p-10">
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid sm:grid-cols-2 gap-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="name" className="text-foreground font-medium">
-                          Ad Soyad <span className="text-primary">*</span>
-                        </Label>
-                        <Input
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          placeholder="Adınız Soyadınız"
-                          required
-                          className="h-12 rounded-xl border-input bg-background focus-visible:ring-primary"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-foreground font-medium">
-                          E-posta <span className="text-primary">*</span>
-                        </Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="ornek@email.com"
-                          required
-                          className="h-12 rounded-xl border-input bg-background focus-visible:ring-primary"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="phone" className="text-foreground font-medium">
-                          Telefon <span className="text-primary">*</span>
-                        </Label>
-                        <Input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          placeholder="05XX XXX XX XX"
-                          required
-                          className="h-12 rounded-xl border-input bg-background focus-visible:ring-primary"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="subject" className="text-foreground font-medium">
-                          Konu
-                        </Label>
-                        <Input
-                          id="subject"
-                          name="subject"
-                          value={formData.subject}
-                          onChange={handleChange}
-                          placeholder="Mesaj konusu"
-                          className="h-12 rounded-xl border-input bg-background focus-visible:ring-primary"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="message" className="text-foreground font-medium">
-                        Mesaj <span className="text-primary">*</span>
-                      </Label>
-                      <Textarea
-                        id="message"
-                        name="message"
-                        value={formData.message}
-                        onChange={handleChange}
-                        placeholder="Mesajınızı yazın..."
-                        rows={6}
-                        required
-                        className="rounded-xl border-input bg-background focus-visible:ring-primary resize-none"
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full h-13 rounded-xl text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Gönderiliyor...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-5 h-5" />
-                          Mesaj Gönder
-                        </>
-                      )}
-                    </Button>
-
-                    <p className="text-xs text-muted-foreground text-center">
-                      Bilgileriniz KVKK kapsamında gizli tutulacak ve yalnızca size dönüş
-                      sağlamak için kullanılacaktır.
-                    </p>
-                  </form>
-                </CardContent>
-              </Card>
+            <div className="cp-actions">
+              <a href={`tel:${CALL_TEL}`} className="cp-btn"><Phone className="h-4 w-4" /> Hemen Ara</a>
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="cp-btn cp-btn-wa"><MessageCircle className="h-4 w-4" /> WhatsApp</a>
             </div>
           </div>
-        </main>
+        </section>
 
-        <Footer />
-      </div>
-    </>
+        <section className="cp-channels">
+          {channels.map((c) => {
+            const inner = (
+              <>
+                <div className="cp-channel-top"><span className="cp-channel-ic"><c.icon className="h-5 w-5" /></span><ArrowUpRight className="cp-channel-arrow h-5 w-5" /></div>
+                <h3>{c.title}</h3><strong>{c.value}</strong><p>{c.desc}</p>
+              </>
+            );
+            return c.to
+              ? <Link key={c.title} to={c.to} className={`cp-channel ${c.bg}`}>{inner}</Link>
+              : <a key={c.title} href={c.href} target={c.href!.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className={`cp-channel ${c.bg}`}>{inner}</a>;
+          })}
+        </section>
+
+        <section className="cp-form-wrap">
+          <div>
+            <p className="cp-eyebrow">Bize yazın</p>
+            <h2 className="cp-h2">En kısa sürede <span>dönüş yapalım</span></h2>
+            <p className="cp-copy">Üyelik, danışan yönlendirme, ödeme, profil yönetimi veya teknik konularda destek almak için formu doldurun. Ekibimiz talebinizi en hızlı şekilde değerlendirecektir.</p>
+            <div className="cp-rows">
+              {[[Headphones, "7/24 uzman destek hattı"], [Clock, "Hafta içi ve cumartesi 09:00 - 18:00"], [Shield, "Güvenli ve hızlı geri dönüş"]].map(([I, t]: any) => (
+                <div key={t} className="cp-row"><I className="cp-ic h-5 w-5" /> {t}</div>
+              ))}
+            </div>
+            <div className="cp-hours">
+              <h3><Clock className="cp-ic h-5 w-5" /> Çalışma Saatleri</h3>
+              <div><span>Pazartesi - Cuma</span><span>09:00 - 18:00</span></div>
+              <div><span>Cumartesi</span><span>09:00 - 18:00</span></div>
+              <div><span>Pazar</span><span className="cp-closed">Kapalı</span></div>
+            </div>
+          </div>
+
+          <div className="cp-form">
+            {sent ? (
+              <div className="cp-success" role="status">
+                <CheckCircle className="h-14 w-14" />
+                <h3 className="cp-h2" style={{ fontSize: "1.6rem" }}>Mesajınız alındı</h3>
+                <p className="cp-copy">Teşekkür ederiz. Ekibimiz en kısa sürede size dönüş yapacak.</p>
+                <button type="button" className="cp-btn mt-6" onClick={() => setSent(false)}>Yeni mesaj yaz</button>
+              </div>
+            ) : (
+              <form onSubmit={submit} noValidate>
+                <div className="cp-form-head"><span><Send className="h-5 w-5" /></span><div><h3 className="font-bold text-lg">İletişim formu</h3><p className="cp-copy text-sm">Tüm alanları doldurmanız yeterli</p></div></div>
+                <div className="cp-fields">
+                  {field("name", "Ad Soyad", { placeholder: "Adınız Soyadınız", autoComplete: "name" })}
+                  {field("email", "E-posta", { type: "email", placeholder: "ornek@email.com", autoComplete: "email" })}
+                  {field("phone", "Telefon", { type: "tel", placeholder: "05XX XXX XX XX", autoComplete: "tel" })}
+                  <div className="cp-field">
+                    <label htmlFor="c-topic">Konu</label>
+                    <select id="c-topic" value={topic} onChange={(e) => setTopic(e.target.value)}>
+                      {TOPICS.map((t) => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div className="cp-field cp-full">
+                    <label htmlFor="c-message">Mesaj *</label>
+                    <textarea id="c-message" rows={5} value={form.message} onChange={set("message")} placeholder="Mesajınızı yazın..." className={errors.message ? "cp-err" : ""} />
+                    {errors.message && <p className="cp-errtext">{errors.message}</p>}
+                  </div>
+                </div>
+                <div className="cp-topics">
+                  {TOPICS.map((t) => (
+                    <button key={t} type="button" aria-pressed={topic === t} onClick={() => setTopic(t)} className={`cp-topic ${topic === t ? "cp-topic-active" : ""}`}>{t}</button>
+                  ))}
+                </div>
+                <button type="submit" disabled={sending} className="cp-btn w-full">
+                  {sending ? "Gönderiliyor..." : <><Send className="h-4 w-4" /> Mesaj Gönder</>}
+                </button>
+                <p className="cp-copy text-xs text-center mt-3">Bilgileriniz KVKK kapsamında gizli tutulacak ve yalnızca size dönüş sağlamak için kullanılacaktır.</p>
+              </form>
+            )}
+          </div>
+        </section>
+
+        <section className="cp-map">
+          <iframe title="Doktorum Ol ofis konumu" src={`https://www.google.com/maps?q=${MAP_QUERY}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+          <span className="cp-pin"><img src={iconUrl} alt="" /></span>
+          <div className="cp-map-card">
+            <h3 className="font-bold text-lg">Ofisimizi ziyaret edin</h3>
+            <p className="cp-copy text-sm my-2">Küçükbakkalköy Mah. Selvili Sok. No:4/20 Ataşehir / İstanbul</p>
+            <a href={`https://www.google.com/maps/dir/?api=1&destination=${MAP_QUERY}`} target="_blank" rel="noopener noreferrer" className="cp-btn"><Navigation className="h-4 w-4" /> Yol tarifi al</a>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 };
 
