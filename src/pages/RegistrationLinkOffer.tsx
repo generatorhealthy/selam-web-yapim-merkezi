@@ -8,7 +8,11 @@ import { HorizontalNavigation } from "@/components/HorizontalNavigation";
 import { FeatureBox } from "@/components/FeatureBox";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { OfferBelowVariant, OfferDraftSwitcher, OFFER_VARIANTS } from "@/components/offer/OfferBelowVariants";
+import { OfferBelowVariant, OfferDraftSwitcher, OFFER_VARIANTS, Table, Faq, steps } from "@/components/offer/OfferBelowVariants";
+import "@/components/home/home.css";
+import "./pricing.css";
+import { MessageCircle, Info, ArrowRight } from "lucide-react";
+import { iconUrl } from "@/components/home/media";
 import { registrationLinkPricing, registrationLinkDiscountPercent } from "@/lib/registrationLinkPricing";
 
 import { expertOsFeatures, expertOsPlusExtras } from "@/lib/expertOsFeatures";
@@ -20,70 +24,79 @@ type PlanCardProps = {
   intro?: string; featured?: boolean;
 };
 
-const PlanCard = ({ id, title, subtitle, icon: Icon, tagline, price, originalPrice, features, baseFeatures, intro, featured }: PlanCardProps) => {
+const PlanCard = ({ id, title, subtitle, icon: Icon, tagline, price, originalPrice, features, baseFeatures, featured }: PlanCardProps) => {
   const [open, setOpen] = useState(false);
-  const shown = open ? features : features.slice(0, VISIBLE);
-  const hidden = features.length - VISIBLE;
+  const shown = open ? features : features.slice(0, featured ? 9 : VISIBLE);
+  const hidden = features.length - (featured ? 9 : VISIBLE);
   return (
-    <div className={`relative rounded-[2rem] overflow-hidden bg-card/90 backdrop-blur-xl shadow-2xl ring-1 ${featured ? 'ring-primary/60' : 'ring-primary-foreground/60'}`}>
-      <svg className="absolute inset-x-0 top-0 w-full h-48 pointer-events-none" viewBox="0 0 400 190" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0 0H400V120C330 160 260 90 190 125C120 160 60 135 0 150Z" className="fill-primary/10" />
-        <path d="M120 0H400V70C340 105 290 40 230 70C180 95 140 50 120 0Z" className="fill-primary/10" />
-      </svg>
-      <div className="relative px-6 pt-7 pb-2">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="flex items-center gap-2 text-2xl md:text-3xl font-bold text-foreground">
-            <Icon className="w-7 h-7 text-primary" /> {title}
-          </h3>
-          {featured && <Badge className="rounded-full">En Kapsamlı</Badge>}
+    <div className={`pr-card ${featured ? "pr-card-featured" : ""}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <span className="pr-card-icon"><Icon className="h-5 w-5" /></span>
+          <div><h3 className="pr-card-title">{title}</h3>{subtitle && <p className="pr-card-sub">{subtitle}</p>}</div>
         </div>
-        {subtitle && <p className="mt-1 text-sm md:text-base text-muted-foreground">{subtitle}</p>}
-        <p className="mt-2 text-muted-foreground">{tagline}</p>
+        {featured && <span className="pr-badge">En Kapsamlı</span>}
       </div>
-      <div className="relative p-6 space-y-5">
-        <div>
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <span className="text-4xl font-bold text-foreground">₺{price.toLocaleString('tr-TR')}<span className="text-lg font-semibold"> /ay</span></span>
-            <span className="text-lg text-muted-foreground line-through">₺{originalPrice.toLocaleString('tr-TR')}</span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">KDV dahil</span>
-            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">12 Aylık Abonelik</span>
-          </div>
-        </div>
-        <Link to={`/odeme/${id}`} state={{ packageData: { id } }} className="block">
-          <Button size="lg" variant={featured ? 'default' : 'outline'} className="w-full rounded-full py-6 text-lg font-semibold border-2 border-primary">{title} Planını Seçin →</Button>
-        </Link>
-        <div className="flex gap-3">
-          <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-          <div>
-            <p className="font-semibold text-foreground">Akıllı Profil Yönetim Modülü</p>
-            <p className="text-sm text-muted-foreground">Dijital profilinizi akıllı yazılım teknolojileriyle kolayca oluşturun ve yönetin.</p>
-          </div>
-        </div>
-        <div className="border-t border-border pt-4">
-          {intro && <p className="font-semibold text-foreground mb-3">{intro}</p>}
-          <ul className="space-y-3">
-            {shown.map((f) => (
-              <li key={f} className={`flex items-center gap-3 text-foreground ${baseFeatures && !baseFeatures.includes(f) ? 'font-semibold text-primary' : ''}`}>
-                <span className="w-6 h-6 rounded-full bg-primary/80 shadow-sm flex items-center justify-center shrink-0">
-                  <Check className="w-4 h-4 text-primary-foreground" />
-                </span>
-                {f}
-              </li>
-            ))}
-          </ul>
-          {hidden > 0 && (
-            <button type="button" onClick={() => setOpen(!open)} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
-              {open ? 'Özellikleri Daralt' : `Tüm Özellikleri İncele (+${hidden})`}
-              <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
-            </button>
-          )}
-        </div>
+      <p className="pr-card-tag">{tagline}</p>
+      <div className="mt-5 flex items-baseline gap-2 flex-wrap">
+        <span className="pr-price">₺{price.toLocaleString("tr-TR")}</span><span className="pr-per">/ay</span>
+        <span className="pr-old">₺{originalPrice.toLocaleString("tr-TR")}</span>
       </div>
+      <div className="mt-3 flex flex-wrap gap-2"><span className="pr-chip">KDV dahil</span><span className="pr-chip">12 Aylık Abonelik</span></div>
+      <Link to={`/odeme/${id}`} state={{ packageData: { id } }} className="pr-cta">{title} Planını Seçin <ArrowRight className="h-4 w-4" /></Link>
+      <div className="pr-module">
+        <Sparkles className="h-4 w-4 shrink-0 mt-0.5" />
+        <div><p className="font-semibold">Akıllı Profil Yönetim Modülü</p><p className="pr-module-copy">Dijital profilinizi akıllı yazılım teknolojileriyle kolayca oluşturun ve yönetin.</p></div>
+      </div>
+      <ul className="mt-5 space-y-2.5">
+        {shown.map((f) => (
+          <li key={f} className={`pr-feature ${baseFeatures && !baseFeatures.includes(f) ? "font-semibold" : ""}`}>
+            <span className="pr-check"><Check className="h-3 w-3" /></span>{f}
+          </li>
+        ))}
+      </ul>
+      {hidden > 0 && (
+        <button type="button" onClick={() => setOpen(!open)} className="pr-more">
+          {open ? "Özellikleri Daralt" : `Tüm özellikleri incele (+${hidden})`}
+          <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+      )}
+      {featured && <img src={iconUrl} alt="" aria-hidden="true" className="pr-watermark" />}
     </div>
   );
 };
+
+const stepTone = ["pr-step-blue", "pr-step-green", "pr-step-peach"];
+const NewBelow = ({ onWhatsApp }: { onWhatsApp: () => void }) => (
+  <>
+    <section className="container mx-auto px-4 py-16">
+      <p className="text-center text-sm font-semibold text-[hsl(var(--home-copy))]">Expert OS</p>
+      <h2 className="pr-h2 text-center mt-3">Expert OS ile başlayın, <span>Expert OS Plus</span> ile ölçekleyin</h2>
+      <div className="mt-10 grid gap-5 md:grid-cols-3 max-w-6xl mx-auto">
+        {steps.map((s, i) => (
+          <div key={s.title} className={`pr-step ${stepTone[i]}`}>
+            <div className="flex justify-between"><span className="pr-step-icon"><s.icon className="h-4 w-4" /></span><span className="text-xs font-semibold text-[hsl(var(--home-copy))]">0{i + 1}</span></div>
+            <h3 className="mt-5 text-lg font-bold">{s.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-[hsl(var(--home-copy))]">{s.text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+    <section className="container mx-auto px-4 pb-16">
+      <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] max-w-6xl mx-auto items-start">
+        <div><h2 className="pr-h3 mb-5">Paketleri <span>karşılaştırın</span></h2><Table /></div>
+        <div><h2 className="pr-h3 mb-5">Sık sorulan <span>sorular</span></h2><Faq /></div>
+      </div>
+    </section>
+    <section className="container mx-auto px-4 pb-20">
+      <div className="pr-contact max-w-6xl mx-auto">
+        <img src={iconUrl} alt="" className="h-20 w-20 rounded-2xl shadow-lg" />
+        <div className="flex-1"><h2 className="text-2xl md:text-3xl font-bold">Sorularınız mı var?</h2><p className="mt-1 text-[hsl(var(--home-copy))]">Uzman ekibimiz yanınızda. Size en uygun paketi birlikte seçelim.</p></div>
+        <button type="button" onClick={onWhatsApp} className="pr-whatsapp"><MessageCircle className="h-4 w-4" /> WhatsApp ile Anında İletişim</button>
+      </div>
+    </section>
+  </>
+);
 
 const RegistrationLinkOffer = () => {
   const handleWhatsAppContact = () => {
@@ -116,54 +129,34 @@ const RegistrationLinkOffer = () => {
       
       <HorizontalNavigation />
       
-      {/* Hero Section */}
-      <section className={`relative min-h-screen overflow-hidden ${lightOffer ? "bg-muted/70 text-foreground" : "bg-gradient-to-br from-blue-600 via-blue-500 to-purple-600"}`}>
-        {/* Background decorations - GPU accelerated, no reflow */}
-        {!lightOffer && <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl will-change-transform" style={{ contain: 'strict' }}></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl will-change-transform" style={{ contain: 'strict' }}></div>
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-white/10 rounded-full blur-2xl will-change-transform" style={{ contain: 'strict' }}></div>
-        </div>}
-        
-        <div className="relative z-10 container mx-auto px-4 py-20">
-          <div className="text-center mb-16">
-            <Badge className={`mb-6 text-lg px-6 py-2 ${lightOffer ? "bg-primary/10 text-primary border-primary/20" : "bg-white/20 text-white border-white/30"}`}>
-              <Zap className="w-5 h-5 mr-2" />
-              ÖZEL FIRSAT
-            </Badge>
-            
-            <p className={`text-xl md:text-2xl max-w-3xl mx-auto mb-8 leading-relaxed ${lightOffer ? "text-foreground" : "text-white/90"}`}>
-              Dijital dünyadaki profesyonel varlığınızı güçlendirin ve daha fazla danışana ulaşın
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 max-w-4xl mx-auto">
-              <div className={`flex items-center ${lightOffer ? "text-muted-foreground" : "text-white/90"}`}>
-                <Check className={`w-5 h-5 mr-2 ${lightOffer ? "text-primary" : "text-white"}`} />
-                7/24 Online Randevu
-              </div>
-              <div className={`flex items-center ${lightOffer ? "text-muted-foreground" : "text-white/90"}`}>
-                <Check className={`w-5 h-5 mr-2 ${lightOffer ? "text-primary" : "text-white"}`} />
-                Danışan Yönlendirme
-              </div>
-              <div className={`flex items-center ${lightOffer ? "text-muted-foreground" : "text-white/90"}`}>
-                <Check className={`w-5 h-5 mr-2 ${lightOffer ? "text-primary" : "text-white"}`} />
-                Yapay Zeka Destekli Testler
-              </div>
+      {draft && OFFER_VARIANTS.includes(draft) ? (
+        <>
+          <OfferDraftSwitcher v={draft} />
+          <OfferBelowVariant v={activeVariant} onWhatsApp={handleWhatsAppContact} />
+        </>
+      ) : (
+      <div className="home-page pr-page">
+        <section className="pr-hero">
+          <div className="relative container mx-auto px-4 pt-14 pb-10 text-center">
+            <span className="pr-eyebrow"><Zap className="h-3.5 w-3.5" /> ÖZEL FIRSAT</span>
+            <h1 className="pr-title">Dijitalde <span>görünür olun</span>, daha fazla danışana ulaşın</h1>
+            <div className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-[hsl(var(--home-copy))]">
+              {["7/24 Online Randevu", "Danışan Yönlendirme", "Yapay Zeka Destekli Testler"].map((t) => (
+                <span key={t} className="inline-flex items-center gap-1.5"><span className="pr-check pr-check-solid"><Check className="h-3 w-3" /></span>{t}</span>
+              ))}
+            </div>
+            <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-4 max-w-2xl mx-auto">
+              {statistics.map((stat) => (
+                <div key={stat.label} className="pr-stat">
+                  <stat.icon className="h-5 w-5 mx-auto text-[hsl(var(--home-brand))]" />
+                  <div className="mt-2 text-base sm:text-2xl font-bold">{stat.number}</div>
+                  <div className="text-[10px] sm:text-xs leading-tight text-[hsl(var(--home-copy))]">{stat.label}</div>
+                </div>
+              ))}
             </div>
           </div>
-          
-          {/* Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-4xl mx-auto">
-            {statistics.map((stat, index) => (
-              <div key={index} className={`text-center p-6 rounded-2xl ${lightOffer ? "bg-card border border-border/70 shadow-sm" : "bg-white/10 backdrop-blur-sm"}`}>
-                <stat.icon className={`w-10 h-10 mx-auto mb-3 ${lightOffer ? "text-primary" : "text-white"}`} />
-                <div className={`text-3xl md:text-4xl font-bold mb-1 ${lightOffer ? "text-foreground" : "text-white"}`}>{stat.number}</div>
-                <div className={`text-sm md:text-base ${lightOffer ? "text-muted-foreground" : "text-white/80"}`}>{stat.label}</div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Package Cards */}
+        </section>
+        <section className="container mx-auto px-4 pb-6">
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto items-start">
             <PlanCard
               id="kayit-linki" title="Expert OS" subtitle="Profesyonel Uzman Yönetim Yazılımı" icon={BarChart3}
@@ -175,22 +168,16 @@ const RegistrationLinkOffer = () => {
               id="premium-plus" title="Expert OS Plus" subtitle="Entegre Uzman Yönetim Yazılımı" icon={Crown} featured
               tagline="Yapay zekâ, dijital otomasyon, kişiselleştirilmiş web yazılımı ve bulut teknolojilerini bütünleşik bir dijital altyapı üzerinden yönetin."
               price={7500} originalPrice={12500}
-              features={[...expertOsFeatures, ...expertOsPlusExtras]} baseFeatures={expertOsFeatures}
+              features={[...expertOsFeatures.slice(0, 6), ...expertOsPlusExtras, ...expertOsFeatures.slice(6)]} baseFeatures={expertOsFeatures}
             />
           </div>
-          <div className="max-w-5xl mx-auto mt-6 flex flex-col items-center gap-4">
-            <Button size="lg" variant="outline" onClick={handleWhatsAppContact} className="bg-card/90 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-              <Headphones className="w-5 h-5 mr-2" /> WhatsApp Destek
-            </Button>
-            <p className={`text-sm text-center max-w-2xl ${lightOffer ? "text-muted-foreground" : "text-white/90"}`}>
-              <span className="font-semibold">Bilgilendirme:</span> Paket satın alımınız sonrası ekibimiz, profilinizin yayına alınması için sizinle iletişime geçecektir.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {draft && OFFER_VARIANTS.includes(draft) && <OfferDraftSwitcher v={draft} />}
-      <OfferBelowVariant v={activeVariant} onWhatsApp={handleWhatsAppContact} />
+          <p className="mt-6 flex items-center justify-center gap-2 text-sm text-[hsl(var(--home-copy))] text-center">
+            <Info className="h-4 w-4 shrink-0" /><span><strong className="text-[hsl(var(--home-ink))]">Bilgilendirme:</strong> Paket satın alımınız sonrası ekibimiz, profilinizin yayına alınması için sizinle iletişime geçecektir.</span>
+          </p>
+        </section>
+        <NewBelow onWhatsApp={handleWhatsAppContact} />
+      </div>
+      )}
     </>
   );
 };

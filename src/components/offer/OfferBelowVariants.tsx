@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { expertOsFeatures, expertOsPlusExtras } from "@/lib/expertOsFeatures";
 import { BarChart3, Crown, Star, Users, Target, Eye, CalendarCheck, Globe, Check, Minus, Laptop, Headphones, ArrowRight } from "lucide-react";
 
-const steps = [
+export const steps = [
   { icon: Eye, title: "Görünürlük", text: "Uzman profilinizle dijitalde yerinizi alın, daha fazla danışana ulaşın." },
   { icon: CalendarCheck, title: "Yönetim", text: "Randevu, danışan ve içerik süreçlerinizi tek platformdan kolayca yönetin." },
   { icon: Globe, title: "Tam Dijital Altyapı", text: "Kendi web siteniz, alan adınız, kurumsal e-posta ve güvenli altyapınızla markanızı büyütün." },
@@ -31,7 +31,7 @@ const faqs = [
   ["Daha sonra paket yükseltebilir miyim?", "Evet. Expert OS ile başlayıp dilediğiniz zaman Expert OS Plus'a geçebilirsiniz; ekibimiz geçiş sürecinde size yardımcı olur."],
 ];
 
-const Faq = ({ dark }: { dark?: boolean }) => (
+export const Faq = ({ dark }: { dark?: boolean }) => (
   <Accordion type="single" collapsible className="space-y-3">
     {faqs.map(([q, a], i) => (
       <AccordionItem key={i} value={`f${i}`} className={`rounded-xl border px-4 ${dark ? "border-white/15 bg-white/5 text-white" : "bg-card shadow-sm"}`}>
@@ -42,7 +42,7 @@ const Faq = ({ dark }: { dark?: boolean }) => (
   </Accordion>
 );
 
-const Table = ({ dark }: { dark?: boolean }) => {
+export const Table = ({ dark }: { dark?: boolean }) => {
   const [open, setOpen] = useState(false);
   const shown = open ? rows : rows.slice(0, TABLE_VISIBLE);
   return (
