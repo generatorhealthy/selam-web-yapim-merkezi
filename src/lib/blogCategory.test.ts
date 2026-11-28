@@ -1,10 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { blogCategoryOf } from "./blogCategory";
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { blogCategoryOf } from "./blogCategory.ts";
 
-describe("blogCategoryOf", () => {
-  it("beslenme yazılarını ayırır", () => expect(blogCategoryOf("Sağlıklı Kilo Verme Rehberi")).toBe("Beslenme"));
-  it("aile yazılarını ayırır", () => expect(blogCategoryOf("Aile ve Çift Terapisi Nedir?")).toBe("Aile & İlişkiler"));
-  it("psikoloji yazılarını ayırır", () => expect(blogCategoryOf("Kaygı Bozukluğu ile Baş Etme")).toBe("Psikoloji"));
-  it("kadın sağlığı yazılarını ayırır", () => expect(blogCategoryOf("Gebelikte Dikkat Edilmesi Gerekenler")).toBe("Kadın Sağlığı"));
-  it("eşleşmeyenler Sağlık Rehberi olur", () => expect(blogCategoryOf("Fizyoterapi Seansı")).toBe("Sağlık Rehberi"));
-});
+test("beslenme yazılarını ayırır", () => assert.equal(blogCategoryOf("Sağlıklı Kilo Verme Rehberi"), "Beslenme"));
+test("aile yazılarını ayırır", () => assert.equal(blogCategoryOf("Aile ve Çift Terapisi Nedir?"), "Aile & İlişkiler"));
+test("psikoloji yazılarını ayırır", () => assert.equal(blogCategoryOf("Kaygı Bozukluğu ile Baş Etme"), "Psikoloji"));
+test("kadın sağlığı yazılarını ayırır", () => assert.equal(blogCategoryOf("Gebelikte Dikkat Edilmesi Gerekenler"), "Kadın Sağlığı"));
+test("eşleşmeyenler Sağlık Rehberi olur", () => assert.equal(blogCategoryOf("Fizyoterapi Seansı"), "Sağlık Rehberi"));
